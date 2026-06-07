@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🌡️ Arrasta-Estufa: Missão Atmosfera</title>
+<style>
+  :root{
+    --bg1:#13212e;
+    --bg2:#6e3417;
+    --card:#ffffff;
+    --card2:#f4f7fa;
+    --ink:#1c2733;
+    --muted:#5d6b78;
+    --accent:#ff9e3d;
+    --accent-d:#e07d18;
+    --success:#2bb673;
+    --success-bg:#e4f8ee;
+    --danger:#e2503f;
+    --danger-bg:#fdeae7;
+    --line:#dde4ea;
+    --shadow:0 8px 26px rgba(8,18,28,.18);
+    --radius:16px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{
+    margin:0;padding:18px 12px 40px;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    color:var(--ink);
+    background:linear-gradient(160deg,var(--bg1),var(--bg2));
+    background-attachment:fixed;
+    min-height:100vh;
+  }
+  .wrap{width:min(960px,96vw);margin:0 auto;}
+  header{text-align:center;color:#fff;margin-bottom:14px;}
+  h1{font-size:clamp(1.5rem,5vw,2.5rem);margin:0 0 4px;line-height:1.1;text-shadow:0 2px 12px rgba(0,0,0,.35);}
+  .sub{color:#ffe7cf;font-size:clamp(.85rem,2.6vw,1rem);opacity:.95;margin:0;}
+
+  /* níveis */
+  .levels{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:16px 0 10px;}
+  .pill{
+    border:none;cursor:pointer;font-weight:700;font-size:clamp(.8rem,2.5vw,1rem);
+    padding:10px 20px;border-radius:999px;color:#fff;
+    background:rgba(255,255,255,.16);backdrop-filter:blur(4px);
+    transition:transform .2s ease,background .2s ease,box-shadow .2s ease;
+  }
+  .pill:hover{transform:translateY(-2px);}
+  .pill.active{background:var(--accent);color:#22150a;box-shadow:0 6px 18px rgba(255,158,61,.5);}
+
+  .panel{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:14px;}
+
+  .instr{font-size:.95rem;color:var(--muted);margin:0;line-height:1.45;}
+  .instr b{color:var(--ink);}
+
+  /* HUD */
+  .hud{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;}
+  .stat{
+    background:var(--card2);border:1px solid var(--line);border-radius:12px;
+    padding:8px 14px;font-weight:700;font-size:.9rem;color:var(--ink);min-width:92px;text-align:center;
+  }
+  .stat span{display:block;font-size:.68rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+
+  /* tray de itens */
+  .tray{
+    display:flex;flex-wrap:wrap;gap:10px;justify-content:center;min-height:64px;
+    padding:14px;border-radius:14px;background:var(--card2);border:1px solid var(--line);
+  }
+  .chip{
+    display:flex;align-items:center;gap:7px;
+    background:#fff;border:2px solid var(--line);border-radius:12px;
+    padding:9px 13px;font-weight:600;font-size:.92rem;cursor:grab;
+    box-shadow:0 3px 10px rgba(10,20,30,.08);
+    transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+    touch-action:none;user-select:none;
+  }
+  .chip .emo{font-size:1.25rem;}
+  .chip:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(10,20,30,.16);border-color:var(--accent);}
+  .chip.dragging{opacity:.92;cursor:grabbing;box-shadow:0 14px 30px rgba(0,0,0,.3);border-color:var(--accent);transform:scale(1.05);}
+  .chip.placed{cursor:default;border-color:var(--success);background:var(--success-bg);}
+  .chip.pop{animation:pop .4s ease;}
+  .chip.shake{animation:shake .4s ease;}
+
+  @keyframes pop{0%{transform:scale(.6);}60%{transform:scale(1.15);}100%{transform:scale(1);}}
+  @keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-7px);}40%{transform:translateX(7px);}60%{transform:translateX(-5px);}80%{transform:translateX(5px);}}
+
+  /* zonas */
+  .zones{display:grid;gap:12px;margin-top:14px;}
+  .zone{
+    border:3px dashed var(--line);border-radius:14px;padding:12px;min-height:120px;
+    background:var(--card2);transition:background .25s ease,border-color .25s ease,transform .15s ease;
+  }
+  .zone-head{font-weight:800;font-size:1rem;text-align:center;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .zone-items{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
+  .zone.over{border-color:var(--accent);background:#fff6ec;transform:scale(1.01);}
+  .zone.flash-ok{border-color:var(--success);background:var(--success-bg);}
+  .zone.flash-bad{border-color:var(--danger);background:var(--danger-bg);}
+
+  /* feedback */
+  .feedback{
+    margin-top:12px;border-radius:12px;padding:12px 14px;font-size:.93rem;line-height:1.45;
+    background:var(--card2);border-left:5px solid var(--accent);color:var(--ink);min-height:24px;
+    transition:all .25s ease;
+  }
+  .feedback.ok{background:var(--success-bg);border-left-color:var(--success);}
+  .feedback.bad{background:var(--danger-bg);border-left-color:var(--danger);}
+
+  /* final */
+  .final{text-align:center;display:none;}
+  .final.show{display:block;animation:pop .5s ease;}
+  .final h2{font-size:1.6rem;margin:.2rem 0;}
+  .final .big{font-size:2.6rem;font-weight:800;color:var(--success);margin:6px 0;}
+  .namebox{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px;}
+  input[type=text]{
+    padding:11px 14px;border-radius:12px;border:2px solid var(--line);font-size:1rem;width:min(240px,70vw);
+  }
+  input[type=text]:focus{outline:none;border-color:var(--accent);}
+  .btn{
+    border:none;cursor:pointer;font-weight:700;font-size:.95rem;padding:11px 22px;border-radius:12px;
+    background:var(--accent);color:#22150a;transition:transform .2s ease,box-shadow .2s ease;
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(255,158,61,.5);}
+  .btn.alt{background:var(--success);color:#fff;}
+  .btn:disabled{opacity:.5;cursor:default;transform:none;box-shadow:none;}
+
+  /* ranking */
+  .rank h3{margin:0 0 4px;font-size:1.05rem;}
+  .rank .lvltag{font-size:.78rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+  .rank ol{margin:10px 0 0;padding-left:0;list-style:none;counter-reset:r;}
+  .rank li{
+    counter-increment:r;display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:10px;
+    background:var(--card2);margin-bottom:6px;font-size:.9rem;
+  }
+  .rank li::before{content:counter(r);font-weight:800;color:var(--accent-d);width:22px;text-align:center;}
+  .rank li .nm{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .rank li .sc{font-weight:800;color:var(--ink);}
+  .rank li:nth-child(1){background:#fff6e0;}
+  .rank .note{font-size:.82rem;color:var(--muted);margin-top:8px;}
+
+  footer{text-align:center;color:#fff;margin-top:22px;font-size:.9rem;line-height:1.6;}
+  footer .ide{font-weight:800;font-size:1.05rem;text-shadow:0 2px 10px rgba(0,0,0,.3);}
+  footer .meta{color:#ffe7cf;opacity:.9;font-size:.8rem;}
+
+  @media(min-width:640px){
+    .zones.z2{grid-template-columns:1fr 1fr;}
+    .zones.z3{grid-template-columns:1fr 1fr 1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🌡️ Arrasta-Estufa</h1>
+    <p class="sub">Missão Atmosfera — classifique os gases e processos do efeito estufa</p>
+  </header>
+
+  <div class="levels">
+    <button class="pill active" data-lvl="basico">Básico</button>
+    <button class="pill" data-lvl="intermediario">Intermediário</button>
+    <button class="pill" data-lvl="dificil">Difícil</button>
+  </div>
+
+  <div class="panel" id="gamePanel">
+    <p class="instr" id="instr"></p>
+    <div class="hud">
+      <div class="stat">Acertos<span id="hAcertos">0/0</span></div>
+      <div class="stat">Erros<span id="hErros">0</span></div>
+      <div class="stat">Tempo<span id="hTempo">0s</span></div>
+      <div class="stat">Pontos<span id="hPontos">0</span></div>
+    </div>
+
+    <div class="tray" id="tray"></div>
+    <div class="zones" id="zones"></div>
+    <div class="feedback" id="feedback">Arraste cada peça para a categoria correta. 👆</div>
+  </div>
+
+  <div class="panel final" id="final">
+    <div style="font-size:2.8rem">🎉</div>
+    <h2>Missão concluída!</h2>
+    <div class="big" id="finalScore">0 pontos</div>
+    <p id="finalDetail" style="color:var(--muted);margin:0"></p>
+    <div class="namebox">
+      <input type="text" id="playerName" maxlength="20" placeholder="Seu nome (até 20)">
+      <button class="btn alt" id="saveBtn">Salvar no ranking</button>
+    </div>
+    <p id="saveMsg" style="font-size:.85rem;color:var(--muted);min-height:18px;margin-top:8px"></p>
+    <button class="btn" id="againBtn" style="margin-top:6px">Jogar de novo 🔁</button>
+  </div>
+
+  <div class="panel rank">
+    <h3>🏆 Ranking Global</h3>
+    <div class="lvltag" id="rankLvl">Nível: Básico</div>
+    <ol id="rankList"></ol>
+    <p class="note" id="rankNote">Carregando ranking…</p>
+  </div>
+
+  <footer>
+    <div class="ide">— Idealizado por Ernandes Sobreira —</div>
+    <div class="meta">Tema: Efeito estufa e gases de efeito estufa · Gênero: Arrastar e soltar (classificar) · app ambiental do dia (2026-06-07)</div>
+  </footer>
+</div>
+
+<script type="module">
+/* ===== Firebase (apenas ranking) ===== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-06-07-arrasta-estufa";
+
+let db=null, fs=null, fbReady=false;
+(async()=>{
+  try{
+    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    fs = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app = appMod.initializeApp(firebaseConfig);
+    db = fs.getFirestore(app);
+    fbReady = true;
+    loadRanking();
+  }catch(e){
+    fbReady=false;
+    document.getElementById('rankNote').textContent="Ranking offline — o jogo funciona normalmente. 🌐";
+  }
+})();
+
+/* ===== Conteúdo dos níveis ===== */
+const LEVELS = {
+  basico:{
+    instr:'<b>Básico:</b> arraste cada gás para a caixa certa. Alguns gases <b>retêm calor</b> (efeito estufa); outros <b>não</b>.',
+    zones:[
+      {id:'gee', label:'É gás de efeito estufa', emoji:'🌡️'},
+      {id:'nao', label:'NÃO é gás de efeito estufa', emoji:'❄️'}
+    ],
+    items:[
+      {t:'Gás carbônico (CO₂)', e:'🏭', z:'gee', fb:'O CO₂ é o principal gás de efeito estufa de origem humana, vindo da queima de combustíveis fósseis.'},
+      {t:'Metano (CH₄)', e:'🐄', z:'gee', fb:'O metano vem do gado, lixões e arrozais, e aquece muito mais que o CO₂.'},
+      {t:'Vapor d\'água', e:'💧', z:'gee', fb:'O vapor d\'água é o gás de efeito estufa mais abundante da atmosfera.'},
+      {t:'Óxido nitroso (N₂O)', e:'🌱', z:'gee', fb:'Liberado por fertilizantes agrícolas, é um potente gás de efeito estufa.'},
+      {t:'Nitrogênio (N₂)', e:'💨', z:'nao', fb:'O nitrogênio é 78% do ar, mas não retém calor: não é gás de efeito estufa.'},
+      {t:'Oxigênio (O₂)', e:'🫁', z:'nao', fb:'O oxigênio que respiramos não contribui para o efeito estufa.'},
+      {t:'Argônio (Ar)', e:'🎈', z:'nao', fb:'O argônio é um gás nobre inerte e não causa efeito estufa.'},
+      {t:'CFC (clorofluorcarbono)', e:'🧴', z:'gee', fb:'Os CFCs, de sprays antigos, são gases de efeito estufa e ainda destroem a camada de ozônio.'}
+    ]
+  },
+  intermediario:{
+    instr:'<b>Intermediário:</b> cada fonte emite principalmente um gás. Classifique pela <b>emissão dominante</b>: CO₂, metano (CH₄) ou óxido nitroso (N₂O).',
+    zones:[
+      {id:'co2', label:'Emite principalmente CO₂', emoji:'🏭'},
+      {id:'ch4', label:'Emite principalmente CH₄', emoji:'🐄'},
+      {id:'n2o', label:'Emite principalmente N₂O', emoji:'🧪'}
+    ],
+    items:[
+      {t:'Queima de combustíveis fósseis', e:'🚗', z:'co2', fb:'A queima de petróleo, carvão e gás libera CO₂, a maior fonte de emissões.'},
+      {t:'Desmatamento e queimadas', e:'🔥', z:'co2', fb:'Ao queimar a vegetação, o carbono estocado volta à atmosfera como CO₂.'},
+      {t:'Produção de cimento', e:'🧱', z:'co2', fb:'A calcinação do calcário na fabricação de cimento libera grande quantidade de CO₂.'},
+      {t:'Fermentação entérica do gado', e:'🐄', z:'ch4', fb:'A digestão dos bovinos (arrotos) é uma das maiores fontes de metano.'},
+      {t:'Aterros e lixões', e:'🗑️', z:'ch4', fb:'A decomposição do lixo orgânico sem oxigênio gera metano.'},
+      {t:'Cultivo de arroz alagado', e:'🌾', z:'ch4', fb:'Os solos inundados das lavouras de arroz produzem metano por microrganismos.'},
+      {t:'Extração de petróleo e gás', e:'🛢️', z:'ch4', fb:'Vazamentos e ventilação na produção de gás natural liberam metano.'},
+      {t:'Fertilizantes nitrogenados', e:'🧪', z:'n2o', fb:'O excesso de nitrogênio no solo é convertido em óxido nitroso por bactérias.'},
+      {t:'Dejetos e esterco animal', e:'💩', z:'n2o', fb:'O manejo de dejetos pecuários emite N₂O durante a decomposição.'},
+      {t:'Solos agrícolas adubados', e:'🌱', z:'n2o', fb:'A adubação intensiva favorece a emissão de óxido nitroso pelos solos.'}
+    ]
+  },
+  dificil:{
+    instr:'<b>Difícil:</b> classifique cada processo pelo efeito no clima: <b>intensifica</b> o aquecimento, <b>mitiga</b> (reduz/sequestra) ou tem <b>efeito desprezível</b>.',
+    zones:[
+      {id:'mais', label:'Intensifica o aquecimento', emoji:'⬆️'},
+      {id:'menos', label:'Mitiga o aquecimento', emoji:'⬇️'},
+      {id:'neutro', label:'Efeito desprezível', emoji:'➖'}
+    ],
+    items:[
+      {t:'Aumento de CH₄ por fontes antrópicas', e:'🐄', z:'mais', fb:'Mais metano de origem humana eleva o forçamento radiativo e intensifica o aquecimento.'},
+      {t:'Emissão de SF₆ de equipamentos elétricos', e:'⚡', z:'mais', fb:'O hexafluoreto de enxofre é ~23.500× mais potente que o CO₂ e dura milhares de anos.'},
+      {t:'Degelo do permafrost liberando metano', e:'🧊', z:'mais', fb:'É uma retroalimentação positiva: o aquecimento libera metano que aquece ainda mais.'},
+      {t:'Perfluorcarbonos (PFCs) na produção de alumínio', e:'🏭', z:'mais', fb:'Os PFCs são gases fluorados de altíssimo GWP e longa permanência atmosférica.'},
+      {t:'Retroalimentação do vapor d\'água', e:'💧', z:'mais', fb:'Ar mais quente retém mais vapor d\'água, que amplifica o aquecimento inicial.'},
+      {t:'Emissão de N₂O por fertilizantes sintéticos', e:'🧪', z:'mais', fb:'O óxido nitroso tem GWP cerca de 270× o do CO₂ e destrói o ozônio estratosférico.'},
+      {t:'Reflorestamento e sequestro pela biomassa', e:'🌳', z:'menos', fb:'Árvores em crescimento removem CO₂ do ar e o estocam na madeira e no solo.'},
+      {t:'Captura e armazenamento geológico (CCS)', e:'🛢️', z:'menos', fb:'O CCS injeta CO₂ em formações geológicas profundas, removendo-o da atmosfera.'},
+      {t:'Substituir termelétricas por energia eólica', e:'🌬️', z:'menos', fb:'Gerar eletricidade sem combustão evita emissões de CO₂.'},
+      {t:'Plantio direto que retém carbono no solo', e:'🌾', z:'menos', fb:'O manejo conservacionista aumenta o carbono orgânico estocado no solo.'},
+      {t:'Concentração de argônio na atmosfera', e:'🎈', z:'neutro', fb:'O argônio é um gás nobre inerte e não interage com a radiação infravermelha.'},
+      {t:'Aumento de O₂ pela fotossíntese', e:'🫁', z:'neutro', fb:'O oxigênio molecular não absorve radiação infravermelha de forma relevante.'}
+    ]
+  }
+};
+
+const NIVEL_NOME = {basico:'Básico', intermediario:'Intermediário', dificil:'Difícil'};
+
+/* ===== Estado ===== */
+let nivel='basico', acertos=0, erros=0, total=0, timer=null, seg=0, finalizado=false;
+
+const tray=document.getElementById('tray');
+const zonesEl=document.getElementById('zones');
+const feedback=document.getElementById('feedback');
+const finalEl=document.getElementById('final');
+const gamePanel=document.getElementById('gamePanel');
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function updateHUD(){
+  document.getElementById('hAcertos').textContent=acertos+'/'+total;
+  document.getElementById('hErros').textContent=erros;
+  document.getElementById('hTempo').textContent=seg+'s';
+  document.getElementById('hPontos').textContent=pontos();
+}
+function pontos(){return Math.max(0, acertos*100 - erros*15 - Math.floor(seg*0.5));}
+
+function startTimer(){clearInterval(timer);seg=0;timer=setInterval(()=>{seg++;updateHUD();},1000);}
+
+function build(){
+  finalizado=false;
+  finalEl.classList.remove('show');
+  gamePanel.style.display='block';
+  const L=LEVELS[nivel];
+  document.getElementById('instr').innerHTML=L.instr;
+  acertos=0;erros=0;total=L.items.length;
+  feedback.className='feedback';
+  feedback.textContent='Arraste cada peça para a categoria correta. 👆';
+
+  // zonas
+  zonesEl.className='zones '+(L.zones.length===2?'z2':'z3');
+  zonesEl.innerHTML=L.zones.map(z=>`
+    <div class="zone" data-zone="${z.id}">
+      <div class="zone-head">${z.emoji} ${esc(z.label)}</div>
+      <div class="zone-items"></div>
+    </div>`).join('');
+
+  // peças
+  tray.innerHTML='';
+  shuffle([...L.items]).forEach((it,idx)=>{
+    const c=document.createElement('div');
+    c.className='chip';
+    c.dataset.zone=it.z;
+    c.dataset.fb=it.fb;
+    c.dataset.name=it.t;
+    c.innerHTML=`<span class="emo">${it.e}</span><span>${esc(it.t)}</span>`;
+    attachDrag(c);
+    tray.appendChild(c);
+  });
+  updateHUD();
+  startTimer();
+}
+
+/* ===== Drag por ponteiro (mouse + toque) ===== */
+let drag=null;
+function attachDrag(chip){
+  chip.addEventListener('pointerdown',e=>{
+    if(chip.classList.contains('placed')||finalizado)return;
+    e.preventDefault();
+    const r=chip.getBoundingClientRect();
+    drag={el:chip, dx:e.clientX-r.left, dy:e.clientY-r.top, w:r.width, h:r.height};
+    chip.classList.add('dragging');
+    chip.style.position='fixed';
+    chip.style.zIndex=9999;
+    chip.style.width=r.width+'px';
+    chip.style.pointerEvents='none';
+    moveAt(e.clientX,e.clientY);
+    window.addEventListener('pointermove',onMove);
+    window.addEventListener('pointerup',onUp);
+  });
+}
+function moveAt(x,y){
+  if(!drag)return;
+  drag.el.style.left=(x-drag.dx)+'px';
+  drag.el.style.top=(y-drag.dy)+'px';
+}
+function zoneUnder(x,y){
+  const els=document.elementsFromPoint(x,y);
+  for(const el of els){const z=el.closest&&el.closest('.zone');if(z)return z;}
+  return null;
+}
+function onMove(e){
+  if(!drag)return;
+  moveAt(e.clientX,e.clientY);
+  document.querySelectorAll('.zone.over').forEach(z=>z.classList.remove('over'));
+  const z=zoneUnder(e.clientX,e.clientY);
+  if(z)z.classList.add('over');
+}
+function onUp(e){
+  if(!drag)return;
+  window.removeEventListener('pointermove',onMove);
+  window.removeEventListener('pointerup',onUp);
+  const chip=drag.el;
+  const z=zoneUnder(e.clientX,e.clientY);
+  document.querySelectorAll('.zone.over').forEach(zz=>zz.classList.remove('over'));
+  // reset estilo flutuante
+  chip.classList.remove('dragging');
+  chip.style.position='';chip.style.left='';chip.style.top='';
+  chip.style.zIndex='';chip.style.width='';chip.style.pointerEvents='';
+  if(z){
+    if(z.dataset.zone===chip.dataset.zone){
+      // acerto
+      z.querySelector('.zone-items').appendChild(chip);
+      chip.classList.add('placed','pop');
+      setTimeout(()=>chip.classList.remove('pop'),400);
+      acertos++;
+      z.classList.add('flash-ok');setTimeout(()=>z.classList.remove('flash-ok'),450);
+      showFB('ok','✅ <b>Certo!</b> '+chip.dataset.fb);
+    }else{
+      // erro
+      erros++;
+      chip.classList.add('shake');setTimeout(()=>chip.classList.remove('shake'),400);
+      z.classList.add('flash-bad');setTimeout(()=>z.classList.remove('flash-bad'),450);
+      showFB('bad','❌ <b>Quase!</b> "'+esc(chip.dataset.name)+'" não vai aí. '+chip.dataset.fb);
+    }
+    updateHUD();
+    checkEnd();
+  }
+  drag=null;
+}
+function showFB(kind,html){feedback.className='feedback '+kind;feedback.innerHTML=html;}
+
+function checkEnd(){
+  if(acertos>=total){
+    clearInterval(timer);
+    finalizado=true;
+    setTimeout(showFinal,500);
+  }
+}
+
+function showFinal(){
+  gamePanel.style.display='none';
+  finalEl.classList.add('show');
+  const p=pontos();
+  document.getElementById('finalScore').textContent=p+' pontos';
+  document.getElementById('finalDetail').textContent=
+    `Nível ${NIVEL_NOME[nivel]} · ${acertos} acertos · ${erros} erros · ${seg}s`;
+  document.getElementById('saveMsg').textContent='';
+  document.getElementById('saveBtn').disabled=false;
+  document.getElementById('playerName').value='';
+}
+
+/* ===== Ranking ===== */
+async function loadRanking(){
+  document.getElementById('rankLvl').textContent='Nível: '+NIVEL_NOME[nivel];
+  const list=document.getElementById('rankList');
+  const note=document.getElementById('rankNote');
+  if(!fbReady){note.textContent='Ranking offline — o jogo funciona normalmente. 🌐';return;}
+  note.textContent='Carregando ranking…';
+  try{
+    const col=fs.collection(db,'games',GAME_ID,'scores');
+    const snap=await fs.getDocs(fs.query(col,fs.limit(300)));
+    let rows=[];
+    snap.forEach(d=>{const v=d.data();if(v.nivel===nivel)rows.push(v);});
+    rows.sort((a,b)=>(b.score||0)-(a.score||0));
+    rows=rows.slice(0,10);
+    if(rows.length===0){list.innerHTML='';note.textContent='Seja o primeiro a entrar no ranking deste nível! 🌟';return;}
+    list.innerHTML=rows.map(r=>`<li><span class="nm">${esc(r.name||'Anônimo')}</span><span class="sc">${r.score||0} pts</span></li>`).join('');
+    note.textContent='Top 10 — nível '+NIVEL_NOME[nivel]+'.';
+  }catch(e){
+    note.textContent='Não foi possível carregar o ranking agora. 🌐';
+  }
+}
+
+document.getElementById('saveBtn').addEventListener('click',async()=>{
+  const name=document.getElementById('playerName').value.trim().slice(0,20)||'Anônimo';
+  const msg=document.getElementById('saveMsg');
+  if(!fbReady){msg.textContent='Ranking offline — não foi possível salvar, mas seu resultado vale! 🌐';return;}
+  document.getElementById('saveBtn').disabled=true;
+  msg.textContent='Salvando…';
+  try{
+    await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{
+      name, score:pontos(), acertos, erros, tempo:seg, nivel, ts:Date.now()
+    });
+    msg.textContent='✅ Salvo no ranking!';
+    loadRanking();
+  }catch(e){
+    msg.textContent='Não foi possível salvar agora. Tente novamente. 🌐';
+    document.getElementById('saveBtn').disabled=false;
+  }
+});
+
+document.getElementById('againBtn').addEventListener('click',build);
+
+document.querySelectorAll('.pill').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    nivel=b.dataset.lvl;
+    build();
+    loadRanking();
+  });
+});
+
+/* início */
+build();
+</script>
+</body>
+</html>
