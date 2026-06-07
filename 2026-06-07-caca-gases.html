@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caça-Gases — Missão Efeito Estufa</title>
+<style>
+  :root{
+    --bg1:#0b3d2e; --bg2:#0e5c43; --accent:#7be0a0; --accent2:#ffd166;
+    --card:#ffffff; --ink:#14241c; --muted:#5c6b63; --ok:#1f9d57; --err:#e0533d;
+    --shadow:0 6px 18px rgba(0,0,0,.18);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    margin:0;font-family:'Segoe UI',system-ui,Arial,sans-serif;color:var(--ink);
+    background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;
+  }
+  header{text-align:center;padding:18px 14px 6px}
+  h1{margin:0;font-size:clamp(1.5rem,5vw,2.4rem);color:#fff;letter-spacing:.5px}
+  .sub{color:var(--accent);font-size:.95rem;margin-top:4px}
+  .wrap{max-width:1000px;margin:0 auto;padding:10px 14px 30px}
+  .panel{background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:16px;margin:12px 0}
+  .levels{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:8px 0}
+  .levels button{
+    border:none;padding:10px 18px;border-radius:30px;font-weight:700;cursor:pointer;
+    background:#ffffff22;color:#fff;border:2px solid #ffffff55;transition:.15s
+  }
+  .levels button.active{background:var(--accent2);color:#1a1a1a;border-color:var(--accent2)}
+  .levels button:hover{transform:translateY(-1px)}
+  .stats{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;color:#fff;font-weight:600;margin:6px 0}
+  .stats span{background:#ffffff22;padding:6px 12px;border-radius:20px;font-size:.9rem}
+  .instr{color:var(--muted);text-align:center;margin:4px 0 12px;font-size:.95rem}
+  .pool{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;min-height:70px;
+    padding:12px;border:2px dashed #cfe0d6;border-radius:12px;background:#f5faf7}
+  .chip{
+    padding:10px 14px;border-radius:10px;background:#eafaf0;border:2px solid #bfe8cf;
+    cursor:grab;font-weight:600;user-select:none;touch-action:none;font-size:.95rem;
+    box-shadow:0 2px 5px rgba(0,0,0,.08);transition:transform .1s
+  }
+  .chip:active{cursor:grabbing}
+  .chip.dragging{opacity:.5}
+  .bins{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+  .bin{
+    flex:1 1 220px;min-width:200px;min-height:130px;border-radius:14px;padding:10px;
+    background:#f0f6f2;border:3px solid #d4e6db;transition:.15s
+  }
+  .bin h3{margin:2px 0 8px;text-align:center;font-size:1rem;color:var(--bg1)}
+  .bin.over{border-color:var(--accent2);background:#fffaf0}
+  .bin .drop{display:flex;flex-wrap:wrap;gap:8px;min-height:60px}
+  .bin .chip{cursor:default}
+  .feedback{margin-top:12px;padding:12px;border-radius:12px;font-size:.95rem;min-height:20px;display:none}
+  .feedback.show{display:block}
+  .feedback.ok{background:#e7f7ee;border-left:5px solid var(--ok);color:#0b5e34}
+  .feedback.err{background:#fcebe7;border-left:5px solid var(--err);color:#8a2c1c}
+  .bigbtn{
+    display:block;width:100%;margin-top:10px;padding:14px;border:none;border-radius:12px;
+    background:var(--bg2);color:#fff;font-size:1.05rem;font-weight:700;cursor:pointer
+  }
+  .bigbtn:hover{background:var(--bg1)}
+  .final{text-align:center}
+  .final h2{color:var(--bg1)}
+  .nameRow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+  .nameRow input{padding:10px;border-radius:10px;border:2px solid #cfe0d6;font-size:1rem}
+  .nameRow button{padding:10px 16px;border:none;border-radius:10px;background:var(--ok);color:#fff;font-weight:700;cursor:pointer}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th,td{padding:8px;text-align:left;border-bottom:1px solid #eee;font-size:.92rem}
+  th{color:var(--muted);font-weight:700}
+  .rank-note{font-size:.85rem;color:var(--muted);text-align:center;margin-top:6px}
+  footer{
+    text-align:center;color:#fff;padding:22px 14px 30px;line-height:1.6
+  }
+  footer .idea{font-size:1.15rem;font-weight:800;color:var(--accent2)}
+  footer .meta{font-size:.85rem;color:#d9efe2;margin-top:6px}
+  .hidden{display:none}
+  .medal{font-weight:800}
+</style>
+</head>
+<body>
+<header>
+  <h1>🌍 Caça-Gases</h1>
+  <div class="sub">Missão Efeito Estufa — arraste e classifique!</div>
+</header>
+
+<div class="wrap">
+  <div class="panel">
+    <div class="levels">
+      <button data-lvl="basico" class="active">Básico</button>
+      <button data-lvl="inter">Intermediário</button>
+      <button data-lvl="dificil">Difícil</button>
+    </div>
+    <div class="stats">
+      <span>⏱️ Tempo: <b id="time">0s</b></span>
+      <span>✅ Acertos: <b id="hits">0</b></span>
+      <span>❌ Erros: <b id="errs">0</b></span>
+      <span>📦 Restam: <b id="left">0</b></span>
+    </div>
+  </div>
+
+  <div class="panel" id="gameArea">
+    <p class="instr" id="instr">Arraste cada item para a caixa correta.</p>
+    <div class="pool" id="pool"></div>
+    <div class="bins" id="bins"></div>
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <div class="panel final hidden" id="finalPanel">
+    <h2>🎉 Missão concluída!</h2>
+    <p id="finalMsg"></p>
+    <div class="nameRow">
+      <input id="playerName" maxlength="20" placeholder="Seu nome (até 20)">
+      <button id="saveBtn">Salvar no ranking</button>
+    </div>
+    <button class="bigbtn" id="againBtn">Jogar de novo</button>
+  </div>
+
+  <div class="panel">
+    <h2 style="text-align:center;color:var(--bg1);margin:4px 0">🏆 Ranking Global — <span id="rankLvl">Básico</span></h2>
+    <table>
+      <thead><tr><th>#</th><th>Nome</th><th>Pontos</th><th>Tempo</th><th>Erros</th></tr></thead>
+      <tbody id="rankBody"><tr><td colspan="5" class="rank-note">Carregando…</td></tr></tbody>
+    </table>
+    <div class="rank-note" id="rankNote">Menor pontuação = melhor (tempo + 10 por erro).</div>
+  </div>
+</div>
+
+<footer>
+  <div class="idea">— Idealizado por Ernandes Sobreira —</div>
+  <div class="meta">Tema: Efeito estufa e gases de efeito estufa · Gênero: Arrastar e soltar (classificar em categorias) · app ambiental do dia (2026-06-07)</div>
+</footer>
+
+<script>
+/* ===================== FIREBASE ===================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-06-07-caca-gases";
+
+let db=null, fs=null, firebaseOK=false;
+(async()=>{
+  try{
+    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    fs = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app = appMod.initializeApp(firebaseConfig);
+    db = fs.getFirestore(app);
+    firebaseOK = true;
+    loadRanking();
+  }catch(e){
+    firebaseOK=false;
+    document.getElementById('rankBody').innerHTML =
+      '<tr><td colspan="5" class="rank-note">⚠️ Ranking offline. O jogo continua 100% jogável!</td></tr>';
+  }
+})();
+
+function escapeHTML(s){
+  return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ===================== CONTEÚDO ===================== */
+/* Cada nível: categorias (bins) + itens {t:texto, cat:idCategoria, fb:explicação} */
+const DATA = {
+  basico:{
+    instr:"Cada substância é um gás de efeito estufa ou não? Arraste para a caixa certa.",
+    bins:[{id:"gee",name:"É gás de efeito estufa"},{id:"nao",name:"NÃO é gás de efeito estufa"}],
+    items:[
+      {t:"Gás carbônico (CO₂)",cat:"gee",fb:"O CO₂ é o principal gás de efeito estufa ligado às ações humanas, como queimar combustíveis."},
+      {t:"Metano (CH₄)",cat:"gee",fb:"O metano segura muito calor e vem do gado, do lixo e do petróleo/gás."},
+      {t:"Vapor d'água",cat:"gee",fb:"O vapor d'água é o gás de efeito estufa mais abundante da atmosfera."},
+      {t:"Óxido nitroso (N₂O)",cat:"gee",fb:"O N₂O vem muito de adubos agrícolas e é um forte gás de efeito estufa."},
+      {t:"Oxigênio (O₂)",cat:"nao",fb:"O oxigênio que respiramos não segura calor: não é gás de efeito estufa."},
+      {t:"Nitrogênio (N₂)",cat:"nao",fb:"O nitrogênio é o gás mais comum do ar e não causa efeito estufa."},
+      {t:"Argônio",cat:"nao",fb:"O argônio é um gás nobre inerte; não retém calor."},
+      {t:"Hélio",cat:"nao",fb:"O hélio (de balões) não é gás de efeito estufa."}
+    ]
+  },
+  inter:{
+    instr:"Estas ações AUMENTAM ou REDUZEM o efeito estufa? Classifique cada uma.",
+    bins:[{id:"aum",name:"Aumenta o efeito estufa"},{id:"red",name:"Reduz / combate"}],
+    items:[
+      {t:"Queimar carvão e petróleo",cat:"aum",fb:"A queima de combustíveis fósseis libera CO₂, o principal causador do aquecimento."},
+      {t:"Desmatar florestas",cat:"aum",fb:"Sem árvores, menos CO₂ é absorvido — e a queima/decomposição ainda libera carbono."},
+      {t:"Pecuária em larga escala",cat:"aum",fb:"A fermentação no estômago do gado produz metano, gás de efeito estufa potente."},
+      {t:"Aterros sem captação de gás",cat:"aum",fb:"O lixo orgânico em decomposição gera metano, que escapa para a atmosfera."},
+      {t:"Usar energia solar e eólica",cat:"red",fb:"Fontes renováveis geram eletricidade quase sem emitir gases de efeito estufa."},
+      {t:"Reflorestar áreas degradadas",cat:"red",fb:"Árvores em crescimento retiram CO₂ do ar e estocam carbono na madeira e no solo."},
+      {t:"Andar de bicicleta ou transporte público",cat:"red",fb:"Reduz a queima de combustível por pessoa e corta emissões de CO₂."},
+      {t:"Capturar e armazenar carbono",cat:"red",fb:"Tecnologias de captura retiram CO₂ das chaminés ou do ar e o armazenam."}
+    ]
+  },
+  dificil:{
+    instr:"Classifique cientificamente: gás de efeito estufa direto OU não. Cuidado com os disfarçados!",
+    bins:[{id:"gee",name:"Gás de efeito estufa (direto)"},{id:"nao",name:"NÃO é GEE direto"}],
+    items:[
+      {t:"Dióxido de carbono (CO₂)",cat:"gee",fb:"GEE de longa permanência; referência do GWP (potencial de aquecimento = 1)."},
+      {t:"Metano (CH₄)",cat:"gee",fb:"GWP cerca de 28–34× o do CO₂ em 100 anos; vida atmosférica curta (~12 anos)."},
+      {t:"Óxido nitroso (N₂O)",cat:"gee",fb:"GWP ~265–298× o CO₂; origem agrícola e industrial, vida ~114 anos."},
+      {t:"Hexafluoreto de enxofre (SF₆)",cat:"gee",fb:"Um dos GEE mais potentes: GWP > 23.000 e milhares de anos na atmosfera."},
+      {t:"Hidrofluorcarbonetos (HFCs)",cat:"gee",fb:"Gases fluorados usados em refrigeração; alvo da Emenda de Kigali."},
+      {t:"Perfluorcarbonetos (PFCs)",cat:"gee",fb:"GEE fluorados de altíssimo GWP e permanência muito longa."},
+      {t:"Ozônio troposférico (O₃)",cat:"gee",fb:"Na baixa atmosfera, o O₃ é GEE e poluente; difere do ozônio estratosférico protetor."},
+      {t:"Vapor d'água (H₂O)",cat:"gee",fb:"GEE mais abundante; atua como retroalimentação amplificadora do aquecimento."},
+      {t:"Nitrogênio (N₂)",cat:"nao",fb:"Molécula diatômica simétrica: não absorve infravermelho de forma significativa."},
+      {t:"Oxigênio (O₂)",cat:"nao",fb:"Diatômico homonuclear; não é gás de efeito estufa."},
+      {t:"Argônio (Ar)",cat:"nao",fb:"Gás nobre monoatômico, radiativamente inativo."},
+      {t:"Hidrogênio (H₂)",cat:"nao",fb:"Não é GEE direto; pode ter efeito indireto sobre metano e ozônio."},
+      {t:"Hélio (He)",cat:"nao",fb:"Gás nobre inerte, sem absorção de infravermelho."},
+      {t:"Monóxido de carbono (CO)",cat:"nao",fb:"Não é GEE direto, mas é indireto: afeta a química do CH₄ e do O₃."},
+      {t:"Dióxido de enxofre (SO₂)",cat:"nao",fb:"Forma aerossóis que, ao contrário dos GEE, têm efeito de resfriamento."},
+      {t:"Neônio (Ne)",cat:"nao",fb:"Gás nobre monoatômico; não retém calor."}
+    ]
+  }
+};
+
+const LEVEL_NAMES = {basico:"Básico",inter:"Intermediário",dificil:"Difícil"};
+
+/* ===================== ESTADO ===================== */
+let level="basico", hits=0, errs=0, remaining=0, total=0;
+let startTime=0, timerId=null, finished=false, savedThisRound=false;
+
+const $=id=>document.getElementById(id);
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function startTimer(){
+  startTime=Date.now();
+  clearInterval(timerId);
+  timerId=setInterval(()=>{ $("time").textContent=elapsed()+"s"; },1000);
+}
+function elapsed(){return Math.floor((Date.now()-startTime)/1000);}
+function scoreValue(){return elapsed()+errs*10;}
+
+function buildLevel(lvl){
+  level=lvl; hits=0; errs=0; finished=false; savedThisRound=true; savedThisRound=false;
+  const cfg=DATA[lvl];
+  total=cfg.items.length; remaining=total;
+  $("instr").textContent=cfg.instr;
+  $("hits").textContent=0; $("errs").textContent=0; $("left").textContent=total; $("time").textContent="0s";
+  $("finalPanel").classList.add("hidden");
+  $("gameArea").classList.remove("hidden");
+  $("feedback").className="feedback";
+
+  // bins
+  const binsEl=$("bins"); binsEl.innerHTML="";
+  cfg.bins.forEach(b=>{
+    const d=document.createElement("div");
+    d.className="bin"; d.dataset.bin=b.id;
+    d.innerHTML=`<h3>${escapeHTML(b.name)}</h3><div class="drop"></div>`;
+    addDropHandlers(d);
+    binsEl.appendChild(d);
+  });
+
+  // pool
+  const pool=$("pool"); pool.innerHTML="";
+  const items=shuffle(cfg.items.slice());
+  items.forEach((it,i)=>{
+    const c=document.createElement("div");
+    c.className="chip"; c.textContent=it.t; c.draggable=true;
+    c.dataset.cat=it.cat; c.dataset.fb=it.fb; c.dataset.id="chip"+i;
+    addDragHandlers(c);
+    pool.appendChild(c);
+  });
+  startTimer();
+  $("rankLvl").textContent=LEVEL_NAMES[lvl];
+  loadRanking();
+}
+
+/* ===== Drag desktop ===== */
+let dragged=null;
+function addDragHandlers(chip){
+  chip.addEventListener("dragstart",e=>{dragged=chip;chip.classList.add("dragging");});
+  chip.addEventListener("dragend",e=>{chip.classList.remove("dragging");});
+  // touch
+  chip.addEventListener("touchstart",touchStart,{passive:false});
+}
+function addDropHandlers(bin){
+  bin.addEventListener("dragover",e=>{e.preventDefault();bin.classList.add("over");});
+  bin.addEventListener("dragleave",e=>{bin.classList.remove("over");});
+  bin.addEventListener("drop",e=>{
+    e.preventDefault();bin.classList.remove("over");
+    if(dragged) handleDrop(dragged,bin);
+  });
+}
+
+/* ===== Touch (celular) ===== */
+let touchChip=null, ghost=null;
+function touchStart(e){
+  if(finished)return;
+  e.preventDefault();
+  touchChip=e.currentTarget;
+  const t=e.touches[0];
+  ghost=touchChip.cloneNode(true);
+  ghost.style.position="fixed";ghost.style.zIndex=9999;ghost.style.opacity=".85";
+  ghost.style.pointerEvents="none";ghost.style.left=(t.clientX-30)+"px";ghost.style.top=(t.clientY-20)+"px";
+  document.body.appendChild(ghost);
+  touchChip.classList.add("dragging");
+  document.addEventListener("touchmove",touchMove,{passive:false});
+  document.addEventListener("touchend",touchEnd,{passive:false});
+}
+function touchMove(e){
+  e.preventDefault();
+  const t=e.touches[0];
+  if(ghost){ghost.style.left=(t.clientX-30)+"px";ghost.style.top=(t.clientY-20)+"px";}
+  document.querySelectorAll(".bin").forEach(b=>b.classList.remove("over"));
+  const el=document.elementFromPoint(t.clientX,t.clientY);
+  const bin=el&&el.closest(".bin");
+  if(bin)bin.classList.add("over");
+}
+function touchEnd(e){
+  const t=e.changedTouches[0];
+  const el=document.elementFromPoint(t.clientX,t.clientY);
+  const bin=el&&el.closest(".bin");
+  document.querySelectorAll(".bin").forEach(b=>b.classList.remove("over"));
+  if(ghost){ghost.remove();ghost=null;}
+  if(touchChip){touchChip.classList.remove("dragging");
+    if(bin)handleDrop(touchChip,bin);
+    touchChip=null;}
+  document.removeEventListener("touchmove",touchMove);
+  document.removeEventListener("touchend",touchEnd);
+}
+
+/* ===== Lógica de soltar ===== */
+function handleDrop(chip,bin){
+  if(finished)return;
+  const correct = chip.dataset.cat===bin.dataset.bin;
+  const fbEl=$("feedback");
+  if(correct){
+    hits++; $("hits").textContent=hits;
+    chip.draggable=false; chip.style.background="#d6f5e2"; chip.style.borderColor="#9bdcb5";
+    bin.querySelector(".drop").appendChild(chip);
+    chip.classList.remove("dragging");
+    remaining--; $("left").textContent=remaining;
+    fbEl.className="feedback show ok";
+    fbEl.innerHTML="✅ <b>Certo!</b> "+escapeHTML(chip.dataset.fb);
+    if(remaining===0) endGame();
+  }else{
+    errs++; $("errs").textContent=errs;
+    fbEl.className="feedback show err";
+    fbEl.innerHTML="❌ <b>Não é aí.</b> "+escapeHTML(chip.dataset.fb)+" Tente outra caixa.";
+    // volta visualmente: balança
+    chip.animate([{transform:"translateX(0)"},{transform:"translateX(-6px)"},{transform:"translateX(6px)"},{transform:"translateX(0)"}],{duration:250});
+  }
+}
+
+function endGame(){
+  finished=true; clearInterval(timerId);
+  const score=scoreValue();
+  $("gameArea").classList.add("hidden");
+  $("finalPanel").classList.remove("hidden");
+  $("finalMsg").innerHTML=`Nível <b>${LEVEL_NAMES[level]}</b> · Tempo: <b>${elapsed()}s</b> · Erros: <b>${errs}</b><br>Pontuação (menor é melhor): <b>${score}</b>`;
+  $("playerName").value=""; $("saveBtn").disabled=false; $("saveBtn").textContent="Salvar no ranking";
+  savedThisRound=false;
+}
+
+/* ===================== RANKING ===================== */
+async function loadRanking(){
+  const body=$("rankBody");
+  if(!firebaseOK){
+    body.innerHTML='<tr><td colspan="5" class="rank-note">⚠️ Ranking offline. O jogo continua jogável!</td></tr>';
+    return;
+  }
+  body.innerHTML='<tr><td colspan="5" class="rank-note">Carregando…</td></tr>';
+  try{
+    const {collection,query,where,orderBy,limit,getDocs}=fs;
+    const q=query(collection(db,"games",GAME_ID,"scores"),
+      where("level","==",level), orderBy("score","asc"), limit(10));
+    const snap=await getDocs(q);
+    const rows=[];
+    snap.forEach(d=>rows.push(d.data()));
+    if(!rows.length){body.innerHTML='<tr><td colspan="5" class="rank-note">Ainda sem pontuações neste nível. Seja o primeiro!</td></tr>';return;}
+    const medals=["🥇","🥈","🥉"];
+    body.innerHTML=rows.map((r,i)=>
+      `<tr><td class="medal">${medals[i]||(i+1)}</td><td>${escapeHTML(r.name||"—")}</td><td>${r.score}</td><td>${r.time}s</td><td>${r.errors}</td></tr>`
+    ).join("");
+  }catch(e){
+    // pode faltar índice composto; tenta fallback sem orderBy
+    try{
+      const {collection,query,where,getDocs}=fs;
+      const q=query(collection(db,"games",GAME_ID,"scores"),where("level","==",level));
+      const snap=await getDocs(q);
+      const rows=[];snap.forEach(d=>rows.push(d.data()));
+      rows.sort((a,b)=>a.score-b.score);
+      const top=rows.slice(0,10);
+      const medals=["🥇","🥈","🥉"];
+      body.innerHTML=top.length?top.map((r,i)=>
+        `<tr><td class="medal">${medals[i]||(i+1)}</td><td>${escapeHTML(r.name||"—")}</td><td>${r.score}</td><td>${r.time}s</td><td>${r.errors}</td></tr>`
+      ).join(""):'<tr><td colspan="5" class="rank-note">Ainda sem pontuações. Seja o primeiro!</td></tr>';
+    }catch(e2){
+      body.innerHTML='<tr><td colspan="5" class="rank-note">⚠️ Não foi possível carregar o ranking agora.</td></tr>';
+    }
+  }
+}
+
+async function saveScore(){
+  if(savedThisRound)return;
+  const name=($("playerName").value||"").trim().slice(0,20)||"Anônimo";
+  if(!firebaseOK){
+    $("saveBtn").textContent="Sem conexão 😕";
+    return;
+  }
+  $("saveBtn").disabled=true; $("saveBtn").textContent="Salvando…";
+  try{
+    const {collection,addDoc,serverTimestamp}=fs;
+    await addDoc(collection(db,"games",GAME_ID,"scores"),{
+      name:name, level:level, score:scoreValue(), time:elapsed(), errors:errs, hits:hits,
+      created:serverTimestamp()
+    });
+    savedThisRound=true;
+    $("saveBtn").textContent="Salvo! ✅";
+    loadRanking();
+  }catch(e){
+    $("saveBtn").disabled=false; $("saveBtn").textContent="Tentar de novo";
+  }
+}
+
+/* ===================== EVENTOS ===================== */
+document.querySelectorAll(".levels button").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll(".levels button").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    buildLevel(b.dataset.lvl);
+  });
+});
+$("saveBtn").addEventListener("click",saveScore);
+$("againBtn").addEventListener("click",()=>buildLevel(level));
+
+/* início */
+buildLevel("basico");
+</script>
+</body>
+</html>
