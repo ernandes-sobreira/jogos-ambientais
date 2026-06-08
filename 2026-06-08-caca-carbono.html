@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caça-Carbono 🌿 — Ciclo do Carbono</title>
+<style>
+  :root{
+    --bg1:#2c3e34;
+    --bg2:#0f1714;
+    --panel:rgba(255,255,255,0.06);
+    --panel2:rgba(255,255,255,0.10);
+    --accent:#34d399;
+    --accent-d:#10b981;
+    --success:#4ade80;
+    --error:#f87171;
+    --text:#eaf5ee;
+    --muted:#a7c4b5;
+    --line:rgba(255,255,255,0.14);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--text);
+    background:linear-gradient(160deg,var(--bg1),var(--bg2));
+    min-height:100vh;
+    padding:18px 12px 40px;
+    line-height:1.5;
+  }
+  .wrap{width:min(1000px,95vw);margin:0 auto}
+  header{text-align:center;margin-bottom:14px}
+  h1{
+    font-size:clamp(1.8rem,5vw,3rem);
+    margin:.2em 0 .1em;
+    letter-spacing:.5px;
+    text-shadow:0 2px 12px rgba(0,0,0,.35);
+  }
+  .subtitle{color:var(--muted);font-size:clamp(.9rem,2.4vw,1.05rem);margin:0}
+  .levels{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:16px 0}
+  .pill{
+    border:1px solid var(--line);
+    background:var(--panel);
+    color:var(--text);
+    padding:10px 20px;
+    border-radius:999px;
+    font-size:1rem;
+    font-weight:600;
+    cursor:pointer;
+    transition:all .25s ease;
+  }
+  .pill:hover{transform:translateY(-2px);background:var(--panel2)}
+  .pill.active{background:var(--accent);color:#06281c;border-color:var(--accent);box-shadow:0 6px 18px rgba(52,211,153,.35)}
+  .howto{
+    text-align:center;color:var(--muted);font-size:.95rem;margin:6px auto 14px;
+    max-width:640px;
+  }
+  .hud{
+    display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;
+  }
+  .stat{
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:8px 16px;font-weight:600;font-size:.98rem;min-width:96px;text-align:center;
+  }
+  .stat span{color:var(--accent)}
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start}
+  @media (max-width:820px){.layout{grid-template-columns:1fr}}
+  .card{
+    background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    padding:16px;box-shadow:0 8px 26px rgba(0,0,0,.28);
+  }
+  /* grid */
+  #gridWrap{display:flex;justify-content:center}
+  #grid{
+    display:grid;gap:3px;touch-action:none;user-select:none;-webkit-user-select:none;
+    width:min(560px,90vw);
+  }
+  .cell{
+    aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;
+    background:var(--panel2);border-radius:8px;
+    font-weight:700;cursor:pointer;
+    font-size:clamp(.7rem,2.6vw,1.15rem);
+    transition:background .15s ease,transform .15s ease,color .15s ease;
+    color:var(--text);
+  }
+  .cell.sel{background:var(--accent);color:#06281c;transform:scale(1.04)}
+  .cell.found{background:var(--accent-d);color:#03241a;}
+  .cell.flash-bad{animation:shake .35s}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+  @keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.22)}100%{transform:scale(1)}}
+  .pop{animation:pop .35s}
+  /* words list */
+  .words h3{margin:.1em 0 .6em;font-size:1.05rem}
+  .wlist{display:flex;flex-direction:column;gap:8px}
+  .witem{
+    background:var(--panel2);border:1px solid var(--line);border-radius:12px;
+    padding:8px 12px;transition:all .25s ease;
+  }
+  .witem .wname{font-weight:700;letter-spacing:1px}
+  .witem .whint{font-size:.82rem;color:var(--muted);margin-top:2px}
+  .witem.done{opacity:.55}
+  .witem.done .wname{text-decoration:line-through;color:var(--success)}
+  .witem.done .whint{display:none}
+  .feedback{
+    margin-top:14px;background:var(--panel2);border-left:4px solid var(--accent);
+    border-radius:10px;padding:12px 14px;font-size:.92rem;min-height:60px;
+  }
+  /* ranking */
+  .rank h3{margin:.1em 0 .5em;font-size:1.05rem;display:flex;align-items:center;gap:8px}
+  .rank .lvltag{font-size:.72rem;background:var(--accent);color:#06281c;padding:2px 8px;border-radius:999px;font-weight:700}
+  .rank ol{margin:0;padding-left:1.3em;font-size:.9rem}
+  .rank li{margin:4px 0}
+  .rank .rmsg{font-size:.85rem;color:var(--muted)}
+  /* overlay */
+  .overlay{
+    position:fixed;inset:0;background:rgba(7,15,11,.78);backdrop-filter:blur(4px);
+    display:none;align-items:center;justify-content:center;padding:18px;z-index:30;
+  }
+  .overlay.show{display:flex}
+  .modal{
+    background:linear-gradient(160deg,#15241c,#0d1813);border:1px solid var(--line);
+    border-radius:20px;padding:26px;width:min(440px,94vw);text-align:center;
+    box-shadow:0 18px 50px rgba(0,0,0,.5);
+  }
+  .modal h2{margin:.1em 0 .2em;font-size:1.7rem}
+  .modal .score{font-size:1.15rem;color:var(--success);font-weight:700;margin:6px 0 14px}
+  .modal input{
+    width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--line);
+    background:var(--panel2);color:var(--text);font-size:1rem;margin-bottom:10px;
+  }
+  .btn{
+    background:var(--accent);color:#06281c;border:none;border-radius:12px;
+    padding:11px 18px;font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s;
+    width:100%;
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(52,211,153,.35)}
+  .btn.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line);margin-top:8px}
+  footer{
+    text-align:center;margin-top:30px;color:var(--muted);font-size:.9rem;
+  }
+  footer .idea{color:var(--accent);font-weight:700;font-size:1rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🌿 Caça-Carbono 🪨</h1>
+    <p class="subtitle">Encontre as palavras escondidas e descubra como o carbono circula pela Terra</p>
+  </header>
+
+  <div class="levels" id="levels">
+    <button class="pill active" data-level="basico">Básico</button>
+    <button class="pill" data-level="intermediario">Intermediário</button>
+    <button class="pill" data-level="dificil">Difícil</button>
+  </div>
+
+  <p class="howto">Como jogar: clique (ou toque) na primeira letra e arraste até a última para selecionar uma palavra da lista — na horizontal, vertical ou diagonal. Acertou, a palavra fica verde!</p>
+
+  <div class="hud">
+    <div class="stat">Tempo: <span id="hudTime">0s</span></div>
+    <div class="stat">Encontradas: <span id="hudFound">0/0</span></div>
+    <div class="stat">Erros: <span id="hudErrors">0</span></div>
+    <div class="stat">Pontos: <span id="hudScore">—</span></div>
+  </div>
+
+  <div class="layout">
+    <div class="card" id="gridCard">
+      <div id="gridWrap"><div id="grid"></div></div>
+      <div class="feedback" id="feedback">Selecione uma palavra para começar. Cada descoberta traz uma explicação sobre o ciclo do carbono. 🌍</div>
+    </div>
+
+    <div>
+      <div class="card words">
+        <h3>🔎 Palavras (<span id="wcount">0</span>)</h3>
+        <div class="wlist" id="wlist"></div>
+      </div>
+      <div class="card rank" style="margin-top:16px">
+        <h3>🏆 Ranking Global <span class="lvltag" id="rankLvl">Básico</span></h3>
+        <div id="rankBox"><p class="rmsg">Carregando ranking…</p></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p class="idea">— Idealizado por Ernandes Sobreira —</p>
+    <p>Tema: Ciclo do carbono · Gênero: Caça-palavras · app ambiental do dia (2026-06-08)</p>
+  </footer>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2>🎉 Parabéns!</h2>
+    <p>Você encontrou todas as palavras do nível <strong id="endLevel">Básico</strong>.</p>
+    <p class="score" id="endScore"></p>
+    <input id="playerName" maxlength="20" placeholder="Seu nome (até 20 caracteres)">
+    <button class="btn" id="saveBtn">Salvar no ranking</button>
+    <button class="btn secondary" id="againBtn">Jogar de novo</button>
+    <p class="rmsg" id="saveMsg" style="margin-top:10px;color:var(--muted);font-size:.85rem"></p>
+  </div>
+</div>
+
+<script type="module">
+/* ===== Firebase (apenas ranking) ===== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-06-08-caca-carbono";
+
+let db=null, fb=null;
+async function initFirebase(){
+  try{
+    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const fsMod  = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app = appMod.initializeApp(firebaseConfig);
+    db = fsMod.getFirestore(app);
+    fb = fsMod;
+    return true;
+  }catch(e){ db=null; return false; }
+}
+
+/* ===== Conteúdo: 3 níveis ===== */
+// grid usa versão sem acento/maiúscula; "nome" exibe com acento.
+const LEVELS = {
+  basico:{
+    label:"Básico", size:9,
+    dirs:[[0,1],[1,0]],
+    words:[
+      {g:"CARBONO", n:"CARBONO", h:"Elemento químico base de toda a vida (símbolo C)."},
+      {g:"ARVORE", n:"ÁRVORE", h:"Ser vivo que absorve gás carbônico para crescer."},
+      {g:"OXIGENIO", n:"OXIGÊNIO", h:"Gás que as plantas liberam durante a fotossíntese."},
+      {g:"SOLO", n:"SOLO", h:"Guarda muito carbono na forma de matéria orgânica."},
+      {g:"GAS", n:"GÁS", h:"O carbono viaja pelo ar como ___ carbônico (CO₂)."},
+      {g:"FOLHA", n:"FOLHA", h:"Parte da planta onde acontece a fotossíntese."},
+      {g:"RAIZ", n:"RAIZ", h:"Leva carbono da planta para dentro do solo."},
+      {g:"FLORESTA", n:"FLORESTA", h:"Grande conjunto de árvores que estoca carbono."}
+    ]
+  },
+  intermediario:{
+    label:"Intermediário", size:13,
+    dirs:[[0,1],[1,0],[1,1],[-1,1]],
+    words:[
+      {g:"FOTOSSINTESE", n:"FOTOSSÍNTESE", h:"Plantas captam CO₂ e luz para criar matéria orgânica e O₂."},
+      {g:"RESPIRACAO", n:"RESPIRAÇÃO", h:"Seres vivos liberam CO₂ ao queimar energia das células."},
+      {g:"COMBUSTAO", n:"COMBUSTÃO", h:"Queima de combustíveis que devolve carbono à atmosfera."},
+      {g:"ATMOSFERA", n:"ATMOSFERA", h:"Camada de gases onde o CO₂ se acumula (hoje ~420 ppm)."},
+      {g:"OCEANO", n:"OCEANO", h:"Maior reservatório de carbono em troca com a atmosfera."},
+      {g:"BIOMASSA", n:"BIOMASSA", h:"Carbono armazenado nos corpos dos seres vivos."},
+      {g:"FUNGOS", n:"FUNGOS", h:"Decompositores que devolvem carbono ao solo e ao ar."},
+      {g:"CARVAO", n:"CARVÃO", h:"Combustível fóssil sólido rico em carbono."},
+      {g:"PETROLEO", n:"PETRÓLEO", h:"Combustível fóssil formado por restos orgânicos antigos."},
+      {g:"SUMIDOURO", n:"SUMIDOURO", h:"Reservatório que absorve mais carbono do que emite."}
+    ]
+  },
+  dificil:{
+    label:"Difícil", size:15,
+    dirs:[[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]],
+    words:[
+      {g:"SEQUESTRO", n:"SEQUESTRO", h:"Captura e armazenamento de carbono por longos períodos."},
+      {g:"CARBONATO", n:"CARBONATO", h:"Mineral que aprisiona carbono em rochas e conchas."},
+      {g:"CALCARIO", n:"CALCÁRIO", h:"Rocha sedimentar formada por carbonato de cálcio."},
+      {g:"METANO", n:"METANO", h:"Gás de efeito estufa, CH₄, mais potente que o CO₂."},
+      {g:"PLANCTON", n:"PLÂNCTON", h:"Microrganismos marinhos que fixam carbono no oceano."},
+      {g:"SEDIMENTO", n:"SEDIMENTO", h:"Material que enterra carbono no fundo dos oceanos."},
+      {g:"LITOSFERA", n:"LITOSFERA", h:"Reservatório geológico que guarda carbono por milênios."},
+      {g:"FOSSIL", n:"FÓSSIL", h:"Combustível que libera carbono estocado há milhões de anos."},
+      {g:"ANTROPICO", n:"ANTRÓPICO", h:"Relativo à ação humana sobre o ciclo do carbono."},
+      {g:"CELULOSE", n:"CELULOSE", h:"Carbono estrutural das paredes das células vegetais."},
+      {g:"PERMAFROST", n:"PERMAFROST", h:"Solo congelado que aprisiona enorme estoque de carbono."},
+      {g:"CALCIFICACAO", n:"CALCIFICAÇÃO", h:"Formação de conchas e carapaças com carbonato de cálcio."}
+    ]
+  }
+};
+
+const ALPHA="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+let state=null;
+
+/* ===== DOM refs ===== */
+const gridEl=document.getElementById("grid");
+const wlistEl=document.getElementById("wlist");
+const wcountEl=document.getElementById("wcount");
+const feedbackEl=document.getElementById("feedback");
+const hudTime=document.getElementById("hudTime");
+const hudFound=document.getElementById("hudFound");
+const hudErrors=document.getElementById("hudErrors");
+const hudScore=document.getElementById("hudScore");
+const rankLvl=document.getElementById("rankLvl");
+const rankBox=document.getElementById("rankBox");
+const overlay=document.getElementById("overlay");
+
+/* ===== Geração do grid ===== */
+function placeWords(level){
+  const size=level.size;
+  let grid, placed;
+  for(let attempt=0; attempt<40; attempt++){
+    grid=Array.from({length:size},()=>Array(size).fill(""));
+    placed=[];
+    let ok=true;
+    // palavras maiores primeiro
+    const words=[...level.words].sort((a,b)=>b.g.length-a.g.length);
+    for(const w of words){
+      if(!placeOne(grid,size,w.g,level.dirs)){ ok=false; break; }
+    }
+    if(ok){ break; }
+  }
+  // preencher vazios
+  for(let r=0;r<size;r++)for(let c=0;c<size;c++){
+    if(!grid[r][c]) grid[r][c]=ALPHA[Math.floor(Math.random()*26)];
+  }
+  return grid;
+}
+function placeOne(grid,size,word,dirs){
+  for(let t=0;t<300;t++){
+    const [dr,dc]=dirs[Math.floor(Math.random()*dirs.length)];
+    const len=word.length;
+    const rMin = dr<0 ? (len-1):0, rMax = dr>0 ? size-len : size-1;
+    const cMin = dc<0 ? (len-1):0, cMax = dc>0 ? size-len : size-1;
+    if(rMax<rMin||cMax<cMin) continue;
+    const r0=rMin+Math.floor(Math.random()*(rMax-rMin+1));
+    const c0=cMin+Math.floor(Math.random()*(cMax-cMin+1));
+    let fits=true;
+    for(let i=0;i<len;i++){
+      const ch=grid[r0+dr*i][c0+dc*i];
+      if(ch && ch!==word[i]){ fits=false; break; }
+    }
+    if(!fits) continue;
+    for(let i=0;i<len;i++) grid[r0+dr*i][c0+dc*i]=word[i];
+    return true;
+  }
+  return false;
+}
+
+/* ===== Render ===== */
+function startGame(levelKey){
+  const level=LEVELS[levelKey];
+  const grid=placeWords(level);
+  state={
+    levelKey, level, grid, size:level.size,
+    found:new Set(), errors:0, startTime:null, timer:null, elapsed:0,
+    finished:false, score:null,
+    selecting:false, selStart:null, selCells:[]
+  };
+  // grid DOM
+  gridEl.style.gridTemplateColumns=`repeat(${level.size},1fr)`;
+  gridEl.innerHTML="";
+  for(let r=0;r<level.size;r++)for(let c=0;c<level.size;c++){
+    const d=document.createElement("div");
+    d.className="cell"; d.textContent=grid[r][c];
+    d.dataset.r=r; d.dataset.c=c;
+    gridEl.appendChild(d);
+  }
+  // words list
+  wlistEl.innerHTML="";
+  for(const w of level.words){
+    const it=document.createElement("div");
+    it.className="witem"; it.dataset.g=w.g;
+    it.innerHTML=`<div class="wname">${w.n}</div><div class="whint">${w.h}</div>`;
+    wlistEl.appendChild(it);
+  }
+  wcountEl.textContent=level.words.length;
+  hudFound.textContent=`0/${level.words.length}`;
+  hudErrors.textContent="0";
+  hudScore.textContent="—";
+  hudTime.textContent="0s";
+  feedbackEl.textContent="Selecione uma palavra para começar. Cada descoberta traz uma explicação sobre o ciclo do carbono. 🌍";
+  rankLvl.textContent=level.label;
+  document.querySelectorAll(".pill").forEach(p=>p.classList.toggle("active",p.dataset.level===levelKey));
+  loadRanking();
+}
+
+function ensureTimer(){
+  if(state.startTime) return;
+  state.startTime=Date.now();
+  state.timer=setInterval(()=>{
+    state.elapsed=Math.floor((Date.now()-state.startTime)/1000);
+    hudTime.textContent=state.elapsed+"s";
+  },1000);
+}
+
+/* ===== Seleção ===== */
+function cellAt(r,c){return gridEl.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);}
+function lineCells(r1,c1,r2,c2){
+  const dr=Math.sign(r2-r1), dc=Math.sign(c2-c1);
+  const adr=Math.abs(r2-r1), adc=Math.abs(c2-c1);
+  if(!(r1===r2||c1===c2||adr===adc)) return null;
+  const steps=Math.max(adr,adc);
+  const cells=[];
+  for(let i=0;i<=steps;i++) cells.push([r1+dr*i,c1+dc*i]);
+  return cells;
+}
+function clearSel(){
+  state.selCells.forEach(([r,c])=>{const el=cellAt(r,c); if(el&&!el.classList.contains("found"))el.classList.remove("sel");});
+  state.selCells=[];
+}
+function applySel(cells){
+  clearSel();
+  state.selCells=cells;
+  cells.forEach(([r,c])=>{const el=cellAt(r,c); if(el)el.classList.add("sel");});
+}
+function getCellFromEvent(e){
+  const t=e.touches?e.touches[0]:e;
+  const el=document.elementFromPoint(t.clientX,t.clientY);
+  if(el&&el.classList.contains("cell")) return [parseInt(el.dataset.r),parseInt(el.dataset.c)];
+  return null;
+}
+
+function onDown(e){
+  if(!state||state.finished) return;
+  const cell=getCellFromEvent(e); if(!cell) return;
+  e.preventDefault();
+  ensureTimer();
+  state.selecting=true; state.selStart=cell;
+  applySel([cell]);
+}
+function onMove(e){
+  if(!state||!state.selecting) return;
+  const cell=getCellFromEvent(e); if(!cell) return;
+  e.preventDefault();
+  const cells=lineCells(state.selStart[0],state.selStart[1],cell[0],cell[1]);
+  if(cells) applySel(cells);
+}
+function onUp(){
+  if(!state||!state.selecting) return;
+  state.selecting=false;
+  evaluate();
+}
+function evaluate(){
+  const cells=state.selCells;
+  if(cells.length<2){ clearSel(); return; }
+  let str=""; cells.forEach(([r,c])=>str+=state.grid[r][c]);
+  const rev=str.split("").reverse().join("");
+  const match=state.level.words.find(w=>!state.found.has(w.g)&&(w.g===str||w.g===rev));
+  if(match){
+    state.found.add(match.g);
+    cells.forEach(([r,c])=>{const el=cellAt(r,c); el.classList.remove("sel"); el.classList.add("found","pop"); setTimeout(()=>el.classList.remove("pop"),350);});
+    state.selCells=[];
+    const it=wlistEl.querySelector(`.witem[data-g="${match.g}"]`);
+    if(it) it.classList.add("done");
+    hudFound.textContent=`${state.found.size}/${state.level.words.length}`;
+    feedbackEl.innerHTML=`✅ <strong>${match.n}</strong> — ${match.h}`;
+    if(state.found.size===state.level.words.length) finish();
+  }else{
+    state.errors++;
+    hudErrors.textContent=state.errors;
+    cells.forEach(([r,c])=>{const el=cellAt(r,c); if(!el.classList.contains("found")){el.classList.add("flash-bad"); setTimeout(()=>el.classList.remove("flash-bad"),350);}});
+    feedbackEl.innerHTML=`❌ Essa seleção não forma uma palavra da lista. Tente seguir a dica! 🔎`;
+    setTimeout(clearSel,200);
+  }
+}
+
+/* ===== Fim ===== */
+function finish(){
+  state.finished=true;
+  clearInterval(state.timer);
+  const score=state.elapsed + state.errors*5;
+  state.score=score;
+  hudScore.textContent=score;
+  document.getElementById("endLevel").textContent=state.level.label;
+  document.getElementById("endScore").textContent=`Tempo ${state.elapsed}s · Erros ${state.errors} · Pontuação ${score} (quanto menor, melhor!)`;
+  document.getElementById("saveMsg").textContent="";
+  document.getElementById("playerName").value="";
+  overlay.classList.add("show");
+}
+
+/* ===== Ranking Firebase ===== */
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+async function loadRanking(){
+  rankBox.innerHTML='<p class="rmsg">Carregando ranking…</p>';
+  if(!db){ rankBox.innerHTML='<p class="rmsg">⚠️ Ranking indisponível offline. O jogo funciona normalmente!</p>'; return; }
+  try{
+    const {collection,query,where,orderBy,limit,getDocs}=fb;
+    const q=query(
+      collection(db,"games",GAME_ID,"scores"),
+      where("level","==",state.levelKey),
+      orderBy("score","asc"),
+      limit(10)
+    );
+    const snap=await getDocs(q);
+    if(snap.empty){ rankBox.innerHTML='<p class="rmsg">Ainda não há pontuações neste nível. Seja o primeiro! 🚀</p>'; return; }
+    let html="<ol>";
+    snap.forEach(d=>{const v=d.data(); html+=`<li><strong>${esc(v.name)}</strong> — ${v.score} pts <span class="rmsg">(${v.time}s · ${v.errors} erros)</span></li>`;});
+    html+="</ol>";
+    rankBox.innerHTML=html;
+  }catch(e){
+    rankBox.innerHTML='<p class="rmsg">⚠️ Não foi possível carregar o ranking agora. O jogo segue normal!</p>';
+  }
+}
+async function saveScore(){
+  const name=(document.getElementById("playerName").value||"").trim().slice(0,20)||"Anônimo";
+  const msg=document.getElementById("saveMsg");
+  if(!db){ msg.textContent="⚠️ Sem conexão: não foi possível salvar, mas seu resultado vale!"; return; }
+  msg.textContent="Salvando…";
+  try{
+    const {collection,addDoc}=fb;
+    await addDoc(collection(db,"games",GAME_ID,"scores"),{
+      name, level:state.levelKey, score:state.score, time:state.elapsed, errors:state.errors,
+      ts:Date.now()
+    });
+    msg.textContent="✅ Salvo no ranking!";
+    loadRanking();
+  }catch(e){
+    msg.textContent="⚠️ Não foi possível salvar agora. Tente novamente.";
+  }
+}
+
+/* ===== Eventos ===== */
+gridEl.addEventListener("mousedown",onDown);
+window.addEventListener("mousemove",onMove);
+window.addEventListener("mouseup",onUp);
+gridEl.addEventListener("touchstart",onDown,{passive:false});
+gridEl.addEventListener("touchmove",onMove,{passive:false});
+window.addEventListener("touchend",onUp);
+
+document.querySelectorAll(".pill").forEach(p=>{
+  p.addEventListener("click",()=>{ if(state) clearInterval(state.timer); startGame(p.dataset.level); });
+});
+document.getElementById("saveBtn").addEventListener("click",saveScore);
+document.getElementById("againBtn").addEventListener("click",()=>{overlay.classList.remove("show");startGame(state.levelKey);});
+
+/* ===== Início ===== */
+initFirebase().then(()=>{ if(state) loadRanking(); });
+startGame("basico");
+</script>
+</body>
+</html>
