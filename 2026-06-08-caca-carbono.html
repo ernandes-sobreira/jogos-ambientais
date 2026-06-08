@@ -51,6 +51,8 @@
   }
   .pill:hover{transform:translateY(-2px);background:var(--panel2)}
   .pill.active{background:var(--accent);color:#06281c;border-color:var(--accent);box-shadow:0 6px 18px rgba(52,211,153,.35)}
+  .pill.carbonauta{border-color:#fbbf24;color:#fcd34d}
+  .pill.carbonauta.active{background:#fbbf24;color:#3a2a00;border-color:#fbbf24;box-shadow:0 6px 18px rgba(251,191,36,.4)}
   .howto{
     text-align:center;color:var(--muted);font-size:.95rem;margin:6px auto 14px;
     max-width:640px;
@@ -79,7 +81,7 @@
     aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;
     background:var(--panel2);border-radius:8px;
     font-weight:700;cursor:pointer;
-    font-size:clamp(.7rem,2.6vw,1.15rem);
+    font-size:clamp(.6rem,2.4vw,1.15rem);
     transition:background .15s ease,transform .15s ease,color .15s ease;
     color:var(--text);
   }
@@ -91,7 +93,7 @@
   .pop{animation:pop .35s}
   /* words list */
   .words h3{margin:.1em 0 .6em;font-size:1.05rem}
-  .wlist{display:flex;flex-direction:column;gap:8px}
+  .wlist{display:flex;flex-direction:column;gap:8px;max-height:none}
   .witem{
     background:var(--panel2);border:1px solid var(--line);border-radius:12px;
     padding:8px 12px;transition:all .25s ease;
@@ -106,7 +108,7 @@
     border-radius:10px;padding:12px 14px;font-size:.92rem;min-height:60px;
   }
   /* ranking */
-  .rank h3{margin:.1em 0 .5em;font-size:1.05rem;display:flex;align-items:center;gap:8px}
+  .rank h3{margin:.1em 0 .5em;font-size:1.05rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .rank .lvltag{font-size:.72rem;background:var(--accent);color:#06281c;padding:2px 8px;border-radius:999px;font-weight:700}
   .rank ol{margin:0;padding-left:1.3em;font-size:.9rem}
   .rank li{margin:4px 0}
@@ -152,6 +154,7 @@
     <button class="pill active" data-level="basico">Básico</button>
     <button class="pill" data-level="intermediario">Intermediário</button>
     <button class="pill" data-level="dificil">Difícil</button>
+    <button class="pill carbonauta" data-level="carbonauta">🚀 Carbonauta</button>
   </div>
 
   <p class="howto">Como jogar: clique (ou toque) na primeira letra e arraste até a última para selecionar uma palavra da lista — na horizontal, vertical ou diagonal. Acertou, a palavra fica verde!</p>
@@ -160,7 +163,7 @@
     <div class="stat">Tempo: <span id="hudTime">0s</span></div>
     <div class="stat">Encontradas: <span id="hudFound">0/0</span></div>
     <div class="stat">Erros: <span id="hudErrors">0</span></div>
-    <div class="stat">Pontos: <span id="hudScore">—</span></div>
+    <div class="stat">Pontos: <span id="hudScore">0</span></div>
   </div>
 
   <div class="layout">
@@ -224,55 +227,77 @@ async function initFirebase(){
   }catch(e){ db=null; return false; }
 }
 
-/* ===== Conteúdo: 3 níveis ===== */
-// grid usa versão sem acento/maiúscula; "nome" exibe com acento.
+/* ===== Conteúdo: 4 níveis ===== */
+// grid usa versão sem acento/maiúscula; "n" exibe com acento.
 const LEVELS = {
   basico:{
     label:"Básico", size:9,
     dirs:[[0,1],[1,0]],
     words:[
-      {g:"CARBONO", n:"CARBONO", h:"Elemento químico base de toda a vida (símbolo C)."},
-      {g:"ARVORE", n:"ÁRVORE", h:"Ser vivo que absorve gás carbônico para crescer."},
-      {g:"OXIGENIO", n:"OXIGÊNIO", h:"Gás que as plantas liberam durante a fotossíntese."},
-      {g:"SOLO", n:"SOLO", h:"Guarda muito carbono na forma de matéria orgânica."},
-      {g:"GAS", n:"GÁS", h:"O carbono viaja pelo ar como ___ carbônico (CO₂)."},
-      {g:"FOLHA", n:"FOLHA", h:"Parte da planta onde acontece a fotossíntese."},
-      {g:"RAIZ", n:"RAIZ", h:"Leva carbono da planta para dentro do solo."},
-      {g:"FLORESTA", n:"FLORESTA", h:"Grande conjunto de árvores que estoca carbono."}
+      {g:"CARBONO", n:"CARBONO", h:"É o elemento que forma todos os seres vivos; controlar para onde ele vai evita o aquecimento global."},
+      {g:"ARVORE", n:"ÁRVORE", h:"A árvore é importante pois retira CO₂ do ar para crescer, reduzindo o gás que aquece o planeta."},
+      {g:"OXIGENIO", n:"OXIGÊNIO", h:"Gás que as plantas liberam justamente quando retiram carbono do ar na fotossíntese."},
+      {g:"SOLO", n:"SOLO", h:"O solo é importante pois guarda enormes quantidades de carbono; protegê-lo evita que ele volte ao ar como CO₂."},
+      {g:"GAS", n:"GÁS", h:"O carbono sobe à atmosfera como gás carbônico (CO₂), que retém calor e aquece a Terra."},
+      {g:"FOLHA", n:"FOLHA", h:"A folha é importante pois é onde ocorre a fotossíntese, capturando o carbono do ar."},
+      {g:"RAIZ", n:"RAIZ", h:"A raiz é importante pois leva carbono para o solo, ajudando a guardá-lo longe da atmosfera."},
+      {g:"FLORESTA", n:"FLORESTA", h:"A floresta é importante pois estoca grande quantidade de carbono em suas árvores e solo."}
     ]
   },
   intermediario:{
     label:"Intermediário", size:13,
     dirs:[[0,1],[1,0],[1,1],[-1,1]],
     words:[
-      {g:"FOTOSSINTESE", n:"FOTOSSÍNTESE", h:"Plantas captam CO₂ e luz para criar matéria orgânica e O₂."},
-      {g:"RESPIRACAO", n:"RESPIRAÇÃO", h:"Seres vivos liberam CO₂ ao queimar energia das células."},
-      {g:"COMBUSTAO", n:"COMBUSTÃO", h:"Queima de combustíveis que devolve carbono à atmosfera."},
-      {g:"ATMOSFERA", n:"ATMOSFERA", h:"Camada de gases onde o CO₂ se acumula (hoje ~420 ppm)."},
-      {g:"OCEANO", n:"OCEANO", h:"Maior reservatório de carbono em troca com a atmosfera."},
-      {g:"BIOMASSA", n:"BIOMASSA", h:"Carbono armazenado nos corpos dos seres vivos."},
-      {g:"FUNGOS", n:"FUNGOS", h:"Decompositores que devolvem carbono ao solo e ao ar."},
-      {g:"CARVAO", n:"CARVÃO", h:"Combustível fóssil sólido rico em carbono."},
-      {g:"PETROLEO", n:"PETRÓLEO", h:"Combustível fóssil formado por restos orgânicos antigos."},
-      {g:"SUMIDOURO", n:"SUMIDOURO", h:"Reservatório que absorve mais carbono do que emite."}
+      {g:"FOTOSSINTESE", n:"FOTOSSÍNTESE", h:"É importante pois retira CO₂ do ar para criar matéria orgânica e O₂ — o principal sumidouro natural de carbono."},
+      {g:"RESPIRACAO", n:"RESPIRAÇÃO", h:"Importante pois devolve CO₂ ao ar quando os seres vivos usam energia — o outro lado do ciclo."},
+      {g:"COMBUSTAO", n:"COMBUSTÃO", h:"Importante pois a queima de combustíveis libera carbono fóssil e intensifica o efeito estufa."},
+      {g:"ATMOSFERA", n:"ATMOSFERA", h:"Importante pois nela o CO₂ se acumula (hoje ~420 ppm) e retém calor, aquecendo a Terra."},
+      {g:"OCEANO", n:"OCEANO", h:"Importante pois é o maior reservatório ativo de carbono e absorve parte do CO₂ que emitimos."},
+      {g:"BIOMASSA", n:"BIOMASSA", h:"Importante pois guarda carbono nos corpos dos seres vivos; queimá-la o devolve ao ar."},
+      {g:"FUNGOS", n:"FUNGOS", h:"Importantes pois decompõem matéria e reciclam carbono, devolvendo-o ao solo e à atmosfera."},
+      {g:"CARVAO", n:"CARVÃO", h:"Importante pois, ao queimar, libera carbono fóssil estocado há milhões de anos."},
+      {g:"PETROLEO", n:"PETRÓLEO", h:"Importante pois sua queima é uma das maiores fontes de CO₂ de origem humana."},
+      {g:"SUMIDOURO", n:"SUMIDOURO", h:"Importante pois absorve mais carbono do que emite, freando o aquecimento global."}
     ]
   },
   dificil:{
     label:"Difícil", size:15,
     dirs:[[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]],
     words:[
-      {g:"SEQUESTRO", n:"SEQUESTRO", h:"Captura e armazenamento de carbono por longos períodos."},
-      {g:"CARBONATO", n:"CARBONATO", h:"Mineral que aprisiona carbono em rochas e conchas."},
-      {g:"CALCARIO", n:"CALCÁRIO", h:"Rocha sedimentar formada por carbonato de cálcio."},
-      {g:"METANO", n:"METANO", h:"Gás de efeito estufa, CH₄, mais potente que o CO₂."},
-      {g:"PLANCTON", n:"PLÂNCTON", h:"Microrganismos marinhos que fixam carbono no oceano."},
-      {g:"SEDIMENTO", n:"SEDIMENTO", h:"Material que enterra carbono no fundo dos oceanos."},
-      {g:"LITOSFERA", n:"LITOSFERA", h:"Reservatório geológico que guarda carbono por milênios."},
-      {g:"FOSSIL", n:"FÓSSIL", h:"Combustível que libera carbono estocado há milhões de anos."},
-      {g:"ANTROPICO", n:"ANTRÓPICO", h:"Relativo à ação humana sobre o ciclo do carbono."},
-      {g:"CELULOSE", n:"CELULOSE", h:"Carbono estrutural das paredes das células vegetais."},
-      {g:"PERMAFROST", n:"PERMAFROST", h:"Solo congelado que aprisiona enorme estoque de carbono."},
-      {g:"CALCIFICACAO", n:"CALCIFICAÇÃO", h:"Formação de conchas e carapaças com carbonato de cálcio."}
+      {g:"SEQUESTRO", n:"SEQUESTRO", h:"Importante pois captura e armazena carbono por longos prazos, retirando-o da atmosfera."},
+      {g:"CARBONATO", n:"CARBONATO", h:"Importante pois aprisiona carbono em rochas e conchas por milênios."},
+      {g:"CALCARIO", n:"CALCÁRIO", h:"Importante pois é rocha de carbonato de cálcio — o maior estoque de carbono do planeta."},
+      {g:"METANO", n:"METANO", h:"Importante pois o CH₄ é gás de efeito estufa dezenas de vezes mais potente que o CO₂."},
+      {g:"PLANCTON", n:"PLÂNCTON", h:"O fitoplâncton é importante pois fixa CO₂ no mar e alimenta a 'bomba biológica' de carbono."},
+      {g:"SEDIMENTO", n:"SEDIMENTO", h:"Importante pois enterra carbono no fundo dos oceanos, removendo-o do ciclo por muito tempo."},
+      {g:"LITOSFERA", n:"LITOSFERA", h:"Importante pois é o reservatório geológico que guarda a maior parte do carbono da Terra."},
+      {g:"FOSSIL", n:"FÓSSIL", h:"Importante pois o combustível fóssil libera carbono estocado há milhões de anos, elevando o CO₂."},
+      {g:"ANTROPICO", n:"ANTRÓPICO", h:"Importante pois a ação humana desequilibra o ciclo e causa o aquecimento global."},
+      {g:"CELULOSE", n:"CELULOSE", h:"Importante pois é carbono estrutural das plantas, estocado na madeira e nas fibras."},
+      {g:"PERMAFROST", n:"PERMAFROST", h:"Importante pois guarda enorme carbono congelado; ao degelar, libera CO₂ e metano."},
+      {g:"CALCIFICACAO", n:"CALCIFICAÇÃO", h:"Importante pois forma conchas com carbonato, fixando carbono — processo ameaçado pela acidificação."}
+    ]
+  },
+  carbonauta:{
+    label:"Carbonauta", size:17,
+    dirs:[[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]],
+    words:[
+      {g:"IPCC", n:"IPCC", h:"Importante pois é o painel científico da ONU que avalia evidências e cenários do carbono e do clima."},
+      {g:"ARQUEA", n:"ARQUEA", h:"Importante pois arqueas metanogênicas produzem metano em ambientes sem oxigênio, como pântanos e o Pantanal."},
+      {g:"METANOGENESE", n:"METANOGÊNESE", h:"Importante pois é o processo anaeróbico em que micróbios geram metano, potente gás de efeito estufa."},
+      {g:"METANOTROFICA", n:"METANOTRÓFICA", h:"Importante pois a bactéria metanotrófica consome metano, reduzindo sua liberação para a atmosfera."},
+      {g:"RUBISCO", n:"RUBISCO", h:"Importante pois é a enzima que fixa o CO₂ na fotossíntese — a reação que mais move carbono no planeta."},
+      {g:"CARBOXILACAO", n:"CARBOXILAÇÃO", h:"Importante pois é a etapa em que a RuBisCO incorpora CO₂ em moléculas orgânicas no ciclo de Calvin."},
+      {g:"QUIMIOSSINTESE", n:"QUIMIOSSÍNTESE", h:"Importante pois fixa carbono sem luz, usando energia química, em fontes hidrotermais do oceano profundo."},
+      {g:"DIAGENESE", n:"DIAGÊNESE", h:"Importante pois transforma sedimentos em rocha, aprisionando carbono na crosta por eras."},
+      {g:"RIZOSFERA", n:"RIZOSFERA", h:"Importante pois é a zona ao redor das raízes por onde grande fluxo de carbono entra no solo."},
+      {g:"HUMIFICACAO", n:"HUMIFICAÇÃO", h:"Importante pois forma húmus estável que retém carbono orgânico no solo por décadas."},
+      {g:"RECALCITRANTE", n:"RECALCITRANTE", h:"Importante pois o carbono recalcitrante resiste à decomposição e permanece estocado no solo."},
+      {g:"TURFEIRA", n:"TURFEIRA", h:"Importante pois acumula turfa e guarda imenso carbono; ao secar, vira fonte de CO₂."},
+      {g:"DIATOMACEA", n:"DIATOMÁCEA", h:"Importante pois as diatomáceas fixam CO₂ e afundam, transportando carbono ao fundo do mar."},
+      {g:"PIROCARBONO", n:"PIROCARBONO", h:"Importante pois o carbono pirogênico (biochar) é muito estável e pode estocar carbono no solo."},
+      {g:"FOTORRESPIRACAO", n:"FOTORRESPIRAÇÃO", h:"Importante pois libera parte do CO₂ já fixado, reduzindo a eficiência da fotossíntese."},
+      {g:"ESTROMATOLITO", n:"ESTROMATÓLITO", h:"Importante pois registra a fixação microbiana de carbono na Terra há bilhões de anos."}
     ]
   }
 };
@@ -296,26 +321,23 @@ const overlay=document.getElementById("overlay");
 /* ===== Geração do grid ===== */
 function placeWords(level){
   const size=level.size;
-  let grid, placed;
-  for(let attempt=0; attempt<40; attempt++){
+  let grid;
+  for(let attempt=0; attempt<150; attempt++){
     grid=Array.from({length:size},()=>Array(size).fill(""));
-    placed=[];
     let ok=true;
-    // palavras maiores primeiro
     const words=[...level.words].sort((a,b)=>b.g.length-a.g.length);
     for(const w of words){
       if(!placeOne(grid,size,w.g,level.dirs)){ ok=false; break; }
     }
     if(ok){ break; }
   }
-  // preencher vazios
   for(let r=0;r<size;r++)for(let c=0;c<size;c++){
     if(!grid[r][c]) grid[r][c]=ALPHA[Math.floor(Math.random()*26)];
   }
   return grid;
 }
 function placeOne(grid,size,word,dirs){
-  for(let t=0;t<300;t++){
+  for(let t=0;t<800;t++){
     const [dr,dc]=dirs[Math.floor(Math.random()*dirs.length)];
     const len=word.length;
     const rMin = dr<0 ? (len-1):0, rMax = dr>0 ? size-len : size-1;
@@ -345,7 +367,6 @@ function startGame(levelKey){
     finished:false, score:null,
     selecting:false, selStart:null, selCells:[]
   };
-  // grid DOM
   gridEl.style.gridTemplateColumns=`repeat(${level.size},1fr)`;
   gridEl.innerHTML="";
   for(let r=0;r<level.size;r++)for(let c=0;c<level.size;c++){
@@ -354,7 +375,6 @@ function startGame(levelKey){
     d.dataset.r=r; d.dataset.c=c;
     gridEl.appendChild(d);
   }
-  // words list
   wlistEl.innerHTML="";
   for(const w of level.words){
     const it=document.createElement("div");
@@ -365,7 +385,7 @@ function startGame(levelKey){
   wcountEl.textContent=level.words.length;
   hudFound.textContent=`0/${level.words.length}`;
   hudErrors.textContent="0";
-  hudScore.textContent="—";
+  hudScore.textContent="0";
   hudTime.textContent="0s";
   feedbackEl.textContent="Selecione uma palavra para começar. Cada descoberta traz uma explicação sobre o ciclo do carbono. 🌍";
   rankLvl.textContent=level.label;
@@ -373,12 +393,15 @@ function startGame(levelKey){
   loadRanking();
 }
 
+function liveScore(){ return state.elapsed + state.errors*5; }
+function refreshScore(){ if(!state.finished) hudScore.textContent=liveScore(); }
 function ensureTimer(){
   if(state.startTime) return;
   state.startTime=Date.now();
   state.timer=setInterval(()=>{
     state.elapsed=Math.floor((Date.now()-state.startTime)/1000);
     hudTime.textContent=state.elapsed+"s";
+    refreshScore();
   },1000);
 }
 
@@ -447,6 +470,7 @@ function evaluate(){
   }else{
     state.errors++;
     hudErrors.textContent=state.errors;
+    refreshScore();
     cells.forEach(([r,c])=>{const el=cellAt(r,c); if(!el.classList.contains("found")){el.classList.add("flash-bad"); setTimeout(()=>el.classList.remove("flash-bad"),350);}});
     feedbackEl.innerHTML=`❌ Essa seleção não forma uma palavra da lista. Tente seguir a dica! 🔎`;
     setTimeout(clearSel,200);
@@ -473,17 +497,20 @@ async function loadRanking(){
   rankBox.innerHTML='<p class="rmsg">Carregando ranking…</p>';
   if(!db){ rankBox.innerHTML='<p class="rmsg">⚠️ Ranking indisponível offline. O jogo funciona normalmente!</p>'; return; }
   try{
-    const {collection,query,where,orderBy,limit,getDocs}=fb;
+    // Filtra só por nível (índice simples) e ordena no cliente — dispensa índice composto do Firestore.
+    const {collection,query,where,getDocs}=fb;
     const q=query(
       collection(db,"games",GAME_ID,"scores"),
-      where("level","==",state.levelKey),
-      orderBy("score","asc"),
-      limit(10)
+      where("level","==",state.levelKey)
     );
     const snap=await getDocs(q);
-    if(snap.empty){ rankBox.innerHTML='<p class="rmsg">Ainda não há pontuações neste nível. Seja o primeiro! 🚀</p>'; return; }
+    const rows=[];
+    snap.forEach(d=>{const v=d.data(); rows.push(v);});
+    rows.sort((a,b)=>(a.score-b.score)||(a.time-b.time));
+    const top=rows.slice(0,10);
+    if(top.length===0){ rankBox.innerHTML='<p class="rmsg">Ainda não há pontuações neste nível. Seja o primeiro! 🚀</p>'; return; }
     let html="<ol>";
-    snap.forEach(d=>{const v=d.data(); html+=`<li><strong>${esc(v.name)}</strong> — ${v.score} pts <span class="rmsg">(${v.time}s · ${v.errors} erros)</span></li>`;});
+    top.forEach(v=>{ html+=`<li><strong>${esc(v.name)}</strong> — ${v.score} pts <span class="rmsg">(${v.time}s · ${v.errors} erros)</span></li>`; });
     html+="</ol>";
     rankBox.innerHTML=html;
   }catch(e){
