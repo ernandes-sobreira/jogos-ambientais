@@ -194,54 +194,58 @@ let db=null, fs=null, fbReady=false;
   }
 })();
 
-/* ====== Conteúdo do jogo ====== */
+/* ====== Conteúdo do jogo ======
+   NOTA DE DESIGN: os rótulos das opções (campo "t") têm contagem de palavras
+   parelha dentro de cada cena, e a resposta correta NÃO é sistematicamente a
+   mais longa — ora é a mais curta, ora a do meio. O tamanho do texto não pode
+   denunciar a resposta certa. A ordem ainda é embaralhada a cada cena. */
 const LEVELS = {
 basico:{
   label:"Básico", start:50,
   scenes:[
     {emoji:"🌧️",ch:"Estação das chuvas",situ:"Chegam as primeiras chuvas e o rio Paraguai começa a subir. Em poucos dias os campos baixos vão alagar. O que você faz com o gado?",
       opts:[
-        {t:"Levar o gado para as cordilheiras (terras mais altas)",d:12,ok:true,fb:"Certo! Na cheia, a água cobre os campos baixos. O pantaneiro move o gado para as partes altas e respeita o ritmo das águas."},
-        {t:"Deixar o gado nos campos baixos mesmo assim",d:-10,ok:false,fb:"O gado pode ficar ilhado ou se afogar. A cheia do Pantanal é previsível todo ano — é preciso se antecipar."},
-        {t:"Construir um grande dique para barrar a água",d:-12,ok:false,fb:"Barrar a cheia destrói o pulso de inundação, o coração do Pantanal. Sem alagar e secar, o bioma entra em colapso."}
+        {t:"Levar o gado para as terras altas",d:12,ok:true,fb:"Certo! Na cheia, a água cobre os campos baixos. O pantaneiro move o gado para as partes altas e respeita o ritmo das águas."},
+        {t:"Deixar o gado nos campos baixos",d:-10,ok:false,fb:"O gado pode ficar ilhado ou se afogar. A cheia do Pantanal é previsível todo ano — é preciso se antecipar."},
+        {t:"Erguer um grande dique de contenção",d:-12,ok:false,fb:"Barrar a cheia destrói o pulso de inundação, o coração do Pantanal. Sem alagar e secar, o bioma entra em colapso."}
       ]},
     {emoji:"🐆",ch:"Encontro com a onça",situ:"No fim da tarde você avista uma onça-pintada bebendo água na beira do rio.",
       opts:[
-        {t:"Observar em silêncio, bem de longe",d:10,ok:true,fb:"A onça-pintada é o maior felino das Américas e o predador de topo do Pantanal. Observar sem perturbar é o jeito certo."},
         {t:"Atirar para proteger o rebanho",d:-14,ok:false,fb:"Matar onças é crime e quebra a cadeia alimentar. Há manejos que reduzem ataques ao gado sem matar o predador."},
-        {t:"Chegar bem perto para uma selfie",d:-6,ok:false,fb:"Aproximar-se demais estressa o animal e é perigoso. Manter distância é parte do ecoturismo responsável."}
+        {t:"Observar de longe, em silêncio",d:10,ok:true,fb:"A onça-pintada é o maior felino das Américas e o predador de topo do Pantanal. Observar sem perturbar é o jeito certo."},
+        {t:"Chegar perto para uma selfie",d:-6,ok:false,fb:"Aproximar-se demais estressa o animal e é perigoso. Manter distância é parte do ecoturismo responsável."}
       ]},
     {emoji:"☀️",ch:"A seca chega",situ:"Os rios baixam e a água se concentra em poças e baías. Muitos bichos se amontoam ali para beber.",
       opts:[
-        {t:"Preservar as poças onde os animais bebem",d:10,ok:true,fb:"Na seca, essas poças viram refúgio de vida. Protegê-las ajuda peixes, aves e mamíferos a atravessarem o período difícil."},
-        {t:"Drenar as poças para plantar lavoura",d:-12,ok:false,fb:"Sem essas reservas de água, muitos animais morrem de sede. O Pantanal depende desses refúgios na seca."},
-        {t:"Cercar a água só para o gado",d:-8,ok:false,fb:"A fauna silvestre também precisa beber. Compartilhar a água mantém o equilíbrio do bioma."}
+        {t:"Drenar as poças para plantar",d:-12,ok:false,fb:"Sem essas reservas de água, muitos animais morrem de sede. O Pantanal depende desses refúgios na seca."},
+        {t:"Cercar a água só para o gado",d:-8,ok:false,fb:"A fauna silvestre também precisa beber. Compartilhar a água mantém o equilíbrio do bioma."},
+        {t:"Preservar as poças dos animais",d:10,ok:true,fb:"Na seca, essas poças viram refúgio de vida. Protegê-las ajuda peixes, aves e mamíferos a atravessarem o período difícil."}
       ]},
     {emoji:"🦩",ch:"O tuiuiú",situ:"Um casal de tuiuiús — a ave-símbolo do Pantanal — faz um ninho enorme numa árvore alta perto da sede.",
       opts:[
-        {t:"Proteger a árvore e o ninho",d:10,ok:true,fb:"O tuiuiú (Jabiru mycteria) é o símbolo do Pantanal. Preservar seus ninhos garante a continuidade da espécie."},
-        {t:"Cortar a árvore para fazer lenha",d:-10,ok:false,fb:"Derrubar a árvore-ninho destrói a reprodução das aves. Árvores altas são raras e valiosas para muitas espécies."}
+        {t:"Proteger a árvore do ninho",d:10,ok:true,fb:"O tuiuiú (Jabiru mycteria) é o símbolo do Pantanal. Preservar seus ninhos garante a continuidade da espécie."},
+        {t:"Cortar a árvore para lenha",d:-10,ok:false,fb:"Derrubar a árvore-ninho destrói a reprodução das aves. Árvores altas são raras e valiosas para muitas espécies."}
       ]},
     {emoji:"🎣",ch:"Época da piracema",situ:"É piracema: os peixes sobem o rio para se reproduzir. Um vizinho chama para uma grande pescaria.",
       opts:[
-        {t:"Respeitar o defeso e não pescar agora",d:12,ok:true,fb:"O defeso protege os peixes durante a reprodução. Sem ele, os cardumes desaparecem e toda a teia alimentar sofre."},
-        {t:"Pescar o máximo que conseguir",d:-12,ok:false,fb:"Pescar na reprodução esvazia os rios no futuro. A piracema é justamente o momento de deixar os peixes em paz."}
+        {t:"Pescar o máximo que conseguir",d:-12,ok:false,fb:"Pescar na reprodução esvazia os rios no futuro. A piracema é justamente o momento de deixar os peixes em paz."},
+        {t:"Respeitar o defeso da piracema",d:12,ok:true,fb:"O defeso protege os peixes durante a reprodução. Sem ele, os cardumes desaparecem e toda a teia alimentar sofre."}
       ]},
     {emoji:"🔥",ch:"Foco de fogo",situ:"No fim da seca, começa um foco de fogo no capim seco perto da mata.",
       opts:[
-        {t:"Acionar a brigada e abrir um aceiro",d:12,ok:true,fb:"Aceiros (faixas sem vegetação) e brigadas evitam que o fogo vire um incêndio gigante. Prevenção salva a floresta e a fauna."},
-        {t:"Atear mais fogo para 'limpar' o pasto",d:-14,ok:false,fb:"Queimadas descontroladas devastaram o Pantanal em 2020. Usar fogo no capim seco é perigoso e ilegal sem manejo."},
-        {t:"Ignorar — fogo é coisa natural",d:-8,ok:false,fb:"Parte do fogo é natural, mas perto de mata e na seca extrema ele pode sair do controle rapidamente."}
+        {t:"Acionar a brigada e abrir aceiro",d:12,ok:true,fb:"Aceiros (faixas sem vegetação) e brigadas evitam que o fogo vire um incêndio gigante. Prevenção salva a floresta e a fauna."},
+        {t:"Atear fogo para limpar o pasto",d:-14,ok:false,fb:"Queimadas descontroladas devastaram o Pantanal em 2020. Usar fogo no capim seco é perigoso e ilegal sem manejo."},
+        {t:"Ignorar, pois fogo é natural",d:-8,ok:false,fb:"Parte do fogo é natural, mas perto de mata e na seca extrema ele pode sair do controle rapidamente."}
       ]},
     {emoji:"🐗",ch:"Visitas no quintal",situ:"Capivaras e queixadas aparecem pastando perto da casa, tranquilas.",
       opts:[
-        {t:"Conviver — elas fazem parte do bioma",d:8,ok:true,fb:"A capivara é o maior roedor do mundo e alimento de onças e jacarés. Conviver mantém a cadeia alimentar funcionando."},
-        {t:"Espantar com tiros e cães",d:-8,ok:false,fb:"Perseguir a fauna nativa desequilibra o ambiente. Esses animais são parte essencial da teia trófica pantaneira."}
+        {t:"Espantar com tiros e cães",d:-8,ok:false,fb:"Perseguir a fauna nativa desequilibra o ambiente. Esses animais são parte essencial da teia trófica pantaneira."},
+        {t:"Conviver com a fauna nativa",d:8,ok:true,fb:"A capivara é o maior roedor do mundo e alimento de onças e jacarés. Conviver mantém a cadeia alimentar funcionando."}
       ]},
     {emoji:"🌳",ch:"Fim do ciclo",situ:"O ano se fecha. Há uma faixa de mata ciliar (a vegetação da beira do rio) degradada e sem árvores.",
       opts:[
-        {t:"Reflorestar a mata ciliar",d:12,ok:true,fb:"A mata ciliar protege as margens, filtra a água e abriga fauna. Recuperá-la deixa um Pantanal mais forte para o próximo ciclo."},
-        {t:"Deixar como está e expandir o pasto até o rio",d:-10,ok:false,fb:"Sem mata ciliar, as margens erodem e a água fica turva. A vegetação ribeirinha é a defesa natural dos rios."}
+        {t:"Expandir o pasto até a margem",d:-10,ok:false,fb:"Sem mata ciliar, as margens erodem e a água fica turva. A vegetação ribeirinha é a defesa natural dos rios."},
+        {t:"Reflorestar a mata ciliar",d:12,ok:true,fb:"A mata ciliar protege as margens, filtra a água e abriga fauna. Recuperá-la deixa um Pantanal mais forte para o próximo ciclo."}
       ]}
   ]
 },
@@ -250,57 +254,57 @@ intermediario:{
   scenes:[
     {emoji:"🌊",ch:"O pulso de inundação",situ:"Você gerencia uma fazenda no Pantanal (cerca de 150 mil km² no Brasil). A cheia anual avança pelos campos. Um técnico propõe regular as águas.",
       opts:[
-        {t:"Preservar o pulso de inundação natural",d:12,ok:true,fb:"O pulso de inundação — alternância cheia/seca — é o processo ecológico central do Pantanal. Ele renova nutrientes e sustenta peixes e aves."},
-        {t:"Construir barragens para nivelar a vazão",d:-12,ok:false,fb:"Barramentos no Alto Paraguai alteram o pulso e ameaçam a conectividade hidrológica de todo o bioma."},
-        {t:"Drenar áreas alagadas para ampliar a lavoura",d:-10,ok:false,fb:"A drenagem de áreas úmidas elimina berçários de fauna e libera carbono estocado no solo encharcado."}
+        {t:"Preservar o pulso de inundação",d:12,ok:true,fb:"O pulso de inundação — alternância cheia/seca — é o processo ecológico central do Pantanal. Ele renova nutrientes e sustenta peixes e aves."},
+        {t:"Construir barragens para a vazão",d:-12,ok:false,fb:"Barramentos no Alto Paraguai alteram o pulso e ameaçam a conectividade hidrológica de todo o bioma."},
+        {t:"Drenar áreas alagadas para lavoura",d:-10,ok:false,fb:"A drenagem de áreas úmidas elimina berçários de fauna e libera carbono estocado no solo encharcado."}
       ]},
     {emoji:"🐟",ch:"Conectividade dos rios",situ:"Há um projeto de hidrovia e dragagem para facilitar o transporte de grãos pelo rio Paraguai.",
       opts:[
-        {t:"Defender estudos de impacto e cautela",d:10,ok:true,fb:"Dragar e retificar o rio reduz a conectividade e altera os ciclos de cheia que sustentam ~260 a 325 espécies de peixes."},
-        {t:"Aprovar a dragagem em larga escala já",d:-12,ok:false,fb:"Intervenções no leito do rio aceleram a drenagem da planície e desestabilizam o pulso de inundação."},
+        {t:"Exigir estudo de impacto antes",d:10,ok:true,fb:"Dragar e retificar o rio reduz a conectividade e altera os ciclos de cheia que sustentam ~260 a 325 espécies de peixes."},
+        {t:"Aprovar a dragagem em larga escala",d:-12,ok:false,fb:"Intervenções no leito do rio aceleram a drenagem da planície e desestabilizam o pulso de inundação."},
         {t:"Canalizar trechos para acelerar o fluxo",d:-10,ok:false,fb:"Canalizar reduz a planície de inundação, secando áreas úmidas que são essenciais ao bioma."}
       ]},
     {emoji:"🦦",ch:"Espécie-chave",situ:"Uma família de ariranhas (lontras gigantes, até ~1,8 m) ocupa um trecho de rio rico em peixes que você queria explorar para pesca comercial.",
       opts:[
-        {t:"Proteger o território das ariranhas",d:11,ok:true,fb:"A ariranha é predadora de topo aquática e indicadora de rios saudáveis. Sua presença sinaliza um ecossistema equilibrado."},
-        {t:"Expulsá-las para liberar a pesca",d:-12,ok:false,fb:"Remover predadores de topo desestabiliza a teia trófica e degrada a qualidade ambiental do trecho."}
+        {t:"Expulsá-las para liberar a pesca",d:-12,ok:false,fb:"Remover predadores de topo desestabiliza a teia trófica e degrada a qualidade ambiental do trecho."},
+        {t:"Proteger o território das ariranhas",d:11,ok:true,fb:"A ariranha é predadora de topo aquática e indicadora de rios saudáveis. Sua presença sinaliza um ecossistema equilibrado."}
       ]},
     {emoji:"🐆",ch:"Conflito com predadores",situ:"Onças-pintadas têm atacado bezerros. Os peões pedem uma solução.",
       opts:[
-        {t:"Adotar manejo: búfalos-guia, cães e currais à noite",d:11,ok:true,fb:"Medidas de manejo reduzem ataques sem matar onças. Conservação e pecuária podem coexistir no Pantanal."},
-        {t:"Contratar caçadores para abater as onças",d:-14,ok:false,fb:"Abate de onças é crime ambiental e remove o predador de topo, base do equilíbrio da fauna pantaneira."},
+        {t:"Adotar manejo antipredação no gado",d:11,ok:true,fb:"Medidas de manejo (búfalos-guia, cães, currais à noite) reduzem ataques sem matar onças. Conservação e pecuária podem coexistir."},
+        {t:"Contratar caçadores para abater onças",d:-14,ok:false,fb:"Abate de onças é crime ambiental e remove o predador de topo, base do equilíbrio da fauna pantaneira."},
         {t:"Envenenar carcaças como isca",d:-15,ok:false,fb:"Iscas envenenadas matam onças, urubus, ariranhas e outros animais — um desastre ecológico em cadeia."}
       ]},
     {emoji:"🦜",ch:"Arara-azul",situ:"Você encontra ninhos de arara-azul em manduvis (árvores ocas). Há quem queira capturar filhotes para vender.",
       opts:[
-        {t:"Proteger ninhos e apoiar projetos de conservação",d:11,ok:true,fb:"A arara-azul quase foi extinta pelo tráfico. Projetos de ninhos artificiais ajudaram sua recuperação no Pantanal."},
-        {t:"Permitir a captura de filhotes para venda",d:-13,ok:false,fb:"O tráfico de animais silvestres é crime e foi a principal causa do declínio histórico da arara-azul."}
+        {t:"Proteger os ninhos de arara-azul",d:11,ok:true,fb:"A arara-azul quase foi extinta pelo tráfico. Projetos de ninhos artificiais ajudaram sua recuperação no Pantanal."},
+        {t:"Capturar filhotes para venda",d:-13,ok:false,fb:"O tráfico de animais silvestres é crime e foi a principal causa do declínio histórico da arara-azul."}
       ]},
     {emoji:"🔥",ch:"Manejo do fogo",situ:"Após uma seca severa, o capim acumulado vira combustível. É preciso decidir a estratégia de fogo.",
       opts:[
-        {t:"Fazer manejo integrado do fogo (queimas prescritas e aceiros)",d:11,ok:true,fb:"Queimas controladas em época úmida e aceiros reduzem o material combustível e previnem megaincêndios."},
+        {t:"Fazer manejo integrado do fogo",d:11,ok:true,fb:"Queimas controladas em época úmida e aceiros reduzem o material combustível e previnem megaincêndios."},
         {t:"Tocar fogo geral no fim da seca",d:-14,ok:false,fb:"Em 2020, incêndios queimaram cerca de 30% do Pantanal. Fogo na seca extrema foge ao controle e mata milhões de animais."},
-        {t:"Não fazer nada e torcer pela chuva",d:-7,ok:false,fb:"Sem manejo, o capim acumulado pode alimentar incêndios devastadores quando uma faísca surgir."}
+        {t:"Não fazer nada e esperar a chuva",d:-7,ok:false,fb:"Sem manejo, o capim acumulado pode alimentar incêndios devastadores quando uma faísca surgir."}
       ]},
     {emoji:"🌾",ch:"Capim invasor",situ:"Um vendedor oferece sementes de braquiária (capim africano) para 'turbinar' o pasto nas áreas mais altas.",
       opts:[
-        {t:"Manter as gramíneas nativas e o campo natural",d:10,ok:true,fb:"A pecuária tradicional do Pantanal usa campos nativos, compatível com a fauna. Gramíneas exóticas invadem e empobrecem o ecossistema."},
-        {t:"Plantar braquiária em larga escala",d:-11,ok:false,fb:"Capins exóticos como a braquiária se tornam invasores, reduzem a biodiversidade e aumentam o risco de fogo."}
+        {t:"Plantar braquiária em larga escala",d:-11,ok:false,fb:"Capins exóticos como a braquiária se tornam invasores, reduzem a biodiversidade e aumentam o risco de fogo."},
+        {t:"Manter as gramíneas nativas do campo",d:10,ok:true,fb:"A pecuária tradicional do Pantanal usa campos nativos, compatível com a fauna. Gramíneas exóticas invadem e empobrecem o ecossistema."}
       ]},
     {emoji:"🦌",ch:"Cervo-do-pantanal",situ:"O cervo-do-pantanal, maior cervídeo da América do Sul, depende das áreas alagadas. Há pressão para drená-las.",
       opts:[
         {t:"Manter as áreas úmidas preservadas",d:11,ok:true,fb:"O cervo-do-pantanal vive em brejos e áreas alagadas. Drená-las elimina seu habitat e o de inúmeras outras espécies."},
-        {t:"Drenar brejos para ganhar pasto",d:-11,ok:false,fb:"Drenar áreas úmidas destrói habitats-chave e libera carbono, além de quebrar o ciclo da água local."}
+        {t:"Drenar os brejos para ganhar pasto",d:-11,ok:false,fb:"Drenar áreas úmidas destrói habitats-chave e libera carbono, além de quebrar o ciclo da água local."}
       ]},
     {emoji:"🌳",ch:"Mata ciliar e APP",situ:"A lei exige manter a mata ciliar como Área de Preservação Permanente (APP) nas margens dos rios.",
       opts:[
-        {t:"Respeitar e recuperar a APP ribeirinha",d:11,ok:true,fb:"A mata ciliar evita erosão, filtra sedimentos e conecta habitats. É proteção legal e ecológica das margens."},
-        {t:"Avançar o pasto até a beira do rio",d:-10,ok:false,fb:"Sem mata ciliar, as margens erodem, a água assoreia e a fauna ribeirinha perde abrigo."}
+        {t:"Avançar o pasto até a margem",d:-10,ok:false,fb:"Sem mata ciliar, as margens erodem, a água assoreia e a fauna ribeirinha perde abrigo."},
+        {t:"Recuperar a mata ciliar (APP)",d:11,ok:true,fb:"A mata ciliar evita erosão, filtra sedimentos e conecta habitats. É proteção legal e ecológica das margens."}
       ]},
     {emoji:"🤝",ch:"Legado do ciclo",situ:"No balanço do ano, surge a chance de aderir a um programa de pecuária sustentável e ecoturismo.",
       opts:[
-        {t:"Aderir: certificação sustentável + ecoturismo",d:12,ok:true,fb:"Pecuária de baixo impacto e ecoturismo geram renda preservando o bioma — modelo que sustenta o Pantanal a longo prazo."},
-        {t:"Intensificar produção a qualquer custo",d:-10,ok:false,fb:"Produção sem limites degrada solo, água e fauna, corroendo a própria base da atividade no futuro."}
+        {t:"Aderir à certificação sustentável",d:12,ok:true,fb:"Pecuária de baixo impacto e ecoturismo geram renda preservando o bioma — modelo que sustenta o Pantanal a longo prazo."},
+        {t:"Intensificar a produção a qualquer custo",d:-10,ok:false,fb:"Produção sem limites degrada solo, água e fauna, corroendo a própria base da atividade no futuro."}
       ]}
   ]
 },
@@ -309,62 +313,62 @@ dificil:{
   scenes:[
     {emoji:"🌊",ch:"Pulso e conectividade",situ:"Como gestor de bacia, você avalia o regime hidrológico. A planície alagável depende da conectividade longitudinal e lateral do Alto Paraguai.",
       opts:[
-        {t:"Preservar a conectividade hidrológica e o pulso de inundação",d:12,ok:true,fb:"A conectividade lateral (rio–planície) controla o pulso de inundação, regulando produtividade primária, recrutamento de peixes e dinâmica de nutrientes."},
-        {t:"Implantar cascata de PCHs no Alto Paraguai",d:-13,ok:false,fb:"Hidrelétricas a montante fragmentam o regime de vazão e retêm sedimentos, descaracterizando o pulso que estrutura todo o bioma."},
+        {t:"Preservar a conectividade hidrológica",d:12,ok:true,fb:"A conectividade lateral (rio–planície) controla o pulso de inundação, regulando produtividade primária, recrutamento de peixes e dinâmica de nutrientes."},
+        {t:"Implantar cascata de PCHs a montante",d:-13,ok:false,fb:"Hidrelétricas a montante fragmentam o regime de vazão e retêm sedimentos, descaracterizando o pulso que estrutura todo o bioma."},
         {t:"Retificar meandros para drenagem agrícola",d:-12,ok:false,fb:"Retificar canais aumenta a velocidade de escoamento, reduz o tempo de residência da água e seca áreas úmidas."}
       ]},
     {emoji:"🪨",ch:"Sedimentação e erosão",situ:"O desmatamento no planalto que circunda a planície (a borda do Cerrado) está acelerando o aporte de sedimentos para os rios.",
       opts:[
-        {t:"Restaurar vegetação no planalto e controlar erosão",d:12,ok:true,fb:"A planície funciona como bacia de sedimentação; o desmatamento do planalto aumenta o assoreamento e altera leitos e arrombados."},
-        {t:"Ignorar — o sedimento se dilui na planície",d:-11,ok:false,fb:"O excesso de sedimentos assoreia canais, forma 'arrombados' e redireciona rios, com efeitos hidrológicos de larga escala."},
+        {t:"Ignorar o aporte de sedimentos",d:-11,ok:false,fb:"O excesso de sedimentos assoreia canais, forma 'arrombados' e redireciona rios, com efeitos hidrológicos de larga escala."},
+        {t:"Restaurar a vegetação do planalto",d:12,ok:true,fb:"A planície funciona como bacia de sedimentação; o desmatamento do planalto aumenta o assoreamento e altera leitos e arrombados."},
         {t:"Dragar continuamente os canais assoreados",d:-9,ok:false,fb:"A dragagem trata o sintoma, não a causa (erosão no planalto), e ainda perturba o leito e a biota aquática."}
       ]},
     {emoji:"🔥",ch:"Ecologia do fogo",situ:"O regime de fogo do Pantanal é histórico, mas a seca extrema de anos recentes elevou a frequência e a severidade dos incêndios.",
       opts:[
-        {t:"Adotar Manejo Integrado do Fogo (MIF) com queimas prescritas",d:12,ok:true,fb:"O MIF usa o fogo na estação certa para reduzir biomassa combustível e criar mosaicos, diminuindo a severidade de megaincêndios."},
-        {t:"Política de supressão total do fogo",d:-9,ok:false,fb:"Suprimir todo fogo acumula combustível; quando a ignição ocorre na seca, o incêndio é catastrófico — o paradoxo da supressão."},
-        {t:"Queima extensiva no auge da seca",d:-14,ok:false,fb:"Em 2020, ~26–30% do Pantanal queimou. Fogo na seca extrema é incontrolável e dizima fauna, turfa e vegetação."}
+        {t:"Adotar Manejo Integrado do Fogo",d:12,ok:true,fb:"O MIF usa o fogo na estação certa para reduzir biomassa combustível e criar mosaicos, diminuindo a severidade de megaincêndios."},
+        {t:"Suprimir todo e qualquer fogo",d:-9,ok:false,fb:"Suprimir todo fogo acumula combustível; quando a ignição ocorre na seca, o incêndio é catastrófico — o paradoxo da supressão."},
+        {t:"Queimar tudo no auge da seca",d:-14,ok:false,fb:"Em 2020, ~26–30% do Pantanal queimou. Fogo na seca extrema é incontrolável e dizima fauna, turfa e vegetação."}
       ]},
     {emoji:"🌱",ch:"Carbono e turfa",situ:"Há solos hidromórficos e acúmulo orgânico em áreas permanentemente úmidas que estocam carbono.",
       opts:[
-        {t:"Manter áreas úmidas alagadas e o estoque de carbono",d:11,ok:true,fb:"Solos saturados estocam carbono porque a decomposição anaeróbica é lenta. Drená-los oxida a matéria orgânica e emite CO₂."},
         {t:"Drenar para agricultura intensiva",d:-12,ok:false,fb:"A drenagem de áreas úmidas converte sumidouros em fontes de carbono e ainda eleva o risco de incêndios de solo (turfa)."},
-        {t:"Queimar a vegetação para fertilizar o solo",d:-11,ok:false,fb:"A queima libera o carbono estocado e degrada a fertilidade a longo prazo, com ganho apenas efêmero de nutrientes."}
+        {t:"Manter as áreas úmidas alagadas",d:11,ok:true,fb:"Solos saturados estocam carbono porque a decomposição anaeróbica é lenta. Drená-los oxida a matéria orgânica e emite CO₂."},
+        {t:"Queimar a vegetação para fertilizar",d:-11,ok:false,fb:"A queima libera o carbono estocado e degrada a fertilidade a longo prazo, com ganho apenas efêmero de nutrientes."}
       ]},
     {emoji:"🐆",ch:"Predador de topo",situ:"Dados de monitoramento mostram a maior densidade de onças-pintadas das Américas em certas regiões do Pantanal. Há conflito com a pecuária.",
       opts:[
-        {t:"Pagamento por serviços ambientais + manejo antipredação",d:12,ok:true,fb:"Compensar produtores e adotar manejo (búfalos-guia, currais, búfalas) alinha conservação do predador de topo e pecuária."},
-        {t:"Programa de abate de onças 'problema'",d:-15,ok:false,fb:"Remover predadores de topo gera cascatas tróficas (ex.: superpopulação de presas) e é crime ambiental."},
-        {t:"Fragmentar habitat com cercas e estradas",d:-11,ok:false,fb:"A fragmentação reduz o fluxo gênico e o território de grandes felinos, comprometendo populações viáveis."}
+        {t:"Pagar por serviços ambientais (PSA)",d:12,ok:true,fb:"Compensar produtores e adotar manejo antipredação (búfalos-guia, currais) alinha conservação do predador de topo e pecuária."},
+        {t:"Abater as onças 'problema'",d:-15,ok:false,fb:"Remover predadores de topo gera cascatas tróficas (ex.: superpopulação de presas) e é crime ambiental."},
+        {t:"Fragmentar o habitat com cercas",d:-11,ok:false,fb:"A fragmentação reduz o fluxo gênico e o território de grandes felinos, comprometendo populações viáveis."}
       ]},
     {emoji:"🌾",ch:"Invasoras e homogeneização",situ:"Gramíneas africanas (Urochloa/braquiária) avançam sobre campos nativos, e o javali-europeu se espalha.",
       opts:[
-        {t:"Controlar invasoras e manejar campos nativos",d:11,ok:true,fb:"Invasoras homogeneízam comunidades, alteram o regime de fogo e deslocam espécies nativas — controlá-las preserva a heterogeneidade do bioma."},
-        {t:"Substituir campos nativos por pasto exótico",d:-12,ok:false,fb:"A conversão para monocultura de capim exótico reduz a biodiversidade e a resiliência do ecossistema."},
-        {t:"Introduzir mais espécies exóticas 'úteis'",d:-13,ok:false,fb:"Novas introduções aumentam o risco de invasões em cascata, um dos maiores motores globais de perda de biodiversidade."}
+        {t:"Controlar as espécies invasoras",d:11,ok:true,fb:"Invasoras homogeneízam comunidades, alteram o regime de fogo e deslocam espécies nativas — controlá-las preserva a heterogeneidade do bioma."},
+        {t:"Trocar campo nativo por pasto exótico",d:-12,ok:false,fb:"A conversão para monocultura de capim exótico reduz a biodiversidade e a resiliência do ecossistema."},
+        {t:"Introduzir mais exóticas 'úteis'",d:-13,ok:false,fb:"Novas introduções aumentam o risco de invasões em cascata, um dos maiores motores globais de perda de biodiversidade."}
       ]},
     {emoji:"🐟",ch:"Pesca e recrutamento",situ:"A pesca profissional e esportiva pressiona estoques de espécies migratórias (piscívoras de grande porte, como o dourado).",
       opts:[
-        {t:"Defeso, cotas e proteção de rotas de migração",d:11,ok:true,fb:"Peixes migratórios dependem da cheia para reprodução; defeso e proteção das rotas garantem o recrutamento e a sustentabilidade dos estoques."},
-        {t:"Liberar pesca sem limites de cota ou tamanho",d:-12,ok:false,fb:"A sobrepesca de migradores colapsa estoques e desorganiza a teia trófica aquática inteira."},
-        {t:"Construir barreiras que bloqueiam a migração",d:-12,ok:false,fb:"Barramentos interrompem as migrações reprodutivas (piracema), causando queda drástica das populações de peixes."}
+        {t:"Liberar pesca sem cota nem tamanho",d:-12,ok:false,fb:"A sobrepesca de migradores colapsa estoques e desorganiza a teia trófica aquática inteira."},
+        {t:"Defeso e cotas para migradores",d:11,ok:true,fb:"Peixes migratórios dependem da cheia para reprodução; defeso e proteção das rotas garantem o recrutamento e a sustentabilidade dos estoques."},
+        {t:"Barrar o rio bloqueando a migração",d:-12,ok:false,fb:"Barramentos interrompem as migrações reprodutivas (piracema), causando queda drástica das populações de peixes."}
       ]},
     {emoji:"📜",ch:"Governança transfronteiriça",situ:"O Pantanal é compartilhado por Brasil (~70%), Bolívia (~20%) e Paraguai (~10%). Uma decisão a montante afeta todos.",
       opts:[
-        {t:"Articular gestão integrada da bacia entre os países",d:12,ok:true,fb:"Por ser uma bacia transfronteiriça, a conservação exige coordenação internacional — decisões a montante repercutem por toda a planície."},
-        {t:"Decidir só com base no interesse local imediato",d:-11,ok:false,fb:"Gestão fragmentada ignora a conectividade da bacia e gera externalidades que degradam o sistema como um todo."},
-        {t:"Acelerar grandes obras sem acordo regional",d:-12,ok:false,fb:"Infraestrutura sem coordenação transfronteiriça pode comprometer o regime hidrológico de todo o Pantanal."}
+        {t:"Decidir só pelo interesse local",d:-11,ok:false,fb:"Gestão fragmentada ignora a conectividade da bacia e gera externalidades que degradam o sistema como um todo."},
+        {t:"Articular gestão integrada da bacia",d:12,ok:true,fb:"Por ser uma bacia transfronteiriça, a conservação exige coordenação internacional — decisões a montante repercutem por toda a planície."},
+        {t:"Acelerar obras sem acordo regional",d:-12,ok:false,fb:"Infraestrutura sem coordenação transfronteiriça pode comprometer o regime hidrológico de todo o Pantanal."}
       ]},
     {emoji:"🌡️",ch:"Mudança climática",situ:"Projeções indicam secas mais longas e severas e maior variabilidade de chuvas na região nas próximas décadas.",
       opts:[
-        {t:"Aumentar a resiliência: corredores, restauração e MIF",d:12,ok:true,fb:"Corredores ecológicos, restauração e manejo do fogo aumentam a capacidade do bioma de absorver eventos extremos mais frequentes."},
-        {t:"Manter o mesmo modelo, ignorando o clima",d:-10,ok:false,fb:"Ignorar a tendência de secas intensifica perdas; a adaptação proativa é mais barata que a recuperação pós-desastre."},
-        {t:"Expandir drenagem para 'compensar' as cheias",d:-12,ok:false,fb:"Drenar reduz a capacidade de retenção hídrica, agravando tanto secas quanto a perda de habitat."}
+        {t:"Investir em resiliência e corredores",d:12,ok:true,fb:"Corredores ecológicos, restauração e manejo do fogo aumentam a capacidade do bioma de absorver eventos extremos mais frequentes."},
+        {t:"Manter o modelo e ignorar o clima",d:-10,ok:false,fb:"Ignorar a tendência de secas intensifica perdas; a adaptação proativa é mais barata que a recuperação pós-desastre."},
+        {t:"Expandir drenagem para conter cheias",d:-12,ok:false,fb:"Drenar reduz a capacidade de retenção hídrica, agravando tanto secas quanto a perda de habitat."}
       ]},
     {emoji:"🏞️",ch:"RPPN e legado",situ:"Surge a oportunidade de criar uma Reserva Particular do Patrimônio Natural (RPPN) e integrar a Reserva da Biosfera do Pantanal (UNESCO).",
       opts:[
-        {t:"Criar a RPPN e aderir à Reserva da Biosfera",d:12,ok:true,fb:"O Pantanal é Patrimônio Natural da Humanidade e Reserva da Biosfera (UNESCO). RPPNs ampliam a rede de áreas protegidas com incentivos."},
-        {t:"Vender a área para conversão agrícola total",d:-12,ok:false,fb:"A conversão integral elimina serviços ecossistêmicos (água, carbono, fauna) que sustentam a própria região no longo prazo."},
+        {t:"Criar uma RPPN na propriedade",d:12,ok:true,fb:"O Pantanal é Patrimônio Natural da Humanidade e Reserva da Biosfera (UNESCO). RPPNs ampliam a rede de áreas protegidas com incentivos."},
+        {t:"Vender para conversão agrícola total",d:-12,ok:false,fb:"A conversão integral elimina serviços ecossistêmicos (água, carbono, fauna) que sustentam a própria região no longo prazo."},
         {t:"Lotear para especulação imobiliária",d:-11,ok:false,fb:"A fragmentação fundiária dificulta o manejo em escala de paisagem, essencial para um bioma regido pelo pulso de inundação."}
       ]}
   ]
@@ -374,81 +378,81 @@ carbonauta:{
   scenes:[
     {emoji:"🛰️",ch:"Desenho experimental",situ:"Você coordena um projeto de longo prazo sobre o balanço de carbono da planície. Precisa quantificar a troca líquida de CO₂ entre vegetação/solo e atmosfera ao longo do pulso de inundação.",
       opts:[
-        {t:"Instalar torres de covariância de vórtices (eddy covariance) com amostragem em cheia e seca",d:12,ok:true,fb:"A covariância de vórtices mede a Troca Líquida do Ecossistema (NEE) em alta frequência, captando a inversão fonte/sumidouro entre as fases inundada e seca."},
-        {t:"Estimar o carbono só por uma campanha pontual de câmaras na seca",d:-12,ok:false,fb:"Uma única campanha sazonal ignora a forte sazonalidade do pulso e enviesa o balanço — áreas úmidas alternam entre fonte e sumidouro."},
-        {t:"Inferir o balanço apenas de NDVI sem medição de fluxo",d:-9,ok:false,fb:"Índices de vegetação aproximam produtividade, mas não medem respiração nem fluxos de CH₄; sozinhos não fecham o balanço de carbono."}
+        {t:"Instalar torres de eddy covariance",d:12,ok:true,fb:"A covariância de vórtices mede a Troca Líquida do Ecossistema (NEE) em alta frequência, captando a inversão fonte/sumidouro entre as fases inundada e seca."},
+        {t:"Fazer uma campanha pontual na seca",d:-12,ok:false,fb:"Uma única campanha sazonal ignora a forte sazonalidade do pulso e enviesa o balanço — áreas úmidas alternam entre fonte e sumidouro."},
+        {t:"Inferir o balanço só por NDVI",d:-9,ok:false,fb:"Índices de vegetação aproximam produtividade, mas não medem respiração nem fluxos de CH₄; sozinhos não fecham o balanço de carbono."}
       ]},
     {emoji:"🫧",ch:"Metano vs. CO₂",situ:"Os dados mostram que, na fase alagada, há forte efluxo de CH₄ das áreas anóxicas. Um colega quer reportar o balanço só em massa de carbono.",
       opts:[
-        {t:"Converter para CO₂-equivalente usando o GWP do metano e reportar forçamento radiativo",d:12,ok:true,fb:"O CH₄ tem potencial de aquecimento dezenas de vezes maior que o CO₂ em 100 anos; ignorá-lo subestima o forçamento radiativo do sistema."},
-        {t:"Somar carbono de CH₄ e CO₂ em massa, sem ponderar por GWP",d:-12,ok:false,fb:"Massa de carbono não equivale a impacto climático: o metano precisa ser ponderado pelo GWP para um balanço de forçamento correto."},
-        {t:"Descartar o CH₄ por ser 'minoritário' em massa",d:-13,ok:false,fb:"Áreas úmidas tropicais são grandes fontes naturais de metano; descartá-lo compromete toda a inferência sobre o papel climático do bioma."}
+        {t:"Ponderar o CH₄ pelo GWP",d:12,ok:true,fb:"O CH₄ tem potencial de aquecimento dezenas de vezes maior que o CO₂ em 100 anos; ignorá-lo subestima o forçamento radiativo do sistema."},
+        {t:"Somar CH₄ e CO₂ só em massa",d:-12,ok:false,fb:"Massa de carbono não equivale a impacto climático: o metano precisa ser ponderado pelo GWP para um balanço de forçamento correto."},
+        {t:"Descartar o CH₄ por ser minoritário",d:-13,ok:false,fb:"Áreas úmidas tropicais são grandes fontes naturais de metano; descartá-lo compromete toda a inferência sobre o papel climático do bioma."}
       ]},
     {emoji:"🌊",ch:"Conceito do pulso de inundação",situ:"Ao interpretar a alta produtividade do sistema, você ancora a hipótese no arcabouço teórico de áreas alagáveis.",
       opts:[
-        {t:"Aplicar o Flood Pulse Concept: a zona de transição aquático-terrestre dirige a produtividade",d:12,ok:true,fb:"O Flood Pulse Concept (Junk et al.) explica que o avanço/recuo da água na ATTZ controla a ciclagem de nutrientes e a produtividade da planície."},
-        {t:"Assumir que a produtividade vem só de aporte alóctone de montante",d:-10,ok:false,fb:"Em grandes planícies, a produção autóctone na zona de inundação domina; reduzir tudo a subsídio de montante é o modelo do River Continuum, menos adequado aqui."},
-        {t:"Tratar o sistema como lêntico estável, ignorando a sazonalidade",d:-11,ok:false,fb:"O Pantanal é definido pela pulsação hidrológica; modelá-lo como sistema estático descarta seu principal forçante ecológico."}
+        {t:"Atribuir tudo ao aporte de montante",d:-10,ok:false,fb:"Em grandes planícies, a produção autóctone na zona de inundação domina; reduzir tudo a subsídio de montante é o modelo do River Continuum, menos adequado aqui."},
+        {t:"Aplicar o Flood Pulse Concept",d:12,ok:true,fb:"O Flood Pulse Concept (Junk et al.) explica que o avanço/recuo da água na ATTZ controla a ciclagem de nutrientes e a produtividade da planície."},
+        {t:"Tratar como sistema lêntico estável",d:-11,ok:false,fb:"O Pantanal é definido pela pulsação hidrológica; modelá-lo como sistema estático descarta seu principal forçante ecológico."}
       ]},
     {emoji:"🪵",ch:"Reconstrução paleoambiental",situ:"Você quer reconstruir a dinâmica de carbono e fogo dos últimos milênios para contextualizar as mudanças atuais.",
       opts:[
-        {t:"Coletar testemunhos de sedimento e analisar δ¹³C, carvão e datação ¹⁴C",d:12,ok:true,fb:"Isótopos de carbono, partículas de carvão e datação radiocarbônica em cores sedimentares revelam alternâncias C3/C4, regimes de fogo e taxas de acúmulo."},
-        {t:"Inferir o passado só a partir de relatos históricos do século XX",d:-9,ok:false,fb:"Registros documentais cobrem décadas, não milênios; sem proxies sedimentares não se acessa a variabilidade de longo prazo."},
-        {t:"Assumir estabilidade climática holocênica e pular a paleo",d:-10,ok:false,fb:"O Holoceno teve fases secas/úmidas marcantes na região; assumir estabilidade ignora a linha de base natural de variabilidade."}
+        {t:"Usar só relatos do século XX",d:-9,ok:false,fb:"Registros documentais cobrem décadas, não milênios; sem proxies sedimentares não se acessa a variabilidade de longo prazo."},
+        {t:"Datar testemunhos de sedimento (¹⁴C)",d:12,ok:true,fb:"Isótopos de carbono (δ¹³C), partículas de carvão e datação radiocarbônica em cores sedimentares revelam alternâncias C3/C4, regimes de fogo e taxas de acúmulo."},
+        {t:"Assumir estabilidade climática holocênica",d:-10,ok:false,fb:"O Holoceno teve fases secas/úmidas marcantes na região; assumir estabilidade ignora a linha de base natural de variabilidade."}
       ]},
     {emoji:"🔥",ch:"Carbono pirogênico",situ:"Após uma temporada de incêndios extremos, você avalia o destino do carbono queimado e suas emissões.",
       opts:[
-        {t:"Quantificar emissões pirogênicas e o estoque residual de carbono negro (pyC) no solo",d:12,ok:true,fb:"O fogo emite CO₂/CH₄/aerossóis, mas também gera carbono pirogênico recalcitrante que se incorpora ao solo — ambos precisam entrar no balanço."},
-        {t:"Considerar que todo o carbono da biomassa queimada vira CO₂ imediato",d:-10,ok:false,fb:"Parte do carbono fica como carvão (black carbon) de longa residência; tratar 100% como emissão imediata distorce o orçamento."},
-        {t:"Excluir incêndios do balanço por serem 'eventos pontuais'",d:-12,ok:false,fb:"Em anos de seca extrema o fogo domina o balanço anual de carbono; excluí-lo subnotifica emissões de forma grave."}
+        {t:"Quantificar o carbono pirogênico (pyC)",d:12,ok:true,fb:"O fogo emite CO₂/CH₄/aerossóis, mas também gera carbono pirogênico recalcitrante (black carbon) que se incorpora ao solo — ambos precisam entrar no balanço."},
+        {t:"Supor que tudo vira CO₂ na hora",d:-10,ok:false,fb:"Parte do carbono fica como carvão de longa residência; tratar 100% como emissão imediata distorce o orçamento de carbono."},
+        {t:"Excluir o fogo do balanço",d:-12,ok:false,fb:"Em anos de seca extrema o fogo domina o balanço anual de carbono; excluí-lo subnotifica emissões de forma grave."}
       ]},
     {emoji:"📡",ch:"Sensoriamento da inundação",situ:"Mapear a extensão e a duração da inundação é crítico para escalonar fluxos de gases. A estação chuvosa traz muitas nuvens.",
       opts:[
-        {t:"Usar SAR (radar de abertura sintética), que penetra nuvens, fundido com séries ópticas",d:12,ok:true,fb:"O SAR enxerga através de nuvens e da vegetação parcial, sendo padrão-ouro para mapear inundação sob dossel na estação chuvosa."},
-        {t:"Confiar apenas em imagens ópticas (ex.: bandas do visível) durante a cheia",d:-10,ok:false,fb:"A cobertura de nuvens na estação úmida cria enormes lacunas no óptico justamente no pico da inundação que se quer mapear."},
-        {t:"Interpolar a área alagada a partir de um único nível de régua fluvial",d:-9,ok:false,fb:"Uma régua pontual não captura a heterogeneidade espacial da inundação; é preciso mapeamento espacializado."}
+        {t:"Mapear inundação com radar SAR",d:12,ok:true,fb:"O SAR (radar de abertura sintética) enxerga através de nuvens e da vegetação parcial, sendo padrão-ouro para mapear inundação sob dossel na estação chuvosa."},
+        {t:"Usar só imagem óptica na cheia",d:-10,ok:false,fb:"A cobertura de nuvens na estação úmida cria enormes lacunas no óptico justamente no pico da inundação que se quer mapear."},
+        {t:"Inferir de uma única régua fluvial",d:-9,ok:false,fb:"Uma régua pontual não captura a heterogeneidade espacial da inundação; é preciso mapeamento espacializado."}
       ]},
     {emoji:"🧪",ch:"Exportação de carbono dissolvido",situ:"Você investiga o carbono orgânico dissolvido (DOC) exportado pelos rios e a evasão de CO₂ da água.",
       opts:[
-        {t:"Medir pCO₂ da água, fluxo de evasão e fluxo de DOC/DIC ao longo do hidrograma",d:12,ok:true,fb:"Rios e áreas alagadas frequentemente são supersaturados em CO₂ e o evadem para a atmosfera; ignorar a evasão aquática subestima a fonte."},
-        {t:"Tratar o rio como simples tubo que conserva o carbono a jusante",d:-11,ok:false,fb:"As águas continentais processam e emitem carbono ativamente; o conceito de 'tubo passivo' foi superado pela visão de continuum aquático reativo."},
-        {t:"Assumir DOC constante e independente da vazão",d:-9,ok:false,fb:"A exportação de DOC é fortemente modulada pela conectividade e pela vazão; assumi-la constante introduz viés sazonal grande."}
+        {t:"Tratar o rio como tubo passivo",d:-11,ok:false,fb:"As águas continentais processam e emitem carbono ativamente; o conceito de 'tubo passivo' foi superado pela visão de continuum aquático reativo."},
+        {t:"Medir pCO₂ e evasão aquática",d:12,ok:true,fb:"Rios e áreas alagadas frequentemente são supersaturados em CO₂ e o evadem para a atmosfera; ignorar a evasão aquática subestima a fonte."},
+        {t:"Assumir DOC constante na vazão",d:-9,ok:false,fb:"A exportação de DOC é fortemente modulada pela conectividade e pela vazão; assumi-la constante introduz viés sazonal grande."}
       ]},
     {emoji:"🌀",ch:"Teleconexões climáticas",situ:"A variabilidade interanual da inundação parece ligada a forçantes de grande escala. Você modela os controles hidroclimáticos.",
       opts:[
-        {t:"Incluir ENSO e gradientes de TSM do Atlântico como preditores da anomalia de cheia",d:12,ok:true,fb:"Eventos de El Niño/La Niña e padrões de temperatura da superfície do mar modulam a precipitação na bacia, controlando a magnitude do pulso."},
-        {t:"Modelar a cheia só com a chuva local do dia, sem memória de bacia",d:-10,ok:false,fb:"A inundação integra chuva de toda a bacia com defasagem de semanas a meses; um modelo sem memória ou escala falha."},
-        {t:"Assumir estacionariedade e ignorar tendências climáticas",d:-11,ok:false,fb:"Sob mudança climática a hipótese de estacionariedade hidrológica é frágil; secas mais intensas alteram a distribuição de extremos."}
+        {t:"Usar só a chuva local do dia",d:-10,ok:false,fb:"A inundação integra chuva de toda a bacia com defasagem de semanas a meses; um modelo sem memória ou escala falha."},
+        {t:"Incluir ENSO e TSM como preditores",d:12,ok:true,fb:"Eventos de El Niño/La Niña e padrões de temperatura da superfície do mar (TSM) modulam a precipitação na bacia, controlando a magnitude do pulso."},
+        {t:"Assumir estacionariedade hidrológica",d:-11,ok:false,fb:"Sob mudança climática a hipótese de estacionariedade hidrológica é frágil; secas mais intensas alteram a distribuição de extremos."}
       ]},
     {emoji:"📐",ch:"Quantificação de incerteza",situ:"Ao escalonar fluxos pontuais para toda a planície, revisores exigem rigor estatístico.",
       opts:[
-        {t:"Propagar incerteza com bootstrap/Monte Carlo e reportar intervalos de confiança",d:12,ok:true,fb:"O upscaling de fluxos acumula erros de medição, de modelo e de área inundada; propagar incerteza é essencial para conclusões defensáveis."},
-        {t:"Reportar apenas a média pontual, sem intervalos",d:-11,ok:false,fb:"Estimativas sem incerteza são cientificamente incompletas e impedem comparação entre estudos e detecção de tendências."},
-        {t:"Extrapolar de um único sítio para todo o bioma sem estratificar habitats",d:-12,ok:false,fb:"A planície é um mosaico (campos, baías, matas, vazantes); ignorar a estratificação produz vieses de representatividade enormes."}
+        {t:"Propagar incerteza com Monte Carlo",d:12,ok:true,fb:"O upscaling de fluxos acumula erros de medição, de modelo e de área inundada; propagar incerteza (bootstrap/Monte Carlo) é essencial para conclusões defensáveis."},
+        {t:"Reportar só a média pontual",d:-11,ok:false,fb:"Estimativas sem incerteza são cientificamente incompletas e impedem comparação entre estudos e detecção de tendências."},
+        {t:"Extrapolar de um só sítio",d:-12,ok:false,fb:"A planície é um mosaico (campos, baías, matas, vazantes); ignorar a estratificação produz vieses de representatividade enormes."}
       ]},
     {emoji:"🧮",ch:"Balanço líquido de GEE",situ:"Para concluir se o sistema é, no todo, fonte ou sumidouro climático, você integra todos os termos.",
       opts:[
-        {t:"Calcular o balanço líquido de forçamento integrando CO₂, CH₄, fogo e evasão aquática",d:12,ok:true,fb:"O sinal climático líquido depende do equilíbrio entre o sequestro de CO₂ pela vegetação/solo e as emissões de CH₄, fogo e evasão — só o balanço completo decide."},
-        {t:"Declarar 'sumidouro' só porque a NEE de CO₂ é negativa",d:-12,ok:false,fb:"Um sistema pode sequestrar CO₂ e ainda assim ter forçamento positivo se as emissões de metano forem altas — é preciso o balanço sustentado por GWP."},
-        {t:"Reportar um único número anual sem distinguir as fases hidrológicas",d:-9,ok:false,fb:"A média anual esconde a alternância fonte/sumidouro; a interpretação correta exige resolver as fases de cheia e seca."}
+        {t:"Declarar sumidouro só pela NEE",d:-12,ok:false,fb:"Um sistema pode sequestrar CO₂ e ainda assim ter forçamento positivo se as emissões de metano forem altas — é preciso o balanço sustentado por GWP."},
+        {t:"Integrar CO₂, CH₄, fogo e evasão",d:12,ok:true,fb:"O sinal climático líquido depende do equilíbrio entre o sequestro de CO₂ pela vegetação/solo e as emissões de CH₄, fogo e evasão — só o balanço completo decide."},
+        {t:"Dar um número anual único",d:-9,ok:false,fb:"A média anual esconde a alternância fonte/sumidouro; a interpretação correta exige resolver as fases de cheia e seca."}
       ]},
     {emoji:"📊",ch:"MRV e crédito de carbono",situ:"Surge a proposta de um projeto de carbono em áreas úmidas com pagamento por resultados (REDD+/blue carbon de água doce).",
       opts:[
-        {t:"Exigir MRV robusto, adicionalidade, linha de base e tratamento de não-permanência (fogo)",d:12,ok:true,fb:"Créditos críveis dependem de Monitoramento-Relato-Verificação, adicionalidade demonstrável e reservas para o risco de reversão por incêndio ou seca."},
-        {t:"Emitir créditos com base em estimativa única, sem permanência nem verificação",d:-13,ok:false,fb:"Sem MRV e buffer de permanência, os créditos são de baixa integridade e vulneráveis a reversão — risco de greenwashing."},
-        {t:"Ignorar o vazamento (leakage) da pressão produtiva para o entorno",d:-11,ok:false,fb:"Se a conservação só desloca o desmatamento/pecuária para fora da área, o ganho líquido de carbono é ilusório."}
+        {t:"Emitir crédito sem verificação",d:-13,ok:false,fb:"Sem MRV e buffer de permanência, os créditos são de baixa integridade e vulneráveis a reversão — risco de greenwashing."},
+        {t:"Exigir MRV, adicionalidade e permanência",d:12,ok:true,fb:"Créditos críveis dependem de Monitoramento-Relato-Verificação, adicionalidade demonstrável e reservas para o risco de reversão por incêndio ou seca."},
+        {t:"Ignorar o vazamento (leakage)",d:-11,ok:false,fb:"Se a conservação só desloca o desmatamento/pecuária para fora da área, o ganho líquido de carbono é ilusório."}
       ]},
     {emoji:"🌱",ch:"Solos hidromórficos e turfa",situ:"Você caracteriza o estoque de carbono no solo de áreas permanentemente saturadas e o efeito de drenagem.",
       opts:[
-        {t:"Mapear estoques por profundidade e modelar a oxidação esperada sob rebaixamento do lençol",d:12,ok:true,fb:"A saturação inibe a decomposição aeróbica; ao rebaixar o lençol, a matéria orgânica oxida e libera CO₂ — um efeito que precisa ser quantificado, não assumido."},
-        {t:"Assumir que o estoque de solo é insensível ao regime hídrico",d:-12,ok:false,fb:"O conteúdo de carbono do solo é fortemente controlado pelo estado redox; drenagem converte sumidouro em fonte persistente."},
-        {t:"Amostrar só os 5 cm superficiais e extrapolar para todo o perfil",d:-10,ok:false,fb:"Grande parte do carbono está em profundidade; amostragem rasa subestima sistematicamente o estoque total."}
+        {t:"Supor solo insensível ao regime hídrico",d:-12,ok:false,fb:"O conteúdo de carbono do solo é fortemente controlado pelo estado redox; drenagem converte sumidouro em fonte persistente."},
+        {t:"Mapear o estoque por profundidade",d:12,ok:true,fb:"A saturação inibe a decomposição aeróbica; ao rebaixar o lençol, a matéria orgânica oxida e libera CO₂ — um efeito que precisa ser quantificado, não assumido."},
+        {t:"Amostrar só os 5 cm de topo",d:-10,ok:false,fb:"Grande parte do carbono está em profundidade; amostragem rasa subestima sistematicamente o estoque total."}
       ]},
     {emoji:"🏅",ch:"Síntese e legado científico",situ:"Encerrando o ciclo do projeto, você decide como consolidar e dar continuidade à ciência produzida.",
       opts:[
-        {t:"Publicar com dados abertos, integrar redes de fluxo e manter monitoramento de longo prazo",d:12,ok:true,fb:"Séries longas, dados FAIR e integração a redes internacionais de fluxo maximizam a detecção de tendências e a reprodutibilidade — o legado de uma ciência rigorosa."},
-        {t:"Encerrar as torres após um ano e arquivar os dados de forma privada",d:-11,ok:false,fb:"Um único ano não separa sinal de variabilidade interanual; dados fechados limitam síntese e verificação independente."},
-        {t:"Reportar só os resultados que confirmam a hipótese inicial",d:-13,ok:false,fb:"Selecionar resultados favoráveis é viés de publicação e má conduta científica; o balanço deve reportar fontes e sumidouros tais como medidos."}
+        {t:"Publicar com dados abertos (FAIR)",d:12,ok:true,fb:"Séries longas, dados FAIR e integração a redes internacionais de fluxo maximizam a detecção de tendências e a reprodutibilidade — o legado de uma ciência rigorosa."},
+        {t:"Encerrar tudo após um ano só",d:-11,ok:false,fb:"Um único ano não separa sinal de variabilidade interanual; dados fechados limitam síntese e verificação independente."},
+        {t:"Reportar só o que confirma a hipótese",d:-13,ok:false,fb:"Selecionar resultados favoráveis é viés de publicação e má conduta científica; o balanço deve reportar fontes e sumidouros tais como medidos."}
       ]}
   ]
 }
