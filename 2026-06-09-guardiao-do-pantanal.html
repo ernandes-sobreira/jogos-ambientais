@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐆 Guardião do Pantanal — decisões que moldam o bioma</title>
+<style>
+:root{
+  --bg1:#0a3a2a; --bg2:#1f7a5f; --accent:#f2b705; --accent2:#ffd24a;
+  --card:#0f4636; --card2:#13533f; --ink:#eafff6; --muted:#a9d6c5;
+  --success:#34d399; --danger:#ef4444; --warn:#f59e0b; --line:rgba(255,255,255,.14);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:system-ui,'Segoe UI',Roboto,sans-serif;
+  background:linear-gradient(160deg,var(--bg1),var(--bg2));
+  color:var(--ink); min-height:100vh; padding:18px 12px 40px;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{width:min(820px,95vw);margin:0 auto}
+header h1{font-size:clamp(1.5rem,5vw,2.4rem);line-height:1.1;text-shadow:0 2px 8px rgba(0,0,0,.35)}
+header p.sub{color:var(--muted);margin-top:6px;font-size:clamp(.85rem,2.4vw,1rem)}
+.levels{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 10px}
+.pill{
+  flex:1 1 auto;min-width:90px;cursor:pointer;border:2px solid var(--line);
+  background:rgba(255,255,255,.06);color:var(--ink);padding:10px 12px;border-radius:999px;
+  font-weight:700;font-size:.95rem;transition:all .25s;text-align:center;
+}
+.pill:hover{transform:translateY(-2px);border-color:var(--accent)}
+.pill.active{background:var(--accent);color:#1a1a1a;border-color:var(--accent);box-shadow:0 6px 18px rgba(242,183,5,.35)}
+.howto{font-size:.9rem;color:var(--muted);margin:6px 2px 14px;line-height:1.5}
+.hud{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.hud .stat{
+  flex:1 1 120px;background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:10px 12px;box-shadow:0 4px 14px rgba(0,0,0,.18);
+}
+.hud .stat .lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.hud .stat .val{font-size:1.25rem;font-weight:800;margin-top:2px}
+.healthwrap{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:16px;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.healthtop{display:flex;justify-content:space-between;align-items:center;font-weight:700;margin-bottom:8px;font-size:.95rem}
+.bar{height:18px;border-radius:999px;background:rgba(0,0,0,.28);overflow:hidden}
+.bar > span{display:block;height:100%;width:50%;border-radius:999px;transition:width .5s ease, background .5s ease;background:var(--success)}
+.scene{
+  background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:18px 18px 16px;
+  box-shadow:0 8px 26px rgba(0,0,0,.25);
+}
+.scene .emoji{font-size:2.4rem;line-height:1}
+.scene .chapter{color:var(--accent2);font-weight:800;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;margin-top:6px}
+.scene .situ{font-size:clamp(1.02rem,2.8vw,1.18rem);line-height:1.5;margin:8px 0 16px}
+.options{display:flex;flex-direction:column;gap:10px}
+.opt{
+  text-align:left;cursor:pointer;border:2px solid var(--line);background:rgba(255,255,255,.05);
+  color:var(--ink);padding:13px 14px;border-radius:12px;font-size:.98rem;line-height:1.4;
+  transition:all .22s;font-weight:600;
+}
+.opt:hover{transform:translateY(-2px);border-color:var(--accent);background:rgba(255,255,255,.1)}
+.opt:disabled{cursor:default}
+.opt.good{border-color:var(--success);background:rgba(52,211,153,.18);animation:pop .4s}
+.opt.bad{border-color:var(--danger);background:rgba(239,68,68,.18);animation:shake .4s}
+.opt.dim{opacity:.45}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.04)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.feedback{margin-top:14px;border-radius:12px;padding:13px 14px;font-size:.95rem;line-height:1.5;display:none;border:1px solid var(--line)}
+.feedback.show{display:block;animation:pop .35s}
+.feedback.pos{background:rgba(52,211,153,.14);border-color:var(--success)}
+.feedback.neg{background:rgba(239,68,68,.14);border-color:var(--danger)}
+.feedback .delta{font-weight:800}
+.next{
+  margin-top:14px;width:100%;cursor:pointer;border:none;background:var(--accent);color:#1a1a1a;
+  font-weight:800;font-size:1rem;padding:13px;border-radius:12px;transition:all .22s;display:none;
+}
+.next.show{display:block}
+.next:hover{transform:translateY(-2px);background:var(--accent2)}
+/* final */
+.final{display:none;text-align:center;background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:24px 18px;box-shadow:0 8px 26px rgba(0,0,0,.25)}
+.final.show{display:block;animation:pop .5s}
+.final h2{font-size:clamp(1.4rem,5vw,2rem)}
+.final .endingbox{border-radius:14px;padding:16px;margin:14px 0;border:1px solid var(--line);font-size:1rem;line-height:1.55}
+.final .score{font-size:2.6rem;font-weight:900;color:var(--accent2);margin:6px 0}
+.saveform{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+.saveform input{flex:1 1 180px;max-width:260px;padding:12px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.1);color:var(--ink);font-size:1rem}
+.saveform input::placeholder{color:var(--muted)}
+.btn{cursor:pointer;border:none;border-radius:10px;padding:12px 18px;font-weight:800;font-size:1rem;transition:all .22s}
+.btn.save{background:var(--success);color:#06301f}
+.btn.replay{background:var(--accent);color:#1a1a1a}
+.btn:hover{transform:translateY(-2px)}
+/* ranking */
+.rank{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:18px;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.rank h3{font-size:1.05rem;margin-bottom:4px}
+.rank .rsub{font-size:.8rem;color:var(--muted);margin-bottom:10px}
+.rank ol{list-style:none;counter-reset:r}
+.rank li{counter-increment:r;display:flex;align-items:center;gap:10px;padding:8px 6px;border-bottom:1px solid var(--line);font-size:.95rem}
+.rank li:last-child{border-bottom:none}
+.rank li::before{content:counter(r);font-weight:800;color:var(--accent2);min-width:26px;text-align:center}
+.rank li .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank li .sc{font-weight:800}
+.rank .note{font-size:.82rem;color:var(--muted);padding-top:8px}
+footer{text-align:center;margin-top:26px;color:var(--muted);font-size:.86rem;line-height:1.6}
+footer .author{color:var(--accent2);font-weight:800;font-size:1rem}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🐆 Guardião do Pantanal 🦩</h1>
+    <p class="sub">Você vive um ano inteiro na maior planície alagável do mundo. Cada decisão muda o destino do bioma.</p>
+  </header>
+
+  <div class="levels" id="levels">
+    <button class="pill active" data-lvl="basico">Básico</button>
+    <button class="pill" data-lvl="intermediario">Intermediário</button>
+    <button class="pill" data-lvl="dificil">Difícil</button>
+  </div>
+
+  <p class="howto">🎯 <strong>Como jogar:</strong> leia cada situação e escolha uma ação. Decisões certas elevam a <strong>saúde do ecossistema</strong>; escolhas erradas a derrubam. Termine o ciclo com o Pantanal o mais saudável possível. Trocar de nível reinicia o jogo.</p>
+
+  <div class="hud">
+    <div class="stat"><div class="lbl">Cena</div><div class="val" id="hudScene">1/8</div></div>
+    <div class="stat"><div class="lbl">Boas decisões</div><div class="val" id="hudGood">0</div></div>
+    <div class="stat"><div class="lbl">Pontos</div><div class="val" id="hudScore">50</div></div>
+  </div>
+
+  <div class="healthwrap">
+    <div class="healthtop"><span>🌿 Saúde do ecossistema</span><span id="healthPct">50%</span></div>
+    <div class="bar"><span id="healthBar"></span></div>
+  </div>
+
+  <div class="scene" id="scene">
+    <div class="emoji" id="sceneEmoji">🌧️</div>
+    <div class="chapter" id="sceneChapter"></div>
+    <div class="situ" id="sceneSitu"></div>
+    <div class="options" id="options"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="next" id="nextBtn">Próxima cena →</button>
+  </div>
+
+  <div class="final" id="final">
+    <div style="font-size:3rem">🎉</div>
+    <h2 id="finalTitle">Fim do ciclo!</h2>
+    <div class="score" id="finalScore">0 pts</div>
+    <div class="endingbox" id="endingBox"></div>
+    <p style="color:var(--muted);font-size:.9rem">Salve seu resultado no ranking global:</p>
+    <div class="saveform">
+      <input id="nameInput" maxlength="20" placeholder="Seu nome (até 20)">
+      <button class="btn save" id="saveBtn">💾 Salvar no ranking</button>
+    </div>
+    <div style="margin-top:14px"><button class="btn replay" id="replayBtn">🔄 Jogar de novo</button></div>
+  </div>
+
+  <div class="rank">
+    <h3>🏆 Ranking Global</h3>
+    <div class="rsub">Top 10 — nível <span id="rankLvl">Básico</span> · maior pontuação vence</div>
+    <ol id="rankList"></ol>
+    <div class="note" id="rankNote">Carregando ranking…</div>
+  </div>
+
+  <footer>
+    <div class="author">— Idealizado por Ernandes Sobreira —</div>
+    <div>Tema: História natural do Pantanal · Gênero: Cenário de decisões ramificado · app ambiental do dia (2026-06-09)</div>
+  </footer>
+</div>
+
+<script>
+/* ====== Firebase (apenas ranking) ====== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-06-09-guardiao-do-pantanal";
+
+let db=null, fs=null, fbReady=false;
+(async()=>{
+  try{
+    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    fs = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app = appMod.initializeApp(firebaseConfig);
+    db = fs.getFirestore(app);
+    fbReady=true;
+    loadRanking();
+  }catch(e){
+    fbReady=false;
+    document.getElementById('rankNote').textContent="⚠️ Ranking offline — o jogo continua 100% jogável.";
+  }
+})();
+
+/* ====== Conteúdo do jogo ====== */
+const LEVELS = {
+basico:{
+  label:"Básico", start:50,
+  scenes:[
+    {emoji:"🌧️",ch:"Estação das chuvas",situ:"Chegam as primeiras chuvas e o rio Paraguai começa a subir. Em poucos dias os campos baixos vão alagar. O que você faz com o gado?",
+      opts:[
+        {t:"Levar o gado para as cordilheiras (terras mais altas)",d:12,ok:true,fb:"Certo! Na cheia, a água cobre os campos baixos. O pantaneiro move o gado para as partes altas e respeita o ritmo das águas."},
+        {t:"Deixar o gado nos campos baixos mesmo assim",d:-10,ok:false,fb:"O gado pode ficar ilhado ou se afogar. A cheia do Pantanal é previsível todo ano — é preciso se antecipar."},
+        {t:"Construir um grande dique para barrar a água",d:-12,ok:false,fb:"Barrar a cheia destrói o pulso de inundação, o coração do Pantanal. Sem alagar e secar, o bioma entra em colapso."}
+      ]},
+    {emoji:"🐆",ch:"Encontro com a onça",situ:"No fim da tarde você avista uma onça-pintada bebendo água na beira do rio.",
+      opts:[
+        {t:"Observar em silêncio, bem de longe",d:10,ok:true,fb:"A onça-pintada é o maior felino das Américas e o predador de topo do Pantanal. Observar sem perturbar é o jeito certo."},
+        {t:"Atirar para proteger o rebanho",d:-14,ok:false,fb:"Matar onças é crime e quebra a cadeia alimentar. Há manejos que reduzem ataques ao gado sem matar o predador."},
+        {t:"Chegar bem perto para uma selfie",d:-6,ok:false,fb:"Aproximar-se demais estressa o animal e é perigoso. Manter distância é parte do ecoturismo responsável."}
+      ]},
+    {emoji:"☀️",ch:"A seca chega",situ:"Os rios baixam e a água se concentra em poças e baías. Muitos bichos se amontoam ali para beber.",
+      opts:[
+        {t:"Preservar as poças onde os animais bebem",d:10,ok:true,fb:"Na seca, essas poças viram refúgio de vida. Protegê-las ajuda peixes, aves e mamíferos a atravessarem o período difícil."},
+        {t:"Drenar as poças para plantar lavoura",d:-12,ok:false,fb:"Sem essas reservas de água, muitos animais morrem de sede. O Pantanal depende desses refúgios na seca."},
+        {t:"Cercar a água só para o gado",d:-8,ok:false,fb:"A fauna silvestre também precisa beber. Compartilhar a água mantém o equilíbrio do bioma."}
+      ]},
+    {emoji:"🦩",ch:"O tuiuiú",situ:"Um casal de tuiuiús — a ave-símbolo do Pantanal — faz um ninho enorme numa árvore alta perto da sede.",
+      opts:[
+        {t:"Proteger a árvore e o ninho",d:10,ok:true,fb:"O tuiuiú (Jabiru mycteria) é o símbolo do Pantanal. Preservar seus ninhos garante a continuidade da espécie."},
+        {t:"Cortar a árvore para fazer lenha",d:-10,ok:false,fb:"Derrubar a árvore-ninho destrói a reprodução das aves. Árvores altas são raras e valiosas para muitas espécies."}
+      ]},
+    {emoji:"🎣",ch:"Época da piracema",situ:"É piracema: os peixes sobem o rio para se reproduzir. Um vizinho chama para uma grande pescaria.",
+      opts:[
+        {t:"Respeitar o defeso e não pescar agora",d:12,ok:true,fb:"O defeso protege os peixes durante a reprodução. Sem ele, os cardumes desaparecem e toda a teia alimentar sofre."},
+        {t:"Pescar o máximo que conseguir",d:-12,ok:false,fb:"Pescar na reprodução esvazia os rios no futuro. A piracema é justamente o momento de deixar os peixes em paz."}
+      ]},
+    {emoji:"🔥",ch:"Foco de fogo",situ:"No fim da seca, começa um foco de fogo no capim seco perto da mata.",
+      opts:[
+        {t:"Acionar a brigada e abrir um aceiro",d:12,ok:true,fb:"Aceiros (faixas sem vegetação) e brigadas evitam que o fogo vire um incêndio gigante. Prevenção salva a floresta e a fauna."},
+        {t:"Atear mais fogo para 'limpar' o pasto",d:-14,ok:false,fb:"Queimadas descontroladas devastaram o Pantanal em 2020. Usar fogo no capim seco é perigoso e ilegal sem manejo."},
+        {t:"Ignorar — fogo é coisa natural",d:-8,ok:false,fb:"Parte do fogo é natural, mas perto de mata e na seca extrema ele pode sair do controle rapidamente."}
+      ]},
+    {emoji:"🐗",ch:"Visitas no quintal",situ:"Capivaras e queixadas aparecem pastando perto da casa, tranquilas.",
+      opts:[
+        {t:"Conviver — elas fazem parte do bioma",d:8,ok:true,fb:"A capivara é o maior roedor do mundo e alimento de onças e jacarés. Conviver mantém a cadeia alimentar funcionando."},
+        {t:"Espantar com tiros e cães",d:-8,ok:false,fb:"Perseguir a fauna nativa desequilibra o ambiente. Esses animais são parte essencial da teia trófica pantaneira."}
+      ]},
+    {emoji:"🌳",ch:"Fim do ciclo",situ:"O ano se fecha. Há uma faixa de mata ciliar (a vegetação da beira do rio) degradada e sem árvores.",
+      opts:[
+        {t:"Reflorestar a mata ciliar",d:12,ok:true,fb:"A mata ciliar protege as margens, filtra a água e abriga fauna. Recuperá-la deixa um Pantanal mais forte para o próximo ciclo."},
+        {t:"Deixar como está e expandir o pasto até o rio",d:-10,ok:false,fb:"Sem mata ciliar, as margens erodem e a água fica turva. A vegetação ribeirinha é a defesa natural dos rios."}
+      ]}
+  ]
+},
+intermediario:{
+  label:"Intermediário", start:50,
+  scenes:[
+    {emoji:"🌊",ch:"O pulso de inundação",situ:"Você gerencia uma fazenda no Pantanal (cerca de 150 mil km² no Brasil). A cheia anual avança pelos campos. Um técnico propõe regular as águas.",
+      opts:[
+        {t:"Preservar o pulso de inundação natural",d:12,ok:true,fb:"O pulso de inundação — alternância cheia/seca — é o processo ecológico central do Pantanal. Ele renova nutrientes e sustenta peixes e aves."},
+        {t:"Construir barragens para nivelar a vazão",d:-12,ok:false,fb:"Barramentos no Alto Paraguai alteram o pulso e ameaçam a conectividade hidrológica de todo o bioma."},
+        {t:"Drenar áreas alagadas para ampliar a lavoura",d:-10,ok:false,fb:"A drenagem de áreas úmidas elimina berçários de fauna e libera carbono estocado no solo encharcado."}
+      ]},
+    {emoji:"🐟",ch:"Conectividade dos rios",situ:"Há um projeto de hidrovia e dragagem para facilitar o transporte de grãos pelo rio Paraguai.",
+      opts:[
+        {t:"Defender estudos de impacto e cautela",d:10,ok:true,fb:"Dragar e retificar o rio reduz a conectividade e altera os ciclos de cheia que sustentam ~260 a 325 espécies de peixes."},
+        {t:"Aprovar a dragagem em larga escala já",d:-12,ok:false,fb:"Intervenções no leito do rio aceleram a drenagem da planície e desestabilizam o pulso de inundação."},
+        {t:"Canalizar trechos para acelerar o fluxo",d:-10,ok:false,fb:"Canalizar reduz a planície de inundação, secando áreas úmidas que são essenciais ao bioma."}
+      ]},
+    {emoji:"🦦",ch:"Espécie-chave",situ:"Uma família de ariranhas (lontras gigantes, até ~1,8 m) ocupa um trecho de rio rico em peixes que você queria explorar para pesca comercial.",
+      opts:[
+        {t:"Proteger o território das ariranhas",d:11,ok:true,fb:"A ariranha é predadora de topo aquática e indicadora de rios saudáveis. Sua presença sinaliza um ecossistema equilibrado."},
+        {t:"Expulsá-las para liberar a pesca",d:-12,ok:false,fb:"Remover predadores de topo desestabiliza a teia trófica e degrada a qualidade ambiental do trecho."}
+      ]},
+    {emoji:"🐆",ch:"Conflito com predadores",situ:"Onças-pintadas têm atacado bezerros. Os peões pedem uma solução.",
+      opts:[
+        {t:"Adotar manejo: búfalos-guia, cães e currais à noite",d:11,ok:true,fb:"Medidas de manejo reduzem ataques sem matar onças. Conservação e pecuária podem coexistir no Pantanal."},
+        {t:"Contratar caçadores para abater as onças",d:-14,ok:false,fb:"Abate de onças é crime ambiental e remove o predador de topo, base do equilíbrio da fauna pantaneira."},
+        {t:"Envenenar carcaças como isca",d:-15,ok:false,fb:"Iscas envenenadas matam onças, urubus, ariranhas e outros animais — um desastre ecológico em cadeia."}
+      ]},
+    {emoji:"🦜",ch:"Arara-azul",situ:"Você encontra ninhos de arara-azul em manduvis (árvores ocas). Há quem queira capturar filhotes para vender.",
+      opts:[
+        {t:"Proteger ninhos e apoiar projetos de conservação",d:11,ok:true,fb:"A arara-azul quase foi extinta pelo tráfico. Projetos de ninhos artificiais ajudaram sua recuperação no Pantanal."},
+        {t:"Permitir a captura de filhotes para venda",d:-13,ok:false,fb:"O tráfico de animais silvestres é crime e foi a principal causa do declínio histórico da arara-azul."}
+      ]},
+    {emoji:"🔥",ch:"Manejo do fogo",situ:"Após uma seca severa, o capim acumulado vira combustível. É preciso decidir a estratégia de fogo.",
+      opts:[
+        {t:"Fazer manejo integrado do fogo (queimas prescritas e aceiros)",d:11,ok:true,fb:"Queimas controladas em época úmida e aceiros reduzem o material combustível e previnem megaincêndios."},
+        {t:"Tocar fogo geral no fim da seca",d:-14,ok:false,fb:"Em 2020, incêndios queimaram cerca de 30% do Pantanal. Fogo na seca extrema foge ao controle e mata milhões de animais."},
+        {t:"Não fazer nada e torcer pela chuva",d:-7,ok:false,fb:"Sem manejo, o capim acumulado pode alimentar incêndios devastadores quando uma faísca surgir."}
+      ]},
+    {emoji:"🌾",ch:"Capim invasor",situ:"Um vendedor oferece sementes de braquiária (capim africano) para 'turbinar' o pasto nas áreas mais altas.",
+      opts:[
+        {t:"Manter as gramíneas nativas e o campo natural",d:10,ok:true,fb:"A pecuária tradicional do Pantanal usa campos nativos, compatível com a fauna. Gramíneas exóticas invadem e empobrecem o ecossistema."},
+        {t:"Plantar braquiária em larga escala",d:-11,ok:false,fb:"Capins exóticos como a braquiária se tornam invasores, reduzem a biodiversidade e aumentam o risco de fogo."}
+      ]},
+    {emoji:"🦌",ch:"Cervo-do-pantanal",situ:"O cervo-do-pantanal, maior cervídeo da América do Sul, depende das áreas alagadas. Há pressão para drená-las.",
+      opts:[
+        {t:"Manter as áreas úmidas preservadas",d:11,ok:true,fb:"O cervo-do-pantanal vive em brejos e áreas alagadas. Drená-las elimina seu habitat e o de inúmeras outras espécies."},
+        {t:"Drenar brejos para ganhar pasto",d:-11,ok:false,fb:"Drenar áreas úmidas destrói habitats-chave e libera carbono, além de quebrar o ciclo da água local."}
+      ]},
+    {emoji:"🌳",ch:"Mata ciliar e APP",situ:"A lei exige manter a mata ciliar como Área de Preservação Permanente (APP) nas margens dos rios.",
+      opts:[
+        {t:"Respeitar e recuperar a APP ribeirinha",d:11,ok:true,fb:"A mata ciliar evita erosão, filtra sedimentos e conecta habitats. É proteção legal e ecológica das margens."},
+        {t:"Avançar o pasto até a beira do rio",d:-10,ok:false,fb:"Sem mata ciliar, as margens erodem, a água assoreia e a fauna ribeirinha perde abrigo."}
+      ]},
+    {emoji:"🤝",ch:"Legado do ciclo",situ:"No balanço do ano, surge a chance de aderir a um programa de pecuária sustentável e ecoturismo.",
+      opts:[
+        {t:"Aderir: certificação sustentável + ecoturismo",d:12,ok:true,fb:"Pecuária de baixo impacto e ecoturismo geram renda preservando o bioma — modelo que sustenta o Pantanal a longo prazo."},
+        {t:"Intensificar produção a qualquer custo",d:-10,ok:false,fb:"Produção sem limites degrada solo, água e fauna, corroendo a própria base da atividade no futuro."}
+      ]}
+  ]
+},
+dificil:{
+  label:"Difícil", start:50,
+  scenes:[
+    {emoji:"🌊",ch:"Pulso e conectividade",situ:"Como gestor de bacia, você avalia o regime hidrológico. A planície alagável depende da conectividade longitudinal e lateral do Alto Paraguai.",
+      opts:[
+        {t:"Preservar a conectividade hidrológica e o pulso de inundação",d:12,ok:true,fb:"A conectividade lateral (rio–planície) controla o pulso de inundação, regulando produtividade primária, recrutamento de peixes e dinâmica de nutrientes."},
+        {t:"Implantar cascata de PCHs no Alto Paraguai",d:-13,ok:false,fb:"Hidrelétricas a montante fragmentam o regime de vazão e retêm sedimentos, descaracterizando o pulso que estrutura todo o bioma."},
+        {t:"Retificar meandros para drenagem agrícola",d:-12,ok:false,fb:"Retificar canais aumenta a velocidade de escoamento, reduz o tempo de residência da água e seca áreas úmidas."}
+      ]},
+    {emoji:"🪨",ch:"Sedimentação e erosão",situ:"O desmatamento no planalto que circunda a planície (a borda do Cerrado) está acelerando o aporte de sedimentos para os rios.",
+      opts:[
+        {t:"Restaurar vegetação no planalto e controlar erosão",d:12,ok:true,fb:"A planície funciona como bacia de sedimentação; o desmatamento do planalto aumenta o assoreamento e altera leitos e arrombados."},
+        {t:"Ignorar — o sedimento se dilui na planície",d:-11,ok:false,fb:"O excesso de sedimentos assoreia canais, forma 'arrombados' e redireciona rios, com efeitos hidrológicos de larga escala."},
+        {t:"Dragar continuamente os canais assoreados",d:-9,ok:false,fb:"A dragagem trata o sintoma, não a causa (erosão no planalto), e ainda perturba o leito e a biota aquática."}
+      ]},
+    {emoji:"🔥",ch:"Ecologia do fogo",situ:"O regime de fogo do Pantanal é histórico, mas a seca extrema de anos recentes elevou a frequência e a severidade dos incêndios.",
+      opts:[
+        {t:"Adotar Manejo Integrado do Fogo (MIF) com queimas prescritas",d:12,ok:true,fb:"O MIF usa o fogo na estação certa para reduzir biomassa combustível e criar mosaicos, diminuindo a severidade de megaincêndios."},
+        {t:"Política de supressão total do fogo",d:-9,ok:false,fb:"Suprimir todo fogo acumula combustível; quando a ignição ocorre na seca, o incêndio é catastrófico — o paradoxo da supressão."},
+        {t:"Queima extensiva no auge da seca",d:-14,ok:false,fb:"Em 2020, ~26–30% do Pantanal queimou. Fogo na seca extrema é incontrolável e dizima fauna, turfa e vegetação."}
+      ]},
+    {emoji:"🌱",ch:"Carbono e turfa",situ:"Há solos hidromórficos e acúmulo orgânico em áreas permanentemente úmidas que estocam carbono.",
+      opts:[
+        {t:"Manter áreas úmidas alagadas e o estoque de carbono",d:11,ok:true,fb:"Solos saturados estocam carbono porque a decomposição anaeróbica é lenta. Drená-los oxida a matéria orgânica e emite CO₂."},
+        {t:"Drenar para agricultura intensiva",d:-12,ok:false,fb:"A drenagem de áreas úmidas converte sumidouros em fontes de carbono e ainda eleva o risco de incêndios de solo (turfa)."},
+        {t:"Queimar a vegetação para fertilizar o solo",d:-11,ok:false,fb:"A queima libera o carbono estocado e degrada a fertilidade a longo prazo, com ganho apenas efêmero de nutrientes."}
+      ]},
+    {emoji:"🐆",ch:"Predador de topo",situ:"Dados de monitoramento mostram a maior densidade de onças-pintadas das Américas em certas regiões do Pantanal. Há conflito com a pecuária.",
+      opts:[
+        {t:"Pagamento por serviços ambientais + manejo antipredação",d:12,ok:true,fb:"Compensar produtores e adotar manejo (búfalos-guia, currais, búfalas) alinha conservação do predador de topo e pecuária."},
+        {t:"Programa de abate de onças 'problema'",d:-15,ok:false,fb:"Remover predadores de topo gera cascatas tróficas (ex.: superpopulação de presas) e é crime ambiental."},
+        {t:"Fragmentar habitat com cercas e estradas",d:-11,ok:false,fb:"A fragmentação reduz o fluxo gênico e o território de grandes felinos, comprometendo populações viáveis."}
+      ]},
+    {emoji:"🌾",ch:"Invasoras e homogeneização",situ:"Gramíneas africanas (Urochloa/braquiária) avançam sobre campos nativos, e o javali-europeu se espalha.",
+      opts:[
+        {t:"Controlar invasoras e manejar campos nativos",d:11,ok:true,fb:"Invasoras homogeneízam comunidades, alteram o regime de fogo e deslocam espécies nativas — controlá-las preserva a heterogeneidade do bioma."},
+        {t:"Substituir campos nativos por pasto exótico",d:-12,ok:false,fb:"A conversão para monocultura de capim exótico reduz a biodiversidade e a resiliência do ecossistema."},
+        {t:"Introduzir mais espécies exóticas 'úteis'",d:-13,ok:false,fb:"Novas introduções aumentam o risco de invasões em cascata, um dos maiores motores globais de perda de biodiversidade."}
+      ]},
+    {emoji:"🐟",ch:"Pesca e recrutamento",situ:"A pesca profissional e esportiva pressiona estoques de espécies migratórias (piscívoras de grande porte, como o dourado).",
+      opts:[
+        {t:"Defeso, cotas e proteção de rotas de migração",d:11,ok:true,fb:"Peixes migratórios dependem da cheia para reprodução; defeso e proteção das rotas garantem o recrutamento e a sustentabilidade dos estoques."},
+        {t:"Liberar pesca sem limites de cota ou tamanho",d:-12,ok:false,fb:"A sobrepesca de migradores colapsa estoques e desorganiza a teia trófica aquática inteira."},
+        {t:"Construir barreiras que bloqueiam a migração",d:-12,ok:false,fb:"Barramentos interrompem as migrações reprodutivas (piracema), causando queda drástica das populações de peixes."}
+      ]},
+    {emoji:"📜",ch:"Governança transfronteiriça",situ:"O Pantanal é compartilhado por Brasil (~70%), Bolívia (~20%) e Paraguai (~10%). Uma decisão a montante afeta todos.",
+      opts:[
+        {t:"Articular gestão integrada da bacia entre os países",d:12,ok:true,fb:"Por ser uma bacia transfronteiriça, a conservação exige coordenação internacional — decisões a montante repercutem por toda a planície."},
+        {t:"Decidir só com base no interesse local imediato",d:-11,ok:false,fb:"Gestão fragmentada ignora a conectividade da bacia e gera externalidades que degradam o sistema como um todo."},
+        {t:"Acelerar grandes obras sem acordo regional",d:-12,ok:false,fb:"Infraestrutura sem coordenação transfronteiriça pode comprometer o regime hidrológico de todo o Pantanal."}
+      ]},
+    {emoji:"🌡️",ch:"Mudança climática",situ:"Projeções indicam secas mais longas e severas e maior variabilidade de chuvas na região nas próximas décadas.",
+      opts:[
+        {t:"Aumentar a resiliência: corredores, restauração e MIF",d:12,ok:true,fb:"Corredores ecológicos, restauração e manejo do fogo aumentam a capacidade do bioma de absorver eventos extremos mais frequentes."},
+        {t:"Manter o mesmo modelo, ignorando o clima",d:-10,ok:false,fb:"Ignorar a tendência de secas intensifica perdas; a adaptação proativa é mais barata que a recuperação pós-desastre."},
+        {t:"Expandir drenagem para 'compensar' as cheias",d:-12,ok:false,fb:"Drenar reduz a capacidade de retenção hídrica, agravando tanto secas quanto a perda de habitat."}
+      ]},
+    {emoji:"🏞️",ch:"RPPN e legado",situ:"Surge a oportunidade de criar uma Reserva Particular do Patrimônio Natural (RPPN) e integrar a Reserva da Biosfera do Pantanal (UNESCO).",
+      opts:[
+        {t:"Criar a RPPN e aderir à Reserva da Biosfera",d:12,ok:true,fb:"O Pantanal é Patrimônio Natural da Humanidade e Reserva da Biosfera (UNESCO). RPPNs ampliam a rede de áreas protegidas com incentivos."},
+        {t:"Vender a área para conversão agrícola total",d:-12,ok:false,fb:"A conversão integral elimina serviços ecossistêmicos (água, carbono, fauna) que sustentam a própria região no longo prazo."},
+        {t:"Lotear para especulação imobiliária",d:-11,ok:false,fb:"A fragmentação fundiária dificulta o manejo em escala de paisagem, essencial para um bioma regido pelo pulso de inundação."}
+      ]}
+  ]
+}
+};
+
+/* ====== Estado ====== */
+let level="basico", idx=0, score=0, good=0, answered=false;
+
+const $=id=>document.getElementById(id);
+
+function levelLabel(l){return LEVELS[l].label;}
+
+function startGame(){
+  idx=0; answered=false;
+  score=LEVELS[level].start; good=0;
+  $('final').classList.remove('show');
+  $('scene').classList.remove('hidden');
+  renderScene();
+  updateHUD();
+  $('rankLvl').textContent=levelLabel(level);
+  loadRanking();
+}
+
+function updateHealthBar(){
+  const v=Math.max(0,Math.min(100,score));
+  const bar=$('healthBar');
+  bar.style.width=v+'%';
+  let col=getComputedStyle(document.documentElement).getPropertyValue('--success');
+  if(v<35) col=getComputedStyle(document.documentElement).getPropertyValue('--danger');
+  else if(v<60) col=getComputedStyle(document.documentElement).getPropertyValue('--warn');
+  bar.style.background=col;
+  $('healthPct').textContent=v+'%';
+}
+
+function updateHUD(){
+  const total=LEVELS[level].scenes.length;
+  $('hudScene').textContent=(Math.min(idx+1,total))+'/'+total;
+  $('hudGood').textContent=good;
+  $('hudScore').textContent=Math.max(0,Math.min(100,score));
+  updateHealthBar();
+}
+
+function renderScene(){
+  answered=false;
+  const sc=LEVELS[level].scenes[idx];
+  $('sceneEmoji').textContent=sc.emoji;
+  $('sceneChapter').textContent='Cena '+(idx+1)+' · '+sc.ch;
+  $('sceneSitu').textContent=sc.situ;
+  const wrap=$('options'); wrap.innerHTML='';
+  sc.opts.forEach((o,i)=>{
+    const b=document.createElement('button');
+    b.className='opt'; b.textContent=o.t;
+    b.onclick=()=>choose(i,b);
+    wrap.appendChild(b);
+  });
+  const fb=$('feedback'); fb.className='feedback'; fb.innerHTML='';
+  $('nextBtn').classList.remove('show');
+  $('nextBtn').textContent=(idx===LEVELS[level].scenes.length-1)?'Ver resultado final →':'Próxima cena →';
+  updateHUD();
+}
+
+function choose(i,btn){
+  if(answered) return;
+  answered=true;
+  const sc=LEVELS[level].scenes[idx];
+  const o=sc.opts[i];
+  score+=o.d;
+  score=Math.max(0,Math.min(100,score));
+  if(o.ok) good++;
+  // estiliza opções
+  [...$('options').children].forEach((b,j)=>{
+    b.disabled=true;
+    if(j===i){ b.classList.add(o.ok?'good':'bad'); }
+    else { b.classList.add('dim'); }
+  });
+  const fb=$('feedback');
+  const sign=o.d>=0?'+':'';
+  fb.className='feedback show '+(o.d>=0?'pos':'neg');
+  fb.innerHTML='<span class="delta">'+(o.d>=0?'✅ ':'⚠️ ')+sign+o.d+' saúde do ecossistema</span><br>'+o.fb;
+  $('nextBtn').classList.add('show');
+  updateHUD();
+}
+
+$('nextBtn').onclick=()=>{
+  if(idx<LEVELS[level].scenes.length-1){
+    idx++; renderScene();
+    window.scrollTo({top:0,behavior:'smooth'});
+  } else {
+    showFinal();
+  }
+};
+
+function showFinal(){
+  $('scene').classList.add('hidden');
+  const f=$('final'); f.classList.add('show');
+  const v=Math.max(0,Math.min(100,score));
+  $('finalScore').textContent=v+' pts';
+  const total=LEVELS[level].scenes.length;
+  let title, msg, col;
+  if(v>=80){title='🌿 Pantanal Próspero!';col='var(--success)';
+    msg='Sob sua gestão, o pulso de inundação seguiu livre, a fauna prosperou e o bioma terminou o ciclo mais forte. Você é um verdadeiro Guardião do Pantanal!';}
+  else if(v>=55){title='🙂 Equilíbrio mantido';col='var(--warn)';
+    msg='O Pantanal sobreviveu ao ciclo razoavelmente bem, mas algumas decisões cobraram seu preço. Há espaço para proteger ainda mais o bioma.';}
+  else if(v>=30){title='😟 Ecossistema fragilizado';col='var(--warn)';
+    msg='Decisões equivocadas degradaram habitats e desequilibraram a fauna. O Pantanal terminou o ano vulnerável. Tente um caminho mais sustentável.';}
+  else {title='🔥 Colapso ambiental';col='var(--danger)';
+    msg='A planície perdeu seu equilíbrio: fogo, drenagem e perda de espécies levaram o ecossistema ao limite. Recomece e proteja o pulso de inundação!';}
+  const eb=$('endingBox');
+  eb.style.borderColor=col;
+  eb.innerHTML='<strong style="color:'+col+'">'+title+'</strong><br><br>'+msg+'<br><br>Boas decisões: <strong>'+good+'/'+total+'</strong>';
+  $('finalTitle').textContent='Fim do ciclo no Pantanal!';
+  loadRanking();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+$('replayBtn').onclick=startGame;
+
+/* ====== Níveis ====== */
+document.querySelectorAll('.pill').forEach(p=>{
+  p.onclick=()=>{
+    document.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));
+    p.classList.add('active');
+    level=p.dataset.lvl;
+    startGame();
+  };
+});
+
+/* ====== Ranking (Firestore) ====== */
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+async function loadRanking(){
+  const list=$('rankList'), note=$('rankNote');
+  $('rankLvl').textContent=levelLabel(level);
+  if(!fbReady){ note.textContent="⚠️ Ranking offline — o jogo continua 100% jogável."; list.innerHTML=''; return; }
+  note.textContent="Carregando ranking…"; list.innerHTML='';
+  try{
+    const {collection,query,where,orderBy,limit,getDocs}=fs;
+    const q=query(collection(db,"games",GAME_ID,"scores"),where("level","==",level),orderBy("score","desc"),limit(10));
+    const snap=await getDocs(q);
+    list.innerHTML='';
+    if(snap.empty){ note.textContent="Seja o primeiro a entrar no ranking deste nível! 🏆"; return; }
+    snap.forEach(d=>{
+      const x=d.data();
+      const li=document.createElement('li');
+      li.innerHTML='<span class="nm">'+escapeHtml(x.name||'Anônimo')+'</span><span class="sc">'+(x.score|0)+' pts</span>';
+      list.appendChild(li);
+    });
+    note.textContent='';
+  }catch(e){
+    note.textContent="⚠️ Não foi possível carregar o ranking agora.";
+  }
+}
+
+$('saveBtn').onclick=async()=>{
+  const nm=($('nameInput').value||'').trim().slice(0,20);
+  if(!nm){ $('nameInput').focus(); $('nameInput').placeholder='Digite seu nome!'; return; }
+  if(!fbReady){ $('rankNote').textContent="⚠️ Ranking offline — não foi possível salvar, mas seu resultado vale!"; return; }
+  $('saveBtn').disabled=true; $('saveBtn').textContent='Salvando…';
+  try{
+    const {collection,addDoc}=fs;
+    await addDoc(collection(db,"games",GAME_ID,"scores"),{
+      name:nm, score:Math.max(0,Math.min(100,score)), level:level, ts:Date.now()
+    });
+    $('saveBtn').textContent='✅ Salvo!';
+    loadRanking();
+  }catch(e){
+    $('saveBtn').disabled=false; $('saveBtn').textContent='💾 Salvar no ranking';
+    $('rankNote').textContent="⚠️ Erro ao salvar. Tente novamente.";
+  }
+};
+
+/* iniciar */
+startGame();
+</script>
+</body>
+</html>
