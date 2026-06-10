@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bio-Verdade!</title>
+<style>
+:root {
+  --bg1: #0d3a18;
+  --bg2: #2d6a1a;
+  --accent: #e8a020;
+  --card: rgba(255,255,255,0.97);
+  --card-shadow: 0 6px 28px rgba(0,0,0,0.22);
+  --radius: 16px;
+  --text: #17281a;
+  --muted: #507050;
+  --success: #27ae60;
+  --danger: #c0392b;
+  --v-color: #1a7a3a;
+  --f-color: #c0392b;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:system-ui,'Segoe UI',sans-serif;
+  background:linear-gradient(160deg,var(--bg1) 0%,var(--bg2) 100%);
+  min-height:100vh;color:var(--text);padding-bottom:40px;
+}
+header{text-align:center;padding:28px 16px 12px;color:#fff;}
+header h1{font-size:clamp(1.7rem,5vw,2.7rem);font-weight:800;text-shadow:0 2px 10px rgba(0,0,0,.4);margin-bottom:4px;}
+header p{color:rgba(255,255,255,.72);font-size:clamp(.85rem,2vw,1rem);}
+.level-bar{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:10px 16px 14px;}
+.level-btn{
+  background:rgba(255,255,255,.14);color:#fff;
+  border:2px solid rgba(255,255,255,.28);border-radius:999px;
+  padding:8px 22px;font-size:.88rem;font-weight:700;cursor:pointer;transition:all .2s;
+}
+.level-btn:hover{background:rgba(255,255,255,.24);transform:translateY(-1px);}
+.level-btn.active{background:var(--accent);border-color:var(--accent);color:#1a2a10;box-shadow:0 2px 14px rgba(232,160,32,.5);}
+.main-wrap{
+  display:grid;grid-template-columns:1fr min(400px,95vw);
+  gap:16px;max-width:1080px;margin:0 auto;padding:0 16px;
+}
+@media(max-width:680px){.main-wrap{grid-template-columns:1fr;}}
+.game-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--card-shadow);overflow:hidden;}
+.hud{
+  display:flex;gap:12px;flex-wrap:wrap;padding:11px 16px;
+  background:rgba(0,0,0,.04);border-bottom:1px solid rgba(0,0,0,.07);
+  font-size:.83rem;font-weight:600;color:var(--muted);
+}
+.hud span{display:flex;align-items:center;gap:4px;}
+.hud .val{color:var(--text);font-weight:800;}
+.progress-wrap{padding:10px 16px 6px;background:rgba(0,0,0,.02);}
+.progress-label{font-size:.79rem;font-weight:700;color:var(--muted);margin-bottom:4px;display:flex;justify-content:space-between;}
+.progress-bar-outer{width:100%;height:12px;background:#d8e8d8;border-radius:999px;overflow:hidden;}
+.progress-bar-inner{height:100%;border-radius:999px;background:var(--accent);transition:width .5s ease;}
+.instructions{
+  padding:9px 16px;font-size:.82rem;color:var(--muted);
+  border-bottom:1px solid rgba(0,0,0,.06);background:rgba(232,160,32,.07);line-height:1.4;
+}
+.stmt-area{padding:22px 18px 16px;}
+.stmt-emoji{font-size:2.8rem;text-align:center;display:block;margin-bottom:10px;}
+.stmt-text{
+  font-size:1.05rem;line-height:1.65;color:var(--text);
+  text-align:center;min-height:80px;margin-bottom:20px;font-weight:500;
+}
+.vf-btns{display:flex;gap:14px;justify-content:center;margin-bottom:4px;}
+.vf-btn{
+  flex:1;max-width:160px;padding:18px 10px;border:none;border-radius:14px;
+  font-size:1.5rem;font-weight:900;cursor:pointer;transition:all .25s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.vf-btn.v-btn{background:#e8f8ed;color:var(--v-color);border:3px solid #a8dcc0;}
+.vf-btn.f-btn{background:#fdf0ee;color:var(--f-color);border:3px solid #f2b8ae;}
+.vf-btn:hover:not(:disabled){transform:translateY(-3px) scale(1.04);box-shadow:0 6px 18px rgba(0,0,0,.15);}
+.vf-btn.v-btn:hover:not(:disabled){background:#c8f0d8;border-color:var(--v-color);}
+.vf-btn.f-btn:hover:not(:disabled){background:#fcd8d0;border-color:var(--f-color);}
+.vf-btn.correct{background:var(--v-color)!important;color:#fff!important;border-color:var(--v-color)!important;animation:pop .35s ease;}
+.vf-btn.wrong{background:var(--f-color)!important;color:#fff!important;border-color:var(--f-color)!important;animation:shake .35s ease;}
+.vf-btn:disabled{cursor:not-allowed;}
+@keyframes pop{0%{transform:scale(1);}50%{transform:scale(1.08);}100%{transform:scale(1);}}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-7px);}75%{transform:translateX(7px);}}
+.feedback-panel{
+  margin:10px 16px 0;padding:12px 14px;
+  background:rgba(232,160,32,.09);border-left:4px solid var(--accent);
+  border-radius:8px;font-size:.88rem;line-height:1.5;color:var(--text);min-height:58px;
+}
+.next-btn{
+  display:block;margin:14px 16px 20px;width:calc(100% - 32px);
+  padding:12px;background:var(--accent);color:#1a2a10;border:none;
+  border-radius:12px;font-size:1rem;font-weight:800;cursor:pointer;transition:all .2s;
+}
+.next-btn:hover{background:#c88010;transform:translateY(-1px);box-shadow:0 4px 14px rgba(232,160,32,.4);}
+/* End screen */
+.end-screen{padding:22px 20px;text-align:center;}
+.end-emoji{font-size:3.5rem;margin-bottom:10px;display:block;}
+.end-title{font-size:1.55rem;font-weight:800;margin-bottom:8px;color:#1a3a1a;}
+.end-desc{font-size:.93rem;color:var(--muted);margin-bottom:18px;line-height:1.5;}
+.end-stats{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-bottom:18px;}
+.end-stat{background:rgba(0,0,0,.05);border-radius:12px;padding:10px 16px;font-size:.95rem;font-weight:800;color:var(--text);}
+.end-stat span{display:block;font-size:.74rem;font-weight:400;color:var(--muted);margin-top:2px;}
+.save-area{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px;}
+.save-area input{
+  padding:10px 14px;border:2px solid #c8e0c8;border-radius:10px;
+  font-size:.9rem;flex:1;min-width:140px;max-width:200px;outline:none;
+}
+.save-area input:focus{border-color:var(--accent);}
+.save-btn{
+  padding:10px 18px;background:#1e5e30;color:#fff;border:none;
+  border-radius:10px;font-size:.9rem;font-weight:700;cursor:pointer;transition:all .2s;
+}
+.save-btn:hover{background:#154822;}
+.save-btn:disabled{opacity:.5;cursor:not-allowed;}
+.restart-btn{
+  margin-top:12px;padding:10px 24px;background:#fff;color:var(--text);
+  border:2px solid #c8e0c8;border-radius:10px;font-size:.9rem;
+  font-weight:600;cursor:pointer;transition:all .2s;display:inline-block;
+}
+.restart-btn:hover{border-color:var(--accent);background:rgba(232,160,32,.07);}
+/* Ranking */
+.ranking-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--card-shadow);padding:16px;height:fit-content;}
+.ranking-card h3{font-size:1rem;font-weight:800;color:#1a3a1a;margin-bottom:3px;}
+.rank-level{font-size:.78rem;color:var(--muted);margin-bottom:12px;}
+.rank-list{display:flex;flex-direction:column;gap:8px;}
+.rank-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(0,0,0,.03);border-radius:10px;font-size:.85rem;}
+.rank-pos{font-weight:800;color:var(--muted);min-width:22px;}
+.rank-pos.gold{color:#e8a020;}.rank-pos.silver{color:#9e9e9e;}.rank-pos.bronze{color:#a0522d;}
+.rank-name{flex:1;font-weight:600;color:var(--text);}
+.rank-score{font-weight:700;color:#1e5e30;font-size:.9rem;}
+.rank-empty{font-size:.84rem;color:var(--muted);text-align:center;padding:14px;}
+.rank-status{font-size:.77rem;color:var(--muted);text-align:center;margin-top:6px;}
+footer{
+  text-align:center;padding:24px 16px 12px;
+  color:rgba(255,255,255,.62);font-size:.82rem;line-height:1.85;
+}
+footer strong{color:rgba(255,255,255,.9);font-size:.9rem;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🌿 Bio-Verdade!</h1>
+  <p>Teste seus conhecimentos sobre os biomas do Brasil</p>
+</header>
+
+<div class="level-bar">
+  <button class="level-btn active" onclick="setLevel('basico',this)">Básico</button>
+  <button class="level-btn" onclick="setLevel('intermediario',this)">Intermediário</button>
+  <button class="level-btn" onclick="setLevel('dificil',this)">Difícil</button>
+  <button class="level-btn" onclick="setLevel('carbonauta',this)">🛰️ Carbonauta</button>
+</div>
+
+<div class="main-wrap">
+  <div>
+    <div class="game-card">
+      <div class="hud">
+        <span>✅ Acertos: <span class="val" id="hud-acertos">0</span></span>
+        <span>🔥 Sequência: <span class="val" id="hud-streak">0</span></span>
+        <span>⏱️ Tempo: <span class="val" id="hud-time">0s</span></span>
+        <span>🏆 Pontos: <span class="val" id="hud-score">0</span></span>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span id="prog-label">Progresso</span>
+          <span id="prog-pct">0%</span>
+        </div>
+        <div class="progress-bar-outer">
+          <div class="progress-bar-inner" id="progress-bar" style="width:0%"></div>
+        </div>
+      </div>
+      <div class="instructions">
+        🌳 Leia a afirmação e clique <strong>V</strong> se for Verdadeiro ou <strong>F</strong> se for Falso. Construa sua sequência de acertos!
+      </div>
+      <div id="game-area"></div>
+      <div class="feedback-panel" id="feedback-panel">Faça sua primeira escolha para ver a explicação!</div>
+      <button class="next-btn" id="next-btn" onclick="nextStmt()" style="display:none">Próxima afirmação →</button>
+    </div>
+  </div>
+
+  <div>
+    <div class="ranking-card">
+      <h3>🏆 Ranking Global</h3>
+      <div class="rank-level" id="rank-level-label">Nível: Básico</div>
+      <div class="rank-list" id="rank-list">
+        <div class="rank-empty">Carregando ranking...</div>
+      </div>
+      <div class="rank-status" id="rank-status"></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <strong>— Idealizado por Ernandes Sobreira —</strong><br>
+  Tema: Biomas brasileiros · Gênero: Verdadeiro ou Falso<br>
+  App ambiental do dia (2026-06-10)
+</footer>
+
+<script type="module">
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-06-10-bio-verdade";
+
+let db = null;
+(async () => {
+  try {
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc, getDocs, orderBy, query, limit, serverTimestamp }
+      = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    window._fb = { collection, addDoc, getDocs, orderBy, query, limit, serverTimestamp, db };
+    loadRanking();
+  } catch(e) {
+    console.warn("Firebase offline", e);
+    document.getElementById("rank-status").textContent = "Ranking indisponível offline";
+    document.getElementById("rank-list").innerHTML = '<div class="rank-empty">Sem conexão</div>';
+  }
+})();
+
+// ── Game Data ─────────────────────────────────────────────────────────────────
+// Each item: { s: "statement", a: true/false, e: emoji, fb: "feedback" }
+const LEVELS_DATA = {
+  basico: {
+    label: 'Básico',
+    items: [
+      { s: 'O Brasil possui 6 biomas terrestres.', a: true, e: '🗺️',
+        fb: 'Verdadeiro. Os 6 biomas oficiais do Brasil são: Amazônia, Cerrado, Mata Atlântica, Caatinga, Pantanal e Pampa.' },
+      { s: 'A Amazônia é o maior bioma brasileiro, ocupando quase metade do território nacional.', a: true, e: '🌳',
+        fb: 'Verdadeiro. A Amazônia cobre ~4,2 milhões de km², equivalente a cerca de 49% do território brasileiro.' },
+      { s: 'O Cerrado é o segundo maior bioma do Brasil.', a: true, e: '🌾',
+        fb: 'Verdadeiro. O Cerrado ocupa ~2 milhões de km² (cerca de 24% do território), sendo o segundo maior bioma do país.' },
+      { s: 'A Caatinga é o único bioma que existe exclusivamente no Brasil.', a: true, e: '🌵',
+        fb: 'Verdadeiro. A Caatinga é endêmica do Brasil, cobrindo ~11% do território no semiárido do Nordeste e norte de Minas Gerais.' },
+      { s: 'A Mata Atlântica é o bioma brasileiro mais preservado.', a: false, e: '🌲',
+        fb: 'Falso. A Mata Atlântica é um dos mais devastados: restam apenas ~12% da cobertura original, dispersos em fragmentos ao longo de 17 estados.' },
+      { s: 'O Pampa está localizado inteiramente na região Sul do Brasil.', a: true, e: '🌿',
+        fb: 'Verdadeiro. O Pampa ocorre apenas no Rio Grande do Sul, cobrindo ~63% do território gaúcho com campos temperados de grande biodiversidade.' },
+      { s: 'O Pantanal é a maior planície inundável tropical do mundo.', a: true, e: '🌊',
+        fb: 'Verdadeiro. O Pantanal brasileiro tem ~150.000 km², e junto com porções da Bolívia e Paraguai chega a ~210.000 km² — a maior planície inundável do planeta.' },
+      { s: 'A Amazônia tem mais espécies de plantas do que qualquer outro bioma do mundo.', a: true, e: '🌺',
+        fb: 'Verdadeiro. A Amazônia abriga cerca de 40.000 espécies de plantas — a maior diversidade vegetal de qualquer bioma do planeta.' }
+    ]
+  },
+
+  intermediario: {
+    label: 'Intermediário',
+    items: [
+      { s: 'O Cerrado é considerado a savana mais biodiversa do mundo.', a: true, e: '🦋',
+        fb: 'Verdadeiro. Com ~12.000 espécies de plantas, 935 de aves e 300 de mamíferos, o Cerrado é reconhecido como a savana tropical mais rica em biodiversidade do mundo.' },
+      { s: 'A Caatinga é completamente árida, sem rios perenes ou reservatórios.', a: false, e: '🌊',
+        fb: 'Falso. A Caatinga tem rios perenes como o São Francisco e importantes reservatórios. O que a caracteriza é a semiaridez sazonal, não a aridez absoluta permanente.' },
+      { s: 'Menos de 15% da Mata Atlântica original ainda existe.', a: true, e: '🌲',
+        fb: 'Verdadeiro. Restam aproximadamente 11–12% da cobertura original da Mata Atlântica, dispersa em fragmentos ao longo da costa e interior do Brasil.' },
+      { s: 'O Pampa brasileiro ocorre exclusivamente no estado do Rio Grande do Sul.', a: true, e: '🌾',
+        fb: 'Verdadeiro. O Pampa no Brasil restringe-se ao Rio Grande do Sul, cobrindo ~178.000 km² (~63% do estado), com campos temperados únicos.' },
+      { s: 'Cerrado e Mata Atlântica são hotspots de biodiversidade reconhecidos mundialmente.', a: true, e: '🦜',
+        fb: 'Verdadeiro. Ambos figuram na lista dos 36 hotspots globais de biodiversidade, definidos por alta diversidade de espécies endêmicas combinada com severa ameaça de destruição.' },
+      { s: 'A Caatinga cobre mais de 10% do território brasileiro.', a: true, e: '🌵',
+        fb: 'Verdadeiro. A Caatinga ocupa ~844.000 km², equivalente a cerca de 11% do território nacional, abrangendo 9 estados do Nordeste e norte de Minas Gerais.' },
+      { s: 'O Pampa é o bioma brasileiro com menor extensão territorial.', a: true, e: '🗺️',
+        fb: 'Verdadeiro. O Pampa tem ~176.000 km² — o menor dos 6 biomas brasileiros. O Pantanal tem área ligeiramente maior (~150.355 km² apenas no Brasil, mas ~210.000 km² no total trinacional).' },
+      { s: 'Todas as espécies animais da Caatinga são endêmicas desse bioma.', a: false, e: '🦎',
+        fb: 'Falso. O endemismo é alto em répteis e algumas plantas, mas muitas espécies da Caatinga compartilham distribuição com Cerrado e Mata Atlântica. O endemismo é real mas não universal.' },
+      { s: 'Antes do desmatamento, a Mata Atlântica era o segundo maior bloco de floresta tropical das Américas.', a: true, e: '🌳',
+        fb: 'Verdadeiro. A Mata Atlântica original se estendia por ~1,3 milhão de km², sendo o segundo maior bloco de floresta tropical das Américas, atrás somente da Amazônia.' },
+      { s: 'A Amazônia contribui mais para as emissões brasileiras de CO₂ do que qualquer outro bioma.', a: false, e: '💨',
+        fb: 'Falso. A floresta Amazônica intacta é sumidouro de carbono. São o desmatamento e as queimadas que a transformam em fonte de emissão — não a floresta em si.' }
+    ]
+  },
+
+  dificil: {
+    label: 'Difícil',
+    items: [
+      { s: 'O Cerrado é formado por uma única fisionomia vegetal homogênea.', a: false, e: '🌾',
+        fb: 'Falso. O Cerrado tem pelo menos 11 fisionomias: campo limpo, campo sujo, campo cerrado, cerrado sensu stricto, cerradão, veredas, matas de galeria, matas ciliares, matas secas, brejos e campos rupestres.' },
+      { s: 'O Pampa tem o menor percentual de área protegida em UCs de todos os biomas brasileiros.', a: true, e: '🌿',
+        fb: 'Verdadeiro. Menos de 3% do Pampa está em Unidades de Conservação — o menor percentual entre todos os biomas. O MMA classifica o Pampa como criticamente ameaçado pela expansão agrícola.' },
+      { s: 'O Pantanal tem menor diversidade de espécies de peixes do que a Amazônia.', a: true, e: '🐟',
+        fb: 'Verdadeiro. A Amazônia abriga ~3.000 espécies de peixes de água doce — a maior diversidade mundial. O Pantanal tem ~260 espécies. Embora menor em número, o Pantanal tem altíssima densidade por área alagada.' },
+      { s: 'A Mata Atlântica apresenta maior endemismo vegetal proporcional à sua área do que a Amazônia.', a: true, e: '🌺',
+        fb: 'Verdadeiro. A Mata Atlântica tem ~20.000 espécies de plantas, com ~40% de endemismo. Em relação à área remanescente, o endemismo proporcional supera o da Amazônia — justificando seu status de hotspot global.' },
+      { s: 'Todos os 6 biomas brasileiros possuem espécies de vertebrados endêmicas.', a: true, e: '🦁',
+        fb: 'Verdadeiro. Todos os biomas brasileiros têm vertebrados endêmicos — espécies que não ocorrem naturalmente em nenhum outro lugar do mundo.' },
+      { s: 'O ecossistema de manguezal é um dos 6 biomas terrestres oficiais do Brasil.', a: false, e: '🌊',
+        fb: 'Falso. Os manguezais são ecossistemas costeiros, não classificados como bioma terrestre pelo IBGE. Os 6 biomas são: Amazônia, Cerrado, Mata Atlântica, Caatinga, Pantanal e Pampa.' },
+      { s: 'O Cerrado foi formado há pelo menos 30 milhões de anos.', a: true, e: '🌍',
+        fb: 'Verdadeiro. O Cerrado tem origem no Cretáceo-Paleogeno, com evidências paleobotânicas acima de 30 milhões de anos. Sua flora reflete longa coevolução com fogo, sazonalidade e solos oligotróficos.' },
+      { s: 'A perda de habitat no Cerrado é maior em área absoluta do que na Amazônia.', a: true, e: '🔴',
+        fb: 'Verdadeiro. O Cerrado perdeu ~50% de sua cobertura original (≈1 milhão de km²), enquanto a Amazônia perdeu ~20% (≈800.000 km²). Em área devastada, o Cerrado supera a Amazônia — mas recebe muito menos atenção.' },
+      { s: 'A Amazônia é o bioma com maior número de espécies de anfíbios no Brasil.', a: true, e: '🐸',
+        fb: 'Verdadeiro. A Amazônia abriga mais de 1.000 espécies de anfíbios, a maior diversidade de qualquer bioma brasileiro e uma das maiores do planeta.' },
+      { s: 'A Caatinga é o bioma mais quente do Brasil em temperatura média anual.', a: true, e: '🌡️',
+        fb: 'Verdadeiro. O semiárido nordestino, dominado pela Caatinga, registra temperaturas médias anuais entre 26°C e 30°C — as mais altas do país, com déficit hídrico prolongado.' },
+      { s: 'O Cerrado contribui com mais de 50% da recarga dos principais aquíferos brasileiros.', a: true, e: '💧',
+        fb: 'Verdadeiro. O Cerrado funciona como a "caixa d\'água" do Brasil — recarga os aquíferos Guarani, Bambuí e outros, além de ser berço de 8 das 12 principais bacias hidrográficas nacionais.' },
+      { s: 'A floresta Amazônica intacta tem sido consistentemente uma fonte líquida de CO₂ ao longo das últimas décadas.', a: false, e: '🌳',
+        fb: 'Falso. A Amazônia intacta é historicamente um sumidouro de carbono. Pesquisas recentes (2021) indicam que partes do Leste Amazônico tornaram-se fontes por efeito combinado de desmatamento, fogo e mudanças climáticas — mas a floresta íntegra ainda absorve mais do que emite.' }
+    ]
+  },
+
+  carbonauta: {
+    label: '🛰️ Carbonauta',
+    items: [
+      { s: 'O Cerrado é responsável pela recarga hídrica de 8 das 12 principais bacias hidrográficas do Brasil.', a: true, e: '💧',
+        fb: 'Verdadeiro. O Cerrado é o berço hídrico do Brasil, regulando as bacias do Amazonas, São Francisco, Paraná, Tocantins e outras — justificando sua designação como "caixa d\'água do Brasil".' },
+      { s: 'A savanização da Amazônia seria irreversível após um ponto de inflexão de aproximadamente 20–25% de desmatamento total.', a: true, e: '⚠️',
+        fb: 'Verdadeiro conforme a hipótese do tipping point (Lovejoy & Nobre, 2019). Análises de resiliência da floresta (Boulton et al., 2022) sugerem que partes da Amazônia já perderam capacidade de recuperação, aproximando-se de um limiar de colapso sistêmico.' },
+      { s: 'O Pantanal funciona exclusivamente como sumidouro de carbono ao longo de todo o ano hidrológico.', a: false, e: '🌊',
+        fb: 'Falso. O Pantanal alterna entre sumidouro (estação seca, fixação vegetal) e fonte (cheia, decomposição anaeróbica com emissão de CH₄). Torres de Eddy covariance mostram que o balanço líquido em GWP-100 é ligeiramente positivo (sumidouro), mas o sistema emite CH₄ significativo durante a inundação.' },
+      { s: 'A fragmentação da Mata Atlântica afeta desproporcionalmente espécies especialistas de interior florestal em relação às de borda.', a: true, e: '🦜',
+        fb: 'Verdadeiro. Especialistas de interior (sensíveis ao efeito de borda) têm taxas de extinção local muito maiores em fragmentos pequenos. O efeito de borda penetra até ~100 m para aves e mais para algumas espécies de mamíferos, tornando ineficazes fragmentos abaixo de ~10 ha para a maioria das espécies sensíveis.' },
+      { s: 'O carbono armazenado no solo do Pampa supera o da biomassa aérea total do bioma.', a: true, e: '🌿',
+        fb: 'Verdadeiro. Ecossistemas campestres como o Pampa alocam a maior parte do carbono no solo (raízes e matéria orgânica) — tipicamente 70–90% do total. A biomassa aérea de campos é pequena comparada à floresta, mas o SOC é substancial e frequentemente subestimado nas contabilidades de carbono.' },
+      { s: 'Todos os biomas brasileiros possuem políticas específicas de pagamento por serviços ambientais consolidadas em lei federal.', a: false, e: '📋',
+        fb: 'Falso. A lei federal de PSA (Lei 14.119/2021) criou a Política Nacional de Pagamento por Serviços Ambientais, mas sua implementação é incipiente e não cobre especificamente todos os biomas com programas consolidados. O Cerrado tem programas como o SPSB; outros biomas têm iniciativas fragmentadas.' },
+      { s: 'A desertificação na Caatinga é causada exclusivamente pelo aquecimento global.', a: false, e: '🌡️',
+        fb: 'Falso. A desertificação no semiárido é multicausal: manejo inadequado do solo, superpastejo, desmatamento e uso de lenha interagem com a variabilidade climática natural e o aquecimento global. Isolar o clima como causa única ignora décadas de evidência sobre pressões antrópicas locais.' },
+      { s: 'Modelos de ensemble CMIP6 projetam expansão da área de distribuição de espécies típicas de Cerrado para zonas hoje ocupadas pela Amazônia até 2100.', a: true, e: '🗺️',
+        fb: 'Verdadeiro conforme projeções sob SSP3-7.0. A combinação de aumento de temperatura, redução de precipitação e maior frequência de eventos de seca favorece a expansão de fisionomias de savana em detrimento de florestas — processo chamado de "savanização" ou "cerradização" da periferia amazônica.' },
+      { s: 'A Amazônia oriental emitiu mais CO₂ do que absorveu na última década, tornando-se fonte líquida.', a: true, e: '🌳',
+        fb: 'Verdadeiro. Estudo publicado na Nature (Qin et al., 2021) mostrou que a Amazônia oriental foi fonte líquida de CO₂ no período 2010–2018, resultado da combinação de desmatamento, fogo e aumento de temperatura. A Amazônia ocidental ainda é sumidouro líquido.' },
+      { s: 'O Cerrado tem maior diversidade de espécies de abelhas nativas do que a Mata Atlântica.', a: true, e: '🐝',
+        fb: 'Verdadeiro. O Cerrado abriga mais de 300 espécies de abelhas nativas — superior ao registrado na Mata Atlântica — refletindo a alta heterogeneidade de fisionomias e a diversidade de plantas com flores que o caracterizam. As abelhas do Cerrado são fundamentais para a polinização de culturas agrícolas de biomas adjacentes.' },
+      { s: 'A fragmentação do Cerrado tem impacto menor sobre o fluxo gênico de grandes mamíferos do que a fragmentação da Amazônia.', a: false, e: '🐆',
+        fb: 'Falso. A intensidade e o padrão da fragmentação importam mais do que o bioma em si. O Cerrado, com ~50% de sua área convertida em mosaicos agrícolas e urbanos densos, apresenta barreiras ao fluxo gênico de espécies como o lobo-guará e a onça-pintada equivalentes ou superiores às da Amazônia em certas regiões.' },
+      { s: 'O Pampa é o bioma brasileiro com menor taxa de crescimento de área protegida nas últimas duas décadas.', a: true, e: '🌱',
+        fb: 'Verdadeiro. O Pampa permaneceu com menos de 3% de área protegida em UCs por mais de 20 anos — virtualmente sem crescimento significativo — enquanto outros biomas tiveram expansão expressiva de UCs, particularmente Amazônia e Cerrado nos anos 2000.' }
+    ]
+  }
+};
+
+// ── State ──────────────────────────────────────────────────────────────────────
+let currentLevel = 'basico';
+let currentIdx = 0;
+let acertos = 0;
+let streak = 0;
+let maxStreak = 0;
+let score = 0;
+let seconds = 0;
+let timerRef = null;
+let answered = false;
+let savedToRanking = false;
+let shuffledItems = [];
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function init() {
+  currentIdx = 0;
+  acertos = 0;
+  streak = 0;
+  maxStreak = 0;
+  score = 0;
+  seconds = 0;
+  answered = false;
+  savedToRanking = false;
+  shuffledItems = shuffle(LEVELS_DATA[currentLevel].items);
+  if (timerRef) clearInterval(timerRef);
+  timerRef = setInterval(() => {
+    seconds++;
+    document.getElementById('hud-time').textContent = seconds + 's';
+  }, 1000);
+  updateHUD();
+  updateProgress();
+  renderStmt();
+  document.getElementById('feedback-panel').textContent = 'Faça sua primeira escolha para ver a explicação!';
+  document.getElementById('next-btn').style.display = 'none';
+}
+
+window.setLevel = function(level, btn) {
+  currentLevel = level;
+  document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('rank-level-label').textContent = 'Nível: ' + LEVELS_DATA[level].label;
+  if (timerRef) clearInterval(timerRef);
+  init();
+  loadRanking();
+};
+
+// ── Render ─────────────────────────────────────────────────────────────────────
+function renderStmt() {
+  const items = shuffledItems;
+  if (currentIdx >= items.length) { renderEnd(); return; }
+  const item = items[currentIdx];
+  document.getElementById('game-area').innerHTML = `
+    <div class="stmt-area">
+      <span class="stmt-emoji">${item.e}</span>
+      <div class="stmt-text">${item.s}</div>
+      <div class="vf-btns">
+        <button class="vf-btn v-btn" onclick="answer(true, this)">✅ Verdadeiro</button>
+        <button class="vf-btn f-btn" onclick="answer(false, this)">❌ Falso</button>
+      </div>
+    </div>`;
+  answered = false;
+}
+
+window.answer = function(userAns, btn) {
+  if (answered) return;
+  answered = true;
+  const item = shuffledItems[currentIdx];
+  const correct = userAns === item.a;
+  document.querySelectorAll('.vf-btn').forEach(b => { b.disabled = true; });
+  btn.classList.add(correct ? 'correct' : 'wrong');
+  if (correct) {
+    acertos++;
+    streak++;
+    maxStreak = Math.max(maxStreak, streak);
+    score += 10 + (streak > 1 ? (streak - 1) * 2 : 0);
+  } else {
+    streak = 0;
+  }
+  updateHUD();
+  updateProgress();
+  const sign = correct ? '✅' : '❌';
+  const truth = item.a ? 'VERDADEIRO' : 'FALSO';
+  document.getElementById('feedback-panel').innerHTML =
+    `${sign} <strong>A afirmação é ${truth}.</strong> — ${item.fb}`;
+  const nextBtn = document.getElementById('next-btn');
+  nextBtn.textContent = currentIdx + 1 >= shuffledItems.length ? 'Ver resultado final 🏁' : 'Próxima afirmação →';
+  nextBtn.style.display = 'block';
+};
+
+window.nextStmt = function() {
+  currentIdx++;
+  document.getElementById('next-btn').style.display = 'none';
+  renderStmt();
+};
+
+// ── End ────────────────────────────────────────────────────────────────────────
+function renderEnd() {
+  if (timerRef) clearInterval(timerRef);
+  const total = shuffledItems.length;
+  const pct = Math.round(acertos / total * 100);
+  let emoji, title, desc;
+  if (pct === 100) {
+    emoji = '🎉🌿'; title = 'Perfeito! Especialista em Biomas!';
+    desc = 'Acertou tudo! Seus conhecimentos sobre os biomas brasileiros são excepcionais.';
+  } else if (pct >= 75) {
+    emoji = '🌟'; title = 'Muito bem! Naturalista Brasileiro!';
+    desc = 'Ótimo desempenho! Você conhece bem os biomas do Brasil.';
+  } else if (pct >= 50) {
+    emoji = '🌱'; title = 'Bom começo!';
+    desc = 'Você tem uma base, mas há muito mais para descobrir sobre os biomas brasileiros.';
+  } else {
+    emoji = '🌾'; title = 'Continue aprendendo!';
+    desc = 'Os biomas brasileiros são ricos e complexos. Revise e tente novamente!';
+  }
+  document.getElementById('game-area').innerHTML = `
+    <div class="end-screen">
+      <span class="end-emoji">${emoji}</span>
+      <div class="end-title">${title}</div>
+      <div class="end-desc">${desc}</div>
+      <div class="end-stats">
+        <div class="end-stat">${acertos}/${total}<span>Acertos</span></div>
+        <div class="end-stat">${pct}%<span>Aproveitamento</span></div>
+        <div class="end-stat">${score}<span>Pontos</span></div>
+        <div class="end-stat">${maxStreak}🔥<span>Maior sequência</span></div>
+        <div class="end-stat">${seconds}s<span>Tempo</span></div>
+      </div>
+      <div class="save-area">
+        <input type="text" id="player-name" maxlength="20" placeholder="Seu nome (até 20 chars)" />
+        <button class="save-btn" id="save-btn" onclick="saveScore()">Salvar no Ranking</button>
+      </div>
+      <div id="save-msg" style="font-size:.82rem;color:#1e5e30;margin-top:6px;min-height:18px;"></div>
+      <br>
+      <button class="restart-btn" onclick="init()">🔄 Jogar novamente</button>
+    </div>`;
+  document.getElementById('feedback-panel').textContent = '🏁 Jogo concluído! Veja seu desempenho acima.';
+  document.getElementById('next-btn').style.display = 'none';
+}
+
+// ── HUD & Progress ─────────────────────────────────────────────────────────────
+function updateHUD() {
+  document.getElementById('hud-acertos').textContent = acertos;
+  document.getElementById('hud-streak').textContent = streak;
+  document.getElementById('hud-score').textContent = score;
+}
+
+function updateProgress() {
+  const total = shuffledItems.length;
+  const done = Math.min(currentIdx, total);
+  const pct = total > 0 ? Math.round(done / total * 100) : 0;
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('prog-label').textContent = `Questão ${done} de ${total}`;
+  document.getElementById('prog-pct').textContent = pct + '%';
+}
+
+// ── Ranking ───────────────────────────────────────────────────────────────────
+async function loadRanking() {
+  const list = document.getElementById('rank-list');
+  if (!db || !window._fb) {
+    list.innerHTML = '<div class="rank-empty">Ranking indisponível</div>';
+    return;
+  }
+  try {
+    const { collection, getDocs, orderBy, query, limit, db: fdb } = window._fb;
+    const q = query(collection(fdb, `games/${GAME_ID}/scores`), orderBy('score', 'desc'), limit(80));
+    const snap = await getDocs(q);
+    const levelLabel = LEVELS_DATA[currentLevel].label;
+    const all = [];
+    snap.forEach(d => all.push(d.data()));
+    const filtered = all.filter(d => d.level === levelLabel).slice(0, 10);
+    if (filtered.length === 0) {
+      list.innerHTML = '<div class="rank-empty">Nenhum registro. Seja o primeiro! 🏆</div>';
+      return;
+    }
+    const medals = ['gold', 'silver', 'bronze'];
+    list.innerHTML = filtered.map((d, i) => `
+      <div class="rank-item">
+        <span class="rank-pos ${medals[i] || ''}">${i + 1}º</span>
+        <span class="rank-name">${escHtml(d.name || '?')}</span>
+        <span class="rank-score">${d.score} pts</span>
+      </div>`).join('');
+  } catch(e) {
+    list.innerHTML = '<div class="rank-empty">Erro ao carregar</div>';
+    console.warn(e);
+  }
+}
+
+window.saveScore = async function() {
+  if (savedToRanking) return;
+  const nameInput = document.getElementById('player-name');
+  const name = (nameInput ? nameInput.value.trim() : '') || 'Anônimo';
+  const msg = document.getElementById('save-msg');
+  const btn = document.getElementById('save-btn');
+  if (!db || !window._fb) {
+    msg.textContent = '⚠️ Ranking indisponível offline. Pontuação: ' + score;
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Salvando...';
+  try {
+    const { collection, addDoc, serverTimestamp, db: fdb } = window._fb;
+    await addDoc(collection(fdb, `games/${GAME_ID}/scores`), {
+      name: escHtml(name.slice(0, 20)),
+      score,
+      level: LEVELS_DATA[currentLevel].label,
+      seconds,
+      ts: serverTimestamp()
+    });
+    savedToRanking = true;
+    msg.textContent = '✅ Salvo com sucesso!';
+    btn.textContent = 'Salvo ✓';
+    loadRanking();
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Salvar no Ranking';
+    msg.textContent = '⚠️ Erro ao salvar. Tente novamente.';
+    console.warn(e);
+  }
+};
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ── Start ──────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
