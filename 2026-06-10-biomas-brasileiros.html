@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bioma ou Mito? 🌳 — Verdadeiro ou Falso dos Biomas Brasileiros</title>
+<style>
+  :root{
+    --c1:#0b3d2e;        /* verde floresta profundo */
+    --c2:#1e7a4d;        /* verde mata */
+    --accent:#ffd23f;    /* amarelo cerrado vibrante */
+    --accent2:#7bd389;   /* verde claro */
+    --ok:#2ecc71;
+    --err:#e74c3c;
+    --ink:#0d241b;
+    --paper:#f3fbf5;
+    --card:#ffffff;
+    --muted:#5b7a6b;
+    --shadow:0 10px 30px rgba(4,30,18,.28);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:linear-gradient(160deg,#0b3d2e 0%,#1e7a4d 60%,#3fae6b 100%);
+    min-height:100vh;
+    padding:18px 12px 40px;
+    display:flex;flex-direction:column;align-items:center;
+  }
+  .wrap{width:min(820px,95vw)}
+  header{text-align:center;color:#fff;margin-bottom:14px}
+  h1{font-size:clamp(1.7rem,5vw,2.6rem);letter-spacing:.5px;text-shadow:0 3px 10px rgba(0,0,0,.3)}
+  .sub{opacity:.92;font-size:clamp(.85rem,2.4vw,1rem);margin-top:4px}
+  .levels{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+  .pill{
+    border:none;cursor:pointer;font-weight:700;font-size:.95rem;
+    padding:9px 18px;border-radius:999px;background:rgba(255,255,255,.18);
+    color:#fff;backdrop-filter:blur(4px);transition:all .25s;
+  }
+  .pill:hover{transform:translateY(-2px)}
+  .pill.active{background:var(--accent);color:#3a2e00;box-shadow:0 6px 16px rgba(255,210,63,.45)}
+  .panel{
+    background:var(--card);border-radius:18px;box-shadow:var(--shadow);
+    padding:18px;margin-bottom:16px;
+  }
+  .hud{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;margin-bottom:8px}
+  .stat{
+    flex:1;min-width:84px;text-align:center;background:var(--paper);
+    border-radius:12px;padding:8px 6px;border:1px solid #e1efe6;
+  }
+  .stat b{display:block;font-size:1.25rem;color:var(--c2)}
+  .stat span{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .progwrap{height:10px;background:#e3efe8;border-radius:99px;overflow:hidden;margin:12px 0 4px}
+  .prog{height:100%;width:0;background:linear-gradient(90deg,var(--accent2),var(--ok));transition:width .35s}
+  .howto{font-size:.86rem;color:var(--muted);text-align:center;margin-top:6px}
+  .qcard{
+    background:linear-gradient(160deg,#ffffff,#eef8f1);
+    border-radius:16px;padding:26px 20px;text-align:center;
+    box-shadow:inset 0 0 0 1px #e0efe5;min-height:140px;
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .25s;
+  }
+  .qcard.pop{animation:pop .4s}
+  .qcard.shake{animation:shake .4s}
+  .qnum{font-size:.8rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+  .qtext{font-size:clamp(1.15rem,3.5vw,1.5rem);line-height:1.4;font-weight:600}
+  .answers{display:flex;gap:14px;margin-top:16px}
+  .ans{
+    flex:1;cursor:pointer;border:none;border-radius:14px;padding:18px 10px;
+    font-size:1.25rem;font-weight:800;color:#fff;transition:all .22s;
+    box-shadow:0 6px 0 rgba(0,0,0,.12);
+  }
+  .ans:hover:not(:disabled){transform:translateY(-3px)}
+  .ans:disabled{cursor:default;opacity:.92}
+  .ans.t{background:linear-gradient(160deg,#27ae60,#1e8c4d)}
+  .ans.f{background:linear-gradient(160deg,#e74c3c,#c0392b)}
+  .ans.correctpick{outline:4px solid #ffd23f}
+  .ans.wrongpick{filter:grayscale(.4) brightness(.8)}
+  .fb{
+    margin-top:14px;border-radius:14px;padding:14px 16px;font-size:.95rem;
+    line-height:1.45;background:var(--paper);border-left:6px solid var(--accent2);
+    min-height:54px;display:flex;align-items:center;
+  }
+  .fb.good{border-color:var(--ok);background:#eafaf0}
+  .fb.bad{border-color:var(--err);background:#fdeeec}
+  .fb b{color:var(--c1)}
+  .next{
+    margin-top:14px;width:100%;border:none;cursor:pointer;border-radius:14px;
+    padding:14px;font-size:1.05rem;font-weight:800;color:#3a2e00;
+    background:var(--accent);transition:all .22s;box-shadow:0 6px 14px rgba(255,210,63,.4);
+  }
+  .next:hover{transform:translateY(-2px)}
+  .next[disabled]{opacity:.4;cursor:default;transform:none}
+  /* tela final */
+  .final{text-align:center;display:none}
+  .final.show{display:block;animation:pop .5s}
+  .final h2{font-size:1.8rem;color:var(--c1);margin-bottom:6px}
+  .final .big{font-size:3rem;font-weight:900;color:var(--ok);margin:6px 0}
+  .final .res{color:var(--muted);margin-bottom:14px}
+  .saverow{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+  .saverow input{
+    flex:1;min-width:160px;padding:12px 14px;border-radius:12px;border:2px solid #cfe6d8;
+    font-size:1rem;outline:none;
+  }
+  .saverow input:focus{border-color:var(--accent2)}
+  .saverow button{
+    border:none;cursor:pointer;border-radius:12px;padding:12px 20px;font-weight:800;
+    background:var(--c2);color:#fff;transition:all .22s;
+  }
+  .saverow button:hover{transform:translateY(-2px);background:var(--c1)}
+  .replay{margin-top:12px;background:none;border:2px solid var(--c2);color:var(--c1);
+    padding:10px 20px;border-radius:12px;cursor:pointer;font-weight:700}
+  /* ranking */
+  .rank h3{color:var(--c1);font-size:1.1rem;display:flex;align-items:center;gap:8px;margin-bottom:4px}
+  .rank .lvlnote{font-size:.78rem;color:var(--muted);margin-bottom:10px}
+  .rank ol{list-style:none;counter-reset:r}
+  .rank li{
+    counter-increment:r;display:flex;align-items:center;gap:10px;
+    padding:9px 12px;border-radius:10px;background:var(--paper);margin-bottom:6px;
+    font-size:.92rem;border:1px solid #e6f1ea;
+  }
+  .rank li::before{
+    content:counter(r);background:var(--c2);color:#fff;font-weight:800;
+    width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:.8rem;flex:none;
+  }
+  .rank li:nth-child(1)::before{background:#f1c40f;color:#5a4500}
+  .rank li:nth-child(2)::before{background:#bdc3c7;color:#33403a}
+  .rank li:nth-child(3)::before{background:#cd7f32}
+  .rank li .nm{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rank li .sc{font-weight:800;color:var(--c2)}
+  .rank li .tm{font-size:.75rem;color:var(--muted);margin-left:6px}
+  .rankmsg{font-size:.85rem;color:var(--muted);padding:6px 2px}
+  footer{color:#eafaf0;text-align:center;margin-top:6px;font-size:.85rem;line-height:1.6}
+  footer .by{font-weight:800;font-size:1rem;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.3)}
+  @keyframes pop{0%{transform:scale(.92)}50%{transform:scale(1.04)}100%{transform:scale(1)}}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+  @media(max-width:520px){
+    .answers{flex-direction:column}
+    .stat{min-width:70px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🌳 Bioma ou Mito? 🦜</h1>
+    <div class="sub">Verdadeiro ou Falso sobre os biomas brasileiros — separe o fato do mito!</div>
+  </header>
+
+  <div class="levels" id="levels">
+    <button class="pill active" data-lvl="basico">Básico</button>
+    <button class="pill" data-lvl="inter">Intermediário</button>
+    <button class="pill" data-lvl="dificil">Difícil</button>
+  </div>
+
+  <!-- JOGO -->
+  <div class="panel" id="gamePanel">
+    <div class="hud">
+      <div class="stat"><b id="hPts">0</b><span>Pontos</span></div>
+      <div class="stat"><b id="hAcertos">0/0</b><span>Acertos</span></div>
+      <div class="stat"><b id="hStreak">0</b><span>Sequência</span></div>
+      <div class="stat"><b id="hTempo">0s</b><span>Tempo</span></div>
+    </div>
+    <div class="progwrap"><div class="prog" id="prog"></div></div>
+    <div class="howto">Leia a afirmação e toque em <b>Verdadeiro</b> ou <b>Falso</b>. Acerte o máximo no menor tempo!</div>
+
+    <div class="qcard" id="qcard">
+      <div>
+        <div class="qnum" id="qnum">Afirmação 1</div>
+        <div class="qtext" id="qtext">Carregando…</div>
+      </div>
+    </div>
+
+    <div class="answers">
+      <button class="ans t" id="btnT" onclick="answer(true)">✔ Verdadeiro</button>
+      <button class="ans f" id="btnF" onclick="answer(false)">✖ Falso</button>
+    </div>
+
+    <div class="fb" id="fb">Toque em uma resposta para começar. 🌎</div>
+    <button class="next" id="next" onclick="nextQ()" disabled>Próxima ▶</button>
+  </div>
+
+  <!-- TELA FINAL -->
+  <div class="panel final" id="finalPanel">
+    <h2>🎉 Fim de jogo!</h2>
+    <div class="big" id="finalScore">0</div>
+    <div class="res" id="finalRes">—</div>
+    <div class="saverow">
+      <input id="nameIn" maxlength="20" placeholder="Seu nome (até 20 letras)">
+      <button onclick="saveScore()" id="saveBtn">Salvar no ranking</button>
+    </div>
+    <div class="rankmsg" id="saveMsg"></div>
+    <button class="replay" onclick="startGame()">Jogar de novo ↻</button>
+  </div>
+
+  <!-- RANKING -->
+  <div class="panel rank">
+    <h3>🏆 Ranking Global</h3>
+    <div class="lvlnote">Nível atual: <b id="rankLvl">Básico</b> — maior pontuação vence (tempo desempata)</div>
+    <ol id="rankList"></ol>
+    <div class="rankmsg" id="rankMsg">Carregando ranking…</div>
+  </div>
+
+  <footer>
+    <div class="by">— Idealizado por Ernandes Sobreira —</div>
+    <div>Tema: Biomas brasileiros • Gênero: Verdadeiro ou Falso • app ambiental do dia (2026-06-10)</div>
+  </footer>
+</div>
+
+<script>
+/* ====================== FIREBASE (somente ranking) ====================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-06-10-biomas-brasileiros";
+
+let db=null, fs=null;
+async function initFirebase(){
+  try{
+    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    fs = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app = appMod.initializeApp(firebaseConfig);
+    db = fs.getFirestore(app);
+    return true;
+  }catch(e){ console.warn("Firebase indisponível:",e); return false; }
+}
+
+/* ====================== CONTEÚDO (3 níveis) ====================== */
+const LEVELS = {
+  basico: [
+    {t:"O Brasil possui seis biomas principais reconhecidos pelo IBGE.", v:true,
+     fb:"São eles: Amazônia, Cerrado, Mata Atlântica, Caatinga, Pampa e Pantanal."},
+    {t:"A Amazônia é o maior bioma do território brasileiro.", v:true,
+     fb:"Sozinha, ocupa cerca de 49% do país — quase metade do Brasil."},
+    {t:"O Pantanal é um grande deserto seco e sem rios.", v:false,
+     fb:"Ao contrário: o Pantanal é uma enorme área alagável, cheia de água boa parte do ano."},
+    {t:"A Caatinga é um bioma que só existe no Brasil.", v:true,
+     fb:"É o único bioma exclusivamente brasileiro, típico do sertão nordestino."},
+    {t:"Na Caatinga chove muito durante todos os meses do ano.", v:false,
+     fb:"A Caatinga tem clima semiárido, com longos períodos de seca e chuvas escassas."},
+    {t:"O Cerrado é um tipo de savana brasileira com árvores baixas.", v:true,
+     fb:"O Cerrado tem árvores tortas, de cascas grossas, em meio a campos abertos."},
+    {t:"A Mata Atlântica ocupa toda a região Norte e o interior amazônico.", v:false,
+     fb:"Errado: a Mata Atlântica acompanha o litoral, do Nordeste ao Sul — não a Amazônia."},
+    {t:"Todos os biomas do Brasil têm a mesma vegetação e o mesmo clima.", v:false,
+     fb:"Cada bioma tem clima, plantas e animais próprios — essa diversidade é uma riqueza nacional."}
+  ],
+  inter: [
+    {t:"A Amazônia ocupa cerca de 49% do território brasileiro.", v:true,
+     fb:"É de longe o maior bioma do país e abriga a maior floresta tropical do mundo."},
+    {t:"O Cerrado é o segundo maior bioma do Brasil em extensão.", v:true,
+     fb:"Cobre cerca de 23% do território, atrás apenas da Amazônia."},
+    {t:"O bioma Pampa está concentrado principalmente nos estados da região Norte.", v:false,
+     fb:"O Pampa fica no extremo sul, sobretudo no Rio Grande do Sul — não no Norte."},
+    {t:"A Mata Atlântica é hoje o bioma mais preservado do Brasil.", v:false,
+     fb:"É justamente o mais devastado: restam cerca de 27% da cobertura florestal original."},
+    {t:"O Pantanal é considerado a maior planície alagável do mundo.", v:true,
+     fb:"Seus pulsos de cheia e seca sustentam uma fauna riquíssima de aves e peixes."},
+    {t:"A Caatinga apresenta clima semiárido com chuvas irregulares.", v:true,
+     fb:"Plantas como o mandacaru e o xique-xique se adaptaram à pouca água."},
+    {t:"O Cerrado é a savana mais rica em biodiversidade do planeta.", v:true,
+     fb:"Tem mais de 10 mil espécies de plantas, muitas exclusivas desse bioma."},
+    {t:"Os manguezais são um dos seis biomas oficiais definidos pelo IBGE.", v:false,
+     fb:"O mangue é um ecossistema costeiro, mas não entra na lista dos seis biomas oficiais."},
+    {t:"A vegetação típica do Cerrado é formada por pinheiros e densas coníferas.", v:false,
+     fb:"O Cerrado tem árvores tortas de cascas grossas; pinheiros são da Mata de Araucária."},
+    {t:"O bioma Pampa é coberto por densas florestas tropicais fechadas.", v:false,
+     fb:"O Pampa é formado por campos e vegetação rasteira, não por florestas densas."}
+  ],
+  dificil: [
+    {t:"A Mata Atlântica conserva cerca de 27% de sua cobertura florestal original.", v:true,
+     fb:"Apesar da fragmentação intensa, ainda abriga altíssima taxa de endemismo de espécies."},
+    {t:"O Cerrado é chamado de 'berço das águas' por abrigar nascentes de grandes bacias.", v:true,
+     fb:"Suas nascentes alimentam bacias como a do São Francisco, Paraná e Tocantins-Araguaia."},
+    {t:"A Caatinga ocupa aproximadamente 40% do território nacional brasileiro.", v:false,
+     fb:"São cerca de 10% do país; a Caatinga é exclusiva do semiárido nordestino."},
+    {t:"A vegetação predominante da Caatinga é a floresta tropical úmida.", v:false,
+     fb:"A Caatinga é uma savana estépica de clima seco, com plantas caducifólias e espinhosas."},
+    {t:"O bioma Cerrado abriga mais de 10.000 espécies de plantas catalogadas.", v:true,
+     fb:"Essa flora torna o Cerrado a savana com maior biodiversidade vegetal do mundo."},
+    {t:"O Pantanal corresponde a cerca de 25% do território brasileiro.", v:false,
+     fb:"Na verdade é só cerca de 1,8% — o menor bioma do país em extensão."},
+    {t:"Espécies endêmicas são aquelas distribuídas por vários continentes do globo.", v:false,
+     fb:"Endêmica é a espécie restrita a uma única região — o oposto de ampla distribuição."},
+    {t:"A fitofisionomia 'campo limpo' do Cerrado é dominada por árvores altas e densas.", v:false,
+     fb:"O campo limpo é predominantemente herbáceo, quase sem árvores; o cerradão é o estrato florestado."},
+    {t:"O Pantanal é estruturado por pulsos sazonais de inundação e vazante.", v:true,
+     fb:"Esse pulso de cheia controla a reprodução de peixes e a dinâmica de toda a planície."},
+    {t:"A Amazônia concentra cerca de um terço das florestas tropicais úmidas do planeta.", v:true,
+     fb:"Esse estoque florestal a torna peça-chave no equilíbrio climático global."},
+    {t:"O Pampa é classificado pelo IBGE como um bioma do tipo savana.", v:false,
+     fb:"O Pampa é formado por estepes e campos sulinos; a savana brasileira é o Cerrado."},
+    {t:"O Cerrado possui adaptações ao fogo, como gemas protegidas e rebrota rápida.", v:true,
+     fb:"Muitas plantas são pirofíticas: o fogo natural faz parte da ecologia desse bioma."}
+  ]
+};
+
+const LVL_NAMES = {basico:"Básico", inter:"Intermediário", dificil:"Difícil"};
+
+/* ====================== ESTADO ====================== */
+let level="basico", queue=[], idx=0, pts=0, acertos=0, streak=0, locked=false;
+let t0=0, timer=null, elapsed=0;
+
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+function startGame(){
+  queue = shuffle(LEVELS[level].slice());
+  idx=0; pts=0; acertos=0; streak=0; locked=false; elapsed=0;
+  document.getElementById("finalPanel").classList.remove("show");
+  document.getElementById("gamePanel").style.display="block";
+  startTimer();
+  renderQ();
+  updateHUD();
+}
+
+function startTimer(){
+  clearInterval(timer); t0=Date.now();
+  timer=setInterval(()=>{
+    elapsed=Math.floor((Date.now()-t0)/1000);
+    document.getElementById("hTempo").textContent=elapsed+"s";
+  },250);
+}
+
+function renderQ(){
+  locked=false;
+  const q=queue[idx];
+  const card=document.getElementById("qcard");
+  card.classList.remove("pop","shake");
+  document.getElementById("qnum").textContent="Afirmação "+(idx+1)+" de "+queue.length;
+  document.getElementById("qtext").textContent=q.t;
+  const fb=document.getElementById("fb");
+  fb.className="fb"; fb.textContent="Verdadeiro ou falso? Decida com calma. 🌱";
+  const bt=document.getElementById("btnT"), bf=document.getElementById("btnF");
+  [bt,bf].forEach(b=>{b.disabled=false;b.classList.remove("correctpick","wrongpick");});
+  document.getElementById("next").disabled=true;
+  document.getElementById("prog").style.width=(idx/queue.length*100)+"%";
+}
+
+function answer(choice){
+  if(locked) return;
+  locked=true;
+  const q=queue[idx];
+  const correct=(choice===q.v);
+  const bt=document.getElementById("btnT"), bf=document.getElementById("btnF");
+  bt.disabled=true; bf.disabled=true;
+  const card=document.getElementById("qcard");
+  const fb=document.getElementById("fb");
+  const right = q.v ? bt : bf;
+  const picked = choice ? bt : bf;
+  right.classList.add("correctpick");
+  if(correct){
+    acertos++; streak++; pts += 10 + Math.min(streak,5)*2;
+    card.classList.add("pop");
+    fb.className="fb good";
+    fb.innerHTML="<span><b>✅ Correto!</b> "+q.fb+"</span>";
+  }else{
+    streak=0;
+    picked.classList.add("wrongpick");
+    card.classList.add("shake");
+    fb.className="fb bad";
+    const verdade = q.v ? "Verdadeiro" : "Falso";
+    fb.innerHTML="<span><b>❌ Era "+verdade+".</b> "+q.fb+"</span>";
+  }
+  updateHUD();
+  document.getElementById("prog").style.width=((idx+1)/queue.length*100)+"%";
+  const nb=document.getElementById("next");
+  nb.disabled=false;
+  nb.textContent = (idx===queue.length-1) ? "Ver resultado 🎉" : "Próxima ▶";
+}
+
+function nextQ(){
+  if(!locked) return;
+  if(idx===queue.length-1){ endGame(); return; }
+  idx++; renderQ();
+}
+
+function updateHUD(){
+  document.getElementById("hPts").textContent=pts;
+  document.getElementById("hAcertos").textContent=acertos+"/"+queue.length;
+  document.getElementById("hStreak").textContent=streak;
+}
+
+function endGame(){
+  clearInterval(timer);
+  document.getElementById("gamePanel").style.display="none";
+  const fp=document.getElementById("finalPanel");
+  fp.classList.add("show");
+  document.getElementById("finalScore").textContent=pts+" pts";
+  const pct=Math.round(acertos/queue.length*100);
+  let msg;
+  if(pct===100) msg="Perfeito! Você é um(a) guardião(ã) dos biomas! 🌟";
+  else if(pct>=70) msg="Muito bom! Você conhece bem o Brasil natural. 🌿";
+  else if(pct>=40) msg="Bom começo — revise os feedbacks e tente de novo! 🍃";
+  else msg="Não desanime: cada rodada ensina algo novo sobre os biomas. 🌎";
+  document.getElementById("finalRes").innerHTML=
+    "Acertos: <b>"+acertos+"/"+queue.length+"</b> ("+pct+"%) • Tempo: <b>"+elapsed+"s</b><br>"+msg;
+  document.getElementById("saveMsg").textContent="";
+  loadRanking();
+}
+
+/* ====================== RANKING (Firestore) ====================== */
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+async function saveScore(){
+  const nm=(document.getElementById("nameIn").value||"").trim().slice(0,20);
+  const msg=document.getElementById("saveMsg");
+  if(!nm){ msg.textContent="✏️ Digite um nome para salvar."; return; }
+  if(!db){ msg.textContent="⚠️ Ranking offline — pontuação não enviada, mas seu jogo valeu!"; return; }
+  try{
+    document.getElementById("saveBtn").disabled=true;
+    msg.textContent="Salvando…";
+    await fs.addDoc(fs.collection(db,"games",GAME_ID,"scores"),{
+      name:nm, score:pts, seconds:elapsed, level:level, acertos:acertos,
+      total:queue.length, ts:fs.serverTimestamp()
+    });
+    msg.textContent="✅ Pontuação salva! Veja o ranking abaixo.";
+    loadRanking();
+  }catch(e){
+    console.warn(e);
+    msg.textContent="⚠️ Não foi possível salvar agora. Tente mais tarde.";
+  }finally{
+    document.getElementById("saveBtn").disabled=false;
+  }
+}
+
+async function loadRanking(){
+  document.getElementById("rankLvl").textContent=LVL_NAMES[level];
+  const list=document.getElementById("rankList");
+  const rmsg=document.getElementById("rankMsg");
+  list.innerHTML=""; rmsg.textContent="Carregando ranking…";
+  if(!db){ rmsg.textContent="⚠️ Ranking indisponível offline. O jogo continua 100% jogável!"; return; }
+  try{
+    // Sem where()+orderBy combinados: ordena por um campo só e filtra o nível no cliente.
+    const q=fs.query(
+      fs.collection(db,"games",GAME_ID,"scores"),
+      fs.orderBy("score","desc"),
+      fs.limit(500)
+    );
+    const snap=await fs.getDocs(q);
+    let rows=[];
+    snap.forEach(d=>{const x=d.data(); if(x.level===level) rows.push(x);});
+    rows.sort((a,b)=> (b.score-a.score) || ((a.seconds||0)-(b.seconds||0)));
+    rows=rows.slice(0,10);
+    if(!rows.length){ rmsg.textContent="Seja o primeiro a entrar no ranking deste nível! 🏅"; return; }
+    rmsg.textContent="";
+    list.innerHTML=rows.map(r=>
+      '<li><span class="nm">'+esc(r.name||"Anônimo")+'</span>'+
+      '<span class="sc">'+(r.score||0)+' pts</span>'+
+      '<span class="tm">'+(r.seconds||0)+'s</span></li>'
+    ).join("");
+  }catch(e){
+    console.warn(e);
+    rmsg.textContent="⚠️ Não foi possível carregar o ranking agora.";
+  }
+}
+
+/* ====================== NÍVEIS ====================== */
+document.getElementById("levels").addEventListener("click",e=>{
+  const b=e.target.closest(".pill"); if(!b) return;
+  document.querySelectorAll(".pill").forEach(p=>p.classList.remove("active"));
+  b.classList.add("active");
+  level=b.dataset.lvl;
+  startGame();
+  loadRanking();
+});
+
+/* ====================== BOOT ====================== */
+(async()=>{
+  startGame();
+  await initFirebase();
+  loadRanking();
+})();
+</script>
+</body>
+</html>
