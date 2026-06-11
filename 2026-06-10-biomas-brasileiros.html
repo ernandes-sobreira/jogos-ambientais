@@ -39,6 +39,8 @@
   }
   .pill:hover{transform:translateY(-2px)}
   .pill.active{background:var(--accent);color:#3a2e00;box-shadow:0 6px 16px rgba(255,210,63,.45)}
+  .pill.carb{background:rgba(13,36,27,.45);color:#cdeede;border:1px solid #7bd389}
+  .pill.carb.active{background:#0d241b;color:#ffd23f;border-color:#ffd23f;box-shadow:0 6px 16px rgba(13,36,27,.6)}
   .panel{
     background:var(--card);border-radius:18px;box-shadow:var(--shadow);
     padding:18px;margin-bottom:16px;
@@ -63,7 +65,7 @@
   .qcard.pop{animation:pop .4s}
   .qcard.shake{animation:shake .4s}
   .qnum{font-size:.8rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
-  .qtext{font-size:clamp(1.15rem,3.5vw,1.5rem);line-height:1.4;font-weight:600}
+  .qtext{font-size:clamp(1.1rem,3.3vw,1.45rem);line-height:1.4;font-weight:600}
   .answers{display:flex;gap:14px;margin-top:16px}
   .ans{
     flex:1;cursor:pointer;border:none;border-radius:14px;padding:18px 10px;
@@ -151,6 +153,7 @@
     <button class="pill active" data-lvl="basico">Básico</button>
     <button class="pill" data-lvl="inter">Intermediário</button>
     <button class="pill" data-lvl="dificil">Difícil</button>
+    <button class="pill carb" data-lvl="carbonauta">🛰️ Carbonauta</button>
   </div>
 
   <!-- JOGO -->
@@ -231,7 +234,7 @@ async function initFirebase(){
   }catch(e){ console.warn("Firebase indisponível:",e); return false; }
 }
 
-/* ====================== CONTEÚDO (3 níveis) ====================== */
+/* ====================== CONTEÚDO (4 níveis) ====================== */
 const LEVELS = {
   basico: [
     {t:"O Brasil possui seis biomas principais reconhecidos pelo IBGE.", v:true,
@@ -298,10 +301,40 @@ const LEVELS = {
      fb:"O Pampa é formado por estepes e campos sulinos; a savana brasileira é o Cerrado."},
     {t:"O Cerrado possui adaptações ao fogo, como gemas protegidas e rebrota rápida.", v:true,
      fb:"Muitas plantas são pirofíticas: o fogo natural faz parte da ecologia desse bioma."}
+  ],
+  carbonauta: [
+    {t:"Na classificação fitogeográfica do IBGE, a Caatinga corresponde à Savana-Estépica.", v:true,
+     fb:"Termo adotado pelo IBGE desde 1992 para enquadrar a vegetação semiárida no sistema universal."},
+    {t:"O Pampa é enquadrado pelo IBGE como formação do tipo Estepe (campos sulinos).", v:true,
+     fb:"Os campos sulinos são classificados como Estepe, distintos da Savana do Cerrado."},
+    {t:"Os solos predominantes do Cerrado são latossolos distróficos, ácidos e ricos em alumínio.", v:true,
+     fb:"A baixa fertilidade e a toxidez por alumínio selecionam a vegetação esclerófila do bioma."},
+    {t:"A Mata Atlântica é reconhecida internacionalmente como um hotspot de biodiversidade.", v:true,
+     fb:"Recebeu o status em 2000 por combinar altíssimo endemismo com intensa perda de hábitat."},
+    {t:"No Cerrado, o gradiente fisionômico vai do campo limpo ao cerradão pela densidade arbórea.", v:true,
+     fb:"É um mosaico savânico que varia de herbáceo (campo limpo) a florestado (cerradão)."},
+    {t:"A acidez e o alumínio do solo do Cerrado são irrelevantes para a sua vegetação típica.", v:false,
+     fb:"Ao contrário: são fatores decisivos que selecionam plantas tolerantes ao alumínio."},
+    {t:"O endemismo da Mata Atlântica é baixo porque suas espécies ocorrem em todo o continente.", v:false,
+     fb:"O bioma tem dos maiores índices de endemismo do mundo, com espécies restritas a ele."},
+    {t:"Plantas pirofíticas do Cerrado possuem xilopódios subterrâneos que rebrotam após o fogo.", v:true,
+     fb:"Xilopódios estocam reservas e gemas protegidas, permitindo a rebrota rápida pós-queima."},
+    {t:"O Pantanal é classificado pelo IBGE como bioma exclusivamente de floresta ombrófila densa.", v:false,
+     fb:"O Pantanal é um complexo de formações savânicas e campestres sujeitas a inundação sazonal."},
+    {t:"A Caatinga abriga vegetação caducifólia e espinhosa, adaptada ao acentuado déficit hídrico.", v:true,
+     fb:"A queda das folhas na seca reduz a transpiração; cactáceas estocam água nos tecidos."},
+    {t:"O Cerrado é considerado a savana mais pobre em biodiversidade de todo o planeta.", v:false,
+     fb:"É justamente o oposto: é reconhecido como a savana mais rica em biodiversidade do mundo."},
+    {t:"As veredas do Cerrado, com buritis, ocorrem em solos secos e arenosos bem drenados.", v:false,
+     fb:"Veredas ocupam solos hidromórficos encharcados, ligados a nascentes e lençol freático aflorante."},
+    {t:"Espécie endêmica e espécie invasora são conceitos sinônimos dentro da ecologia.", v:false,
+     fb:"Endêmica é nativa restrita a uma região; invasora é exótica que se dispersa e causa danos."},
+    {t:"Os seis biomas brasileiros compartilham uma única classificação fitofisionômica do IBGE.", v:false,
+     fb:"Cada bioma reúne formações distintas: Savana, Savana-Estépica, Estepe, Floresta Ombrófila etc."}
   ]
 };
 
-const LVL_NAMES = {basico:"Básico", inter:"Intermediário", dificil:"Difícil"};
+const LVL_NAMES = {basico:"Básico", inter:"Intermediário", dificil:"Difícil", carbonauta:"🛰️ Carbonauta"};
 
 /* ====================== ESTADO ====================== */
 let level="basico", queue=[], idx=0, pts=0, acertos=0, streak=0, locked=false;
@@ -397,7 +430,8 @@ function endGame(){
   document.getElementById("finalScore").textContent=pts+" pts";
   const pct=Math.round(acertos/queue.length*100);
   let msg;
-  if(pct===100) msg="Perfeito! Você é um(a) guardião(ã) dos biomas! 🌟";
+  if(level==="carbonauta" && pct===100) msg="🛰️ Domínio de Carbonauta! Conhecimento de pesquisador! 🌟";
+  else if(pct===100) msg="Perfeito! Você é um(a) guardião(ã) dos biomas! 🌟";
   else if(pct>=70) msg="Muito bom! Você conhece bem o Brasil natural. 🌿";
   else if(pct>=40) msg="Bom começo — revise os feedbacks e tente de novo! 🍃";
   else msg="Não desanime: cada rodada ensina algo novo sobre os biomas. 🌎";
