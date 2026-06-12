@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Refloresta! 🌱🌳 — Quiz do Desmatamento e da Regeneração</title>
+<style>
+:root{
+  --bg1:#0b3d2e; --bg2:#1e6b3a; --card:#ffffff; --ink:#13241b; --muted:#5a6b60;
+  --accent:#26d07c; --accent2:#a3e635; --ok:#16a34a; --okbg:#dcfce7;
+  --err:#dc2626; --errbg:#fee2e2; --line:#dbe7df; --gold:#f5c518;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:system-ui,"Segoe UI",Roboto,Arial,sans-serif;
+  color:var(--ink);
+  background:linear-gradient(160deg,var(--bg1),var(--bg2));
+  min-height:100vh;padding:18px 12px 40px;
+}
+.wrap{width:min(840px,95vw);margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:14px}
+h1{font-size:clamp(1.7rem,5vw,2.7rem);line-height:1.1;text-shadow:0 2px 10px rgba(0,0,0,.3)}
+.sub{opacity:.92;margin-top:6px;font-size:clamp(.85rem,2.6vw,1rem)}
+.levels{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0}
+.pill{
+  border:none;cursor:pointer;font-weight:700;font-size:.95rem;
+  padding:10px 18px;border-radius:999px;background:rgba(255,255,255,.16);
+  color:#fff;transition:all .25s;backdrop-filter:blur(4px);
+}
+.pill:hover{transform:translateY(-2px);background:rgba(255,255,255,.28)}
+.pill.active{background:var(--accent);color:#07291c;box-shadow:0 6px 18px rgba(38,208,124,.45)}
+.panel{
+  background:var(--card);border-radius:18px;padding:20px;
+  box-shadow:0 14px 40px rgba(0,0,0,.25);margin-bottom:16px;
+}
+.hud{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:12px}
+.chip{
+  background:#eef6f0;border:1px solid var(--line);border-radius:10px;
+  padding:7px 12px;font-weight:700;font-size:.9rem;color:#234
+}
+.howto{font-size:.92rem;color:var(--muted);text-align:center;margin-bottom:12px}
+.bar{height:10px;background:#e9efeb;border-radius:99px;overflow:hidden;margin-bottom:16px}
+.bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .35s}
+.qnum{font-size:.82rem;font-weight:700;color:var(--accent);letter-spacing:.04em;text-transform:uppercase}
+.q{font-size:clamp(1.05rem,3vw,1.3rem);font-weight:700;margin:6px 0 16px;line-height:1.35}
+.opts{display:grid;gap:10px}
+.opt{
+  text-align:left;border:2px solid var(--line);background:#fff;border-radius:12px;
+  padding:14px 16px;font-size:1rem;cursor:pointer;transition:all .2s;font-weight:600;color:var(--ink)
+}
+.opt:hover:not(:disabled){transform:translateY(-2px);border-color:var(--accent);box-shadow:0 6px 16px rgba(38,208,124,.18)}
+.opt:disabled{cursor:default}
+.opt.correct{border-color:var(--ok);background:var(--okbg);animation:pop .4s}
+.opt.wrong{border-color:var(--err);background:var(--errbg);animation:shake .4s}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.06)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.fb{margin-top:14px;padding:13px 15px;border-radius:12px;font-size:.95rem;line-height:1.45;display:none}
+.fb.show{display:block;animation:pop .35s}
+.fb.good{background:var(--okbg);border-left:5px solid var(--ok)}
+.fb.bad{background:var(--errbg);border-left:5px solid var(--err)}
+.next{
+  margin-top:16px;width:100%;border:none;border-radius:12px;cursor:pointer;
+  background:var(--accent);color:#07291c;font-weight:800;font-size:1.05rem;
+  padding:14px;transition:all .25s;display:none
+}
+.next.show{display:block}
+.next:hover{transform:translateY(-2px);filter:brightness(1.05)}
+/* final */
+.final{text-align:center;display:none}
+.final.show{display:block;animation:pop .5s}
+.final h2{font-size:clamp(1.5rem,5vw,2.2rem);color:var(--ok)}
+.score-big{font-size:clamp(2.6rem,9vw,3.6rem);font-weight:900;color:var(--accent);margin:6px 0}
+.namebox{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:16px 0}
+.namebox input{
+  flex:1;min-width:180px;border:2px solid var(--line);border-radius:12px;padding:13px 14px;font-size:1rem
+}
+.btn{
+  border:none;border-radius:12px;cursor:pointer;font-weight:800;font-size:1rem;
+  padding:13px 20px;background:var(--accent);color:#07291c;transition:all .25s
+}
+.btn:hover{transform:translateY(-2px);filter:brightness(1.05)}
+.btn.ghost{background:#eef6f0;color:#234}
+/* ranking */
+.rank h3{font-size:1.1rem;margin-bottom:4px}
+.rank .lvl{font-size:.82rem;color:var(--muted);margin-bottom:10px}
+.rk{list-style:none;display:grid;gap:6px}
+.rk li{display:flex;align-items:center;gap:10px;background:#f6faf7;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:.92rem}
+.rk li .pos{font-weight:900;color:var(--accent);width:26px}
+.rk li .nm{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rk li .sc{font-weight:800;color:#234}
+.rk li.me{outline:2px solid var(--accent)}
+.note{font-size:.85rem;color:var(--muted);margin-top:8px;text-align:center}
+footer{text-align:center;color:#eafff4;margin-top:22px;font-size:.9rem;line-height:1.6}
+footer .by{font-weight:800;font-size:1.02rem;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.3)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🌱 Refloresta! 🌳</h1>
+    <div class="sub">Quiz do desmatamento e da regeneração florestal — teste seu conhecimento e ajude a floresta a renascer.</div>
+  </header>
+
+  <div class="levels" id="levels">
+    <button class="pill" data-lv="basico">Básico</button>
+    <button class="pill" data-lv="intermediario">Intermediário</button>
+    <button class="pill" data-lv="dificil">Difícil</button>
+    <button class="pill" data-lv="carbonauta">🛰️ Carbonauta</button>
+  </div>
+
+  <div class="panel" id="gamePanel">
+    <div class="hud">
+      <span class="chip" id="hTime">Tempo: 0s</span>
+      <span class="chip" id="hAcertos">Acertos: 0/0</span>
+      <span class="chip" id="hStreak">Sequência: 0</span>
+      <span class="chip" id="hPontos">Pontos: 0</span>
+    </div>
+    <p class="howto">Leia a pergunta e toque na alternativa que você acha correta. Cada resposta traz uma explicação. ✅</p>
+    <div class="bar"><i id="prog"></i></div>
+
+    <div id="quizArea">
+      <div class="qnum" id="qnum">Pergunta 1</div>
+      <div class="q" id="qtext">Carregando…</div>
+      <div class="opts" id="opts"></div>
+      <div class="fb" id="fb"></div>
+      <button class="next" id="nextBtn">Próxima ➜</button>
+    </div>
+
+    <div class="final" id="final">
+      <h2>🎉 Fim de jogo!</h2>
+      <div class="score-big" id="finalScore">0</div>
+      <div id="finalMsg" style="color:var(--muted);font-weight:600"></div>
+      <div class="namebox">
+        <input id="nameInput" maxlength="20" placeholder="Seu nome (até 20 caracteres)">
+        <button class="btn" id="saveBtn">Salvar no ranking</button>
+      </div>
+      <button class="btn ghost" id="againBtn">Jogar de novo 🔁</button>
+      <div class="note" id="saveNote"></div>
+    </div>
+  </div>
+
+  <div class="panel rank">
+    <h3>🏆 Ranking Global</h3>
+    <div class="lvl" id="rankLvl">Nível: Básico</div>
+    <ol class="rk" id="rankList"><li><span class="nm">Carregando ranking…</span></li></ol>
+    <div class="note" id="rankNote"></div>
+  </div>
+
+  <footer>
+    <div class="by">— Idealizado por Ernandes Sobreira —</div>
+    <div>Tema: Desmatamento e regeneração florestal · Gênero: Quiz · app ambiental do dia (2026-06-12)</div>
+  </footer>
+</div>
+
+<script>
+/* ===== Firebase config ===== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-06-12-refloresta";
+
+/* ===== Conteúdo do jogo (4 níveis) ===== */
+const DATA = {
+  basico: [
+    {q:"O que é desmatamento?", a:0, fb:"Desmatamento é a retirada da vegetação florestal de uma área, geralmente para criar pasto ou tirar madeira.",
+      o:["Remoção da cobertura de árvores","Plantio de novas árvores nativas","Crescimento natural da floresta","Proteção legal de áreas verdes"]},
+    {q:"O que ajuda uma floresta a se regenerar?", a:0, fb:"A regeneração natural acontece quando a área é protegida, deixando sementes e brotos voltarem a crescer.",
+      o:["Deixar a área se recuperar","Cobrir o solo com asfalto","Queimar o mato todo ano","Retirar toda a terra fértil"]},
+    {q:"Por que as árvores ajudam o clima?", a:0, fb:"As árvores capturam CO₂ na fotossíntese e guardam carbono, ajudando a frear o aquecimento global.",
+      o:["Absorvem gás carbônico do ar","Produzem muito gás carbônico","Aumentam a poluição do ar","Esquentam o planeta inteiro"]},
+    {q:"Qual atividade mais causa desmatamento na Amazônia?", a:0, fb:"A pecuária é a principal causa: abre pastos para o gado onde antes havia floresta.",
+      o:["Abertura de pasto para gado","Construção de pequenas escolas","Passeios de barco no rio","Observação de aves nativas"]},
+    {q:"O que são mudas?", a:0, fb:"Mudas são plantas jovens criadas em viveiros e usadas para reflorestar áreas degradadas.",
+      o:["Árvores jovens para plantio","Pedaços de troncos secos","Folhas caídas no chão","Galhos cortados das árvores"]},
+    {q:"Reflorestar significa:", a:0, fb:"Reflorestar é replantar árvores onde a vegetação foi perdida, recuperando a floresta.",
+      o:["Plantar árvores onde foram cortadas","Cortar todas as árvores nativas","Construir muitas casas dentro","Secar os rios para plantar"]},
+    {q:"O que acontece com o solo sem árvores?", a:0, fb:"Sem raízes e copa para proteger, o solo perde nutrientes e é levado pela chuva (erosão).",
+      o:["Fica mais exposto à erosão","Fica sempre muito fértil","Vira pedra muito dura","Produz água limpa sozinho"]},
+    {q:"Quem perde a casa com o desmatamento?", a:0, fb:"O desmatamento destrói o habitat de inúmeras espécies, ameaçando a biodiversidade.",
+      o:["Muitos animais silvestres","Apenas peixes do mar","Somente insetos urbanos","Quase nenhum ser vivo"]}
+  ],
+  intermediario: [
+    {q:"A regeneração natural depende principalmente de:", a:0, fb:"Ela depende do banco de sementes no solo e da chegada de sementes trazidas por animais e vento.",
+      o:["Banco de sementes e dispersão","Adubação química do solo","Irrigação artificial diária constante","Remoção total da vegetação"]},
+    {q:"As espécies pioneiras se caracterizam por:", a:0, fb:"Pioneiras crescem rápido, exigem luz e produzem muitas sementes, abrindo caminho para outras.",
+      o:["Crescimento rápido e muita luz","Crescimento lento na sombra","Vida longa e poucas sementes","Tolerância total à escuridão"]},
+    {q:"Em 2025, o desmatamento na Amazônia Legal:", a:0, fb:"Pelo PRODES/INPE, caiu 11,08% em 2025 (5.796 km²), a menor taxa em 11 anos.",
+      o:["Caiu cerca de 11%","Subiu cerca de 11%","Dobrou em relação antes","Ficou exatamente igual"]},
+    {q:"A Mata Atlântica hoje conserva aproximadamente:", a:0, fb:"Restam cerca de 12 a 24% da cobertura original, fazendo dela um dos biomas mais ameaçados.",
+      o:["Cerca de 12 a 24%","Quase 90% original","Exatamente metade dela","Mais de 70% preservada"]},
+    {q:"A técnica de nucleação serve para:", a:0, fb:"Instala núcleos (poleiros, galharias, ilhas de mudas) que atraem dispersores e aceleram a regeneração.",
+      o:["Criar núcleos que atraem fauna","Remover todas as ervas daninhas","Plantar uma única espécie","Impedir a chegada de sementes"]},
+    {q:"O que é um corredor ecológico?", a:0, fb:"É uma faixa que liga fragmentos de floresta, permitindo o fluxo de animais e de genes entre eles.",
+      o:["Faixa que liga fragmentos florestais","Estrada que corta a floresta","Área cercada sem nenhuma árvore","Rio canalizado entre cidades"]},
+    {q:"Florestas secundárias são:", a:0, fb:"São florestas que crescem em áreas já desmatadas e depois deixadas se regenerar.",
+      o:["Áreas regeneradas após distúrbio","Florestas nunca antes tocadas","Plantações de uma só cultura","Regiões sem qualquer vegetação"]},
+    {q:"A mata à margem dos rios, protegida por lei, é chamada de:", a:0, fb:"As matas ciliares são Áreas de Preservação Permanente (APP), protegidas pelo Código Florestal.",
+      o:["Área de Preservação Permanente","Reserva particular do patrimônio","Zona livre para construção","Parque urbano de lazer"]},
+    {q:"O desmatamento aquece o planeta porque:", a:0, fb:"Ao derrubar e queimar árvores, o carbono guardado na biomassa volta à atmosfera como CO₂.",
+      o:["Libera carbono antes estocado","Resfria a superfície terrestre","Aumenta as chuvas constantes","Reduz o gás carbônico total"]},
+    {q:"Uma floresta tropical recupera ~80% do carbono em cerca de:", a:0, fb:"Estudo na Science mostrou recuperação de ~80% do carbono e da fertilidade do solo em até 20 anos.",
+      o:["20 anos de regeneração","2 anos de regeneração","500 anos de regeneração","5 mil anos de espera"]}
+  ],
+  dificil: [
+    {q:"Na sucessão secundária, a troca de pioneiras por tolerantes à sombra é impulsionada por:", a:0, fb:"Com o fechamento do dossel, a luz no sub-bosque cai e favorece espécies secundárias e clímax.",
+      o:["Fechamento gradual do dossel","Aumento contínuo da luminosidade","Empobrecimento total do solo","Eliminação total dos dispersores"]},
+    {q:"O 'efeito de borda' em fragmentos florestais provoca:", a:0, fb:"Nas bordas, vento, luz e dessecamento elevam a mortalidade de árvores e alteram o microclima.",
+      o:["Maior mortalidade de árvores periféricas","Forte aumento da umidade interna","Redução total da radiação solar","Estabilidade do microclima interno"]},
+    {q:"A 'dívida de extinção' refere-se a:", a:0, fb:"É o desaparecimento defasado de espécies cujo habitat já foi fragmentado, mesmo que ainda persistam.",
+      o:["Extinções futuras já comprometidas","Multas pagas por desmatadores","Créditos de carbono já negociados","Sementes guardadas em bancos"]},
+    {q:"Os sistemas PRODES e DETER, do INPE, diferem porque:", a:0, fb:"O DETER gera alertas rápidos para fiscalização; o PRODES calcula a taxa oficial anual por satélite.",
+      o:["DETER alerta; PRODES quantifica anual","Ambos medem a mesma taxa","PRODES alerta; DETER ignora tudo","Nenhum usa imagens de satélite"]},
+    {q:"O risco de 'savanização' da Amazônia é a:", a:0, fb:"É o ponto de não retorno em que partes da floresta podem virar vegetação tipo savana, por seca e fogo.",
+      o:["Conversão de floresta em vegetação aberta","Transformação de savana em floresta densa","Expansão de grandes lagos pela região","Resfriamento acelerado de todo bioma"]},
+    {q:"A expressão 'rios voadores' descreve:", a:0, fb:"São massas de vapor liberadas pela evapotranspiração da floresta, que levam chuva a outras regiões.",
+      o:["Transporte aéreo de vapor d'água","Voos comerciais sobre a floresta","Migração de grandes aves aquáticas","Enchentes sazonais dos igarapés"]},
+    {q:"A resiliência de uma floresta após distúrbio depende fortemente de:", a:0, fb:"A diversidade funcional (variedade de estratégias ecológicas) aumenta a capacidade de se reorganizar.",
+      o:["Diversidade funcional das espécies","Presença de uma única espécie","Ausência completa de toda fauna","Solo permanentemente encharcado"]},
+    {q:"O sequestro de carbono numa floresta em regeneração é maior:", a:0, fb:"Florestas jovens fixam carbono em alta taxa; as maduras estocam muito, mas sequestram mais devagar.",
+      o:["Nas fases iniciais de crescimento","Apenas após muitos séculos parados","Somente quando madura e estável","Quando o solo está totalmente estéril"]},
+    {q:"A regeneração natural assistida (RNA) consiste em:", a:0, fb:"Acelera a sucessão protegendo a regeneração existente e controlando gramíneas e fogo, sem plantio massivo.",
+      o:["Favorecer brotos e remover competidores","Plantar somente espécies exóticas","Capinar toda a área regularmente","Substituir a floresta por pasto"]},
+    {q:"Gramíneas exóticas como a braquiária dificultam a restauração porque:", a:0, fb:"Competem com mudas por luz e água e acumulam biomassa seca, elevando o risco de incêndios.",
+      o:["Competem e aumentam o fogo","Fertilizam o solo rapidamente","Atraem dispersores de sementes","Aceleram a sombra do dossel"]},
+    {q:"A fragmentação florestal reduz a biodiversidade principalmente por:", a:0, fb:"Fragmentos isolam populações pequenas, reduzindo o fluxo gênico e elevando a extinção local.",
+      o:["Isolamento de populações pequenas","Aumento do território contínuo","Excesso de conectividade genética","Ampliação do interior florestal"]},
+    {q:"A taxa de 2025 (5.796 km²), na série histórica do PRODES, é:", a:0, fb:"É a terceira menor taxa desde 1988 e o terceiro ano seguido de queda no desmatamento.",
+      o:["A terceira menor já registrada","A maior de toda a série","A média exata de todos anos","O dobro da década passada"]}
+  ],
+  carbonauta: [
+    {q:"O 'tipping point' amazônico (Lovejoy & Nobre) situa-se em torno de:", a:0, fb:"Lovejoy e Nobre estimam que entre 20% e 25% de desmatamento acumulado a Amazônia cruzaria o limiar hidrológico.",
+      o:["20–25% de desmatamento acumulado","70–80% de desmatamento acumulado","1–2% de desmatamento acumulado","95–99% de desmatamento acumulado"]},
+    {q:"A perda de espécies ao reduzir habitat é modelada pela:", a:0, fb:"A relação espécie-área (S = cAᶻ) estima quantas espécies se perdem com a redução da área, base da dívida de extinção.",
+      o:["Relação espécie-área de potência","Curva logística de mortalidade","Função linear de dispersão","Equação alométrica de biomassa"]},
+    {q:"Em inventários florestais, a biomassa acima do solo é estimada por:", a:0, fb:"A AGB é estimada por equações alométricas que usam DAP, altura e densidade da madeira, calibradas por parcelas.",
+      o:["Equações alométricas e DAP","Contagem direta das folhas","Medição apenas da altura","Pesagem total feita in loco"]},
+    {q:"O índice de vegetação NDVI baseia-se na razão entre bandas:", a:0, fb:"O NDVI usa (NIR−RED)/(NIR+RED), combinando vermelho e infravermelho próximo para indicar vigor da vegetação.",
+      o:["Vermelho e infravermelho próximo","Azul e ultravioleta bem distante","Verde e micro-ondas térmicas","Amarelo e raios X bem moles"]},
+    {q:"A 'histerese' na transição floresta-savana implica que:", a:0, fb:"Após cruzar o limiar, restaurar a floresta exige condições bem mais úmidas do que as que a mantinham.",
+      o:["Recuperar exige condições mais estritas","A volta ocorre instantaneamente sempre","Não existe qualquer ponto crítico","O sistema sempre ignora o fogo"]},
+    {q:"A defaunação de grandes frugívoros tende a causar:", a:0, fb:"Sem dispersores de sementes grandes (árvores de madeira densa), caem o recrutamento e até o estoque de carbono.",
+      o:["Empobrecimento florestal por defaunação","Aumento de árvores de madeira densa","Maior recrutamento de sementes grandes","Expansão imediata de todo dossel"]},
+    {q:"No protocolo MRV de REDD+, 'adicionalidade' significa:", a:0, fb:"A redução de emissões deve ser extra ao cenário base (baseline), evitando creditar ganhos que ocorreriam mesmo assim.",
+      o:["Redução além do cenário base","Soma de áreas já protegidas","Repetição da linha de base","Exclusão das fugas contábeis"]},
+    {q:"O fenômeno de 'leakage' (fuga) em projetos de conservação é:", a:0, fb:"Leakage ocorre quando proteger uma área apenas empurra o desmatamento para outra, reduzindo o benefício líquido.",
+      o:["Deslocamento do desmatamento para fora","Vazamento físico de carbono fóssil","Erro de medição feito por satélite","Acúmulo extra de biomassa bem local"]},
+    {q:"A mortalidade arbórea sob seca intensa relaciona-se à:", a:0, fb:"A alta tensão no xilema gera embolia/cavitação, interrompendo o transporte de água e matando a árvore.",
+      o:["Embolia e cavitação do xilema","Excesso de fotossíntese noturna","Fixação de nitrogênio radicular","Saturação hídrica total das folhas"]},
+    {q:"O 'nicho de regeneração' de Grubb enfatiza:", a:0, fb:"A coexistência decorre das diferenças nas exigências de germinação e estabelecimento entre as espécies.",
+      o:["Requisitos distintos de germinação específica","Igualdade total entre todas plântulas","Ausência de competição por recursos","Dominância de uma única estratégia"]},
+    {q:"Dados de LiDAR aerotransportado permitem estimar sobretudo:", a:0, fb:"O LiDAR mede a estrutura vertical (altura e perfil do dossel), insumo-chave para estimar biomassa e carbono.",
+      o:["Estrutura vertical e altura do dossel","Composição química do solo profundo","Identidade taxonômica de cada folha","Idade exata de cada uma árvore"]},
+    {q:"A hipótese de Janzen-Connell prevê:", a:0, fb:"Patógenos e predadores especializados matam mais plântulas perto da matriz, o que ajuda a manter a diversidade.",
+      o:["Maior morte perto da planta-mãe","Sobrevivência máxima sob a copa","Ausência total de patógenos específicos","Dispersão nula das sementes pesadas"]},
+    {q:"O mecanismo 'debt-for-nature swap' é uma:", a:0, fb:"Parte da dívida externa de um país é perdoada em troca de compromissos de conservação ambiental.",
+      o:["Troca de dívida por conservação","Compra direta de madeira certificada","Tomada de empréstimo para pastagens","Venda de terras já bem degradadas"]},
+    {q:"O sumidouro líquido de carbono da Amazônia tem declinado por causa de:", a:0, fb:"Estudos de longo prazo (RAINFOR) mostram que seca e calor elevam a mortalidade, reduzindo o sumidouro líquido.",
+      o:["Mortalidade crescente por seca e calor","Queda contínua das temperaturas globais","Excesso de chuva durante o ano todo","Aumento perpétuo de toda fertilidade"]}
+  ]
+};
+
+const LABELS = {basico:"Básico", intermediario:"Intermediário", dificil:"Difícil", carbonauta:"🛰️ Carbonauta"};
+
+/* ===== Estado ===== */
+let level="basico", order=[], idx=0, correct=0, streak=0, points=0, answered=false;
+let startT=0, timer=null, finished=false, lastScore=0, lastSeconds=0;
+
+const $=id=>document.getElementById(id);
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function setLevel(lv){
+  level=lv;
+  document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('active',p.dataset.lv===lv));
+  $('rankLvl').textContent="Nível: "+LABELS[lv];
+  startGame();
+  loadRanking();
+}
+
+function startGame(){
+  order=shuffle(DATA[level].map((_,i)=>i));
+  idx=0;correct=0;streak=0;points=0;answered=false;finished=false;
+  $('final').classList.remove('show');
+  $('quizArea').style.display="block";
+  startT=Date.now();
+  clearInterval(timer);
+  timer=setInterval(updTime,250);
+  updHud();
+  render();
+}
+
+function updTime(){
+  if(finished)return;
+  const s=Math.floor((Date.now()-startT)/1000);
+  $('hTime').textContent="Tempo: "+s+"s";
+}
+
+function updHud(){
+  $('hAcertos').textContent="Acertos: "+correct+"/"+DATA[level].length;
+  $('hStreak').textContent="Sequência: "+streak;
+  $('hPontos').textContent="Pontos: "+points;
+}
+
+function render(){
+  answered=false;
+  const total=DATA[level].length;
+  const item=DATA[level][order[idx]];
+  $('qnum').textContent="Pergunta "+(idx+1)+" de "+total;
+  $('qtext').textContent=item.q;
+  $('prog').style.width=Math.round(idx/total*100)+"%";
+  $('fb').className="fb";$('fb').textContent="";
+  $('nextBtn').classList.remove('show');
+  // monta alternativas embaralhadas, marcando a correta pelo texto
+  const correctText=item.o[item.a];
+  const opts=shuffle(item.o.slice());
+  const box=$('opts');box.innerHTML="";
+  opts.forEach(text=>{
+    const b=document.createElement('button');
+    b.className="opt";b.textContent=text;
+    b.onclick=()=>answer(b,text===correctText,item.fb,box);
+    box.appendChild(b);
+  });
+}
+
+function answer(btn,isCorrect,fb,box){
+  if(answered)return;answered=true;
+  [...box.children].forEach(b=>b.disabled=true);
+  const fbEl=$('fb');
+  if(isCorrect){
+    btn.classList.add('correct');
+    correct++;streak++;
+    points+=100+Math.min(streak,5)*20; // bônus por sequência
+    fbEl.className="fb good show";
+    fbEl.innerHTML="✅ <b>Correto!</b> "+fb;
+  }else{
+    btn.classList.add('wrong');
+    streak=0;
+    // destaca a correta
+    [...box.children].forEach(b=>{if(b.classList.contains('opt')&&b.textContent===DATA[level][order[idx]].o[DATA[level][order[idx]].a])b.classList.add('correct');});
+    fbEl.className="fb bad show";
+    fbEl.innerHTML="❌ <b>Quase!</b> "+fb;
+  }
+  updHud();
+  $('nextBtn').classList.add('show');
+  $('nextBtn').textContent=(idx+1>=DATA[level].length)?"Ver resultado 🎉":"Próxima ➜";
+}
+
+$('nextBtn').onclick=()=>{
+  if(idx+1>=DATA[level].length){finish();}
+  else{idx++;render();}
+};
+
+function finish(){
+  finished=true;clearInterval(timer);
+  const total=DATA[level].length;
+  lastSeconds=Math.floor((Date.now()-startT)/1000);
+  lastScore=points;
+  $('prog').style.width="100%";
+  $('quizArea').style.display="none";
+  $('final').classList.add('show');
+  $('finalScore').textContent=points+" pts";
+  let msg=`Você acertou ${correct} de ${total} no nível ${LABELS[level]} em ${lastSeconds}s.`;
+  if(correct===total)msg="🌳 Perfeito! "+msg+" A floresta agradece!";
+  else if(correct/total>=0.7)msg="🌿 Muito bom! "+msg;
+  else msg="🌱 Continue plantando conhecimento! "+msg;
+  $('finalMsg').textContent=msg;
+  $('saveNote').textContent="";
+}
+
+$('againBtn').onclick=startGame;
+
+/* ===== Firebase ranking ===== */
+let db=null,fs=null;
+async function initFirebase(){
+  try{
+    const appMod=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    fs=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app=appMod.initializeApp(firebaseConfig);
+    db=fs.getFirestore(app);
+    return true;
+  }catch(e){console.warn("Firebase indisponível",e);return false;}
+}
+const fbReady=initFirebase();
+
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+async function loadRanking(){
+  const listEl=$('rankList'),noteEl=$('rankNote');
+  noteEl.textContent="";
+  const ok=await fbReady;
+  if(!ok||!db){listEl.innerHTML='<li><span class="nm">Ranking offline — jogo funciona normalmente. 🌿</span></li>';return;}
+  try{
+    const {collection,query,orderBy,limit,getDocs}=fs;
+    // só orderBy por campo único (evita índice composto); filtra nível no cliente
+    const q=query(collection(db,"games",GAME_ID,"scores"),orderBy("score","desc"),limit(200));
+    const snap=await getDocs(q);
+    let rows=[];
+    snap.forEach(d=>{const v=d.data();if(v.level===level)rows.push(v);});
+    rows.sort((a,b)=>(b.score-a.score)||((a.seconds||0)-(b.seconds||0)));
+    rows=rows.slice(0,10);
+    if(!rows.length){listEl.innerHTML='<li><span class="nm">Seja o primeiro a pontuar neste nível! 🌱</span></li>';return;}
+    listEl.innerHTML="";
+    rows.forEach((r,i)=>{
+      const li=document.createElement('li');
+      li.innerHTML=`<span class="pos">${i+1}º</span><span class="nm">${esc(r.name||'Anônimo')}</span><span class="sc">${r.score} pts · ${r.seconds||0}s</span>`;
+      listEl.appendChild(li);
+    });
+  }catch(e){console.warn(e);listEl.innerHTML='<li><span class="nm">Não foi possível carregar o ranking agora.</span></li>';}
+}
+
+$('saveBtn').onclick=async()=>{
+  const name=($('nameInput').value||"").trim().slice(0,20)||"Anônimo";
+  const noteEl=$('saveNote');
+  const ok=await fbReady;
+  if(!ok||!db){noteEl.textContent="Sem conexão: não deu para salvar agora, mas seu jogo valeu! 🌿";return;}
+  try{
+    const {collection,addDoc,serverTimestamp}=fs;
+    await addDoc(collection(db,"games",GAME_ID,"scores"),{
+      name, level, score:lastScore, seconds:lastSeconds, ts:serverTimestamp()
+    });
+    noteEl.textContent="Pontuação salva no ranking! 🏆";
+    $('saveBtn').disabled=true;
+    loadRanking();
+  }catch(e){console.warn(e);noteEl.textContent="Não foi possível salvar agora. Tente novamente.";}
+};
+
+/* ===== Init ===== */
+document.querySelectorAll('.pill').forEach(p=>p.onclick=()=>setLevel(p.dataset.lv));
+setLevel('basico');
+</script>
+</body>
+</html>
