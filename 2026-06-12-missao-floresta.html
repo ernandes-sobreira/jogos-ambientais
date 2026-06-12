@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Missão Floresta 🌲 — Quiz do Desmatamento e da Regeneração</title>
+<style>
+  :root{
+    --c1:#1b3a13;        /* verde mata escuro */
+    --c2:#2f7d32;        /* verde folha */
+    --accent:#ffd23f;    /* amarelo sol */
+    --accent2:#9ccc65;   /* verde broto */
+    --ok:#43a047;
+    --err:#e74c3c;
+    --ink:#15240f;
+    --paper:#f2faef;
+    --card:#ffffff;
+    --muted:#5d7a52;
+    --shadow:0 10px 30px rgba(10,30,8,.28);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:linear-gradient(160deg,#14320f 0%,#2f7d32 60%,#5aa64f 100%);
+    min-height:100vh;
+    padding:18px 12px 40px;
+    display:flex;flex-direction:column;align-items:center;
+  }
+  .wrap{width:min(820px,95vw)}
+  header{text-align:center;color:#fff;margin-bottom:14px}
+  h1{font-size:clamp(1.7rem,5vw,2.6rem);letter-spacing:.5px;text-shadow:0 3px 10px rgba(0,0,0,.3)}
+  .sub{opacity:.92;font-size:clamp(.85rem,2.4vw,1rem);margin-top:4px}
+  .levels{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+  .pill{
+    border:none;cursor:pointer;font-weight:700;font-size:.95rem;
+    padding:9px 18px;border-radius:999px;background:rgba(255,255,255,.18);
+    color:#fff;backdrop-filter:blur(4px);transition:all .25s;
+  }
+  .pill:hover{transform:translateY(-2px)}
+  .pill.active{background:var(--accent);color:#3a2e00;box-shadow:0 6px 16px rgba(255,210,63,.45)}
+  .pill.carb{background:rgba(13,30,8,.45);color:#d7efc9;border:1px solid #9ccc65}
+  .pill.carb.active{background:#13260c;color:#ffd23f;border-color:#ffd23f;box-shadow:0 6px 16px rgba(13,30,8,.6)}
+  .panel{
+    background:var(--card);border-radius:18px;box-shadow:var(--shadow);
+    padding:18px;margin-bottom:16px;
+  }
+  .hud{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;margin-bottom:8px}
+  .stat{
+    flex:1;min-width:84px;text-align:center;background:var(--paper);
+    border-radius:12px;padding:8px 6px;border:1px solid #dcecd3;
+  }
+  .stat b{display:block;font-size:1.25rem;color:var(--c2)}
+  .stat span{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .progwrap{height:10px;background:#e3efe0;border-radius:99px;overflow:hidden;margin:12px 0 4px}
+  .prog{height:100%;width:0;background:linear-gradient(90deg,var(--accent2),var(--ok));transition:width .35s}
+  .howto{font-size:.86rem;color:var(--muted);text-align:center;margin-top:6px}
+  .qcard{
+    background:linear-gradient(160deg,#ffffff,#eef8e8);
+    border-radius:16px;padding:22px 18px;text-align:center;
+    box-shadow:inset 0 0 0 1px #e0efd8;min-height:96px;
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .25s;
+  }
+  .qcard.pop{animation:pop .4s}
+  .qcard.shake{animation:shake .4s}
+  .qnum{font-size:.8rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+  .qtext{font-size:clamp(1.05rem,3.2vw,1.35rem);line-height:1.4;font-weight:600}
+  .opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+  .opt{
+    cursor:pointer;border:2px solid #d7e8cd;border-radius:14px;padding:16px 12px;
+    font-size:1rem;font-weight:700;color:var(--c1);background:#fbfff8;transition:all .2s;
+    text-align:center;
+  }
+  .opt:hover:not(:disabled){transform:translateY(-3px);border-color:var(--accent2);box-shadow:0 6px 14px rgba(67,160,71,.18)}
+  .opt:disabled{cursor:default}
+  .opt.correct{background:linear-gradient(160deg,#43a047,#2f7d32);color:#fff;border-color:#2f7d32}
+  .opt.wrong{background:linear-gradient(160deg,#e74c3c,#c0392b);color:#fff;border-color:#c0392b}
+  .opt.dim{opacity:.55}
+  .fb{
+    margin-top:14px;border-radius:14px;padding:14px 16px;font-size:.95rem;
+    line-height:1.45;background:var(--paper);border-left:6px solid var(--accent2);
+    min-height:54px;display:flex;align-items:center;
+  }
+  .fb.good{border-color:var(--ok);background:#eafae6}
+  .fb.bad{border-color:var(--err);background:#fdeeec}
+  .fb b{color:var(--c1)}
+  .next{
+    margin-top:14px;width:100%;border:none;cursor:pointer;border-radius:14px;
+    padding:14px;font-size:1.05rem;font-weight:800;color:#3a2e00;
+    background:var(--accent);transition:all .22s;box-shadow:0 6px 14px rgba(255,210,63,.4);
+  }
+  .next:hover{transform:translateY(-2px)}
+  .next[disabled]{opacity:.4;cursor:default;transform:none}
+  /* tela final */
+  .final{text-align:center;display:none}
+  .final.show{display:block;animation:pop .5s}
+  .final h2{font-size:1.8rem;color:var(--c1);margin-bottom:6px}
+  .final .big{font-size:3rem;font-weight:900;color:var(--ok);margin:6px 0}
+  .final .res{color:var(--muted);margin-bottom:14px}
+  .saverow{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+  .saverow input{
+    flex:1;min-width:160px;padding:12px 14px;border-radius:12px;border:2px solid #cde6bf;
+    font-size:1rem;outline:none;
+  }
+  .saverow input:focus{border-color:var(--accent2)}
+  .saverow button{
+    border:none;cursor:pointer;border-radius:12px;padding:12px 20px;font-weight:800;
+    background:var(--c2);color:#fff;transition:all .22s;
+  }
+  .saverow button:hover{transform:translateY(-2px);background:var(--c1)}
+  .replay{margin-top:12px;background:none;border:2px solid var(--c2);color:var(--c1);
+    padding:10px 20px;border-radius:12px;cursor:pointer;font-weight:700}
+  /* ranking */
+  .rank h3{color:var(--c1);font-size:1.1rem;display:flex;align-items:center;gap:8px;margin-bottom:4px}
+  .rank .lvlnote{font-size:.78rem;color:var(--muted);margin-bottom:10px}
+  .rank ol{list-style:none;counter-reset:r}
+  .rank li{
+    counter-increment:r;display:flex;align-items:center;gap:10px;
+    padding:9px 12px;border-radius:10px;background:var(--paper);margin-bottom:6px;
+    font-size:.92rem;border:1px solid #e6f1de;
+  }
+  .rank li::before{
+    content:counter(r);background:var(--c2);color:#fff;font-weight:800;
+    width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:.8rem;flex:none;
+  }
+  .rank li:nth-child(1)::before{background:#f1c40f;color:#5a4500}
+  .rank li:nth-child(2)::before{background:#bdc3c7;color:#33403a}
+  .rank li:nth-child(3)::before{background:#cd7f32}
+  .rank li .nm{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rank li .sc{font-weight:800;color:var(--c2)}
+  .rank li .tm{font-size:.75rem;color:var(--muted);margin-left:6px}
+  .rankmsg{font-size:.85rem;color:var(--muted);padding:6px 2px}
+  footer{color:#eafae0;text-align:center;margin-top:6px;font-size:.85rem;line-height:1.6}
+  footer .by{font-weight:800;font-size:1rem;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.3)}
+  @keyframes pop{0%{transform:scale(.92)}50%{transform:scale(1.04)}100%{transform:scale(1)}}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+  @media(max-width:520px){
+    .opts{grid-template-columns:1fr}
+    .stat{min-width:70px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🌲 Missão Floresta 🪓</h1>
+    <div class="sub">Quiz sobre desmatamento e regeneração florestal — teste o que você sabe!</div>
+  </header>
+
+  <div class="levels" id="levels">
+    <button class="pill active" data-lvl="basico">Básico</button>
+    <button class="pill" data-lvl="inter">Intermediário</button>
+    <button class="pill" data-lvl="dificil">Difícil</button>
+    <button class="pill carb" data-lvl="carbonauta">🛰️ Carbonauta</button>
+  </div>
+
+  <!-- JOGO -->
+  <div class="panel" id="gamePanel">
+    <div class="hud">
+      <div class="stat"><b id="hPts">0</b><span>Pontos</span></div>
+      <div class="stat"><b id="hAcertos">0/0</b><span>Acertos</span></div>
+      <div class="stat"><b id="hStreak">0</b><span>Sequência</span></div>
+      <div class="stat"><b id="hTempo">0s</b><span>Tempo</span></div>
+    </div>
+    <div class="progwrap"><div class="prog" id="prog"></div></div>
+    <div class="howto">Escolha a alternativa correta. Cada acerto vale pontos; sequências dão bônus. ⏱️</div>
+
+    <div class="qcard" id="qcard">
+      <div>
+        <div class="qnum" id="qnum">Pergunta 1</div>
+        <div class="qtext" id="qtext">Carregando…</div>
+      </div>
+    </div>
+
+    <div class="opts" id="opts"></div>
+
+    <div class="fb" id="fb">Toque em uma alternativa para começar. 🌎</div>
+    <button class="next" id="next" onclick="nextQ()" disabled>Próxima ▶</button>
+  </div>
+
+  <!-- TELA FINAL -->
+  <div class="panel final" id="finalPanel">
+    <h2>🎉 Fim da missão!</h2>
+    <div class="big" id="finalScore">0</div>
+    <div class="res" id="finalRes">—</div>
+    <div class="saverow">
+      <input id="nameIn" maxlength="20" placeholder="Seu nome (até 20 letras)">
+      <button onclick="saveScore()" id="saveBtn">Salvar no ranking</button>
+    </div>
+    <div class="rankmsg" id="saveMsg"></div>
+    <button class="replay" onclick="startGame()">Jogar de novo ↻</button>
+  </div>
+
+  <!-- RANKING -->
+  <div class="panel rank">
+    <h3>🏆 Ranking Global</h3>
+    <div class="lvlnote">Nível atual: <b id="rankLvl">Básico</b> — maior pontuação vence (tempo desempata)</div>
+    <ol id="rankList"></ol>
+    <div class="rankmsg" id="rankMsg">Carregando ranking…</div>
+  </div>
+
+  <footer>
+    <div class="by">— Idealizado por Ernandes Sobreira —</div>
+    <div>Tema: Desmatamento e regeneração florestal • Gênero: Quiz • app ambiental do dia (2026-06-12)</div>
+  </footer>
+</div>
+
+<script>
+/* ====================== FIREBASE (somente ranking) ====================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-06-12-missao-floresta";
+
+let db=null, fs=null;
+async function initFirebase(){
+  try{
+    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    fs = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app = appMod.initializeApp(firebaseConfig);
+    db = fs.getFirestore(app);
+    return true;
+  }catch(e){ console.warn("Firebase indisponível:",e); return false; }
+}
+
+/* ====================== CONTEÚDO (4 níveis) — a[0] é SEMPRE a correta (embaralhada ao exibir) ====================== */
+const LEVELS = {
+  basico: [
+    {q:"O que é desmatamento?",
+     a:["Remoção da floresta","Plantio de mudas","Rega das plantas","Colheita de frutas"],
+     fb:"Desmatamento é a retirada da cobertura florestal de uma área."},
+    {q:"O que ajuda a floresta a voltar sozinha?",
+     a:["Regeneração natural","Corte raso","Fogo florestal","Poluição hídrica"],
+     fb:"Na regeneração natural, a floresta se recupera quando a pressão humana diminui."},
+    {q:"Qual gás as árvores retiram do ar?",
+     a:["Gás carbônico","Gás oxigênio","Gás hidrogênio","Gás nobre"],
+     fb:"As árvores absorvem CO₂ na fotossíntese, ajudando a equilibrar o clima."},
+    {q:"Replantar árvores nativas é chamado de?",
+     a:["Reflorestamento","Desmatamento","Pavimentação","Mineração"],
+     fb:"Reflorestamento é repor árvores em áreas que perderam a floresta."},
+    {q:"Qual ação reduz o desmatamento?",
+     a:["Fiscalizar áreas","Abrir estradas","Atear fogo","Derrubar matas"],
+     fb:"Fiscalização e proteção de áreas freiam a derrubada ilegal de florestas."},
+    {q:"O que cresce primeiro quando a mata se recupera?",
+     a:["Plantas pioneiras","Árvores enormes","Grandes mamíferos","Troncos mortos"],
+     fb:"As pioneiras crescem rápido e preparam solo e sombra para as demais espécies."},
+    {q:"A maior floresta tropical do Brasil é a?",
+     a:["Amazônia","Caatinga","Cerrado","Pampa"],
+     fb:"A Amazônia é a maior floresta tropical do mundo e sofre forte pressão de desmatamento."},
+    {q:"Derrubar mata para criar gado provoca?",
+     a:["Perda da floresta","Ganho de espécies","Aumento das chuvas","Melhora do solo"],
+     fb:"A conversão de mata em pasto é uma das maiores causas de desmatamento no Brasil."}
+  ],
+  inter: [
+    {q:"A recuperação gradual de um ecossistema chama-se?",
+     a:["Sucessão ecológica","Teia alimentar","Erosão laminar","Deriva continental"],
+     fb:"A sucessão ecológica é a substituição gradual de espécies até a comunidade madura."},
+    {q:"Florestas que crescem após desmatamento são as?",
+     a:["Florestas secundárias","Florestas primárias","Florestas plantadas","Florestas alagadas"],
+     fb:"Florestas secundárias surgem por regeneração após a perda da vegetação original."},
+    {q:"Qual bioma é o mais desmatado historicamente?",
+     a:["Mata Atlântica","Floresta Amazônica","Pantanal alagado","Cerrado central"],
+     fb:"Restam cerca de 27% da Mata Atlântica original — o bioma mais devastado do país."},
+    {q:"O monitoramento do desmatamento amazônico usa?",
+     a:["Imagens orbitais","Contagem manual","Relatos verbais","Mapas históricos"],
+     fb:"O PRODES/INPE usa imagens de satélite para medir o corte raso a cada ano."},
+    {q:"Espécies pioneiras costumam ter?",
+     a:["Crescimento rápido","Crescimento lento","Folhas aquáticas","Frutos venenosos"],
+     fb:"Pioneiras crescem rápido, toleram sol forte e facilitam a chegada de outras espécies."},
+    {q:"Reduzir desmatamento ajuda o clima ao evitar?",
+     a:["Emissão de carbono","Captura de carbono","Formação de nuvens","Erosão das praias"],
+     fb:"Derrubar e queimar floresta libera o carbono estocado, aquecendo o planeta."},
+    {q:"A meta de restauração do Planaveg até 2030 é de?",
+     a:["12 milhões de hectares","3 milhões de hectares","1 milhão de hectares","8 milhões de hectares"],
+     fb:"O Planaveg prevê recuperar 12 milhões de hectares de vegetação nativa até 2030."},
+    {q:"O termo 'corte raso' significa?",
+     a:["Remover toda vegetação","Cortar alguns galhos","Plantar mudas novas","Adubar o terreno"],
+     fb:"Corte raso é a retirada completa da floresta, deixando o solo exposto."},
+    {q:"As APPs (Áreas de Preservação Permanente) protegem?",
+     a:["Margens dos rios","Centros das cidades","Áreas de mineração","Zonas industriais densas"],
+     fb:"As APPs protegem matas ciliares, topos de morro e nascentes, vitais para a água."},
+    {q:"Plantar só uma espécie comercial de árvore forma?",
+     a:["Monocultura florestal","Floresta nativa","Mata diversa","Reserva protegida"],
+     fb:"Plantios homogêneos (ex.: eucalipto) recompõem cobertura, mas não a biodiversidade nativa."}
+  ],
+  dificil: [
+    {q:"O índice PRODES/INPE mede especificamente o?",
+     a:["Corte raso anual","Manejo seletivo legal","Foco de incêndio","Avanço das nuvens"],
+     fb:"O PRODES mede o corte raso (desmatamento total); a degradação é vista por DEGRAD/DETER."},
+    {q:"O 'efeito de borda' em fragmentos florestais causa?",
+     a:["Maior dessecação interna","Menor temperatura média","Mais umidade central","Solo mais profundo"],
+     fb:"Bordas expostas ao sol e vento ressecam o microclima e elevam a mortalidade de árvores."},
+    {q:"A regeneração natural é favorecida sobretudo por?",
+     a:["Proximidade de remanescentes","Distância de florestas","Solo muito compactado","Fogo muito frequente"],
+     fb:"Fontes de sementes próximas e fauna dispersora aceleram a recolonização natural."},
+    {q:"Espécies de estágios tardios (clímax) tendem a ser?",
+     a:["Tolerantes à sombra","Exigentes de luz","Sempre herbáceas","Sempre exóticas"],
+     fb:"As clímax germinam sob dossel sombreado, ao contrário das pioneiras heliófilas."},
+    {q:"A estimativa PRODES 2025 para a Amazônia foi de cerca de?",
+     a:["5,8 mil km²","11 mil km²","20 mil km²","2 mil km²"],
+     fb:"Foram ~5.796 km² em 2025, queda de 11% e o menor índice em 11 anos (INPE/PRODES)."},
+    {q:"Frente a 2024, o desmatamento amazônico em 2025?",
+     a:["Caiu cerca de 11%","Subiu cerca de 11%","Dobrou no período","Triplicou no período"],
+     fb:"A redução foi de 11,08% frente a 2024, segundo a estimativa preliminar do INPE."},
+    {q:"A 'restauração ecológica' difere do reflorestamento por buscar?",
+     a:["Recompor o ecossistema","Apenas plantar árvores","Lucro com madeira","Cobertura com eucalipto"],
+     fb:"Restauração reconstitui estrutura, espécies e funções do ecossistema, não só árvores."},
+    {q:"A técnica de 'nucleação' na restauração consiste em?",
+     a:["Criar núcleos regenerativos","Plantar tudo junto","Remover a fauna","Drenar o solo"],
+     fb:"Núcleos (poleiros, galharia, ilhas de mudas) atraem fauna e irradiam a regeneração."},
+    {q:"Florestas secundárias jovens, frente às maduras, estocam?",
+     a:["Menos carbono","Mais carbono","Carbono idêntico","Nenhum carbono"],
+     fb:"O estoque de carbono cresce com a idade; matas maduras guardam muito mais."},
+    {q:"A fragmentação florestal tende a reduzir a?",
+     a:["Conectividade dos hábitats","Quantidade de bordas","Mortalidade das árvores","Temperatura das clareiras"],
+     fb:"Fragmentar isola populações e dificulta o fluxo gênico, elevando extinções locais."},
+    {q:"Qual fator NÃO favorece a regeneração natural?",
+     a:["Solo severamente degradado","Sementes próximas disponíveis","Presença de dispersores","Redução das queimadas"],
+     fb:"Solos compactados e erodidos travam a sucessão; os demais fatores a impulsionam."},
+    {q:"A meta de 12 milhões de hectares conecta-se a qual pacto?",
+     a:["Desafio de Bonn","Protocolo de Montreal","Convenção de Ramsar","Acordo de Basileia"],
+     fb:"O Planaveg liga-se ao Desafio de Bonn, à Iniciativa 20x20 e ao Acordo de Paris."}
+  ],
+  carbonauta: [
+    {q:"No PRODES, o 'ano' de referência anual vai de?",
+     a:["Agosto a julho","Janeiro a dezembro","Junho a maio","Outubro a setembro"],
+     fb:"O calendário PRODES consolida 1º/ago a 31/jul, alinhado à estação seca amazônica."},
+    {q:"O sensor historicamente base do PRODES pertence à família?",
+     a:["Landsat óptico","Sentinel radar","MODIS térmico","SRTM altimétrico"],
+     fb:"O PRODES usa imagens ópticas tipo Landsat para mapear corte raso a partir de ~6,25 ha."},
+    {q:"A 'dívida de extinção' em fragmentos descreve?",
+     a:["Extinções futuras retardadas","Extinções já concluídas","Imigração de espécies","Ganho de espécies"],
+     fb:"Espécies persistem temporariamente no fragmento, mas tendem à extinção ao longo do tempo."},
+    {q:"Em sucessão secundária, o acúmulo de biomassa costuma ser?",
+     a:["Rápido depois saturante","Linear e constante","Sempre decrescente","Estável e baixo"],
+     fb:"A biomassa cresce rápido nas décadas iniciais e desacelera ao se aproximar do clímax."},
+    {q:"Recuperar a biomassa de uma mata madura pode levar?",
+     a:["Várias décadas","Poucos meses","Dois anos","Pouquíssimos dias"],
+     fb:"A recuperação plena de biomassa e composição pode levar muitas décadas a séculos."},
+    {q:"A 'savanização' da Amazônia refere-se à?",
+     a:["Transição para savana","Expansão da floresta","Aumento das chuvas","Resfriamento do clima"],
+     fb:"Desmatamento e clima podem empurrar trechos de floresta a um estado tipo savana (tipping point)."},
+    {q:"A área mínima de polígono mapeada pelo PRODES é de cerca de?",
+     a:["6,25 hectares","625 hectares","0,1 hectare","6.250 hectares"],
+     fb:"O PRODES detecta polígonos a partir de ~6,25 ha; eventos menores escapam dessa escala."},
+    {q:"A 'restauração passiva' distingue-se da ativa por?",
+     a:["Confiar na regeneração","Exigir plantio massivo","Usar apenas exóticas","Remover a serapilheira"],
+     fb:"A passiva remove a perturbação e deixa a sucessão agir; a ativa intervém com plantio/manejo."},
+    {q:"O sequestro de carbono por regeneração natural é tido como?",
+     a:["Alto potencial","Baixo potencial","Nenhum potencial","Potencial negativo"],
+     fb:"A vegetação secundária é via estratégica e de baixo custo para metas de carbono no Brasil."},
+    {q:"A biogeografia de ilhas prevê que fragmentos menores sustentam?",
+     a:["Menos espécies","Mais espécies","Espécies infinitas","Zero extinções"],
+     fb:"Área menor → menos hábitat → maior taxa de extinção e menor riqueza no equilíbrio."},
+    {q:"O DETER, complementar ao PRODES, serve para?",
+     a:["Alertas diários rápidos","Censo de árvores","Mapa do relevo","Registro de chuvas"],
+     fb:"O DETER emite alertas frequentes para fiscalização; o PRODES faz a taxa oficial anual."},
+    {q:"A 'resiliência' de uma floresta é a capacidade de?",
+     a:["Retornar após distúrbio","Resistir a tudo","Ficar sempre idêntico","Crescer para sempre"],
+     fb:"Resiliência é recuperar estrutura e função após distúrbios, base da regeneração natural."}
+  ]
+};
+
+const LVL_NAMES = {basico:"Básico", inter:"Intermediário", dificil:"Difícil", carbonauta:"🛰️ Carbonauta"};
+
+/* ====================== ESTADO ====================== */
+let level="basico", queue=[], idx=0, pts=0, acertos=0, streak=0, locked=false;
+let t0=0, timer=null, elapsed=0;
+
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+function startGame(){
+  queue = shuffle(LEVELS[level].slice());
+  idx=0; pts=0; acertos=0; streak=0; locked=false; elapsed=0;
+  document.getElementById("finalPanel").classList.remove("show");
+  document.getElementById("gamePanel").style.display="block";
+  startTimer();
+  renderQ();
+  updateHUD();
+}
+
+function startTimer(){
+  clearInterval(timer); t0=Date.now();
+  timer=setInterval(()=>{
+    elapsed=Math.floor((Date.now()-t0)/1000);
+    document.getElementById("hTempo").textContent=elapsed+"s";
+  },250);
+}
+
+function renderQ(){
+  locked=false;
+  const q=queue[idx];
+  const card=document.getElementById("qcard");
+  card.classList.remove("pop","shake");
+  document.getElementById("qnum").textContent="Pergunta "+(idx+1)+" de "+queue.length;
+  document.getElementById("qtext").textContent=q.q;
+  const fb=document.getElementById("fb");
+  fb.className="fb"; fb.textContent="Escolha a alternativa que você acha correta. 🌱";
+  // monta e embaralha alternativas (a[0] é a correta)
+  const opts = shuffle(q.a.map((t,i)=>({t, ok:i===0})));
+  const box=document.getElementById("opts");
+  box.innerHTML="";
+  opts.forEach(o=>{
+    const b=document.createElement("button");
+    b.className="opt"; b.textContent=o.t; b.dataset.ok=o.ok?"1":"0";
+    b.onclick=()=>answer(b);
+    box.appendChild(b);
+  });
+  document.getElementById("next").disabled=true;
+  document.getElementById("prog").style.width=(idx/queue.length*100)+"%";
+}
+
+function answer(btn){
+  if(locked) return;
+  locked=true;
+  const q=queue[idx];
+  const correct = btn.dataset.ok==="1";
+  const buttons=document.querySelectorAll("#opts .opt");
+  buttons.forEach(b=>{
+    b.disabled=true;
+    if(b.dataset.ok==="1") b.classList.add("correct");
+    else b.classList.add("dim");
+  });
+  const card=document.getElementById("qcard");
+  const fb=document.getElementById("fb");
+  if(correct){
+    acertos++; streak++; pts += 10 + Math.min(streak,5)*2;
+    card.classList.add("pop");
+    fb.className="fb good";
+    fb.innerHTML="<span><b>✅ Correto!</b> "+q.fb+"</span>";
+  }else{
+    streak=0;
+    btn.classList.remove("dim"); btn.classList.add("wrong");
+    card.classList.add("shake");
+    fb.className="fb bad";
+    fb.innerHTML="<span><b>❌ Não foi dessa vez.</b> "+q.fb+"</span>";
+  }
+  updateHUD();
+  document.getElementById("prog").style.width=((idx+1)/queue.length*100)+"%";
+  const nb=document.getElementById("next");
+  nb.disabled=false;
+  nb.textContent = (idx===queue.length-1) ? "Ver resultado 🎉" : "Próxima ▶";
+}
+
+function nextQ(){
+  if(!locked) return;
+  if(idx===queue.length-1){ endGame(); return; }
+  idx++; renderQ();
+}
+
+function updateHUD(){
+  document.getElementById("hPts").textContent=pts;
+  document.getElementById("hAcertos").textContent=acertos+"/"+queue.length;
+  document.getElementById("hStreak").textContent=streak;
+}
+
+function endGame(){
+  clearInterval(timer);
+  document.getElementById("gamePanel").style.display="none";
+  const fp=document.getElementById("finalPanel");
+  fp.classList.add("show");
+  document.getElementById("finalScore").textContent=pts+" pts";
+  const pct=Math.round(acertos/queue.length*100);
+  let msg;
+  if(level==="carbonauta" && pct===100) msg="🛰️ Domínio de Carbonauta! Nível de pesquisador! 🌟";
+  else if(pct===100) msg="Perfeito! Você é guardião(ã) da floresta! 🌟";
+  else if(pct>=70) msg="Muito bom! Você manja de floresta. 🌿";
+  else if(pct>=40) msg="Bom caminho — revise os feedbacks e tente de novo! 🍃";
+  else msg="Não desanime: cada rodada planta uma nova ideia. 🌱";
+  document.getElementById("finalRes").innerHTML=
+    "Acertos: <b>"+acertos+"/"+queue.length+"</b> ("+pct+"%) • Tempo: <b>"+elapsed+"s</b><br>"+msg;
+  document.getElementById("saveMsg").textContent="";
+  loadRanking();
+}
+
+/* ====================== RANKING (Firestore) ====================== */
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+async function saveScore(){
+  const nm=(document.getElementById("nameIn").value||"").trim().slice(0,20);
+  const msg=document.getElementById("saveMsg");
+  if(!nm){ msg.textContent="✏️ Digite um nome para salvar."; return; }
+  if(!db){ msg.textContent="⚠️ Ranking offline — pontuação não enviada, mas seu jogo valeu!"; return; }
+  try{
+    document.getElementById("saveBtn").disabled=true;
+    msg.textContent="Salvando…";
+    await fs.addDoc(fs.collection(db,"games",GAME_ID,"scores"),{
+      name:nm, score:pts, seconds:elapsed, level:level, acertos:acertos,
+      total:queue.length, ts:fs.serverTimestamp()
+    });
+    msg.textContent="✅ Pontuação salva! Veja o ranking abaixo.";
+    loadRanking();
+  }catch(e){
+    console.warn(e);
+    msg.textContent="⚠️ Não foi possível salvar agora. Tente mais tarde.";
+  }finally{
+    document.getElementById("saveBtn").disabled=false;
+  }
+}
+
+async function loadRanking(){
+  document.getElementById("rankLvl").textContent=LVL_NAMES[level];
+  const list=document.getElementById("rankList");
+  const rmsg=document.getElementById("rankMsg");
+  list.innerHTML=""; rmsg.textContent="Carregando ranking…";
+  if(!db){ rmsg.textContent="⚠️ Ranking indisponível offline. O jogo continua 100% jogável!"; return; }
+  try{
+    // Sem where()+orderBy combinados: ordena por um campo só e filtra o nível no cliente.
+    const q=fs.query(
+      fs.collection(db,"games",GAME_ID,"scores"),
+      fs.orderBy("score","desc"),
+      fs.limit(500)
+    );
+    const snap=await fs.getDocs(q);
+    let rows=[];
+    snap.forEach(d=>{const x=d.data(); if(x.level===level) rows.push(x);});
+    rows.sort((a,b)=> (b.score-a.score) || ((a.seconds||0)-(b.seconds||0)));
+    rows=rows.slice(0,10);
+    if(!rows.length){ rmsg.textContent="Seja o primeiro a entrar no ranking deste nível! 🏅"; return; }
+    rmsg.textContent="";
+    list.innerHTML=rows.map(r=>
+      '<li><span class="nm">'+esc(r.name||"Anônimo")+'</span>'+
+      '<span class="sc">'+(r.score||0)+' pts</span>'+
+      '<span class="tm">'+(r.seconds||0)+'s</span></li>'
+    ).join("");
+  }catch(e){
+    console.warn(e);
+    rmsg.textContent="⚠️ Não foi possível carregar o ranking agora.";
+  }
+}
+
+/* ====================== NÍVEIS ====================== */
+document.getElementById("levels").addEventListener("click",e=>{
+  const b=e.target.closest(".pill"); if(!b) return;
+  document.querySelectorAll(".pill").forEach(p=>p.classList.remove("active"));
+  b.classList.add("active");
+  level=b.dataset.lvl;
+  startGame();
+  loadRanking();
+});
+
+/* ====================== BOOT ====================== */
+(async()=>{
+  startGame();
+  await initFirebase();
+  loadRanking();
+})();
+</script>
+</body>
+</html>
