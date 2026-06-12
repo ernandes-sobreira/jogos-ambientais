@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Missão Refloresta</title>
+<style>
+:root {
+  --bg1: #1a3a0e;
+  --bg2: #2d6018;
+  --accent: #68c030;
+  --accent2: #4a9020;
+  --card: rgba(255,255,255,0.97);
+  --card-shadow: 0 6px 28px rgba(0,0,0,0.22);
+  --radius: 16px;
+  --text: #162010;
+  --muted: #4a7030;
+  --success: #2a9a40;
+  --danger: #c03020;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:system-ui,'Segoe UI',sans-serif;
+  background:linear-gradient(160deg,var(--bg1) 0%,var(--bg2) 100%);
+  min-height:100vh;color:var(--text);padding-bottom:40px;
+}
+header{text-align:center;padding:28px 16px 12px;color:#fff;}
+header h1{font-size:clamp(1.7rem,5vw,2.7rem);font-weight:800;text-shadow:0 2px 10px rgba(0,0,0,.4);margin-bottom:4px;}
+header p{color:rgba(255,255,255,.72);font-size:clamp(.85rem,2vw,1rem);}
+.level-bar{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:10px 16px 14px;}
+.level-btn{
+  background:rgba(255,255,255,.14);color:#fff;border:2px solid rgba(255,255,255,.28);
+  border-radius:999px;padding:8px 22px;font-size:.88rem;font-weight:700;cursor:pointer;transition:all .2s;
+}
+.level-btn:hover{background:rgba(255,255,255,.24);transform:translateY(-1px);}
+.level-btn.active{background:var(--accent);border-color:var(--accent);color:#0a1a06;box-shadow:0 2px 14px rgba(104,192,48,.5);}
+.main-wrap{
+  display:grid;grid-template-columns:1fr min(380px,95vw);
+  gap:16px;max-width:1060px;margin:0 auto;padding:0 16px;
+}
+@media(max-width:680px){.main-wrap{grid-template-columns:1fr;}}
+.game-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--card-shadow);overflow:hidden;}
+.hud{
+  display:flex;gap:12px;flex-wrap:wrap;padding:11px 16px;
+  background:rgba(0,0,0,.04);border-bottom:1px solid rgba(0,0,0,.07);
+  font-size:.83rem;font-weight:600;color:var(--muted);
+}
+.hud span{display:flex;align-items:center;gap:4px;}
+.hud .val{color:var(--text);font-weight:800;}
+.prog-wrap{padding:10px 16px 6px;background:rgba(0,0,0,.02);}
+.prog-label{font-size:.79rem;font-weight:700;color:var(--muted);margin-bottom:4px;display:flex;justify-content:space-between;}
+.prog-bar-outer{width:100%;height:10px;background:#d0e8c0;border-radius:999px;overflow:hidden;}
+.prog-bar-inner{height:100%;border-radius:999px;background:var(--accent);transition:width .5s ease;}
+.instructions{
+  padding:9px 16px;font-size:.82rem;color:var(--muted);
+  border-bottom:1px solid rgba(0,0,0,.06);background:rgba(104,192,48,.07);line-height:1.4;
+}
+/* Question */
+.q-area{padding:20px 16px 10px;}
+.q-emoji{font-size:2.6rem;text-align:center;display:block;margin-bottom:8px;}
+.q-num{font-size:.78rem;font-weight:700;color:var(--muted);text-align:center;margin-bottom:6px;}
+.q-text{font-size:1rem;line-height:1.62;color:var(--text);margin-bottom:18px;font-weight:500;min-height:60px;}
+.choices{display:flex;flex-direction:column;gap:9px;margin-bottom:4px;}
+.choice-btn{
+  background:#fff;border:2px solid #c8e0b8;border-radius:12px;
+  padding:11px 16px;font-size:.9rem;line-height:1.45;
+  color:var(--text);cursor:pointer;text-align:left;
+  transition:all .2s;font-weight:500;
+}
+.choice-btn:hover:not(:disabled){
+  border-color:var(--accent);background:rgba(104,192,48,.07);
+  transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.09);
+}
+.choice-btn.correct{border-color:var(--success);background:rgba(42,154,64,.1);animation:pop .32s ease;}
+.choice-btn.wrong{border-color:var(--danger);background:rgba(192,48,32,.08);animation:shake .32s ease;}
+.choice-btn:disabled{cursor:not-allowed;opacity:.75;}
+@keyframes pop{0%{transform:scale(1);}50%{transform:scale(1.03);}100%{transform:scale(1);}}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+.feedback-panel{
+  margin:12px 16px 0;padding:12px 14px;
+  background:rgba(104,192,48,.08);border-left:4px solid var(--accent);
+  border-radius:8px;font-size:.88rem;line-height:1.5;color:var(--text);min-height:56px;
+}
+.next-btn{
+  display:block;margin:12px 16px 20px;width:calc(100% - 32px);
+  padding:12px;background:var(--accent);color:#0a1a06;border:none;
+  border-radius:12px;font-size:1rem;font-weight:800;cursor:pointer;transition:all .2s;
+}
+.next-btn:hover{background:#50a020;transform:translateY(-1px);box-shadow:0 4px 14px rgba(104,192,48,.4);}
+/* End */
+.end-screen{padding:22px 20px;text-align:center;}
+.end-emoji{font-size:3.5rem;display:block;margin-bottom:10px;}
+.end-title{font-size:1.55rem;font-weight:800;margin-bottom:8px;color:#1a3a0e;}
+.end-desc{font-size:.93rem;color:var(--muted);margin-bottom:18px;line-height:1.5;}
+.end-stats{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-bottom:18px;}
+.end-stat{background:rgba(0,0,0,.05);border-radius:12px;padding:10px 16px;font-size:.95rem;font-weight:800;color:var(--text);}
+.end-stat span{display:block;font-size:.74rem;font-weight:400;color:var(--muted);margin-top:2px;}
+.save-area{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px;}
+.save-area input{
+  padding:10px 14px;border:2px solid #c8e0b8;border-radius:10px;
+  font-size:.9rem;flex:1;min-width:140px;max-width:200px;outline:none;
+}
+.save-area input:focus{border-color:var(--accent);}
+.save-btn{
+  padding:10px 18px;background:#1a4a08;color:#fff;border:none;
+  border-radius:10px;font-size:.9rem;font-weight:700;cursor:pointer;transition:all .2s;
+}
+.save-btn:hover{background:#103206;}
+.save-btn:disabled{opacity:.5;cursor:not-allowed;}
+.restart-btn{
+  margin-top:12px;padding:10px 24px;background:#fff;color:var(--text);
+  border:2px solid #c8e0b8;border-radius:10px;font-size:.9rem;
+  font-weight:600;cursor:pointer;transition:all .2s;display:inline-block;
+}
+.restart-btn:hover{border-color:var(--accent);background:rgba(104,192,48,.07);}
+/* Ranking */
+.ranking-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--card-shadow);padding:16px;height:fit-content;}
+.ranking-card h3{font-size:1rem;font-weight:800;color:#1a3a0e;margin-bottom:3px;}
+.rank-level{font-size:.78rem;color:var(--muted);margin-bottom:12px;}
+.rank-list{display:flex;flex-direction:column;gap:8px;}
+.rank-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(0,0,0,.03);border-radius:10px;font-size:.85rem;}
+.rank-pos{font-weight:800;color:var(--muted);min-width:22px;}
+.rank-pos.gold{color:#f0a020;}.rank-pos.silver{color:#9e9e9e;}.rank-pos.bronze{color:#a0522d;}
+.rank-name{flex:1;font-weight:600;color:var(--text);}
+.rank-score{font-weight:700;color:#1a4a08;font-size:.9rem;}
+.rank-empty{font-size:.84rem;color:var(--muted);text-align:center;padding:14px;}
+.rank-status{font-size:.77rem;color:var(--muted);text-align:center;margin-top:6px;}
+footer{text-align:center;padding:24px 16px 12px;color:rgba(255,255,255,.62);font-size:.82rem;line-height:1.85;}
+footer strong{color:rgba(255,255,255,.9);font-size:.9rem;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🌳 Missão Refloresta</h1>
+  <p>Desmatamento, regeneração e restauração florestal no Brasil</p>
+</header>
+
+<div class="level-bar">
+  <button class="level-btn active" onclick="setLevel('basico',this)">Básico</button>
+  <button class="level-btn" onclick="setLevel('intermediario',this)">Intermediário</button>
+  <button class="level-btn" onclick="setLevel('dificil',this)">Difícil</button>
+  <button class="level-btn" onclick="setLevel('carbonauta',this)">🛰️ Carbonauta</button>
+</div>
+
+<div class="main-wrap">
+  <div>
+    <div class="game-card">
+      <div class="hud">
+        <span>✅ Acertos: <span class="val" id="hud-acertos">0</span></span>
+        <span>🔥 Sequência: <span class="val" id="hud-streak">0</span></span>
+        <span>⏱️ Tempo: <span class="val" id="hud-time">0s</span></span>
+        <span>🏆 Pontos: <span class="val" id="hud-score">0</span></span>
+      </div>
+      <div class="prog-wrap">
+        <div class="prog-label">
+          <span id="prog-label">Questão 0</span>
+          <span id="prog-pct">0%</span>
+        </div>
+        <div class="prog-bar-outer">
+          <div class="prog-bar-inner" id="prog-bar" style="width:0%"></div>
+        </div>
+      </div>
+      <div class="instructions">
+        🌳 Leia a pergunta e escolha a resposta correta. Acerte em sequência para ganhar bônus de pontos!
+      </div>
+      <div id="game-area"></div>
+      <div class="feedback-panel" id="feedback-panel">Escolha uma alternativa para ver a explicação!</div>
+      <button class="next-btn" id="next-btn" onclick="nextQ()" style="display:none">Próxima pergunta →</button>
+    </div>
+  </div>
+  <div>
+    <div class="ranking-card">
+      <h3>🏆 Ranking Global</h3>
+      <div class="rank-level" id="rank-level-label">Nível: Básico</div>
+      <div class="rank-list" id="rank-list"><div class="rank-empty">Carregando...</div></div>
+      <div class="rank-status" id="rank-status"></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <strong>— Idealizado por Ernandes Sobreira —</strong><br>
+  Tema: Desmatamento e regeneração florestal · Gênero: Quiz<br>
+  App ambiental do dia (2026-06-12)
+</footer>
+
+<script type="module">
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-06-12-missao-refloresta";
+
+let db = null;
+(async () => {
+  try {
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc, getDocs, orderBy, query, limit, serverTimestamp }
+      = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    window._fb = { collection, addDoc, getDocs, orderBy, query, limit, serverTimestamp, db };
+    loadRanking();
+  } catch(e) {
+    console.warn("Firebase offline", e);
+    document.getElementById("rank-status").textContent = "Ranking indisponível offline";
+    document.getElementById("rank-list").innerHTML = '<div class="rank-empty">Sem conexão</div>';
+  }
+})();
+
+// ── Game Data ──────────────────────────────────────────────────────────────────
+// Each question: { e, q, opts: [{t, correct, fb}] }
+const LEVELS_DATA = {
+  basico: {
+    label: 'Básico',
+    qs: [
+      { e:'🌳', q:'Qual é a principal causa de desmatamento no Brasil?',
+        opts:[
+          { t:'Abertura de áreas para pecuária e agricultura', correct:true,
+            fb:'A expansão agropecuária — pecuária bovina e cultivo de soja — responde por mais de 70% do desmatamento histórico no Brasil, sendo a principal força por trás da destruição de florestas nativas.' },
+          { t:'Crescimento das cidades e expansão urbana', correct:false,
+            fb:'A urbanização tem impacto local, mas responde por uma fração pequena do desmatamento total. A fronteira agropecuária é a força dominante.' },
+          { t:'Extração ilegal de madeira para exportação', correct:false,
+            fb:'A madeira ilegal contribui para o desmatamento, mas isoladamente não é a principal causa — frequentemente é o primeiro passo antes da conversão para pecuária.' },
+          { t:'Construção de rodovias e barragens federais', correct:false,
+            fb:'Infraestrutura abre fronteiras e facilita o desmatamento, mas não é a causa direta predominante — a conversão para uso agropecuário é.' }
+        ]
+      },
+      { e:'🌱', q:'O que é regeneração florestal natural?',
+        opts:[
+          { t:'Retorno espontâneo da vegetação em área abandonada', correct:true,
+            fb:'A regeneração natural ocorre quando a vegetação se recupera por conta própria após o abandono de uma área, sem intervenção humana. É o método mais barato e eficaz de restauração florestal.' },
+          { t:'Plantio de mudas nativas em terrenos degradados', correct:false,
+            fb:'Isso descreve restauração ativa ou reflorestamento — diferente da regeneração natural, que dispensa o plantio e acontece espontaneamente.' },
+          { t:'Controle de espécies invasoras por técnicos ambientais', correct:false,
+            fb:'O controle de invasoras é uma etapa de restauração assistida, não a definição de regeneração natural, que ocorre sem essa intervenção.' },
+          { t:'Manejo sustentável de florestas para extração de madeira', correct:false,
+            fb:'Manejo florestal sustentável é o uso controlado da floresta — o oposto da regeneração, que pressupõe ausência de exploração.' }
+        ]
+      },
+      { e:'🔥', q:'O que o desmatamento e a queima de florestas liberam para a atmosfera?',
+        opts:[
+          { t:'CO₂ armazenado na biomassa das árvores derrubadas', correct:true,
+            fb:'As árvores armazenam carbono em sua biomassa. Quando derrubadas e queimadas, esse carbono é liberado como CO₂, tornando o desmatamento uma das maiores fontes de emissão de gases de efeito estufa.' },
+          { t:'Somente vapor d\'água e nitrogênio inerte da madeira', correct:false,
+            fb:'A queima de biomassa libera principalmente CO₂, CO, CH₄ e material particulado — não apenas vapor d\'água.' },
+          { t:'Oxigênio puro que reequilibra a camada de ozônio', correct:false,
+            fb:'A queima de madeira consome oxigênio e libera CO₂ — o processo oposto à fotossíntese.' },
+          { t:'Apenas gases nobres presentes no interior das células', correct:false,
+            fb:'Gases nobres como argônio existem na atmosfera, mas não são liberados de forma relevante pela queima de madeira.' }
+        ]
+      },
+      { e:'🗺️', q:'Qual porcentagem da Mata Atlântica original ainda existe hoje?',
+        opts:[
+          { t:'Cerca de 50% da cobertura florestal original', correct:false,
+            fb:'A Mata Atlântica está muito mais devastada do que 50%. O desmatamento histórico foi intenso por séculos.' },
+          { t:'Em torno de 30% da cobertura florestal original', correct:false,
+            fb:'Ainda longe da realidade. A devastação foi muito mais intensa — restam fragmentos dispersos em apenas ~12% da área.' },
+          { t:'Aproximadamente 12% da cobertura original da floresta', correct:true,
+            fb:'Restam apenas ~12% da Mata Atlântica original, dispersos em fragmentos ao longo de 17 estados. Por isso é um dos hotspots globais de biodiversidade — alta diversidade combinada com alta ameaça.' },
+          { t:'Menos de 5% da cobertura florestal original restante', correct:false,
+            fb:'A estimativa atual é de ~12%, não abaixo de 5%. Ainda assim é um número alarmante dado que a Mata Atlântica abriga ~72% das espécies ameaçadas de extinção do Brasil.' }
+        ]
+      },
+      { e:'📋', q:'O que é uma APP (Área de Preservação Permanente)?',
+        opts:[
+          { t:'Área destinada ao cultivo orgânico de espécies nativas', correct:false,
+            fb:'APPs não são para cultivo — são áreas de proteção onde a vegetação não pode ser removida.' },
+          { t:'Área legal protegida em margens de rios e topos de morro', correct:true,
+            fb:'APPs são definidas pelo Código Florestal (Lei 12.651/2012) como áreas de função ambiental crítica — margens de rios, nascentes, encostas e topos de morro — onde a vegetação é protegida por lei.' },
+          { t:'Região destinada exclusivamente a pesquisas científicas', correct:false,
+            fb:'Pesquisas científicas podem ocorrer em APPs, mas sua definição é de proteção de vegetação em áreas de risco ambiental, não de pesquisa.' },
+          { t:'Zona de amortecimento ao redor de parques nacionais', correct:false,
+            fb:'Zonas de amortecimento são um conceito diferente, associado às Unidades de Conservação. APPs são definidas pela topografia e hidrologia da propriedade.' }
+        ]
+      },
+      { e:'💰', q:'O que é o Fundo Amazônia, gerido pelo BNDES?',
+        opts:[
+          { t:'Imposto cobrado sobre exportações de commodities agrícolas', correct:false,
+            fb:'O Fundo Amazônia não é um imposto — é financiado por doações voluntárias de governos e empresas estrangeiros.' },
+          { t:'Fundo de doações para projetos de prevenção ao desmatamento', correct:true,
+            fb:'O Fundo Amazônia (criado em 2008) recebe doações principalmente da Noruega e Alemanha e financia projetos de prevenção ao desmatamento, monitoramento e desenvolvimento sustentável na Amazônia.' },
+          { t:'Programa de compensação financeira para áreas desmatadas', correct:false,
+            fb:'O Fundo Amazônia financia a prevenção do desmatamento — não a compensação de áreas já destruídas.' },
+          { t:'Fundo de reparação por danos ambientais em processos judiciais', correct:false,
+            fb:'Isso se refere a instrumentos jurídicos distintos. O Fundo Amazônia é voluntário e preventivo, não judicial.' }
+        ]
+      },
+      { e:'🌿', q:'O que é a Reserva Legal exigida pelo Código Florestal?',
+        opts:[
+          { t:'Faixa de vegetação protegida às margens de cursos d\'água', correct:false,
+            fb:'Essa é a definição de APP, não de Reserva Legal. São instrumentos diferentes do Código Florestal.' },
+          { t:'Área mínima de vegetação nativa obrigatória em cada propriedade', correct:true,
+            fb:'A Reserva Legal é a percentagem mínima de vegetação nativa que toda propriedade rural deve manter — 20% fora da Amazônia, até 80% dentro da Amazônia Legal.' },
+          { t:'Unidade de conservação criada pelo governo federal em fazendas', correct:false,
+            fb:'Unidades de conservação são criadas e geridas pelo poder público. A Reserva Legal é um ônus sobre a propriedade privada, não uma UC.' },
+          { t:'Área de amortecimento ao redor de reservas indígenas demarcadas', correct:false,
+            fb:'Áreas de amortecimento têm regras específicas ligadas às UCs. A Reserva Legal incide sobre toda propriedade rural produtiva.' }
+        ]
+      },
+      { e:'🔭', q:'Qual sistema do INPE monitora o desmatamento na Amazônia?',
+        opts:[
+          { t:'SEMA — Sistema de Emergências Ambientais Nacionais', correct:false,
+            fb:'O SEMA não existe com essa sigla no INPE. O sistema de monitoramento de desmatamento é o PRODES.' },
+          { t:'PRODES — Programa de Monitoramento do Desmatamento por Satélite', correct:true,
+            fb:'O PRODES (INPE) usa imagens de satélite Landsat para medir anualmente a supressão de floresta primária na Amazônia desde 1988, sendo a referência oficial para as taxas de desmatamento.' },
+          { t:'IBGE — Instituto de Monitoramento Florestal Geográfico', correct:false,
+            fb:'O IBGE faz levantamentos agropecuários e censitários, mas o monitoramento de desmatamento na Amazônia é responsabilidade do INPE (PRODES/DETER).' },
+          { t:'SIVAM — Sistema de Vigilância Ambiental da Amazônia', correct:false,
+            fb:'O SIVAM é um sistema de defesa e vigilância da Amazônia, não especificamente de monitoramento de desmatamento — esse é o PRODES/INPE.' }
+        ]
+      }
+    ]
+  },
+
+  intermediario: {
+    label: 'Intermediário',
+    qs: [
+      { e:'📡', q:'Qual a diferença entre o PRODES e o DETER no monitoramento do desmatamento?',
+        opts:[
+          { t:'PRODES mede desmatamento anual; DETER emite alertas em tempo quase real', correct:true,
+            fb:'O PRODES (anual, preciso, floresta primária) é a medida oficial de desmatamento. O DETER (diário/semanal) emite alertas rápidos para subsidiar fiscalizações do IBAMA, mas não é a medida definitiva.' },
+          { t:'PRODES monitora o Cerrado; DETER monitora a Amazônia Legal', correct:false,
+            fb:'Ambos monitoram a Amazônia. O monitoramento do Cerrado é feito por um sistema separado também do INPE.' },
+          { t:'PRODES usa radar; DETER usa imagens ópticas de satélite', correct:false,
+            fb:'Ambos usam imagens de satélite ópticas (Landsat e outros). A diferença é no intervalo temporal — anual vs. quase em tempo real.' },
+          { t:'PRODES detecta queimadas; DETER detecta o corte de árvores', correct:false,
+            fb:'Ambos detectam desmatamento (supressão de vegetação), não exclusivamente queimadas. Queimadas são monitoradas pelo INPE por um sistema diferente (BDQueimadas).' }
+        ]
+      },
+      { e:'🌍', q:'O que é o REDD+, mecanismo climático internacional?',
+        opts:[
+          { t:'Sistema que remunera países por reduções verificadas no desmatamento', correct:true,
+            fb:'O REDD+ (Redução de Emissões por Desmatamento e Degradação) paga países em desenvolvimento por resultados mensuráveis de redução do desmatamento em relação a uma linha de base histórica. O "+" inclui conservação de estoques de carbono e manejo sustentável.' },
+          { t:'Protocolo de replantio obrigatório para países signatários do Acordo de Paris', correct:false,
+            fb:'O Acordo de Paris não exige replantio obrigatório. O REDD+ é um mecanismo voluntário de incentivo financeiro, não uma obrigação legal.' },
+          { t:'Taxa aplicada sobre exportações de países com alto desmatamento', correct:false,
+            fb:'O REDD+ não é uma taxa punitiva — é um incentivo financeiro positivo para países que reduzem o desmatamento voluntariamente.' },
+          { t:'Fundo de compra de terras para criação de reservas florestais', correct:false,
+            fb:'O REDD+ paga por resultados de redução de desmatamento — não compra terras. É baseado em pagamentos por desempenho.' }
+        ]
+      },
+      { e:'🌿', q:'Qual a área desmatada na Amazônia brasileira acumulada desde 1988?',
+        opts:[
+          { t:'Cerca de 200.000 km² de floresta primária suprimida', correct:false,
+            fb:'O número real é quatro vezes maior. Desde 1988 o desmatamento acumulado supera 800.000 km².' },
+          { t:'Em torno de 400.000 km² de floresta primária suprimida', correct:false,
+            fb:'A cifra real é o dobro desse valor. Mais de 800.000 km² de floresta foram suprimidos desde 1988 segundo o PRODES/INPE.' },
+          { t:'Mais de 800.000 km² de cobertura florestal amazônica', correct:true,
+            fb:'Desde 1988, o PRODES registrou mais de 800.000 km² de desmatamento acumulado — área equivalente à soma de França e Portugal. Esse número justifica a Amazônia como prioridade climática global.' },
+          { t:'Mais de 2 milhões de km² de floresta primária destruída', correct:false,
+            fb:'A Amazônia brasileira total tem ~4,1 milhões de km². Perder 2 milhões já teria sido catastrófico e provavelmente irreversível — o número real, embora grave, é de pouco mais de 800.000 km².' }
+        ]
+      },
+      { e:'🌲', q:'O que é "degradação florestal" e por que é diferente do desmatamento?',
+        opts:[
+          { t:'Substituição total da floresta por monocultura de soja ou pasto', correct:false,
+            fb:'Isso é desmatamento — remoção total da cobertura. Degradação é mais sutil: a floresta permanece, mas com menos biomassa e biodiversidade.' },
+          { t:'Perda de biomassa e biodiversidade sem remoção total do dossel', correct:true,
+            fb:'Degradação florestal reduz a biomassa, a biodiversidade e os serviços ecossistêmicos sem remover completamente a cobertura arbórea. É mais difícil de medir por satélite e frequentemente subestimada.' },
+          { t:'Extinção de espécies endêmicas em fragmentos florestais isolados', correct:false,
+            fb:'Extinção de espécies é uma consequência da degradação e fragmentação, não a definição de degradação florestal em si.' },
+          { t:'Invasão de gramíneas exóticas na periferia de florestas nativas', correct:false,
+            fb:'Invasão de gramíneas é uma forma de degradação, mas não a definição completa. Degradação abrange também extração seletiva, fogo, caça intensa e fragmentação.' }
+        ]
+      },
+      { e:'🌱', q:'Quanto tempo leva para uma floresta tropical se recuperar completamente?',
+        opts:[
+          { t:'Cerca de 10 a 20 anos com plantio intensivo de mudas nativas', correct:false,
+            fb:'Em 10-20 anos se reconstitui estrutura vegetal básica, mas não a biodiversidade, biomassa ou serviços ecossistêmicos de uma floresta madura.' },
+          { t:'Entre 30 e 50 anos com regeneração natural assistida', correct:false,
+            fb:'30-50 anos restabelece muito da cobertura e parte da biodiversidade, mas pesquisas mostram que a recuperação plena de biomassa e diversidade de espécies exige muito mais tempo.' },
+          { t:'Mais de 100 anos para restaurar biodiversidade e biomassa plenas', correct:true,
+            fb:'Embora a estrutura básica de floresta secundária se forme em décadas, recuperar a biodiversidade completa, a biomassa de floresta madura e todos os serviços ecossistêmicos leva mais de 100 anos — em alguns casos, séculos.' },
+          { t:'Apenas 5 a 8 anos quando há chuvas regulares e solo fértil', correct:false,
+            fb:'Em 5-8 anos há crescimento inicial de capoeira, mas isso está longe de ser uma floresta madura. Chuva e solo fértil ajudam, mas não aceleram o processo a esse ponto.' }
+        ]
+      },
+      { e:'💧', q:'Por que o Cerrado é chamado de "caixa d\'água do Brasil"?',
+        opts:[
+          { t:'Tem a maior área de solos alagados e veredas do mundo', correct:false,
+            fb:'O Cerrado tem veredas e áreas úmidas, mas não é a maior área alagada do mundo — essa é a característica do Pantanal.' },
+          { t:'Recarga os aquíferos e nascentes das maiores bacias hidrográficas brasileiras', correct:true,
+            fb:'O Cerrado é o berço de 8 das 12 maiores bacias hidrográficas do Brasil, incluindo Amazonas, São Francisco e Paraná. Seu solo profundo e poroso absorve chuva e recarrega aquíferos que abastecem o país.' },
+          { t:'Tem a maior pluviosidade anual entre os biomas brasileiros', correct:false,
+            fb:'A Amazônia tem maior pluviosidade. O Cerrado tem chuvas concentradas no verão, mas não é o bioma mais chuvoso do Brasil.' },
+          { t:'Contém a maior reserva de água subterrânea do planeta', correct:false,
+            fb:'O Aquífero Guarani, que passa pelo Cerrado, é uma das maiores reservas de água doce subterrânea do mundo, mas o título de "caixa d\'água do Brasil" se refere à função de recarga hídrica, não ao aquífero em si.' }
+        ]
+      },
+      { e:'🐆', q:'O que é o "efeito de borda" em fragmentos florestais?',
+        opts:[
+          { t:'Aumento da biodiversidade nas margens dos remanescentes florestais', correct:false,
+            fb:'O efeito de borda geralmente reduz a biodiversidade nas margens — espécies do interior (especialistas de floresta) são substituídas por espécies generalistas e exóticas.' },
+          { t:'Degradação das bordas por vento, ressecamento e espécies invasoras', correct:true,
+            fb:'O efeito de borda é a degradação ambiental nas margens de fragmentos florestais, causada por maior exposição ao vento, ressecamento, espécies invasoras e perturbação humana. Pode penetrar 50-300 m para o interior.' },
+          { t:'Proteção extra criada pelo microclima úmido nas faixas externas', correct:false,
+            fb:'O microclima nas bordas é geralmente mais seco e quente — o oposto de proteção. A umidade e temperatura estáveis ficam no interior da floresta.' },
+          { t:'Reprodução intensificada de espécies nas faixas externas da mata', correct:false,
+            fb:'A reprodução de espécies dependentes de floresta é justamente comprometida nas bordas. Muitas espécies evitam as margens, reduzindo sua área efetiva de habitat.' }
+        ]
+      },
+      { e:'📜', q:'Qual a meta de restauração florestal do Brasil assumida no Acordo de Paris?',
+        opts:[
+          { t:'Restaurar 6 milhões de hectares de vegetação nativa até 2030', correct:false,
+            fb:'A meta brasileira no Acordo de Paris é o dobro disso — 12 milhões de hectares de vegetação nativa a serem restaurados até 2030.' },
+          { t:'Recuperar 12 milhões de hectares de vegetação nativa até 2030', correct:true,
+            fb:'O Brasil assumiu na sua NDC (Contribuição Nacionalmente Determinada) do Acordo de Paris a meta de restaurar 12 milhões de hectares de florestas até 2030, como parte do PLANAVEG (Plano Nacional de Recuperação da Vegetação Nativa).' },
+          { t:'Reflorestar 20 milhões de hectares de floresta tropical até 2030', correct:false,
+            fb:'A meta oficial da NDC brasileira é de 12 milhões de hectares, não 20. Há outras metas voluntárias mais ambiciosas assumidas por estados e empresas, mas a NDC federal é 12 Mha.' },
+          { t:'Proteger 30 milhões de hectares adicionais de floresta até 2030', correct:false,
+            fb:'A meta de proteção de áreas nativas tem números diferentes da meta de restauração. Os 12 milhões de hectares referem-se especificamente à restauração de vegetação degradada.' }
+        ]
+      },
+      { e:'🌍', q:'O que é o "arco do desmatamento" na Amazônia?',
+        opts:[
+          { t:'Corredor de floresta preservada no sudoeste amazônico', correct:false,
+            fb:'O arco do desmatamento é uma zona de destruição, não de preservação. É o local de maior pressão sobre a floresta.' },
+          { t:'Fronteira de avanço do desmatamento no sul e leste da Amazônia', correct:true,
+            fb:'O arco do desmatamento é a faixa de maior pressão sobre a floresta amazônica, estendendo-se do Maranhão ao Mato Grosso pelo sul e leste da Amazônia, onde a expansão agropecuária avança sobre a floresta.' },
+          { t:'Região de maior regeneração florestal no norte da Amazônia', correct:false,
+            fb:'O norte da Amazônia tem baixo desmatamento e alguma regeneração em áreas abandonadas, mas "arco do desmatamento" refere-se à fronteira ativa de destruição no sul/leste.' },
+          { t:'Zona de transição entre o Cerrado e a floresta amazônica densa', correct:false,
+            fb:'A transição Amazônia-Cerrado é chamada de ecótono ou "cerradão amazônico" — diferente do arco do desmatamento, que é uma zona definida pela pressão antrópica sobre a floresta.' }
+        ]
+      },
+      { e:'🌿', q:'O que é a "teoria de biogeografia de ilhas" aplicada a fragmentos florestais?',
+        opts:[
+          { t:'Fragmentos maiores e mais conectados abrigam mais espécies', correct:true,
+            fb:'Baseada em MacArthur & Wilson (1967), a teoria prevê que o número de espécies em um fragmento depende positivamente de seu tamanho e negativamente de seu isolamento — fundamento da biologia da conservação de paisagens.' },
+          { t:'Ilhas de floresta sempre perdem mais espécies que áreas contínuas', correct:false,
+            fb:'Esta afirmação é parcialmente verdadeira, mas não é a teoria em si. A teoria de biogeografia de ilhas prevê equilíbrio dinâmico entre extinção local e colonização, dependendo do tamanho e isolamento.' },
+          { t:'Fragmentos de qualquer tamanho conservam biodiversidade idêntica', correct:false,
+            fb:'Exatamente o contrário. A teoria prediz que fragmentos menores e mais isolados têm menos espécies — há forte relação espécie-área.' },
+          { t:'Espécies de borda sempre substituem espécies de interior florestal', correct:false,
+            fb:'Espécies de borda podem colonizar fragmentos, mas a teoria de biogeografia de ilhas foca na relação tamanho-isolamento-diversidade, não na substituição de espécies.' }
+        ]
+      }
+    ]
+  },
+
+  dificil: {
+    label: 'Difícil',
+    qs: [
+      { e:'🌿', q:'O que é o "paradoxo de Borlaug" no contexto do desmatamento?',
+        opts:[
+          { t:'Alta produtividade agrícola pode aumentar o desmatamento via efeito rebote', correct:true,
+            fb:'O paradoxo de Borlaug sugere que aumentar a produtividade agrícola pode paradoxalmente ampliar o desmatamento: maior lucratividade da terra torna economicamente atraente desmatá-la para expansão — o "efeito Jevons" aplicado ao uso da terra.' },
+          { t:'Maior eficiência agropecuária sempre reduz a pressão sobre florestas', correct:false,
+            fb:'Isso seria o argumento intuitivo, mas o paradoxo de Borlaug questiona justamente essa premissa — eficiência pode aumentar a rentabilidade do desmatamento ao invés de reduzir a pressão.' },
+          { t:'Novas tecnologias agrícolas nunca chegam a pequenos produtores rurais', correct:false,
+            fb:'Essa é uma questão de difusão tecnológica, não o paradoxo de Borlaug. O paradoxo é sobre o efeito rebote da produtividade sobre o desmatamento.' },
+          { t:'Produção orgânica intensiva causa mais erosão do que a convencional', correct:false,
+            fb:'Não há relação com o paradoxo de Borlaug, que trata do efeito de aumentos de produtividade sobre a pressão de desmatamento, via incentivo econômico à expansão da fronteira.' }
+        ]
+      },
+      { e:'💸', q:'O que é "leakage" no contexto de projetos REDD+?',
+        opts:[
+          { t:'Deslocamento do desmatamento evitado para áreas fora do projeto', correct:true,
+            fb:'Leakage ocorre quando o desmatamento evitado em uma área protegida pelo REDD+ simplesmente se desloca para outra área não coberta pelo projeto — anulando parcialmente os ganhos climáticos. É um dos maiores desafios metodológicos do REDD+.' },
+          { t:'Vazamento de dados sigilosos de monitoramento para empresas', correct:false,
+            fb:'Leakage no contexto de REDD+ é um conceito econômico-geográfico, não de segurança de dados. Refere-se ao deslocamento espacial das pressões sobre a floresta.' },
+          { t:'Perda de carbono por incêndios em áreas protegidas pelo projeto', correct:false,
+            fb:'Perda de carbono por incêndios é tratada como "reversão" ou "não-permanência" no REDD+, não leakage. Leakage é especificamente o deslocamento da atividade de desmatamento para outras áreas.' },
+          { t:'Corrupção na distribuição de pagamentos a comunidades locais', correct:false,
+            fb:'Problemas de governança e corrupção são desafios reais do REDD+, mas não se chamam leakage. Leakage é o deslocamento geográfico das emissões para fora da área do projeto.' }
+        ]
+      },
+      { e:'🌲', q:'O que diferencia reflorestamento de restauração florestal?',
+        opts:[
+          { t:'Reflorestamento foca em produção; restauração visa a estrutura ecológica', correct:true,
+            fb:'Reflorestamento geralmente implica plantio de espécies (podendo ser exóticas como eucalipto ou pinus) para fins produtivos. Restauração florestal visa recompor a estrutura, composição e funções do ecossistema original usando espécies nativas de diferentes grupos funcionais.' },
+          { t:'Reflorestamento usa espécies nativas; restauração usa exóticas produtivas', correct:false,
+            fb:'É o contrário — reflorestamento pode usar exóticas (eucalipto, pinus); restauração florestal exige espécies nativas para reconstituir o ecossistema original.' },
+          { t:'Reflorestamento ocorre em áreas urbanas; restauração em zonas rurais', correct:false,
+            fb:'Ambos ocorrem tanto em áreas urbanas quanto rurais. A distinção é de objetivo e método, não de localização geográfica.' },
+          { t:'Reflorestamento é sempre natural; restauração depende de intervenção', correct:false,
+            fb:'É o contrário — reflorestamento implica plantio (intervenção); restauração pode ser tanto ativa (plantio de nativas) quanto passiva (regeneração natural assistida).' }
+        ]
+      },
+      { e:'📊', q:'O que mede o "Forest Landscape Integrity Index" (FLII)?',
+        opts:[
+          { t:'Taxa anual de desmatamento por km² em cada país tropical', correct:false,
+            fb:'Taxa de desmatamento é medida por sistemas como o PRODES. O FLII mede algo mais amplo — a integridade da paisagem considerando distúrbios e efeitos de borda.' },
+          { t:'Grau de integridade e perturbação humana na paisagem florestal global', correct:true,
+            fb:'O FLII (Grantham et al., 2020, Nature) mapeia a integridade da paisagem florestal global considerando distúrbios diretos (desmatamento, infraestrutura) e efeitos indiretos (efeito de borda). Em 2019, apenas 40% das florestas tinham alta integridade.' },
+          { t:'Proporção entre florestas primárias e secundárias por bioma', correct:false,
+            fb:'A relação primária/secundária é um dado relevante, mas não é o que o FLII mede. O índice avalia integridade da paisagem, incluindo pressões antrópicas além do desmatamento.' },
+          { t:'Velocidade de regeneração de florestas após perturbação climática', correct:false,
+            fb:'Velocidade de regeneração é medida por outros estudos (como Poorter et al. 2016). O FLII avalia o estado atual de integridade da paisagem florestal, não a dinâmica de regeneração.' }
+        ]
+      },
+      { e:'🔬', q:'O que é o tipping point florestal da Amazônia, segundo Lovejoy e Nobre (2019)?',
+        opts:[
+          { t:'Limiar de desmatamento (~20–25%) além do qual a floresta savaniza', correct:true,
+            fb:'Lovejoy & Nobre (2019) estimam que o tipping point amazônico ocorre com 20–25% de desmatamento total. Além desse limiar, a redução das chuvas recicladas pela floresta causaria savanização irreversível da Amazônia oriental.' },
+          { t:'Temperatura máxima que as raízes suportam antes de soltarem CO₂', correct:false,
+            fb:'Há efeitos da temperatura nas raízes, mas o tipping point amazônico de Lovejoy & Nobre refere-se especificamente ao nível de desmatamento que quebra o ciclo hidrológico regional — não a um limite térmico de raízes.' },
+          { t:'Percentual mínimo de cobertura florestal para manter chuvas regionais', correct:false,
+            fb:'Esta opção está próxima, mas formulada de forma inversa. O tipping point é o nível de desmatamento (acima do qual há ruptura do ciclo hídrico), não um mínimo de cobertura.' },
+          { t:'Nível de emissões de CO₂ que torna o clima irreversível para a floresta', correct:false,
+            fb:'O tipping point de Lovejoy & Nobre é específico sobre desmatamento e o ciclo hidrológico regional — não sobre emissões globais de CO₂ e clima. São processos distintos.' }
+        ]
+      },
+      { e:'🌿', q:'O que são florestas secundárias e qual seu papel climático?',
+        opts:[
+          { t:'Florestas manejadas para extração sustentável de madeira nativa', correct:false,
+            fb:'Florestas manejadas são florestas primárias ou plantadas sob manejo sustentável. Florestas secundárias são vegetação que regenerou espontaneamente após perturbação — sem manejo ativo.' },
+          { t:'Vegetação que regenera em áreas previamente desmatadas ou degradadas', correct:true,
+            fb:'Florestas secundárias regeneram espontaneamente após abandono de área perturbada. Estudo de 2016 (Nature, Poorter et al.) mostrou que cobrem ~28% das florestas tropicais e armazenam ~55 Pg de carbono — cruciais para metas climáticas.' },
+          { t:'Fragmentos de segunda categoria com baixa biodiversidade funcional', correct:false,
+            fb:'Florestas secundárias maduras podem atingir elevada biodiversidade e serviços ecossistêmicos. O termo "secundária" refere-se à origem (após perturbação), não à qualidade ecológica.' },
+          { t:'Unidades de conservação de uso sustentável geridas por comunidades', correct:false,
+            fb:'Unidades de conservação de uso sustentável são categorias jurídicas do SNUC. Florestas secundárias são definidas pela dinâmica ecológica — presença em áreas após perturbação — independentemente da gestão.' }
+        ]
+      },
+      { e:'💰', q:'O que garante a "permanência" em créditos de carbono florestal?',
+        opts:[
+          { t:'Contrato mínimo de 30 anos entre o projeto e o fundo financiador', correct:false,
+            fb:'Contratos têm prazo, mas permanência é um conceito mais robusto — envolve garantias e mecanismos de amortecimento (buffer pools) para cobrir perdas futuras, não apenas a duração do contrato.' },
+          { t:'Garantia de que o carbono sequestrado permanecerá estocado a longo prazo', correct:true,
+            fb:'Permanência em créditos de carbono florestal é a garantia de que o carbono não será reeditado para a atmosfera (por desmatamento, incêndio ou mudança de uso). É verificada por buffer pools, monitoramento contínuo e seguros contra reversão.' },
+          { t:'Continuidade do monitoramento após término do período de crédito', correct:false,
+            fb:'O monitoramento pós-contrato é uma prática recomendada, mas a permanência refere-se especificamente à garantia de que o carbono estocado não será liberado — independentemente de quem monitora.' },
+          { t:'Persistência dos benefícios socioeconômicos para comunidades locais', correct:false,
+            fb:'Benefícios sociais são um co-benefício importante do REDD+ e outros mecanismos, mas permanência é um termo técnico de mercado de carbono referente especificamente ao estoque de carbono florestal.' }
+        ]
+      },
+      { e:'🌱', q:'O que é o "desmatamento por pulso" (pulse deforestation)?',
+        opts:[
+          { t:'Supressão acelerada de vegetação antes do endurecimento de regulações', correct:true,
+            fb:'O desmatamento por pulso ocorre quando produtores antecipam restrições legais iminentes e suprimem vegetação antes que as novas regras entrem em vigor — fenômeno bem documentado no Brasil antes de mudanças no Código Florestal.' },
+          { t:'Desmatamento cíclico de baixa intensidade autorizado pelo Código Florestal', correct:false,
+            fb:'Não existe mecanismo legal de "desmatamento cíclico" no Código Florestal. O pulse deforestation é um comportamento estratégico antecipatório ilegal ou na fronteira da legalidade.' },
+          { t:'Técnica de corte seletivo que preserva a estrutura vertical da floresta', correct:false,
+            fb:'Corte seletivo é uma técnica de manejo florestal distinta. Pulse deforestation é um comportamento de antecipação regulatória — não uma técnica de manejo.' },
+          { t:'Método de alerta precoce de desmatamento usado pelo INPE em tempo real', correct:false,
+            fb:'O DETER é o sistema de alertas do INPE. Pulse deforestation é um conceito econômico-comportamental sobre como agentes econômicos respondem a mudanças regulatórias.' }
+        ]
+      },
+      { e:'🌎', q:'O que o Acordo de Glasgow (COP26, 2021) estipulou sobre florestas?',
+        opts:[
+          { t:'Zerar o desmatamento ilegal em países tropicais até 2025', correct:false,
+            fb:'A meta de Glasgow é para 2030, e inclui tanto florestas quanto "uso da terra" — não apenas desmatamento ilegal. É uma declaração voluntária, não um tratado vinculante.' },
+          { t:'Deter e reverter a perda de florestas e degradação de terras até 2030', correct:true,
+            fb:'A Declaração dos Líderes de Glasgow sobre Florestas e Uso da Terra (2021) comprometeu mais de 140 países a "deter e reverter" a perda de florestas e degradação de terras até 2030, com US$ 19 bi em financiamento público e privado.' },
+          { t:'Proibir importações de commodities ligadas ao desmatamento até 2025', correct:false,
+            fb:'A proibição de importações de commodities com desmatamento é uma medida da UE (lei de due diligence, 2023), não do Acordo de Glasgow. São instrumentos distintos.' },
+          { t:'Criar um fundo global de US$ 500 bi para restauração florestal', correct:false,
+            fb:'O Acordo de Glasgow mobilizou US$ 19,2 bilhões em financiamento para florestas — não US$ 500 bilhões. Um fundo desse porte seria o maior compromisso climático da história.' }
+        ]
+      },
+      { e:'📉', q:'O que significa "desmatamento líquido zero" versus "desmatamento bruto zero"?',
+        opts:[
+          { t:'Líquido = equilíbrio entre desmate e regeneração; bruto = cessação total', correct:true,
+            fb:'Desmatamento líquido zero permite que ocorra algum desmatamento, desde que compensado por regeneração equivalente. Desmatamento bruto zero significa cessação completa de qualquer supressão de vegetação nativa — meta muito mais rigorosa.' },
+          { t:'São termos equivalentes usados indistintamente em acordos climáticos', correct:false,
+            fb:'Não são equivalentes — a diferença é crítica para políticas climáticas. O líquido permite compensações; o bruto não. Essa distinção define metas muito diferentes de conservação.' },
+          { t:'Líquido refere-se à Amazônia; bruto refere-se aos demais biomas', correct:false,
+            fb:'Os conceitos se aplicam a qualquer bioma ou território — não são definidos por bioma específico. São categorias analíticas de contabilidade de desmatamento.' },
+          { t:'Líquido inclui queimadas; bruto inclui somente corte mecanizado', correct:false,
+            fb:'Ambos os conceitos incluem todas as formas de supressão de vegetação — corte, queimada e outras. A distinção é sobre compensação por regeneração, não pelo método de supressão.' }
+        ]
+      },
+      { e:'🌿', q:'Como o "mosaic deforestation" se diferencia do desmatamento em grandes blocos?',
+        opts:[
+          { t:'Mosaico cria muitos fragmentos pequenos com alto efeito de borda total', correct:true,
+            fb:'O desmatamento mosaico cria múltiplos fragmentos com alta relação perímetro/área, maximizando o efeito de borda cumulativo. Embora cada polígono seja pequeno, o impacto sobre a biodiversidade pode ser maior do que um único bloco de área equivalente.' },
+          { t:'Mosaico concentra impacto em uma área; bloco distribui por toda a região', correct:false,
+            fb:'É o contrário — o mosaico distribui o desmatamento em muitos pontos; o bloco concentra em uma área contígua. A diferença de impacto está na relação com o efeito de borda.' },
+          { t:'Desmatamento em blocos sempre causa mais extinções do que o mosaico', correct:false,
+            fb:'Na prática, o mosaico costuma ser mais prejudicial para espécies especialistas de interior por criar mais borda relativa. Blocos grandes preservam áreas de interior livre do efeito de borda.' },
+          { t:'Mosaico é permitido pelo Código Florestal; bloco é sempre ilegal', correct:false,
+            fb:'A legalidade depende da área total suprimida e da Reserva Legal — não do padrão espacial (mosaico vs. bloco). Ambos podem ser legais ou ilegais dependendo do contexto fundiário.' }
+        ]
+      },
+      { e:'🔭', q:'O que é "additionality" em projetos de carbono florestal (REDD+/VCS)?',
+        opts:[
+          { t:'Garantia de que o desmatamento evitado não teria ocorrido sem o projeto', correct:true,
+            fb:'Additionality exige provar que o desmatamento evitado é consequência direta do projeto — sem ele, a floresta seria desmatada. É um dos critérios mais rigorosos do VERRA/VCS e fundamental para a credibilidade dos créditos de carbono.' },
+          { t:'Área adicional de floresta plantada além da meta de restauração acordada', correct:false,
+            fb:'Área plantada acima da meta é um "excedente", não additionality. Additionality é sobre provar que a redução de desmatamento não teria ocorrido de qualquer forma — mesmo sem o projeto.' },
+          { t:'Incremento de biodiversidade documentado após início do projeto florestal', correct:false,
+            fb:'Ganhos de biodiversidade são co-benefícios importantes, mas não definem additionality. Este conceito é estritamente sobre as emissões de carbono que não teriam sido evitadas na ausência do projeto.' },
+          { t:'Volume extra de CO₂ absorvido acima da capacidade histórica da floresta', correct:false,
+            fb:'Absorção acima da linha de base histórica é relevante para créditos de sequestro (ARR), mas additionality no REDD+ refere-se ao desmatamento evitado — não à absorção adicional.' }
+        ]
+      }
+    ]
+  },
+
+  carbonauta: {
+    label: '🛰️ Carbonauta',
+    qs: [
+      { e:'🌍', q:'Segundo o IPCC AR6, qual a contribuição do desmatamento e uso da terra para as emissões globais de GEE?',
+        opts:[
+          { t:'Cerca de 10–12% das emissões anuais globais de CO₂ equivalente', correct:true,
+            fb:'O IPCC AR6 (2022) estima que AFOLU (Agricultura, Florestas e Outros Usos da Terra) contribui com ~13–21% das emissões globais de GEE. Desmatamento sozinho representa ~10–12% do total, tornando-o a segunda maior fonte depois dos combustíveis fósseis.' },
+          { t:'Menos de 3% das emissões globais de CO₂ equivalente anuais', correct:false,
+            fb:'A contribuição real é muito maior. O setor AFOLU é responsável por ~10–12% das emissões quando se considera apenas o desmatamento — muito além de 3%.' },
+          { t:'Mais de 30% das emissões anuais globais de gases estufa totais', correct:false,
+            fb:'30% seria o dobro do real. O setor AFOLU total representa ~13–21%, e o desmatamento isolado, ~10–12% — números graves, mas não tão altos quanto 30%.' },
+          { t:'Aproximadamente 5% das emissões anuais de GEE em CO₂ equivalente', correct:false,
+            fb:'5% subestima significativamente a contribuição real. O desmatamento tropical responde por ~10–12% das emissões globais anuais de GEE.' }
+        ]
+      },
+      { e:'📡', q:'O que é o modelo jurisdicional REDD+ e por que é preferido ao projeto-by-project?',
+        opts:[
+          { t:'Cobre toda uma jurisdição evitando leakage interno entre projetos', correct:true,
+            fb:'O REDD+ jurisdicional (estadual ou nacional) contabiliza todas as florestas de uma jurisdição, eliminando o leakage interno (onde o desmatamento evitado em um projeto se desloca para área fora dele, dentro da mesma jurisdição). Estados como Mato Grosso e Acre pioneiraram essa abordagem no Brasil.' },
+          { t:'Sistema nacional gerido pelo governo federal para toda a Amazônia', correct:false,
+            fb:'A abordagem jurisdicional pode ser estadual ou nacional, mas o conceito-chave é a escala territorial que resolve o leakage — não necessariamente quem gerencia.' },
+          { t:'Método que prioriza pagamentos a municípios com menor desmatamento', correct:false,
+            fb:'Isso seria um critério de alocação de pagamentos, não a definição de REDD+ jurisdicional. O conceito é sobre a escala geográfica de contabilização das emissões.' },
+          { t:'Protocolo que exclui florestas secundárias do cálculo de emissões', correct:false,
+            fb:'REDD+ jurisdicional inclui florestas secundárias e degradação — é mais abrangente do que projetos pontuais, não mais restrito.' }
+        ]
+      },
+      { e:'💡', q:'O que é a "carbon debt hypothesis" em biocombustíveis com desmatamento associado?',
+        opts:[
+          { t:'Tempo necessário para o biocombustível compensar a emissão da conversão florestal', correct:true,
+            fb:'A carbon debt hypothesis (Fargione et al., 2008, Science) calcula que biocombustíveis produzidos em terra desmatada acumulam uma "dívida de carbono" — as emissões da conversão florestal. Essa dívida pode levar décadas (cana: ~17 anos) a séculos (floresta tropical: >400 anos) para ser "paga" pelas emissões evitadas do biocombustível.' },
+          { t:'Prejuízo econômico de países por não cumprir metas de reflorestamento', correct:false,
+            fb:'A carbon debt hypothesis é um conceito biogeofísico de balanço de carbono, não econômico. Trata do tempo de compensação de emissões de carbono via uso de biocombustível.' },
+          { t:'Dívida de emissões acumulada por décadas de exploração madeireira', correct:false,
+            fb:'Extração madeireira tem seus próprios impactos de carbono, mas a "carbon debt hypothesis" é específica para biocombustíveis produzidos em terra previamente florestada — focando no balanço entre emissões da conversão e substituição de combustível fóssil.' },
+          { t:'Compensação financeira que países desenvolvidos devem ao Sul Global pelo desmate histórico', correct:false,
+            fb:'Isso remete a debates de justiça climática e responsabilidade histórica — um conceito político diferente da carbon debt hypothesis, que é um balanço técnico de emissões de carbono ao longo do tempo.' }
+        ]
+      },
+      { e:'🔬', q:'Como se mede o "forest carbon stock" e qual a principal fonte de incerteza?',
+        opts:[
+          { t:'Por alometria e sensoriamento remoto; incerteza na densidade da madeira', correct:true,
+            fb:'O estoque de carbono florestal (biomassa aérea + raízes + solo) é estimado via equações alométricas (relação diâmetro-biomassa) combinadas com dados de sensoriamento remoto (LiDAR, SAR). A maior fonte de incerteza são as equações alométricas e os valores de densidade da madeira por espécie, especialmente para florestas tropicais diversas.' },
+          { t:'Por contagem de espécies; incerteza no número de árvores por hectare', correct:false,
+            fb:'Contagem de espécies mede biodiversidade, não estoque de carbono. A estimativa de carbono florestal requer medições de biomassa — diâmetro, altura e densidade da madeira.' },
+          { t:'Por análise isotópica; incerteza na concentração de CO₂ atmosférico', correct:false,
+            fb:'Análise isotópica é usada para rastrear fontes de carbono atmosférico, não para medir estoques florestais. O método padrão é alometria de campo combinada com sensoriamento remoto.' },
+          { t:'Por modelos de circulação geral; incerteza nos dados de temperatura local', correct:false,
+            fb:'Modelos de circulação geral (GCMs) simulam o clima — não medem estoques de carbono florestal. Estoques são medidos por inventários de campo e sensoriamento remoto, não por GCMs.' }
+        ]
+      },
+      { e:'🌳', q:'O que prevê a metodologia VERRA/VCS para verificação de projetos REDD+?',
+        opts:[
+          { t:'Linha de base histórica, additionality, leakage e permanência auditados por terceiros', correct:true,
+            fb:'O padrão VCS (Verified Carbon Standard) da VERRA exige: (1) linha de base (o que teria ocorrido sem o projeto), (2) additionality (prova de que os benefícios são adicionais), (3) contabilização de leakage e (4) garantias de permanência — tudo verificado por auditores independentes acreditados.' },
+          { t:'Apenas contagem de árvores replantadas e área total protegida', correct:false,
+            fb:'Simples contagem de árvores não é suficiente. O VCS exige metodologia robusta com linha de base, additionality, leakage e permanência — verificados por auditores terceirizados.' },
+          { t:'Comparação satelital com índice de vegetação NDVI antes e depois do projeto', correct:false,
+            fb:'Dados de sensoriamento remoto (como NDVI) são ferramentas de monitoramento, mas não definem a metodologia completa VCS. O padrão exige muito mais rigor metodológico e verificação independente.' },
+          { t:'Aprovação governamental e registro no MDL da UNFCCC como único critério', correct:false,
+            fb:'O MDL (Mecanismo de Desenvolvimento Limpo) da UNFCCC é um padrão distinto do VCS/VERRA. Projetos REDD+ voluntários geralmente seguem o VCS — que tem critérios próprios independentes do MDL.' }
+        ]
+      },
+      { e:'📊', q:'Como o modelo "forest transition" de Mather (1992) explica a recuperação florestal?',
+        opts:[
+          { t:'Países ricos em floresta perdem cobertura no desenvolvimento e a recuperam depois', correct:true,
+            fb:'A hipótese da transição florestal (Mather, 1992) prevê uma curva em forma de U: países passam por fase de desmatamento durante o desenvolvimento econômico e depois recuperam cobertura florestal, impulsionados por urbanização, intensificação agrícola e demanda por serviços ambientais. Verificado empiricamente na Europa Ocidental e partes da América Latina.' },
+          { t:'Florestas tropicais sempre se regeneram naturalmente sem intervenção humana', correct:false,
+            fb:'A regeneração natural ocorre em condições específicas, mas o modelo de Mather foca na dinâmica socioeconômica nacional — não na ecologia da regeneração. Além disso, muitas florestas tropicais não se recuperam naturalmente sem redução da pressão antrópica.' },
+          { t:'Reflorestamento de países desenvolvidos compensa o desmatamento tropical', correct:false,
+            fb:'A teoria da transição florestal descreve a trajetória de um mesmo país ao longo do tempo — não compensação entre países. Além disso, reflorestamento em países temperados não compensa biodiversidade tropical perdida.' },
+          { t:'Proteção legal estrita é o único mecanismo de transição florestal documentado', correct:false,
+            fb:'A teoria de Mather identifica múltiplos mecanismos — urbanização (reduz pressão rural), intensificação agrícola (libera terra), aumento de renda (eleva demanda por serviços ambientais). Proteção legal é apenas um deles.' }
+        ]
+      },
+      { e:'🌿', q:'O que é "deforestation displacement" e como compromete políticas de conservação?',
+        opts:[
+          { t:'Desmatamento que se desloca geograficamente em resposta a políticas locais', correct:true,
+            fb:'Displacement (ou leakage geográfico) ocorre quando políticas de conservação em uma região deslocam a pressão de desmatamento para regiões vizinhas ou países com menor regulação. Estudos mostram que até 35% das reduções do PRODES/Amazônia podem ter sido "exportadas" ao Cerrado ou outros países.' },
+          { t:'Mudança das atividades produtivas de fazendeiros para evitar multas', correct:false,
+            fb:'Adaptação de atividades produtivas é uma resposta comportamental, mas deforestation displacement é especificamente sobre o deslocamento geográfico das pressões de desmatamento para outras regiões.' },
+          { t:'Relocalização de empresas madeireiras para países com leis mais frouxas', correct:false,
+            fb:'Relocalização de indústria madeireira é um tipo específico de displacement, mas o conceito é mais amplo — abrange qualquer atividade que causa desmatamento se deslocando para evitar regulação mais rígida.' },
+          { t:'Transferência de emissões de carbono de países desenvolvidos ao Sul Global', correct:false,
+            fb:'Transferência de emissões industriais entre países é chamada de "carbon leakage" industrial — conceito diferente de deforestation displacement, que é específico ao uso da terra e supressão de vegetação.' }
+        ]
+      },
+      { e:'🔭', q:'Qual a limitação do uso do NDVI para monitorar degradação florestal?',
+        opts:[
+          { t:'Não detecta perda de biomassa sob dossel fechado nem mudanças de sub-bosque', correct:true,
+            fb:'O NDVI detecta densidade de clorofila no dossel, mas não "enxerga" sob a copa das árvores. Extração seletiva de madeira, morte de sub-bosque por fogo de sub-copa e perda de biomassa lateral não causam queda detectável de NDVI — tornando-o insuficiente para mapear degradação. LiDAR e SAR (dados de estrutura 3D) são necessários para essa finalidade.' },
+          { t:'Só funciona em regiões com menos de 500 mm de chuva por ano', correct:false,
+            fb:'O NDVI funciona em qualquer clima, mas é afetado por variações sazonais de umidade (verdejamento) em regiões secas. A limitação para monitorar degradação florestal não é climática — é estrutural (não enxerga sob o dossel).' },
+          { t:'Requer missões de campo mensais para calibração dos dados orbitais', correct:false,
+            fb:'O NDVI orbital pode ser calibrado com dados de reflectância de superfície sem necessidade de campo mensal. A limitação principal para degradação é a sensibilidade apenas à superfície do dossel.' },
+          { t:'Não distingue florestas nativas de plantios de eucalipto ou pinus', correct:false,
+            fb:'Distinguir florestas nativas de plantios é um desafio de classificação — possível com dados hiperespectrais e contexto espacial. A limitação fundamental do NDVI para degradação é a insensibilidade à perda de biomassa sob dossel fechado.' }
+        ]
+      },
+      { e:'🌱', q:'Qual o papel das florestas secundárias nas metas climáticas do Acordo de Paris?',
+        opts:[
+          { t:'Armazenam ~55 Pg C e têm alta taxa de acúmulo nas primeiras décadas', correct:true,
+            fb:'Poorter et al. (2016, Nature) estimaram que florestas secundárias tropicais acumulam biomassa 11× mais rápido que florestas primárias maduras, armazenando ~55 Pg C. São cruciais para o Paris Agreement pois oferecem mitigação rápida a baixo custo — protegê-las é tão importante quanto evitar o desmatamento primário.' },
+          { t:'Não contam nas NDCs pois não são florestas primárias nativas', correct:false,
+            fb:'Florestas secundárias são contabilizadas nas NDCs e no REDD+ como "conservação de estoques de carbono". O foco exclusivo em floresta primária subestimaria o potencial de mitigação das florestas tropicais.' },
+          { t:'Emitem mais CO₂ do que absorvem durante a fase jovem de crescimento', correct:false,
+            fb:'O contrário — florestas secundárias jovens absorvem carbono em alta taxa durante a fase de crescimento ativo. A emissão líquida de CO₂ ocorreria apenas se fossem desmatadas novamente.' },
+          { t:'Só têm valor climático após 50 anos de regeneração ininterrupta', correct:false,
+            fb:'Florestas secundárias acumulam carbono rapidamente desde o início — ~3-4 Mg C/ha/ano nos primeiros 20 anos. Mesmo florestas jovens têm valor climático significativo, embora o acúmulo desacelere com a maturidade.' }
+        ]
+      },
+      { e:'📉', q:'O que explica a tendência de redução do desmatamento na Amazônia entre 2004 e 2012?',
+        opts:[
+          { t:'Combinação de fiscalização, crédito condicionado, preço das commodities e governança', correct:true,
+            fb:'Análises mostram que a redução de ~83% no desmatamento amazônico (2004–2012) resultou de múltiplos fatores: fortalecimento do IBAMA/PRODES, suspensão de crédito rural para municípios desmatadores (Operação Arc of Fire), Moratória da Soja, PPCDAm (Plano de Ação para Prevenção e Controle do Desmatamento) e, coincidentemente, queda no preço das commodities.' },
+          { t:'Apenas mudanças climáticas que reduziram a atratividade agrícola da Amazônia', correct:false,
+            fb:'Mudanças climáticas não causaram a queda do desmatamento nesse período. A redução foi atribuída a políticas públicas específicas, monitoramento satellite e pressão de mercado — não a fatores climáticos.' },
+          { t:'Somente a criação de novas Unidades de Conservação no período', correct:false,
+            fb:'UCs criadas no período (2004–2012) contribuíram, mas sozinhas não explicam ~83% de redução. O PPCDAm foi um conjunto de medidas integradas — fiscalização, crédito, zoneamento e monitoramento.' },
+          { t:'Principalmente a queda do preço da soja que tornou o desmate pouco lucrativo', correct:false,
+            fb:'A queda das commodities contribuiu, mas o Brasil manteve baixo desmatamento mesmo quando os preços voltaram a subir, indicando que as políticas (não apenas o mercado) foram o fator dominante.' }
+        ]
+      },
+      { e:'🌿', q:'Como a fragmentação florestal afeta o fluxo gênico de espécies arbóreas?',
+        opts:[
+          { t:'Reduz a distância efetiva de dispersão de pólen e sementes entre populações', correct:true,
+            fb:'Fragmentação interrompe corredores de dispersão, aumentando o isolamento genético entre populações. Para espécies arbóreas de floresta interior, a distância efetiva de dispersão de pólen por insetos e morcegos se reduz drasticamente além das bordas do fragmento — levando à erosão genética e perda de variabilidade adaptativa.' },
+          { t:'Sempre aumenta a diversidade genética por efeito fundador nos fragmentos', correct:false,
+            fb:'O efeito fundador pode ocorrer na colonização inicial de fragmentos, mas ao longo do tempo a fragmentação reduz o fluxo gênico e aumenta a endogamia — efeito oposto. A diversidade genética declina com o isolamento prolongado.' },
+          { t:'Só afeta espécies polinizadas pelo vento, não as por animais vetores', correct:false,
+            fb:'Espécies polinizadas por vetores animais (insetos, morcegos, aves) são frequentemente mais afetadas pela fragmentação, pois dependem de corredores de movimento dos polinizadores. Espécies anemófilas têm pólen que viaja mais longe.' },
+          { t:'Não impacta o fluxo gênico de espécies com sementes dispersas por vento', correct:false,
+            fb:'Mesmo espécies anemocóricas (dispersão por vento) têm sua distância efetiva de dispersão limitada em paisagens fragmentadas — vento turbulento próximo às bordas reduz a distância de dispersão de sementes.' }
+        ]
+      },
+      { e:'🔬', q:'Por que a detecção de degradação florestal por SAR (Synthetic Aperture Radar) é preferida ao óptico em trópicos úmidos?',
+        opts:[
+          { t:'SAR penetra nuvens e estima estrutura 3D da biomassa lenhosa', correct:true,
+            fb:'Regiões tropicais têm cobertura de nuvens > 70% do tempo, tornando imagens ópticas (Landsat, Sentinel-2) inutilizáveis boa parte do ano. SAR (como Sentinel-1 e ALOS PALSAR) opera independentemente de nuvens e capta backscatter relacionado à biomassa lenhosa — detectando degradação estrutural que óptico não vê.' },
+          { t:'SAR tem resolução espacial 10× superior a qualquer sensor óptico disponível', correct:false,
+            fb:'Resolução não é a vantagem principal do SAR sobre o óptico para monitoramento florestal. Sensores ópticos como WorldView têm resolução submétrica — muito maior que SAR convencional. A vantagem do SAR é a penetração de nuvens e sensibilidade à estrutura da biomassa.' },
+          { t:'SAR detecta CO₂ diretamente emitido durante a degradação florestal', correct:false,
+            fb:'SAR não detecta gases — capta a retrodifusão de micro-ondas da estrutura física da vegetação. A estimativa de emissões de CO₂ é calculada a partir da perda de biomassa inferida, não medida diretamente.' },
+          { t:'SAR não é afetado por incêndios, enquanto o óptico é inutilizável em áreas queimadas', correct:false,
+            fb:'SAR pode detectar mudanças estruturais causadas por incêndios (perda de biomassa lenhosa), mas ambos — SAR e óptico — são ferramentas complementares. A vantagem principal do SAR nos trópicos úmidos é a penetração de nuvens, não a resposta ao fogo.' }
+        ]
+      }
+    ]
+  }
+};
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ── State ──────────────────────────────────────────────────────────────────────
+let currentLevel = 'basico';
+let qIdx = 0;
+let acertos = 0;
+let streak = 0;
+let maxStreak = 0;
+let score = 0;
+let seconds = 0;
+let timerRef = null;
+let answered = false;
+let savedToRanking = false;
+let shuffledQs = [];
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+function init() {
+  qIdx = 0;
+  acertos = 0;
+  streak = 0;
+  maxStreak = 0;
+  score = 0;
+  seconds = 0;
+  answered = false;
+  savedToRanking = false;
+  shuffledQs = shuffle(LEVELS_DATA[currentLevel].qs);
+  if (timerRef) clearInterval(timerRef);
+  timerRef = setInterval(() => {
+    seconds++;
+    document.getElementById('hud-time').textContent = seconds + 's';
+  }, 1000);
+  updateHUD();
+  updateProg();
+  renderQ();
+  document.getElementById('feedback-panel').textContent = 'Escolha uma alternativa para ver a explicação!';
+  document.getElementById('next-btn').style.display = 'none';
+}
+
+window.setLevel = function(level, btn) {
+  currentLevel = level;
+  document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('rank-level-label').textContent = 'Nível: ' + LEVELS_DATA[level].label;
+  if (timerRef) clearInterval(timerRef);
+  init();
+  loadRanking();
+};
+
+// ── Render Q ───────────────────────────────────────────────────────────────────
+function renderQ() {
+  if (qIdx >= shuffledQs.length) { renderEnd(); return; }
+  const q = shuffledQs[qIdx];
+  const opts = shuffle(q.opts.map((o, i) => ({ ...o, origIdx: i })));
+  const total = shuffledQs.length;
+  document.getElementById('game-area').innerHTML = `
+    <div class="q-area">
+      <span class="q-emoji">${q.e}</span>
+      <div class="q-num">Questão ${qIdx + 1} de ${total}</div>
+      <div class="q-text">${q.q}</div>
+      <div class="choices">
+        ${opts.map(o => `<button class="choice-btn" onclick="answer(${o.origIdx}, this)">${o.t}</button>`).join('')}
+      </div>
+    </div>`;
+  answered = false;
+}
+
+window.answer = function(origIdx, btn) {
+  if (answered) return;
+  answered = true;
+  const q = shuffledQs[qIdx];
+  const opt = q.opts[origIdx];
+  document.querySelectorAll('.choice-btn').forEach(b => { b.disabled = true; });
+  // highlight correct
+  document.querySelectorAll('.choice-btn').forEach((b, _) => {
+    const idx = parseInt(b.getAttribute('onclick').match(/\d+/)[0]);
+    if (q.opts[idx] && q.opts[idx].correct) b.classList.add('correct');
+  });
+  if (opt.correct) {
+    streak++;
+    maxStreak = Math.max(maxStreak, streak);
+    score += 10 + Math.max(0, (streak - 1) * 2);
+    acertos++;
+  } else {
+    btn.classList.add('wrong');
+    streak = 0;
+  }
+  updateHUD();
+  updateProg();
+  const sign = opt.correct ? '✅' : '❌';
+  document.getElementById('feedback-panel').innerHTML = `${sign} ${opt.fb}`;
+  const nb = document.getElementById('next-btn');
+  nb.textContent = qIdx + 1 >= shuffledQs.length ? 'Ver resultado final 🏁' : 'Próxima pergunta →';
+  nb.style.display = 'block';
+};
+
+window.nextQ = function() {
+  qIdx++;
+  document.getElementById('next-btn').style.display = 'none';
+  renderQ();
+};
+
+// ── HUD & Progress ─────────────────────────────────────────────────────────────
+function updateHUD() {
+  document.getElementById('hud-acertos').textContent = acertos;
+  document.getElementById('hud-streak').textContent = streak;
+  document.getElementById('hud-score').textContent = score;
+}
+function updateProg() {
+  const total = shuffledQs.length;
+  const done = Math.min(qIdx, total);
+  const pct = total ? Math.round(done / total * 100) : 0;
+  document.getElementById('prog-bar').style.width = pct + '%';
+  document.getElementById('prog-label').textContent = `Questão ${done} de ${total}`;
+  document.getElementById('prog-pct').textContent = pct + '%';
+}
+
+// ── End ────────────────────────────────────────────────────────────────────────
+function renderEnd() {
+  if (timerRef) clearInterval(timerRef);
+  const total = shuffledQs.length;
+  const pct = Math.round(acertos / total * 100);
+  let emoji, title, desc;
+  if (pct === 100)      { emoji='🎉🌳'; title='Guardião da Floresta!'; desc='Perfeito! Você domina tudo sobre desmatamento e regeneração florestal.'; }
+  else if (pct >= 75)   { emoji='🌟🌿'; title='Especialista Florestal!'; desc='Ótimo resultado! Seus conhecimentos sobre florestas brasileiras são sólidos.'; }
+  else if (pct >= 50)   { emoji='🌱'; title='Em Crescimento!'; desc='Boa base! Revise as explicações e avance para o próximo nível.'; }
+  else                  { emoji='🍂'; title='Continue Aprendendo!'; desc='As florestas precisam de defensores preparados. Estude e tente de novo!'; }
+  document.getElementById('game-area').innerHTML = `
+    <div class="end-screen">
+      <span class="end-emoji">${emoji}</span>
+      <div class="end-title">${title}</div>
+      <div class="end-desc">${desc}</div>
+      <div class="end-stats">
+        <div class="end-stat">${acertos}/${total}<span>Acertos</span></div>
+        <div class="end-stat">${pct}%<span>Aproveitamento</span></div>
+        <div class="end-stat">${score}<span>Pontos</span></div>
+        <div class="end-stat">${maxStreak}🔥<span>Maior sequência</span></div>
+        <div class="end-stat">${seconds}s<span>Tempo</span></div>
+      </div>
+      <div class="save-area">
+        <input type="text" id="player-name" maxlength="20" placeholder="Seu nome (até 20 chars)" />
+        <button class="save-btn" id="save-btn" onclick="saveScore()">Salvar no Ranking</button>
+      </div>
+      <div id="save-msg" style="font-size:.82rem;color:#1a4a08;margin-top:6px;min-height:18px;"></div>
+      <br>
+      <button class="restart-btn" onclick="init()">🔄 Jogar novamente</button>
+    </div>`;
+  document.getElementById('feedback-panel').textContent = '🏁 Jogo concluído!';
+  document.getElementById('next-btn').style.display = 'none';
+}
+
+// ── Ranking ───────────────────────────────────────────────────────────────────
+async function loadRanking() {
+  const list = document.getElementById('rank-list');
+  if (!db || !window._fb) { list.innerHTML = '<div class="rank-empty">Indisponível</div>'; return; }
+  try {
+    const { collection, getDocs, orderBy, query, limit, db: fdb } = window._fb;
+    const q = query(collection(fdb, `games/${GAME_ID}/scores`), orderBy('score', 'desc'), limit(80));
+    const snap = await getDocs(q);
+    const lvl = LEVELS_DATA[currentLevel].label;
+    const all = []; snap.forEach(d => all.push(d.data()));
+    const filtered = all.filter(d => d.level === lvl).slice(0, 10);
+    if (!filtered.length) { list.innerHTML = '<div class="rank-empty">Seja o primeiro! 🏆</div>'; return; }
+    const medals = ['gold','silver','bronze'];
+    list.innerHTML = filtered.map((d,i) => `
+      <div class="rank-item">
+        <span class="rank-pos ${medals[i]||''}">${i+1}º</span>
+        <span class="rank-name">${escHtml(d.name||'?')}</span>
+        <span class="rank-score">${d.score} pts</span>
+      </div>`).join('');
+  } catch(e) { list.innerHTML='<div class="rank-empty">Erro ao carregar</div>'; console.warn(e); }
+}
+
+window.saveScore = async function() {
+  if (savedToRanking) return;
+  const nameInput = document.getElementById('player-name');
+  const name = (nameInput ? nameInput.value.trim() : '') || 'Anônimo';
+  const msg = document.getElementById('save-msg');
+  const btn = document.getElementById('save-btn');
+  if (!db || !window._fb) { msg.textContent = '⚠️ Offline. Pontuação: ' + score; return; }
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  try {
+    const { collection, addDoc, serverTimestamp, db: fdb } = window._fb;
+    await addDoc(collection(fdb, `games/${GAME_ID}/scores`), {
+      name: escHtml(name.slice(0,20)), score,
+      level: LEVELS_DATA[currentLevel].label, seconds, ts: serverTimestamp()
+    });
+    savedToRanking = true; msg.textContent = '✅ Salvo!'; btn.textContent = 'Salvo ✓';
+    loadRanking();
+  } catch(e) {
+    btn.disabled = false; btn.textContent = 'Salvar no Ranking';
+    msg.textContent = '⚠️ Erro. Tente novamente.'; console.warn(e);
+  }
+};
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Start ──────────────────────────────────────────────────────────────────────
+window.init = init;
+init();
+</script>
+</body>
+</html>
