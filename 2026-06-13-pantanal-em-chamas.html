@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔥 Pantanal em Chamas — Simulador de Fogo</title>
+<style>
+:root{
+  --bg1:#2b0a04; --bg2:#7a1f08; --panel:rgba(30,12,6,0.66); --panel2:rgba(255,255,255,0.06);
+  --accent:#ff7a18; --accent2:#ffb347; --ember:#ff3b1d; --success:#2ec27e; --danger:#ff5a52;
+  --ink:#fff3e6; --muted:#f0c9a8; --line:rgba(255,160,80,0.28);
+  --veg:#3f8f4a; --veg2:#2f7a3c; --burn:#ff6a1a; --burned:#241712; --wet:#3aa0c8;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; color:var(--ink);
+  font-family:system-ui,"Segoe UI",Roboto,Arial,sans-serif;
+  background:linear-gradient(160deg,var(--bg1) 0%,var(--bg2) 100%);
+  background-attachment:fixed; padding:18px 12px 40px;
+}
+.wrap{width:min(960px,96vw); margin:0 auto;}
+header{text-align:center; margin-bottom:14px}
+h1{font-size:clamp(1.7rem,5vw,2.8rem); margin:.1em 0; letter-spacing:.5px;
+  text-shadow:0 2px 16px rgba(255,90,20,.45)}
+.sub{color:var(--muted); font-size:clamp(.85rem,2.4vw,1.02rem); margin:0}
+.levels{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:16px 0}
+.pill{
+  border:1.5px solid var(--line); background:var(--panel2); color:var(--ink);
+  padding:9px 16px; border-radius:999px; font-size:.95rem; font-weight:600; cursor:pointer;
+  transition:all .25s ease;
+}
+.pill:hover{transform:translateY(-2px); border-color:var(--accent)}
+.pill.active{background:var(--accent); border-color:var(--accent); color:#2b0a04; box-shadow:0 6px 18px rgba(255,122,24,.4)}
+.howto{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:11px 15px;
+  font-size:.93rem; color:var(--muted); margin-bottom:14px; line-height:1.45}
+.howto b{color:var(--accent2)}
+.hud{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:12px}
+.hud .chip{background:var(--panel); border:1px solid var(--line); border-radius:10px;
+  padding:7px 13px; font-size:.92rem; font-weight:600}
+.hud .chip span{color:var(--accent2)}
+.grid{display:grid; grid-template-columns:1.15fr .85fr; gap:14px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:16px;
+  box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.mission{font-size:.98rem; line-height:1.5; margin:0 0 10px}
+.goal{display:inline-block; background:rgba(255,122,24,.16); border:1px solid var(--accent);
+  color:var(--accent2); font-weight:700; padding:6px 12px; border-radius:10px; font-size:.95rem; margin-bottom:10px}
+canvas{width:100%; height:auto; border-radius:12px; background:#1a2a14; display:block;
+  border:1px solid var(--line)}
+.canolabel{font-size:.78rem; color:var(--muted); text-align:center; margin-top:5px}
+.readouts{display:flex; flex-wrap:wrap; gap:8px; margin:12px 0}
+.read{flex:1 1 30%; min-width:90px; background:var(--panel2); border:1px solid var(--line);
+  border-radius:10px; padding:8px 10px; text-align:center}
+.read .v{font-size:1.15rem; font-weight:800; color:var(--accent2)}
+.read .l{font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.4px}
+.projbox{text-align:center; background:var(--panel2); border:1px solid var(--line); border-radius:12px;
+  padding:10px; margin-bottom:12px}
+.projbox .big{font-size:2.1rem; font-weight:900; line-height:1}
+.riskbar{height:12px; border-radius:8px; background:rgba(255,255,255,.12); overflow:hidden; margin-top:8px}
+.riskbar>i{display:block; height:100%; width:0%;
+  background:linear-gradient(90deg,#2ec27e,#ffd23f,#ff7a18,#ff3b1d); transition:width .25s}
+.ctrl{margin:12px 0}
+.ctrl label{display:flex; justify-content:space-between; font-size:.9rem; font-weight:600; margin-bottom:4px}
+.ctrl label b{color:var(--accent2)}
+.ctrl input[type=range]{width:100%; accent-color:var(--accent)}
+.ctrl.locked{opacity:.55}
+.ctrl.locked label::after{content:" 🔒 fixo"; font-size:.74rem; color:var(--muted); font-weight:500}
+.btns{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px}
+button.act{flex:1 1 auto; border:none; border-radius:12px; padding:12px 16px; font-size:1rem; font-weight:800;
+  cursor:pointer; transition:transform .2s, box-shadow .2s}
+button.act:hover{transform:translateY(-2px)}
+button.act:disabled{opacity:.45; cursor:not-allowed; transform:none}
+.btn-go{background:var(--accent); color:#2b0a04; box-shadow:0 6px 16px rgba(255,122,24,.4)}
+.btn-next{background:var(--success); color:#06281a}
+.feedback{margin-top:12px; padding:11px 14px; border-radius:12px; font-size:.92rem; line-height:1.45;
+  border:1px solid var(--line); background:var(--panel2); min-height:20px}
+.feedback.ok{border-color:var(--success); background:rgba(46,194,126,.14)}
+.feedback.bad{border-color:var(--danger); background:rgba(255,90,82,.14)}
+.pop{animation:pop .4s ease}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.06)}100%{transform:scale(1)}}
+.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.final{text-align:center; padding:22px}
+.final h2{font-size:2rem; margin:.2em 0}
+.final .score{font-size:3rem; font-weight:900; color:var(--success); margin:.1em 0}
+.final input{padding:10px 14px; border-radius:10px; border:1px solid var(--line); background:#fff;
+  color:#2b0a04; font-size:1rem; width:min(280px,80%); margin:8px 0}
+.rank{margin-top:8px}
+.rank h3{margin:.3em 0; color:var(--accent2); font-size:1.05rem}
+.rank ol{list-style:none; padding:0; margin:0; counter-reset:r}
+.rank li{counter-increment:r; display:flex; justify-content:space-between; gap:8px;
+  padding:7px 10px; border-bottom:1px solid var(--line); font-size:.9rem}
+.rank li::before{content:counter(r)"º"; color:var(--accent2); font-weight:800; min-width:30px}
+.rank li .nm{flex:1; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.rank .note{font-size:.82rem; color:var(--muted)}
+footer{margin-top:26px; text-align:center; color:var(--muted); font-size:.86rem; line-height:1.6}
+footer .by{color:var(--accent2); font-weight:800; font-size:1rem}
+.hidden{display:none !important}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>🔥 Pantanal em Chamas</h1>
+  <p class="sub">Simulador de propagação e contenção do fogo no Pantanal — ajuste os fatores e cumpra cada missão</p>
+</header>
+
+<div class="levels" id="levels">
+  <button class="pill active" data-lvl="basico">Básico</button>
+  <button class="pill" data-lvl="inter">Intermediário</button>
+  <button class="pill" data-lvl="dificil">Difícil</button>
+  <button class="pill" data-lvl="carbonauta">🛰️ Carbonauta</button>
+</div>
+
+<div class="howto">
+  <b>Como jogar:</b> mova os controles (umidade, vento, combustível, aceiros…) e observe a <b>projeção da área queimada</b> mudar ao vivo. Quando estiver pronto, toque em <b>▶ Simular</b> para rodar o fogo no mapa. Cada missão tem uma meta: <b>conter</b> abaixo de um limite ou fazer uma <b>queima controlada</b> dentro de uma faixa. Você tem <b>uma tentativa por missão</b> — acertos somam pontos!
+</div>
+
+<div class="hud" id="hud">
+  <div class="chip">Tempo: <span id="hTime">0s</span></div>
+  <div class="chip">Missão: <span id="hMis">1/8</span></div>
+  <div class="chip">Acertos: <span id="hHit">0</span></div>
+  <div class="chip">Erros: <span id="hErr">0</span></div>
+  <div class="chip">Pontos: <span id="hPts">0</span></div>
+</div>
+
+<div id="play" class="grid">
+  <div class="card">
+    <p class="mission" id="missionText"></p>
+    <div class="goal" id="goalText"></div>
+    <canvas id="cv" width="600" height="360"></canvas>
+    <div class="canolabel">🗺️ Mapa de propagação (ilustração) — <span style="color:var(--veg)">vegetação</span> · <span style="color:var(--burn)">fogo</span> · <span style="color:#b89">queimado</span> · <span style="color:var(--wet)">aceiro/água</span></div>
+  </div>
+  <div class="card">
+    <div class="projbox">
+      <div class="big" id="projVal">0%</div>
+      <div class="l" style="font-size:.78rem;color:var(--muted)">PROJEÇÃO DE ÁREA QUEIMADA</div>
+      <div class="riskbar"><i id="riskFill"></i></div>
+    </div>
+    <div class="readouts">
+      <div class="read"><div class="v" id="rRos">0</div><div class="l">ROS m/min</div></div>
+      <div class="read"><div class="v" id="rInt">0</div><div class="l">Intensidade kW/m</div></div>
+      <div class="read"><div class="v" id="rRisk">Baixo</div><div class="l">Perigo de fogo</div></div>
+    </div>
+    <div id="controls"></div>
+    <div class="btns">
+      <button class="act btn-go" id="btnSim">▶ Simular</button>
+      <button class="act btn-next hidden" id="btnNext">Próxima ▶</button>
+    </div>
+    <div class="feedback" id="feedback">Ajuste os controles e toque em <b>Simular</b>.</div>
+  </div>
+</div>
+
+<div id="finalScreen" class="card final hidden"></div>
+
+<div class="card rank" id="rankCard">
+  <h3>🏆 Ranking Global — <span id="rankLevelLbl">Básico</span></h3>
+  <div class="note" id="rankNote">Carregando ranking…</div>
+  <ol id="rankList"></ol>
+</div>
+
+<footer>
+  <div class="by">— Idealizado por Ernandes Sobreira —</div>
+  <div>Tema: Queimadas e fogo no Pantanal · Gênero: Simulação interativa · app ambiental do dia (2026-06-13)</div>
+</footer>
+</div>
+
+<script>
+/* ===================== Firebase (somente ranking) ===================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-06-13-pantanal-em-chamas";
+
+let _db=null, _fs=null, _fbReady=false;
+async function initFirebase(){
+  if(_fbReady) return true;
+  try{
+    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const fsMod  = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app = appMod.initializeApp(firebaseConfig);
+    _db = fsMod.getFirestore(app);
+    _fs = fsMod;
+    _fbReady = true;
+    return true;
+  }catch(e){ _fbReady=false; return false; }
+}
+function esc(s){ return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+async function loadRanking(level){
+  const note=document.getElementById('rankNote'), list=document.getElementById('rankList');
+  list.innerHTML=''; note.textContent='Carregando ranking…';
+  const ok=await initFirebase();
+  if(!ok){ note.textContent='⚠️ Ranking offline — o jogo funciona normalmente.'; return; }
+  try{
+    const {collection,query,orderBy,limit,getDocs}=_fs;
+    const ref=collection(_db,"games",GAME_ID,"scores");
+    const q=query(ref, orderBy("score","desc"), limit(60));
+    const snap=await getDocs(q);
+    let rows=[];
+    snap.forEach(d=>{const v=d.data(); if(v && v.level===level) rows.push(v);});
+    rows.sort((a,b)=> (b.score-a.score) || ((a.seconds||9999)-(b.seconds||9999)) );
+    rows=rows.slice(0,10);
+    if(!rows.length){ note.textContent='Seja o primeiro a pontuar neste nível!'; return; }
+    note.textContent='';
+    list.innerHTML=rows.map(r=>'<li><span class="nm">'+esc(r.name||'—')+'</span><span>'+r.score+' pts · '+(r.seconds||0)+'s</span></li>').join('');
+  }catch(e){ note.textContent='⚠️ Não foi possível ler o ranking agora.'; }
+}
+async function saveScore(name,score,seconds,level){
+  const ok=await initFirebase();
+  if(!ok) return false;
+  try{
+    const {collection,addDoc,serverTimestamp}=_fs;
+    await addDoc(collection(_db,"games",GAME_ID,"scores"),
+      {name:String(name).slice(0,20), score, seconds, level, ts:serverTimestamp()});
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ===================== Definição dos controles ===================== */
+const SLIDERS={
+  umidadeAr:{label:'Umidade do ar (%)', min:10,max:95,step:1, unit:'%'},
+  vento:{label:'Velocidade do vento (km/h)', min:0,max:60,step:1, unit:' km/h'},
+  umidadeComb:{label:'Umidade do combustível fino (%)', min:5,max:40,step:1, unit:'%'},
+  carga:{label:'Carga de combustível seco (t/ha)', min:1,max:12,step:0.5, unit:' t/ha'},
+  supressao:{label:'Aceiros + brigada (supressão %)', min:0,max:100,step:1, unit:'%'}
+};
+
+/* ===================== Modelo físico simplificado ===================== */
+function clamp(x,a,b){return Math.max(a,Math.min(b,x));}
+function model(p){
+  const D=clamp((95-p.umidadeAr)/85,0,1);
+  const windF=clamp(p.vento/60,0,1);
+  const W=0.30+0.70*windF;
+  const cext=30;
+  const combDry=clamp((cext-p.umidadeComb)/(cext-5),0,1);
+  const C=0.25+0.75*combDry;
+  const cargaF=clamp((p.carga-1)/11,0,1);
+  const L=0.55+0.45*cargaF;
+  const S=clamp(p.supressao/100,0,1);
+  let burn=100*D*W*C*L*(1-0.9*S);
+  if(p.umidadeComb>=cext) burn*=0.15;
+  burn=clamp(burn,0,100);
+  const ros=0.4+20*D*W*combDry*(1-0.85*S);            // m/min
+  const intensity=18000*(p.carga*0.1*0.8)*(ros/60);    // kW/m
+  const risk=D*W*C;                                     // 0..1
+  return {burn,ros,intensity,risk,windF,S};
+}
+
+/* ===================== Cenários por nível ===================== */
+const LEVELS={
+ basico:{ name:'Básico', sliders:['umidadeAr','vento'], scen:[
+  {sit:"Estação seca: o ar está seco e venta bastante, e o capim já está pronto para pegar fogo. Ajuste a umidade do ar e o vento para conter a propagação.",g:{umidadeAr:25,vento:38,umidadeComb:16,carga:5},m:{t:'conter',max:35},fb:"Ar mais úmido e vento fraco reduzem muito o avanço das chamas. Na seca extrema de 2020, o fogo atingiu cerca de 30% do Pantanal — perto de 4,5 milhões de hectares."},
+  {sit:"Queima de manejo: para renovar o pasto com segurança, faça uma queima controlada mantendo a área entre 20% e 45%.",g:{umidadeAr:55,vento:12,umidadeComb:18,carga:4},m:{t:'prescrita',min:20,max:45},fb:"A queima prescrita, feita em condições amenas, consome o material seco aos poucos e evita incêndios maiores — base do Manejo Integrado do Fogo."},
+  {sit:"Frente de vento forte: veja como o vento sozinho acelera o fogo e tente conter a área queimada abaixo de 40%.",g:{umidadeAr:40,vento:50,umidadeComb:16,carga:5},m:{t:'conter',max:40},fb:"O vento empurra as chamas e leva fagulhas adiante, aumentando a velocidade de propagação. Por isso brigadas evitam atacar o fogo de frente com vento forte."},
+  {sit:"Manhã úmida: o orvalho deixou tudo mais molhado. Mantenha o fogo bem baixo, abaixo de 20%.",g:{umidadeAr:80,vento:8,umidadeComb:22,carga:4},m:{t:'conter',max:20},fb:"De manhã a umidade do ar sobe e o capim absorve água, dificultando a queima. As brigadas aproveitam essas janelas para trabalhar com segurança."},
+  {sit:"Vegetação ressecada: o capim está seco como palha. Ajuste o tempo para conter abaixo de 30%.",g:{umidadeAr:35,vento:30,umidadeComb:10,carga:6},m:{t:'conter',max:30},fb:"Capim fino e seco pega fogo facilmente e queima rápido — o combustível fino seco é o que mais espalha incêndios em campos e savanas."},
+  {sit:"Aceiro natural com rio: condições calmas. Faça uma queima leve, entre 15% e 35%.",g:{umidadeAr:60,vento:15,umidadeComb:18,carga:4},m:{t:'prescrita',min:15,max:35},fb:"Rios e áreas alagadas funcionam como barreiras naturais ao fogo no Pantanal, ajudando a limitar o tamanho das queimadas."},
+  {sit:"Calor de meio-dia: ar seco e quente deixam o fogo agressivo. Tente segurar abaixo de 25%.",g:{umidadeAr:30,vento:25,umidadeComb:14,carga:5},m:{t:'conter',max:25},fb:"No horário mais quente e seco do dia o fogo fica mais agressivo. A umidade relativa do ar é um dos melhores indicadores de risco."},
+  {sit:"Missão final do básico: seca forte e vento. Conter abaixo de 30% para proteger a fauna.",g:{umidadeAr:28,vento:42,umidadeComb:13,carga:6},m:{t:'conter',max:30},fb:"Animais lentos, como tamanduás e tatus, são os mais atingidos pelas queimadas. Conter o fogo cedo salva vidas e habitat."}
+ ]},
+ inter:{ name:'Intermediário', sliders:['umidadeAr','vento','umidadeComb'], scen:[
+  {sit:"Agora você também controla a umidade do capim. Conter abaixo de 30% mesmo com vento moderado.",g:{umidadeAr:40,vento:30,umidadeComb:20,carga:5},m:{t:'conter',max:30},fb:"A umidade do combustível fino pesa tanto quanto o clima: capim com mais água gasta energia para evaporá-la antes de queimar."},
+  {sit:"Umidade de extinção: acima de ~30% de umidade o capim quase não propaga fogo. Faça o fogo praticamente parar, abaixo de 10%.",g:{umidadeAr:55,vento:20,umidadeComb:28,carga:5},m:{t:'conter',max:10},fb:"A 'umidade de extinção' é o limite acima do qual o combustível não sustenta a chama — em pastagens fica em torno de 30%."},
+  {sit:"Queima prescrita técnica: alvo entre 25% e 40% para reduzir a biomassa seca acumulada.",g:{umidadeAr:50,vento:14,umidadeComb:19,carga:6},m:{t:'prescrita',min:25,max:40},fb:"Reduzir a biomassa seca acumulada em queimas planejadas diminui a intensidade de um eventual incêndio no auge da seca."},
+  {sit:"Vento travado em 45 km/h: o vento não muda. Compense com a umidade do ar e do capim para conter abaixo de 35%.",g:{umidadeAr:45,vento:45,umidadeComb:18,carga:5},lock:['vento'],m:{t:'conter',max:35},fb:"Quando não dá para controlar o vento, aumentar a umidade disponível é a melhor defesa — por isso a previsão do tempo guia as operações."},
+  {sit:"Seca de 2024: ar e capim muito secos. Segure o fogo abaixo de 30%.",g:{umidadeAr:30,vento:28,umidadeComb:12,carga:6},m:{t:'conter',max:30},fb:"Em 2024 o Pantanal perdeu mais água que em qualquer ano desde 1985; só junho queimou cerca de 440 mil hectares, recorde para o mês."},
+  {sit:"Capim alto e seco: muito combustível fino. Conter abaixo de 25%.",g:{umidadeAr:42,vento:22,umidadeComb:11,carga:7},m:{t:'conter',max:25},fb:"Quanto mais combustível fino, seco e aerado, maior a velocidade de propagação, a altura da chama e a temperatura do fogo."},
+  {sit:"Janela noturna: a umidade sobe à noite. Aproveite para uma queima entre 15% e 30%.",g:{umidadeAr:70,vento:12,umidadeComb:24,carga:5},m:{t:'prescrita',min:15,max:30},fb:"À noite a umidade relativa sobe e o combustível se reidrata, reduzindo a intensidade — janela preferida para queimas controladas."},
+  {sit:"Frente seca com rajadas: ar seco e vento. Conter abaixo de 35%.",g:{umidadeAr:33,vento:40,umidadeComb:15,carga:6},m:{t:'conter',max:35},fb:"Ar seco somado a vento forma a combinação clássica de dias de incêndio extremo, monitorada por índices de perigo de fogo."},
+  {sit:"Recuperação da umidade: uma chuva isolada molhou o capim. Mantenha abaixo de 15%.",g:{umidadeAr:65,vento:18,umidadeComb:26,carga:5},m:{t:'conter',max:15},fb:"Pequenas chuvas elevam a umidade do combustível por horas a dias, abrindo janelas mais seguras de manejo."},
+  {sit:"Desafio intermediário: seca, vento moderado e capim seco. Conter abaixo de 28%.",g:{umidadeAr:35,vento:30,umidadeComb:13,carga:6},m:{t:'conter',max:28},fb:"Combinar ar úmido e combustível úmido derruba a propagação mesmo com algum vento — gestão de risco em ação."}
+ ]},
+ dificil:{ name:'Difícil', sliders:['umidadeAr','vento','umidadeComb','carga','supressao'], scen:[
+  {sit:"Aceiros entram em cena: use a supressão (aceiros + brigada) para conter um incêndio em capim seco abaixo de 25%.",g:{umidadeAr:35,vento:30,umidadeComb:12,carga:7,supressao:0},m:{t:'conter',max:25},fb:"Aceiros são faixas sem combustível que interrompem a continuidade do fogo; combinados à brigada, reduzem a área queimada drasticamente."},
+  {sit:"Carga de combustível alta: 10 t/ha de biomassa seca. Reduza a área queimada abaixo de 30%.",g:{umidadeAr:40,vento:25,umidadeComb:14,carga:10,supressao:20},m:{t:'conter',max:30},fb:"Maior carga de combustível eleva a intensidade da linha de fogo (Byram: I = H·w·R), exigindo aceiros mais largos e mais recursos."},
+  {sit:"Intensidade de Byram alta: vento forte e muita biomassa. Mantenha abaixo de 20% com aceiros.",g:{umidadeAr:38,vento:45,umidadeComb:13,carga:9,supressao:25},m:{t:'conter',max:20},fb:"A intensidade da linha de fogo (kW/m) cresce com o calor de combustão, a carga consumida e o ROS — acima de ~4.000 kW/m o combate direto fica inviável."},
+  {sit:"Queima prescrita de precisão: alvo estreito entre 22% e 32% com supressão parcial.",g:{umidadeAr:52,vento:16,umidadeComb:20,carga:7,supressao:15},m:{t:'prescrita',min:22,max:32},fb:"Queimas prescritas usam contrafogo e aceiros para manter a intensidade dentro de uma faixa segura e atingir o objetivo ecológico."},
+  {sit:"Vento travado em 50 km/h: compense com umidade, menor carga e supressão. Conter abaixo de 30%.",g:{umidadeAr:42,vento:50,umidadeComb:16,carga:6,supressao:30},lock:['vento'],m:{t:'conter',max:30},fb:"Com vento forte fixo, a estratégia é atacar os flancos e ancorar o fogo em barreiras, nunca enfrentar a cabeça do incêndio."},
+  {sit:"Combustível na umidade de extinção: capim a 30%. Mostre que a propagação quase cessa, abaixo de 12%.",g:{umidadeAr:55,vento:25,umidadeComb:30,carga:7,supressao:10},m:{t:'conter',max:12},fb:"Na umidade de extinção o balanço de energia não sustenta a combustão: a frente perde calor mais rápido do que o gera e se apaga."},
+  {sit:"Incêndio de 2020: seca histórica, capim seco e vento. Conter abaixo de 22% com aceiros.",g:{umidadeAr:30,vento:38,umidadeComb:11,carga:8,supressao:20},m:{t:'conter',max:22},fb:"Em 2020 o INPE registrou 3.682 incêndios entre janeiro e julho no Pantanal, alta de 201% sobre 2019, sob seca extrema."},
+  {sit:"Solo orgânico (turfa): fogo subterrâneo persistente. Reduza a frente de superfície abaixo de 18%.",g:{umidadeAr:40,vento:22,umidadeComb:14,carga:7,supressao:25},m:{t:'conter',max:18},fb:"No Pantanal, o fogo pode descer ao solo orgânico/turfa e arder por semanas, reacendendo a superfície — daí a importância do rescaldo."},
+  {sit:"Mosaico de manejo: queima em manchas entre 18% e 30% para criar barreiras.",g:{umidadeAr:50,vento:18,umidadeComb:19,carga:6,supressao:20},m:{t:'prescrita',min:18,max:30},fb:"Queimas em mosaico criam paisagens com diferentes idades de combustível, reduzindo a propagação de grandes incêndios."},
+  {sit:"Pico de perigo: ar a 30%, vento 40, capim a 12%. Conter abaixo de 25% com toda a supressão necessária.",g:{umidadeAr:30,vento:40,umidadeComb:12,carga:8,supressao:30},m:{t:'conter',max:25},fb:"Índices de perigo de fogo integram temperatura, umidade, vento e seca do combustível para antecipar dias críticos."},
+  {sit:"Proteger corredor de fauna: conter rigorosamente abaixo de 15%.",g:{umidadeAr:45,vento:28,umidadeComb:15,carga:7,supressao:35},m:{t:'conter',max:15},fb:"Corredores ripários abrigam refúgios de fauna; mantê-los intactos exige supressão precoce e aceiros bem posicionados."},
+  {sit:"Poucos recursos disponíveis: baixa supressão. Use o clima a seu favor e conter abaixo de 30%.",g:{umidadeAr:48,vento:24,umidadeComb:18,carga:6,supressao:10},m:{t:'conter',max:30},fb:"Quando os recursos são escassos, escolher a janela climática certa (umidade alta, vento baixo) multiplica a eficácia da brigada."},
+  {sit:"Queima de redução de risco: faixa 20%–30% antes do pico da seca.",g:{umidadeAr:54,vento:16,umidadeComb:21,carga:7,supressao:18},m:{t:'prescrita',min:20,max:30},fb:"Reduzir a carga de combustível no início da seca diminui a severidade dos incêndios no auge da estação seca."},
+  {sit:"Avaliação difícil: condições adversas combinadas. Conter abaixo de 20%.",g:{umidadeAr:33,vento:36,umidadeComb:13,carga:8,supressao:25},m:{t:'conter',max:20},fb:"O Manejo Integrado do Fogo une conhecimento tradicional, ecológico e científico em metas claras e mensuráveis de proteção."}
+ ]},
+ carbonauta:{ name:'🛰️ Carbonauta', sliders:['umidadeAr','vento','umidadeComb','carga','supressao'], scen:[
+  {sit:"Calibre o ROS de cabeça: em campo seco com vento, mantenha a área queimada ≤ 15% controlando microclima e supressão.",g:{umidadeAr:32,vento:42,umidadeComb:11,carga:9,supressao:20},m:{t:'conter',max:15},fb:"A velocidade de propagação (ROS) em pastagens pode superar 2–3 m/s sob vento forte; a cabeça do incêndio concentra a maior intensidade e nunca deve ser atacada de frente."},
+  {sit:"Intensidade de Byram alvo: limite a frente a ≤ 12% (proxy de manter I abaixo do limiar de combate direto).",g:{umidadeAr:35,vento:45,umidadeComb:12,carga:10,supressao:28},m:{t:'conter',max:12},fb:"I = H·w·R: com H≈18.000 kJ/kg, carga consumida e ROS elevados, a intensidade ultrapassa 10.000 kW/m, exigindo ataque indireto e meios aéreos."},
+  {sit:"Umidade de extinção (Rothermel): com combustível a 30%, demonstre a cessação da propagação, ≤ 8%.",g:{umidadeAr:58,vento:30,umidadeComb:30,carga:8,supressao:10},m:{t:'conter',max:8},fb:"No modelo de Rothermel, acima da umidade de extinção do modelo de combustível o fluxo de calor não basta para pré-aquecer e ignir o combustível adjacente."},
+  {sit:"Vento travado em 55 km/h: frente seca. Ancoragem e ataque pelos flancos para ≤ 18%.",g:{umidadeAr:40,vento:55,umidadeComb:13,carga:8,supressao:30},lock:['vento'],m:{t:'conter',max:18},fb:"Sob vento forte fixo, ancora-se em barreira e progride-se pelos flancos; o comprimento de chama escala com a raiz da intensidade (relação de Byram–Thomas)."},
+  {sit:"Queima prescrita de precisão científica: janela estreita 24%–30% para o objetivo ecológico.",g:{umidadeAr:53,vento:17,umidadeComb:20,carga:7,supressao:16},m:{t:'prescrita',min:24,max:30},fb:"Prescrições definem faixas de umidade do combustível fino (em geral 10–20%) e de umidade relativa para manter ROS e intensidade dentro do alvo."},
+  {sit:"Combustível morto fino (timelag 1-h): teor a 11%, alta razão superfície/volume. Conter ≤ 14%.",g:{umidadeAr:36,vento:34,umidadeComb:11,carga:9,supressao:24},m:{t:'conter',max:14},fb:"Combustíveis 1-h (Ø < 6 mm) equilibram-se com a umidade atmosférica em cerca de 1 hora e governam a ignição e o ROS inicial."},
+  {sit:"Acoplamento fogo–atmosfera: pluma convectiva intensa. Reduza a frente a ≤ 12%.",g:{umidadeAr:34,vento:40,umidadeComb:12,carga:10,supressao:30},m:{t:'conter',max:12},fb:"Incêndios intensos geram colunas convectivas que podem formar pyrocumulonimbus, criar ventos próprios e lançar brasas (spotting) a centenas de metros."},
+  {sit:"Turfa/solo orgânico: combustão latente (smoldering). Suprima a frente de superfície a ≤ 16%.",g:{umidadeAr:42,vento:24,umidadeComb:14,carga:7,supressao:26},m:{t:'conter',max:16},fb:"A combustão latente da turfa libera CO em proporção elevada, persiste sob a superfície e exige rescaldo com água e escavação para extinção real."},
+  {sit:"Recorrência < 2 anos: área com retorno de fogo muito frequente. Conter ≤ 13%.",g:{umidadeAr:38,vento:32,umidadeComb:12,carga:8,supressao:24},m:{t:'conter',max:13},fb:"Cerca de 10% das áreas protegidas do Pantanal apresentam intervalo de retorno do fogo inferior a 2 anos, o que compromete a regeneração da vegetação."},
+  {sit:"Atribuição climática 2024: condições ~40% mais intensas. Demonstre contenção a ≤ 15%.",g:{umidadeAr:31,vento:44,umidadeComb:11,carga:9,supressao:30},m:{t:'conter',max:15},fb:"Estudos de atribuição estimam que o aquecimento de origem humana tornou as condições de fogo de junho/2024 no Pantanal cerca de 40% mais intensas."},
+  {sit:"Contrafogo técnico: ataque indireto com queima de expansão. Faixa 20%–28%.",g:{umidadeAr:50,vento:20,umidadeComb:18,carga:7,supressao:22},m:{t:'prescrita',min:20,max:28},fb:"O contrafogo consome o combustível à frente da cabeça do incêndio; exige leitura precisa do vento e ancoragem para não escapar."},
+  {sit:"Fração de combustível disponível: 11 t/ha com baixa umidade. Conter ≤ 12%.",g:{umidadeAr:33,vento:38,umidadeComb:11,carga:11,supressao:30},m:{t:'conter',max:12},fb:"Nem toda a carga queima na frente flamejante; a fração consumida (w) define a energia liberada e, junto com o ROS, a intensidade de Byram."},
+  {sit:"Umidade relativa crítica travada em 30%: compense com os demais fatores para ≤ 16%.",g:{umidadeAr:30,vento:34,umidadeComb:13,carga:8,supressao:28},lock:['umidadeAr'],m:{t:'conter',max:16},fb:"Abaixo de ~30% de umidade relativa e com combustível fino seco, a probabilidade de ignição e propagação cresce de forma não linear."},
+  {sit:"Mosaico pirodiverso: heterogeneidade de idades de combustível. Faixa 18%–26%.",g:{umidadeAr:52,vento:18,umidadeComb:19,carga:7,supressao:20},m:{t:'prescrita',min:18,max:26},fb:"A pirodiversidade — mosaicos com diferentes históricos de fogo — sustenta a biodiversidade e cria barreiras a megaincêndios."},
+  {sit:"Megaincêndio iminente: vento 50 (travado), carga alta e capim seco. Conter ≤ 14%.",g:{umidadeAr:36,vento:50,umidadeComb:12,carga:10,supressao:32},lock:['vento'],m:{t:'conter',max:14},fb:"Megaincêndios resultam do acoplamento entre seca, carga acumulada e vento; manejar a carga previne melhor do que combater."},
+  {sit:"Banca final Carbonauta: condições extremas combinadas. Conter ≤ 12%.",g:{umidadeAr:32,vento:46,umidadeComb:11,carga:10,supressao:30},m:{t:'conter',max:12},fb:"O Manejo Integrado do Fogo integra ecologia, clima e operações: metas mensuráveis, monitoramento e participação local reduzem perdas no Pantanal."}
+ ]}
+};
+
+/* ===================== Estado do jogo ===================== */
+let state={lvl:'basico', idx:0, hits:0, errs:0, params:{}, t0:0, timer:null, finished:false, committed:false};
+const $=id=>document.getElementById(id);
+
+function setLevel(lvl){
+  state.lvl=lvl; state.idx=0; state.hits=0; state.errs=0; state.finished=false;
+  state.t0=Date.now();
+  if(state.timer) clearInterval(state.timer);
+  state.timer=setInterval(updateTimer,1000);
+  document.querySelectorAll('.pill').forEach(b=>b.classList.toggle('active', b.dataset.lvl===lvl));
+  $('rankLevelLbl').textContent=LEVELS[lvl].name;
+  $('finalScreen').classList.add('hidden');
+  $('play').classList.remove('hidden');
+  loadRanking(lvl);
+  renderScenario();
+  updateHUD();
+}
+function elapsed(){ return Math.floor((Date.now()-state.t0)/1000); }
+function updateTimer(){ $('hTime').textContent=elapsed()+'s'; }
+function updateHUD(){
+  const total=LEVELS[state.lvl].scen.length;
+  $('hMis').textContent=(Math.min(state.idx+1,total))+'/'+total;
+  $('hHit').textContent=state.hits;
+  $('hErr').textContent=state.errs;
+  $('hPts').textContent=state.hits;
+}
+
+function renderScenario(){
+  const L=LEVELS[state.lvl], sc=L.scen[state.idx];
+  state.committed=false;
+  state.params=Object.assign({umidadeAr:50,vento:15,umidadeComb:18,carga:5,supressao:0}, sc.g);
+  $('missionText').textContent=sc.sit;
+  $('goalText').textContent = sc.m.t==='conter'
+      ? '🎯 Meta: conter a área queimada ≤ '+sc.m.max+'%'
+      : '🎯 Meta: queima controlada entre '+sc.m.min+'% e '+sc.m.max+'%';
+  const cont=$('controls'); cont.innerHTML='';
+  L.sliders.forEach(key=>{
+    const s=SLIDERS[key], locked=(sc.lock||[]).includes(key);
+    const div=document.createElement('div');
+    div.className='ctrl'+(locked?' locked':'');
+    div.innerHTML='<label>'+s.label+' <b id="lab_'+key+'">'+state.params[key]+s.unit+'</b></label>'+
+      '<input type="range" id="sl_'+key+'" min="'+s.min+'" max="'+s.max+'" step="'+s.step+'" value="'+state.params[key]+'" '+(locked?'disabled':'')+'>';
+    cont.appendChild(div);
+    const inp=div.querySelector('input');
+    inp.addEventListener('input',()=>{
+      state.params[key]=parseFloat(inp.value);
+      $('lab_'+key).textContent=inp.value+s.unit;
+      refreshReadouts();
+      drawScene();
+    });
+  });
+  $('btnSim').classList.remove('hidden'); $('btnSim').disabled=false;
+  $('btnNext').classList.add('hidden');
+  $('feedback').className='feedback';
+  $('feedback').innerHTML='Ajuste os controles e toque em <b>Simular</b>.';
+  refreshReadouts();
+  initGrid();
+  drawScene();
+  updateHUD();
+}
+
+function refreshReadouts(){
+  const r=model(state.params);
+  $('projVal').textContent=Math.round(r.burn)+'%';
+  $('projVal').style.color = r.burn>50?'#ff3b1d':(r.burn>25?'#ffb347':'#2ec27e');
+  $('riskFill').style.width=Math.round(r.risk*100)+'%';
+  $('rRos').textContent=r.ros.toFixed(1);
+  $('rInt').textContent=Math.round(r.intensity).toLocaleString('pt-BR');
+  const lvl = r.risk<0.25?'Baixo':r.risk<0.5?'Moderado':r.risk<0.72?'Alto':'Extremo';
+  $('rRisk').textContent=lvl;
+  $('rRisk').style.color = r.risk<0.25?'#2ec27e':r.risk<0.5?'#ffd23f':r.risk<0.72?'#ff7a18':'#ff3b1d';
+}
+
+/* ===================== Mapa CA (ilustração) ===================== */
+const CW=60, CH=36; let grid=[];
+const cv=$('cv'), ctx=cv.getContext('2d');
+function initGrid(){
+  grid=new Array(CW*CH).fill(0);
+  const S=clamp(state.params.supressao/100,0,1);
+  const wet=S*0.42;
+  for(let i=0;i<grid.length;i++){ if(Math.random()<wet) grid[i]=3; }
+  const cx=4, cy=(CH/2)|0;
+  for(let dx=0;dx<2;dx++)for(let dy=-1;dy<=1;dy++){
+    const x=cx+dx,y=cy+dy; if(x>=0&&x<CW&&y>=0&&y<CH){ const idx=y*CW+x; if(grid[idx]!==3) grid[idx]=1; }
+  }
+}
+function drawScene(){
+  const w=cv.width,h=cv.height, cwpx=w/CW, chpx=h/CH;
+  for(let y=0;y<CH;y++)for(let x=0;x<CW;x++){
+    const v=grid[y*CW+x]; let c='#2f7a3c';
+    if(v===0){ c=((x+y)&1)?'#3f8f4a':'#357f40'; }
+    else if(v===1){ c=Math.random()<0.5?'#ff6a1a':'#ff3b1d'; }
+    else if(v===2){ c='#2a1c16'; }
+    else if(v===3){ c='#2f6f8c'; }
+    ctx.fillStyle=c; ctx.fillRect(x*cwpx,y*chpx,Math.ceil(cwpx),Math.ceil(chpx));
+  }
+}
+function stepGrid(pp,windF){
+  const next=grid.slice();
+  for(let y=0;y<CH;y++)for(let x=0;x<CW;x++){
+    const idx=y*CW+x;
+    if(grid[idx]===1){
+      next[idx]=2;
+      const nb=[[1,0,1+windF*1.6],[-1,0,0.5],[0,1,1],[0,-1,1],[1,1,0.8+windF],[1,-1,0.8+windF]];
+      for(const n of nb){
+        const nx=x+n[0], ny=y+n[1];
+        if(nx<0||nx>=CW||ny<0||ny>=CH) continue;
+        const ni=ny*CW+nx;
+        if(grid[ni]===0 && Math.random()<pp*n[2]) next[ni]=1;
+      }
+    }
+  }
+  grid=next;
+}
+function anyBurning(){ for(let i=0;i<grid.length;i++) if(grid[i]===1) return true; return false; }
+
+/* ===================== Simular / avaliar ===================== */
+function simulate(){
+  if(state.committed) return;
+  state.committed=true;
+  $('btnSim').disabled=true;
+  document.querySelectorAll('#controls input').forEach(i=>i.disabled=true);
+  const r=model(state.params);
+  const pp=clamp(r.burn/100*0.45+r.windF*0.06,0.015,0.55);
+  initGrid();
+  let ticks=0;
+  $('feedback').className='feedback';
+  $('feedback').innerHTML='🔥 Simulando a propagação…';
+  const iv=setInterval(()=>{
+    stepGrid(pp,r.windF); drawScene(); ticks++;
+    if(ticks>=130 || !anyBurning()){ clearInterval(iv); evaluate(r); }
+  },28);
+}
+function evaluate(r){
+  const sc=LEVELS[state.lvl].scen[state.idx];
+  const burn=r.burn, m=sc.m;
+  const pass = m.t==='conter' ? (burn<=m.max+0.5) : (burn>=m.min-0.5 && burn<=m.max+0.5);
+  const fbEl=$('feedback');
+  if(pass){
+    state.hits++;
+    fbEl.className='feedback ok pop';
+    fbEl.innerHTML='✅ <b>Missão cumprida!</b> Projeção: '+Math.round(burn)+'%. '+sc.fb;
+  }else{
+    state.errs++;
+    fbEl.className='feedback bad shake';
+    const motivo = m.t==='conter'
+      ? 'A área queimada ('+Math.round(burn)+'%) passou do limite de '+m.max+'%.'
+      : 'A área ('+Math.round(burn)+'%) ficou fora da faixa '+m.min+'%–'+m.max+'%.';
+    fbEl.innerHTML='❌ <b>Não foi dessa vez.</b> '+motivo+' '+sc.fb;
+  }
+  setTimeout(()=>fbEl.classList.remove('shake','pop'),450);
+  $('btnSim').classList.add('hidden');
+  const total=LEVELS[state.lvl].scen.length;
+  $('btnNext').textContent = (state.idx+1>=total)?'Ver resultado 🎉':'Próxima ▶';
+  $('btnNext').classList.remove('hidden');
+  updateHUD();
+}
+function nextScenario(){
+  const total=LEVELS[state.lvl].scen.length;
+  if(state.idx+1>=total){ showFinal(); return; }
+  state.idx++;
+  renderScenario();
+}
+
+/* ===================== Tela final + ranking ===================== */
+function showFinal(){
+  state.finished=true;
+  if(state.timer) clearInterval(state.timer);
+  const total=LEVELS[state.lvl].scen.length, secs=elapsed();
+  $('play').classList.add('hidden');
+  const fs=$('finalScreen'); fs.classList.remove('hidden');
+  const pct=state.hits/total;
+  const msg = pct>=0.9?'Brigadista de elite! 🛰️🔥':pct>=0.7?'Ótimo controle do fogo!':pct>=0.5?'Bom trabalho — dá para afinar a estratégia.':'Continue praticando: o Pantanal agradece!';
+  fs.innerHTML=
+    '<h2>🎉 Nível '+LEVELS[state.lvl].name+' concluído!</h2>'+
+    '<div class="score">'+state.hits+' / '+total+'</div>'+
+    '<p>Acertos: <b>'+state.hits+'</b> · Erros: <b>'+state.errs+'</b> · Tempo: <b>'+secs+'s</b></p>'+
+    '<p style="color:var(--accent2);font-weight:700">'+msg+'</p>'+
+    '<input id="playerName" maxlength="20" placeholder="Seu nome para o ranking"/>'+
+    '<div class="btns" style="justify-content:center">'+
+      '<button class="act btn-go" id="btnSave">💾 Salvar no ranking</button>'+
+      '<button class="act btn-next" id="btnAgain">↺ Jogar de novo</button>'+
+    '</div>'+
+    '<div id="saveMsg" class="note" style="margin-top:8px"></div>';
+  $('btnSave').addEventListener('click',async()=>{
+    const nm=($('playerName').value||'Anônimo').trim().slice(0,20)||'Anônimo';
+    $('btnSave').disabled=true; $('saveMsg').textContent='Salvando…';
+    const ok=await saveScore(nm,state.hits,secs,state.lvl);
+    $('saveMsg').textContent= ok?'✅ Pontuação salva no ranking!':'⚠️ Não foi possível salvar (offline). Sua partida valeu mesmo assim!';
+    if(ok) loadRanking(state.lvl);
+  });
+  $('btnAgain').addEventListener('click',()=>setLevel(state.lvl));
+  loadRanking(state.lvl);
+}
+
+/* ===================== Ligações ===================== */
+document.querySelectorAll('.pill').forEach(b=>b.addEventListener('click',()=>setLevel(b.dataset.lvl)));
+$('btnSim').addEventListener('click',simulate);
+$('btnNext').addEventListener('click',nextScenario);
+setLevel('basico');
+</script>
+</body>
+</html>
