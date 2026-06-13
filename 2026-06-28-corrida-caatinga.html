@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Corrida da Caatinga 🦎 | Runner · Biologia</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#1a0e00;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:100vh;padding:10px;font-family:"Segoe UI",system-ui,sans-serif;color:#f0e0c0}
+h1{font-size:1.4rem;margin:6px 0 2px;text-align:center}
+.tagline{font-size:.78rem;opacity:.65;margin-bottom:6px;text-align:center}
+.hud{display:flex;gap:10px;margin:4px 0 6px;font-size:.82rem;flex-wrap:wrap;justify-content:center}
+.hud span{background:rgba(255,255,255,.09);border-radius:8px;padding:3px 10px}
+.hud b{color:#fb923c}
+canvas{border:2px solid rgba(200,120,40,.25);border-radius:8px;display:block;max-width:100%}
+.save-box{margin-top:10px;display:none;flex-direction:column;align-items:center;gap:8px}
+.save-box input{padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-size:.95rem;width:220px;outline:none}
+.save-box button{padding:8px 20px;border-radius:8px;border:none;background:#ea580c;color:#fff;font-size:.9rem;cursor:pointer;font-weight:600}
+.ranking{width:min(780px,98vw);background:rgba(255,255,255,.05);border-radius:10px;padding:10px;margin-top:8px}
+.ranking h3{font-size:.78rem;opacity:.6;margin-bottom:6px}
+.rank-list{display:flex;flex-direction:column;gap:3px;max-height:150px;overflow-y:auto}
+.rank-item{display:flex;justify-content:space-between;font-size:.76rem;padding:3px 8px;background:rgba(255,255,255,.04);border-radius:5px}
+footer{margin-top:12px;opacity:.45;font-size:.68rem;text-align:center}
+</style>
+</head>
+<body>
+<h1>🦎 Corrida da Caatinga</h1>
+<p class="tagline">Runner · Biologia · Educação Física · Caatinga — ↑ ou Espaço pular · ↓ agachar</p>
+<div class="hud">
+  <span>Fase: <b id="hP">1/5</b></span>
+  <span>Pontos: <b id="hS">0</b></span>
+  <span>Vidas: <b id="hL">❤️❤️❤️</b></span>
+  <span>Meta: <b id="hD">0 m</b></span>
+</div>
+<canvas id="c" width="780" height="380"></canvas>
+<div class="save-box" id="saveBox">
+  <p style="font-size:.85rem;opacity:.8">🏆 Você cruzou a Caatinga! Salve seu recorde:</p>
+  <input type="text" id="pName" maxlength="24" placeholder="Seu nome…">
+  <button onclick="window.saveScore()">Salvar Pontuação</button>
+</div>
+<div class="ranking">
+  <h3>🏆 Ranking</h3>
+  <div class="rank-list" id="rankList"><p style="opacity:.45;font-size:.76rem;padding:4px">Carregando…</p></div>
+</div>
+<footer>Biologia · Educação Física · Caatinga Nordestina 🌵 | 2026-06-28 — Idealizado por Ernandes Sobreira</footer>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import{getFirestore,collection,addDoc,query,orderBy,limit,getDocs,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+const fbApp=initializeApp({apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"});
+const db=getFirestore(fbApp);
+const GAME_ID="2026-06-28-corrida-caatinga";
+
+const W=780,H=380,GROUND=320;
+const GRAV=1400,JUMP=-580;
+
+const PHASES=[
+ {spd:220,dist:1200,obsRate:.55,
+  fact:"A Caatinga é o único bioma 100% brasileiro e o único no mundo a predominar uma região semiárida tropical. Abriga mais de 10.000 espécies animais e vegetais.",
+  name:"Sertão Aberto",bgTop:'#3a1500',bgBot:'#1a0800'},
+ {spd:255,dist:1500,obsRate:.50,
+  fact:"O tatu-peba pode correr até 30 km/h e se enrolar completamente como uma bola de armadura quitinosa para se defender de predadores como onças e cobras.",
+  name:"Terra das Mandacarus",bgTop:'#2a0f00',bgBot:'#150800'},
+ {spd:290,dist:1800,obsRate:.45,
+  fact:"A ararinha-azul (Cyanopsitta spixii) é um símbolo da Caatinga. Extinta na natureza desde 2000, um programa de reintrodução libertou 8 aves no habitat em 2022.",
+  name:"Raso da Catarina",bgTop:'#200a00',bgBot:'#100500'},
+ {spd:325,dist:2000,obsRate:.40,
+  fact:"O umbuzeiro é chamado de 'Árvore da Vida' da Caatinga. Seus raízes-reservatório podem guardar até 3.000 litros de água, sustentando animais e humanos na seca.",
+  name:"Serra da Capivara",bgTop:'#180800',bgBot:'#0c0400'},
+ {spd:370,dist:2400,obsRate:.38,
+  fact:"A cisterna de placa é uma tecnologia social que captura e armazena água de chuva no semiárido brasileiro. Já beneficiou mais de 1 milhão de famílias na Caatinga.",
+  name:"Grande Sertão Final",bgTop:'#100600',bgBot:'#080300'},
+];
+
+// Obstacle types: emoji, w, h, isHigh (fly over), duck
+const OBS=[
+  {e:'🌵',w:28,h:50,duck:false},
+  {e:'🦂',w:26,h:22,duck:false},
+  {e:'🪨',w:36,h:30,duck:false},
+  {e:'🦅',w:30,h:26,duck:true,y:-60},  // flying: duck under
+  {e:'🌵',w:22,h:66,duck:false},
+];
+
+// Collectable: raindrops
+const COLL_E='💧';
+
+const c=document.getElementById('c');
+const ctx=c.getContext('2d');
+const keys={};
+let jumpBuf=0,coyote=0;
+document.addEventListener('keydown',e=>{keys[e.key]=true;if([' ','ArrowUp','ArrowDown'].includes(e.key))e.preventDefault();});
+document.addEventListener('keyup',e=>{keys[e.key]=false;});
+
+let gState='title',phase=0,score=0,lives=3;
+let lizard,obs,drops,parts,dist,totalDist,speed,legAnim;
+
+function initPhase(){
+  const ph=PHASES[phase];
+  speed=ph.spd;
+  lizard={x:110,y:GROUND-34,vy:0,w:36,h:32,grnd:true,ducking:false,inv:0,leg:0};
+  obs=[];drops=[];parts=[];
+  dist=0;totalDist=ph.dist;legAnim=0;
+  document.getElementById('hP').textContent=`${phase+1}/5`;
+  document.getElementById('hD').textContent=`0 / ${totalDist} m`;
+  gState='play';
+}
+
+function aabb(ax,ay,aw,ah,bx,by,bw,bh){return ax<bx+bw&&ax+aw>bx&&ay<by+bh&&ay+ah>by;}
+function spPart(x,y,col,n=5){for(let i=0;i<n;i++)parts.push({x,y,vx:(Math.random()-.5)*180,vy:-Math.random()*160-30,c:col,t:.7});}
+
+function update(dt){
+  if(gState!=='play')return;
+  const ph=PHASES[phase];
+
+  const J=keys['ArrowUp']||keys['w']||keys[' '];
+  const D=keys['ArrowDown']||keys['s'];
+
+  // Jump logic
+  if(J)jumpBuf=.12; else jumpBuf=Math.max(0,jumpBuf-dt);
+  if(!J)coyote=Math.max(0,coyote-dt);
+  if(jumpBuf>0&&coyote>0&&!lizard.ducking){
+    lizard.vy=JUMP;jumpBuf=0;coyote=0;
+    spPart(lizard.x+18,lizard.y+lizard.h,'#fb923c');
+  }
+
+  // Duck
+  lizard.ducking=D&&lizard.grnd;
+  lizard.h=lizard.ducking?18:32;
+
+  lizard.vy+=GRAV*dt;
+  if(lizard.vy>900)lizard.vy=900;
+  lizard.y+=lizard.vy*dt;
+  lizard.grnd=false;
+
+  if(lizard.y>=GROUND-lizard.h){lizard.y=GROUND-lizard.h;lizard.vy=0;lizard.grnd=true;coyote=.1;}
+
+  legAnim+=dt*10;
+
+  // Speed ramp
+  speed=ph.spd+dist*.015;
+
+  // Obstacle spawn
+  if(Math.random()<ph.obsRate*dt){
+    const ot=OBS[Math.floor(Math.random()*OBS.length)];
+    const oy=ot.y?GROUND-ot.h+ot.y:GROUND-ot.h;
+    obs.push({...ot,x:W,y:oy});
+  }
+
+  // Drop spawn
+  if(Math.random()<.8*dt){
+    drops.push({x:W+10,y:GROUND-80-Math.random()*100,t:0,got:false});
+  }
+
+  // Obs update
+  for(let i=obs.length-1;i>=0;i--){
+    const o=obs[i];
+    o.x-=speed*dt;
+    if(lizard.inv<=0&&aabb(lizard.x+4,lizard.y+4,lizard.w-8,lizard.h-8,o.x,o.y,o.w,o.h)){
+      lives--;document.getElementById('hL').textContent='❤️'.repeat(Math.max(0,lives));
+      lizard.inv=1.5;spPart(lizard.x,lizard.y,'#ef4444');
+      if(lives<=0){gState='over';return;}
+    }
+    if(o.x+o.w<0)obs.splice(i,1);
+  }
+
+  // Drops update
+  for(let i=drops.length-1;i>=0;i--){
+    const d=drops[i];
+    d.x-=speed*.4*dt;d.t+=dt*3;
+    if(!d.got&&aabb(lizard.x,lizard.y,lizard.w,lizard.h,d.x-10,d.y-10,20,20)){
+      d.got=true;score+=8;spPart(d.x,d.y,'#60a5fa',4);
+      document.getElementById('hS').textContent=score;
+    }
+    if(d.x<-20)drops.splice(i,1);
+  }
+
+  dist+=speed*dt;
+  score+=Math.floor(speed*dt*.1);
+  document.getElementById('hS').textContent=score;
+  document.getElementById('hD').textContent=`${Math.floor(dist)} / ${totalDist} m`;
+
+  if(dist>=totalDist){score+=300+phase*100;document.getElementById('hS').textContent=score;gState='phend';}
+
+  parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=350*dt;p.t-=dt;});
+  parts=parts.filter(p=>p.t>0);
+  if(lizard.inv>0)lizard.inv-=dt;
+}
+
+function drawLizard(){
+  const l=lizard;
+  if(l.inv>0&&Math.floor(l.inv*8)%2===0)return;
+  const duckShift=l.ducking?14:0;
+  ctx.save();
+  ctx.font=`${l.ducking?24:28}px serif`;
+  ctx.fillText('🦎',l.x,l.y+l.h+2+duckShift);
+  ctx.restore();
+}
+
+let lastT=0;
+function loop(t){const dt=Math.min((t-(lastT||t))/1000,.05);lastT=t;update(dt);render(t);requestAnimationFrame(loop);}
+
+function render(ts){
+  const ph=PHASES[phase]||PHASES[0];
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,ph.bgTop);g.addColorStop(1,ph.bgBot);
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+
+  // Sun
+  ctx.globalAlpha=.6;ctx.fillStyle='#fbbf24';
+  ctx.beginPath();ctx.arc(680,60,38,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=1;
+
+  // Distant landscape
+  ctx.fillStyle='rgba(120,50,10,.3)';
+  for(let i=0;i<8;i++){
+    const mx=(i*120+dist*.02)%W;
+    ctx.fillRect(mx,260,60,60);
+    ctx.fillRect(mx+20,240,20,80);
+  }
+
+  // Ground
+  ctx.fillStyle='#6b3510';ctx.fillRect(0,GROUND,W,H-GROUND);
+  ctx.fillStyle='#8b4513';ctx.fillRect(0,GROUND,W,5);
+  ctx.fillStyle='#5a2a08';
+  for(let i=0;i<12;i++){ctx.fillRect((i*80+dist*1.5)%W,GROUND+5,40,4);}
+
+  // Cacti in background (scrolling)
+  ctx.font='18px serif';
+  for(let i=0;i<5;i++){
+    const bx=((i*200+dist*.3)%W+W)%W;
+    ctx.fillText('🌵',bx,GROUND-5);
+  }
+
+  // Drops
+  drops.forEach(d=>{
+    if(d.got)return;
+    const bob=Math.sin(d.t)*.5;
+    ctx.font='16px serif';ctx.textAlign='center';ctx.fillText(COLL_E,d.x,d.y+bob);
+  });
+
+  // Obstacles
+  obs.forEach(o=>{
+    ctx.font=`${Math.max(20,o.h*.9)}px serif`;ctx.textAlign='center';
+    ctx.fillText(o.e,o.x+o.w/2,o.y+o.h);
+  });
+
+  // Particles
+  parts.forEach(p=>{
+    ctx.globalAlpha=Math.max(0,p.t/.7);
+    ctx.fillStyle=p.c;ctx.fillRect(p.x-3,p.y-3,6,6);
+    ctx.globalAlpha=1;
+  });
+
+  if(gState==='play'||gState==='phend')drawLizard();
+
+  // Progress bar
+  const pct=Math.min(1,dist/totalDist);
+  ctx.fillStyle='rgba(0,0,0,.4)';ctx.fillRect(10,10,200,12);
+  ctx.fillStyle='#fb923c';ctx.fillRect(10,10,200*pct,12);
+  ctx.fillStyle='rgba(255,255,255,.6)';ctx.font='10px sans-serif';ctx.textAlign='left';
+  ctx.fillText(`${Math.floor(pct*100)}%`,215,21);
+
+  ctx.textAlign='center';
+
+  if(gState==='title'){
+    ctx.fillStyle='rgba(0,0,0,.78)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fb923c';ctx.font='bold 36px sans-serif';ctx.fillText('🦎 Corrida da Caatinga',W/2,H/2-68);
+    ctx.fillStyle='#f0e0c0';ctx.font='16px sans-serif';ctx.fillText('Corra, pule e desvie pela Caatinga!',W/2,H/2-26);
+    ctx.fillStyle='#e0c090';ctx.font='14px sans-serif';
+    ctx.fillText('↑ / Espaço pular   ·   ↓ agachar',W/2,H/2+14);
+    ctx.fillStyle='#fbbf24';ctx.font='bold 19px sans-serif';
+    if(Math.sin(ts/300)>.2)ctx.fillText('▶  ESPAÇO para começar  ◀',W/2,H/2+57);
+    if(keys[' ']||keys['ArrowUp'])initPhase();
+    return;
+  }
+  if(gState==='phend'){
+    ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fb923c';ctx.font='bold 27px sans-serif';ctx.fillText(`✅ Fase ${phase+1} — ${PHASES[phase].name}`,W/2,65);
+    ctx.fillStyle='#f0e0c0';ctx.font='13.5px sans-serif';
+    const words=PHASES[phase].fact.split(' ');let line='',py=108;
+    for(const w of words){const tt=line+w+' ';if(ctx.measureText(tt).width>680&&line){ctx.fillText(line.trim(),W/2,py);py+=21;line=w+' ';}else line=tt;}
+    if(line)ctx.fillText(line.trim(),W/2,py);
+    ctx.fillStyle='#fbbf24';ctx.font='bold 17px sans-serif';
+    if(Math.sin(ts/300)>.2)ctx.fillText(phase<4?'ESPAÇO → próxima fase':'🎉 ESPAÇO → salvar recorde',W/2,H-38);
+    if(keys[' ']){if(phase<4){phase++;setTimeout(initPhase,80);}else{gState='win';document.getElementById('saveBox').style.display='flex';}}
+    return;
+  }
+  if(gState==='over'){
+    ctx.fillStyle='rgba(0,0,0,.85)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#ef4444';ctx.font='bold 34px sans-serif';ctx.fillText('💀 Game Over',W/2,H/2-40);
+    ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação: ${score}`,W/2,H/2+8);
+    ctx.fillStyle='#fbbf24';ctx.font='17px sans-serif';ctx.fillText('ESPAÇO → recomeçar',W/2,H/2+50);
+    if(keys[' ']){phase=0;score=0;lives=3;document.getElementById('hL').textContent='❤️❤️❤️';document.getElementById('hS').textContent=0;gState='title';}
+    return;
+  }
+  if(gState==='win'){
+    ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#4ade80';ctx.font='bold 30px sans-serif';ctx.fillText('🦎 Você cruzou a Caatinga!',W/2,90);
+    ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação: ${score}`,W/2,145);
+    ctx.fillStyle='#fb923c';ctx.font='14px sans-serif';ctx.fillText('Resistência, cor e vida no semiárido brasileiro. 🌵',W/2,185);
+    ctx.fillStyle='#fbbf24';ctx.font='15px sans-serif';ctx.fillText('Use o campo abaixo para salvar.',W/2,230);
+    return;
+  }
+  ctx.textAlign='left';
+}
+
+async function saveScore(){
+  const name=(document.getElementById('pName').value||'Anônimo').trim().slice(0,24);
+  await addDoc(collection(db,'games',GAME_ID,'scores'),{name,score,level:'Completo',seconds:0,ts:serverTimestamp()});
+  document.getElementById('saveBox').style.display='none';
+  loadRanking();
+}
+
+async function loadRanking(){
+  const rl=document.getElementById('rankList');
+  try{
+    const q=query(collection(db,'games',GAME_ID,'scores'),orderBy('score','desc'),limit(80));
+    const snap=await getDocs(q);
+    const docs=snap.docs.map(d=>d.data()).slice(0,10);
+    if(!docs.length){rl.innerHTML='<p style="opacity:.45;font-size:.76rem;padding:4px">Nenhum recorde ainda.</p>';return;}
+    rl.innerHTML=docs.map((d,i)=>`<div class="rank-item"><span>${['🥇','🥈','🥉'][i]||`${i+1}.`} ${d.name}</span><span>${d.score} pts</span></div>`).join('');
+  }catch(e){rl.innerHTML='<p style="opacity:.35;font-size:.76rem">Não foi possível carregar.</p>';}
+}
+
+window.saveScore=saveScore;
+requestAnimationFrame(loop);
+loadRanking();
+</script>
+</body>
+</html>

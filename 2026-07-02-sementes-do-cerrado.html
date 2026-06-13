@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sementes do Cerrado 🌱 | Plataforma · Espanhol · Biologia</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0f0a00;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:100vh;padding:10px;font-family:"Segoe UI",system-ui,sans-serif;color:#f0e0b0}
+h1{font-size:1.4rem;margin:6px 0 2px;text-align:center}
+.tagline{font-size:.78rem;opacity:.65;margin-bottom:6px;text-align:center}
+.hud{display:flex;gap:10px;margin:4px 0 6px;font-size:.82rem;flex-wrap:wrap;justify-content:center}
+.hud span{background:rgba(255,255,255,.09);border-radius:8px;padding:3px 10px}
+.hud b{color:#fcd34d}
+canvas{border:2px solid rgba(200,160,40,.22);border-radius:8px;display:block;max-width:100%}
+.save-box{margin-top:10px;display:none;flex-direction:column;align-items:center;gap:8px}
+.save-box input{padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-size:.95rem;width:220px;outline:none}
+.save-box button{padding:8px 20px;border-radius:8px;border:none;background:#b45309;color:#fff;font-size:.9rem;cursor:pointer;font-weight:600}
+.ranking{width:min(780px,98vw);background:rgba(255,255,255,.05);border-radius:10px;padding:10px;margin-top:8px}
+.ranking h3{font-size:.78rem;opacity:.6;margin-bottom:6px}
+.rank-list{display:flex;flex-direction:column;gap:3px;max-height:150px;overflow-y:auto}
+.rank-item{display:flex;justify-content:space-between;font-size:.76rem;padding:3px 8px;background:rgba(255,255,255,.04);border-radius:5px}
+footer{margin-top:12px;opacity:.45;font-size:.68rem;text-align:center}
+</style>
+</head>
+<body>
+<h1>🌱 Sementes do Cerrado</h1>
+<p class="tagline">Plataforma · Espanhol · Biologia · Cerrado — ← → mover · ↑ ou Espaço pular</p>
+<div class="hud">
+  <span>Fase: <b id="hP">1/5</b></span>
+  <span>Pontos: <b id="hS">0</b></span>
+  <span>Vidas: <b id="hL">❤️❤️❤️</b></span>
+  <span>Sementes: <b id="hSE">0/0</b></span>
+</div>
+<canvas id="c" width="780" height="410"></canvas>
+<div class="save-box" id="saveBox">
+  <p style="font-size:.85rem;opacity:.8">🏆 ¡Cerrado replantado! Salve seu recorde:</p>
+  <input type="text" id="pName" maxlength="24" placeholder="Seu nome…">
+  <button onclick="window.saveScore()">Salvar Pontuação</button>
+</div>
+<div class="ranking">
+  <h3>🏆 Ranking</h3>
+  <div class="rank-list" id="rankList"><p style="opacity:.45;font-size:.76rem;padding:4px">Carregando…</p></div>
+</div>
+<footer>Biologia · Espanhol · Cerrado Brasileiro 🌻 | 2026-07-02 — Idealizado por Ernandes Sobreira</footer>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import{getFirestore,collection,addDoc,query,orderBy,limit,getDocs,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+const fbApp=initializeApp({apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"});
+const db=getFirestore(fbApp);
+const GAME_ID="2026-07-02-sementes-do-cerrado";
+
+const W=780,H=410,GY=372;
+const GRAV=1300,JSPD=-575,MSPD=200;
+
+// Bilingual facts (PT + ES)
+const PHASES=[
+{name:"Campo Sujo / Campo Sucio",
+ plats:[
+  {x:0,y:GY,w:W,h:38,c:'#5a3800'},{x:150,y:290,w:130,h:16,c:'#7a4800'},{x:390,y:255,w:110,h:16,c:'#7a4800'},{x:580,y:310,w:140,h:16,c:'#7a4800'}
+ ],
+ seeds:[{x:80,y:GY-14},{x:220,y:276},{x:450,y:241},{x:640,y:296},{x:350,y:GY-14}],
+ fires:[{x:480,y:GY-24,vx:65,dir:1}],
+ pt:"O Cerrado é o berço das águas do Brasil: abriga as nascentes dos grandes rios Araguaia, Tocantins, São Francisco e Paraná.",
+ es:"El Cerrado es la cuna del agua de Brasil: alberga las nacientes de los ríos Araguaia, Tocantins, São Francisco y Paraná."},
+{name:"Vereda / Vereda",
+ plats:[
+  {x:0,y:GY,w:180,h:38,c:'#5a3800'},{x:230,y:GY,w:140,h:38,c:'#5a3800'},{x:420,y:GY,w:140,h:38,c:'#5a3800'},{x:610,y:GY,w:170,h:38,c:'#5a3800'},
+  {x:90,y:248,w:100,h:16,c:'#7a4800'},{x:320,y:212,w:100,h:16,c:'#7a4800'},{x:545,y:260,w:100,h:16,c:'#7a4800'}
+ ],
+ seeds:[{x:50,y:GY-14},{x:280,y:GY-14},{x:470,y:GY-14},{x:660,y:GY-14},{x:140,y:234},{x:365,y:198},{x:595,y:246}],
+ fires:[{x:310,y:GY-24,vx:80,dir:1},{x:590,y:GY-24,vx:80,dir:-1}],
+ pt:"O Cerrado possui 11.000 espécies de plantas, sendo 4.400 endêmicas. O pequizeiro e o buriti são ícones do bioma.",
+ es:"El Cerrado tiene 11.000 especies de plantas, siendo 4.400 endémicas. El pequizeiro y el buriti son íconos del bioma."},
+{name:"Chapada / Meseta",
+ plats:[
+  {x:0,y:GY,w:110,h:38,c:'#6a4000'},{x:165,y:GY,w:110,h:38,c:'#6a4000'},{x:330,y:GY,w:110,h:38,c:'#6a4000'},{x:495,y:GY,w:110,h:38,c:'#6a4000'},{x:660,y:GY,w:120,h:38,c:'#6a4000'},
+  {x:60,y:272,w:85,h:16,c:'#8a5000'},{x:238,y:238,w:85,h:16,c:'#8a5000'},{x:406,y:202,w:85,h:16,c:'#8a5000'},{x:575,y:258,w:85,h:16,c:'#8a5000'}
+ ],
+ seeds:[{x:35,y:GY-14},{x:200,y:GY-14},{x:365,y:GY-14},{x:530,y:GY-14},{x:695,y:GY-14},{x:100,y:258},{x:278,y:224},{x:446,y:188}],
+ fires:[{x:142,y:GY-24,vx:90,dir:1},{x:432,y:GY-24,vx:90,dir:-1},{x:645,y:GY-24,vx:75,dir:1}],
+ pt:"A anta (tapir) é a maior dispersora de sementes do Cerrado. Ela come frutas inteiras e planta árvores em toda a sua rota.",
+ es:"El tapir es el mayor dispersor de semillas del Cerrado. Come frutas enteras y siembra árboles a lo largo de toda su ruta."},
+{name:"Cerradão em Chamas / Cerradón en Llamas",
+ plats:[
+  {x:0,y:GY,w:90,h:38,c:'#6a3000'},{x:150,y:GY,w:90,h:38,c:'#6a3000'},{x:300,y:GY,w:90,h:38,c:'#6a3000'},{x:450,y:GY,w:90,h:38,c:'#6a3000'},{x:610,y:GY,w:170,h:38,c:'#6a3000'},
+  {x:45,y:295,w:72,h:16,c:'#8a4000'},{x:195,y:260,w:72,h:16,c:'#8a4000'},{x:348,y:225,w:72,h:16,c:'#8a4000'},{x:498,y:272,w:72,h:16,c:'#8a4000'},
+  {x:120,y:198,w:62,h:16,c:'#8a4000'},{x:428,y:175,w:62,h:16,c:'#8a4000'}
+ ],
+ seeds:[{x:25,y:GY-14},{x:180,y:GY-14},{x:330,y:GY-14},{x:480,y:GY-14},{x:650,y:GY-14},{x:80,y:281},{x:230,y:246},{x:383,y:211},{x:533,y:258},{x:151,y:184}],
+ fires:[{x:122,y:GY-24,vx:100,dir:1},{x:345,y:GY-24,vx:100,dir:-1},{x:573,y:GY-24,vx:100,dir:1},{x:242,y:GY-24,vx:82,dir:1}],
+ pt:"O Cerrado já perdeu mais de 50% de sua cobertura original para soja, gado e cana. É o bioma mais ameaçado do Brasil.",
+ es:"El Cerrado ya perdió más del 50% de su cobertura original por soya, ganado y caña. Es el bioma más amenazado de Brasil."},
+{name:"Renascimento / Renacimiento",
+ plats:[
+  {x:0,y:GY,w:72,h:38,c:'#5a2800'},{x:118,y:GY,w:72,h:38,c:'#5a2800'},{x:248,y:GY,w:72,h:38,c:'#5a2800'},{x:378,y:GY,w:72,h:38,c:'#5a2800'},{x:508,y:GY,w:72,h:38,c:'#5a2800'},{x:638,y:GY,w:142,h:38,c:'#5a2800'},
+  {x:38,y:308,w:58,h:16,c:'#7a3800'},{x:160,y:275,w:58,h:16,c:'#7a3800'},{x:285,y:242,w:58,h:16,c:'#7a3800'},{x:410,y:208,w:58,h:16,c:'#7a3800'},{x:535,y:268,w:58,h:16,c:'#7a3800'},
+  {x:108,y:218,w:52,h:16,c:'#7a3800'},{x:365,y:165,w:52,h:16,c:'#7a3800'},{x:625,y:208,w:52,h:16,c:'#7a3800'}
+ ],
+ seeds:[{x:22,y:GY-14},{x:140,y:GY-14},{x:268,y:GY-14},{x:398,y:GY-14},{x:528,y:GY-14},{x:688,y:GY-14},
+        {x:66,y:294},{x:188,y:261},{x:313,y:228},{x:438,y:194},{x:563,y:254},{x:134,y:204}],
+ fires:[{x:98,y:GY-24,vx:115,dir:1},{x:258,y:GY-24,vx:115,dir:-1},{x:418,y:GY-24,vx:115,dir:1},{x:565,y:GY-24,vx:105,dir:-1},{x:182,y:GY-24,vx:90,dir:1},{x:476,y:GY-24,vx:90,dir:-1}],
+ pt:"Recuperar 12 milhões de hectares do Cerrado poderia reduzir 1,5 bilhão de toneladas de CO₂ até 2030 e garantir água para o agronegócio brasileiro.",
+ es:"Recuperar 12 millones de hectáreas del Cerrado podría reducir 1,5 mil millones de toneladas de CO₂ hasta 2030 y garantizar agua para la agroindustria brasileña."}
+];
+
+const c=document.getElementById('c');
+const ctx=c.getContext('2d');
+const keys={};
+let coyote=0,jBuf=0;
+document.addEventListener('keydown',e=>{keys[e.key]=true;if([' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key))e.preventDefault();});
+document.addEventListener('keyup',e=>{keys[e.key]=false;});
+
+let gState='title',phase=0,score=0,lives=3;
+let plant,seeds,fires,parts,seFound;
+
+function initPhase(){
+  const ph=PHASES[phase];
+  plant={x:55,y:GY-36,vx:0,vy:0,w:30,h:34,face:1,grnd:false,inv:0};
+  seeds=ph.seeds.map(s=>({...s,got:false,t:Math.random()*Math.PI*2}));
+  fires=ph.fires.map(f=>({...f,w:28,h:26}));
+  parts=[];seFound=0;
+  document.getElementById('hP').textContent=`${phase+1}/5`;
+  document.getElementById('hSE').textContent=`0/${seeds.length}`;
+  gState='play';
+}
+
+function aabb(ax,ay,aw,ah,bx,by,bw,bh){return ax<bx+bw&&ax+aw>bx&&ay<by+bh&&ay+ah>by;}
+function spPart(x,y,col,n=6){for(let i=0;i<n;i++)parts.push({x,y,vx:(Math.random()-.5)*180,vy:-Math.random()*170-40,c:col,t:.7});}
+
+function update(dt){
+  if(gState!=='play')return;
+  const ph=PHASES[phase];
+  const L=keys['ArrowLeft']||keys['a'];
+  const R=keys['ArrowRight']||keys['d'];
+  const J=keys['ArrowUp']||keys['w']||keys[' '];
+
+  if(L){plant.vx=-MSPD;plant.face=-1;}
+  else if(R){plant.vx=MSPD;plant.face=1;}
+  else plant.vx*=.8;
+
+  plant.vy+=GRAV*dt;if(plant.vy>900)plant.vy=900;
+  if(J)jBuf=.12;else jBuf=Math.max(0,jBuf-dt);
+  if(!J)coyote=Math.max(0,coyote-dt);
+  if(jBuf>0&&coyote>0){plant.vy=JSPD;jBuf=0;coyote=0;spPart(plant.x+15,plant.y+plant.h,'#fcd34d');}
+
+  plant.x+=plant.vx*dt;plant.y+=plant.vy*dt;
+  plant.x=Math.max(0,Math.min(W-plant.w,plant.x));
+  plant.grnd=false;
+
+  for(const p of ph.plats){
+    if(!aabb(plant.x,plant.y,plant.w,plant.h,p.x,p.y,p.w,p.h))continue;
+    const pb=plant.y+plant.h-plant.vy*dt;
+    const pt=plant.y-plant.vy*dt;
+    const pr=plant.x+plant.w-plant.vx*dt;
+    const pl=plant.x-plant.vx*dt;
+    if(pb<=p.y+4&&plant.vy>=0){plant.y=p.y-plant.h;plant.vy=0;plant.grnd=true;coyote=.1;}
+    else if(pt>=p.y+p.h-4&&plant.vy<0){plant.y=p.y+p.h;plant.vy=0;}
+    else if(pr<=p.x+4&&plant.vx>0){plant.x=p.x-plant.w;plant.vx=0;}
+    else if(pl>=p.x+p.w-4&&plant.vx<0){plant.x=p.x+p.w;plant.vx=0;}
+  }
+  if(plant.y>H+60){loseLife();return;}
+
+  let got=0;
+  seeds.forEach(s=>{
+    s.t+=dt*3;
+    if(!s.got&&aabb(plant.x,plant.y,plant.w,plant.h,s.x-10,s.y-12,20,20)){
+      s.got=true;seFound++;score+=15;spPart(s.x,s.y,'#fcd34d');
+    }
+    if(s.got)got++;
+  });
+  document.getElementById('hSE').textContent=`${got}/${seeds.length}`;
+  document.getElementById('hS').textContent=score;
+  if(got===seeds.length){score+=150+phase*60;document.getElementById('hS').textContent=score;gState='phend';return;}
+
+  fires.forEach(f=>{
+    f.x+=f.vx*f.dir*dt;
+    if(f.x+f.w>=W||f.x<=0)f.dir*=-1;
+    if(plant.inv<=0&&aabb(plant.x,plant.y,plant.w,plant.h,f.x,f.y,f.w,f.h)){loseLife();}
+  });
+
+  parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=380*dt;p.t-=dt;});
+  parts=parts.filter(p=>p.t>0);
+  if(plant.inv>0)plant.inv-=dt;
+}
+
+function loseLife(){
+  lives--;document.getElementById('hL').textContent='❤️'.repeat(Math.max(0,lives));
+  if(lives<=0){gState='over';return;}
+  plant.x=55;plant.y=GY-36;plant.vx=0;plant.vy=0;plant.inv=2;
+  spPart(plant.x+15,plant.y+17,'#ef4444');
+}
+
+let lastT=0;
+function loop(t){const dt=Math.min((t-(lastT||t))/1000,.05);lastT=t;update(dt);render(t);requestAnimationFrame(loop);}
+
+function render(ts){
+  const ph=PHASES[phase]||PHASES[0];
+  const phase_pct=phase/4;
+  const topC=`hsl(${35+phase_pct*10},${50-phase_pct*20}%,${8+phase_pct*5}%)`;
+  const botC=`hsl(${28+phase_pct*10},${45-phase_pct*15}%,${4+phase_pct*4}%)`;
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,topC);g.addColorStop(1,botC);
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+
+  // Sun
+  ctx.globalAlpha=.5;ctx.fillStyle='#fcd34d';
+  ctx.beginPath();ctx.arc(700,55,44,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=1;
+
+  // Rolling hills background
+  ctx.fillStyle='rgba(80,45,5,.25)';
+  for(let i=0;i<5;i++){
+    ctx.beginPath();
+    ctx.arc(i*200+60,380,120,0,Math.PI,true);
+    ctx.closePath();ctx.fill();
+  }
+
+  // Platforms
+  for(const p of ph.plats){
+    ctx.fillStyle=p.c||'#5a3800';ctx.fillRect(p.x,p.y,p.w,p.h);
+    ctx.fillStyle='#8a6400';ctx.fillRect(p.x,p.y,p.w,4);
+    ctx.fillStyle='#6a4800';ctx.fillRect(p.x+2,p.y,p.w-4,3);
+  }
+
+  // Seeds
+  seeds.forEach(s=>{
+    if(s.got)return;
+    const bob=Math.sin(s.t)*3;
+    ctx.font='18px serif';ctx.textAlign='center';ctx.fillText('🌱',s.x-9,s.y+bob+2);
+    ctx.globalAlpha=.4;ctx.fillStyle='#fcd34d';
+    ctx.beginPath();ctx.arc(s.x,s.y+bob-4,8,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;
+  });
+
+  // Fires
+  fires.forEach(f=>{
+    const fl=Math.sin(ts/80)*.15+.9;
+    ctx.globalAlpha=fl;ctx.font='26px serif';ctx.textAlign='center';
+    ctx.fillText('🔥',f.x-2,f.y+f.h+2);
+    ctx.globalAlpha=1;
+  });
+
+  // Particles
+  parts.forEach(p=>{
+    ctx.globalAlpha=Math.max(0,p.t/.7);
+    ctx.fillStyle=p.c;ctx.fillRect(p.x-3,p.y-3,6,6);
+    ctx.globalAlpha=1;
+  });
+
+  // Plant (player)
+  if(gState==='play'||gState==='phend'){
+    if(!(plant.inv>0&&Math.floor(plant.inv*8)%2===0)){
+      ctx.save();
+      ctx.font='30px serif';ctx.textAlign='center';
+      if(plant.face===-1){ctx.scale(-1,1);ctx.fillText('🌿',-plant.x-15,plant.y+plant.h+2);}
+      else ctx.fillText('🌿',plant.x+15,plant.y+plant.h+2);
+      ctx.restore();
+    }
+  }
+
+  ctx.textAlign='center';
+
+  if(gState==='title'){
+    ctx.fillStyle='rgba(0,0,0,.78)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fcd34d';ctx.font='bold 34px sans-serif';ctx.fillText('🌱 Sementes do Cerrado',W/2,H/2-75);
+    ctx.fillStyle='#f0e0b0';ctx.font='15px sans-serif';ctx.fillText('Coleta las semillas — Colete as sementes!',W/2,H/2-35);
+    ctx.fillStyle='#e0c880';ctx.font='14px sans-serif';ctx.fillText('← → mover   ·   ↑ ou Espaço pular',W/2,H/2+5);
+    ctx.fillStyle='rgba(200,240,200,.7)';ctx.font='13px sans-serif';ctx.fillText('🇧🇷 Português + 🇪🇸 Español — bilingue!',W/2,H/2+38);
+    ctx.fillStyle='#fbbf24';ctx.font='bold 19px sans-serif';
+    if(Math.sin(ts/300)>.2)ctx.fillText('▶  ESPAÇO para começar  ◀',W/2,H/2+75);
+    if(keys[' ']||keys['ArrowUp'])initPhase();
+    return;
+  }
+  if(gState==='phend'){
+    ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fcd34d';ctx.font='bold 26px sans-serif';ctx.fillText(`🌻 Fase ${phase+1} — ${ph.name}`,W/2,55);
+    ctx.fillStyle='#f0e0b0';ctx.font='13px sans-serif';
+    // PT
+    ctx.fillStyle='rgba(100,220,100,.8)';ctx.fillText('🇧🇷',W/2,88);
+    ctx.fillStyle='#d0f0c0';
+    const wpt=ph.pt.split(' ');let lp='',yp=112;
+    for(const w of wpt){const tt=lp+w+' ';if(ctx.measureText(tt).width>680&&lp){ctx.fillText(lp.trim(),W/2,yp);yp+=19;lp=w+' ';}else lp=tt;}
+    if(lp)ctx.fillText(lp.trim(),W/2,yp);yp+=30;
+    // ES
+    ctx.fillStyle='rgba(220,220,80,.8)';ctx.fillText('🇪🇸',W/2,yp);yp+=22;
+    ctx.fillStyle='#f0f0c0';
+    const wes=ph.es.split(' ');let le='';
+    for(const w of wes){const tt=le+w+' ';if(ctx.measureText(tt).width>680&&le){ctx.fillText(le.trim(),W/2,yp);yp+=19;le=w+' ';}else le=tt;}
+    if(le)ctx.fillText(le.trim(),W/2,yp);
+    ctx.fillStyle='#fbbf24';ctx.font='bold 17px sans-serif';
+    if(Math.sin(ts/300)>.2)ctx.fillText(phase<4?'ESPAÇO → próxima fase / siguiente fase':'🎉 ESPAÇO → salvar recorde',W/2,H-38);
+    if(keys[' ']){if(phase<4){phase++;setTimeout(initPhase,80);}else{gState='win';document.getElementById('saveBox').style.display='flex';}}
+    return;
+  }
+  if(gState==='over'){
+    ctx.fillStyle='rgba(0,0,0,.85)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#ef4444';ctx.font='bold 34px sans-serif';ctx.fillText('💀 Game Over / Juego terminado',W/2,H/2-40);
+    ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação / Puntuación: ${score}`,W/2,H/2+8);
+    ctx.fillStyle='#fbbf24';ctx.font='17px sans-serif';ctx.fillText('ESPAÇO → recomeçar',W/2,H/2+50);
+    if(keys[' ']){phase=0;score=0;lives=3;document.getElementById('hL').textContent='❤️❤️❤️';document.getElementById('hS').textContent=0;gState='title';}
+    return;
+  }
+  if(gState==='win'){
+    ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fcd34d';ctx.font='bold 28px sans-serif';ctx.fillText('🌻 ¡Cerrado Renacido! / Cerrado Renascido!',W/2,90);
+    ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontos / Puntos: ${score}`,W/2,145);
+    ctx.fillStyle='#fcd34d';ctx.font='14px sans-serif';ctx.fillText('Cada semente é uma promessa de vida. / Cada semilla es una promesa de vida. 🌱',W/2,183);
+    ctx.fillStyle='#fbbf24';ctx.font='15px sans-serif';ctx.fillText('Use o campo abaixo para salvar.',W/2,228);
+    return;
+  }
+  ctx.textAlign='left';
+}
+
+async function saveScore(){
+  const name=(document.getElementById('pName').value||'Anônimo').trim().slice(0,24);
+  await addDoc(collection(db,'games',GAME_ID,'scores'),{name,score,level:'Completo',seconds:0,ts:serverTimestamp()});
+  document.getElementById('saveBox').style.display='none';
+  loadRanking();
+}
+
+async function loadRanking(){
+  const rl=document.getElementById('rankList');
+  try{
+    const q=query(collection(db,'games',GAME_ID,'scores'),orderBy('score','desc'),limit(80));
+    const snap=await getDocs(q);
+    const docs=snap.docs.map(d=>d.data()).slice(0,10);
+    if(!docs.length){rl.innerHTML='<p style="opacity:.45;font-size:.76rem;padding:4px">Nenhum recorde ainda.</p>';return;}
+    rl.innerHTML=docs.map((d,i)=>`<div class="rank-item"><span>${['🥇','🥈','🥉'][i]||`${i+1}.`} ${d.name}</span><span>${d.score} pts</span></div>`).join('');
+  }catch(e){rl.innerHTML='<p style="opacity:.35;font-size:.76rem">Não foi possível carregar.</p>';}
+}
+
+window.saveScore=saveScore;
+requestAnimationFrame(loop);
+loadRanking();
+</script>
+</body>
+</html>

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tamanduazinho 🦔 | Plataforma · Pantanal</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a1a06;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:100vh;padding:10px;font-family:"Segoe UI",system-ui,sans-serif;color:#d4edda}
+h1{font-size:1.4rem;margin:6px 0 2px;text-align:center}
+.tagline{font-size:.78rem;opacity:.65;margin-bottom:6px;text-align:center}
+.hud{display:flex;gap:10px;margin:4px 0 6px;font-size:.82rem;flex-wrap:wrap;justify-content:center}
+.hud span{background:rgba(255,255,255,.09);border-radius:8px;padding:3px 10px}
+.hud b{color:#4ade80}
+canvas{border:2px solid rgba(255,255,255,.13);border-radius:8px;display:block;max-width:100%;background:#1a3a0a}
+.ranking{width:min(780px,98vw);background:rgba(255,255,255,.05);border-radius:10px;padding:10px;margin-top:8px}
+.ranking h3{font-size:.78rem;opacity:.6;margin-bottom:6px}
+.rank-list{display:flex;flex-direction:column;gap:3px;max-height:150px;overflow-y:auto}
+.rank-item{display:flex;justify-content:space-between;font-size:.76rem;padding:3px 8px;background:rgba(255,255,255,.04);border-radius:5px}
+.save-box{margin-top:10px;display:none;flex-direction:column;align-items:center;gap:8px}
+.save-box input{padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-size:.95rem;width:220px;outline:none}
+.save-box button{padding:8px 20px;border-radius:8px;border:none;background:#16a34a;color:#fff;font-size:.9rem;cursor:pointer;font-weight:600}
+.save-box button:hover{background:#15803d}
+footer{margin-top:12px;opacity:.45;font-size:.68rem;text-align:center}
+</style>
+</head>
+<body>
+<h1>🦔 Tamanduazinho</h1>
+<p class="tagline">Plataforma · Biologia · Educação Física · Pantanal — ← → mover · ↑ ou Espaço pular</p>
+<div class="hud">
+  <span>Fase: <b id="hP">1/5</b></span>
+  <span>Pontos: <b id="hS">0</b></span>
+  <span>Vidas: <b id="hL">❤️❤️❤️</b></span>
+  <span>Formigas: <b id="hA">0/0</b></span>
+</div>
+<canvas id="c" width="780" height="400"></canvas>
+<div class="save-box" id="saveBox">
+  <p style="font-size:.85rem;opacity:.8">🏆 Você completou todos os 5 fases! Salve seu recorde:</p>
+  <input type="text" id="pName" maxlength="24" placeholder="Seu nome…">
+  <button onclick="window.saveScore()">Salvar Pontuação</button>
+</div>
+<div class="ranking">
+  <h3>🏆 Ranking</h3>
+  <div class="rank-list" id="rankList"><p style="opacity:.45;font-size:.76rem;padding:4px">Carregando…</p></div>
+</div>
+<footer>Biologia · Tamanduá-bandeira · Pantanal 🌿 | 2026-06-24 — Idealizado por Ernandes Sobreira</footer>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import{getFirestore,collection,addDoc,query,orderBy,limit,getDocs,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+const fbApp=initializeApp({apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"});
+const db=getFirestore(fbApp);
+const GAME_ID="2026-06-24-tamanduazinho";
+
+const W=780,H=400,GY=358;
+const GRAV=1300,JSPD=-570,MSPD=205;
+
+const PHASES=[
+{name:"Campo Limpo",bgTop:"#1a3a0a",bgBot:"#2a5a0a",
+ plats:[{x:0,y:GY,w:W,h:42},{x:160,y:285,w:130,h:16},{x:400,y:255,w:120,h:16},{x:590,y:300,w:150,h:16}],
+ ants:[{x:90,y:GY-14},{x:230,y:271},{x:460,y:241},{x:650,y:286},{x:340,y:GY-14}],
+ fires:[{x:490,y:GY-26,vx:65,dir:1}],
+ fact:"O tamanduá-bandeira come até 35.000 formigas por dia com sua língua de 60 cm — sem mastigar, pois não tem dentes!"},
+{name:"Vereda dos Buritis",bgTop:"#0a2a16",bgBot:"#0a4a2a",
+ plats:[{x:0,y:GY,w:190,h:42},{x:240,y:GY,w:150,h:42},{x:440,y:GY,w:140,h:42},{x:630,y:GY,w:150,h:42},
+        {x:100,y:245,w:100,h:16},{x:330,y:210,w:100,h:16},{x:560,y:265,w:100,h:16}],
+ ants:[{x:55,y:GY-14},{x:290,y:GY-14},{x:510,y:GY-14},{x:680,y:GY-14},{x:150,y:231},{x:375,y:196},{x:605,y:251}],
+ fires:[{x:315,y:GY-26,vx:80,dir:1},{x:600,y:GY-26,vx:80,dir:-1}],
+ fact:"O tamanduá-bandeira pesa até 40 kg e tem garras dianteiras tão fortes que podem afastar onças e pumas em autodefesa."},
+{name:"Mata Ciliar",bgTop:"#0a1a28",bgBot:"#0a2a38",
+ plats:[{x:0,y:GY,w:120,h:42},{x:175,y:GY,w:110,h:42},{x:340,y:GY,w:110,h:42},{x:510,y:GY,w:110,h:42},{x:680,y:GY,w:100,h:42},
+        {x:70,y:270,w:85,h:16},{x:245,y:235,w:85,h:16},{x:415,y:200,w:85,h:16},{x:595,y:255,w:85,h:16}],
+ ants:[{x:40,y:GY-14},{x:215,y:GY-14},{x:380,y:GY-14},{x:550,y:GY-14},{x:710,y:GY-14},{x:110,y:256},{x:285,y:221},{x:455,y:186}],
+ fires:[{x:145,y:GY-26,vx:90,dir:1},{x:440,y:GY-26,vx:90,dir:-1},{x:660,y:GY-26,vx:75,dir:1}],
+ fact:"A espécie é vulnerável à extinção no Brasil. Queimadas, atropelamentos em rodovias e perda de habitat são suas maiores ameaças."},
+{name:"Cerradão em Chamas",bgTop:"#1a0a00",bgBot:"#2a1500",
+ plats:[{x:0,y:GY,w:95,h:42},{x:155,y:GY,w:95,h:42},{x:310,y:GY,w:95,h:42},{x:465,y:GY,w:95,h:42},{x:620,y:GY,w:160,h:42},
+        {x:45,y:292,w:75,h:16},{x:200,y:258,w:75,h:16},{x:355,y:222,w:75,h:16},{x:505,y:272,w:75,h:16},
+        {x:120,y:195,w:65,h:16},{x:430,y:170,w:65,h:16},{x:650,y:200,w:65,h:16}],
+ ants:[{x:30,y:GY-14},{x:185,y:GY-14},{x:340,y:GY-14},{x:495,y:GY-14},{x:660,y:GY-14},
+       {x:82,y:278},{x:235,y:244},{x:390,y:208},{x:540,y:258},{x:152,y:181}],
+ fires:[{x:125,y:GY-26,vx:100,dir:1},{x:350,y:GY-26,vx:100,dir:-1},{x:580,y:GY-26,vx:100,dir:1},{x:245,y:GY-26,vx:80,dir:1}],
+ fact:"Em 2020, o Pantanal perdeu 26% de sua área para incêndios — pior temporada em 50 anos. O tamanduá-bandeira foi gravemente afetado."},
+{name:"Pantanal Resiste",bgTop:"#100500",bgBot:"#200a00",
+ plats:[{x:0,y:GY,w:75,h:42},{x:120,y:GY,w:75,h:42},{x:250,y:GY,w:75,h:42},{x:380,y:GY,w:75,h:42},{x:510,y:GY,w:75,h:42},{x:640,y:GY,w:140,h:42},
+        {x:40,y:305,w:60,h:16},{x:165,y:272,w:60,h:16},{x:295,y:238,w:60,h:16},{x:425,y:204,w:60,h:16},{x:550,y:265,w:60,h:16},
+        {x:110,y:215,w:55,h:16},{x:370,y:165,w:55,h:16},{x:620,y:205,w:55,h:16}],
+ ants:[{x:25,y:GY-14},{x:148,y:GY-14},{x:275,y:GY-14},{x:403,y:GY-14},{x:535,y:GY-14},{x:695,y:GY-14},
+       {x:68,y:291},{x:192,y:258},{x:323,y:224},{x:453,y:190},{x:578,y:251},{x:137,y:201}],
+ fires:[{x:100,y:GY-26,vx:115,dir:1},{x:260,y:GY-26,vx:115,dir:-1},{x:420,y:GY-26,vx:115,dir:1},{x:570,y:GY-26,vx:105,dir:-1},{x:185,y:GY-26,vx:90,dir:1},{x:480,y:GY-26,vx:90,dir:-1}],
+ fact:"O tamanduá-bandeira é considerado bioindicador da saúde do ecossistema. Proteger o Pantanal é proteger essa espécie e toda a biodiversidade que depende dela."}
+];
+
+const c=document.getElementById('c');
+const ctx=c.getContext('2d');
+const keys={};
+document.addEventListener('keydown',e=>{keys[e.key]=true;if([' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key))e.preventDefault();});
+document.addEventListener('keyup',e=>{keys[e.key]=false;});
+
+let gState='title',phase=0,score=0,lives=3,ants,fires,parts,player,coyote=0,jBuf=0;
+
+function mkPlayer(){return{x:60,y:GY-38,vx:0,vy:0,w:44,h:36,face:1,grnd:false,inv:0};}
+function initPhase(){
+  const ph=PHASES[phase];
+  player=mkPlayer();
+  ants=ph.ants.map(a=>({...a,got:false,t:Math.random()*Math.PI*2}));
+  fires=ph.fires.map(f=>({...f,x:f.x,w:30,h:26}));
+  parts=[];
+  document.getElementById('hP').textContent=`${phase+1}/5`;
+  document.getElementById('hA').textContent=`0/${ants.length}`;
+  gState='play';
+}
+
+function aabb(ax,ay,aw,ah,bx,by,bw,bh){return ax<bx+bw&&ax+aw>bx&&ay<by+bh&&ay+ah>by;}
+
+function spPart(x,y,col){for(let i=0;i<7;i++)parts.push({x,y,vx:(Math.random()-.5)*190,vy:-Math.random()*200-60,c:col,t:.7});}
+
+function update(dt){
+  if(gState!=='play')return;
+  const L=keys['ArrowLeft']||keys['a'];
+  const R=keys['ArrowRight']||keys['d'];
+  const J=keys['ArrowUp']||keys['w']||keys[' '];
+
+  if(L){player.vx=-MSPD;player.face=-1;}
+  else if(R){player.vx=MSPD;player.face=1;}
+  else player.vx*=.8;
+
+  player.vy+=GRAV*dt;
+  if(player.vy>900)player.vy=900;
+
+  if(J)jBuf=.12; else jBuf=Math.max(0,jBuf-dt);
+  if(!J)coyote=Math.max(0,coyote-dt);
+  if(jBuf>0&&coyote>0){player.vy=JSPD;jBuf=0;coyote=0;spPart(player.x+22,player.y+player.h,'#4ade80');}
+
+  player.x+=player.vx*dt;
+  player.y+=player.vy*dt;
+  player.x=Math.max(0,Math.min(W-player.w,player.x));
+  player.grnd=false;
+
+  for(const p of PHASES[phase].plats){
+    if(!aabb(player.x,player.y,player.w,player.h,p.x,p.y,p.w,p.h))continue;
+    const wasAbove=player.y-player.vy*dt+player.h<=p.y+4;
+    const wasBelow=player.y-player.vy*dt>=p.y+p.h-4;
+    const wasLeft=player.x-player.vx*dt+player.w<=p.x+4;
+    const wasRight=player.x-player.vx*dt>=p.x+p.w-4;
+    if(wasAbove&&player.vy>=0){player.y=p.y-player.h;player.vy=0;player.grnd=true;coyote=.1;}
+    else if(wasBelow&&player.vy<0){player.y=p.y+p.h;player.vy=0;}
+    else if(wasLeft&&player.vx>0){player.x=p.x-player.w;player.vx=0;}
+    else if(wasRight&&player.vx<0){player.x=p.x+p.w;player.vx=0;}
+  }
+
+  if(player.y>H+60){loseLife();return;}
+
+  let got=0;
+  ants.forEach(a=>{
+    a.t+=dt*3;
+    if(!a.got&&aabb(player.x,player.y,player.w,player.h,a.x-10,a.y-12,20,20)){
+      a.got=true;score+=15;spPart(a.x,a.y,'#fbbf24');
+    }
+    if(a.got)got++;
+  });
+  document.getElementById('hA').textContent=`${got}/${ants.length}`;
+  document.getElementById('hS').textContent=score;
+  if(got===ants.length){score+=100+phase*50;document.getElementById('hS').textContent=score;gState='phend';return;}
+
+  fires.forEach(f=>{
+    f.x+=f.vx*f.dir*dt;
+    if(f.x+f.w>=W||f.x<=0)f.dir*=-1;
+    if(player.inv<=0&&aabb(player.x,player.y,player.w,player.h,f.x,f.y,f.w,f.h)){loseLife();}
+  });
+
+  parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=400*dt;p.t-=dt;});
+  parts=parts.filter(p=>p.t>0);
+  if(player.inv>0)player.inv-=dt;
+}
+
+function loseLife(){
+  lives--;
+  const h=document.getElementById('hL');
+  h.textContent='❤️'.repeat(Math.max(0,lives));
+  if(lives<=0){gState='over';return;}
+  player.x=60;player.y=GY-38;player.vx=0;player.vy=0;player.inv=2;
+  spPart(player.x+22,player.y+18,'#ef4444');
+}
+
+function drawEmoji(e,x,y,sz=28){ctx.font=`${sz}px serif`;ctx.fillText(e,x,y);}
+
+function drawPlayer(){
+  const p=player;
+  if(p.inv>0&&Math.floor(p.inv*8)%2===0)return;
+  ctx.save();
+  if(p.face===-1){ctx.translate(p.x+p.w,0);ctx.scale(-1,1);drawEmoji('🦔',0,p.y+p.h-2,36);}
+  else drawEmoji('🦔',p.x,p.y+p.h-2,36);
+  ctx.restore();
+}
+
+let lastT=0;
+function loop(t){
+  const dt=Math.min((t-(lastT||t))/1000,.05);
+  lastT=t;
+  update(dt);
+  render(t);
+  requestAnimationFrame(loop);
+}
+
+function wrapText(text,x,y,maxW,lh){
+  const words=text.split(' ');let line='';
+  for(const w of words){const test=line+w+' ';if(ctx.measureText(test).width>maxW&&line){ctx.fillText(line.trim(),x,y);y+=lh;line=w+' ';}else line=test;}
+  if(line)ctx.fillText(line.trim(),x,y);
+}
+
+function render(t){
+  const ph=PHASES[phase]||PHASES[0];
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,ph.bgTop);g.addColorStop(1,ph.bgBot);
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+
+  // Stars
+  ctx.fillStyle='rgba(255,255,255,.25)';
+  for(let i=0;i<18;i++){ctx.fillRect((i*139+phase*71)%W,(i*97+phase*53)%180,2,2);}
+
+  // Platforms
+  for(const p of ph.plats){
+    ctx.fillStyle='#4a2810';ctx.fillRect(p.x,p.y,p.w,p.h);
+    ctx.fillStyle='#2d7a0f';ctx.fillRect(p.x,p.y,p.w,5);
+    ctx.fillStyle='#3d9a1f';ctx.fillRect(p.x+2,p.y,p.w-4,3);
+  }
+
+  // Ants
+  ants.forEach(a=>{
+    if(a.got)return;
+    const bob=Math.sin(a.t)*3;
+    drawEmoji('🐜',a.x-8,a.y+bob,20);
+  });
+
+  // Fires
+  fires.forEach(f=>{
+    const fl=Math.sin(t/90)*.15+.9;
+    ctx.globalAlpha=fl;
+    drawEmoji('🔥',f.x-4,f.y+f.h,28);
+    ctx.globalAlpha=1;
+  });
+
+  // Player
+  if(gState==='play'||gState==='phend')drawPlayer();
+
+  // Particles
+  parts.forEach(p=>{
+    ctx.globalAlpha=Math.max(0,p.t/.7);
+    ctx.fillStyle=p.c;ctx.fillRect(p.x-3,p.y-3,6,6);
+    ctx.globalAlpha=1;
+  });
+
+  ctx.textAlign='center';
+
+  if(gState==='title'){
+    ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#4ade80';ctx.font='bold 36px sans-serif';ctx.fillText('🦔 Tamanduazinho',W/2,H/2-65);
+    ctx.fillStyle='#d4edda';ctx.font='17px sans-serif';ctx.fillText('Colete todas as formigas e evite o fogo!',W/2,H/2-25);
+    ctx.fillStyle='#a0e0a0';ctx.font='15px sans-serif';ctx.fillText('← → mover   ·   ↑ ou Espaço pular',W/2,H/2+15);
+    ctx.fillStyle='#fbbf24';ctx.font='bold 19px sans-serif';
+    const blink=Math.sin(t/300)>.2;
+    if(blink)ctx.fillText('▶  Pressione ESPAÇO para começar  ◀',W/2,H/2+58);
+    if(keys[' ']||keys['Enter'])initPhase();
+    ctx.textAlign='left';return;
+  }
+
+  if(gState==='phend'){
+    ctx.fillStyle='rgba(0,0,0,.78)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#4ade80';ctx.font='bold 28px sans-serif';ctx.fillText(`✅ Fase ${phase+1} — ${PHASES[phase].name}`,W/2,70);
+    ctx.fillStyle='#ffe',ctx.font='14px sans-serif';
+    ctx.fillText('🌿 Curiosidade:',W/2,115);
+    ctx.fillStyle='#d4edda';ctx.font='14px sans-serif';
+    const lines=PHASES[phase].fact.match(/.{1,75}(\s|$)/g)||[];
+    lines.forEach((l,i)=>ctx.fillText(l.trim(),W/2,140+i*22));
+    ctx.fillStyle='#fbbf24';ctx.font='bold 17px sans-serif';
+    const blink2=Math.sin(t/300)>.2;
+    if(blink2)ctx.fillText(phase<4?'ESPAÇO → próxima fase ▶':'🎉 ESPAÇO → salvar pontuação',W/2,H-38);
+    if(keys[' ']||keys['Enter']){
+      if(phase<4){phase++;setTimeout(initPhase,80);}
+      else{gState='win';document.getElementById('saveBox').style.display='flex';}
+    }
+    ctx.textAlign='left';return;
+  }
+
+  if(gState==='over'){
+    ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#ef4444';ctx.font='bold 34px sans-serif';ctx.fillText('💀 Game Over',W/2,H/2-40);
+    ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação: ${score}`,W/2,H/2+10);
+    ctx.fillStyle='#fbbf24';ctx.font='17px sans-serif';ctx.fillText('ESPAÇO → recomeçar',W/2,H/2+52);
+    if(keys[' ']||keys['Enter']){phase=0;score=0;lives=3;document.getElementById('hL').textContent='❤️❤️❤️';document.getElementById('hS').textContent=0;gState='title';}
+    ctx.textAlign='left';return;
+  }
+
+  if(gState==='win'){
+    ctx.fillStyle='rgba(0,0,0,.8)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#4ade80';ctx.font='bold 30px sans-serif';ctx.fillText('🦔 Pantanal Protegido!',W/2,90);
+    ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação final: ${score}`,W/2,140);
+    ctx.fillStyle='#a0e0a0';ctx.font='14px sans-serif';ctx.fillText('O tamanduá-bandeira está a salvo. 🌿',W/2,180);
+    ctx.fillStyle='#fbbf24';ctx.font='15px sans-serif';ctx.fillText('Digite seu nome abaixo e salve seu recorde!',W/2,230);
+    ctx.textAlign='left';return;
+  }
+  ctx.textAlign='left';
+}
+
+async function saveScore(){
+  const name=(document.getElementById('pName').value||'Anônimo').trim().slice(0,24);
+  await addDoc(collection(db,'games',GAME_ID,'scores'),{name,score,level:'Completo',seconds:0,ts:serverTimestamp()});
+  document.getElementById('saveBox').style.display='none';
+  loadRanking();
+}
+
+async function loadRanking(){
+  const rl=document.getElementById('rankList');
+  try{
+    const q=query(collection(db,'games',GAME_ID,'scores'),orderBy('score','desc'),limit(80));
+    const snap=await getDocs(q);
+    const docs=snap.docs.map(d=>d.data()).slice(0,10);
+    if(!docs.length){rl.innerHTML='<p style="opacity:.45;font-size:.76rem;padding:4px">Nenhum recorde ainda.</p>';return;}
+    rl.innerHTML=docs.map((d,i)=>`<div class="rank-item"><span>${['🥇','🥈','🥉'][i]||`${i+1}.`} ${d.name}</span><span>${d.score} pts</span></div>`).join('');
+  }catch(e){rl.innerHTML='<p style="opacity:.35;font-size:.76rem">Não foi possível carregar.</p>';}
+}
+
+window.saveScore=saveScore;
+requestAnimationFrame(loop);
+loadRanking();
+</script>
+</body>
+</html>

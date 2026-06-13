@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caçador de Plástico 🐢 | Top-down · Química · Oceano</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#01060f;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:100vh;padding:10px;font-family:"Segoe UI",system-ui,sans-serif;color:#c0e8ff}
+h1{font-size:1.4rem;margin:6px 0 2px;text-align:center}
+.tagline{font-size:.78rem;opacity:.65;margin-bottom:6px;text-align:center}
+.hud{display:flex;gap:10px;margin:4px 0 6px;font-size:.82rem;flex-wrap:wrap;justify-content:center}
+.hud span{background:rgba(255,255,255,.09);border-radius:8px;padding:3px 10px}
+.hud b{color:#38bdf8}
+canvas{border:2px solid rgba(30,150,255,.22);border-radius:8px;display:block;max-width:100%}
+.save-box{margin-top:10px;display:none;flex-direction:column;align-items:center;gap:8px}
+.save-box input{padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-size:.95rem;width:220px;outline:none}
+.save-box button{padding:8px 20px;border-radius:8px;border:none;background:#0284c7;color:#fff;font-size:.9rem;cursor:pointer;font-weight:600}
+.ranking{width:min(780px,98vw);background:rgba(255,255,255,.05);border-radius:10px;padding:10px;margin-top:8px}
+.ranking h3{font-size:.78rem;opacity:.6;margin-bottom:6px}
+.rank-list{display:flex;flex-direction:column;gap:3px;max-height:150px;overflow-y:auto}
+.rank-item{display:flex;justify-content:space-between;font-size:.76rem;padding:3px 8px;background:rgba(255,255,255,.04);border-radius:5px}
+footer{margin-top:12px;opacity:.45;font-size:.68rem;text-align:center}
+</style>
+</head>
+<body>
+<h1>🐢 Caçador de Plástico</h1>
+<p class="tagline">Top-down · Química · Biologia · Oceano — ← → ↑ ↓ para nadar · colete o plástico!</p>
+<div class="hud">
+  <span>Fase: <b id="hP">1/5</b></span>
+  <span>Pontos: <b id="hS">0</b></span>
+  <span>Oceano: <b id="hO">🌊🌊🌊🌊🌊</b></span>
+  <span>Plástico: <b id="hN">0/0</b></span>
+</div>
+<canvas id="c" width="780" height="440"></canvas>
+<div class="save-box" id="saveBox">
+  <p style="font-size:.85rem;opacity:.8">🏆 Oceano limpo! Salve seu recorde:</p>
+  <input type="text" id="pName" maxlength="24" placeholder="Seu nome…">
+  <button onclick="window.saveScore()">Salvar Pontuação</button>
+</div>
+<div class="ranking">
+  <h3>🏆 Ranking</h3>
+  <div class="rank-list" id="rankList"><p style="opacity:.45;font-size:.76rum;padding:4px">Carregando…</p></div>
+</div>
+<footer>Química · Biologia · Oceanos do Mundo 🌊 | 2026-07-03 — Idealizado por Ernandes Sobreira</footer>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import{getFirestore,collection,addDoc,query,orderBy,limit,getDocs,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+const fbApp=initializeApp({apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"});
+const db=getFirestore(fbApp);
+const GAME_ID="2026-07-03-cacador-de-plastico";
+
+const W=780,H=440;
+const MSPD=195;
+const PLASTIC_E=['🧴','🥤','🧃','🛍️','🪣','💊','🔧','⚗️'];
+const THREAT_E=['🦈','🐙']; // threats (fast, avoid)
+const FISH_E=['🐠','🐡','🦀','🦐','🐟'];
+
+const PHASES=[
+ {need:10,spawnRate:.6,plasticSpd:55,threatFreq:.3,
+  fact:"8 milhões de toneladas de plástico chegam ao oceano todo ano. Em 2050, pode haver mais plástico (em peso) do que peixes nos oceanos.",
+  name:"Costa Atlântica"},
+ {need:14,spawnRate:.5,plasticSpd:70,threatFreq:.35,
+  fact:"O 'Great Pacific Garbage Patch' (ilhota de lixo do Pacífico) tem o dobro do tamanho da França. É composto principalmente por microplásticos — partículas < 5 mm.",
+  name:"Giro do Pacífico"},
+ {need:18,spawnRate:.42,plasticSpd:90,threatFreq:.4,
+  fact:"As tartarugas marinhas confundem sacolas plásticas com medusas (águas-vivas). Obstrução intestinal por plástico é uma das principais causas de morte da espécie.",
+  name:"Corrente do Golfo"},
+ {need:22,spawnRate:.35,plasticSpd:110,threatFreq:.45,
+  fact:"Os microplásticos já foram encontrados no pico do Monte Everest, no fundo da Fossa das Marianas e no sangue humano. A contaminação é global e irreversível.",
+  name:"Abismo Oceânico"},
+ {need:28,spawnRate:.28,plasticSpd:135,threatFreq:.5,
+  fact:"A solução para a crise do plástico inclui: redução do uso, design para reciclagem, responsabilidade estendida dos fabricantes e tratamento de esgoto para reter microplásticos.",
+  name:"Último Oceano"}
+];
+
+const c=document.getElementById('c');
+const ctx=c.getContext('2d');
+const keys={};
+document.addEventListener('keydown',e=>{keys[e.key]=true;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key))e.preventDefault();});
+document.addEventListener('keyup',e=>{keys[e.key]=false;});
+
+let gState='title',phase=0,score=0,ocean=5;
+let turtle,plastics,threats,fish,parts,pTimer,tTimer,fTimer,collected,time;
+
+function mkTurtle(){return{x:W/2,y:H/2,vx:0,vy:0,r:18,angle:0,inv:0};}
+
+function initPhase(){
+  const ph=PHASES[phase];
+  turtle=mkTurtle();
+  plastics=[];threats=[];fish=[];parts=[];
+  pTimer=0;tTimer=0;fTimer=0;collected=0;time=0;ocean=5;
+  document.getElementById('hP').textContent=`${phase+1}/5`;
+  document.getElementById('hN').textContent=`0/${ph.need}`;
+  document.getElementById('hO').textContent='🌊'.repeat(5);
+  // Spawn some fish decoration
+  for(let i=0;i<8;i++){
+    fish.push({x:Math.random()*W,y:Math.random()*H,e:FISH_E[Math.floor(Math.random()*FISH_E.length)],vx:(Math.random()-.5)*40,vy:(Math.random()-.5)*25,t:Math.random()*Math.PI*2});
+  }
+  gState='play';
+}
+
+function dist2(ax,ay,bx,by){return Math.sqrt((ax-bx)**2+(ay-by)**2);}
+function spPart(x,y,col,n=6){for(let i=0;i<n;i++)parts.push({x,y,vx:(Math.random()-.5)*200,vy:(Math.random()-.5)*200,c:col,t:.9});}
+
+function update(dt){
+  if(gState!=='play')return;
+  const ph=PHASES[phase];
+  time+=dt;
+
+  const L=keys['ArrowLeft']||keys['a'];
+  const R=keys['ArrowRight']||keys['d'];
+  const U=keys['ArrowUp']||keys['w'];
+  const D=keys['ArrowDown']||keys['s'];
+  const ax=(R?1:0)-(L?1:0);
+  const ay=(D?1:0)-(U?1:0);
+
+  if(ax!==0||ay!==0){
+    const len=Math.sqrt(ax*ax+ay*ay);
+    turtle.vx+=(ax/len*MSPD-turtle.vx)*7*dt;
+    turtle.vy+=(ay/len*MSPD-turtle.vy)*7*dt;
+    turtle.angle=Math.atan2(ay,ax);
+  } else {
+    turtle.vx*=.88;turtle.vy*=.88;
+  }
+  turtle.x+=turtle.vx*dt;turtle.y+=turtle.vy*dt;
+  turtle.x=Math.max(turtle.r,Math.min(W-turtle.r,turtle.x));
+  turtle.y=Math.max(turtle.r,Math.min(H-turtle.r,turtle.y));
+
+  // Plastic spawn
+  pTimer-=dt;
+  if(pTimer<=0){
+    const pi=Math.floor(Math.random()*PLASTIC_E.length);
+    const ang=Math.random()*Math.PI*2;
+    const spawnR=350;
+    plastics.push({
+      x:W/2+Math.cos(ang)*spawnR,
+      y:H/2+Math.sin(ang)*spawnR,
+      e:PLASTIC_E[pi],
+      vx:(Math.random()-.5)*ph.plasticSpd,
+      vy:(Math.random()-.5)*ph.plasticSpd,
+      r:14,t:0
+    });
+    pTimer=ph.spawnRate*(0.7+Math.random()*.6);
+  }
+
+  // Threat spawn
+  tTimer-=dt;
+  if(tTimer<=0&&Math.random()<ph.threatFreq){
+    const side=Math.floor(Math.random()*4);
+    let tx,ty;
+    if(side===0){tx=Math.random()*W;ty=-30;}
+    else if(side===1){tx=W+30;ty=Math.random()*H;}
+    else if(side===2){tx=Math.random()*W;ty=H+30;}
+    else{tx=-30;ty=Math.random()*H;}
+    threats.push({x:tx,y:ty,e:THREAT_E[Math.floor(Math.random()*THREAT_E.length)],r:20,t:0,spd:ph.plasticSpd*.9});
+    tTimer=2+Math.random()*2;
+  }
+
+  // Fish decorations
+  fish.forEach(f=>{
+    f.t+=dt;f.x+=f.vx*dt;f.y+=f.vy*dt;
+    if(f.x<-30)f.x=W+10;if(f.x>W+30)f.x=-10;
+    if(f.y<-30)f.y=H+10;if(f.y>H+30)f.y=-10;
+  });
+
+  // Update plastics
+  for(let i=plastics.length-1;i>=0;i--){
+    const p=plastics[i];
+    p.x+=p.vx*dt;p.y+=p.vy*dt;p.t+=dt;
+    // Wrap
+    if(p.x<-30)p.x=W+10;if(p.x>W+30)p.x=-10;
+    if(p.y<-30)p.y=H+10;if(p.y>H+30)p.y=-10;
+    // Collect
+    if(dist2(turtle.x,turtle.y,p.x,p.y)<turtle.r+p.r){
+      plastics.splice(i,1);
+      collected++;score+=20;
+      spPart(p.x,p.y,'#38bdf8',7);
+      document.getElementById('hN').textContent=`${collected}/${ph.need}`;
+      document.getElementById('hS').textContent=score;
+      if(collected>=ph.need){score+=250+phase*100;document.getElementById('hS').textContent=score;gState='phend';return;}
+    }
+  }
+
+  // Update threats
+  for(let i=threats.length-1;i>=0;i--){
+    const th=threats[i];
+    const dx=turtle.x-th.x,dy=turtle.y-th.y;
+    const d=Math.sqrt(dx*dx+dy*dy)||1;
+    th.x+=dx/d*th.spd*dt;th.y+=dy/d*th.spd*dt;th.t+=dt;
+    if(turtle.inv<=0&&d<turtle.r+th.r){
+      ocean--;document.getElementById('hO').textContent='🌊'.repeat(Math.max(0,ocean))+'⬛'.repeat(5-ocean);
+      spPart(turtle.x,turtle.y,'#ef4444',10);
+      turtle.inv=2.5;
+      if(ocean<=0){gState='over';return;}
+    }
+    if(th.t>15)threats.splice(i,1);
+  }
+
+  parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.t-=dt;});
+  parts=parts.filter(p=>p.t>0);
+  if(turtle.inv>0)turtle.inv-=dt;
+}
+
+function render(ts){
+  // Deep ocean gradient
+  const bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,`hsl(210,${60+phase*5}%,${5+phase*2}%)`);
+  bg.addColorStop(1,`hsl(220,${70+phase*5}%,${3+phase}%)`);
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+  // Caustic light patterns
+  ctx.globalAlpha=.06;
+  for(let i=0;i<10;i++){
+    const cx=((i*185+ts*.02)%W+W)%W;
+    const cy=((i*127)%(H*.6))+H*.1;
+    ctx.fillStyle='#38bdf8';
+    ctx.beginPath();ctx.ellipse(cx,cy,35+i*4,10,Math.sin(ts*.001+i)*.4,0,Math.PI*2);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+
+  // Fish decorations (background)
+  fish.forEach(f=>{
+    ctx.font='16px serif';ctx.textAlign='center';
+    ctx.globalAlpha=.4;
+    ctx.fillText(f.e,f.x,f.y+6);
+    ctx.globalAlpha=1;
+  });
+
+  // Plastics
+  plastics.forEach(p=>{
+    const bob=Math.sin(p.t*2)*.5;
+    ctx.font='20px serif';ctx.textAlign='center';
+    ctx.fillText(p.e,p.x-10,p.y+6+bob);
+    // Glow / warning
+    ctx.globalAlpha=.3+.2*Math.sin(p.t*3);
+    ctx.fillStyle='#f87171';
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r+4,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;
+  });
+
+  // Threats
+  threats.forEach(th=>{
+    ctx.font='26px serif';ctx.textAlign='center';
+    ctx.fillText(th.e,th.x-13,th.y+10);
+  });
+
+  // Particles
+  parts.forEach(p=>{
+    ctx.globalAlpha=Math.max(0,p.t/.9);
+    ctx.fillStyle=p.c;ctx.fillRect(p.x-3,p.y-3,6,6);
+    ctx.globalAlpha=1;
+  });
+
+  // Turtle
+  if(gState==='play'||gState==='phend'){
+    if(!(turtle.inv>0&&Math.floor(turtle.inv*8)%2===0)){
+      ctx.save();
+      ctx.translate(turtle.x,turtle.y);
+      ctx.rotate(turtle.angle+Math.PI*.5);
+      ctx.font='34px serif';ctx.textAlign='center';
+      ctx.fillText('🐢',-17,12);
+      ctx.restore();
+      // Collection radius hint
+      ctx.globalAlpha=.12+.06*Math.sin(ts*.003);
+      ctx.fillStyle='#38bdf8';
+      ctx.beginPath();ctx.arc(turtle.x,turtle.y,turtle.r+8,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=1;
+    }
+  }
+
+  // Bubble trail
+  if(gState==='play'){
+    const spd=Math.sqrt(turtle.vx**2+turtle.vy**2);
+    if(spd>30&&Math.random()<.3){
+      parts.push({x:turtle.x+(Math.random()-.5)*10,y:turtle.y+(Math.random()-.5)*10,vx:(Math.random()-.5)*40,vy:-30-Math.random()*40,c:'rgba(100,200,255,0.5)',t:.6});
+    }
+  }
+
+  ctx.textAlign='center';
+
+  if(gState==='title'){
+    ctx.fillStyle='rgba(0,0,0,.8)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#38bdf8';ctx.font='bold 34px sans-serif';ctx.fillText('🐢 Caçador de Plástico',W/2,H/2-70);
+    ctx.fillStyle='#c0e8ff';ctx.font='16px sans-serif';ctx.fillText('Colete o plástico antes que destrua o oceano!',W/2,H/2-28);
+    ctx.fillStyle='#90c0e0';ctx.font='14px sans-serif';ctx.fillText('← → ↑ ↓ para nadar  ·  evite tubarões e polvos!',W/2,H/2+14);
+    ctx.fillStyle='#fbbf24';ctx.font='bold 19px sans-serif';
+    if(Math.sin(ts/300)>.2)ctx.fillText('▶  ESPAÇO para começar  ◀',W/2,H/2+58);
+    if(keys[' ']||keys['Enter'])initPhase();
+    return;
+  }
+  if(gState==='phend'){
+    ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#38bdf8';ctx.font='bold 27px sans-serif';ctx.fillText(`🌊 Fase ${phase+1} — ${PHASES[phase].name}`,W/2,65);
+    ctx.fillStyle='#c0e8ff';ctx.font='13.5px sans-serif';
+    const words=PHASES[phase].fact.split(' ');let line='',py=108;
+    for(const w of words){const tt=line+w+' ';if(ctx.measureText(tt).width>680&&line){ctx.fillText(line.trim(),W/2,py);py+=21;line=w+' ';}else line=tt;}
+    if(line)ctx.fillText(line.trim(),W/2,py);
+    ctx.fillStyle='#fbbf24';ctx.font='bold 17px sans-serif';
+    if(Math.sin(ts/300)>.2)ctx.fillText(phase<4?'ESPAÇO → próxima fase':'🎉 ESPAÇO → salvar recorde',W/2,H-38);
+    if(keys[' ']){if(phase<4){phase++;setTimeout(initPhase,80);}else{gState='win';document.getElementById('saveBox').style.display='flex';}}
+    return;
+  }
+  if(gState==='over'){
+    ctx.fillStyle='rgba(0,0,0,.85)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#ef4444';ctx.font='bold 34px sans-serif';ctx.fillText('🌊 Oceano Contaminado!',W/2,H/2-40);
+    ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação: ${score}`,W/2,H/2+8);
+    ctx.fillStyle='#fbbf24';ctx.font='17px sans-serif';ctx.fillText('ESPAÇO → tentar novamente',W/2,H/2+50);
+    if(keys[' ']){phase=0;score=0;document.getElementById('hS').textContent=0;gState='title';}
+    return;
+  }
+  if(gState==='win'){
+    ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#4ade80';ctx.font='bold 30px sans-serif';ctx.fillText('🐢 Oceano Limpo!',W/2,90);
+    ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação: ${score}`,W/2,145);
+    ctx.fillStyle='#38bdf8';ctx.font='14px sans-serif';ctx.fillText('A tartaruga marinha sobrevive. O oceano agradece. 🌊',W/2,183);
+    ctx.fillStyle='#fbbf24';ctx.font='15px sans-serif';ctx.fillText('Use o campo abaixo para salvar seu recorde.',W/2,230);
+    return;
+  }
+  ctx.textAlign='left';
+}
+
+let lastT=0;
+function loop(t){const dt=Math.min((t-(lastT||t))/1000,.05);lastT=t;update(dt);render(t);requestAnimationFrame(loop);}
+
+async function saveScore(){
+  const name=(document.getElementById('pName').value||'Anônimo').trim().slice(0,24);
+  await addDoc(collection(db,'games',GAME_ID,'scores'),{name,score,level:'Completo',seconds:0,ts:serverTimestamp()});
+  document.getElementById('saveBox').style.display='none';
+  loadRanking();
+}
+
+async function loadRanking(){
+  const rl=document.getElementById('rankList');
+  try{
+    const q=query(collection(db,'games',GAME_ID,'scores'),orderBy('score','desc'),limit(80));
+    const snap=await getDocs(q);
+    const docs=snap.docs.map(d=>d.data()).slice(0,10);
+    if(!docs.length){rl.innerHTML='<p style="opacity:.45;font-size:.76rem;padding:4px">Nenhum recorde ainda.</p>';return;}
+    rl.innerHTML=docs.map((d,i)=>`<div class="rank-item"><span>${['🥇','🥈','🥉'][i]||`${i+1}.`} ${d.name}</span><span>${d.score} pts</span></div>`).join('');
+  }catch(e){rl.innerHTML='<p style="opacity:.35;font-size:.76rem">Não foi possível carregar.</p>';}
+}
+
+window.saveScore=saveScore;
+requestAnimationFrame(loop);
+loadRanking();
+</script>
+</body>
+</html>

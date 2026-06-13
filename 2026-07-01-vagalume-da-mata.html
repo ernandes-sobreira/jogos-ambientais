@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vagalume da Mata ✨ | Runner · Biologia</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#010508;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:100vh;padding:10px;font-family:"Segoe UI",system-ui,sans-serif;color:#d0f0e0}
+h1{font-size:1.4rem;margin:6px 0 2px;text-align:center}
+.tagline{font-size:.78rem;opacity:.65;margin-bottom:6px;text-align:center}
+.hud{display:flex;gap:10px;margin:4px 0 6px;font-size:.82rem;flex-wrap:wrap;justify-content:center}
+.hud span{background:rgba(255,255,255,.09);border-radius:8px;padding:3px 10px}
+.hud b{color:#86efac}
+canvas{border:2px solid rgba(100,240,160,.18);border-radius:8px;display:block;max-width:100%}
+.save-box{margin-top:10px;display:none;flex-direction:column;align-items:center;gap:8px}
+.save-box input{padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-size:.95rem;width:220px;outline:none}
+.save-box button{padding:8px 20px;border-radius:8px;border:none;background:#15803d;color:#fff;font-size:.9rem;cursor:pointer;font-weight:600}
+.ranking{width:min(780px,98vw);background:rgba(255,255,255,.05);border-radius:10px;padding:10px;margin-top:8px}
+.ranking h3{font-size:.78rem;opacity:.6;margin-bottom:6px}
+.rank-list{display:flex;flex-direction:column;gap:3px;max-height:150px;overflow-y:auto}
+.rank-item{display:flex;justify-content:space-between;font-size:.76rem;padding:3px 8px;background:rgba(255,255,255,.04);border-radius:5px}
+footer{margin-top:12px;opacity:.45;font-size:.68rem;text-align:center}
+</style>
+</head>
+<body>
+<h1>✨ Vagalume da Mata</h1>
+<p class="tagline">Runner · Biologia · Mata Atlântica — ↑ ↓ navegar · evite as teias!</p>
+<div class="hud">
+  <span>Fase: <b id="hP">1/5</b></span>
+  <span>Pontos: <b id="hS">0</b></span>
+  <span>Vidas: <b id="hL">❤️❤️❤️</b></span>
+  <span>Luz: <b id="hG">0/0</b></span>
+</div>
+<canvas id="c" width="780" height="400"></canvas>
+<div class="save-box" id="saveBox">
+  <p style="font-size:.85rem;opacity:.8">🏆 Floresta iluminada! Salve seu recorde:</p>
+  <input type="text" id="pName" maxlength="24" placeholder="Seu nome…">
+  <button onclick="window.saveScore()">Salvar Pontuação</button>
+</div>
+<div class="ranking">
+  <h3>🏆 Ranking</h3>
+  <div class="rank-list" id="rankList"><p style="opacity:.45;font-size:.76rem;padding:4px">Carregando…</p></div>
+</div>
+<footer>Biologia · Vagalumes · Mata Atlântica 🌿 | 2026-07-01 — Idealizado por Ernandes Sobreira</footer>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import{getFirestore,collection,addDoc,query,orderBy,limit,getDocs,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+const fbApp=initializeApp({apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"});
+const db=getFirestore(fbApp);
+const GAME_ID="2026-07-01-vagalume-da-mata";
+
+const W=780,H=400;
+const VSPD=180; // vertical speed (up/down direct control)
+const BASE_HSPD=160; // horizontal auto-scroll
+
+const PHASES=[
+ {hspd:160,gap:175,glowNeed:8,webRate:.45,
+  fact:"Os vagalumes (pirilampos) produzem luz fria via bioluminescência — reação química entre luciferina e luciferase. É 100% eficiente em energia; nenhum calor é produzido.",
+  name:"Noite no Sub-bosque"},
+ {hspd:185,gap:158,glowNeed:10,webRate:.4,
+  fact:"A Mata Atlântica, que já cobriu 15% do Brasil, hoje ocupa menos de 12%. Mesmo assim, é lar de 72% dos mamíferos ameaçados e 91% dos anfíbios endêmicos do país.",
+  name:"Galeria de Cipós"},
+ {hspd:215,gap:140,glowNeed:12,webRate:.35,
+  fact:"Os vagalumes são bioindicadores de qualidade ambiental. A poluição luminosa das cidades interfere no ritual de acasalamento por luz, ameaçando a reprodução das espécies.",
+  name:"Teia da Escuridão"},
+ {hspd:250,gap:125,glowNeed:14,webRate:.3,
+  fact:"A Mata Atlântica possui mais de 20.000 espécies de plantas — mais do que toda a Europa. Cerca de 8.000 são endêmicas, existindo apenas nessa floresta.",
+  name:"Corredor das Orquídeas"},
+ {hspd:290,gap:110,glowNeed:16,webRate:.28,
+  fact:"Os vagalumes adultos vivem poucos dias — seu único objetivo é se reproduzir. As larvas, porém, podem viver até 2 anos no solo e são predadoras eficientes de lesmas.",
+  name:"Madrugada Final"}
+];
+
+// Obstacles: spider webs (horizontal logs with gap) and descending bats
+// Using pipe-like structure: top branch / bottom branch with gap
+
+const c=document.getElementById('c');
+const ctx=c.getContext('2d');
+const keys={};
+document.addEventListener('keydown',e=>{keys[e.key]=true;if([' ','ArrowUp','ArrowDown'].includes(e.key))e.preventDefault();});
+document.addEventListener('keyup',e=>{keys[e.key]=false;});
+
+let gState='title',phase=0,score=0,lives=3;
+let bug,logs,glows,parts,bats,logTimer,glowTimer,glowFound,dist;
+
+function mkBug(){return{x:100,y:H/2,vy:0,r:10,inv:0,glow:0};}
+
+function initPhase(){
+  const ph=PHASES[phase];
+  bug=mkBug();
+  logs=[];glows=[];parts=[];bats=[];
+  logTimer=0;glowTimer=0;glowFound=0;dist=0;
+  document.getElementById('hP').textContent=`${phase+1}/5`;
+  document.getElementById('hG').textContent=`0/${ph.glowNeed}`;
+  gState='play';
+}
+
+function aabb(ax,ay,aw,ah,bx,by,bw,bh){return ax<bx+bw&&ax+aw>bx&&ay<by+bh&&ay+ah>by;}
+function spPart(x,y,col,n=7){for(let i=0;i<n;i++)parts.push({x,y,vx:(Math.random()-.5)*160,vy:(Math.random()-.5)*160,c:col,t:.9});}
+
+function update(dt){
+  if(gState!=='play')return;
+  const ph=PHASES[phase];
+
+  // Bug movement: direct vertical control + gravity
+  const U=keys['ArrowUp']||keys['w']||keys[' '];
+  const D=keys['ArrowDown']||keys['s'];
+  if(U)bug.vy=Math.max(-VSPD,bug.vy-2000*dt);
+  else if(D)bug.vy=Math.min(VSPD,bug.vy+2000*dt);
+  else bug.vy*=.88;
+
+  bug.y+=bug.vy*dt;
+  bug.y=Math.max(bug.r,Math.min(H-bug.r,bug.y));
+  bug.glow=(bug.glow+dt*4)%(Math.PI*2);
+
+  // Log spawn (obstacles like pipes)
+  logTimer-=dt;
+  if(logTimer<=0){
+    const gap=ph.gap;
+    const topH=30+Math.random()*(H-gap-60);
+    logs.push({x:W+20,topH,botY:topH+gap,w:50,spd:ph.hspd});
+    logTimer=1.8+Math.random()*.7;
+  }
+
+  // Glow spawn (collectibles)
+  glowTimer-=dt;
+  if(glowTimer<=0){
+    glows.push({x:W+10,y:40+Math.random()*(H-80),t:0,got:false});
+    glowTimer=1.6+Math.random()*1;
+  }
+
+  // Bat spawn
+  if(Math.random()<ph.webRate*dt){
+    bats.push({x:W+20,y:Math.random()*H*.8+H*.1,vx:-ph.hspd*.8,vy:(Math.random()-.5)*80,t:0,r:16});
+  }
+
+  // Update logs
+  for(let i=logs.length-1;i>=0;i--){
+    const l=logs[i];
+    l.x-=l.spd*dt;
+    if(l.x+l.w<0){logs.splice(i,1);}
+    else if(bug.inv<=0&&(aabb(bug.x-bug.r,bug.y-bug.r,bug.r*2,bug.r*2,l.x,0,l.w,l.topH)||aabb(bug.x-bug.r,bug.y-bug.r,bug.r*2,bug.r*2,l.x,l.botY,l.w,H-l.botY))){
+      hitBug();return;
+    }
+  }
+
+  // Boundary
+  if(bug.y<=bug.r||bug.y>=H-bug.r){if(bug.inv<=0){hitBug();return;}}
+
+  // Update glows
+  for(let i=glows.length-1;i>=0;i--){
+    const g=glows[i];
+    g.x-=ph.hspd*.3*dt;g.t+=dt*3;
+    if(!g.got&&aabb(bug.x-bug.r-4,bug.y-bug.r-4,bug.r*2+8,bug.r*2+8,g.x-10,g.y-10,20,20)){
+      g.got=true;glowFound++;score+=20;
+      spPart(g.x,g.y,'#86efac',8);
+      document.getElementById('hG').textContent=`${glowFound}/${ph.glowNeed}`;
+      document.getElementById('hS').textContent=score;
+      if(glowFound>=ph.glowNeed){score+=200+phase*80;document.getElementById('hS').textContent=score;gState='phend';return;}
+    }
+    if(g.x<-20)glows.splice(i,1);
+  }
+
+  // Update bats
+  for(let i=bats.length-1;i>=0;i--){
+    const b=bats[i];
+    b.x+=b.vx*dt;b.y+=b.vy*dt;b.t+=dt;
+    b.y=Math.max(b.r,Math.min(H-b.r,b.y));
+    if(bug.inv<=0&&Math.sqrt((bug.x-b.x)**2+(bug.y-b.y)**2)<bug.r+b.r){hitBug();return;}
+    if(b.x<-50)bats.splice(i,1);
+  }
+
+  parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.t-=dt;});
+  parts=parts.filter(p=>p.t>0);
+  dist+=dt*ph.hspd;
+  score+=Math.floor(dt*5);
+  document.getElementById('hS').textContent=score;
+  if(bug.inv>0)bug.inv-=dt;
+}
+
+function hitBug(){
+  lives--;document.getElementById('hL').textContent='❤️'.repeat(Math.max(0,lives));
+  if(lives<=0){gState='over';return;}
+  spPart(bug.x,bug.y,'#ef4444',10);
+  bug.x=100;bug.y=H/2;bug.vy=0;bug.inv=2;
+}
+
+function render(ts){
+  ctx.fillStyle='#010508';ctx.fillRect(0,0,W,H);
+
+  // Bioluminescent background glow pulses
+  for(let i=0;i<12;i++){
+    const gx=((i*170+dist*.08)%W+W)%W;
+    const gy=30+((i*80)%(H-60));
+    ctx.globalAlpha=.08+.06*Math.sin(ts/800+i);
+    ctx.fillStyle='#4ade80';
+    ctx.beginPath();ctx.arc(gx,gy,20,0,Math.PI*2);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+
+  // Ground/sky vegetation (parallax)
+  ctx.fillStyle='rgba(10,40,15,.8)';ctx.fillRect(0,H-20,W,20);
+  ctx.fillStyle='rgba(5,20,8,.8)';ctx.fillRect(0,0,W,18);
+
+  // Logs (tree trunks / branches as obstacles)
+  logs.forEach(l=>{
+    // Top branch
+    ctx.fillStyle='#2d4a1e';ctx.fillRect(l.x,0,l.w,l.topH);
+    ctx.fillStyle='#1a2d10';ctx.fillRect(l.x,l.topH-24,l.w,24);
+    ctx.fillStyle='#3d6a28';ctx.fillRect(l.x-6,l.topH-16,l.w+12,16);
+    // Web on bottom of top log
+    ctx.strokeStyle='rgba(200,200,220,.4)';ctx.lineWidth=1;
+    for(let j=0;j<4;j++){
+      ctx.beginPath();
+      ctx.moveTo(l.x+j*(l.w/3),l.topH);
+      ctx.lineTo(l.x+l.w/2,l.topH+20);
+      ctx.stroke();
+    }
+    // Bottom branch
+    ctx.fillStyle='#2d4a1e';ctx.fillRect(l.x,l.botY,l.w,H-l.botY);
+    ctx.fillStyle='#3d6a28';ctx.fillRect(l.x-6,l.botY,l.w+12,16);
+  });
+
+  // Glows (light eggs / energy orbs)
+  glows.forEach(g=>{
+    if(g.got)return;
+    const pulse=Math.sin(g.t)*.3+.7;
+    ctx.globalAlpha=pulse;
+    ctx.fillStyle='#86efac';
+    ctx.beginPath();ctx.arc(g.x,g.y,8,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=.3*pulse;
+    ctx.beginPath();ctx.arc(g.x,g.y,16,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;
+    ctx.font='12px serif';ctx.textAlign='center';ctx.fillText('✨',g.x-6,g.y+5);
+  });
+
+  // Bats
+  bats.forEach(b=>{
+    ctx.font='20px serif';ctx.textAlign='center';
+    ctx.fillText(b.t%1<.5?'🦇':'🦇',b.x-10,b.y+8);
+  });
+
+  // Particles
+  parts.forEach(p=>{
+    ctx.globalAlpha=Math.max(0,p.t/.9);
+    ctx.fillStyle=p.c;ctx.fillRect(p.x-3,p.y-3,6,6);
+    ctx.globalAlpha=1;
+  });
+
+  // Bug (vagalume)
+  if(gState==='play'||gState==='phend'){
+    if(!(bug.inv>0&&Math.floor(bug.inv*8)%2===0)){
+      const glowIntensity=.5+.5*Math.sin(bug.glow);
+      ctx.globalAlpha=.35*glowIntensity;
+      ctx.fillStyle='#86efac';
+      ctx.beginPath();ctx.arc(bug.x,bug.y,24,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=1;
+      ctx.font='18px serif';ctx.textAlign='center';
+      ctx.fillText('✨',bug.x-9,bug.y+7);
+    }
+  }
+
+  ctx.textAlign='center';
+
+  if(gState==='title'){
+    ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#86efac';ctx.font='bold 36px sans-serif';ctx.fillText('✨ Vagalume da Mata',W/2,H/2-68);
+    ctx.fillStyle='#d0f0e0';ctx.font='16px sans-serif';ctx.fillText('Colete as esferas de luz e desvie dos obstáculos!',W/2,H/2-26);
+    ctx.fillStyle='#a0d4c0';ctx.font='14px sans-serif';ctx.fillText('↑ subir  ·  ↓ descer  (controle suave)',W/2,H/2+14);
+    ctx.fillStyle='#fbbf24';ctx.font='bold 19px sans-serif';
+    if(Math.sin(ts/300)>.2)ctx.fillText('▶  ESPAÇO para começar  ◀',W/2,H/2+57);
+    if(keys[' ']||keys['ArrowUp'])initPhase();
+    return;
+  }
+  if(gState==='phend'){
+    ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#86efac';ctx.font='bold 27px sans-serif';ctx.fillText(`✨ Fase ${phase+1} — ${PHASES[phase].name}`,W/2,65);
+    ctx.fillStyle='#d0f0e0';ctx.font='13.5px sans-serif';
+    const words=PHASES[phase].fact.split(' ');let line='',py=108;
+    for(const w of words){const tt=line+w+' ';if(ctx.measureText(tt).width>680&&line){ctx.fillText(line.trim(),W/2,py);py+=21;line=w+' ';}else line=tt;}
+    if(line)ctx.fillText(line.trim(),W/2,py);
+    ctx.fillStyle='#fbbf24';ctx.font='bold 17px sans-serif';
+    if(Math.sin(ts/300)>.2)ctx.fillText(phase<4?'ESPAÇO → próxima fase':'🎉 ESPAÇO → salvar recorde',W/2,H-40);
+    if(keys[' ']){if(phase<4){phase++;setTimeout(initPhase,80);}else{gState='win';document.getElementById('saveBox').style.display='flex';}}
+    return;
+  }
+  if(gState==='over'){
+    ctx.fillStyle='rgba(0,0,0,.85)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#ef4444';ctx.font='bold 34px sans-serif';ctx.fillText('💀 Luz Apagada!',W/2,H/2-40);
+    ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação: ${score}`,W/2,H/2+8);
+    ctx.fillStyle='#fbbf24';ctx.font='17px sans-serif';ctx.fillText('ESPAÇO → recomeçar',W/2,H/2+50);
+    if(keys[' ']){phase=0;score=0;lives=3;document.getElementById('hL').textContent='❤️❤️❤️';document.getElementById('hS').textContent=0;gState='title';}
+    return;
+  }
+  if(gState==='win'){
+    ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#86efac';ctx.font='bold 30px sans-serif';ctx.fillText('✨ Mata Atlântica Brilhando!',W/2,90);
+    ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação: ${score}`,W/2,145);
+    ctx.fillStyle='#86efac';ctx.font='14px sans-serif';ctx.fillText('Os vagalumes voltam. A floresta está viva. 🌿',W/2,183);
+    ctx.fillStyle='#fbbf24';ctx.font='15px sans-serif';ctx.fillText('Use o campo abaixo para salvar.',W/2,230);
+    return;
+  }
+  ctx.textAlign='left';
+}
+
+let lastT=0;
+function loop(t){const dt=Math.min((t-(lastT||t))/1000,.05);lastT=t;update(dt);render(t);requestAnimationFrame(loop);}
+
+async function saveScore(){
+  const name=(document.getElementById('pName').value||'Anônimo').trim().slice(0,24);
+  await addDoc(collection(db,'games',GAME_ID,'scores'),{name,score,level:'Completo',seconds:0,ts:serverTimestamp()});
+  document.getElementById('saveBox').style.display='none';
+  loadRanking();
+}
+
+async function loadRanking(){
+  const rl=document.getElementById('rankList');
+  try{
+    const q=query(collection(db,'games',GAME_ID,'scores'),orderBy('score','desc'),limit(80));
+    const snap=await getDocs(q);
+    const docs=snap.docs.map(d=>d.data()).slice(0,10);
+    if(!docs.length){rl.innerHTML='<p style="opacity:.45;font-size:.76rem;padding:4px">Nenhum recorde ainda.</p>';return;}
+    rl.innerHTML=docs.map((d,i)=>`<div class="rank-item"><span>${['🥇','🥈','🥉'][i]||`${i+1}.`} ${d.name}</span><span>${d.score} pts</span></div>`).join('');
+  }catch(e){rl.innerHTML='<p style="opacity:.35;font-size:.76rem">Não foi possível carregar.</p>';}
+}
+
+window.saveScore=saveScore;
+requestAnimationFrame(loop);
+loadRanking();
+</script>
+</body>
+</html>

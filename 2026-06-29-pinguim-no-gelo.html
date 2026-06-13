@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pinguim no Gelo 🐧 | Plataforma · Física · Polar</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#020a18;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:100vh;padding:10px;font-family:"Segoe UI",system-ui,sans-serif;color:#d0eeff}
+h1{font-size:1.4rem;margin:6px 0 2px;text-align:center}
+.tagline{font-size:.78rem;opacity:.65;margin-bottom:6px;text-align:center}
+.hud{display:flex;gap:10px;margin:4px 0 6px;font-size:.82rem;flex-wrap:wrap;justify-content:center}
+.hud span{background:rgba(255,255,255,.09);border-radius:8px;padding:3px 10px}
+.hud b{color:#93c5fd}
+canvas{border:2px solid rgba(100,180,255,.22);border-radius:8px;display:block;max-width:100%}
+.save-box{margin-top:10px;display:none;flex-direction:column;align-items:center;gap:8px}
+.save-box input{padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-size:.95rem;width:220px;outline:none}
+.save-box button{padding:8px 20px;border-radius:8px;border:none;background:#1d4ed8;color:#fff;font-size:.9rem;cursor:pointer;font-weight:600}
+.ranking{width:min(780px,98vw);background:rgba(255,255,255,.05);border-radius:10px;padding:10px;margin-top:8px}
+.ranking h3{font-size:.78rem;opacity:.6;margin-bottom:6px}
+.rank-list{display:flex;flex-direction:column;gap:3px;max-height:150px;overflow-y:auto}
+.rank-item{display:flex;justify-content:space-between;font-size:.76rem;padding:3px 8px;background:rgba(255,255,255,.04);border-radius:5px}
+footer{margin-top:12px;opacity:.45;font-size:.68rem;text-align:center}
+</style>
+</head>
+<body>
+<h1>🐧 Pinguim no Gelo</h1>
+<p class="tagline">Plataforma · Física · Clima Global — ← → mover · ↑ ou Espaço pular</p>
+<div class="hud">
+  <span>Fase: <b id="hP">1/5</b></span>
+  <span>Pontos: <b id="hS">0</b></span>
+  <span>Vidas: <b id="hL">❤️❤️❤️</b></span>
+  <span>Filhotes: <b id="hC">0/0</b></span>
+</div>
+<canvas id="c" width="780" height="420"></canvas>
+<div class="save-box" id="saveBox">
+  <p style="font-size:.85rem;opacity:.8">🏆 Colônia salva! Salve seu recorde:</p>
+  <input type="text" id="pName" maxlength="24" placeholder="Seu nome…">
+  <button onclick="window.saveScore()">Salvar Pontuação</button>
+</div>
+<div class="ranking">
+  <h3>🏆 Ranking</h3>
+  <div class="rank-list" id="rankList"><p style="opacity:.45;font-size:.76rem;padding:4px">Carregando…</p></div>
+</div>
+<footer>Física · Clima Global · Polo Sul 🧊 | 2026-06-29 — Idealizado por Ernandes Sobreira</footer>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import{getFirestore,collection,addDoc,query,orderBy,limit,getDocs,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+const fbApp=initializeApp({apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"});
+const db=getFirestore(fbApp);
+const GAME_ID="2026-06-29-pinguim-no-gelo";
+
+const W=780,H=420;
+const GRAV=1250,JSPD=-560,MSPD=185;
+const ICE_MELT_RATE=[.015,.025,.038,.055,.08]; // per phase
+
+const PHASES=[
+ {name:"Banquisa Ártica",melt:.015,chicks:5,plats:6,
+  fact:"O Ártico perdeu 40% do seu gelo marítimo em setembro desde 1979. À medida que o gelo derrete, ursos polares e pinguins perdem habitat e caçam menos eficientemente."},
+ {name:"Mar de Ross",melt:.025,chicks:7,plats:6,
+  fact:"A Antártica tem a maior camada de gelo do mundo — 26,5 milhões de km³. Se derreter completamente, o nível do mar subiria 58 metros, inundando cidades costeiras globalmente."},
+ {name:"Plataforma Larsen",melt:.038,chicks:8,plats:7,
+  fact:"Em 2022, a plataforma de gelo Conger (do tamanho de Roma) desabou em 72 horas na Antártica — evento sem precedentes. Científicos atribuem ao aquecimento do oceano."},
+ {name:"Corrente do Atlântico",melt:.055,chicks:10,plats:7,
+  fact:"A AMOC (corrente do Atlântico) está enfraquecendo devido ao derretimento dos polos. Ela regula o clima da Europa e pode colapsar antes de 2095, alterando padrões globais de chuva."},
+ {name:"Última Barreira de Gelo",melt:.08,chicks:12,plats:8,
+  fact:"O Acordo de Paris visa limitar o aquecimento a 1,5°C. Cada décimo de grau adicional representa 10 cm a mais no nível do mar e impactos em bilhões de pessoas em zonas costeiras."}
+];
+
+const c=document.getElementById('c');
+const ctx=c.getContext('2d');
+const keys={};
+let coyote=0,jBuf=0;
+document.addEventListener('keydown',e=>{keys[e.key]=true;if([' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key))e.preventDefault();});
+document.addEventListener('keyup',e=>{keys[e.key]=false;});
+
+let gState='title',phase=0,score=0,lives=3;
+let peng,icePlats,chicks,parts,chickFound,meltTimer;
+
+// Ice platform: x, y, w, h, meltPct (0-1, dies at 1), driftX
+function mkPlats(n,melt){
+  const pls=[];
+  // Bottom safe platform (big, melts slower)
+  pls.push({x:0,y:H-30,w:W,h:30,melt:0,maxMelt:melt*.5,drift:0,bob:0});
+  for(let i=0;i<n;i++){
+    pls.push({
+      x:30+Math.random()*(W-130),
+      y:100+Math.random()*(H-200),
+      w:80+Math.random()*100,
+      h:18,
+      melt:0,
+      maxMelt:melt*(0.8+Math.random()*.4),
+      drift:(Math.random()-.5)*25,
+      bob:Math.random()*Math.PI*2
+    });
+  }
+  return pls;
+}
+
+function mkChicks(n,plats){
+  const cks=[];
+  for(let i=0;i<n;i++){
+    const pl=plats[1+Math.floor(Math.random()*(plats.length-1))];
+    cks.push({x:pl.x+pl.w*.3+Math.random()*pl.w*.4,y:pl.y-18,got:false,t:Math.random()*Math.PI*2,platRef:pl});
+  }
+  return cks;
+}
+
+function initPhase(){
+  const ph=PHASES[phase];
+  icePlats=mkPlats(ph.plats,ph.melt);
+  peng={x:80,y:H-80,vx:0,vy:0,w:32,h:38,face:1,grnd:false,inv:0};
+  chicks=mkChicks(ph.chicks,icePlats);
+  parts=[];chickFound=0;meltTimer=0;
+  document.getElementById('hP').textContent=`${phase+1}/5`;
+  document.getElementById('hC').textContent=`0/${ph.chicks}`;
+  gState='play';
+}
+
+function aabb(ax,ay,aw,ah,bx,by,bw,bh){return ax<bx+bw&&ax+aw>bx&&ay<by+bh&&ay+ah>by;}
+function spPart(x,y,col,n=6){for(let i=0;i<n;i++)parts.push({x,y,vx:(Math.random()-.5)*180,vy:-Math.random()*160-30,c:col,t:.8});}
+
+function update(dt){
+  if(gState!=='play')return;
+  const ph=PHASES[phase];
+
+  const L=keys['ArrowLeft']||keys['a'];
+  const R=keys['ArrowRight']||keys['d'];
+  const J=keys['ArrowUp']||keys['w']||keys[' '];
+
+  if(L){peng.vx=-MSPD;peng.face=-1;}
+  else if(R){peng.vx=MSPD;peng.face=1;}
+  else peng.vx*=.82;
+
+  peng.vy+=GRAV*dt;
+  if(peng.vy>800)peng.vy=800;
+
+  if(J)jBuf=.12;else jBuf=Math.max(0,jBuf-dt);
+  if(!J)coyote=Math.max(0,coyote-dt);
+  if(jBuf>0&&coyote>0){peng.vy=JSPD;jBuf=0;coyote=0;spPart(peng.x+16,peng.y+peng.h,'#93c5fd');}
+
+  peng.x+=peng.vx*dt;
+  peng.y+=peng.vy*dt;
+  peng.x=Math.max(0,Math.min(W-peng.w,peng.x));
+  peng.grnd=false;
+
+  // Ice drift & melt
+  meltTimer+=dt;
+  icePlats.forEach(p=>{
+    if(p===icePlats[0])return; // bottom always stays
+    p.bob+=dt*.5;
+    p.x+=p.drift*dt*.3*Math.sin(p.bob);
+    p.x=Math.max(0,Math.min(W-p.w,p.x));
+    p.melt+=p.maxMelt*dt*(1+meltTimer*.08);
+    if(p.melt>1)p.melt=1;
+  });
+
+  // Platform collision
+  for(const p of icePlats){
+    if(p.melt>=1)continue; // melted away
+    if(!aabb(peng.x,peng.y,peng.w,peng.h,p.x,p.y,p.w,p.h))continue;
+    const prevBottom=peng.y+peng.h-peng.vy*dt;
+    const prevTop=peng.y-peng.vy*dt;
+    const prevRight=peng.x+peng.w-peng.vx*dt;
+    const prevLeft=peng.x-peng.vx*dt;
+    if(prevBottom<=p.y+4&&peng.vy>=0){peng.y=p.y-peng.h;peng.vy=0;peng.grnd=true;coyote=.1;}
+    else if(prevTop>=p.y+p.h-4&&peng.vy<0){peng.y=p.y+p.h;peng.vy=0;}
+    else if(prevRight<=p.x+4&&peng.vx>0){peng.x=p.x-peng.w;peng.vx=0;}
+    else if(prevLeft>=p.x+p.w-4&&peng.vx<0){peng.x=p.x+p.w;peng.vx=0;}
+  }
+
+  // Fall into sea
+  if(peng.y>H+30){
+    lives--;document.getElementById('hL').textContent='❤️'.repeat(Math.max(0,lives));
+    if(lives<=0){gState='over';return;}
+    spPart(peng.x,H,'#93c5fd',10);
+    peng.x=80;peng.y=H-90;peng.vx=0;peng.vy=0;peng.inv=1.5;
+  }
+
+  // Chicks (move with their platform)
+  chicks.forEach(ch=>{
+    if(ch.got)return;
+    ch.t+=dt*2;
+    if(ch.platRef&&ch.platRef.melt<1){
+      ch.y=ch.platRef.y-18;
+      ch.x=Math.max(ch.platRef.x+5,Math.min(ch.platRef.x+ch.platRef.w-5,ch.x));
+    }
+    if(aabb(peng.x,peng.y,peng.w,peng.h,ch.x-10,ch.y-10,20,20)){
+      ch.got=true;chickFound++;score+=25;
+      spPart(ch.x,ch.y,'#fbbf24',8);
+      document.getElementById('hC').textContent=`${chickFound}/${ph.chicks}`;
+      document.getElementById('hS').textContent=score;
+      if(chickFound>=ph.chicks){score+=200+phase*100;document.getElementById('hS').textContent=score;gState='phend';}
+    }
+  });
+
+  parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=300*dt;p.t-=dt;});
+  parts=parts.filter(p=>p.t>0);
+  if(peng.inv>0)peng.inv-=dt;
+}
+
+function render(ts){
+  // Ocean gradient
+  const bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#020a18');bg.addColorStop(1,'#03214d');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+  // Aurora borealis effect
+  ctx.globalAlpha=.12;
+  for(let i=0;i<4;i++){
+    const gx=ctx.createLinearGradient(0,0,W,0);
+    gx.addColorStop(0,'transparent');
+    gx.addColorStop(.3+i*.12,'rgba(100,240,180,.8)');
+    gx.addColorStop(.5+i*.1,'rgba(60,160,255,.6)');
+    gx.addColorStop(1,'transparent');
+    ctx.fillStyle=gx;
+    ctx.fillRect(0,(i*35+Math.sin(ts/2000+i)*.5)*1,W,25);
+  }
+  ctx.globalAlpha=1;
+
+  // Stars
+  for(let i=0;i<40;i++){
+    const sx=((i*157)%W);const sy=((i*97)%130);
+    ctx.fillStyle=`rgba(255,255,255,${.3+.4*(i%2)})`;
+    ctx.fillRect(sx,sy,i%5===0?2:1,i%5===0?2:1);
+  }
+
+  // Ice platforms
+  icePlats.forEach(p=>{
+    if(p.melt>=1)return;
+    const alpha=1-p.melt*.8;
+    const wFrac=1-p.melt*.5;
+    const pw=p.w*wFrac;
+    const ph2=Math.max(4,p.h*(1-p.melt*.6));
+    const px=p.x+(p.w-pw)/2;
+    ctx.globalAlpha=alpha;
+    // Ice body
+    ctx.fillStyle=`rgb(${100+Math.floor(155*p.melt)},${200-Math.floor(50*p.melt)},${240-Math.floor(80*p.melt)})`;
+    ctx.fillRect(px,p.y,pw,ph2);
+    // Glare
+    ctx.fillStyle='rgba(255,255,255,.4)';
+    ctx.fillRect(px+4,p.y+2,pw*.5,3);
+    // Cracks when melting
+    if(p.melt>.4){
+      ctx.strokeStyle='rgba(0,100,200,.5)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(px+pw*.3,p.y);ctx.lineTo(px+pw*.5,p.y+ph2);ctx.stroke();
+    }
+    ctx.globalAlpha=1;
+  });
+
+  // Chicks
+  chicks.forEach(ch=>{
+    if(ch.got)return;
+    const bob=Math.sin(ch.t)*.5;
+    ctx.font='16px serif';ctx.textAlign='center';
+    ctx.fillText('🐣',ch.x,ch.y+bob);
+  });
+
+  // Particles
+  parts.forEach(p=>{
+    ctx.globalAlpha=Math.max(0,p.t/.8);
+    ctx.fillStyle=p.c;ctx.fillRect(p.x-3,p.y-3,6,6);
+    ctx.globalAlpha=1;
+  });
+
+  // Penguin
+  if(gState==='play'||gState==='phend'){
+    if(!(peng.inv>0&&Math.floor(peng.inv*8)%2===0)){
+      ctx.save();
+      ctx.font='34px serif';ctx.textAlign='center';
+      if(peng.face===-1){ctx.scale(-1,1);ctx.fillText('🐧',-peng.x-16,peng.y+peng.h);}
+      else ctx.fillText('🐧',peng.x+16,peng.y+peng.h);
+      ctx.restore();
+    }
+  }
+
+  // Water ripples at bottom
+  ctx.globalAlpha=.4;
+  for(let i=0;i<6;i++){
+    const wx=((i*130+ts*.04)%W+W)%W;
+    ctx.fillStyle='rgba(100,200,255,.3)';
+    ctx.fillRect(wx,H-30+Math.sin(ts*.003+i)*3,80,4);
+  }
+  ctx.globalAlpha=1;
+
+  ctx.textAlign='center';
+
+  if(gState==='title'){
+    ctx.fillStyle='rgba(0,0,0,.78)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#93c5fd';ctx.font='bold 36px sans-serif';ctx.fillText('🐧 Pinguim no Gelo',W/2,H/2-68);
+    ctx.fillStyle='#d0eeff';ctx.font='16px sans-serif';ctx.fillText('Salve os filhotes antes que o gelo derreta!',W/2,H/2-26);
+    ctx.fillStyle='#a0c8f0';ctx.font='14px sans-serif';ctx.fillText('← → mover  ·  ↑ ou Espaço pular',W/2,H/2+14);
+    ctx.fillStyle='#fbbf24';ctx.font='bold 19px sans-serif';
+    if(Math.sin(ts/300)>.2)ctx.fillText('▶  ESPAÇO para começar  ◀',W/2,H/2+57);
+    if(keys[' ']||keys['ArrowUp'])initPhase();
+    return;
+  }
+  if(gState==='phend'){
+    ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#93c5fd';ctx.font='bold 27px sans-serif';ctx.fillText(`🧊 Fase ${phase+1} — ${PHASES[phase].name}`,W/2,65);
+    ctx.fillStyle='#d0eeff';ctx.font='13.5px sans-serif';
+    const words=PHASES[phase].fact.split(' ');let line='',py=108;
+    for(const w of words){const tt=line+w+' ';if(ctx.measureText(tt).width>680&&line){ctx.fillText(line.trim(),W/2,py);py+=21;line=w+' ';}else line=tt;}
+    if(line)ctx.fillText(line.trim(),W/2,py);
+    ctx.fillStyle='#fbbf24';ctx.font='bold 17px sans-serif';
+    if(Math.sin(ts/300)>.2)ctx.fillText(phase<4?'ESPAÇO → próxima fase':'🎉 ESPAÇO → salvar recorde',W/2,H-38);
+    if(keys[' ']){if(phase<4){phase++;setTimeout(initPhase,80);}else{gState='win';document.getElementById('saveBox').style.display='flex';}}
+    return;
+  }
+  if(gState==='over'){
+    ctx.fillStyle='rgba(0,0,0,.85)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#ef4444';ctx.font='bold 34px sans-serif';ctx.fillText('🌊 Afogado!',W/2,H/2-40);
+    ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação: ${score}`,W/2,H/2+8);
+    ctx.fillStyle='#fbbf24';ctx.font='17px sans-serif';ctx.fillText('ESPAÇO → recomeçar',W/2,H/2+50);
+    if(keys[' ']){phase=0;score=0;lives=3;document.getElementById('hL').textContent='❤️❤️❤️';document.getElementById('hS').textContent=0;gState='title';}
+    return;
+  }
+  if(gState==='win'){
+    ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#4ade80';ctx.font='bold 30px sans-serif';ctx.fillText('🐧 Colônia Salva!',W/2,90);
+    ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação: ${score}`,W/2,145);
+    ctx.fillStyle='#93c5fd';ctx.font='14px sans-serif';ctx.fillText('Mas o clima real precisa de ação humana urgente. 🌍',W/2,183);
+    ctx.fillStyle='#fbbf24';ctx.font='15px sans-serif';ctx.fillText('Use o campo abaixo para salvar.',W/2,230);
+    return;
+  }
+  ctx.textAlign='left';
+}
+
+let lastT=0;
+function loop(t){const dt=Math.min((t-(lastT||t))/1000,.05);lastT=t;update(dt);render(t);requestAnimationFrame(loop);}
+
+async function saveScore(){
+  const name=(document.getElementById('pName').value||'Anônimo').trim().slice(0,24);
+  await addDoc(collection(db,'games',GAME_ID,'scores'),{name,score,level:'Completo',seconds:0,ts:serverTimestamp()});
+  document.getElementById('saveBox').style.display='none';
+  loadRanking();
+}
+
+async function loadRanking(){
+  const rl=document.getElementById('rankList');
+  try{
+    const q=query(collection(db,'games',GAME_ID,'scores'),orderBy('score','desc'),limit(80));
+    const snap=await getDocs(q);
+    const docs=snap.docs.map(d=>d.data()).slice(0,10);
+    if(!docs.length){rl.innerHTML='<p style="opacity:.45;font-size:.76rem;padding:4px">Nenhum recorde ainda.</p>';return;}
+    rl.innerHTML=docs.map((d,i)=>`<div class="rank-item"><span>${['🥇','🥈','🥉'][i]||`${i+1}.`} ${d.name}</span><span>${d.score} pts</span></div>`).join('');
+  }catch(e){rl.innerHTML='<p style="opacity:.35;font-size:.76rem">Não foi possível carregar.</p>';}
+}
+
+window.saveScore=saveScore;
+requestAnimationFrame(loop);
+loadRanking();
+</script>
+</body>
+</html>

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Floresta Defensora 🌳 | Top-down Shooter · Amazônia</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#040a04;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:100vh;padding:10px;font-family:"Segoe UI",system-ui,sans-serif;color:#c0e8c0}
+h1{font-size:1.4rem;margin:6px 0 2px;text-align:center}
+.tagline{font-size:.78rem;opacity:.65;margin-bottom:6px;text-align:center}
+.hud{display:flex;gap:10px;margin:4px 0 6px;font-size:.82rem;flex-wrap:wrap;justify-content:center}
+.hud span{background:rgba(255,255,255,.09);border-radius:8px;padding:3px 10px}
+.hud b{color:#4ade80}
+canvas{border:2px solid rgba(40,180,80,.22);border-radius:8px;display:block;max-width:100%}
+.save-box{margin-top:10px;display:none;flex-direction:column;align-items:center;gap:8px}
+.save-box input{padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-size:.95rem;width:220px;outline:none}
+.save-box button{padding:8px 20px;border-radius:8px;border:none;background:#15803d;color:#fff;font-size:.9rem;cursor:pointer;font-weight:600}
+.ranking{width:min(780px,98vw);background:rgba(255,255,255,.05);border-radius:10px;padding:10px;margin-top:8px}
+.ranking h3{font-size:.78rem;opacity:.6;margin-bottom:6px}
+.rank-list{display:flex;flex-direction:column;gap:3px;max-height:150px;overflow-y:auto}
+.rank-item{display:flex;justify-content:space-between;font-size:.76rem;padding:3px 8px;background:rgba(255,255,255,.04);border-radius:5px}
+footer{margin-top:12px;opacity:.45;font-size:.68rem;text-align:center}
+</style>
+</head>
+<body>
+<h1>🌳 Floresta Defensora</h1>
+<p class="tagline">Top-down Shooter · Biologia · Ensino Religioso · Amazônia — ← → ↑ ↓ mover · Espaço atirar</p>
+<div class="hud">
+  <span>Fase: <b id="hP">1/5</b></span>
+  <span>Pontos: <b id="hS">0</b></span>
+  <span>Floresta: <b id="hF">🌳🌳🌳🌳🌳</b></span>
+  <span>Eliminar: <b id="hN">0/0</b></span>
+</div>
+<canvas id="c" width="780" height="430"></canvas>
+<div class="save-box" id="saveBox">
+  <p style="font-size:.85rem;opacity:.8">🏆 Floresta protegida! Salve seu recorde:</p>
+  <input type="text" id="pName" maxlength="24" placeholder="Seu nome…">
+  <button onclick="window.saveScore()">Salvar Pontuação</button>
+</div>
+<div class="ranking">
+  <h3>🏆 Ranking</h3>
+  <div class="rank-list" id="rankList"><p style="opacity:.45;font-size:.76rem;padding:4px">Carregando…</p></div>
+</div>
+<footer>Biologia · Ensino Religioso · Amazônia 🌿 | 2026-06-30 — Idealizado por Ernandes Sobreira</footer>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import{getFirestore,collection,addDoc,query,orderBy,limit,getDocs,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+const fbApp=initializeApp({apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"});
+const db=getFirestore(fbApp);
+const GAME_ID="2026-06-30-floresta-defensora";
+
+const W=780,H=430,SPCHARS=['⛏️','🚜','🔥','🪚','🧨'];
+const MSPD=200;
+
+const PHASES=[
+ {need:10,maxEn:6,spawnRate:.9,enSpd:50,hp:1,
+  fact:"A Amazônia abriga 10% de todas as espécies do planeta e 20% das espécies de pássaros do mundo. Povos indígenas vivem nesse ecossistema há mais de 10.000 anos.",
+  name:"Coração Verde"},
+ {need:15,maxEn:8,spawnRate:.75,enSpd:70,hp:1,
+  fact:"O desmatamento da Amazônia entre 2000 e 2022 destruiu uma área maior do que a França. O Brasil detém 60% da Amazônia global — a maior floresta tropical do mundo.",
+  name:"Defesa do Corredor"},
+ {need:18,maxEn:10,spawnRate:.62,enSpd:90,hp:2,
+  fact:"A Amazônia produz 'rios voadores' — massas de vapor d'água que carregam chuva para o sul do Brasil. Sem a floresta, o agronegócio do Cerrado e do Pantanal seria inviável.",
+  name:"Batalha do Arco do Desmatamento"},
+ {need:22,maxEn:12,spawnRate:.5,enSpd:110,hp:2,
+  fact:"Mais de 700 povos indígenas vivem na Amazônia e têm as terras mais preservadas do bioma. A demarcação das Terras Indígenas é uma das ferramentas mais eficazes contra o desmatamento.",
+  name:"Frente do Fogo"},
+ {need:28,maxEn:14,spawnRate:.42,enSpd:135,hp:3,
+  fact:"A Amazônia está próxima de um ponto de inflexão ('tipping point'): com desmatamento acima de 20-25%, a floresta pode entrar em colapso e se transformar em savana — alterando o clima continental.",
+  name:"Defesa Final da Floresta"}
+];
+
+const c=document.getElementById('c');
+const ctx=c.getContext('2d');
+const keys={};
+let shotCool=0;
+document.addEventListener('keydown',e=>{keys[e.key]=true;if([' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key))e.preventDefault();});
+document.addEventListener('keyup',e=>{keys[e.key]=false;});
+
+let gState='title',phase=0,score=0,forest=5;
+let spirit,bullets,enemies,parts,enTimer,killed,trees;
+
+function mkSpirit(){return{x:W/2,y:H/2,angle:0,w:28,h:28,inv:0};}
+
+function mkTrees(n){
+  const arr=[];
+  for(let i=0;i<n;i++){
+    arr.push({x:40+Math.random()*(W-80),y:40+Math.random()*(H-80),r:14+Math.random()*10,burn:0,id:i});
+  }
+  return arr;
+}
+
+function initPhase(){
+  const ph=PHASES[phase];
+  spirit=mkSpirit();
+  bullets=[];enemies=[];parts=[];
+  enTimer=0;killed=0;
+  trees=mkTrees(20);
+  forest=5;
+  document.getElementById('hP').textContent=`${phase+1}/5`;
+  document.getElementById('hN').textContent=`0/${ph.need}`;
+  document.getElementById('hF').textContent='🌳'.repeat(5);
+  gState='play';
+}
+
+function aabb(ax,ay,aw,ah,bx,by,bw,bh){return ax<bx+bw&&ax+aw>bx&&ay<by+bh&&ay+ah>by;}
+function dist2(ax,ay,bx,by){return Math.sqrt((ax-bx)**2+(ay-by)**2);}
+function spPart(x,y,col,n=6){for(let i=0;i<n;i++)parts.push({x,y,vx:(Math.random()-.5)*200,vy:(Math.random()-.5)*200,c:col,t:.8});}
+
+function update(dt){
+  if(gState!=='play')return;
+  const ph=PHASES[phase];
+
+  // Spirit movement
+  const L=keys['ArrowLeft']||keys['a'];
+  const R=keys['ArrowRight']||keys['d'];
+  const U=keys['ArrowUp']||keys['w'];
+  const D=keys['ArrowDown']||keys['s'];
+  const ax=(R?1:0)-(L?1:0);
+  const ay=(D?1:0)-(U?1:0);
+  if(ax!==0||ay!==0){
+    const len=Math.sqrt(ax*ax+ay*ay);
+    spirit.x+=ax/len*MSPD*dt;
+    spirit.y+=ay/len*MSPD*dt;
+    spirit.angle=Math.atan2(ay,ax);
+  }
+  spirit.x=Math.max(14,Math.min(W-14,spirit.x));
+  spirit.y=Math.max(14,Math.min(H-14,spirit.y));
+
+  // Shoot (8-directional)
+  shotCool=Math.max(0,shotCool-dt);
+  if((keys[' ']||keys['z'])&&shotCool<=0){
+    bullets.push({x:spirit.x,y:spirit.y,vx:Math.cos(spirit.angle)*580,vy:Math.sin(spirit.angle)*580,t:1.2});
+    shotCool=.18;
+  }
+
+  // Bullets
+  for(let i=bullets.length-1;i>=0;i--){
+    const b=bullets[i];
+    b.x+=b.vx*dt;b.y+=b.vy*dt;b.t-=dt;
+    if(b.t<=0||b.x<0||b.x>W||b.y<0||b.y>H)bullets.splice(i,1);
+  }
+
+  // Enemy spawn
+  enTimer-=dt;
+  if(enTimer<=0&&enemies.length<ph.maxEn){
+    const side=Math.floor(Math.random()*4);
+    let ex,ey;
+    if(side===0){ex=Math.random()*W;ey=-30;}
+    else if(side===1){ex=W+30;ey=Math.random()*H;}
+    else if(side===2){ex=Math.random()*W;ey=H+30;}
+    else{ex=-30;ey=Math.random()*H;}
+    const ti=Math.floor(Math.random()*SPCHARS.length);
+    enemies.push({x:ex,y:ey,e:SPCHARS[ti],hp:ph.hp,maxHp:ph.hp,r:18,id:Math.random()});
+    enTimer=ph.spawnRate*(0.7+Math.random()*.6);
+  }
+
+  // Enemy update — move toward nearest tree or spirit
+  for(let i=enemies.length-1;i>=0;i--){
+    const en=enemies[i];
+    // Find nearest living tree
+    let tgt=null,tdist=999;
+    trees.forEach(tr=>{if(tr.burn<1){const d=dist2(en.x,en.y,tr.x,tr.y);if(d<tdist){tdist=d;tgt=tr;}}});
+
+    // If no trees, go for spirit
+    if(!tgt||(dist2(en.x,en.y,spirit.x,spirit.y)<tdist*0.5)){
+      const dx=spirit.x-en.x,dy=spirit.y-en.y;
+      const d=Math.sqrt(dx*dx+dy*dy)||1;
+      en.x+=dx/d*ph.enSpd*dt;en.y+=dy/d*ph.enSpd*dt;
+    } else if(tgt){
+      const dx=tgt.x-en.x,dy=tgt.y-en.y;
+      const d=Math.sqrt(dx*dx+dy*dy)||1;
+      en.x+=dx/d*ph.enSpd*dt;en.y+=dy/d*ph.enSpd*dt;
+      // Burn tree
+      if(d<tgt.r+en.r){tgt.burn+=dt*.08;if(tgt.burn>=1){spPart(tgt.x,tgt.y,'#ef4444',6);forest--;document.getElementById('hF').textContent='🌳'.repeat(Math.max(0,forest))+'⬛'.repeat(5-forest);if(forest<=0){gState='over';return;}}}
+    }
+
+    // Spirit-enemy collision
+    if(spirit.inv<=0&&dist2(en.x,en.y,spirit.x,spirit.y)<en.r+14){
+      spPart(spirit.x,spirit.y,'#ef4444',8);
+      forest--;document.getElementById('hF').textContent='🌳'.repeat(Math.max(0,forest))+'⬛'.repeat(5-forest);
+      spirit.inv=1.8;
+      if(forest<=0){gState='over';return;}
+    }
+
+    // Bullet-enemy collision
+    for(let j=bullets.length-1;j>=0;j--){
+      const b=bullets[j];
+      if(dist2(b.x,b.y,en.x,en.y)<en.r){
+        bullets.splice(j,1);
+        en.hp--;spPart(en.x,en.y,'#4ade80',4);
+        if(en.hp<=0){
+          spPart(en.x,en.y,'#fbbf24',10);
+          score+=20*ph.hp;killed++;
+          document.getElementById('hS').textContent=score;
+          document.getElementById('hN').textContent=`${killed}/${ph.need}`;
+          enemies.splice(i,1);
+          if(killed>=ph.need){score+=250+phase*100;document.getElementById('hS').textContent=score;gState='phend';return;}
+          break;
+        }
+      }
+    }
+  }
+
+  parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.t-=dt;});
+  parts=parts.filter(p=>p.t>0);
+  if(spirit.inv>0)spirit.inv-=dt;
+}
+
+function render(ts){
+  // Forest floor
+  const bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#050f05');bg.addColorStop(1,'#0a1a0a');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+  // Grid texture
+  ctx.fillStyle='rgba(30,80,30,.3)';
+  for(let x=0;x<W;x+=40)for(let y=0;y<H;y+=40)ctx.fillRect(x,y,1,1);
+
+  // Trees
+  trees.forEach(tr=>{
+    if(tr.burn>=1){
+      ctx.font='20px serif';ctx.textAlign='center';ctx.fillText('🪵',tr.x,tr.y+8);
+      return;
+    }
+    const alpha=1-tr.burn*.5;
+    ctx.globalAlpha=alpha;
+    if(tr.burn>.4){
+      ctx.font='22px serif';ctx.textAlign='center';
+      const fl=Math.sin(ts/60)>.5?'🔥':'🌳';
+      ctx.fillText(fl,tr.x,tr.y+8);
+    } else {
+      ctx.fillStyle='#166534';
+      ctx.beginPath();ctx.arc(tr.x,tr.y,tr.r,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#15803d';
+      ctx.beginPath();ctx.arc(tr.x-3,tr.y-3,tr.r*.7,0,Math.PI*2);ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  });
+
+  // Bullets (water jets)
+  bullets.forEach(b=>{
+    ctx.fillStyle='#22d3ee';
+    ctx.beginPath();ctx.arc(b.x,b.y,4,0,Math.PI*2);ctx.fill();
+  });
+
+  // Enemies
+  enemies.forEach(en=>{
+    ctx.font='26px serif';ctx.textAlign='center';
+    ctx.fillText(en.e,en.x-12,en.y+8);
+    if(en.maxHp>1){
+      ctx.fillStyle='#333';ctx.fillRect(en.x-16,en.y-en.r-12,32,5);
+      ctx.fillStyle='#ef4444';ctx.fillRect(en.x-16,en.y-en.r-12,32*(en.hp/en.maxHp),5);
+    }
+  });
+
+  // Particles
+  parts.forEach(p=>{
+    ctx.globalAlpha=Math.max(0,p.t/.8);
+    ctx.fillStyle=p.c;ctx.fillRect(p.x-3,p.y-3,6,6);
+    ctx.globalAlpha=1;
+  });
+
+  // Spirit
+  if(gState==='play'||gState==='phend'){
+    if(!(spirit.inv>0&&Math.floor(spirit.inv*8)%2===0)){
+      ctx.save();ctx.translate(spirit.x,spirit.y);ctx.rotate(spirit.angle);
+      ctx.font='30px serif';ctx.textAlign='center';ctx.fillText('🌲',-15,12);
+      ctx.restore();
+    }
+  }
+
+  ctx.textAlign='center';
+
+  if(gState==='title'){
+    ctx.fillStyle='rgba(0,0,0,.8)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#4ade80';ctx.font='bold 36px sans-serif';ctx.fillText('🌳 Floresta Defensora',W/2,H/2-68);
+    ctx.fillStyle='#c0e8c0';ctx.font='16px sans-serif';ctx.fillText('Proteja as árvores contra os invasores!',W/2,H/2-26);
+    ctx.fillStyle='#a0c8a0';ctx.font='14px sans-serif';
+    ctx.fillText('← → ↑ ↓ mover  ·  Espaço atirar água',W/2,H/2+14);
+    ctx.fillStyle='#fbbf24';ctx.font='bold 19px sans-serif';
+    if(Math.sin(ts/300)>.2)ctx.fillText('▶  ESPAÇO para começar  ◀',W/2,H/2+57);
+    if(keys[' '])initPhase();
+    return;
+  }
+  if(gState==='phend'){
+    ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#4ade80';ctx.font='bold 27px sans-serif';ctx.fillText(`🌳 Fase ${phase+1} — ${PHASES[phase].name}`,W/2,65);
+    ctx.fillStyle='#c0e8c0';ctx.font='13.5px sans-serif';
+    const words=PHASES[phase].fact.split(' ');let line='',py=108;
+    for(const w of words){const tt=line+w+' ';if(ctx.measureText(tt).width>680&&line){ctx.fillText(line.trim(),W/2,py);py+=21;line=w+' ';}else line=tt;}
+    if(line)ctx.fillText(line.trim(),W/2,py);
+    ctx.fillStyle='#fbbf24';ctx.font='bold 17px sans-serif';
+    if(Math.sin(ts/300)>.2)ctx.fillText(phase<4?'ESPAÇO → próxima fase':'🎉 ESPAÇO → salvar recorde',W/2,H-38);
+    if(keys[' ']){if(phase<4){phase++;setTimeout(initPhase,80);}else{gState='win';document.getElementById('saveBox').style.display='flex';}}
+    return;
+  }
+  if(gState==='over'){
+    ctx.fillStyle='rgba(0,0,0,.85)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#ef4444';ctx.font='bold 34px sans-serif';ctx.fillText('🔥 Floresta Destruída!',W/2,H/2-40);
+    ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação: ${score}`,W/2,H/2+8);
+    ctx.fillStyle='#fbbf24';ctx.font='17px sans-serif';ctx.fillText('ESPAÇO → tentar novamente',W/2,H/2+50);
+    if(keys[' ']){phase=0;score=0;gState='title';document.getElementById('hS').textContent=0;}
+    return;
+  }
+  if(gState==='win'){
+    ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#4ade80';ctx.font='bold 30px sans-serif';ctx.fillText('🌳 Amazônia Protegida!',W/2,90);
+    ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação: ${score}`,W/2,145);
+    ctx.fillStyle='#4ade80';ctx.font='14px sans-serif';ctx.fillText('Cada árvore é sagrada. Cada território indígena, uma fortaleza. 🌿',W/2,183);
+    ctx.fillStyle='#fbbf24';ctx.font='15px sans-serif';ctx.fillText('Use o campo abaixo para salvar.',W/2,230);
+    return;
+  }
+  ctx.textAlign='left';
+}
+
+let lastT=0;
+function loop(t){const dt=Math.min((t-(lastT||t))/1000,.05);lastT=t;update(dt);render(t);requestAnimationFrame(loop);}
+
+async function saveScore(){
+  const name=(document.getElementById('pName').value||'Anônimo').trim().slice(0,24);
+  await addDoc(collection(db,'games',GAME_ID,'scores'),{name,score,level:'Completo',seconds:0,ts:serverTimestamp()});
+  document.getElementById('saveBox').style.display='none';
+  loadRanking();
+}
+
+async function loadRanking(){
+  const rl=document.getElementById('rankList');
+  try{
+    const q=query(collection(db,'games',GAME_ID,'scores'),orderBy('score','desc'),limit(80));
+    const snap=await getDocs(q);
+    const docs=snap.docs.map(d=>d.data()).slice(0,10);
+    if(!docs.length){rl.innerHTML='<p style="opacity:.45;font-size:.76rem;padding:4px">Nenhum recorde ainda.</p>';return;}
+    rl.innerHTML=docs.map((d,i)=>`<div class="rank-item"><span>${['🥇','🥈','🥉'][i]||`${i+1}.`} ${d.name}</span><span>${d.score} pts</span></div>`).join('');
+  }catch(e){rl.innerHTML='<p style="opacity:.35;font-size:.76rem">Não foi possível carregar.</p>';}
+}
+
+window.saveScore=saveScore;
+requestAnimationFrame(loop);
+loadRanking();
+</script>
+</body>
+</html>

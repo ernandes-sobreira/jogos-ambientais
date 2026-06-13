@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Abelha Mensageira 🐝 | Flappy · Mata Atlântica</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a1a10;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:100vh;padding:10px;font-family:"Segoe UI",system-ui,sans-serif;color:#d4edd4}
+h1{font-size:1.4rem;margin:6px 0 2px;text-align:center}
+.tagline{font-size:.78rem;opacity:.65;margin-bottom:6px;text-align:center}
+.hud{display:flex;gap:10px;margin:4px 0 6px;font-size:.82rem;flex-wrap:wrap;justify-content:center}
+.hud span{background:rgba(255,255,255,.09);border-radius:8px;padding:3px 10px}
+.hud b{color:#fbbf24}
+canvas{border:2px solid rgba(255,255,255,.13);border-radius:8px;display:block;max-width:100%}
+.save-box{margin-top:10px;display:none;flex-direction:column;align-items:center;gap:8px}
+.save-box input{padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-size:.95rem;width:220px;outline:none}
+.save-box button{padding:8px 20px;border-radius:8px;border:none;background:#d97706;color:#fff;font-size:.9rem;cursor:pointer;font-weight:600}
+.save-box button:hover{background:#b45309}
+.ranking{width:min(780px,98vw);background:rgba(255,255,255,.05);border-radius:10px;padding:10px;margin-top:8px}
+.ranking h3{font-size:.78rem;opacity:.6;margin-bottom:6px}
+.rank-list{display:flex;flex-direction:column;gap:3px;max-height:150px;overflow-y:auto}
+.rank-item{display:flex;justify-content:space-between;font-size:.76rem;padding:3px 8px;background:rgba(255,255,255,.04);border-radius:5px}
+footer{margin-top:12px;opacity:.45;font-size:.68rem;text-align:center}
+</style>
+</head>
+<body>
+<h1>🐝 Abelha Mensageira</h1>
+<p class="tagline">Flappy · Biologia · Mata Atlântica — ↑ ou Espaço para bater as asas!</p>
+<div class="hud">
+  <span>Fase: <b id="hP">1/5</b></span>
+  <span>Pontos: <b id="hS">0</b></span>
+  <span>Flores: <b id="hF">0/0</b></span>
+  <span>Vidas: <b id="hL">❤️❤️❤️</b></span>
+</div>
+<canvas id="c" width="780" height="410"></canvas>
+<div class="save-box" id="saveBox">
+  <p style="font-size:.85rem;opacity:.8">🏆 Missão cumprida! Salve seu recorde:</p>
+  <input type="text" id="pName" maxlength="24" placeholder="Seu nome…">
+  <button onclick="window.saveScore()">Salvar Pontuação</button>
+</div>
+<div class="ranking">
+  <h3>🏆 Ranking</h3>
+  <div class="rank-list" id="rankList"><p style="opacity:.45;font-size:.76rem;padding:4px">Carregando…</p></div>
+</div>
+<footer>Biologia · Polinizadores · Mata Atlântica 🌺 | 2026-06-25 — Idealizado por Ernandes Sobreira</footer>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import{getFirestore,collection,addDoc,query,orderBy,limit,getDocs,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+const fbApp=initializeApp({apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"});
+const db=getFirestore(fbApp);
+const GAME_ID="2026-06-25-abelha-mensageira";
+
+const W=780,H=410;
+const GRAV=900;
+const FLAP=-320;
+
+// Phase configs: obstacle speed, gap size, flowers needed, bg colors, fact
+const PHASES=[
+ {spd:140,gap:170,need:8, bgTop:'#0a1e05',bgBot:'#0f350a',
+  fact:"As abelhas silvestres são responsáveis por polinizar 73% das plantas que os humanos usam para alimentação. Sem elas, nossa dieta seria muito mais limitada.",
+  name:"Dossel da Mata Atlântica"},
+ {spd:165,gap:155,need:10,bgTop:'#05180a',bgBot:'#0a2d12',
+  fact:"A Mata Atlântica é um dos 5 hotspots de biodiversidade mais ricos do mundo — e um dos mais ameaçados. Restam menos de 12% da cobertura original.",
+  name:"Sub-bosque das Epífitas"},
+ {spd:195,gap:140,need:12,bgTop:'#030f08',bgBot:'#082212',
+  fact:"Existem mais de 300 espécies de abelhas nativas no Brasil. Diferente das abelhas europeias, a maioria não tem ferrão e vive em ninhos únicos.",
+  name:"Corredor Ecológico"},
+ {spd:225,gap:125,need:14,bgTop:'#020a05',bgBot:'#051808',
+  fact:"O agrotóxico neonicotinoide é a principal ameaça às abelhas nativas. Quando aplicado em flores, destrói a capacidade de navegação e memória das abelhas.",
+  name:"Zona de Perigo — Pesticidas"},
+ {spd:260,gap:110,need:16,bgTop:'#010805',bgBot:'#030e06',
+  fact:"Produtores que preservam matas e usam agricultura sem pesticidas têm colheitas até 3x maiores graças às abelhas polinizadoras. Natureza e economia andam juntas.",
+  name:"Renovação da Floresta"}
+];
+
+const c=document.getElementById('c');
+const ctx=c.getContext('2d');
+const keys={};
+document.addEventListener('keydown',e=>{keys[e.key]=true;if([' ','ArrowUp'].includes(e.key))e.preventDefault();});
+document.addEventListener('keyup',e=>{keys[e.key]=false;});
+
+let gState='title',phase=0,score=0,lives=3;
+let bee,pipes,flowers,parts,pipeTimer,flowerTimer,dist,phFlowers,flFound,justFlapped;
+
+function mkBee(){return{x:120,y:H/2,vy:0,wing:0,inv:0};}
+
+function initPhase(){
+  bee=mkBee();
+  pipes=[];flowers=[];parts=[];
+  pipeTimer=0;flowerTimer=0;dist=0;phFlowers=0;flFound=0;
+  justFlapped=false;
+  document.getElementById('hP').textContent=`${phase+1}/5`;
+  document.getElementById('hF').textContent=`0/${PHASES[phase].need}`;
+  gState='play';
+}
+
+function spPart(x,y,col){for(let i=0;i<8;i++)parts.push({x,y,vx:(Math.random()-.5)*160,vy:-Math.random()*160-40,c:col,t:.8});}
+
+function aabb(ax,ay,aw,ah,bx,by,bw,bh){return ax<bx+bw&&ax+aw>bx&&ay<by+bh&&ay+ah>by;}
+
+function update(dt){
+  if(gState!=='play')return;
+  const ph=PHASES[phase];
+
+  // Flap
+  const wantFlap=keys['ArrowUp']||keys[' ']||keys['w'];
+  if(wantFlap&&!justFlapped){bee.vy=FLAP;bee.wing=1;spPart(bee.x-10,bee.y+8,'rgba(255,220,80,0.7)');justFlapped=true;}
+  if(!wantFlap)justFlapped=false;
+
+  bee.vy+=GRAV*dt;
+  if(bee.vy>600)bee.vy=600;
+  bee.y+=bee.vy*dt;
+  bee.wing=Math.max(0,bee.wing-dt*6);
+
+  // Boundaries
+  if(bee.y<0){bee.y=0;bee.vy=80;}
+  if(bee.y>H-20){if(bee.inv<=0){hitBee();return;}}
+
+  // Pipe spawn
+  pipeTimer-=dt;
+  if(pipeTimer<=0){
+    const gap=ph.gap;
+    const topH=50+Math.random()*(H-gap-100);
+    pipes.push({x:W,topH,botY:topH+gap,w:58,spd:ph.spd,passed:false});
+    pipeTimer=1.5+Math.random()*.5;
+  }
+
+  // Flower spawn (every ~2 pipes)
+  flowerTimer-=dt;
+  if(flowerTimer<=0){
+    flowers.push({x:W+20,y:60+Math.random()*(H-120),got:false,t:0});
+    flowerTimer=2.2+Math.random()*1.2;
+  }
+
+  // Update pipes
+  for(let i=pipes.length-1;i>=0;i--){
+    const p=pipes[i];
+    p.x-=p.spd*dt;
+    if(!p.passed&&p.x+p.w<bee.x){p.passed=true;score+=10;document.getElementById('hS').textContent=score;}
+    if(bee.inv<=0&&(aabb(bee.x-12,bee.y-12,24,24,p.x,0,p.w,p.topH)||aabb(bee.x-12,bee.y-12,24,24,p.x,p.botY,p.w,H-p.botY))){hitBee();return;}
+    if(p.x+p.w<0)pipes.splice(i,1);
+  }
+
+  // Update flowers
+  for(let i=flowers.length-1;i>=0;i--){
+    const f=flowers[i];
+    f.x-=ph.spd*.4*dt;
+    f.t+=dt*4;
+    if(!f.got&&aabb(bee.x-14,bee.y-14,28,28,f.x-14,f.y-14,28,28)){
+      f.got=true;flFound++;score+=25;
+      spPart(f.x,f.y,'#f9a8d4');
+      document.getElementById('hF').textContent=`${flFound}/${ph.need}`;
+      document.getElementById('hS').textContent=score;
+      if(flFound>=ph.need){score+=150+phase*80;document.getElementById('hS').textContent=score;gState='phend';return;}
+    }
+    if(f.x<-30)flowers.splice(i,1);
+  }
+
+  // Particles
+  parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=300*dt;p.t-=dt;});
+  parts=parts.filter(p=>p.t>0);
+
+  dist+=dt;
+  if(bee.inv>0)bee.inv-=dt;
+}
+
+function hitBee(){
+  lives--;document.getElementById('hL').textContent='❤️'.repeat(Math.max(0,lives));
+  if(lives<=0){gState='over';return;}
+  spPart(bee.x,bee.y,'#ef4444');
+  bee=mkBee();bee.inv=2;
+}
+
+function render(t){
+  const ph=PHASES[phase]||PHASES[0];
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,ph.bgTop);g.addColorStop(1,ph.bgBot);
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+
+  // Ground line
+  ctx.fillStyle='#1a4a0a';ctx.fillRect(0,H-8,W,8);
+
+  // Parallax leaves (decorative)
+  ctx.fillStyle='rgba(20,80,10,.3)';
+  for(let i=0;i<6;i++){
+    const lx=((i*200+dist*30)%W+W)%W;
+    ctx.fillRect(lx,10+i*15,35,8);
+    ctx.fillRect(lx+15,5+i*15,20,5);
+  }
+
+  // Pipes (tree trunks / branches)
+  pipes.forEach(p=>{
+    // Top pipe (tree trunk hanging down)
+    ctx.fillStyle='#1d4d0a';ctx.fillRect(p.x,0,p.w,p.topH);
+    ctx.fillStyle='#2a6a10';ctx.fillRect(p.x,p.topH-20,p.w,20);
+    ctx.fillStyle='#35850d';ctx.fillRect(p.x-5,p.topH-12,p.w+10,12);
+    // Bottom pipe
+    ctx.fillStyle='#1d4d0a';ctx.fillRect(p.x,p.botY,p.w,H-p.botY);
+    ctx.fillStyle='#2a6a10';ctx.fillRect(p.x,p.botY,p.w,20);
+    ctx.fillStyle='#35850d';ctx.fillRect(p.x-5,p.botY,p.w+10,12);
+  });
+
+  // Flowers
+  flowers.forEach(f=>{
+    if(f.got)return;
+    const bob=Math.sin(f.t)*.5;
+    ctx.font='22px serif';ctx.fillText(['🌸','🌺','🌼','🌻','💐'][phase%5],f.x-11,f.y+8+bob);
+  });
+
+  // Particles
+  parts.forEach(p=>{
+    ctx.globalAlpha=Math.max(0,p.t/.8);
+    ctx.fillStyle=p.c;ctx.fillRect(p.x-3,p.y-3,6,6);
+    ctx.globalAlpha=1;
+  });
+
+  // Bee
+  if(gState==='play'||gState==='phend'){
+    if(!(bee.inv>0&&Math.floor(bee.inv*8)%2===0)){
+      const tilt=Math.atan2(bee.vy,300);
+      ctx.save();ctx.translate(bee.x,bee.y);ctx.rotate(Math.max(-0.4,Math.min(.5,tilt)));
+      ctx.font='28px serif';ctx.fillText('🐝',-14,10);
+      ctx.restore();
+    }
+  }
+
+  ctx.textAlign='center';
+
+  if(gState==='title'){
+    ctx.fillStyle='rgba(0,0,0,.75)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fbbf24';ctx.font='bold 36px sans-serif';ctx.fillText('🐝 Abelha Mensageira',W/2,H/2-65);
+    ctx.fillStyle='#d4edd4';ctx.font='16px sans-serif';ctx.fillText('Colete flores nativas e desvie das árvores!',W/2,H/2-25);
+    ctx.fillStyle='#a0d0a0';ctx.font='15px sans-serif';ctx.fillText('↑ ou Espaço — bater as asas',W/2,H/2+15);
+    ctx.fillStyle='#fbbf24';ctx.font='bold 19px sans-serif';
+    if(Math.sin(t/300)>.2)ctx.fillText('▶  ESPAÇO para começar  ◀',W/2,H/2+58);
+    if(keys[' ']||keys['ArrowUp'])initPhase();
+    ctx.textAlign='left';return;
+  }
+  if(gState==='phend'){
+    ctx.fillStyle='rgba(0,0,0,.8)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fbbf24';ctx.font='bold 27px sans-serif';ctx.fillText(`🌺 Fase ${phase+1} — ${ph.name}`,W/2,68);
+    ctx.fillStyle='#fffde7';ctx.font='13.5px sans-serif';
+    const words=ph.fact.split(' ');let line='',py=110;
+    for(const w of words){const t2=line+w+' ';if(ctx.measureText(t2).width>680&&line){ctx.fillText(line.trim(),W/2,py);py+=21;line=w+' ';}else line=t2;}
+    if(line){ctx.fillText(line.trim(),W/2,py);}
+    ctx.fillStyle='#fbbf24';ctx.font='bold 17px sans-serif';
+    if(Math.sin(t/300)>.2)ctx.fillText(phase<4?'ESPAÇO → próxima fase':'🎉 ESPAÇO → salvar recorde',W/2,H-40);
+    if(keys[' ']){if(phase<4){phase++;setTimeout(initPhase,80);}else{gState='win';document.getElementById('saveBox').style.display='flex';}}
+    ctx.textAlign='left';return;
+  }
+  if(gState==='over'){
+    ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#ef4444';ctx.font='bold 34px sans-serif';ctx.fillText('💀 Game Over',W/2,H/2-40);
+    ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação: ${score}`,W/2,H/2+10);
+    ctx.fillStyle='#fbbf24';ctx.font='17px sans-serif';ctx.fillText('ESPAÇO → recomeçar',W/2,H/2+52);
+    if(keys[' ']){phase=0;score=0;lives=3;document.getElementById('hL').textContent='❤️❤️❤️';document.getElementById('hS').textContent=0;gState='title';}
+    ctx.textAlign='left';return;
+  }
+  if(gState==='win'){
+    ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fbbf24';ctx.font='bold 30px sans-serif';ctx.fillText('🐝 Polinização Completa!',W/2,90);
+    ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação: ${score}`,W/2,145);
+    ctx.fillStyle='#a0d4a0';ctx.font='14px sans-serif';ctx.fillText('A Mata Atlântica floresce graças à sua abelha! 🌺',W/2,185);
+    ctx.fillStyle='#fbbf24';ctx.font='15px sans-serif';ctx.fillText('Use o campo abaixo para salvar seu recorde.',W/2,240);
+    ctx.textAlign='left';return;
+  }
+  ctx.textAlign='left';
+}
+
+let lastT=0;
+function loop(t){const dt=Math.min((t-(lastT||t))/1000,.05);lastT=t;update(dt);render(t);requestAnimationFrame(loop);}
+
+async function saveScore(){
+  const name=(document.getElementById('pName').value||'Anônimo').trim().slice(0,24);
+  await addDoc(collection(db,'games',GAME_ID,'scores'),{name,score,level:'Completo',seconds:0,ts:serverTimestamp()});
+  document.getElementById('saveBox').style.display='none';
+  loadRanking();
+}
+
+async function loadRanking(){
+  const rl=document.getElementById('rankList');
+  try{
+    const q=query(collection(db,'games',GAME_ID,'scores'),orderBy('score','desc'),limit(80));
+    const snap=await getDocs(q);
+    const docs=snap.docs.map(d=>d.data()).slice(0,10);
+    if(!docs.length){rl.innerHTML='<p style="opacity:.45;font-size:.76rem;padding:4px">Nenhum recorde ainda.</p>';return;}
+    rl.innerHTML=docs.map((d,i)=>`<div class="rank-item"><span>${['🥇','🥈','🥉'][i]||`${i+1}.`} ${d.name}</span><span>${d.score} pts</span></div>`).join('');
+  }catch(e){rl.innerHTML='<p style="opacity:.35;font-size:.76rem">Não foi possível carregar.</p>';}
+}
+
+window.saveScore=saveScore;
+requestAnimationFrame(loop);
+loadRanking();
+</script>
+</body>
+</html>

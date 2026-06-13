@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Canoa do Pantanal 🚣 | Top-down · Geografia</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#041a18;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:100vh;padding:10px;font-family:"Segoe UI",system-ui,sans-serif;color:#c8f0e8}
+h1{font-size:1.4rem;margin:6px 0 2px;text-align:center}
+.tagline{font-size:.78rem;opacity:.65;margin-bottom:6px;text-align:center}
+.hud{display:flex;gap:10px;margin:4px 0 6px;font-size:.82rem;flex-wrap:wrap;justify-content:center}
+.hud span{background:rgba(255,255,255,.09);border-radius:8px;padding:3px 10px}
+.hud b{color:#34d399}
+canvas{border:2px solid rgba(50,200,160,.25);border-radius:8px;display:block;max-width:100%}
+.save-box{margin-top:10px;display:none;flex-direction:column;align-items:center;gap:8px}
+.save-box input{padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-size:.95rem;width:220px;outline:none}
+.save-box button{padding:8px 20px;border-radius:8px;border:none;background:#059669;color:#fff;font-size:.9rem;cursor:pointer;font-weight:600}
+.ranking{width:min(780px,98vw);background:rgba(255,255,255,.05);border-radius:10px;padding:10px;margin-top:8px}
+.ranking h3{font-size:.78rem;opacity:.6;margin-bottom:6px}
+.rank-list{display:flex;flex-direction:column;gap:3px;max-height:150px;overflow-y:auto}
+.rank-item{display:flex;justify-content:space-between;font-size:.76rem;padding:3px 8px;background:rgba(255,255,255,.04);border-radius:5px}
+footer{margin-top:12px;opacity:.45;font-size:.68rem;text-align:center}
+</style>
+</head>
+<body>
+<h1>🚣 Canoa do Pantanal</h1>
+<p class="tagline">Top-down · Geografia · Biologia · Pantanal — ← → ↑ ↓ para navegar</p>
+<div class="hud">
+  <span>Fase: <b id="hP">1/5</b></span>
+  <span>Pontos: <b id="hS">0</b></span>
+  <span>Espécies: <b id="hE">0/0</b></span>
+  <span>Vidas: <b id="hL">❤️❤️❤️</b></span>
+</div>
+<canvas id="c" width="780" height="440"></canvas>
+<div class="save-box" id="saveBox">
+  <p style="font-size:.85rem;opacity:.8">🏆 Expedição concluída! Salve seu recorde:</p>
+  <input type="text" id="pName" maxlength="24" placeholder="Seu nome…">
+  <button onclick="window.saveScore()">Salvar Pontuação</button>
+</div>
+<div class="ranking">
+  <h3>🏆 Ranking</h3>
+  <div class="rank-list" id="rankList"><p style="opacity:.45;font-size:.76rem;padding:4px">Carregando…</p></div>
+</div>
+<footer>Geografia · Biologia · Pantanal Mato-grossense 🌊 | 2026-06-27 — Idealizado por Ernandes Sobreira</footer>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import{getFirestore,collection,addDoc,query,orderBy,limit,getDocs,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+const fbApp=initializeApp({apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"});
+const db=getFirestore(fbApp);
+const GAME_ID="2026-06-27-canoa-do-pantanal";
+
+const W=780,H=440,SPCHARS=['🐊','🦩','🐟','🦢','🦜','🐢','🦭','🦋'];
+const SPNAMES=['Jacaré','Garça-real','Dourado','Cisne','Arara','Tartaruga','Lontra','Borboleta'];
+const DMGEMOJIS=['🛢️','🌊⚫','♻️🚫','🧪'];
+
+const PHASES=[
+ {spd:130,spNeed:6, obsFreq:.7,obsSpd:55,wdth:260,
+  fact:"O Pantanal é a maior planície alagável do mundo — cerca de 150.000 km². Possui 1.700 espécies animais, incluindo 650 de pássaros.",
+  name:"Rio Cuiabá"},
+ {spd:150,spNeed:8, obsFreq:.6,obsSpd:70,wdth:230,
+  fact:"O Pantanal é o lar da maior população de jacarés do mundo: estima-se 10 milhões de animais. São fundamentais para controlar peixes e manter equilíbrio aquático.",
+  name:"Baía de Chacororé"},
+ {spd:175,spNeed:10,obsFreq:.5,obsSpd:85,wdth:200,
+  fact:"A lontra-gigante do Pantanal pode atingir 1,80m e pesar 32 kg. Elas vivem em grupos familiares e são chamadas de 'lobos dos rios'.",
+  name:"Lagoa do Jacadigo"},
+ {spd:200,spNeed:12,obsFreq:.4,obsSpd:100,wdth:175,
+  fact:"O Pantanal sofre com poluição agrícola e mineração. O rompimento de barragens, como em Mariana e Brumadinho, afeta rios que chegam à região.",
+  name:"Correnteza da Pixaim"},
+ {spd:230,spNeed:15,obsFreq:.35,obsSpd:120,wdth:150,
+  fact:"A piracema — migração dos peixes para desovar — ocorre anualmente no Pantanal. É um fenômeno vital para a biodiversidade e para a pesca sustentável da região.",
+  name:"Piracema do Paraguay"}
+];
+
+const c=document.getElementById('c');
+const ctx=c.getContext('2d');
+const keys={};
+document.addEventListener('keydown',e=>{keys[e.key]=true;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key))e.preventDefault();});
+document.addEventListener('keyup',e=>{keys[e.key]=false;});
+
+let gState='title',phase=0,score=0,lives=3;
+let boat,species,obstacles,parts,riverY,riverH,time,spFound,invTime,wave;
+
+function initPhase(){
+  const ph=PHASES[phase];
+  riverY=H/2-ph.wdth/2;
+  riverH=ph.wdth;
+  boat={x:80,y:H/2,vx:0,vy:0,w:32,h:20,angle:0};
+  species=[];obstacles=[];parts=[];
+  time=0;spFound=0;invTime=0;wave=0;
+  // Spawn initial species
+  for(let i=0;i<ph.spNeed;i++){
+    species.push({
+      x:200+Math.random()*(W*2.5),
+      y:riverY+25+Math.random()*(riverH-50),
+      t:Math.random()*Math.PI*2,
+      idx:Math.floor(Math.random()*SPCHARS.length),
+      got:false,vx:-ph.spd*.3,wx:(Math.random()-.5)*30,wy:(Math.random()-.5)*30
+    });
+  }
+  document.getElementById('hP').textContent=`${phase+1}/5`;
+  document.getElementById('hE').textContent=`0/${ph.spNeed}`;
+  gState='play';
+}
+
+function aabb(ax,ay,aw,ah,bx,by,bw,bh){return ax<bx+bw&&ax+aw>bx&&ay<by+bh&&ay+ah>by;}
+function spPart(x,y,col,n=6){for(let i=0;i<n;i++)parts.push({x,y,vx:(Math.random()-.5)*180,vy:(Math.random()-.5)*180,c:col,t:.9});}
+
+function update(dt){
+  if(gState!=='play')return;
+  const ph=PHASES[phase];
+  time+=dt;wave+=dt;
+
+  const L=keys['ArrowLeft']||keys['a'];
+  const R=keys['ArrowRight']||keys['d'];
+  const U=keys['ArrowUp']||keys['w'];
+  const D=keys['ArrowDown']||keys['s'];
+
+  const ax=(R?1:0)-(L?1:0);
+  const ay=(D?1:0)-(U?1:0);
+
+  boat.vx+=(ax*ph.spd-boat.vx)*8*dt;
+  boat.vy+=(ay*ph.spd-boat.vy)*8*dt;
+  boat.x+=boat.vx*dt;
+  boat.y+=boat.vy*dt;
+
+  // Current: river flows left
+  boat.x-=ph.spd*.15*dt;
+
+  boat.x=Math.max(10,Math.min(W-10,boat.x));
+  boat.y=Math.max(riverY+12,Math.min(riverY+riverH-12,boat.y));
+
+  // Angle
+  if(ax!==0||ay!==0)boat.angle=Math.atan2(ay,ax);
+
+  // Obstacle spawn
+  if(Math.random()<ph.obsFreq*dt){
+    const oidx=Math.floor(Math.random()*DMGEMOJIS.length);
+    obstacles.push({
+      x:W+20,y:riverY+20+Math.random()*(riverH-40),
+      vx:-ph.obsSpd-Math.random()*30,vy:(Math.random()-.5)*40,
+      r:18,e:DMGEMOJIS[oidx],t:0
+    });
+  }
+
+  // Update obstacles
+  for(let i=obstacles.length-1;i>=0;i--){
+    const o=obstacles[i];
+    o.x+=o.vx*dt;o.y+=o.vy*dt;o.t+=dt;
+    o.y=Math.max(riverY+20,Math.min(riverY+riverH-20,o.y));
+    if(o.x<-40)obstacles.splice(i,1);
+    else if(invTime<=0&&aabb(boat.x-14,boat.y-10,28,20,o.x-o.r,o.y-o.r,o.r*2,o.r*2)){
+      lives--;document.getElementById('hL').textContent='❤️'.repeat(Math.max(0,lives));
+      spPart(boat.x,boat.y,'#ef4444',10);
+      invTime=2;
+      if(lives<=0){gState='over';return;}
+    }
+  }
+
+  // Update species
+  for(let i=species.length-1;i>=0;i--){
+    const s=species[i];
+    s.t+=dt*1.5;
+    s.x+=s.vx*dt+Math.sin(s.t+s.wx)*0.3;
+    s.y+=Math.sin(s.t+s.wy)*0.4;
+    s.y=Math.max(riverY+18,Math.min(riverY+riverH-18,s.y));
+    if(!s.got&&aabb(boat.x-16,boat.y-12,32,24,s.x-14,s.y-14,28,28)){
+      s.got=true;spFound++;score+=30;
+      spPart(s.x,s.y,'#34d399',8);
+      document.getElementById('hE').textContent=`${spFound}/${ph.spNeed}`;
+      document.getElementById('hS').textContent=score;
+      if(spFound>=ph.spNeed){score+=200+phase*100;document.getElementById('hS').textContent=score;gState='phend';return;}
+    }
+    if(s.x<-30)species.splice(i,1);
+  }
+
+  // Particles
+  parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.t-=dt;});
+  parts=parts.filter(p=>p.t>0);
+  if(invTime>0)invTime-=dt;
+}
+
+function render(t){
+  // Sky / ground
+  ctx.fillStyle='#041a18';ctx.fillRect(0,0,W,H);
+  // Banks
+  ctx.fillStyle='#0f3d1a';ctx.fillRect(0,0,W,riverY);
+  ctx.fillStyle='#0f3d1a';ctx.fillRect(0,riverY+PHASES[phase].wdth,W,H);
+  // River
+  const rg=ctx.createLinearGradient(0,riverY,0,riverY+PHASES[phase].wdth);
+  rg.addColorStop(0,'#064e3b');rg.addColorStop(.5,'#065f46');rg.addColorStop(1,'#064e3b');
+  ctx.fillStyle=rg;ctx.fillRect(0,riverY,W,PHASES[phase].wdth);
+
+  // Water shimmer
+  for(let i=0;i<12;i++){
+    const wx=((i*130+t*.03)%W+W)%W;
+    const wy=riverY+20+((i*33)%(PHASES[phase].wdth-40));
+    ctx.fillStyle='rgba(100,220,190,.15)';
+    ctx.fillRect(wx,wy,60+i*5,3);
+  }
+
+  // Vegetation on banks
+  for(let i=0;i<14;i++){
+    const bx=(i*65)%W;
+    ctx.font='20px serif';ctx.textAlign='left';
+    ctx.fillText(['🌿','🌱','🍃','🌾'][i%4],bx,riverY-2);
+    ctx.fillText(['🌿','🌱','🍃','🌾'][(i+2)%4],bx+10,riverY+PHASES[phase].wdth+22);
+  }
+
+  // Species
+  species.forEach(s=>{
+    if(s.got)return;
+    ctx.font='22px serif';ctx.textAlign='center';
+    ctx.fillText(SPCHARS[s.idx],s.x,s.y+8);
+    // Glow
+    ctx.globalAlpha=.3+Math.sin(s.t)*.15;
+    ctx.fillStyle='#34d399';
+    ctx.beginPath();ctx.arc(s.x,s.y,16,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;
+  });
+
+  // Obstacles
+  obstacles.forEach(o=>{
+    ctx.font='22px serif';ctx.textAlign='center';
+    ctx.fillText(o.e,o.x-11,o.y+8);
+  });
+
+  // Particles
+  parts.forEach(p=>{
+    ctx.globalAlpha=Math.max(0,p.t/.9);
+    ctx.fillStyle=p.c;ctx.fillRect(p.x-3,p.y-3,6,6);
+    ctx.globalAlpha=1;
+  });
+
+  // Boat
+  if(gState==='play'||gState==='phend'){
+    if(!(invTime>0&&Math.floor(invTime*8)%2===0)){
+      ctx.save();ctx.translate(boat.x,boat.y);ctx.rotate(boat.angle);
+      ctx.font='28px serif';ctx.textAlign='center';
+      ctx.fillText('🚣',-14,10);
+      ctx.restore();
+    }
+  }
+
+  ctx.textAlign='center';
+
+  if(gState==='title'){
+    ctx.fillStyle='rgba(0,0,0,.78)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#34d399';ctx.font='bold 36px sans-serif';ctx.fillText('🚣 Canoa do Pantanal',W/2,H/2-68);
+    ctx.fillStyle='#c8f0e8';ctx.font='16px sans-serif';ctx.fillText('Colete as espécies aquáticas e evite a poluição!',W/2,H/2-26);
+    ctx.fillStyle='#a0d4c4';ctx.font='14px sans-serif';ctx.fillText('← → ↑ ↓ para remar',W/2,H/2+14);
+    ctx.fillStyle='#fbbf24';ctx.font='bold 19px sans-serif';
+    if(Math.sin(t/300)>.2)ctx.fillText('▶  ESPAÇO para começar  ◀',W/2,H/2+57);
+    if(keys[' ']||keys['Enter'])initPhase();
+    return;
+  }
+  if(gState==='phend'){
+    ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#34d399';ctx.font='bold 27px sans-serif';ctx.fillText(`🌊 Fase ${phase+1} — ${PHASES[phase].name}`,W/2,65);
+    ctx.fillStyle='#c8f0e8';ctx.font='13.5px sans-serif';
+    const words=PHASES[phase].fact.split(' ');let line='',py=108;
+    for(const w of words){const tt=line+w+' ';if(ctx.measureText(tt).width>680&&line){ctx.fillText(line.trim(),W/2,py);py+=21;line=w+' ';}else line=tt;}
+    if(line)ctx.fillText(line.trim(),W/2,py);
+    ctx.fillStyle='#fbbf24';ctx.font='bold 17px sans-serif';
+    if(Math.sin(t/300)>.2)ctx.fillText(phase<4?'ESPAÇO → próxima fase':'🎉 ESPAÇO → salvar recorde',W/2,H-40);
+    if(keys[' ']){if(phase<4){phase++;setTimeout(initPhase,80);}else{gState='win';document.getElementById('saveBox').style.display='flex';}}
+    return;
+  }
+  if(gState==='over'){
+    ctx.fillStyle='rgba(0,0,0,.85)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#ef4444';ctx.font='bold 34px sans-serif';ctx.fillText('🌊 Canoa afundou!',W/2,H/2-45);
+    ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação: ${score}`,W/2,H/2+5);
+    ctx.fillStyle='#fbbf24';ctx.font='17px sans-serif';ctx.fillText('ESPAÇO → tentar novamente',W/2,H/2+48);
+    if(keys[' ']){phase=0;score=0;lives=3;document.getElementById('hL').textContent='❤️❤️❤️';document.getElementById('hS').textContent=0;gState='title';}
+    return;
+  }
+  if(gState==='win'){
+    ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#4ade80';ctx.font='bold 30px sans-serif';ctx.fillText('🚣 Expedição concluída!',W/2,90);
+    ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação: ${score}`,W/2,145);
+    ctx.fillStyle='#34d399';ctx.font='14px sans-serif';ctx.fillText('Você catalogou a biodiversidade do Pantanal! 🐊',W/2,183);
+    ctx.fillStyle='#fbbf24';ctx.font='15px sans-serif';ctx.fillText('Use o campo abaixo para salvar.',W/2,230);
+    return;
+  }
+  ctx.textAlign='left';
+}
+
+let lastT=0;
+function loop(t){const dt=Math.min((t-(lastT||t))/1000,.05);lastT=t;update(dt);render(t);requestAnimationFrame(loop);}
+
+async function saveScore(){
+  const name=(document.getElementById('pName').value||'Anônimo').trim().slice(0,24);
+  await addDoc(collection(db,'games',GAME_ID,'scores'),{name,score,level:'Completo',seconds:0,ts:serverTimestamp()});
+  document.getElementById('saveBox').style.display='none';
+  loadRanking();
+}
+
+async function loadRanking(){
+  const rl=document.getElementById('rankList');
+  try{
+    const q=query(collection(db,'games',GAME_ID,'scores'),orderBy('score','desc'),limit(80));
+    const snap=await getDocs(q);
+    const docs=snap.docs.map(d=>d.data()).slice(0,10);
+    if(!docs.length){rl.innerHTML='<p style="opacity:.45;font-size:.76rem;padding:4px">Nenhum recorde ainda.</p>';return;}
+    rl.innerHTML=docs.map((d,i)=>`<div class="rank-item"><span>${['🥇','🥈','🥉'][i]||`${i+1}.`} ${d.name}</span><span>${d.score} pts</span></div>`).join('');
+  }catch(e){rl.innerHTML='<p style="opacity:.35;font-size:.76rem">Não foi possível carregar.</p>';}
+}
+
+window.saveScore=saveScore;
+requestAnimationFrame(loop);
+loadRanking();
+</script>
+</body>
+</html>
