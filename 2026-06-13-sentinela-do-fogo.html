@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🔥 Sentinela do Fogo — Pantanal</title>
+<style>
+  :root{
+    --bg1:#1b0d05;
+    --bg2:#581c0a;
+    --card:#2a1409;
+    --card2:#34190c;
+    --accent:#ff7a18;
+    --accent2:#ffc043;
+    --green:#3fb56b;
+    --green-dark:#1f7a45;
+    --water:#3aa6e0;
+    --ash:#3a3631;
+    --burn:#ff4d2e;
+    --txt:#fdeee0;
+    --txt-dim:#d8b9a3;
+    --ok:#43d17a;
+    --bad:#ff5a5a;
+    --shadow:0 8px 28px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(160deg,var(--bg1),var(--bg2));
+    color:var(--txt);
+    min-height:100vh;
+    padding:18px 14px 40px;
+    line-height:1.5;
+  }
+  .wrap{max-width:980px;margin:0 auto;}
+  header.top{text-align:center;margin-bottom:14px;}
+  h1{
+    font-size:clamp(1.7rem,5vw,2.7rem);
+    font-weight:800;
+    letter-spacing:-.5px;
+    text-shadow:0 2px 18px rgba(255,122,24,.45);
+    background:linear-gradient(90deg,var(--accent2),var(--accent));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .sub{color:var(--txt-dim);font-size:.95rem;margin-top:4px;}
+  .howto{
+    background:rgba(255,192,67,.12);
+    border:1px solid rgba(255,192,67,.35);
+    border-radius:12px;padding:10px 14px;margin:14px 0;font-size:.93rem;
+  }
+  .levels{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0;}
+  .lvl-btn{
+    flex:1 1 130px;min-width:120px;
+    background:var(--card);color:var(--txt-dim);
+    border:2px solid transparent;border-radius:12px;
+    padding:11px 8px;font-size:.95rem;font-weight:700;cursor:pointer;
+    transition:transform .22s,border-color .22s,color .22s,background .22s;
+    box-shadow:var(--shadow);
+  }
+  .lvl-btn:hover{transform:translateY(-2px);color:var(--txt);}
+  .lvl-btn.active{
+    border-color:var(--accent);color:#fff;
+    background:linear-gradient(150deg,var(--card2),#5a230d);
+  }
+  .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:16px;}
+  @media(max-width:760px){.grid{grid-template-columns:1fr;}}
+  .card{
+    background:var(--card);border-radius:16px;padding:16px;
+    box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.05);
+  }
+  .hud{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+  .chip{
+    background:var(--card2);border-radius:10px;padding:7px 11px;
+    font-size:.85rem;font-weight:700;flex:1 1 auto;text-align:center;
+    border:1px solid rgba(255,255,255,.06);white-space:nowrap;
+  }
+  .chip b{color:var(--accent2);}
+  canvas{
+    width:100%;height:auto;display:block;border-radius:12px;
+    background:#0d0a07;image-rendering:pixelated;
+    border:1px solid rgba(255,255,255,.08);
+  }
+  .mission{
+    background:var(--card2);border-radius:12px;padding:12px 14px;margin-bottom:12px;
+    border-left:4px solid var(--accent);
+  }
+  .mission h3{font-size:1.05rem;margin-bottom:4px;}
+  .mission .goal{font-size:.92rem;color:var(--accent2);font-weight:700;margin-top:6px;}
+  .mission .constraint{font-size:.84rem;color:var(--txt-dim);margin-top:4px;}
+  .sliders label{display:block;font-size:.88rem;font-weight:600;margin:12px 0 3px;}
+  .sliders .val{color:var(--accent2);font-weight:800;}
+  input[type=range]{width:100%;accent-color:var(--accent);height:22px;cursor:pointer;}
+  input[type=range]:disabled{opacity:.4;cursor:not-allowed;}
+  .risk-wrap{margin:14px 0 4px;}
+  .risk-label{display:flex;justify-content:space-between;font-size:.84rem;margin-bottom:4px;}
+  .risk-bar{height:14px;border-radius:8px;background:#241108;overflow:hidden;}
+  .risk-fill{height:100%;width:30%;border-radius:8px;transition:width .25s,background .25s;
+    background:linear-gradient(90deg,var(--green),var(--accent2),var(--burn));}
+  .btn-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+  .btn{
+    flex:1 1 auto;border:none;border-radius:11px;padding:12px;
+    font-size:.98rem;font-weight:800;cursor:pointer;color:#fff;
+    transition:transform .2s,filter .2s;box-shadow:var(--shadow);
+  }
+  .btn:hover{transform:translateY(-2px);filter:brightness(1.08);}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+  .btn-fire{background:linear-gradient(140deg,var(--accent),var(--burn));}
+  .btn-next{background:linear-gradient(140deg,var(--green),var(--green-dark));}
+  .btn-ghost{background:var(--card2);color:var(--txt-dim);box-shadow:none;flex:0 0 auto;}
+  .feedback{
+    margin-top:12px;padding:12px 14px;border-radius:12px;font-size:.92rem;
+    background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+    min-height:48px;
+  }
+  .feedback.good{border-color:var(--ok);background:rgba(67,209,122,.12);}
+  .feedback.bad{border-color:var(--bad);background:rgba(255,90,90,.12);}
+  .pop{animation:pop .4s ease;}
+  @keyframes pop{0%{transform:scale(1);}40%{transform:scale(1.06);}100%{transform:scale(1);}}
+  .shake{animation:shake .4s ease;}
+  @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-7px);}75%{transform:translateX(7px);}}
+  .rank{margin-top:16px;}
+  .rank h3{font-size:1.05rem;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+  .rank .lvl-tag{font-size:.72rem;background:var(--accent);color:#000;padding:2px 8px;border-radius:20px;font-weight:800;}
+  .rank ol{list-style:none;}
+  .rank li{display:flex;justify-content:space-between;padding:6px 10px;border-radius:8px;font-size:.88rem;}
+  .rank li:nth-child(odd){background:rgba(255,255,255,.04);}
+  .rank .pos{color:var(--accent2);font-weight:800;margin-right:8px;}
+  .rank .empty{color:var(--txt-dim);font-size:.85rem;padding:8px;}
+  .final{
+    text-align:center;padding:22px;border-radius:16px;margin-top:8px;
+    background:linear-gradient(150deg,var(--card2),#5a230d);box-shadow:var(--shadow);
+  }
+  .final h2{font-size:1.6rem;margin-bottom:8px;}
+  .final .big{font-size:2.6rem;font-weight:900;color:var(--accent2);margin:6px 0;}
+  .save-box{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;justify-content:center;}
+  .save-box input{
+    flex:1 1 180px;padding:11px;border-radius:10px;border:1px solid rgba(255,255,255,.15);
+    background:#1a0d06;color:var(--txt);font-size:.95rem;
+  }
+  footer{margin-top:28px;text-align:center;color:var(--txt-dim);font-size:.84rem;line-height:1.7;}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:8px;font-size:.78rem;color:var(--txt-dim);}
+  .legend span{display:inline-flex;align-items:center;gap:4px;}
+  .sw{width:12px;height:12px;border-radius:3px;display:inline-block;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>🔥 Sentinela do Fogo</h1>
+    <div class="sub">Simulação de queimadas e combate ao fogo no Pantanal</div>
+  </header>
+
+  <div class="howto">
+    <b>Como jogar:</b> cada missão tem uma <b>meta</b>. Ajuste os controles (umidade, vento, brigadas…) e observe o
+    <b>Risco</b> mudar ao vivo. Depois clique em <b>🔥 Simular</b> para ver o fogo se espalhar no mapa. Bata a meta para pontuar!
+  </div>
+
+  <div class="levels" id="levels">
+    <button class="lvl-btn active" data-lvl="0" onclick="setLevel(0,this)">🌱 Básico</button>
+    <button class="lvl-btn" data-lvl="1" onclick="setLevel(1,this)">🌿 Intermediário</button>
+    <button class="lvl-btn" data-lvl="2" onclick="setLevel(2,this)">🔬 Difícil</button>
+    <button class="lvl-btn" data-lvl="3" onclick="setLevel(3,this)">🛰️ Carbonauta</button>
+  </div>
+
+  <div class="hud" id="hud">
+    <div class="chip">Tempo: <b id="hud-time">0s</b></div>
+    <div class="chip">Pontos: <b id="hud-score">0</b></div>
+    <div class="chip">Acertos: <b id="hud-hits">0</b></div>
+    <div class="chip">Missão: <b id="hud-mission">1/8</b></div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="hud" style="margin-bottom:10px;">
+        <div class="chip">Queimado: <b id="stat-burn">0%</b></div>
+        <div class="chip">Salvo: <b id="stat-saved">100%</b></div>
+        <div class="chip">CO₂: <b id="stat-co2">0 t</b></div>
+      </div>
+      <canvas id="cv" width="440" height="300"></canvas>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--green)"></i>Vegetação</span>
+        <span><i class="sw" style="background:var(--burn)"></i>Queimando</span>
+        <span><i class="sw" style="background:var(--ash)"></i>Queimado</span>
+        <span><i class="sw" style="background:var(--water)"></i>Aceiro/Água</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="mission" id="mission">
+        <h3 id="m-title">Carregando…</h3>
+        <div id="m-desc"></div>
+        <div class="goal" id="m-goal"></div>
+        <div class="constraint" id="m-constraint"></div>
+      </div>
+
+      <div class="sliders" id="sliders"></div>
+
+      <div class="risk-wrap">
+        <div class="risk-label"><span>Risco de propagação</span><span class="val" id="risk-txt">—</span></div>
+        <div class="risk-bar"><div class="risk-fill" id="risk-fill"></div></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-fire" id="btn-sim" onclick="runSim()">🔥 Simular</button>
+        <button class="btn btn-next" id="btn-next" onclick="nextMission()" style="display:none;">Próxima ▶</button>
+        <button class="btn btn-ghost" onclick="restartMission()">↻</button>
+      </div>
+
+      <div class="feedback" id="feedback">Ajuste os controles e simule o fogo.</div>
+    </div>
+  </div>
+
+  <div class="card rank">
+    <h3>🏆 Ranking Global <span class="lvl-tag" id="rank-lvl">Básico</span></h3>
+    <ol id="rank-list"><li class="empty">Carregando ranking…</li></ol>
+  </div>
+
+  <div id="final-area"></div>
+
+  <footer>
+    — Idealizado por Ernandes Sobreira —<br>
+    Tema: Queimadas e fogo no Pantanal · Gênero: Simulação interativa · app ambiental do dia (2026-06-13)
+  </footer>
+</div>
+
+<script type="module">
+/* ===== Firebase (somente ranking) ===== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-06-13-sentinela-do-fogo";
+const LEVEL_NAMES = ["Básico","Intermediário","Difícil","Carbonauta"];
+
+let db=null, fb=null;
+async function initFirebase(){
+  try{
+    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    fb = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app = appMod.initializeApp(firebaseConfig);
+    db = fb.getFirestore(app);
+  }catch(e){ db=null; }
+}
+async function loadRanking(){
+  const list=document.getElementById('rank-list');
+  document.getElementById('rank-lvl').textContent=LEVEL_NAMES[state.level];
+  if(!db){ list.innerHTML='<li class="empty">Ranking offline — jogo 100% funcional mesmo assim.</li>'; return; }
+  try{
+    const ref=fb.collection(db,"games",GAME_ID,"scores");
+    const q=fb.query(ref, fb.orderBy("score","desc"), fb.limit(80));
+    const snap=await fb.getDocs(q);
+    let rows=[];
+    snap.forEach(d=>{const v=d.data(); if(v.level===state.level) rows.push(v);});
+    rows.sort((a,b)=> b.score-a.score || a.seconds-b.seconds);
+    rows=rows.slice(0,10);
+    if(!rows.length){ list.innerHTML='<li class="empty">Seja o primeiro a pontuar neste nível!</li>'; return; }
+    list.innerHTML=rows.map((r,i)=>`<li><span><span class="pos">${i+1}º</span>${escapeHtml(r.name||'Anônimo')}</span><span><b>${r.score}</b> pts · ${r.seconds||0}s</span></li>`).join('');
+  }catch(e){ list.innerHTML='<li class="empty">Não foi possível carregar o ranking agora.</li>'; }
+}
+async function saveScore(name){
+  if(!db) return;
+  try{
+    const ref=fb.collection(db,"games",GAME_ID,"scores");
+    await fb.addDoc(ref,{ name:name.slice(0,24), score:state.score, level:state.level, seconds:elapsed(), ts:fb.serverTimestamp() });
+  }catch(e){}
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+/* ===== Conteúdo das missões por nível ===== */
+// kind: 'maxburn' (queimado <= thr) ou 'minsaved' (salvo >= thr)
+// set: valores forçados do ambiente; lock: controles travados
+const MISSIONS = [
+  /* 0 BÁSICO (8) */
+  [
+    {t:"A primeira faísca",d:"Um foco de fogo surgiu no campo seco.",kind:"maxburn",thr:40,set:{},lock:[],fb:"O fogo precisa de três coisas: combustível seco, calor e oxigênio. Tirar uma já dificulta tudo."},
+    {t:"Solo encharcado",d:"Áreas alagadas resistem mais ao fogo.",kind:"maxburn",thr:25,set:{wind:10},lock:[],fb:"No Pantanal, as áreas inundadas funcionam como barreiras naturais — quanto mais úmido o solo, menos o fogo avança."},
+    {t:"Quando venta",d:"O vento empurra brasas e chamas adiante.",kind:"maxburn",thr:55,set:{wind:55,hum:30},lock:["wind"],fb:"O vento carrega faíscas e cria novos focos à frente do fogo. Por isso queimadas com vento forte são tão perigosas."},
+    {t:"Aceiro protege",d:"Faixas sem vegetação barram as chamas.",kind:"minsaved",thr:70,set:{wind:25},lock:[],fb:"O aceiro é uma faixa de terra limpa, sem combustível. O fogo chega nele e não tem como continuar."},
+    {t:"Dia muito quente",d:"O calor resseca a vegetação.",kind:"maxburn",thr:50,set:{temp:42,hum:35},lock:["temp"],fb:"Calor extremo seca folhas e galhos, deixando tudo mais inflamável. Dias quentes e secos são os piores para o fogo."},
+    {t:"Brigada em ação",d:"Os brigadistas chegaram para conter o fogo.",kind:"maxburn",thr:22,set:{wind:20},lock:[],fb:"Brigadistas abrem aceiros e apagam focos. Quanto mais cedo agem, menor a área perdida."},
+    {t:"Estação seca",d:"Faz meses que não chove no Pantanal.",kind:"maxburn",thr:55,set:{hum:25,temp:38},lock:["hum"],fb:"Na seca, o nível dos rios baixa e a vegetação morta se acumula. É a época em que quase todas as grandes queimadas acontecem."},
+    {t:"Proteger a mata",d:"Desafio final: salve o máximo de vegetação.",kind:"minsaved",thr:80,set:{wind:30,temp:36},lock:[],fb:"Combinar solo úmido, brigadas e aceiros é a melhor defesa. Prevenir é sempre mais barato que apagar."}
+  ],
+  /* 1 INTERMEDIÁRIO (10) */
+  [
+    {t:"O alerta de 2020",d:"Em 2020, incêndios queimaram cerca de 30% do Pantanal.",kind:"maxburn",thr:30,set:{hum:30,temp:38},lock:[],fb:"Em 2020 cerca de 30% do bioma (≈45 mil km²) queimou. A meta aqui homenageia esse número: fique abaixo dele."},
+    {t:"Chuva 26% abaixo",d:"A precipitação ficou bem abaixo da média histórica.",kind:"maxburn",thr:35,set:{hum:22,wind:25},lock:["hum"],fb:"Em 2020 a chuva ficou ~26% abaixo da média de 1982–2020, e a área alagada foi 34% menor. Menos água, mais combustível seco."},
+    {t:"Frente de vento",d:"Uma rajada constante muda a direção do fogo.",kind:"maxburn",thr:40,set:{wind:50,temp:36},lock:["wind"],fb:"A propagação acelera na direção do vento. Brigadas priorizam abrir aceiros justamente nesse flanco de avanço."},
+    {t:"Carga de combustível",d:"Capim seco acumulado vira pavio.",kind:"maxburn",thr:32,set:{fuel:75,hum:30},lock:["fuel"],fb:"Biomassa seca acumulada (capim, serapilheira) é o combustível fino que pega fogo primeiro e mais rápido."},
+    {t:"Combate aéreo",d:"Aviões e brigadas reforçam o cerco.",kind:"maxburn",thr:18,set:{wind:30,temp:35},lock:[],fb:"O combate combina aeronaves, aceiros e equipes em terra. Resposta rápida nas primeiras horas evita megaincêndios."},
+    {t:"Umidade relativa baixa",d:"O ar seco favorece a ignição.",kind:"maxburn",thr:38,set:{hum:18,temp:40},lock:["hum","temp"],fb:"Com umidade relativa baixa e calor alto, qualquer faísca vira incêndio. São as condições de tempo de fogo extremo."},
+    {t:"Mosaico de aceiros",d:"Divida a paisagem em blocos protegidos.",kind:"minsaved",thr:72,set:{wind:35,fuel:60},lock:[],fb:"Aceiros bem distribuídos fragmentam o combustível e impedem o fogo de virar uma única frente gigante."},
+    {t:"Brisa e calor juntos",d:"Vento moderado e dia quente ao mesmo tempo.",kind:"maxburn",thr:34,set:{wind:40,temp:39,hum:28},lock:["wind","temp"],fb:"Vento, calor e secura juntos formam a combinação clássica das grandes queimadas. Sua margem vem das brigadas."},
+    {t:"Primeira vez no fogo",d:"Áreas que nunca tinham queimado foram atingidas.",kind:"maxburn",thr:30,set:{fuel:70,hum:25},lock:["fuel"],fb:"Em 2020, cerca de 35% da área queimada pegou fogo pela primeira vez — sinal de fogo invadindo regiões antes úmidas demais."},
+    {t:"Guardião do bioma",d:"Desafio final do nível intermediário.",kind:"minsaved",thr:82,set:{wind:35,temp:37,fuel:65},lock:[],fb:"Você integrou umidade, combustível e brigadas. É exatamente assim que o manejo real busca proteger o Pantanal."}
+  ],
+  /* 2 DIFÍCIL (12) */
+  [
+    {t:"Fogo subterrâneo",d:"A turfa queima sob o solo, sem chama visível.",kind:"maxburn",thr:28,set:{drought:65,hum:30},lock:["drought"],fb:"A turfa (matéria orgânica acumulada) arde lentamente sob a superfície, com pouca fumaça, e reacende focos por semanas."},
+    {t:"Combustível de superfície",d:"Carga elevada de biomassa fina seca.",kind:"maxburn",thr:25,set:{fuel:80,hum:28,temp:38},lock:["fuel"],fb:"O combustível fino (menos de 6 mm) seca em horas e governa a velocidade de propagação superficial da frente de fogo."},
+    {t:"Déficit hídrico severo",d:"Lençol freático rebaixado e solo exposto.",kind:"maxburn",thr:30,set:{hum:18,drought:70},lock:["hum","drought"],fb:"Com o lençol freático baixo, até solos normalmente saturados secam e a turfa fica disponível para combustão."},
+    {t:"Frente de cabeça",d:"O fogo avança a favor do vento (head fire).",kind:"maxburn",thr:34,set:{wind:60,temp:37},lock:["wind"],fb:"O head fire é o flanco mais rápido e intenso. Atacá-lo de frente é perigoso; contém-se pelos flancos e pela retaguarda."},
+    {t:"Janela de manejo",d:"Queima prescrita controlada na estação úmida.",kind:"maxburn",thr:20,set:{hum:55,wind:15,fuel:50},lock:[],fb:"O manejo integrado do fogo usa queimas prescritas em janelas úmidas para reduzir combustível e evitar incêndios catastróficos."},
+    {t:"Reignição da turfa",d:"Focos antigos voltam a acender.",kind:"maxburn",thr:26,set:{drought:75,hum:25,temp:36},lock:["drought","hum"],fb:"A combustão de turfa pode persistir abaixo do solo e reacender a superfície dias depois, exigindo rescaldo prolongado."},
+    {t:"Aceiro negro",d:"Queima-se uma faixa de propósito como barreira.",kind:"minsaved",thr:75,set:{wind:45,fuel:65},lock:[],fb:"O aceiro negro (backfire) elimina o combustível à frente do incêndio, criando uma faixa já queimada que o fogo não cruza."},
+    {t:"Intensidade de Byram",d:"A energia liberada pela frente dispara.",kind:"maxburn",thr:30,set:{fuel:78,wind:50,temp:38},lock:["fuel","wind"],fb:"A intensidade da linha de fogo (kW/m) cresce com carga de combustível e vento — acima de certo limiar, o combate direto é inviável."},
+    {t:"Corredor de fauna",d:"Mantenha refúgios para os animais.",kind:"minsaved",thr:78,set:{wind:40,drought:55,temp:36},lock:[],fb:"Manchas não queimadas (refúgios) são vitais para a fauna sobreviver e recolonizar a área depois do fogo."},
+    {t:"Seca plurianual",d:"Anos seguidos de chuva abaixo da média.",kind:"maxburn",thr:32,set:{hum:20,drought:68,fuel:72},lock:["hum","drought"],fb:"Secas encadeadas reduzem a resiliência do bioma: o solo perde umidade profunda e a vegetação demora mais a se regenerar."},
+    {t:"Rescaldo e monitoramento",d:"Apague de vez para evitar retorno.",kind:"maxburn",thr:15,set:{wind:25,fuel:55},lock:[],fb:"O rescaldo e o monitoramento por satélite (focos de calor) garantem que o fogo não volte a partir de brasas ocultas."},
+    {t:"Brigadista-chefe",d:"Desafio final do nível difícil.",kind:"minsaved",thr:84,set:{wind:45,temp:38,fuel:70,drought:50},lock:[],fb:"Coordenar umidade, combustível, vento e turfa ao mesmo tempo é a realidade de quem comanda o combate no campo."}
+  ],
+  /* 3 CARBONAUTA (13) */
+  [
+    {t:"FWI no vermelho",d:"O Índice Meteorológico de Perigo de Incêndio está crítico.",kind:"maxburn",thr:25,set:{hum:18,wind:45,temp:40,drought:70},lock:["hum","temp"],fb:"O Fire Weather Index (FWI) integra umidade do combustível, vento e secura. Valores extremos indicam perigo de propagação descontrolada."},
+    {t:"Teor de umidade do combustível",d:"O FMC fino caiu abaixo do limiar crítico.",kind:"maxburn",thr:22,set:{fuel:82,hum:16},lock:["fuel","hum"],fb:"O Fuel Moisture Content (FMC) do material fino abaixo de cerca de 12% torna a ignição quase certa e a propagação muito rápida."},
+    {t:"Pulso de emissão de CO₂",d:"A queima libera carbono estocado por décadas.",kind:"maxburn",thr:24,set:{fuel:80,drought:65,temp:38},lock:["fuel","drought"],fb:"Incêndios de turfa e biomassa liberam grandes pulsos de CO₂ e material particulado, afetando o clima e a saúde respiratória regional."},
+    {t:"Combustão latente da turfa",d:"Smoldering: combustão sem chama, rica em CO.",kind:"maxburn",thr:20,set:{drought:80,hum:20},lock:["drought","hum"],fb:"A combustão latente (smoldering) da turfa é ineficiente, libera muito monóxido de carbono e pode durar semanas no subsolo."},
+    {t:"Razão de propagação (ROS)",d:"Modele a taxa de avanço da frente.",kind:"maxburn",thr:28,set:{wind:62,fuel:75,temp:37},lock:["wind","fuel"],fb:"O Rate of Spread (ROS) cresce de forma não-linear com o vento e a inclinação do terreno — pequenos aumentos disparam a velocidade."},
+    {t:"Spotting de longa distância",d:"Brasas cruzam barreiras pelo ar.",kind:"maxburn",thr:30,set:{wind:65,temp:39,fuel:70},lock:["wind"],fb:"O spotting lança partículas incandescentes à frente do fogo, criando focos secundários que ultrapassam aceiros estreitos."},
+    {t:"Queima prescrita ótima",d:"Defina a janela de menor risco e maior benefício.",kind:"minsaved",thr:80,set:{hum:58,wind:12,fuel:48,drought:25},lock:[],fb:"A queima prescrita reduz combustível acumulado fora do período crítico, diminuindo a severidade de incêndios futuros — base do manejo integrado."},
+    {t:"Resiliência pós-fogo",d:"Avalie a capacidade de rebrota do bioma.",kind:"minsaved",thr:82,set:{wind:40,drought:45,fuel:60},lock:[],fb:"A regeneração depende de bancos de sementes, rebrota de raízes e refúgios não queimados. Fogos muito frequentes esgotam essa resiliência."},
+    {t:"Severidade vs. intensidade",d:"Nem todo fogo intenso é igualmente severo.",kind:"maxburn",thr:26,set:{fuel:74,wind:48,temp:38,drought:40},lock:["fuel","wind"],fb:"Intensidade mede energia liberada; severidade mede o dano ecológico ao solo e à biomassa — dependem do tempo de residência e da umidade do solo."},
+    {t:"Detecção por sensoriamento remoto",d:"Focos de calor guiam a resposta rápida.",kind:"maxburn",thr:18,set:{wind:30,fuel:55,drought:35},lock:[],fb:"Produtos como áreas queimadas do MapBiomas e focos de calor de sensores orbitais permitem priorizar o combate nas frentes ativas."},
+    {t:"Retroalimentação climática",d:"Fogo e clima se reforçam mutuamente.",kind:"maxburn",thr:24,set:{hum:18,drought:72,temp:41},lock:["hum","drought","temp"],fb:"Secas mais intensas ampliam incêndios, que emitem CO₂ e reduzem sumidouros — um ciclo de retroalimentação que agrava o aquecimento."},
+    {t:"Mosaico pirodiverso",d:"Planeje um regime de fogo heterogêneo.",kind:"minsaved",thr:83,set:{wind:42,fuel:62,drought:38},lock:[],fb:"A pirodiversidade — variar idade, frequência e intensidade do fogo no espaço — sustenta maior biodiversidade que a supressão total."},
+    {t:"Comando do incidente",d:"Missão final: integre todas as variáveis.",kind:"minsaved",thr:86,set:{wind:50,temp:39,fuel:70,drought:55,hum:22},lock:[],fb:"Coordenar meteorologia do fogo, combustível, turfa e logística é a fronteira da ciência aplicada ao manejo do Pantanal. Parabéns, Carbonauta!"}
+  ]
+];
+
+const MISSION_COUNT=[8,10,12,13];
+
+/* ===== Definição dos controles ===== */
+const SLIDERS=[
+  {id:"hum",   label:"💧 Umidade do solo",         min:0,max:100,def:50,unit:"%",  levels:[0,1,2,3]},
+  {id:"wind",  label:"💨 Vento",                    min:0,max:80, def:15,unit:" km/h",levels:[0,1,2,3]},
+  {id:"brig",  label:"🚒 Brigadas e aceiros",       min:0,max:100,def:30,unit:"%",  levels:[0,1,2,3]},
+  {id:"temp",  label:"🌡️ Temperatura",             min:20,max:45,def:30,unit:"°C", levels:[1,2,3]},
+  {id:"fuel",  label:"🌾 Carga de combustível seco",min:0,max:100,def:55,unit:"",   levels:[2,3]},
+  {id:"drought",label:"🏜️ Índice de seca (turfa)", min:0,max:100,def:30,unit:"",   levels:[3]}
+];
+
+/* ===== Estado ===== */
+const state={ level:0, mission:0, score:0, hits:0, startTs:Date.now(), running:false, solved:false, vals:{} };
+
+/* ===== Canvas / autômato celular ===== */
+const cv=document.getElementById('cv');
+const ctx=cv.getContext('2d');
+const GW=44, GH=30, CELL=10;
+cv.width=GW*CELL; cv.height=GH*CELL;
+let grid=new Uint8Array(GW*GH);
+let burnAge=new Uint8Array(GW*GH);
+let simTimer=null;
+const COL=['#3fb56b','#ff4d2e','#3a3631','#3aa6e0'];
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+let rng=mulberry32(12345);
+
+function curMission(){return MISSIONS[state.level][state.mission];}
+
+function buildGrid(){
+  rng=mulberry32(1000*state.level+state.mission+7);
+  grid=new Uint8Array(GW*GH); burnAge=new Uint8Array(GW*GH);
+  const brig=state.vals.brig/100;
+  const nBar=Math.round(brig*GW*GH*0.16);
+  let stripes=Math.round(brig*5);
+  for(let s=0;s<stripes;s++){
+    const x=2+Math.floor(rng()*(GW-4));
+    const gap=Math.floor(rng()*GH);
+    for(let y=0;y<GH;y++){ if(Math.abs(y-gap)>2) grid[y*GW+x]=3; }
+  }
+  let placed=0,guard=0;
+  while(placed<nBar && guard<nBar*6){ guard++;
+    const i=Math.floor(rng()*GW*GH);
+    if(grid[i]===0){grid[i]=3;placed++;}
+  }
+  igniteAt(2,Math.floor(GH/2));
+  igniteAt(3,Math.floor(GH/3));
+  draw();
+  updateStats();
+}
+function igniteAt(x,y){const i=y*GW+x; if(grid[i]===0){grid[i]=1;}}
+
+function draw(){
+  for(let y=0;y<GH;y++)for(let x=0;x<GW;x++){
+    const i=y*GW+x;
+    let c=COL[grid[i]];
+    if(grid[i]===1){ c = burnAge[i]%2===0 ? '#ff7a18':'#ff4d2e'; }
+    ctx.fillStyle=c;
+    ctx.fillRect(x*CELL,y*CELL,CELL-1,CELL-1);
+  }
+}
+
+function spreadProb(downwind){
+  const v=state.vals;
+  const hum=v.hum/100;
+  const temp=((v.temp??30)-20)/25;
+  const fuel=((v.fuel??55))/100;
+  const drought=((v.drought??30))/100;
+  const wind=v.wind/80;
+  let p=0.34*(1-hum*0.85)*(0.55+temp*0.85)*(0.45+fuel*0.95)*(1+drought*0.6);
+  if(downwind===1) p*=(1+wind*1.5);
+  else if(downwind===-1) p*=(1-wind*0.6);
+  return Math.max(0,Math.min(0.96,p));
+}
+
+function simStep(){
+  const next=grid.slice();
+  let active=false;
+  for(let y=0;y<GH;y++)for(let x=0;x<GW;x++){
+    const i=y*GW+x;
+    if(grid[i]===1){
+      active=true;
+      burnAge[i]++;
+      const nb=[[1,0,1],[-1,0,-1],[0,1,0],[0,-1,0]];
+      for(const cfg of nb){
+        const dx=cfg[0],dy=cfg[1],dw=cfg[2];
+        const nx=x+dx, ny=y+dy;
+        if(nx<0||ny<0||nx>=GW||ny>=GH)continue;
+        const j=ny*GW+nx;
+        if(grid[j]===0 && rng()<spreadProb(dw)) next[j]=1;
+      }
+      if(burnAge[i]>=2) next[i]=2;
+    }
+  }
+  grid=next;
+  draw(); updateStats();
+  if(!active){ endSim(); }
+}
+
+function updateStats(){
+  let burnt=0,total=0;
+  for(let i=0;i<grid.length;i++){ if(grid[i]!==3){ total++; if(grid[i]===1||grid[i]===2)burnt++; } }
+  const pct=Math.round(burnt/total*100);
+  document.getElementById('stat-burn').textContent=pct+'%';
+  document.getElementById('stat-saved').textContent=(100-pct)+'%';
+  const co2=Math.round(burnt*1.8);
+  document.getElementById('stat-co2').textContent=co2+' t';
+  return pct;
+}
+
+function runSim(){
+  if(state.running) return;
+  state.running=true; state.solved=false;
+  document.getElementById('btn-sim').disabled=true;
+  setControlsDisabled(true);
+  buildGrid();
+  simTimer=setInterval(simStep,70);
+}
+function endSim(){
+  clearInterval(simTimer); simTimer=null; state.running=false;
+  document.getElementById('btn-sim').disabled=false;
+  setControlsDisabled(false);
+  const pct=updateStats();
+  const saved=100-pct;
+  const m=curMission();
+  const pass = m.kind==='maxburn' ? (pct<=m.thr) : (saved>=m.thr);
+  const fbEl=document.getElementById('feedback');
+  if(pass && !state.solved){
+    state.solved=true; state.hits++;
+    const pts=100 + saved*2 + (state.level*30);
+    state.score+=pts;
+    fbEl.className='feedback good pop';
+    fbEl.innerHTML=`✅ <b>Meta batida!</b> +${pts} pts. ${m.fb}`;
+    document.getElementById('btn-next').style.display='block';
+    document.getElementById('btn-sim').style.display='none';
+  }else if(!pass){
+    fbEl.className='feedback bad shake';
+    const need = m.kind==='maxburn' ? `queimar no máximo <b>${m.thr}%</b> (você: ${pct}%)` : `salvar pelo menos <b>${m.thr}%</b> (você: ${saved}%)`;
+    fbEl.innerHTML=`🔥 Quase! A meta é ${need}. Dica: ${m.fb}`;
+  }
+  setTimeout(()=>fbEl.classList.remove('pop','shake'),450);
+  updateHud();
+}
+
+/* ===== Risco ao vivo ===== */
+function updateRisk(){
+  const pMid=spreadProb(0), pDown=spreadProb(1);
+  const brig=state.vals.brig/100;
+  let est=(pMid*0.5+pDown*0.5);
+  est=Math.min(0.99,est*1.4*(1-brig*0.55));
+  const pct=Math.round(est*100);
+  const fill=document.getElementById('risk-fill');
+  fill.style.width=Math.max(6,pct)+'%';
+  let label= pct<25?'Baixo':pct<55?'Moderado':pct<78?'Alto':'Extremo';
+  document.getElementById('risk-txt').textContent=`${label} (~${pct}%)`;
+}
+
+/* ===== UI ===== */
+function renderSliders(){
+  const box=document.getElementById('sliders'); box.innerHTML='';
+  state.vals={};
+  const m=curMission();
+  SLIDERS.forEach(s=>{
+    if(!s.levels.includes(state.level)) { state.vals[s.id]=(m.set&&m.set[s.id]!=null)?m.set[s.id]:s.def; return; }
+    let val=(m.set&&m.set[s.id]!=null)?m.set[s.id]:s.def;
+    state.vals[s.id]=val;
+    const locked=m.lock&&m.lock.includes(s.id);
+    const wrap=document.createElement('div');
+    wrap.innerHTML=`<label>${s.label}: <span class="val" id="v-${s.id}">${val}${s.unit}</span>${locked?' 🔒':''}</label>
+      <input type="range" id="sl-${s.id}" min="${s.min}" max="${s.max}" value="${val}" ${locked?'disabled':''}>`;
+    box.appendChild(wrap);
+    const inp=wrap.querySelector('input');
+    inp.addEventListener('input',()=>{
+      state.vals[s.id]=+inp.value;
+      document.getElementById('v-'+s.id).textContent=inp.value+s.unit;
+      updateRisk();
+    });
+  });
+  updateRisk();
+}
+function setControlsDisabled(dis){
+  const m=curMission();
+  SLIDERS.forEach(s=>{
+    const el=document.getElementById('sl-'+s.id);
+    if(!el)return;
+    const locked=m.lock&&m.lock.includes(s.id);
+    el.disabled = dis || locked;
+  });
+}
+function loadMission(){
+  const m=curMission();
+  document.getElementById('m-title').textContent=`Missão ${state.mission+1}: ${m.t}`;
+  document.getElementById('m-desc').textContent=m.d;
+  document.getElementById('m-goal').innerHTML = m.kind==='maxburn'
+    ? `🎯 Meta: queimar no máximo <b>${m.thr}%</b> da área.`
+    : `🎯 Meta: salvar pelo menos <b>${m.thr}%</b> da vegetação.`;
+  const locks=(m.lock||[]).map(id=>{const s=SLIDERS.find(x=>x.id===id);return s?s.label.replace(/^[^ ]+ /,''):id;});
+  document.getElementById('m-constraint').textContent = locks.length? `⚠️ Condições fixas: ${locks.join(', ')}.` : '';
+  document.getElementById('hud-mission').textContent=`${state.mission+1}/${MISSION_COUNT[state.level]}`;
+  document.getElementById('btn-next').style.display='none';
+  document.getElementById('btn-sim').style.display='block';
+  document.getElementById('btn-sim').disabled=false;
+  const fbEl=document.getElementById('feedback');
+  fbEl.className='feedback'; fbEl.textContent='Ajuste os controles e simule o fogo.';
+  renderSliders();
+  buildGrid();
+}
+function nextMission(){
+  if(state.mission+1>=MISSION_COUNT[state.level]){ showFinal(); return; }
+  state.mission++; loadMission(); updateHud();
+}
+function restartMission(){ if(state.running)return; loadMission(); }
+
+function setLevel(lvl,btn){
+  if(state.running){ clearInterval(simTimer); state.running=false; }
+  state.level=lvl; state.mission=0; state.score=0; state.hits=0; state.startTs=Date.now();
+  document.querySelectorAll('.lvl-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  document.getElementById('final-area').innerHTML='';
+  loadMission(); updateHud(); loadRanking();
+}
+
+function elapsed(){return Math.round((Date.now()-state.startTs)/1000);}
+function updateHud(){
+  document.getElementById('hud-score').textContent=state.score;
+  document.getElementById('hud-hits').textContent=state.hits;
+}
+function tickClock(){ document.getElementById('hud-time').textContent=elapsed()+'s'; }
+
+function showFinal(){
+  const total=MISSION_COUNT[state.level];
+  const area=document.getElementById('final-area');
+  area.innerHTML=`
+    <div class="final">
+      <h2>🛰️ Nível ${LEVEL_NAMES[state.level]} concluído!</h2>
+      <div class="big">${state.score} pontos</div>
+      <div>Você cumpriu <b>${state.hits}</b> de <b>${total}</b> missões em <b>${elapsed()}s</b>.</div>
+      <div style="margin-top:8px;color:var(--txt-dim);font-size:.9rem;">Cada missão protegeu uma parte do Pantanal. Prevenir o fogo é o melhor combate.</div>
+      <div class="save-box">
+        <input id="player-name" maxlength="24" placeholder="Seu nome para o ranking">
+        <button class="btn btn-next" style="flex:0 0 auto;" onclick="submitScore()">Salvar no ranking 🏆</button>
+      </div>
+      <div id="save-msg" style="margin-top:8px;font-size:.88rem;"></div>
+    </div>`;
+  area.scrollIntoView({behavior:'smooth'});
+}
+async function submitScore(){
+  const name=(document.getElementById('player-name').value||'Anônimo').trim();
+  document.getElementById('save-msg').textContent='Salvando…';
+  await saveScore(name);
+  document.getElementById('save-msg').textContent = db? '✅ Pontuação enviada! Veja o ranking acima.' : 'Ranking offline — sua pontuação vale localmente.';
+  loadRanking();
+}
+
+/* ===== Expor ao window (escopo de módulo) ===== */
+window.setLevel=setLevel;
+window.runSim=runSim;
+window.nextMission=nextMission;
+window.restartMission=restartMission;
+window.submitScore=submitScore;
+
+/* ===== Init ===== */
+async function init(){
+  await initFirebase();
+  loadMission();
+  updateHud();
+  setInterval(tickClock,500);
+  loadRanking();
+}
+window.init=init;
+init();
+</script>
+</body>
+</html>
