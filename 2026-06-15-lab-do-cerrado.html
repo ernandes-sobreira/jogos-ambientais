@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab do Cerrado ⚗️ — Ciclo do Carbono</title>
+<style>
+:root{--bg1:#1a1200;--bg2:#3d2d00;--accent:#f5a623;--accent2:#d97706;--card:#2a1f00;--ok:#22c55e;--err:#ef4444}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI",system-ui,sans-serif;min-height:100vh;background:linear-gradient(160deg,var(--bg1),var(--bg2));color:#fef3c7;display:flex;flex-direction:column;align-items:center;padding:16px}
+h1{font-size:clamp(1.4rem,4vw,2.1rem);text-align:center;margin:10px 0 2px}
+h1 span{color:var(--accent)}
+.tagline{text-align:center;opacity:.75;font-size:.88rem;margin-bottom:12px}
+.levels{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+.lvl{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:6px 18px;cursor:pointer;font-size:.85rem;color:#fef3c7;transition:.2s}
+.lvl:hover{background:rgba(255,255,255,.18)}
+.lvl.active{background:var(--accent);color:#1a1200;font-weight:700;border-color:transparent}
+.hud{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
+.hud-item{background:rgba(255,255,255,.08);border-radius:10px;padding:6px 14px;font-size:.82rem;text-align:center}
+.hud-item span{color:var(--accent);font-weight:700}
+.instr{text-align:center;font-size:.85rem;opacity:.7;margin-bottom:12px}
+.sim-wrap{width:min(740px,98vw);display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+@media(max-width:520px){.sim-wrap{grid-template-columns:1fr}}
+.panel{background:rgba(255,255,255,.06);border-radius:14px;padding:18px}
+.panel h3{font-size:.88rem;opacity:.7;margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px}
+.slider-row{margin-bottom:14px}
+.slider-label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:4px}
+.slider-val{color:var(--accent);font-weight:700}
+input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
+.metric{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:.88rem}
+.metric:last-child{border-bottom:none}
+.metric-val{font-weight:700;font-size:1rem}
+.metric-val.pos{color:#4ade80}
+.metric-val.neg{color:#f87171}
+.metric-val.neu{color:var(--accent)}
+.flow-diagram{width:min(740px,98vw);background:rgba(255,255,255,.05);border-radius:14px;padding:16px;margin-bottom:12px;text-align:center}
+.flow-diagram canvas{width:100%;max-width:680px;height:120px}
+.challenge{width:min(740px,98vw);background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);border-radius:14px;padding:16px;margin-bottom:12px}
+.challenge h3{color:var(--accent);font-size:.92rem;margin-bottom:6px}
+.challenge p{font-size:.88rem;line-height:1.4;opacity:.9}
+.verify-btn{margin-top:10px;background:var(--accent);color:#1a1200;border:none;border-radius:8px;padding:8px 22px;font-weight:700;cursor:pointer;font-size:.9rem;transition:.2s}
+.verify-btn:hover{filter:brightness(1.1)}
+.result-msg{margin-top:8px;padding:8px 12px;border-radius:8px;font-size:.88rem;display:none}
+.result-msg.ok{background:rgba(34,197,94,.15);color:#4ade80}
+.result-msg.err{background:rgba(239,68,68,.15);color:#f87171}
+.ranking{width:min(740px,98vw);background:rgba(255,255,255,.05);border-radius:14px;padding:16px;margin-bottom:14px}
+.ranking h3{font-size:.88rem;opacity:.7;margin-bottom:10px}
+.rank-list{display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto}
+.rank-item{display:flex;justify-content:space-between;font-size:.8rem;padding:5px 8px;background:rgba(255,255,255,.05);border-radius:6px}
+.rank-item.me{background:rgba(245,166,35,.15);font-weight:700}
+.endscreen{display:none;width:min(740px,98vw);background:rgba(255,255,255,.06);border-radius:16px;padding:24px;text-align:center;margin-bottom:14px}
+.endscreen h2{font-size:1.5rem;margin-bottom:8px}
+.score-big{font-size:2.6rem;font-weight:800;color:var(--accent)}
+.save-form{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.save-form input{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:8px 14px;color:#fef3c7;font-size:.9rem;width:200px}
+.save-form button{background:var(--accent);color:#1a1200;border:none;border-radius:8px;padding:8px 20px;font-weight:700;cursor:pointer}
+.restart-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 22px;color:#fef3c7;cursor:pointer;font-size:.9rem;margin-top:8px}
+footer{margin-top:20px;opacity:.6;font-size:.78rem;text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+<h1>⚗️ <span>Lab do Cerrado</span></h1>
+<p class="tagline">Simulação do Ciclo do Carbono · Química ⚗️ · Cerrado 🌿</p>
+
+<div class="levels">
+  <button class="lvl active" onclick="setLevel('basico',this)">🌱 Básico</button>
+  <button class="lvl" onclick="setLevel('intermediario',this)">🌿 Intermediário</button>
+  <button class="lvl" onclick="setLevel('dificil',this)">🔬 Difícil</button>
+  <button class="lvl" onclick="setLevel('carbonauta',this)">🛰️ Carbonauta</button>
+</div>
+
+<div class="hud">
+  <div class="hud-item">Tempo: <span id="hTime">0s</span></div>
+  <div class="hud-item">Pontos: <span id="hScore">0</span></div>
+  <div class="hud-item">Desafios: <span id="hDesafios">0/3</span></div>
+</div>
+<p class="instr" id="instrText">Ajuste os controles e complete os desafios científicos.</p>
+
+<div class="sim-wrap">
+  <div class="panel" id="slidersPanel">
+    <h3>⚙️ Controles</h3>
+    <div id="sliders"></div>
+  </div>
+  <div class="panel">
+    <h3>📊 Balanço de Carbono</h3>
+    <div id="metrics"></div>
+  </div>
+</div>
+
+<div class="challenge" id="challengeBox">
+  <h3>🎯 Desafio <span id="cNum">1</span>/3</h3>
+  <p id="cText"></p>
+  <button class="verify-btn" onclick="verify()">Verificar</button>
+  <div class="result-msg" id="resultMsg"></div>
+</div>
+
+<div class="endscreen" id="endScreen">
+  <h2>🎉 Laboratório concluído!</h2>
+  <div class="score-big" id="finalScore"></div>
+  <p style="opacity:.75;margin:8px 0">pontos · nível <span id="finalLevel"></span></p>
+  <div class="save-form">
+    <input id="playerName" placeholder="Seu nome" maxlength="20">
+    <button onclick="saveScore()">Salvar ranking</button>
+  </div>
+  <button class="restart-btn" onclick="init()">Jogar novamente</button>
+</div>
+
+<div class="ranking">
+  <h3>🏆 Ranking Global — <span id="rankLevel">Básico</span></h3>
+  <div class="rank-list" id="rankList"><p style="opacity:.5;font-size:.82rem">Carregando…</p></div>
+</div>
+
+<footer>Química ⚗️ · Ciclo do carbono · Cerrado 🌿<br>
+app ambiental do dia (2026-06-15)<br>— Idealizado por Ernandes Sobreira —</footer>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import{getFirestore,collection,addDoc,query,orderBy,limit,getDocs,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+const fbApp=initializeApp({apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"});
+const db=getFirestore(fbApp);
+const GAME_ID="2026-06-15-lab-do-cerrado";
+
+// Cerrado carbon model
+// GPP = fotossíntese_frac * cobertura_frac * 14 t C ha-1 yr-1 (max for cerrado)
+// Ra = GPP * 0.48 (autotrophic respiration)
+// NPP = GPP - Ra
+// Rh_base = decomp_frac * cobertura_frac * 4 t C ha-1 yr-1
+// Q10 effect on Rh: Rh = Rh_base * Q10^((temp-20)/10)
+// NEE = Rh - NPP  (positive = source, negative = sink in atmospheric convention)
+// CH4_flux = (umidade/100)^2 * 0.5 t C ha-1 yr-1 (wetland fraction)
+
+function compute(p){
+  const{foto=50,cobv=70,decomp=50,temp=25,umid=50}=p;
+  const gpp=parseFloat(((foto/100)*(cobv/100)*14).toFixed(2));
+  const ra=parseFloat((gpp*0.48).toFixed(2));
+  const npp=parseFloat((gpp-ra).toFixed(2));
+  const rhBase=(decomp/100)*(cobv/100)*4;
+  const q10factor=Math.pow(2,Math.max(0,(temp-20)/10));
+  const rh=parseFloat((rhBase*q10factor).toFixed(2));
+  const nee=parseFloat((rh-npp).toFixed(2)); // + = source, - = sink
+  const co2label=nee<-0.5?'Sumidouro de CO₂ ✅':nee>0.5?'Fonte de CO₂ ⚠️':'Neutro ≈';
+  const o2=parseFloat((npp*3.67*0.27).toFixed(2)); // O2 produced proportional to NPP
+  const ch4=parseFloat(((umid/100)**2*0.5).toFixed(3));
+  return{gpp,ra,npp,rh,nee,co2label,o2,ch4,q10factor:parseFloat(q10factor.toFixed(2))};
+}
+
+const CHALLENGES={
+basico:[
+  {text:"Ajuste para que a fotossíntese produza mais de 8 t C ha⁻¹ ano⁻¹ (GPP > 8).",check:m=>m.gpp>8,fb:"GPP alto = floresta ativa capturando CO₂. A sazonalidade do Cerrado causa queda de GPP na seca."},
+  {text:"Crie um balanço carbono negativo (NEE < −1), indicando o Cerrado como sumidouro.",check:m=>m.nee<-1,fb:"NEE negativo significa que a vegetação absorve mais carbono do que o solo/decomposição libera — o Cerrado é sumidouro sob boa cobertura vegetal."},
+  {text:"Mantenha a produção de O₂ acima de 1,5 t ha⁻¹ ano⁻¹.",check:m=>m.o2>1.5,fb:"A fotossíntese do Cerrado produz oxigênio essencial para a atmosfera. Estima-se que o Cerrado contribui com ~10% da recarga hídrica nacional."}
+],
+intermediario:[
+  {text:"Ajuste decomposição e cobertura para que Rh (respiração do solo) fique entre 2 e 3 t C ha⁻¹ ano⁻¹.",check:m=>m.rh>=2&&m.rh<=3,fb:"A respiração heterotrófica (Rh) representa a decomposição da matéria orgânica por microrganismos do solo. No Cerrado, o fogo libera em horas o carbono acumulado por décadas."},
+  {text:"Simule uma área degradada: cobertura abaixo de 30% e NEE positivo (fonte de CO₂).",check:(m,p)=>p.cobv<30&&m.nee>0,fb:"A degradação do Cerrado por pastagens e monocultura reduz GPP e torna o ecossistema fonte líquida de carbono — fenômeno medido por eddy covariance."},
+  {text:"Faça GPP superar 10 t C ha⁻¹ ano⁻¹ mantendo Rh abaixo de 3 t C ha⁻¹ ano⁻¹.",check:m=>m.gpp>10&&m.rh<3,fb:"A combinação de alta fotossíntese e baixa decomposição maximiza o sequestro de carbono — condição típica do Cerrado denso (cerradão) em solos menos quentes."}
+],
+dificil:[
+  {text:"Aumente temperatura para 35°C e observe o efeito Q10. Mantenha NEE < 0 mesmo assim.",check:(m,p)=>p.temp>=35&&m.nee<0,fb:"O fator Q10 descreve que a respiração do solo dobra a cada 10°C de aumento. No Cerrado, o aquecimento de +2°C pode transformar savanas em fontes líquidas de CO₂."},
+  {text:"Calcule: com temperatura de 30°C, qual cobertura vegetal mínima para NEE ≤ −2? Ajuste os controles.",check:(m,p)=>p.temp>=29&&p.temp<=31&&m.nee<=-2,fb:"A relação temperatura × cobertura define o 'limiar de balanço carbono' — conceito central em modelos de carbono como JSBACH e ORCHIDEE para o Cerrado."},
+  {text:"Simule a equação: NEE = Rh − NPP. Configure para que NPP > Rh por margem maior que 3 t C ha⁻¹.",check:m=>(m.npp-m.rh)>3,fb:"Quando NPP (produção primária líquida) supera Rh em >3 t C ha⁻¹, o ecossistema é um forte sumidouro. Isso acontece em cerradão não perturbado com boa precipitação anual."}
+],
+carbonauta:[
+  {text:"Modele o efeito de queimada: reduza cobertura a 20%, temperatura a 32°C e decomp. a 80%. Qual é o NEE resultante?",check:(m,p)=>p.cobv<=20&&p.temp>=32&&p.decomp>=80,fb:"Queimadas liberam imediatamente o carbono da biomassa como CO₂ e promovem surto de decomposição. O Cerrado perde ~270 Mt CO₂ por ano em queimadas (INPE, 2023)."},
+  {text:"Para emissão de CH₄ > 0.3 t C ha⁻¹ ano⁻¹, ajuste umidade do solo acima de 77%.",check:(m,p)=>p.umid>77&&m.ch4>0.3,fb:"CH₄ é produzido por metanogênese anaeróbica em solos saturados. Veredas e campos úmidos do Cerrado são fontes significativas de metano, com PRG 28× maior que CO₂."},
+  {text:"Minimize as emissões totais (NEE < −3) com temperatura máxima realista de 28°C.",check:(m,p)=>m.nee<-3&&p.temp<=28,fb:"NEE < −3 em condições termicamente favoráveis descreve o potencial máximo de sequestro do Cerrado sensu stricto. Valores medidos no campo (eddy covariance) chegam a −3,5 t C ha⁻¹ ano⁻¹."}
+]
+};
+
+const SLIDERS_DEF={
+basico:[
+  {key:'foto',label:'Fotossíntese',unit:'%',min:0,max:100,val:50,desc:'Taxa de fotossíntese da vegetação'},
+  {key:'cobv',label:'Cobertura vegetal',unit:'%',min:0,max:100,val:70,desc:'% de cobertura da vegetação nativa'}
+],
+intermediario:[
+  {key:'foto',label:'Fotossíntese',unit:'%',min:0,max:100,val:50},
+  {key:'cobv',label:'Cobertura vegetal',unit:'%',min:0,max:100,val:70},
+  {key:'decomp',label:'Decomposição do solo',unit:'%',min:0,max:100,val:50}
+],
+dificil:[
+  {key:'foto',label:'Fotossíntese',unit:'%',min:0,max:100,val:50},
+  {key:'cobv',label:'Cobertura vegetal',unit:'%',min:0,max:100,val:70},
+  {key:'decomp',label:'Decomposição do solo',unit:'%',min:0,max:100,val:50},
+  {key:'temp',label:'Temperatura',unit:'°C',min:15,max:45,val:25}
+],
+carbonauta:[
+  {key:'foto',label:'Fotossíntese',unit:'%',min:0,max:100,val:50},
+  {key:'cobv',label:'Cobertura vegetal',unit:'%',min:0,max:100,val:70},
+  {key:'decomp',label:'Decomposição do solo',unit:'%',min:0,max:100,val:50},
+  {key:'temp',label:'Temperatura',unit:'°C',min:15,max:45,val:25},
+  {key:'umid',label:'Umidade do solo',unit:'%',min:0,max:100,val:50}
+]
+};
+
+let level='basico',cIdx=0,score=0,timer=0,timerInt=null,lastSave=null;
+let params={foto:50,cobv:70,decomp:50,temp:25,umid:50};
+let desafiosConcluidos=0;
+
+function init(){
+  cIdx=0;score=0;timer=0;desafiosConcluidos=0;
+  clearInterval(timerInt);
+  timerInt=setInterval(()=>{timer++;document.getElementById('hTime').textContent=timer+'s';},1000);
+  document.getElementById('hScore').textContent='0';
+  document.getElementById('hDesafios').textContent='0/3';
+  document.getElementById('rankLevel').textContent=level.charAt(0).toUpperCase()+level.slice(1);
+  document.getElementById('endScreen').style.display='none';
+  params={foto:50,cobv:70,decomp:50,temp:25,umid:50};
+  buildSliders();
+  renderChallenge();
+  updateSim();
+  loadRanking();
+}
+
+function buildSliders(){
+  const defs=SLIDERS_DEF[level];
+  const el=document.getElementById('sliders');
+  el.innerHTML=defs.map(s=>`
+    <div class="slider-row">
+      <div class="slider-label"><span>${s.label}</span><span class="slider-val" id="val_${s.key}">${s.val}${s.unit}</span></div>
+      <input type="range" min="${s.min}" max="${s.max}" value="${s.val}" oninput="updateSim('${s.key}',this.value)">
+    </div>`).join('');
+}
+
+function updateSim(key,val){
+  if(key&&val!==undefined) params[key]=parseFloat(val);
+  const defs=SLIDERS_DEF[level];
+  defs.forEach(s=>{const el=document.getElementById('val_'+s.key);if(el)el.textContent=params[s.key]+s.unit;});
+  const m=compute(params);
+  const neeClass=m.nee<0?'pos':m.nee>0?'neg':'neu';
+  document.getElementById('metrics').innerHTML=`
+    <div class="metric"><span>GPP (Fotossíntese bruta)</span><span class="metric-val neu">${m.gpp} t C ha⁻¹ a⁻¹</span></div>
+    <div class="metric"><span>Ra (Resp. autotrófica)</span><span class="metric-val neg">${m.ra} t C ha⁻¹ a⁻¹</span></div>
+    <div class="metric"><span>NPP (Produção líquida)</span><span class="metric-val pos">${m.npp} t C ha⁻¹ a⁻¹</span></div>
+    <div class="metric"><span>Rh (Resp. do solo)</span><span class="metric-val neg">${m.rh} t C ha⁻¹ a⁻¹</span></div>
+    <div class="metric"><span><b>NEE (Balanço carbono)</b></span><span class="metric-val ${neeClass}">${m.nee} t C ha⁻¹ a⁻¹</span></div>
+    <div class="metric"><span>${m.co2label}</span><span class="metric-val neu">O₂: ${m.o2} t ha⁻¹ a⁻¹</span></div>
+    ${level==='carbonauta'?`<div class="metric"><span>CH₄ emitido</span><span class="metric-val neg">${m.ch4} t C ha⁻¹ a⁻¹</span></div>`:''}
+    ${level!=='basico'?`<div class="metric"><span>Fator Q10</span><span class="metric-val neu">${m.q10factor}×</span></div>`:''}`;
+}
+window.updateSim=updateSim;
+
+function renderChallenge(){
+  const ch=CHALLENGES[level];
+  if(cIdx>=ch.length){endGame();return;}
+  document.getElementById('cNum').textContent=cIdx+1;
+  document.getElementById('cText').textContent=ch[cIdx].text;
+  document.getElementById('resultMsg').style.display='none';
+  document.getElementById('challengeBox').style.display='block';
+}
+
+function verify(){
+  const ch=CHALLENGES[level][cIdx];
+  const m=compute(params);
+  const ok=ch.check(m,params);
+  const msg=document.getElementById('resultMsg');
+  if(ok){
+    msg.className='result-msg ok';msg.textContent='✅ '+ch.fb;msg.style.display='block';
+    score+=150+Math.max(0,50-Math.floor(timer/3));
+    desafiosConcluidos++;
+    document.getElementById('hScore').textContent=score;
+    document.getElementById('hDesafios').textContent=desafiosConcluidos+'/3';
+    setTimeout(()=>{cIdx++;renderChallenge();},2200);
+  } else {
+    msg.className='result-msg err';msg.textContent='❌ Ainda não… Ajuste os controles e tente de novo.';msg.style.display='block';
+  }
+}
+
+function endGame(){
+  clearInterval(timerInt);
+  document.getElementById('challengeBox').style.display='none';
+  document.getElementById('endScreen').style.display='block';
+  document.getElementById('finalScore').textContent=score;
+  document.getElementById('finalLevel').textContent=level;
+  lastSave=null;
+}
+
+async function saveScore(){
+  if(lastSave)return;
+  const name=document.getElementById('playerName').value.trim()||'Anônimo';
+  lastSave={name,score,level,seconds:timer};
+  try{
+    await addDoc(collection(db,`games/${GAME_ID}/scores`),{name,score,level,seconds:timer,ts:serverTimestamp()});
+    loadRanking();
+  }catch(e){console.warn('Firebase offline',e);}
+}
+
+async function loadRanking(){
+  const el=document.getElementById('rankList');
+  try{
+    const q=query(collection(db,`games/${GAME_ID}/scores`),orderBy('score','desc'),limit(80));
+    const snap=await getDocs(q);
+    const rows=snap.docs.map(d=>d.data()).filter(d=>d.level===level).slice(0,15);
+    if(!rows.length){el.innerHTML='<p style="opacity:.5;font-size:.82rem">Seja o primeiro!</p>';return;}
+    el.innerHTML=rows.map((r,i)=>{
+      const me=lastSave&&r.name===lastSave.name&&r.score===lastSave.score;
+      return`<div class="rank-item${me?' me':''}"><span>${i+1}. ${r.name}</span><span>${r.score} pts</span></div>`;
+    }).join('');
+  }catch(e){el.innerHTML='<p style="opacity:.5;font-size:.82rem">Ranking offline.</p>';}
+}
+
+function setLevel(l,btn){
+  level=l;
+  document.querySelectorAll('.lvl').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  init();
+}
+
+window.setLevel=setLevel;
+window.verify=verify;
+window.saveScore=saveScore;
+window.init=init;
+init();
+</script>
+</body>
+</html>

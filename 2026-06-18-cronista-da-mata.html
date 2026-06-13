@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cronista da Mata 📜 — Cenário Histórico</title>
+<style>
+:root{--bg1:#0d1f0d;--bg2:#1a3320;--accent:#86efac;--accent2:#16a34a;--card:#162b1a;--ok:#22c55e;--err:#ef4444;--warn:#f59e0b}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI",system-ui,sans-serif;min-height:100vh;background:linear-gradient(160deg,var(--bg1),var(--bg2));color:#dcfce7;display:flex;flex-direction:column;align-items:center;padding:16px}
+h1{font-size:clamp(1.4rem,4vw,2.1rem);text-align:center;margin:10px 0 2px}
+h1 span{color:var(--accent)}
+.tagline{text-align:center;opacity:.75;font-size:.88rem;margin-bottom:12px}
+.levels{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+.lvl{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:6px 18px;cursor:pointer;font-size:.85rem;color:#dcfce7;transition:.2s}
+.lvl:hover{background:rgba(255,255,255,.18)}
+.lvl.active{background:var(--accent);color:#0d1f0d;font-weight:700;border-color:transparent}
+.hud{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
+.hud-item{background:rgba(255,255,255,.08);border-radius:10px;padding:6px 14px;font-size:.85rem;text-align:center}
+.hud-item span{color:var(--accent);font-weight:700}
+.health-bar-wrap{width:min(720px,98vw);margin-bottom:14px}
+.health-label{display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:4px;opacity:.8}
+.health-bar{height:16px;background:rgba(255,255,255,.1);border-radius:8px;overflow:hidden}
+.health-fill{height:100%;border-radius:8px;transition:.6s;background:linear-gradient(90deg,#ef4444,#f59e0b,#22c55e)}
+.story-card{width:min(720px,98vw);background:rgba(255,255,255,.06);border-radius:16px;padding:22px;margin-bottom:14px}
+.era-tag{font-size:.75rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--accent);opacity:.9;margin-bottom:6px}
+.story-title{font-size:1.2rem;font-weight:700;margin-bottom:10px;line-height:1.3}
+.story-text{font-size:.92rem;line-height:1.65;opacity:.9;margin-bottom:18px}
+.question{font-size:1rem;font-weight:600;margin-bottom:12px;color:var(--accent)}
+.choices{display:flex;flex-direction:column;gap:8px}
+.choice{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 16px;cursor:pointer;font-size:.9rem;line-height:1.35;transition:.2s;text-align:left}
+.choice:hover{background:rgba(134,239,172,.1);border-color:var(--accent)}
+.choice.chosen-ok{background:rgba(34,197,94,.15);border-color:var(--ok);pointer-events:none}
+.choice.chosen-mid{background:rgba(245,158,11,.15);border-color:var(--warn);pointer-events:none}
+.choice.chosen-bad{background:rgba(239,68,68,.15);border-color:var(--err);pointer-events:none}
+.choice.disabled{pointer-events:none;opacity:.45}
+.consequence{background:rgba(255,255,255,.05);border-left:3px solid var(--accent);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:.88rem;line-height:1.45;display:none}
+.consequence.ok{border-left-color:var(--ok)}
+.consequence.mid{border-left-color:var(--warn)}
+.consequence.bad{border-left-color:var(--err)}
+.next-btn{display:none;margin-top:14px;background:var(--accent);color:#0d1f0d;border:none;border-radius:10px;padding:10px 28px;font-size:.95rem;font-weight:700;cursor:pointer;transition:.2s}
+.next-btn:hover{filter:brightness(1.1)}
+.progress-dots{display:flex;gap:8px;justify-content:center;margin-bottom:14px}
+.dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.2);transition:.4s}
+.dot.active{background:var(--accent)}
+.dot.done{background:rgba(134,239,172,.4)}
+.endscreen{display:none;width:min(720px,98vw);background:rgba(255,255,255,.06);border-radius:16px;padding:24px;text-align:center;margin-bottom:14px}
+.endscreen h2{font-size:1.6rem;margin-bottom:8px}
+.ending-icon{font-size:3rem;margin:10px 0}
+.ending-text{font-size:.95rem;line-height:1.6;opacity:.9;margin:10px 0 16px;max-width:500px;margin-left:auto;margin-right:auto}
+.score-big{font-size:2.6rem;font-weight:800;color:var(--accent)}
+.save-form{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.save-form input{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:8px 14px;color:#dcfce7;font-size:.9rem;width:200px}
+.save-form button{background:var(--accent);color:#0d1f0d;border:none;border-radius:8px;padding:8px 20px;font-weight:700;cursor:pointer}
+.restart-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 22px;color:#dcfce7;cursor:pointer;font-size:.9rem;margin-top:8px}
+.ranking{width:min(720px,98vw);background:rgba(255,255,255,.05);border-radius:14px;padding:16px;margin-bottom:14px}
+.ranking h3{font-size:.88rem;opacity:.7;margin-bottom:10px}
+.rank-list{display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto}
+.rank-item{display:flex;justify-content:space-between;font-size:.8rem;padding:5px 8px;background:rgba(255,255,255,.05);border-radius:6px}
+footer{margin-top:20px;opacity:.6;font-size:.78rem;text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+<h1>📜 <span>Cronista da Mata</span></h1>
+<p class="tagline">Cenário Histórico — Mata Atlântica · História 📜 · Sociologia 🤝 · Mata Atlântica 🦋</p>
+
+<div class="levels">
+  <button class="lvl active" onclick="setLevel('basico',this)">🌱 Básico</button>
+  <button class="lvl" onclick="setLevel('intermediario',this)">📚 Intermediário</button>
+  <button class="lvl" onclick="setLevel('dificil',this)">🔬 Difícil</button>
+  <button class="lvl" onclick="setLevel('carbonauta',this)">🛰️ Carbonauta</button>
+</div>
+
+<div class="hud">
+  <div class="hud-item">Tempo: <span id="hTime">0s</span></div>
+  <div class="hud-item">Pontos: <span id="hScore">0</span></div>
+  <div class="hud-item">Cena: <span id="hCena">1/5</span></div>
+</div>
+
+<div class="health-bar-wrap">
+  <div class="health-label"><span>🌿 Saúde da Mata Atlântica</span><span id="healthNum">75%</span></div>
+  <div class="health-bar"><div class="health-fill" id="healthFill" style="width:75%"></div></div>
+</div>
+
+<div class="progress-dots" id="progressDots"></div>
+<div class="story-card" id="storyCard"></div>
+
+<div class="endscreen" id="endScreen">
+  <div class="ending-icon" id="endIcon"></div>
+  <h2 id="endTitle"></h2>
+  <div class="ending-text" id="endText"></div>
+  <div class="score-big" id="finalScore"></div>
+  <p style="opacity:.65;margin:6px 0">pontos finais · nível <span id="finalLevel"></span></p>
+  <div class="save-form">
+    <input id="playerName" placeholder="Seu nome" maxlength="20">
+    <button onclick="saveScore()">Salvar ranking</button>
+  </div>
+  <button class="restart-btn" onclick="init()">Jogar novamente</button>
+</div>
+
+<div class="ranking">
+  <h3>🏆 Ranking Global — <span id="rankLevel">Básico</span></h3>
+  <div class="rank-list" id="rankList"><p style="opacity:.5;font-size:.82rem">Carregando…</p></div>
+</div>
+
+<footer>História 📜 · Desmatamento e regeneração florestal · Mata Atlântica 🦋<br>
+app ambiental do dia (2026-06-18)<br>— Idealizado por Ernandes Sobreira —</footer>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import{getFirestore,collection,addDoc,query,orderBy,limit,getDocs,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+const fbApp=initializeApp({apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"});
+const db=getFirestore(fbApp);
+const GAME_ID="2026-06-18-cronista-da-mata";
+
+const SCENARIOS={
+basico:[
+  {era:"🪵 Século XVI — 1500",title:"A chegada dos colonizadores",
+   text:"As caravelas portuguesas chegam ao Brasil. A Mata Atlântica cobre quase 15% do território nacional — cerca de 1,5 milhão de km². Os colonizadores precisam se estabelecer. Como você decide usar a floresta?",
+   question:"Como usar a floresta para o assentamento inicial?",
+   choices:[
+     {text:"Desmatar apenas o necessário para a aldeia e plantar alimentos",impact:+10,type:'ok',fb:"✅ Uso mínimo da floresta preserva biodiversidade. Comunidades indígenas já habitavam a Mata há milênios com baixo impacto, usando técnicas de agricultura rotativa."},
+     {text:"Cortar grandes áreas para plantações de pau-brasil e exportação",impact:-20,type:'bad',fb:"❌ O ciclo do pau-brasil (Paubrasilia echinata) foi a primeira onda de destruição da Mata Atlântica. Levou ao colapso de populações inteiras da espécie até o século XIX."},
+     {text:"Criar fazendas de cana com mão de obra escravizada indígena",impact:-10,type:'mid',fb:"⚠️ As plantações de cana do litoral nordestino foram a segunda causa de destruição da Mata Atlântica. A escravidão indígena e depois africana impulsionou o desmatamento."}
+   ]
+  },
+  {era:"☕ Século XIX — 1850",title:"A febre do café no Sudeste",
+   text:"O café tornou-se o principal produto de exportação do Brasil. Fazendeiros de São Paulo e Rio de Janeiro desmatam imensas áreas para novos cafezais. A Mata Atlântica encolhe rapidamente.",
+   question:"Como proprietário de terra, o que você decide?",
+   choices:[
+     {text:"Plantar café em consórcio com árvores nativas da mata",impact:+15,type:'ok',fb:"✅ Sistemas agroflorestais com espécies nativas mantêm biodiversidade, protegem nascentes e reduzem erosão. Produzem café 'sombreado' de qualidade superior."},
+     {text:"Desmatar toda a mata e plantar café em monocultura",impact:-25,type:'bad',fb:"❌ A monocultura de café devastou o Vale do Paraíba e depois o interior paulista. São Paulo perdeu >80% de sua Mata Atlântica original nesse período."},
+     {text:"Manter uma faixa de mata às margens dos rios",impact:+5,type:'mid',fb:"⚠️ Matas ciliares protegem nascentes e reduzem erosão, mas foram amplamente desconsideradas até o Código Florestal de 1934. Uma faixa mínima é melhor que nada."}
+   ]
+  },
+  {era:"🏭 Século XX — 1970",title:"O milagre econômico e Cubatão",
+   text:"Cubatão (SP) tornou-se o pólo industrial mais poluído do mundo, chamado de 'Vale da Morte'. Rios mortos, ar tóxico, plantas mortas. Mas a ditadura priorizava o desenvolvimento econômico.",
+   question:"Como governante da época, o que você faz?",
+   choices:[
+     {text:"Criar programa emergencial de controle de poluição industrial",impact:+20,type:'ok',fb:"✅ Em 1983, São Paulo lançou o Programa de Controle da Poluição de Cubatão. Em 10 anos, as emissões caíram 90% e a vegetação começou a se recuperar. Virou caso de sucesso mundial."},
+     {text:"Ignorar a poluição para manter empregos e crescimento",impact:-20,type:'bad',fb:"❌ A omissão causou anencefalia em bebês, doenças respiratórias crônicas e mortalidade de 100% de pássaros e peixes nos rios locais. O custo humano e ambiental foi imenso."},
+     {text:"Deslocar as fábricas para áreas menos habitadas",impact:-5,type:'mid',fb:"⚠️ Deslocar poluição é apenas transferir o problema. Sem controle de emissões, o impacto ambiental persiste onde quer que a indústria se instale."}
+   ]
+  },
+  {era:"⚖️ Século XXI — 2006",title:"O novo Código Florestal",
+   text:"O debate sobre o Código Florestal acirra paixões. Ruralistas querem flexibilizar as Áreas de Preservação Permanente (APPs). Ambientalistas defendem regras mais rígidas. O Congresso Nacional vota.",
+   question:"Como parlamentar, qual posição você defende?",
+   choices:[
+     {text:"Manter as APPs em rios, matas ciliares e topos de morro",impact:+15,type:'ok',fb:"✅ As APPs são essenciais para proteger nascentes, controlar erosão e manter corredores ecológicos. A Mata Atlântica depende desses habitats remanescentes para sua sobrevivência."},
+     {text:"Reduzir APPs para liberar mais área para agricultura",impact:-20,type:'bad',fb:"❌ O Código Florestal de 2012 reduziu APPs e anistiou desmatamentos anteriores. Estudos posteriores estimaram que isso custou ao Brasil mais de 40 Mt CO₂/ano em emissões não evitadas."},
+     {text:"Manter APPs mas criar compensações para pequenos produtores",impact:+8,type:'mid',fb:"✅ Compensação ambiental equilibra produção e conservação. O Cadastro Ambiental Rural (CAR) foi criado com esse espírito, mas sua implementação ainda é lenta."}
+   ]
+  },
+  {era:"🌱 Hoje — 2030",title:"A restauração da Mata Atlântica",
+   text:"O Brasil assumiu meta de restaurar 12 milhões de hectares de florestas até 2030. A Mata Atlântica — com apenas 12% de sua cobertura original — é prioridade. Recursos são limitados.",
+   question:"Como direcionar os recursos de restauração?",
+   choices:[
+     {text:"Restaurar corredores conectando fragmentos de mata existentes",impact:+25,type:'ok',fb:"✅ Corredores ecológicos são a estratégia mais eficaz. Permitem fluxo gênico entre populações isoladas, essencial para a sobrevivência de onças, micos-leão e dezenas de espécies ameaçadas."},
+     {text:"Plantar árvores exóticas de crescimento rápido em áreas degradadas",impact:-10,type:'bad',fb:"❌ Eucalipto e pinus crescem rápido mas não reconstituem o ecossistema. São desertos de biodiversidade comparados à floresta nativa. Restauração ecológica exige espécies nativas."},
+     {text:"Criar Unidades de Conservação em fragmentos grandes remanescentes",impact:+15,type:'mid',fb:"✅ Proteger o que resta é sempre prioridade. A Serra do Mar é o maior contínuo de Mata Atlântica (mais de 1 milhão de ha) e protegê-la é fundamental para a conservação da espécie."}
+   ]
+  }
+],
+intermediario:[
+  {era:"📜 1549 — Capitanias Hereditárias",title:"A divisão do território",
+   text:"D. João III divide o Brasil em 15 capitanias hereditárias. Os donatários recebem poder absoluto sobre suas terras. A Mata Atlântica cobre o litoral brasileiro, lar de mais de 1.000 espécies endêmicas de aves, mamíferos e anfíbios.",
+   question:"Como donatário da Capitania de Pernambuco, o que estabelecer?",
+   choices:[
+     {text:"Estabelecer engenhos de cana com mão de obra africana escravizada",impact:-25,type:'bad',fb:"❌ O ciclo do açúcar devastou a Mata Atlântica de Pernambuco. A monocultura e o desmatamento transformaram o bioma em canaviais. A biodiversidade da região nunca se recuperou completamente."},
+     {text:"Criar aldeamentos indígenas com zonas de uso sustentável da floresta",impact:+15,type:'ok',fb:"✅ Os jesuítas tentaram estabelecer aldeamentos com gestão florestal. Onde funcionou, preservou mais biodiversidade. As 'reservas florestais' jesuíticas foram precursoras das UCs modernas."},
+     {text:"Explorar o pau-brasil com sistema de escambo controlado",impact:-5,type:'mid',fb:"⚠️ O escambo com indígenas foi inicial, mas rapidamente superado pela demanda europeia. O pau-brasil (Paubrasilia echinata) entrou em colapso populacional ainda no século XVI."}
+   ]
+  },
+  {era:"🚂 1850 — Estradas de Ferro",title:"A ferrovia e a expansão cafeeira",
+   text:"A Companhia Estrada de Ferro Dom Pedro II começa a ligar o Rio ao interior de São Paulo. Isso abre o Vale do Paraíba para o café. Pequenos agricultores e grandes fazendeiros competem por terra. A mata recua 50 km a cada década.",
+   question:"Como engenheiro da ferrovia, o que recomendar ao governo?",
+   choices:[
+     {text:"Traçar a ferrovia por áreas já desmatadas, preservando a mata virgem",impact:+20,type:'ok',fb:"✅ Traçar estradas por áreas já abertas minimiza impacto sobre remanescentes florestais. Esta prática é hoje recomendada em Estudos de Impacto Ambiental (EIA) para obras lineares."},
+     {text:"Desmatar diretamente o caminho mais curto pela serra",impact:-20,type:'bad',fb:"❌ A Serra do Mar foi devastada por estradas e mineração no século XIX. A destruição das matas ciliares causou assoreamento intenso dos rios e enchentes que persistem até hoje."},
+     {text:"Contratar mão de obra imigrante e criar cidades ao longo da linha",impact:+5,type:'mid',fb:"⚠️ A imigração europeia criou cidades no interior paulista, mas também pressionou a mata. A colonização europeia no sul do Brasil foi responsável por grande parte do desmatamento da Mata Atlântica gaúcha."}
+   ]
+  },
+  {era:"🏗️ 1960 — JK e o desenvolvimentismo",title:"50 anos em 5",
+   text:"Juscelino Kubitschek promete 'cinquenta anos em cinco'. O Brasil industrializa rapidamente. A Mata Atlântica do Sudeste é o pulmão dessas cidades que crescem. Mas também é vítima do progresso a qualquer custo.",
+   question:"Como secretário de urbanismo de São Paulo, o que decidir?",
+   choices:[
+     {text:"Criar o Parque Estadual da Serra do Mar e cinturão verde ao redor da metrópole",impact:+25,type:'ok',fb:"✅ O Parque Estadual da Serra do Mar (1977) foi criado justamente para conter a expansão urbana e proteger os mananciais de São Paulo. É hoje o maior parque estadual do Brasil."},
+     {text:"Liberar loteamentos em áreas de mata para atender à demanda por moradia",impact:-25,type:'bad',fb:"❌ A ocupação irregular de encostas da Serra do Mar causou tragédias recorrentes: deslizamentos, enchentes, perda de vidas. A expansão urbana sobre a mata foi um erro histórico e humanitário."},
+     {text:"Criar zonas industriais longe da mata, com controle de efluentes",impact:+10,type:'mid',fb:"⚠️ Zoneamento industrial reduz impacto, mas sem controle real de efluentes é insuficiente. O problema de Cubatão mostrou que localização sem regulação ambiental efetiva não é suficiente."}
+   ]
+  },
+  {era:"🌿 1988 — Constituição e a Lei da Mata Atlântica",title:"A floresta na Constituição",
+   text:"A Assembleia Constituinte debate o meio ambiente. Ambientalistas pressionam pela proteção constitucional da Mata Atlântica. Ruralistas resistem. A Mata tem apenas 12% de sua cobertura original.",
+   question:"Como constituinte, o que incluir na Constituição?",
+   choices:[
+     {text:"Declarar Mata Atlântica, Amazônia e Pantanal como patrimônio nacional",impact:+20,type:'ok',fb:"✅ O Art. 225, § 4º da CF/88 é um marco único no mundo: declara Amazônia, Mata Atlântica, Serra do Mar, Pantanal e Zona Costeira como 'patrimônio nacional' com proteção especial."},
+     {text:"Criar apenas metas voluntárias de proteção florestal",impact:-15,type:'bad',fb:"❌ Sem força constitucional, metas voluntárias são frequentemente ignoradas sob pressão econômica. A efetividade da proteção ambiental requer instrumento jurídico vinculante."},
+     {text:"Incluir proteção ambiental mas com exceções para desenvolvimento",impact:-5,type:'mid',fb:"⚠️ Exceções mal definidas criam brechas exploráveis. A história mostra que o equilíbrio entre desenvolvimento e proteção ambiental exige critérios objetivos, não cláusulas gerais."}
+   ]
+  },
+  {era:"🔬 2023 — Ciência e Restauração",title:"A meta de 15 milhões de hectares",
+   text:"O Brasil assumiu na COP27 a meta de restaurar 15 milhões de hectares de florestas até 2030. A ciência aponta que 30% do planeta precisam ser protegidos para evitar o colapso de ecossistemas (meta 30x30 da biodiversidade).",
+   question:"Como ministro do Meio Ambiente, onde alocar R$ 1 bilhão?",
+   choices:[
+     {text:"Pagar produtores rurais por Pagamento por Serviços Ambientais (PSA)",impact:+25,type:'ok',fb:"✅ PSA é a estratégia mais custo-efetiva. Pagar R$200/ha/ano por floresta preservada é mais barato que restaurar depois. O Bolsa Verde e o REDD+ são exemplos de PSA aplicados."},
+     {text:"Gastar tudo em fiscalização e multas para desmatadores",impact:+5,type:'mid',fb:"⚠️ Fiscalização é necessária mas insuficiente isolada. O Brasil multou bilhões em desmatamento ilegal mas cobrou uma fração. Punição sem incentivos positivos não muda comportamento de longo prazo."},
+     {text:"Investir em pesquisa universitária sobre biodiversidade da Mata Atlântica",impact:+10,type:'ok',fb:"✅ Pesquisa é essencial para estratégias de restauração eficazes. O Brasil tem 70% de seus fragmentos abaixo de 100 ha — só a ciência pode determinar quais são prioritários para conectividade."}
+   ]
+  }
+],
+dificil:[
+  {era:"🔬 1543 — Hans Staden e o registro científico",title:"O primeiro relato naturalístico",
+   text:"Hans Staden, náufrago alemão capturado por Tupinambás, documentou a Mata Atlântica em 1557. Seus escritos revelaram uma floresta de extraordinária riqueza. A ciência europeia estava nascendo — Francis Bacon publicaria o Novum Organum em 1620.",
+   question:"Como intelectual humanista do Renascimento, como valorizar a floresta?",
+   choices:[
+     {text:"Documentar a floresta como recurso econômico para a Coroa Portuguesa",impact:-10,type:'mid',fb:"⚠️ A visão utilitária da natureza dominou o pensamento colonial. Resultou na exploração intensiva do pau-brasil, animais e minerais sem consideração de sustentabilidade."},
+     {text:"Registrar a biota com rigor científico para o patrimônio do conhecimento",impact:+20,type:'ok',fb:"✅ A história natural sistemática — que começa com Marcgrave e Piso no Brasil holandês (1648) — criou as bases para a taxonomia moderna. O registro do que existe é pré-requisito para preservar."},
+     {text:"Defender os direitos dos povos indígenas como guardiões da floresta",impact:+15,type:'ok',fb:"✅ Bartolomé de las Casas (1484–1566) foi o primeiro a defender direitos indígenas. A conexão entre direitos indígenas e conservação ambiental é hoje consolidada: territórios indígenas têm menor desmatamento."}
+   ]
+  },
+  {era:"🌿 1798 — Alexandre von Humboldt",title:"A ciência holística da natureza",
+   text:"Humboldt chega às Américas e desenvolve o conceito de 'natureza como rede de interações'. No Brasil, naturalistas como Spix, Martius e Saint-Hilaire catalogarão milhares de espécies. Mas a corte portuguesa, recém-chegada ao Rio, precisa se estabelecer.",
+   question:"Como conselheiro de D. João VI, o que recomendar?",
+   choices:[
+     {text:"Criar o Jardim Botânico do Rio como centro de pesquisa e aclimatação de espécies",impact:+20,type:'ok',fb:"✅ O Real Jardim Botânico (1808) foi criado por D. João VI. Hoje tem 6.500 espécies e é referência mundial em pesquisa de flora neotropical. Instituições científicas criam base para conservação."},
+     {text:"Desmatar florestas ao redor do Rio para expansão agrícola da Família Real",impact:-20,type:'bad',fb:"❌ A chegada da Corte ao Rio pressionou as florestas da Serra dos Órgãos. A visão de natureza como obstáculo ao progresso causou danos irreversíveis nas nascentes que abastecem o Rio de Janeiro."},
+     {text:"Contratar naturalistas para mapear recursos naturais exploráveis",impact:0,type:'mid',fb:"⚠️ O mapeamento para exploração foi a abordagem dominante. Spix e Martius documentaram a biodiversidade mas também coletaram milhares de espécimes para museus europeus — pilhagem científica colonial."}
+   ]
+  },
+  {era:"🏭 1932 — Vargas e o Código Florestal",title:"O primeiro Código Florestal",
+   text:"Getúlio Vargas assina o primeiro Código Florestal brasileiro em 1934. Pela primeira vez, a lei reconhece as florestas como 'bem de interesse comum de todos'. Mas o Brasil está se industrializando rapidamente e a pressão por terra é enorme.",
+   question:"Como ministro da Agricultura de Vargas, o que defender?",
+   choices:[
+     {text:"Definir percentuais obrigatórios de reserva legal em propriedades privadas",impact:+25,type:'ok',fb:"✅ O Código Florestal de 1934 estabeleceu que 25% de cada propriedade deveria ser mantida com cobertura florestal — conceito que evoluiu para a Reserva Legal atual. Foi revolucionário para a época."},
+     {text:"Criar apenas áreas protegidas públicas, sem restringir propriedades privadas",impact:-10,type:'mid',fb:"⚠️ Proteger apenas terras públicas é insuficiente quando 80% do território é privado. No Brasil, a maioria da biodiversidade está em terras privadas — por isso a Reserva Legal é essencial."},
+     {text:"Priorizar o desenvolvimento industrial sem restrições ambientais",impact:-20,type:'bad',fb:"❌ A industrialização sem planejamento ambiental criou os 'vales da morte' como Cubatão. Países que ignoraram leis ambientais em prol do desenvolvimento pagaram décadas de passivo ambiental."}
+   ]
+  },
+  {era:"🛸 1988 — SOS Mata Atlântica e o satélite Landsat",title:"A floresta vista do espaço",
+   text:"O satélite Landsat revela que a Mata Atlântica perdeu 93% de sua cobertura original. A Fundação SOS Mata Atlântica é criada e usa imagens de satélite para denunciar o desmatamento. A Constituinte está em andamento.",
+   question:"Como diretor da recém-criada ONG, qual estratégia adotar?",
+   choices:[
+     {text:"Publicar atlas anual do desmatamento com dados de satélite e pressionar o governo",impact:+25,type:'ok',fb:"✅ O Atlas dos Remanescentes Florestais da Mata Atlântica (SOS Mata Atlântica/INPE) tornou-se referência global. Dados científicos transparentes são ferramenta poderosa de advocacy ambiental."},
+     {text:"Focar em reintrodução de espécies-bandeira como o mico-leão-dourado",impact:+15,type:'ok',fb:"✅ O Programa de Reintrodução do Mico-leão-dourado (Leontopithecus rosalia) foi um dos maiores sucessos da conservação mundial. A espécie passou de ~200 indivíduos (1970) para >3.000 (2023)."},
+     {text:"Propor acordos voluntários com fazendeiros sem enforcement legal",impact:-10,type:'bad',fb:"❌ Acordos voluntários sem enforcement são geralmente ineficazes. A história da Mata Atlântica mostra que a proteção efetiva requer instrumentos jurídicos com sanções reais."}
+   ]
+  },
+  {era:"🌐 2030 — Metas do Marco Global de Biodiversidade Kunming-Montreal",title:"30x30: proteger 30% até 2030",
+   text:"O Marco de Kunming-Montreal (2022) estabeleceu a meta 30x30: 30% do planeta protegido até 2030. O Brasil tem hoje ~19% de seu território em UCs terrestres. Para a Mata Atlântica, com apenas 12% de cobertura remanescente, o desafio é imenso.",
+   question:"Como negociador brasileiro na COP de Biodiversidade (COP16, 2024), o que defender?",
+   choices:[
+     {text:"Incluir terras indígenas e quilombolas no cômputo dos 30% protegidos",impact:+25,type:'ok',fb:"✅ TIs e quilombos têm desmatamento 60-80% menor que áreas não protegidas. Incluí-los no 30x30 reconhece sua eficácia de conservação e os direitos dos povos originários simultaneamente."},
+     {text:"Defender que áreas privadas com vegetação nativa contam para a meta",impact:+10,type:'mid',fb:"⚠️ O cômputo de áreas privadas é controverso. Reservas Legais podem ser computadas se garantida sua permanência. A eficácia depende de monitoramento e enforcement robusto."},
+     {text:"Criar novas UCs apenas em regiões sem conflito fundiário",impact:-10,type:'bad',fb:"❌ Criar UCs apenas onde é fácil deixa desprotegidas as áreas mais críticas para a biodiversidade, que frequentemente coincidem com zonas de conflito fundiário. É conservação de fachada."}
+   ]
+  }
+],
+carbonauta:[
+  {era:"🔬 1832 — Charles Darwin e a Mata Atlântica",title:"O naturalista e a floresta primária",
+   text:"Charles Darwin desembarca em Florianópolis em 1832, a bordo do HMS Beagle. Em seus diários, descreve a Mata Atlântica como a mais bela floresta que já viu. Sua observação da biodiversidade aqui contribuirá para A Origem das Espécies (1859).",
+   question:"Como biólogo evolucionista observando a Mata Atlântica, qual insight priorizar?",
+   choices:[
+     {text:"Documentar o padrão de distribuição altitudinal das espécies nas serras",impact:+20,type:'ok',fb:"✅ A distribuição altitudinal (zonação) antecipou conceitos de nicho ecológico. A Mata Atlântica tem 5 fitofisionomias por altitude — de restinga costeira a floresta montana acima de 1.500 m."},
+     {text:"Descrever a seleção natural como mecanismo de especiação em ilhas de mata",impact:+25,type:'ok',fb:"✅ A Mata Atlântica, com seus fragmentos em serras isoladas, é laboratório natural de especiação alopátrica. O conceito de 'archipelago effect' foi desenvolvido para fragmentos de mata atlântica."},
+     {text:"Colecionar espécimes para museus europeus como prioridade científica",impact:-10,type:'mid',fb:"⚠️ A coleta colonial extraiu biodiversidade sem retorno para o Brasil. Hoje, debates sobre descolonização científica questionam a propriedade de espécimes de biodiversidade coletados no Sul Global."}
+   ]
+  },
+  {era:"⚗️ 1935 — Edith Cobb e o impacto psicológico da natureza",title:"O verde como saúde mental",
+   text:"Pesquisas emergentes (décadas depois sistematizadas por Ulrich, 1984, e Kaplan, 1989) indicarão que exposição à natureza reduz cortisol, frequência cardíaca e aumenta atenção. Mas em 1935, o Brasil está urbanizando rapidamente e a mata sendo destruída.",
+   question:"Como urbanista modernista influenciado por Niemeyer e Costa, o que defender?",
+   choices:[
+     {text:"Incluir parques florestais nativos no planejamento das cidades brasileiras",impact:+25,type:'ok',fb:"✅ Parques urbanos com vegetação nativa têm maior impacto na saúde mental que gramados ou jardins formais. Floresta urbana reduz temperatura em até 4°C e particulas finas em 30%."},
+     {text:"Priorizar eficiência e modernidade, deixando natureza fora das cidades",impact:-20,type:'bad',fb:"❌ A separação modernista de natureza e cidade criou metrópoles hostis à saúde. São Paulo perdeu quase toda sua vegetação nativa urbana — resultado de décadas de planejamento que ignorou o verde."},
+     {text:"Criar jardins tropicais com espécies exóticas ornamentais",impact:-5,type:'mid',fb:"⚠️ Jardins formais com exóticas têm valor estético mas baixo valor ecológico. Limoeiros, ipês e palmeiras imperiais são menos eficazes para biodiversidade que fragmentos de mata nativa."}
+   ]
+  },
+  {era:"🛰️ 1972 — LANDSAT e a consciência global",title:"A Conferência de Estocolmo e o Brasil",
+   text:"Na Conferência das Nações Unidas sobre Meio Ambiente (Estocolmo, 1972), o Brasil defende o 'direito de poluir para crescer'. Os países do Norte têm responsabilidade histórica pelas emissões, mas os do Sul precisam se desenvolver. Tensão norte-sul.",
+   question:"Como chefe da delegação brasileira em Estocolmo (1972), qual posição defender?",
+   choices:[
+     {text:"Aceitar metas ambientais obrigatórias em troca de financiamento verde",impact:+20,type:'ok',fb:"✅ A tensão norte-sul sobre financiamento climático persiste até hoje. O Brasil atual defende 'responsabilidades comuns mas diferenciadas' — países ricos devem financiar a transição dos países em desenvolvimento."},
+     {text:"Rejeitar qualquer restrição ambiental como imperialismo ecológico",impact:-20,type:'bad',fb:"❌ A posição de 'licença para poluir' custou ao Brasil décadas de desmatamento e poluição sem accountability internacional. Hoje o Brasil sofre as consequências e tenta se reposicionar como líder climático."},
+     {text:"Propor princípio da responsabilidade comum mas diferenciada",impact:+15,type:'ok',fb:"✅ O princípio CBDR (Common But Differentiated Responsibilities) tornou-se pilar das negociações climáticas. Emergiu formalmente na Rio-92 e está na base do Acordo de Paris (2015)."}
+   ]
+  },
+  {era:"🧬 1997 — Descoberta de espécies endêmicas e bioprospecção",title:"A soberania genética da Mata Atlântica",
+   text:"Pesquisadores descobrem que a Mata Atlântica tem maior número de espécies de árvores endêmicas por hectare que qualquer outro bioma do mundo. Laboratórios farmacêuticos internacionais querem acesso ao material genético. A Convenção sobre Diversidade Biológica (CBD, 1992) está em vigor.",
+   question:"Como pesquisador do Instituto Botânico de São Paulo, o que fazer?",
+   choices:[
+     {text:"Negociar contratos de bioprospecção com repartição de benefícios (Protocolo de Nagoya)",impact:+25,type:'ok',fb:"✅ O Protocolo de Nagoya (2010, em vigor 2014) estabelece que acesso a recursos genéticos exige consentimento prévio informado e repartição justa de benefícios. O Brasil implementou com a Lei de Biodiversidade (13.123/2015)."},
+     {text:"Recusar acesso e publicar tudo em domínio público",impact:+10,type:'mid',fb:"⚠️ Domínio público evita biopirataria mas não garante retorno para comunidades locais. Sem financiamento, pesquisa de biodiversidade é insustentável. Equilíbrio entre abertura e benefício é necessário."},
+     {text:"Permitir acesso irrestrito para acelerar descobertas científicas",impact:-15,type:'bad',fb:"❌ Acesso irrestrito facilita biopirataria — a exploração comercial sem retorno para o país de origem. O Brasil perdeu bilhões em valor de recursos genéticos extraídos ilegalmente no século XX."}
+   ]
+  },
+  {era:"🌐 2025 — Modelos de linguagem e conservação",title:"IA como ferramenta de conservação",
+   text:"Inteligência artificial e sensoriamento remoto permitem detectar desmatamento em tempo real, prever invasão de espécies exóticas e otimizar corredores ecológicos. O algoritmo da SOS Mata Atlântica analisa 500 terabytes de imagens por ano. Mas há riscos.",
+   question:"Como especialista em IA aplicada à conservação, qual uso priorizar?",
+   choices:[
+     {text:"Usar IA para detectar desmatamento ilegal em tempo real e alertar fiscalização",impact:+25,type:'ok',fb:"✅ Sistemas como DETER (INPE) e Global Forest Watch detectam desmatamento com latência de 24h. A IA aumentou a detecção em 70% comparado a análise manual. São Pedro, RS (2024) usou IA para detectar queimadas."},
+     {text:"Modelar distribuição de espécies para priorizar corredores ecológicos",impact:+20,type:'ok',fb:"✅ Modelos de nicho (MaxEnt, BioClim) com IA identificam áreas prioritárias para restauração. O MapBiomas e o RADAMBRASIL usam ML para mapear cobertura vegetal em escala nacional."},
+     {text:"Desenvolver espécies sintéticas para substituir as extintas na Mata Atlântica",impact:-10,type:'bad',fb:"❌ Bioengenharia de substituição (de-extinction) é cientificamente controversa e pode introduzir riscos imprevisíveis. Prioridade deve ser evitar extinções, não tentar reviver o que foi perdido."}
+   ]
+  }
+]
+};
+
+let level='basico',health=75,scenarioIdx=0,score=0,timer=0,timerInt=null,lastSave=null;
+let scenarios=[];
+
+function init(){
+  health=75;scenarioIdx=0;score=0;timer=0;
+  clearInterval(timerInt);
+  timerInt=setInterval(()=>{timer++;document.getElementById('hTime').textContent=timer+'s';},1000);
+  document.getElementById('hScore').textContent='0';
+  document.getElementById('endScreen').style.display='none';
+  document.getElementById('storyCard').style.display='block';
+  document.getElementById('rankLevel').textContent=level.charAt(0).toUpperCase()+level.slice(1);
+  scenarios=SCENARIOS[level];
+  const dots=document.getElementById('progressDots');
+  dots.innerHTML=scenarios.map((_,i)=>`<div class="dot" id="dot${i}"></div>`).join('');
+  updateHealth();
+  renderScenario();
+  loadRanking();
+}
+
+function updateHealth(){
+  const h=Math.max(0,Math.min(100,health));
+  document.getElementById('healthFill').style.width=h+'%';
+  document.getElementById('healthNum').textContent=Math.round(h)+'%';
+}
+
+function renderScenario(){
+  if(scenarioIdx>=scenarios.length){endGame();return;}
+  const sc=scenarios[scenarioIdx];
+  document.querySelectorAll('.dot').forEach((d,i)=>{
+    d.className='dot'+(i<scenarioIdx?' done':i===scenarioIdx?' active':'');
+  });
+  document.getElementById('hCena').textContent=(scenarioIdx+1)+'/'+scenarios.length;
+  const card=document.getElementById('storyCard');
+  card.innerHTML=`
+    <div class="era-tag">${sc.era}</div>
+    <div class="story-title">${sc.title}</div>
+    <div class="story-text">${sc.text}</div>
+    <div class="question">${sc.question}</div>
+    <div class="choices">
+      ${sc.choices.map((c,i)=>`<button class="choice" id="ch${i}" onclick="choose(${i})">${c.text}</button>`).join('')}
+    </div>
+    <div class="consequence" id="consequence"></div>
+    <button class="next-btn" id="nextBtn" onclick="nextScenario()">Próxima decisão →</button>`;
+}
+
+function choose(i){
+  const sc=scenarios[scenarioIdx];
+  const ch=sc.choices[i];
+  document.querySelectorAll('.choice').forEach((b,j)=>{
+    b.classList.add(j===i?('chosen-'+(ch.type)):'disabled');
+  });
+  health+=ch.impact;
+  score+=ch.type==='ok'?200:(ch.type==='mid'?100:0);
+  document.getElementById('hScore').textContent=score;
+  updateHealth();
+  const cons=document.getElementById('consequence');
+  cons.className='consequence '+ch.type;
+  cons.textContent=ch.fb;cons.style.display='block';
+  document.getElementById('nextBtn').style.display='block';
+}
+window.choose=choose;
+
+function nextScenario(){scenarioIdx++;renderScenario();}
+window.nextScenario=nextScenario;
+
+function endGame(){
+  clearInterval(timerInt);
+  document.getElementById('storyCard').style.display='none';
+  document.getElementById('endScreen').style.display='block';
+  document.getElementById('finalScore').textContent=score;
+  document.getElementById('finalLevel').textContent=level;
+  const h=Math.max(0,Math.min(100,health));
+  let icon,title,text;
+  if(h>=80){icon='🌿';title='Mata Atlântica em florescer!';text='Suas decisões criaram políticas que protegeram e restauraram a Mata Atlântica. Os corredores ecológicos conectam as serras, o mico-leão-dourado prospera e as nascentes abastecem as cidades. Você é um verdadeiro guardião!';}
+  else if(h>=55){icon='🌳';title='Mata em recuperação';text='Algumas decisões foram acertadas, outras deixaram cicatrizes. A Mata Atlântica ainda vive, mas precisa de mais proteção. O trabalho de restauração continua — cada decisão conta.';}
+  else if(h>=30){icon='🍂';title='Floresta ameaçada';text='Suas decisões priorizaram o desenvolvimento de curto prazo sobre a conservação. A Mata Atlântica perdeu mais fragmentos. Ainda há tempo para reverter — mas a janela está se fechando.';}
+  else{icon='🔥';title='Mata Atlântica em colapso';text='As decisões levaram ao colapso do bioma. Espécies endêmicas foram extintas, nascentes secaram e enchentes devastaram cidades. A história mostra que ignorar a floresta tem preço alto para todos.';}
+  document.getElementById('endIcon').textContent=icon;
+  document.getElementById('endTitle').textContent=title;
+  document.getElementById('endText').textContent=text;
+  lastSave=null;
+}
+
+async function saveScore(){
+  if(lastSave)return;
+  const name=document.getElementById('playerName').value.trim()||'Anônimo';
+  lastSave={name,score,level,seconds:timer};
+  try{
+    await addDoc(collection(db,`games/${GAME_ID}/scores`),{name,score,level,seconds:timer,health:Math.round(health),ts:serverTimestamp()});
+    loadRanking();
+  }catch(e){console.warn('offline',e);}
+}
+
+async function loadRanking(){
+  const el=document.getElementById('rankList');
+  try{
+    const q=query(collection(db,`games/${GAME_ID}/scores`),orderBy('score','desc'),limit(80));
+    const snap=await getDocs(q);
+    const rows=snap.docs.map(d=>d.data()).filter(d=>d.level===level).slice(0,15);
+    if(!rows.length){el.innerHTML='<p style="opacity:.5;font-size:.82rem">Seja o primeiro!</p>';return;}
+    el.innerHTML=rows.map((r,i)=>`<div class="rank-item"><span>${i+1}. ${r.name}</span><span>${r.score} pts</span></div>`).join('');
+  }catch(e){el.innerHTML='<p style="opacity:.5;font-size:.82rem">Ranking offline.</p>';}
+}
+
+function setLevel(l,btn){
+  level=l;
+  document.querySelectorAll('.lvl').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  init();
+}
+
+window.setLevel=setLevel;
+window.saveScore=saveScore;
+window.init=init;
+init();
+</script>
+</body>
+</html>

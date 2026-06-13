@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amazon Quest 🇬🇧 — True or False</title>
+<style>
+:root{--bg1:#001a0a;--bg2:#003314;--accent:#4ade80;--accent2:#16a34a;--ok:#22c55e;--err:#ef4444;--t:#22c55e;--f:#ef4444}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI",system-ui,sans-serif;min-height:100vh;background:linear-gradient(160deg,var(--bg1),var(--bg2));color:#dcfce7;display:flex;flex-direction:column;align-items:center;padding:16px}
+h1{font-size:clamp(1.4rem,4vw,2.1rem);text-align:center;margin:10px 0 2px}
+h1 span{color:var(--accent)}
+.tagline{text-align:center;opacity:.75;font-size:.88rem;margin-bottom:12px}
+.levels{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+.lvl{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:6px 18px;cursor:pointer;font-size:.85rem;color:#dcfce7;transition:.2s}
+.lvl:hover{background:rgba(255,255,255,.18)}
+.lvl.active{background:var(--accent);color:#001a0a;font-weight:700;border-color:transparent}
+.hud{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
+.hud-item{background:rgba(255,255,255,.08);border-radius:10px;padding:6px 14px;font-size:.85rem;text-align:center}
+.hud-item span{color:var(--accent);font-weight:700}
+.instr{text-align:center;font-size:.85rem;opacity:.7;margin-bottom:12px}
+.progress-bar{width:min(680px,98vw);height:6px;background:rgba(255,255,255,.12);border-radius:4px;margin-bottom:16px;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:4px;transition:.4s}
+.statement-card{width:min(680px,98vw);background:rgba(255,255,255,.06);border-radius:16px;padding:28px;margin-bottom:18px;text-align:center;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.stmt-num{font-size:.78rem;opacity:.6;margin-bottom:8px}
+.stmt-text{font-size:1.1rem;font-weight:500;line-height:1.5;color:#dcfce7}
+.stmt-text em{font-style:italic;opacity:.75;font-size:.9rem}
+.vf-btns{display:flex;gap:16px;justify-content:center;margin-bottom:16px}
+.vf-btn{width:130px;height:60px;border:none;border-radius:14px;font-size:1.2rem;font-weight:800;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.vf-btn.true-btn{background:var(--t);color:#001a0a}
+.vf-btn.false-btn{background:var(--f);color:#fff}
+.vf-btn:hover{filter:brightness(1.15);transform:scale(1.05)}
+.vf-btn.correct-anim{animation:pop .3s ease}
+.vf-btn.wrong-anim{animation:shake .4s ease}
+.vf-btn:disabled{pointer-events:none;opacity:.45}
+@keyframes pop{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.streak-bar{display:flex;gap:4px;justify-content:center;margin-bottom:12px;flex-wrap:wrap}
+.streak-dot{width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.15);transition:.3s}
+.streak-dot.ok{background:var(--ok)}
+.streak-dot.err{background:var(--err)}
+.explanation{width:min(680px,98vw);background:rgba(255,255,255,.06);border-left:3px solid var(--accent);border-radius:8px;padding:12px 16px;font-size:.88rem;line-height:1.5;margin-bottom:12px;display:none}
+.next-btn{display:none;margin:0 auto 14px;background:var(--accent);color:#001a0a;border:none;border-radius:10px;padding:10px 28px;font-size:.95rem;font-weight:700;cursor:pointer;transition:.2s}
+.next-btn:hover{filter:brightness(1.1)}
+.ranking{width:min(680px,98vw);background:rgba(255,255,255,.05);border-radius:14px;padding:16px;margin-bottom:14px}
+.ranking h3{font-size:.88rem;opacity:.7;margin-bottom:10px}
+.rank-list{display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto}
+.rank-item{display:flex;justify-content:space-between;font-size:.8rem;padding:5px 8px;background:rgba(255,255,255,.05);border-radius:6px}
+.endscreen{display:none;width:min(680px,98vw);background:rgba(255,255,255,.06);border-radius:16px;padding:24px;text-align:center;margin-bottom:14px}
+.endscreen h2{font-size:1.5rem;margin-bottom:8px}
+.score-big{font-size:2.6rem;font-weight:800;color:var(--accent)}
+.save-form{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.save-form input{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:8px 14px;color:#dcfce7;font-size:.9rem;width:200px}
+.save-form button{background:var(--accent);color:#001a0a;border:none;border-radius:8px;padding:8px 20px;font-weight:700;cursor:pointer}
+.restart-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 22px;color:#dcfce7;cursor:pointer;font-size:.9rem;margin-top:8px}
+footer{margin-top:20px;opacity:.6;font-size:.78rem;text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+<h1>🌳 <span>Amazon Quest</span></h1>
+<p class="tagline">True or False · English 🇬🇧 · Amazon Forest 🌳</p>
+
+<div class="levels">
+  <button class="lvl active" onclick="setLevel('basico',this)">🌱 Basic</button>
+  <button class="lvl" onclick="setLevel('intermediario',this)">📚 Intermediate</button>
+  <button class="lvl" onclick="setLevel('dificil',this)">🔬 Advanced</button>
+  <button class="lvl" onclick="setLevel('carbonauta',this)">🛰️ Carbonauta</button>
+</div>
+
+<div class="hud">
+  <div class="hud-item">Time: <span id="hTime">0s</span></div>
+  <div class="hud-item">Score: <span id="hScore">0</span></div>
+  <div class="hud-item">Streak: <span id="hStreak">0</span>🔥</div>
+  <div class="hud-item">Correct: <span id="hCorrect">0</span></div>
+</div>
+<p class="instr">Read the statement in English and decide: TRUE ✅ or FALSE ❌?</p>
+
+<div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+<div class="streak-bar" id="streakBar"></div>
+
+<div class="statement-card" id="stmtCard">
+  <div class="stmt-num" id="stmtNum"></div>
+  <div class="stmt-text" id="stmtText"></div>
+</div>
+
+<div class="vf-btns">
+  <button class="vf-btn true-btn" id="trueBtn" onclick="answer(true)">✅ TRUE</button>
+  <button class="vf-btn false-btn" id="falseBtn" onclick="answer(false)">❌ FALSE</button>
+</div>
+
+<div class="explanation" id="explanation"></div>
+<button class="next-btn" id="nextBtn" onclick="nextQ()">Next →</button>
+
+<div class="endscreen" id="endScreen">
+  <h2>🎉 Quest complete!</h2>
+  <div class="score-big" id="finalScore"></div>
+  <p style="opacity:.75;margin:8px 0">points · level <span id="finalLevel"></span></p>
+  <div class="save-form">
+    <input id="playerName" placeholder="Your name" maxlength="20">
+    <button onclick="saveScore()">Save to ranking</button>
+  </div>
+  <button class="restart-btn" onclick="init()">Play again</button>
+</div>
+
+<div class="ranking">
+  <h3>🏆 Global Ranking — <span id="rankLevel">Basic</span></h3>
+  <div class="rank-list" id="rankList"><p style="opacity:.5;font-size:.82rem">Loading…</p></div>
+</div>
+
+<footer>English 🇬🇧 · Amazon rainforest · Amazônia 🌳<br>
+app ambiental do dia (2026-06-21)<br>— Idealizado por Ernandes Sobreira —</footer>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import{getFirestore,collection,addDoc,query,orderBy,limit,getDocs,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+const fbApp=initializeApp({apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"});
+const db=getFirestore(fbApp);
+const GAME_ID="2026-06-21-amazon-quest";
+
+// t=true/false, e=explanation
+const STATEMENTS={
+basico:[
+  {s:"The Amazon rainforest is the largest tropical forest in the world.",t:true,e:"TRUE ✅ The Amazon covers about 5.5 million km² — more than half of the world's remaining rainforest. It spans 9 countries, with 60% in Brazil."},
+  {s:"Piranhas are the most dangerous animals in the Amazon River.",t:false,e:"FALSE ❌ Piranhas rarely attack humans unprovoked. The most dangerous creatures include the electric eel (can produce 600V), the black caiman, and bullet ants."},
+  {s:"The Amazon River flows into the Atlantic Ocean.",t:true,e:"TRUE ✅ The Amazon empties into the Atlantic near Marajó Island (Pará, Brazil), discharging about 20% of all fresh water that enters the world's oceans."},
+  {s:"Trees in the Amazon produce rain through a process called transpiration.",t:true,e:"TRUE ✅ Amazon trees release about 20 billion tons of water vapor per day — creating 'flying rivers' that produce rainfall thousands of kilometers away in southern Brazil and Argentina."},
+  {s:"The Amazon rainforest covers about 50% of the South American continent.",t:false,e:"FALSE ❌ The Amazon basin covers approximately 40% of South America. The Amazon Legal (Brazil only) covers about 60% of Brazilian territory — roughly 5 million km²."},
+  {s:"Jaguars can swim and often hunt fish and caimans in rivers.",t:true,e:"TRUE ✅ Unlike most big cats, jaguars love water. They are excellent swimmers and regularly hunt fish, turtles, caimans, and capybaras along Amazon riverbanks."},
+  {s:"Deforestation of the Amazon has no effect on global climate.",t:false,e:"FALSE ❌ The Amazon stores 60–80 billion tons of carbon. Deforestation releases massive amounts of CO₂ and disrupts rainfall patterns across South America and globally."},
+  {s:"The Brazil nut tree can only reproduce with the help of a specific orchid bee.",t:true,e:"TRUE ✅ Brazil nut flowers can only be pollinated by large euglossine bees (orchid bees). No bees = no reproduction. This makes Brazil nut trees highly dependent on forest connectivity."},
+  {s:"More than 1,000 species of birds live in the Amazon region.",t:true,e:"TRUE ✅ The Amazon has about 1,300 bird species — roughly 15% of all bird species on Earth. Over 300 are endemic (found nowhere else)."},
+  {s:"The Amazon River is the longest river in the world.",t:false,e:"FALSE ❌ The Nile River (6,650 km) is traditionally considered the longest. The Amazon (6,400 km) is the world's largest by water volume and watershed area."},
+],
+intermediario:[
+  {s:"The Amazon has reached its 'tipping point' and is now releasing more carbon than it absorbs.",t:false,e:"FALSE (debated) ❌ Parts of the eastern Amazon have become net carbon sources, but the whole Amazon still appears slightly carbon-neutral to slightly positive. Lovejoy & Nobre (2018) warn a tipping point at 20–25% deforestation."},
+  {s:"The pink river dolphin (boto) is an endangered species in the Amazon.",t:true,e:"TRUE ✅ The boto (Inia geoffrensis) was classified as Endangered by the IUCN in 2018, primarily due to hunting (for fish bait), pollution, and habitat loss from hydroelectric dams."},
+  {s:"The Amazon contains approximately 10% of all species on Earth.",t:true,e:"TRUE ✅ The Amazon harbors an estimated 10% of the world's species — including 3,000+ fish species, 1,300+ birds, 430+ mammals, and millions of insects, many still undescribed."},
+  {s:"Indigenous territories in the Amazon have significantly less deforestation than non-protected areas.",t:true,e:"TRUE ✅ Studies show deforestation rates in indigenous territories are 3–5× lower than in unprotected areas. Indigenous lands cover ~13% of the Brazilian Amazon but protect vast biodiversity."},
+  {s:"The PRODES satellite system monitors deforestation in the Amazon in real time.",t:false,e:"FALSE ❌ PRODES (INPE) provides annual deforestation estimates from Landsat imagery. DETER provides near-real-time alerts (up to daily), but is lower resolution. They serve complementary purposes."},
+  {s:"Brazil contains about 60% of the total Amazon biome.",t:true,e:"TRUE ✅ Brazil holds approximately 60% of the Amazon basin. The remainder is shared between Peru (13%), Colombia (10%), Venezuela, Ecuador, Bolivia, Guyana, Suriname, and French Guiana."},
+  {s:"The Amazon rainforest produces 20% of the world's oxygen.",t:false,e:"FALSE ❌ This is a common myth. Mature tropical forests consume roughly as much oxygen through respiration as they produce via photosynthesis — near net zero. The '20% of oxygen' claim overstates the Amazon's role."},
+  {s:"Flying rivers carry more water than the Amazon River itself.",t:true,e:"TRUE ✅ The aerial rivers (vapor transported by winds above the forest) carry approximately 20 billion tons of water per day — comparable to or exceeding the Amazon River's outflow to the sea."},
+  {s:"The leaf-cutter ant is a keystone species in Amazon nutrient cycling.",t:true,e:"TRUE ✅ Leaf-cutter ants cultivate fungus gardens, processing large amounts of vegetation. They aerate soil, cycle nutrients, and their waste creates nitrogen-rich patches critical to plant diversity."},
+  {s:"All hydroelectric dams built in the Amazon have been environmentally assessed before construction.",t:false,e:"FALSE ❌ Several Amazon dams (including Belo Monte, 2016) were built with controversial environmental impact assessments and without adequate consultation of affected indigenous communities."},
+  {s:"The Amazon is home to more freshwater fish species than any other river system on Earth.",t:true,e:"TRUE ✅ The Amazon holds over 3,000 described freshwater fish species — more than the entire Atlantic Ocean. An estimated 1,000+ additional species await scientific description."},
+  {s:"Climate models project that with +2°C of warming, the Amazon could lose up to 40% of its species.",t:true,e:"TRUE ✅ A study in Nature (Thomas et al., 2004) estimated 15–37% of species face extinction with 2°C of warming globally. For the Amazon, more recent models project even higher risks."},
+],
+dificil:[
+  {s:"The concept of 'ecological debt' quantifies what wealthy nations owe developing countries for historical carbon emissions.",t:true,e:"TRUE ✅ Ecological debt (coined 1991, Andrew Simms) refers to the debt accrued by developed nations through disproportionate use of global commons (atmosphere). It underpins arguments for climate finance from North to South."},
+  {s:"Mycorrhizal networks in the Amazon function as a 'wood wide web' connecting trees and sharing resources.",t:true,e:"TRUE ✅ Amazonian trees form extensive ectomycorrhizal and arbuscular mycorrhizal networks. Studies by Simard et al. and others show carbon, water, and nutrients can be transferred between trees via fungal hyphae."},
+  {s:"The Intergovernmental Panel on Climate Change (IPCC) projects that 1.5°C of warming will have no significant impact on the Amazon.",t:false,e:"FALSE ❌ IPCC AR6 (2022) states that even at 1.5°C, tropical forests face increased drought stress, fire risk, and biodiversity loss. At 2°C, up to 40% of the Amazon may transition to drier vegetation types."},
+  {s:"The Amazon River crosses the equator twice during its course.",t:false,e:"FALSE ❌ The Amazon River itself does not cross the equator twice. The equator runs through the northern Amazon basin (near Macapá, Brazil), but the main river stays mostly south of it."},
+  {s:"REDD+ (Reducing Emissions from Deforestation and Degradation) is a legally binding international treaty.",t:false,e:"FALSE ❌ REDD+ is a voluntary mechanism under the UNFCCC, not a binding treaty. It creates financial incentives for developing countries to reduce deforestation, but participation and implementation are voluntary."},
+  {s:"The Amazon has a 'green season' where photosynthesis is actually highest during the dry season.",t:true,e:"TRUE ✅ Counterintuitively, Amazon photosynthesis peaks in the dry season when sunlight is more abundant and consistent. Satellite data (MODIS) confirm increased Leaf Area Index during dry months in many Amazon regions."},
+  {s:"Hydroelectric dams in the Amazon emit significant amounts of methane from decomposing organic matter.",t:true,e:"TRUE ✅ Amazon reservoirs, especially in shallow tropical conditions, emit CH₄ from anaerobic decomposition of submerged vegetation. Per kWh emitted, some Amazon dams have higher GHG footprints than gas power plants."},
+  {s:"The Brazil nut is the world's most radioactive food due to uptake of radium from deep soils.",t:true,e:"TRUE ✅ Brazil nut trees have very deep root systems (20–30 m) that absorb naturally occurring radium-226 from soil. This concentrates in the nuts — but the dose is tiny and poses no health risk to humans."},
+  {s:"The Amazon Legal in Brazil has been declared a separate legal entity with rights akin to personhood.",t:false,e:"FALSE ❌ As of 2024, the Amazon has not been granted legal personhood in Brazil (unlike rivers in Colombia and New Zealand). Brazilian law protects it under the Constitution (Art. 225), but as patrimônio nacional, not a person."},
+  {s:"El Niño events typically increase forest fire risk in the Amazon by reducing rainfall.",t:true,e:"TRUE ✅ El Niño causes drought across much of the Amazon, increasing forest flammability. The 2015–16 El Niño drought triggered unprecedented fires and caused large portions of the Amazon to become net carbon sources."},
+  {s:"The Amazon River has no tributaries longer than 1,000 km.",t:false,e:"FALSE ❌ The Amazon has major tributaries over 1,000 km: the Rio Negro (1,700 km), Madeira (3,240 km), Tapajós (2,200 km), Xingu (1,980 km), and others — several are longer than most European rivers."},
+  {s:"Studies show that selective logging in the Amazon increases understory fire risk by up to 10×.",t:true,e:"TRUE ✅ Selective logging creates debris, gaps in the canopy, and dries the understory. Studies by Nepstad et al. show logged forests are up to 10× more flammable than intact forest after drought periods."},
+],
+carbonauta:[
+  {s:"The eddy covariance technique measures net ecosystem exchange (NEE) by calculating correlations between vertical wind velocity and CO₂ concentration fluctuations.",t:true,e:"TRUE ✅ Eddy covariance measures turbulent fluxes of CO₂, H₂O, and heat. NEE = mean covariance of w' (vertical wind anomaly) × CO₂' (concentration anomaly). FluxNet maintains 900+ towers globally, including ~30 in Amazonia."},
+  {s:"The Amazon's soil organic carbon pool is larger than its aboveground biomass carbon pool.",t:true,e:"TRUE ✅ Amazon soils store 30–40% more carbon than aboveground biomass. Tropical Oxisols (Latossolos) can accumulate substantial carbon at depth, especially in terra preta (Amazonian Dark Earth) anthropogenic soils."},
+  {s:"The photosynthetically active radiation (PAR) in the Amazon peaks during the wet season when cloud cover is highest.",t:false,e:"FALSE ❌ PAR is lower during the wet season (more clouds). The Amazon's photosynthesis paradox is that dry season has higher PAR and photosynthesis despite lower water availability — trees use deep soil water reserves."},
+  {s:"The species-area relationship (SAR) predicts that reducing Amazon forest cover by 50% would cause approximately 50% species loss.",t:false,e:"FALSE ❌ The SAR predicts that a 50% area reduction causes roughly 13% species loss (S ∝ A^z, z≈0.25 for islands). However, this may underestimate extinction debt and edge effects in fragmented landscapes."},
+  {s:"Carbon isotope ratios (δ¹³C) can be used to distinguish C3 (forest) and C4 (pasture/grassland) vegetation in soil organic matter.",t:true,e:"TRUE ✅ C3 plants (trees, most crops) have δ¹³C of −26 to −28‰; C4 plants (grasses, sugarcane) have −12 to −14‰. This isotopic signal persists in soil OM for centuries and tracks land use history."},
+  {s:"The Voluntary Carbon Market (VCM) currently prices Amazon deforestation avoidance credits higher than reforestation credits.",t:false,e:"FALSE (nuanced) ❌ Reforestation/ARR credits typically trade at premiums over REDD+ avoidance credits in VCM, partly due to additionality concerns with some REDD+ projects. However, high-quality REDD+ projects (CCBS co-benefits) can exceed basic reforestation prices."},
+  {s:"Lidar (Light Detection and Ranging) can estimate aboveground carbon stocks in tropical forests with better accuracy than allometric equations based on diameter alone.",t:true,e:"TRUE ✅ Airborne lidar provides 3D canopy structure, allowing direct estimation of crown volume and height. Combined with allometry, lidar-derived AGB estimates have lower uncertainty than diameter-based methods in tall tropical forests."},
+  {s:"The 'global forest watch' platform uses Landsat 8 imagery at 30m resolution to detect deforestation with monthly alerts.",t:false,e:"FALSE ❌ GFW uses Landsat at 30m for annual/biannual updates, but near-real-time alerts (GLAD alerts) use daily Landsat 8/9 imagery. Planet's 3-5m daily imagery is increasingly used for higher-resolution, faster alerts."},
+  {s:"Amazonian terra preta (Anthropogenic Dark Earth) can contain up to 70 times more organic carbon than surrounding soils.",t:true,e:"TRUE ✅ Terra preta de índio contains up to 70× more black carbon (pyrogenic carbon) than surrounding Oxisols. Created by pre-Columbian peoples over millennia, it remains fertile for thousands of years — inspiring modern biochar research."},
+  {s:"Under SSP5-8.5 (high emissions scenario), CMIP6 models consistently project Amazon dieback by 2100.",t:false,e:"FALSE ❌ CMIP6 models show divergent projections for Amazon under SSP5-8.5: some project dieback, others show forest persistence with CO₂ fertilization partially compensating drought stress. Uncertainty in precipitation projections drives the range."},
+  {s:"The mismatch between satellite-derived GPP and eddy covariance NEE measurements in the Amazon is partly explained by lateral carbon export via rivers.",t:true,e:"TRUE ✅ Rivers export dissolved and particulate organic carbon (DOC, POC) that satellite-based GPP doesn't capture as ecosystem-level loss. The 'missing carbon' in Amazon carbon budgets is partly explained by aquatic lateral flux — estimated at 0.5–1.0 Pg C/yr."},
+  {s:"Amazon deforestation contributes more CO₂ annually to the atmosphere than the entire aviation industry worldwide.",t:true,e:"TRUE ✅ Amazon deforestation emits approximately 0.5–1.5 Pg CO₂/year (varying by year and fire season), while global aviation emits about 0.9 Pg CO₂/year. In high-deforestation years, the Amazon alone exceeds aviation emissions."},
+]
+};
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+let level='basico',qs=[],qi=0,score=0,streak=0,correct=0,timer=0,timerInt=null,results=[],lastSave=null;
+
+function init(){
+  qs=shuffle([...STATEMENTS[level]]);
+  qi=0;score=0;streak=0;correct=0;timer=0;results=[];
+  clearInterval(timerInt);
+  timerInt=setInterval(()=>{timer++;document.getElementById('hTime').textContent=timer+'s';},1000);
+  ['hScore','hStreak','hCorrect'].forEach(id=>document.getElementById(id).textContent='0');
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('endScreen').style.display='none';
+  document.getElementById('explanation').style.display='none';
+  document.getElementById('nextBtn').style.display='none';
+  document.getElementById('rankLevel').textContent=level==='basico'?'Basic':level==='intermediario'?'Intermediate':level==='dificil'?'Advanced':'Carbonauta';
+  const bar=document.getElementById('streakBar');
+  bar.innerHTML=qs.map((_,i)=>`<div class="streak-dot" id="sd${i}"></div>`).join('');
+  document.getElementById('stmtCard').style.display='flex';
+  document.querySelectorAll('.vf-btn').forEach(b=>b.disabled=false);
+  renderQ();
+  loadRanking();
+}
+
+function renderQ(){
+  if(qi>=qs.length){endGame();return;}
+  const q=qs[qi];
+  document.getElementById('stmtNum').textContent=`Statement ${qi+1} of ${qs.length}`;
+  document.getElementById('progFill').style.width=`${(qi/qs.length)*100}%`;
+  document.getElementById('stmtText').textContent=q.s;
+  document.getElementById('explanation').style.display='none';
+  document.getElementById('nextBtn').style.display='none';
+  document.querySelectorAll('.vf-btn').forEach(b=>{b.disabled=false;b.style.opacity='1';});
+}
+
+function answer(val){
+  const q=qs[qi];
+  const ok=val===q.t;
+  const dot=document.getElementById('sd'+qi);
+  if(ok){
+    streak++;correct++;
+    score+=100+(streak>1?15*(streak-1):0);
+    dot&&(dot.className='streak-dot ok');
+    document.getElementById(val?'trueBtn':'falseBtn').classList.add('correct-anim');
+  } else {
+    streak=0;
+    dot&&(dot.className='streak-dot err');
+    document.getElementById(val?'trueBtn':'falseBtn').classList.add('wrong-anim');
+  }
+  document.getElementById('hScore').textContent=score;
+  document.getElementById('hStreak').textContent=streak;
+  document.getElementById('hCorrect').textContent=correct;
+  document.querySelectorAll('.vf-btn').forEach(b=>b.disabled=true);
+  const expl=document.getElementById('explanation');
+  expl.textContent=q.e;expl.style.display='block';
+  document.getElementById('nextBtn').style.display='block';
+  setTimeout(()=>document.querySelectorAll('.vf-btn').forEach(b=>b.classList.remove('correct-anim','wrong-anim')),500);
+}
+window.answer=answer;
+
+function nextQ(){qi++;renderQ();}
+window.nextQ=nextQ;
+
+function endGame(){
+  clearInterval(timerInt);
+  document.getElementById('stmtCard').style.display='none';
+  document.querySelectorAll('.vf-btn').forEach(b=>b.style.display='none');
+  document.getElementById('explanation').style.display='none';
+  document.getElementById('nextBtn').style.display='none';
+  document.getElementById('endScreen').style.display='block';
+  document.getElementById('finalScore').textContent=score;
+  document.getElementById('finalLevel').textContent=level;
+  lastSave=null;
+}
+
+async function saveScore(){
+  if(lastSave)return;
+  const name=document.getElementById('playerName').value.trim()||'Anonymous';
+  lastSave={name,score,level,seconds:timer};
+  try{
+    await addDoc(collection(db,`games/${GAME_ID}/scores`),{name,score,level,seconds:timer,ts:serverTimestamp()});
+    loadRanking();
+  }catch(e){console.warn('offline',e);}
+}
+
+async function loadRanking(){
+  const el=document.getElementById('rankList');
+  try{
+    const q=query(collection(db,`games/${GAME_ID}/scores`),orderBy('score','desc'),limit(80));
+    const snap=await getDocs(q);
+    const rows=snap.docs.map(d=>d.data()).filter(d=>d.level===level).slice(0,15);
+    if(!rows.length){el.innerHTML='<p style="opacity:.5;font-size:.82rem">Be the first!</p>';return;}
+    el.innerHTML=rows.map((r,i)=>`<div class="rank-item"><span>${i+1}. ${r.name}</span><span>${r.score} pts</span></div>`).join('');
+  }catch(e){el.innerHTML='<p style="opacity:.5;font-size:.82rem">Ranking offline.</p>';}
+}
+
+function setLevel(l,btn){
+  level=l;
+  document.querySelectorAll('.lvl').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.vf-btn').forEach(b=>b.style.display='flex');
+  init();
+}
+
+window.setLevel=setLevel;
+window.saveScore=saveScore;
+window.init=init;
+init();
+</script>
+</body>
+</html>

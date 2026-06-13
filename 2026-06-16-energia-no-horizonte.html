@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Energia no Horizonte ⚡ — Jogo da Memória</title>
+<style>
+:root{--bg1:#0d0d2b;--bg2:#1a1a4e;--accent:#60a5fa;--accent2:#2563eb;--card-back:#1e2d5a;--ok:#22c55e;--err:#ef4444}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI",system-ui,sans-serif;min-height:100vh;background:linear-gradient(160deg,var(--bg1),var(--bg2));color:#dbeafe;display:flex;flex-direction:column;align-items:center;padding:16px}
+h1{font-size:clamp(1.4rem,4vw,2.1rem);text-align:center;margin:10px 0 2px}
+h1 span{color:var(--accent)}
+.tagline{text-align:center;opacity:.75;font-size:.88rem;margin-bottom:12px}
+.levels{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+.lvl{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:6px 18px;cursor:pointer;font-size:.85rem;color:#dbeafe;transition:.2s}
+.lvl:hover{background:rgba(255,255,255,.18)}
+.lvl.active{background:var(--accent);color:#0d0d2b;font-weight:700;border-color:transparent}
+.hud{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
+.hud-item{background:rgba(255,255,255,.08);border-radius:10px;padding:6px 14px;font-size:.85rem;text-align:center}
+.hud-item span{color:var(--accent);font-weight:700}
+.instr{text-align:center;font-size:.85rem;opacity:.7;margin-bottom:14px;max-width:600px}
+.legend{display:flex;gap:16px;justify-content:center;margin-bottom:10px;font-size:.8rem;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:6px;opacity:.8}
+.legend-box{width:14px;height:14px;border-radius:4px}
+.grid{display:grid;gap:8px;margin:0 auto;width:min(720px,98vw);margin-bottom:14px}
+.card-wrap{perspective:600px;cursor:pointer}
+.card{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .4s;border-radius:10px}
+.card.flipped{transform:rotateY(180deg)}
+.card.matched{opacity:.7;pointer-events:none}
+.card-face{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:10px;display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;font-size:.8rem;line-height:1.3;font-weight:600;border:2px solid rgba(255,255,255,.1)}
+.card-front{background:var(--card-back);color:rgba(255,255,255,.3);font-size:1.4rem}
+.card-back{transform:rotateY(180deg)}
+.card-back.type-source{background:linear-gradient(135deg,#1e3a8a,#1e40af);color:#bfdbfe;border-color:#3b82f6}
+.card-back.type-fact{background:linear-gradient(135deg,#065f46,#047857);color:#a7f3d0;border-color:#10b981}
+.card-wrap.shake .card{animation:shake .4s ease}
+.card-wrap.pop .card-back{animation:pop .3s ease}
+@keyframes shake{0%,100%{transform:rotateY(180deg) translateX(0)}25%{transform:rotateY(180deg) translateX(-6px)}75%{transform:rotateY(180deg) translateX(6px)}}
+@keyframes pop{0%,100%{transform:rotateY(180deg) scale(1)}50%{transform:rotateY(180deg) scale(1.06)}}
+.feedback{width:min(720px,98vw);background:rgba(255,255,255,.05);border-left:3px solid var(--accent);border-radius:8px;padding:10px 14px;font-size:.86rem;line-height:1.4;margin-bottom:12px;min-height:36px;display:none}
+.ranking{width:min(720px,98vw);background:rgba(255,255,255,.05);border-radius:14px;padding:16px;margin-bottom:14px}
+.ranking h3{font-size:.88rem;opacity:.7;margin-bottom:10px}
+.rank-list{display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto}
+.rank-item{display:flex;justify-content:space-between;font-size:.8rem;padding:5px 8px;background:rgba(255,255,255,.05);border-radius:6px}
+.rank-item.me{background:rgba(96,165,250,.12);font-weight:700}
+.endscreen{display:none;width:min(720px,98vw);background:rgba(255,255,255,.06);border-radius:16px;padding:24px;text-align:center;margin-bottom:14px}
+.endscreen h2{font-size:1.5rem;margin-bottom:8px}
+.score-big{font-size:2.6rem;font-weight:800;color:var(--accent)}
+.score-note{opacity:.6;font-size:.82rem;margin:4px 0 12px}
+.save-form{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.save-form input{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:8px 14px;color:#dbeafe;font-size:.9rem;width:200px}
+.save-form button{background:var(--accent);color:#0d0d2b;border:none;border-radius:8px;padding:8px 20px;font-weight:700;cursor:pointer}
+.restart-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 22px;color:#dbeafe;cursor:pointer;font-size:.9rem;margin-top:8px}
+footer{margin-top:20px;opacity:.6;font-size:.78rem;text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+<h1>⚡ <span>Energia no Horizonte</span></h1>
+<p class="tagline">Jogo da Memória — Energias Renováveis · Física ⚡ · Global 🌍</p>
+
+<div class="levels">
+  <button class="lvl active" onclick="setLevel('basico',this)">🌱 Básico</button>
+  <button class="lvl" onclick="setLevel('intermediario',this)">🔬 Intermediário</button>
+  <button class="lvl" onclick="setLevel('dificil',this)">⚡ Difícil</button>
+  <button class="lvl" onclick="setLevel('carbonauta',this)">🛰️ Carbonauta</button>
+</div>
+
+<div class="hud">
+  <div class="hud-item">Tempo: <span id="hTime">0s</span></div>
+  <div class="hud-item">Erros: <span id="hErros">0</span></div>
+  <div class="hud-item">Pares: <span id="hPares">0</span></div>
+  <div class="hud-item">Pontos: <span id="hScore">0</span></div>
+</div>
+<p class="instr">Encontre os pares: <b>Fonte de energia ↔ Fato científico</b>. Menor número de erros = mais pontos!</p>
+<div class="legend">
+  <div class="legend-item"><div class="legend-box" style="background:#1e40af;border:1px solid #3b82f6"></div>Fonte de energia</div>
+  <div class="legend-item"><div class="legend-box" style="background:#047857;border:1px solid #10b981"></div>Fato científico</div>
+</div>
+
+<div id="gameGrid"></div>
+<div class="feedback" id="feedback"></div>
+
+<div class="endscreen" id="endScreen">
+  <h2>🎉 Memória completa!</h2>
+  <div class="score-big" id="finalScore"></div>
+  <div class="score-note">Erros: <span id="finalErros"></span> · Tempo: <span id="finalTime"></span></div>
+  <div class="save-form">
+    <input id="playerName" placeholder="Seu nome" maxlength="20">
+    <button onclick="saveScore()">Salvar ranking</button>
+  </div>
+  <button class="restart-btn" onclick="init()">Jogar novamente</button>
+</div>
+
+<div class="ranking">
+  <h3>🏆 Ranking Global — <span id="rankLevel">Básico</span> (menor erros primeiro)</h3>
+  <div class="rank-list" id="rankList"><p style="opacity:.5;font-size:.82rem">Carregando…</p></div>
+</div>
+
+<footer>Física ⚡ · Energias renováveis · Global 🌍<br>
+app ambiental do dia (2026-06-16)<br>— Idealizado por Ernandes Sobreira —</footer>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import{getFirestore,collection,addDoc,query,orderBy,limit,getDocs,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+const fbApp=initializeApp({apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"});
+const db=getFirestore(fbApp);
+const GAME_ID="2026-06-16-energia-no-horizonte";
+
+const PAIRS={
+basico:[
+  {a:"☀️ Energia solar fotovoltaica",b:"Converte luz solar em eletricidade diretamente",fb:"O efeito fotovoltaico foi descoberto por Becquerel em 1839. Painéis modernos convertem ~22% da energia solar em eletricidade."},
+  {a:"💨 Energia eólica",b:"Usa turbinas movidas pelo vento",fb:"A capacidade eólica global ultrapassou 900 GW em 2023. O Brasil é um dos 10 maiores produtores de energia eólica do mundo."},
+  {a:"💧 Energia hidrelétrica",b:"Gera ~63% da eletricidade brasileira",fb:"O Brasil tem a terceira maior capacidade hidrelétrica instalada do mundo (109 GW). Itaipu é a segunda maior usina do planeta."},
+  {a:"🪨 Carvão mineral",b:"Emite até 820 g CO₂ por kWh gerado",fb:"O carvão é o combustível fóssil com maior fator de emissão. Uma usina de 1 GW a carvão emite cerca de 7 Mt CO₂ por ano."},
+  {a:"🌿 Biomassa",b:"Carbono neutro quando manejada corretamente",fb:"A biomassa pode ser carbono-neutra porque o CO₂ emitido na queima foi absorvido durante o crescimento da planta — se houver replantio."},
+  {a:"⚛️ Energia nuclear",b:"Emite apenas ~12 g CO₂ por kWh no ciclo de vida",fb:"A energia nuclear tem das menores emissões de CO₂ por kWh (ciclo de vida), similar à eólica. O Brasil opera Angra 1, 2 e Angra 3 está em construção."},
+  {a:"🌋 Energia geotérmica",b:"Aproveita o calor interno da Terra",fb:"A geotérmica fornece 100% da eletricidade da Islândia e é usada em Nova Zelândia, Quênia e outros países com atividade vulcânica."},
+  {a:"🌊 Energia maremotriz",b:"Usa o movimento das marés e ondas",fb:"A primeira usina maremotriz comercial do mundo foi construída em La Rance, França (1966). O potencial global é de ~3 TW."}
+],
+intermediario:[
+  {a:"☀️ Energia solar concentrada (CSP)",b:"Usa espelhos para focar radiação solar",fb:"O CSP (Concentrated Solar Power) pode armazenar calor em sais fundidos, gerando eletricidade mesmo à noite — vantagem sobre o fotovoltaico convencional."},
+  {a:"💨 Turbina eólica offshore",b:"Fator de capacidade de 40–55% no mar",fb:"Eólica offshore aproveita ventos mais intensos e constantes. O projeto Hornsea (Reino Unido) é o maior parque eólico marítimo do mundo, com 1,2 GW."},
+  {a:"⚡ Energia das ondas",b:"Capta energia cinética das ondas oceânicas",fb:"O potencial teórico da energia das ondas globalmente é de ~2 TW. Portugal e Reino Unido lideram o desenvolvimento desta tecnologia."},
+  {a:"🔋 Armazenamento por baterias",b:"Estabiliza geração intermitente de renováveis",fb:"A bateria de íons de lítio domina o mercado de armazenamento. Projetos como Hornsdale (Austrália) mostraram que baterias de grande escala reduzem custos de frequência de rede."},
+  {a:"🌡️ Bomba de calor geotérmica",b:"Usa temperatura estável do subsolo para climatizar",fb:"Bombas de calor geotérmicas têm COP (coeficiente de performance) de 3–5, ou seja, produzem 3–5 unidades de calor para cada unidade de eletricidade consumida."},
+  {a:"🌱 Biogás e biometano",b:"Formado pela decomposição anaeróbica de matéria orgânica",fb:"O biogás é composto principalmente de CH₄ (55–70%) e CO₂. Quando purificado em biometano, pode substituir gás natural e ser injetado em redes de distribuição."},
+  {a:"⚛️ Fusão nuclear",b:"Combina núcleos leves liberando energia enorme",fb:"O reator ITER (França) buscará atingir 500 MW de potência térmica. A fusão usa deutério e trítio — isótopos do hidrogênio — sem risco de explosão nuclear."},
+  {a:"🔆 LCOE (custo nivelado de energia)",b:"Compara custo real entre diferentes fontes",fb:"Em 2023, o LCOE solar fotovoltaico global caiu para US$ 0,049/kWh — abaixo de todas as fontes fósseis. O vento onshore ficou em US$ 0,033/kWh (IRENA)."},
+  {a:"🌐 Hidrogênio verde",b:"Eletrólise da água com energia renovável",fb:"O hidrogênio verde não emite CO₂. O Brasil tem alta capacidade de produção graças a seu potencial eólico e solar — exportação para Europa está prevista para 2030+."},
+  {a:"💡 Eficiência energética",b:"Reduzir consumo mantendo o mesmo serviço prestado",fb:"A eficiência energética é chamada de 'primeiro combustível' — é mais barata do que instalar nova geração. Iluminação LED economiza 75% em relação à incandescente."}
+],
+dificil:[
+  {a:"⚡ Efeito fotoelétrico (Einstein)",b:"Luz ejetando elétrons de materiais semicondutores",fb:"Einstein ganhou o Nobel de 1921 pelo efeito fotoelétrico — base do fotovoltaico. Um fóton com energia hν > φ (função trabalho) ejecta um elétron do material."},
+  {a:"🌊 OTEC — Conversão térmica oceânica",b:"Usa gradiente térmico entre superfície e fundo",fb:"OTEC (Ocean Thermal Energy Conversion) usa ΔT ≈ 20°C entre 1000 m de profundidade e a superfície. Eficiência teórica de Carnot limita o sistema a ~7%."},
+  {a:"💧 Pump storage — Hidro de bombeamento",b:"Reservatório elevado funciona como bateria",fb:"Bombas-turbinas sobem água na hora de excesso de energia e geram eletricidade na hora de pico. É a forma de armazenamento em larga escala mais usada no mundo (>90% da capacidade global)."},
+  {a:"☢️ Reator de sal fundido (MSR)",b:"Combustível nuclear dissolvido em sal líquido",fb:"MSRs (Molten Salt Reactors) operam a pressão atmosférica e podem usar tório como combustível. Não produzem explosões de vapor e têm menor quantidade de resíduo de longa vida."},
+  {a:"📊 Fator de capacidade",b:"Energia real gerada / capacidade máxima instalada",fb:"Solar tem fator de capacidade de 15–25%; eólico terrestre 25–35%; nuclear >90%; hidro ~45–55%. O fator determina a viabilidade econômica de uma fonte."},
+  {a:"🔬 Célula combustível de hidrogênio",b:"H₂ reage com O₂ gerando eletricidade e água",fb:"Células PEM (Proton Exchange Membrane) operam a 80°C com eficiência de 50–60%. Toyota Mirai e ônibus de hidrogênio as usam comercialmente."},
+  {a:"🌬️ Lei de Betz",b:"Turbinas eólicas captam no máximo 59,3% do vento",fb:"A Lei de Betz demonstra que qualquer conversor de energia eólica tem limite teórico de 16/27 ≈ 59,3% da potência cinética disponível no vento. Turbinas modernas chegam a ~45%."},
+  {a:"🔋 Bateria de fluxo redox",b:"Eletrólito líquido armazenado em tanques externos",fb:"Baterias de fluxo (vanadium redox flow) escalam facilmente em capacidade aumentando o tanque de eletrólito. São ideais para armazenamento de longo prazo em redes elétricas."},
+  {a:"☀️ Célula solar perovskita",b:"Eficiência laboratorial superior a 33% em 2024",fb:"Perovskitas (ABX₃) têm comprimento de difusão de portadores de carga excepcional. Células perovskita/silício em tandem atingiram 33,9% em 2024 (NREL), superando o limite prático do silício."},
+  {a:"🏭 Captura de carbono em termelétricas (CCS)",b:"Isola CO₂ de gases de combustão",fb:"CCS (Carbon Capture and Storage) pode capturar 90% das emissões de CO₂ de usinas. O custo ainda é alto (US$50–100/t CO₂), mas projetos em larga escala estão em operação no Canadá e Noruega."},
+  {a:"🌀 Energia osmótica (salinity gradient)",b:"Diferença de salinidade entre água doce e mar",fb:"Statkraft (Noruega) pioneirou a energia osmótica por membranas de osmose inversa. O potencial global estimado é de 1.700 TWh/ano — suficiente para 5% da demanda mundial."},
+  {a:"📡 Painéis solares no espaço (SBSP)",b:"Coletam energia solar contínua no espaço transmitindo por micro-ondas",fb:"SBSP (Space-Based Solar Power) coletaria energia 24h/dia sem atmosfera e a transmitiria para a Terra. A ESA e agências japonesa/chinesa têm projetos para 2030–2050."}
+],
+carbonauta:[
+  {a:"⚡ Reator de onda estacionária (TWR)",b:"Usa plutônio e urânio exaurido como combustível",fb:"O Traveling Wave Reactor da TerraPower usa urânio-238 depleted (resíduo do enriquecimento), que representa 99,3% do urânio natural. Poderia gerar energia por séculos com o estoque existente de urânio-238."},
+  {a:"🔬 Eficiência de Shockley-Queisser",b:"Limite teórico de 33% para célula solar de junção única",fb:"O limite S-Q (1961) demonstra que fótons com energia abaixo do gap (E<Eg) são perdidos como calor, e fótons acima do gap desperdiçam excesso de energia. Células multijunção superam esse limite."},
+  {a:"🌊 LCOE eólico offshore vs. CCGT (gás natural)",b:"Em 2030, eólico offshore deve custar menos que gás",fb:"Modelos Bloomberg NEF projetam que LCOE eólico offshore atingirá US$ 60–80/MWh em 2030, abaixo do custo marginal de muitas plantas CCGT (Combined Cycle Gas Turbine) existentes."},
+  {a:"⚗️ Eletrólise alcalina vs. PEM para H₂",b:"Alcalina é mais barata; PEM é mais rápida",fb:"Eletrolisadores alcalinos têm CAPEX de US$400–600/kW mas curvas de resposta lentas. PEM custa US$700–1000/kW mas responde em segundos — ideal para integração com eólica e solar intermitentes."},
+  {a:"🔋 Densidade de energia Li-S vs. Li-ion",b:"Li-S pode atingir 500 Wh/kg teoricamente",fb:"Baterias lítio-enxofre têm densidade teórica de ~2.600 Wh/kg vs. ~350 Wh/kg do Li-ion. O principal obstáculo é a degradação pelo 'efeito shuttle' de polissulfetos."},
+  {a:"📊 Net energy ratio (ERoEI)",b:"Energia gerada / energia investida na construção",fb:"ERoEI do petróleo foi >30:1 nos anos 1950 e é ~10:1 hoje. Solar e eólica têm ERoEI de 15–30:1 com vida útil de 20–30 anos. Nuclear chega a 75:1, o mais alto entre as fontes de baixo carbono."},
+  {a:"🌬️ Plasma fusão — confinamento inercial (ICF)",b:"Laser de alta potência comprime cápsula de deutério",fb:"Em 2022, o NIF (National Ignition Facility) atingiu ignição: 3,15 MJ de energia gerada para 2,05 MJ entregues ao alvo — primeira vez que fusão ICF superou a energia entregue ao plasma."},
+  {a:"🔆 Curtailment de renováveis",b:"Energia renovável gerada mas descartada por falta de absorção",fb:"Com alta penetração solar/eólica, o curtailment cresce: na Califórnia, em dias ensolarados, até 30% da solar pode ser desperdiçada. Armazenamento e flexibilidade de carga são soluções."},
+  {a:"🌡️ COP (coefficient of performance) bomba calor",b:"Razão entre calor útil e eletricidade consumida",fb:"Uma bomba de calor ar-ar com COP=4 produz 4 kWh de calor para cada 1 kWh elétrico. Em clima temperado, substitui caldeiras a gás com 75% menos emissões de CO₂ quando a rede é parcialmente renovável."},
+  {a:"⚛️ Tório como combustível nuclear",b:"3× mais abundante que urânio, menor resíduo de longa vida",fb:"Tório-232 é convertido em U-233 em reatores para produzir energia. O ciclo Th-U gera 1000× menos plutônio que o ciclo U-Pu — reduzindo risco de proliferação nuclear."},
+  {a:"📡 Virtual Power Plant (VPP)",b:"Agrega recursos distribuídos como uma usina virtual",fb:"VPPs conectam baterias residenciais, EVs, e unidades de cogeração via software, criando capacidade de resposta rápida à rede. Tesla e outros gerenciam VPPs de centenas de MW."},
+  {a:"🔬 Eficiência de Carnot em ciclos termodinâmicos",b:"η = 1 − T_fria/T_quente (em Kelvin)",fb:"Uma turbina a vapor com T_quente=600°C (873 K) e T_fria=30°C (303 K) tem eficiência máxima de Carnot de 65,3%. Na prática, ciclos a vapor atingem 35–45% por perdas irreversíveis."},
+  {a:"🏭 Síncrono vs. inversor em geração renovável",b:"Renováveis com inversor carecem de inércia síncrona",fb:"Geradores síncronos (hidro, termelétrica) estabilizam frequência da rede por inércia rotacional. Solar e eólica usam inversores sem inércia natural — exigindo controle sintético de inércia ou bancos de rotação virtual."},
+  {a:"🌊 Energia de gradiente de pressão osmótica (PRO)",b:"Pressão osmótica entre rio e mar gera energia",fb:"Na foz de rios, a diferença de pressão osmótica entre água doce e salgada é ~27 bar — energia potencial de 0,7 kWh/m³. Membranas de osmose retardada por pressão (PRO) convertem esta energia."}
+]
+};
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+let level='basico',cards=[],flipped=[],matched=0,errors=0,timer=0,timerInt=null,busy=false,lastSave=null;
+let COLS={basico:4,intermediario:4,dificil:5,carbonauta:5};
+let CARD_H={basico:90,intermediario:90,dificil:80,carbonauta:80};
+
+function init(){
+  errors=0;matched=0;timer=0;busy=false;flipped=[];
+  clearInterval(timerInt);
+  document.getElementById('hErros').textContent='0';
+  document.getElementById('hPares').textContent='0';
+  document.getElementById('hScore').textContent='0';
+  document.getElementById('endScreen').style.display='none';
+  document.getElementById('feedback').style.display='none';
+  document.getElementById('rankLevel').textContent=level.charAt(0).toUpperCase()+level.slice(1);
+  const pairs=PAIRS[level];
+  const total=pairs.length;
+  cards=[];
+  pairs.forEach((p,i)=>{
+    cards.push({id:'a'+i,pairId:i,type:'source',text:p.a,fb:p.fb});
+    cards.push({id:'b'+i,pairId:i,type:'fact',text:p.b,fb:p.fb});
+  });
+  shuffle(cards);
+  const cols=COLS[level];
+  const grid=document.getElementById('gameGrid');
+  grid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  grid.innerHTML=cards.map((c,i)=>`
+    <div class="card-wrap" id="cw${i}" onclick="flipCard(${i})">
+      <div class="card" id="c${i}" style="height:${CARD_H[level]}px">
+        <div class="card-face card-front">❓</div>
+        <div class="card-face card-back type-${c.type}">${c.text}</div>
+      </div>
+    </div>`).join('');
+  timerInt=setInterval(()=>{timer++;document.getElementById('hTime').textContent=timer+'s';},1000);
+  loadRanking();
+}
+
+function flipCard(i){
+  if(busy)return;
+  const cw=document.getElementById('cw'+i);
+  const c=document.getElementById('c'+i);
+  if(c.classList.contains('flipped')||c.classList.contains('matched'))return;
+  c.classList.add('flipped');
+  flipped.push(i);
+  if(flipped.length===2){
+    busy=true;
+    const[a,b]=flipped;
+    const ca=cards[a],cb=cards[b];
+    if(ca.pairId===cb.pairId){
+      matched++;
+      document.getElementById('hPares').textContent=matched;
+      const fb=document.getElementById('feedback');
+      fb.textContent='✅ '+ca.fb;fb.style.display='block';
+      setTimeout(()=>{
+        document.getElementById('c'+a).classList.add('matched');
+        document.getElementById('c'+b).classList.add('matched');
+        document.getElementById('cw'+a).classList.add('pop');
+        document.getElementById('cw'+b).classList.add('pop');
+        flipped=[];busy=false;
+        const score=Math.max(0,1000-errors*80-Math.floor(timer*1.5));
+        document.getElementById('hScore').textContent=score;
+        if(matched===cards.length/2)endGame(score);
+      },600);
+    } else {
+      errors++;
+      document.getElementById('hErros').textContent=errors;
+      document.getElementById('cw'+a).classList.add('shake');
+      document.getElementById('cw'+b).classList.add('shake');
+      setTimeout(()=>{
+        document.getElementById('c'+a).classList.remove('flipped');
+        document.getElementById('c'+b).classList.remove('flipped');
+        document.getElementById('cw'+a).classList.remove('shake');
+        document.getElementById('cw'+b).classList.remove('shake');
+        flipped=[];busy=false;
+        const score=Math.max(0,1000-errors*80-Math.floor(timer*1.5));
+        document.getElementById('hScore').textContent=score;
+      },1000);
+    }
+  }
+}
+window.flipCard=flipCard;
+
+function endGame(score){
+  clearInterval(timerInt);
+  document.getElementById('endScreen').style.display='block';
+  document.getElementById('finalScore').textContent=score;
+  document.getElementById('finalErros').textContent=errors;
+  document.getElementById('finalTime').textContent=timer+'s';
+  lastSave=null;
+}
+
+async function saveScore(){
+  if(lastSave)return;
+  const name=document.getElementById('playerName').value.trim()||'Anônimo';
+  const score=parseInt(document.getElementById('finalScore').textContent)||0;
+  lastSave={name,score,level,seconds:timer};
+  try{
+    await addDoc(collection(db,`games/${GAME_ID}/scores`),{name,score:errors,level,seconds:timer,ts:serverTimestamp()});
+    loadRanking();
+  }catch(e){console.warn('offline',e);}
+}
+
+async function loadRanking(){
+  const el=document.getElementById('rankList');
+  try{
+    const q=query(collection(db,`games/${GAME_ID}/scores`),orderBy('score','asc'),limit(80));
+    const snap=await getDocs(q);
+    const rows=snap.docs.map(d=>d.data()).filter(d=>d.level===level).slice(0,15);
+    if(!rows.length){el.innerHTML='<p style="opacity:.5;font-size:.82rem">Seja o primeiro!</p>';return;}
+    el.innerHTML=rows.map((r,i)=>{
+      const me=lastSave&&r.name===lastSave.name;
+      return`<div class="rank-item${me?' me':''}"><span>${i+1}. ${r.name}</span><span>${r.score} erros · ${r.seconds}s</span></div>`;
+    }).join('');
+  }catch(e){el.innerHTML='<p style="opacity:.5;font-size:.82rem">Ranking offline.</p>';}
+}
+
+function setLevel(l,btn){
+  level=l;
+  document.querySelectorAll('.lvl').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  init();
+}
+
+window.setLevel=setLevel;
+window.saveScore=saveScore;
+window.init=init;
+init();
+</script>
+</body>
+</html>

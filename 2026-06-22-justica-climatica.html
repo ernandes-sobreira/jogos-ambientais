@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Justiça Climática ⚖️</title>
+<style>
+:root{--bg1:#1a0a2e;--bg2:#2d1a4a;--accent:#c084fc;--accent2:#a855f7;--ok:#4ade80;--err:#f87171}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI",system-ui,sans-serif;min-height:100vh;background:linear-gradient(160deg,var(--bg1),var(--bg2));color:#f3e8ff;display:flex;flex-direction:column;align-items:center;padding:16px}
+h1{font-size:clamp(1.4rem,4vw,2.1rem);text-align:center;margin:10px 0 2px}
+h1 span{color:var(--accent)}
+.tagline{text-align:center;opacity:.75;font-size:.88rem;margin-bottom:12px}
+.levels{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+.lvl{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:6px 18px;cursor:pointer;font-size:.85rem;color:#f3e8ff;transition:.2s}
+.lvl:hover{background:rgba(255,255,255,.18)}
+.lvl.active{background:var(--accent);color:#1a0a2e;font-weight:700;border-color:transparent}
+.hud{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
+.hud-item{background:rgba(255,255,255,.08);border-radius:10px;padding:6px 14px;font-size:.85rem;text-align:center}
+.hud-item span{color:var(--accent);font-weight:700}
+.progress-bar{width:min(700px,98vw);height:6px;background:rgba(255,255,255,.12);border-radius:4px;margin-bottom:14px;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:4px;transition:.4s}
+.question-card{width:min(700px,98vw);background:rgba(255,255,255,.06);border-radius:16px;padding:24px;margin-bottom:16px}
+.q-num{font-size:.78rem;opacity:.6;margin-bottom:8px}
+.q-category{font-size:.75rem;background:rgba(192,132,252,.2);border:1px solid rgba(192,132,252,.35);border-radius:20px;padding:3px 12px;display:inline-block;margin-bottom:10px;color:var(--accent)}
+.q-text{font-size:1.05rem;font-weight:500;line-height:1.55;margin-bottom:16px;color:#f3e8ff}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 16px;cursor:pointer;font-size:.9rem;color:#f3e8ff;transition:.2s;text-align:left}
+.opt:hover:not(.locked){background:rgba(192,132,252,.18);border-color:var(--accent)}
+.opt.correct{background:rgba(74,222,128,.15)!important;border-color:var(--ok)!important;color:var(--ok)}
+.opt.wrong{background:rgba(248,113,113,.12)!important;border-color:var(--err)!important;color:var(--err)}
+.opt.reveal{background:rgba(74,222,128,.08)!important;border-color:rgba(74,222,128,.4)!important;opacity:.9}
+.opt.locked{cursor:default}
+.explanation{width:min(700px,98vw);background:rgba(255,255,255,.06);border-left:3px solid var(--accent);border-radius:8px;padding:12px 16px;font-size:.85rem;line-height:1.5;margin-bottom:12px;display:none;color:#e9d5ff}
+.next-btn{display:none;margin:0 auto 14px;background:var(--accent);color:#1a0a2e;border:none;border-radius:10px;padding:10px 28px;font-size:.95rem;font-weight:700;cursor:pointer;transition:.2s}
+.next-btn:hover{filter:brightness(1.1)}
+.ranking{width:min(700px,98vw);background:rgba(255,255,255,.05);border-radius:14px;padding:16px;margin-bottom:14px}
+.ranking h3{font-size:.88rem;opacity:.7;margin-bottom:10px}
+.rank-list{display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto}
+.rank-item{display:flex;justify-content:space-between;font-size:.8rem;padding:5px 8px;background:rgba(255,255,255,.05);border-radius:6px}
+.endscreen{display:none;width:min(700px,98vw);background:rgba(255,255,255,.06);border-radius:16px;padding:24px;text-align:center;margin-bottom:14px}
+.endscreen h2{font-size:1.4rem;margin-bottom:6px}
+.score-big{font-size:2.6rem;font-weight:800;color:var(--accent);margin:8px 0}
+.grade-label{font-size:1rem;margin-bottom:12px}
+.save-form{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.save-form input{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:8px 14px;color:#f3e8ff;font-size:.9rem;width:200px}
+.save-form button{background:var(--accent);color:#1a0a2e;border:none;border-radius:8px;padding:8px 20px;font-weight:700;cursor:pointer}
+.restart-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 22px;color:#f3e8ff;cursor:pointer;font-size:.9rem;margin-top:6px}
+footer{margin-top:20px;opacity:.6;font-size:.78rem;text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+<h1>⚖️ <span>Justiça Climática</span></h1>
+<p class="tagline">Sociologia · Filosofia · Ética Ambiental · Global 🌍</p>
+
+<div class="levels">
+  <button class="lvl active" onclick="setLevel('basico',this)">🌱 Básico</button>
+  <button class="lvl" onclick="setLevel('intermediario',this)">📚 Intermediário</button>
+  <button class="lvl" onclick="setLevel('dificil',this)">🔬 Difícil</button>
+  <button class="lvl" onclick="setLevel('carbonauta',this)">🛰️ Carbonauta</button>
+</div>
+
+<div class="hud">
+  <div class="hud-item">Tempo: <span id="hTime">0s</span></div>
+  <div class="hud-item">Pontos: <span id="hScore">0</span></div>
+  <div class="hud-item">Sequência: <span id="hStreak">0</span>🔥</div>
+  <div class="hud-item">Acertos: <span id="hCorr">0/0</span></div>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+
+<div class="question-card" id="qCard">
+  <div class="q-num" id="qNum"></div>
+  <div class="q-category" id="qCat"></div>
+  <div class="q-text" id="qText"></div>
+  <div class="opts" id="opts"></div>
+</div>
+
+<div class="explanation" id="explanation"></div>
+<button class="next-btn" id="nextBtn" onclick="nextQ()">Próxima →</button>
+
+<div class="endscreen" id="endScreen">
+  <h2>🌍 Parabéns, Agente de Justiça!</h2>
+  <div class="score-big" id="finalScore"></div>
+  <div class="grade-label" id="gradeLabel"></div>
+  <div class="save-form">
+    <input id="playerName" placeholder="Seu nome" maxlength="20">
+    <button onclick="saveScore()">Salvar no ranking</button>
+  </div>
+  <button class="restart-btn" onclick="init()">Jogar novamente</button>
+</div>
+
+<div class="ranking">
+  <h3>🏆 Ranking Global — <span id="rankLevel">Básico</span></h3>
+  <div class="rank-list" id="rankList"><p style="opacity:.5;font-size:.82rem">Carregando…</p></div>
+</div>
+
+<footer>Sociologia · Filosofia · Ética Ambiental<br>
+app ambiental do dia (2026-06-22)<br>— Idealizado por Ernandes Sobreira —</footer>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import{getFirestore,collection,addDoc,query,orderBy,limit,getDocs,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+const fbApp=initializeApp({apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"});
+const db=getFirestore(fbApp);
+const GAME_ID="2026-06-22-justica-climatica";
+
+// c=category, q=question, o=options, a=correct index (0-based), e=explanation
+const QUESTIONS={
+basico:[
+  {c:"Conceitos Básicos",q:"O que significa 'justiça climática'?",o:["Punir países que poluem mais","Garantir que os impactos e responsabilidades das mudanças climáticas sejam distribuídos de forma justa","Proibir indústrias de emitir CO₂","Criar impostos iguais para todos os países"],a:1,e:"Justiça climática reconhece que as mudanças climáticas afetam de forma desigual grupos vulneráveis (pobres, indígenas, países do Sul Global) que historicamente menos contribuíram para o problema."},
+  {c:"Ética Ambiental",q:"O princípio 'do poluidor-pagador' estabelece que:",o:["Somente empresas privadas devem pagar pela poluição","Quem causa danos ambientais deve arcar com os custos de remediação","Governos pagam pela poluição industrial","Consumidores financiam a limpeza ambiental"],a:1,e:"O princípio do poluidor-pagador, adotado pela OCDE em 1972 e pela Rio-92, responsabiliza o agente causador do dano ambiental pelos custos de prevenção e remediação."},
+  {c:"Sociologia",q:"O conceito de 'racismo ambiental' se refere a:",o:["Discriminação dentro de grupos ambientalistas","Concentração de riscos ambientais em comunidades negras e indígenas","Exploração de animais em zoológicos","Desflorestamento em regiões tropicais"],a:1,e:"Racismo ambiental (Robert Bullard, 1987) descreve como populações racializadas são desproporcionalmente expostas a riscos ambientais: lixões, indústrias poluentes, desastres, enquanto têm menos acesso a recursos naturais limpos."},
+  {c:"Filosofia",q:"Na ética ambiental, o 'biocentrismo' defende que:",o:["Apenas humanos têm valor moral","Todo ser vivo tem valor intrínseco, independente da utilidade para humanos","O meio ambiente deve ser preservado apenas por motivos econômicos","Animais de estimação têm mais direitos que animais selvagens"],a:1,e:"O biocentrismo (Paul Taylor, Albert Schweitzer) atribui valor moral a todos os seres vivos. Difere do antropocentrismo (só humanos importam) e do ecocentrismo (que inclui ecossistemas inteiros, não apenas seres vivos individuais)."},
+  {c:"Clima & Desigualdade",q:"Qual grupo social é geralmente mais vulnerável aos impactos das mudanças climáticas?",o:["Países ricos com alta industrialização","Populações pobres de países em desenvolvimento","Empresas multinacionais","Governos com altos orçamentos militares"],a:1,e:"Populações pobres são mais vulneráveis porque têm menor capacidade de adaptação, moram em áreas de risco, dependem de agricultura de subsistência sensível ao clima e têm menor acesso a sistemas de saúde e infraestrutura resiliente."},
+  {c:"Movimentos Sociais",q:"Vandana Shiva é uma ativista indiana conhecida por defender:",o:["A expansão da energia nuclear na Ásia","Os direitos das sementes e soberania alimentar dos agricultores","A privatização de rios na Índia","O desenvolvimento de transgênicos resistentes ao calor"],a:1,e:"Vandana Shiva é filósofa, física e ativista que fundou o Navdanya (Sementes Nativas) em 1987. Luta contra a biopirataria, sementes transgênicas patenteadas e defende a soberania das comunidades sobre sementes e recursos naturais."},
+  {c:"Direitos",q:"A Declaração dos Direitos da Natureza (aprovada no Equador em 2008) garante:",o:["Apenas animais domésticos têm direitos legais","A natureza tem direito de existir, ser mantida e se regenerar","Apenas florestas protegidas podem processar na justiça","Rios têm direito de voto nas eleições locais"],a:1,e:"O Equador foi pioneiro em 2008 ao incluir 'Derechos de la Naturaleza' na Constituição (arts. 71-74), baseado no conceito andino de Pacha Mama. Desde então, Bolívia, Nova Zelândia e Colômbia adotaram legislações similares."},
+  {c:"Conceitos",q:"O que é o 'Acordo de Paris' (2015)?",o:["Um tratado comercial sobre recursos minerais","Um acordo para limitar o aquecimento global a 1,5-2°C acima dos níveis pré-industriais","Uma convenção que proíbe desmatamento tropical","Um pacto para redistribuir terras agrícolas no mundo"],a:1,e:"O Acordo de Paris (COP21, dezembro 2015) foi adotado por 196 partes e estabelece metas de redução de emissões (NDCs) para limitar o aquecimento a 2°C, com esforços para 1,5°C. Entrou em vigor em novembro de 2016."},
+],
+intermediario:[
+  {c:"Filosofia Política",q:"John Rawls propôs o 'véu da ignorância' como método filosófico. Como esse conceito pode se aplicar à justiça climática?",o:["Para ignorar dados científicos sobre o clima","Para imaginar decisões sem saber qual país ou geração seremos, garantindo princípios mais justos","Para vedar informações climáticas ao público","Para priorizar economias maiores nas negociações"],a:1,e:"O véu da ignorância (Rawls, A Theory of Justice, 1971) requer que decisores não saibam sua posição social ao criar regras. Aplicado ao clima: se não soubéssemos em qual país ou geração nasceremos, provavelmente escolheríamos limitar emissões mais agressivamente."},
+  {c:"Dívida Climática",q:"O conceito de 'dívida climática' do Norte para o Sul Global se baseia principalmente em:",o:["Diferenças no PIB per capita entre países","Emissões históricas acumuladas de CO₂ desde a Revolução Industrial","Taxa de desmatamento atual de cada país","Consumo de combustíveis fósseis nos últimos 10 anos"],a:1,e:"O Norte Global industrializado emitiu cerca de 90% do CO₂ histórico, 'ocupando' o espaço atmosférico. A dívida climática argumenta que países ricos devem compensar o Sul pela crise que causaram — via financiamento climático, transferência de tecnologia e adaptação."},
+  {c:"Interseccionalidade",q:"O conceito de 'interseccionalidade' (Kimberlé Crenshaw) aplicado ao clima significa:",o:["Cruzamento de rodovias em zonas de proteção ambiental","Como gênero, raça, classe e outras identidades interagem para amplificar vulnerabilidades climáticas","A junção de diferentes tecnologias renováveis","A interseção entre agricultura e florestas"],a:1,e:"Mulheres negras e indígenas pobres enfrentam riscos climáticos multiplicados: dependem mais de recursos naturais para subsistência, têm menos voz nas decisões políticas, e sofrem maior violência em situações de crise ambiental e deslocamento."},
+  {c:"Filosofia",q:"Hans Jonas em 'O Princípio Responsabilidade' (1979) argumenta que a ética moderna deve incluir:",o:["Responsabilidade apenas pelos atos imediatos e presentes","Responsabilidade pelas gerações futuras e pela preservação da biosfera","Prioridade absoluta do progresso tecnológico","Neutralidade ética em relação ao ambiente não-humano"],a:1,e:"Jonas propõe o imperativo heurístico: 'Age de forma que os efeitos da tua ação sejam compatíveis com a permanência de uma vida humana autêntica na Terra.' Precursor da ética intergeracional e do princípio da precaução."},
+  {c:"Movimentos",q:"O movimento 'Fridays for Future', iniciado por Greta Thunberg em 2018, exemplifica:",o:["Ativismo institucional de ONGs tradicionais","Desobediência civil juvenil como forma de pressão política por ação climática","Lobby corporativo disfarçado de movimento ambiental","Campanha patrocinada por governos europeus"],a:1,e:"FFF representa uma nova geração de ativismo climático: descentralizado, digital, protagonizado por jovens. Sua abordagem — greves escolares, confronto direto com líderes políticos — renovou o debate sobre responsabilidade intergeracional e urgência climática."},
+  {c:"Deslocamento",q:"Os 'refugiados climáticos' ou 'deslocados ambientais' são pessoas que:",o:["Migram voluntariamente em busca de climas mais agradáveis","Forçosamente se deslocam devido a eventos climáticos extremos ou degradação ambiental","Cientistas que estudam climas em regiões remotas","Diplomatas em conferências climáticas internacionais"],a:1,e:"O ACNUR estima 25+ milhões de deslocados climáticos por ano. Ciclones, secas, inundações e elevação do nível do mar forçam migrações. O direito internacional não reconhece formalmente 'refugiado climático' — uma lacuna crítica de justiça global."},
+  {c:"Ética",q:"O 'princípio da precaução' (estabelecido em Rio-92) orienta que:",o:["Se espere certeza científica absoluta antes de agir sobre riscos ambientais","A falta de certeza científica não pode ser usada para adiar medidas preventivas","Cientistas devem ter veto sobre decisões políticas ambientais","Apenas riscos comprovados justificam ação governamental"],a:1,e:"O Princípio 15 da Declaração do Rio-92: 'quando houver risco de dano grave ou irreversível, a falta de certeza científica não será utilizada como razão para postergar medidas eficazes.' Fundamento da regulação climática preventiva."},
+  {c:"Economia",q:"A 'Tragédia dos Comuns' (Hardin, 1968) aplicada ao clima sugere que:",o:["O livre mercado resolve a poluição sem intervenção","Recursos comuns (como atmosfera) são superexplorados sem regulação coletiva","Apenas países pobres poluem os bens comuns globais","A propriedade privada resolve todos os problemas ambientais"],a:1,e:"Hardin alertou que sem regras coletivas, recursos compartilhados são destruídos por interesse individual. A atmosfera é o maior 'bem comum' global. Elinor Ostrom (Nobel 2009) mostrou que comunidades podem gerir comuns sem privatização — mas requer instituições e confiança."},
+  {c:"Sul Global",q:"A MAPA (Most Affected Peoples and Areas) nas negociações climáticas representa:",o:["Países mais industrializados","Nações insulares, povos indígenas e comunidades na linha de frente da crise climática","Grandes empresas de energia renovável","ONGs que monitoram desmatamento"],a:1,e:"MAPA inclui pequenos estados insulares (que podem ser submersos), comunidades árticas, nações africanas com alta vulnerabilidade e povos indígenas. Eles exigem que suas vozes — não apenas dados científicos — guiem decisões na UNFCCC e nas COPs."},
+  {c:"Sociologia",q:"O conceito de 'colonialismo verde' se refere a:",o:["Projetos de reflorestamento em ex-colônias europeias","Imposição de agendas ambientais do Norte sem considerar soberania e necessidades do Sul","Uso de energia solar em países africanos","Parques nacionais criados por governos independentes"],a:1,e:"O colonialismo verde ocorre quando organizações do Norte impõem soluções ambientais (ex.: conservação exclusiva, compensação de carbono) sem consultar comunidades locais, repetindo dinâmicas coloniais de controle sobre terras e recursos do Sul."},
+  {c:"Sociologia",q:"A 'economia do cuidado' tem relação com a crise climática porque:",o:["O cuidado com plantas medicinais substitui medicina tradicional","Trabalho de cuidado (majoritariamente feminino) cresce com eventos climáticos extremos, mas permanece invisível economicamente","A economia circular resolve os problemas de gênero","Homens realizam mais trabalho de cuidado em regiões afetadas"],a:1,e:"Secas, enchentes e doenças climáticas ampliam o trabalho de cuidado — de enfermos, crianças, idosos. Este trabalho cai desproporcional e historicamente sobre mulheres, não é contabilizado no PIB e raramente aparece em análises econômicas das mudanças climáticas."},
+],
+dificil:[
+  {c:"Filosofia Política",q:"Qual filósofo cunhou o conceito de 'responsabilidade intergeracional' como fundamento ético para a política climática?",o:["Immanuel Kant","Edmund Burke — com a ideia de sociedade como parceria entre vivos, mortos e por nascer","Hans Jonas e sua ética da responsabilidade","Peter Singer e o utilitarismo de preferências futuras"],a:1,e:"Edmund Burke (Reflexões sobre a Revolução em França, 1790) descreveu a sociedade como 'parceria entre os mortos, os vivos e os que estão por nascer'. Esta formulação fundamenta a responsabilidade conservacionista intergeracional antes mesmo do ecologismo moderno."},
+  {c:"Teoria Crítica",q:"O 'Antropoceno' como categoria filosófico-política é criticado por pesquisadores como Jason Moore por:",o:["Ser uma invenção da mídia sem base científica","Obscurecer que a crise é causada pelo capitalismo (Capitaloceno), não pela humanidade em geral","Ignorar o papel dos vulcões no aquecimento","Colocar humanos como parte do sistema natural"],a:1,e:"Jason Moore (Capitalism in the Web of Life, 2015) propõe 'Capitaloceno': a crise ecológica é produto do capitalismo, não da humanidade como todo. O Antropoceno, ao culpar a espécie humana em geral, oculta assimetrias de poder e ofusca responsabilidades históricas específicas."},
+  {c:"Direito Internacional",q:"O mecanismo de 'Loss and Damage' aprovado na COP27 (Sharm el-Sheikh, 2022) representa:",o:["Um acordo de compensação automática entre países","O reconhecimento político de que países vulneráveis sofrem perdas climáticas além de adaptação possível, com fundo de financiamento a ser criado","A criação de um tribunal ambiental internacional","Um imposto global sobre combustíveis fósseis"],a:1,e:"Loss & Damage reconhece que países vulneráveis sofrem perdas irreversíveis (territórios submersos, culturas perdidas) além do que adaptação pode resolver. A COP27 criou um fundo, mas deixou aberto o montante, as fontes e se seria compensatório ou filantrópico — debate central de justiça climática."},
+  {c:"Decolonialidade",q:"Aníbal Quijano e a 'colonialidade do poder' aplicada à ecologia implica:",o:["Que países colonizadores destruíam apenas ecossistemas europeus","Que a exploração ecológica do Sul é estrutural e conectada à racialização e subalternização de seus povos e naturezas","Que povos colonizados eram ecologicamente menos desenvolvidos","Que descolonização política resolve automaticamente questões ambientais"],a:1,e:"A colonialidade (Quijano, Mignolo, Maldonado-Torres) opera em dimensões de poder, saber e ser. Aplicada à ecologia (Walter Mignolo, Ramón Grosfoguel), revela como os 'recursos naturais' do Sul são tratados como objetos para extração do Norte — continuidade estrutural do colonialismo histórico."},
+  {c:"Economia Política",q:"A crítica marxista ao 'capitalismo verde' ou 'capitalismo sustentável' argumenta que:",o:["O capitalismo pode ser sustentável com regulação adequada","A acumulação capitalista requer crescimento infinito incompatível com limites ecológicos finitos","O socialismo também destrói o meio ambiente tanto quanto o capitalismo","Impostos sobre carbono resolvem a contradição entre capital e natureza"],a:1,e:"John Bellamy Foster (Marx's Ecology, 2000) retoma o conceito de 'falha metabólica' (Stoffwechsel) em Marx: o capitalismo interrompe o metabolismo entre sociedade e natureza, extraindo mais do que repõe. A sustentabilidade é estruturalmente incompatível com a lógica de acumulação infinita."},
+  {c:"Feminismo",q:"O 'ecofeminismo materialista' (Maria Mies, Vandana Shiva) argumenta que opressão de gênero e destruição ambiental são:",o:["Fenômenos independentes que devem ser tratados separadamente","Resultado da mesma lógica patriarcal e colonial de dominação e exploração","Causados exclusivamente pelo capitalismo industrial","Problemas que o desenvolvimento tecnológico resolve automaticamente"],a:1,e:"O ecofeminismo material conecta a dominação da natureza e das mulheres: ambas são tratadas como recursos a extrair, não como sujeitos com valor próprio. A solução requer transformação das relações de dominação, não apenas políticas verdes dentro do sistema patriarcal-capitalista."},
+  {c:"Filosofia do Direito",q:"Christopher Stone, em 'Should Trees Have Standing?' (1972), propôs que:",o:["Florestas devem ser privatizadas para receber proteção","Objetos naturais como árvores e rios deveriam ter personalidade jurídica e representação legal","Animais, mas não plantas, merecem direitos legais","A natureza deve ser protegida apenas por seu valor econômico"],a:1,e:"Stone argumentou que entidades naturais podem ter 'standing' legal — assim como empresas (pessoas jurídicas). Publicado durante o caso Sierra Club v. Morton sobre Mineral King Valley. Antecipou os Direitos da Natureza do Equador (2008) e decisões judiciais em Colômbia e Nova Zelândia."},
+  {c:"Sociologia do Risco",q:"Ulrich Beck em 'A Sociedade do Risco' (1986) argumenta que a modernidade criou riscos:",o:["Facilmente gerenciáveis pelas instituições científicas existentes","Globais, transfronteiriços e não-seguráveis que escapam às instituições da modernidade clássica","Limitados aos países subdesenvolvidos","Resolvíveis pelo livre mercado e inovação tecnológica"],a:1,e:"Beck propôs que riscos modernos (nuclear, climático, biotecnológico) são globais (Chernobyl não pediu passaporte), democráticos (afetam ricos e pobres), mas distribuídos desigualmente. As instituições da modernidade — estado, ciência, mercado — foram feitas para outros tipos de risco."},
+  {c:"Política Internacional",q:"O 'Artigo 6' do Acordo de Paris (mercados de carbono) é controverso porque:",o:["Proíbe países de comprar créditos de carbono","Permite que países e empresas compensem emissões comprando créditos, potencialmente adiando descarbonização real","Estabelece preços fixos globais para o carbono","Cria um banco central climático supervisionado pela ONU"],a:1,e:"O Artigo 6 criou mecanismos de mercado (carbon markets) entre países. Críticos (incluindo MAPA) argumentam que permite 'dupla contagem', não garante reduções reais e permite que países ricos comprem o direito de poluir em vez de descarbonizar suas economias."},
+  {c:"Filosofia",q:"O 'ecocentrismo profundo' (Deep Ecology, Arne Næss, 1973) difere do ambientalismo convencional porque:",o:["Aceita o crescimento econômico desde que seja verde","Rejeita o antropocentrismo: humanos não têm valor superior a outras espécies ou sistemas ecológicos","Prioriza a conservação da natureza por seu valor econômico","Foca apenas na poluição urbana, ignorando ecossistemas remotos"],a:1,e:"Næss distingue 'shallow ecology' (ambientalismo humanocentrado, focado em serviços ecossistêmicos) da 'deep ecology', que questiona a premissa de que humanos têm valor superior. A crise ambiental exige mudança filosófica profunda nas relações entre sociedade e natureza."},
+],
+carbonauta:[
+  {c:"Teoria Crítica Avançada",q:"O 'Buen Vivir' (Sumak Kawsay) andino e amazônico representa uma alternativa ontológica ao desenvolvimento ocidental porque:",o:["Propõe um capitalismo mais sustentável com crescimento verde","Desafia a ontologia natureza/sociedade, tempo linear e crescimento infinito — centrando relacionalidade, complementaridade e limites ecossistêmicos","Propõe retorno a formas pré-modernas de subsistência","É equivalente ao decrescimento europeu, apenas com nomenclatura diferente"],a:1,e:"Buen Vivir (Bolivia, Ecuador, 2008-2009 constituições) não é 'viver melhor' mas 'viver bem' em harmonia com Pacha Mama. Ontologicamente, recusa a separação sujeito/objeto, natureza/cultura. Difere do decrescimento (crítica interna ao capitalismo) por partir de cosmovisões radicalmente outras."},
+  {c:"Direito Internacional",q:"A 'Doutrina da Responsabilidade Comum mas Diferenciada' (CBDR) do UNFCCC é desafiada por países como EUA e China em favor de:",o:["Metas idênticas para todos os países, ignorando emissões históricas","Responsabilidade proporcional às emissões atuais, não históricas — argumento para diluir obrigações dos maiores poluidores históricos","Isenção total de países em desenvolvimento","Gestão exclusiva das Nações Unidas sobre a política climática global"],a:1,e:"A CBDR (Rio-92, Artigo 3.1) reconhece responsabilidades diferenciadas por capacidade e contribuição histórica. A erosão da CBDR — especialmente após 2009 (Copenhague) e no Acordo de Paris (NDCs voluntárias) — reflete pressão de países ricos para diluir sua responsabilidade histórica diferenciada."},
+  {c:"Economia Política",q:"A hipótese da 'Curva de Kuznets Ambiental' (CKA) — que riqueza eventualmente reduz impacto ambiental — é empiricamente problemática porque:",o:["Todos os países ricos seguiram o padrão previsto pela curva","Países ricos exportam poluição para o Sul via cadeias globais, fazendo suas emissões locais diminuírem artificialmente","O nível de renda necessário para reduzir impactos é facilmente atingível","A curva foi confirmada para todos os poluentes, incluindo CO₂"],a:1,e:"A CKA não se aplica ao CO₂ de forma robusta: países ricos reduzem emissões territoriais mas importam produtos carbono-intensivos. Jason Hickel, Giorgos Kallis e outros mostram que 'desacoplamento' entre PIB e impacto ambiental é predominantemente relativo, não absoluto — e insuficiente para metas climáticas."},
+  {c:"Filosofia",q:"O debate entre 'sustentabilidade fraca' e 'sustentabilidade forte' na economia ecológica gira em torno de:",o:["Diferença entre sustentabilidade a curto e longo prazo","Se capital natural crítico (ecosystems) pode ser substituído por capital manufaturado — a fraca diz sim, a forte diz que certos capitais naturais são insubstituíveis","Disputas sobre regulação entre governos fortes e fracos","Se países desenvolvidos ou em desenvolvimento devem liderar a transição"],a:1,e:"Sustentabilidade fraca (neoclássica): capital pode ser substituído livremente — perda de floresta compensável por fábrica ou capital financeiro. Sustentabilidade forte (Herman Daly, ecologia ecológica): serviços climáticos regulatórios, biodiversidade e sumidouros de carbono são críticos e insubstituíveis, estabelecendo limites ao crescimento."},
+  {c:"Ciência Pós-Normal",q:"O conceito de 'ciência pós-normal' (Funtowicz & Ravetz, 1993) aplicado à política climática sugere que:",o:["A ciência deveria ser o único critério para decisões climáticas","Quando incertezas são altas e apostas elevadas, comunidades ampliadas de pares (incluindo leigos e afetados) devem participar na validação e aplicação do conhecimento","Políticos devem ignorar cientistas em situações de incerteza","O IPCC deve substituir governos nas decisões climáticas"],a:1,e:"A ciência pós-normal reconhece que sob alta incerteza e alto risco, a validação do conhecimento não pode ser monopolizada por especialistas. Comunidades afetadas têm conhecimento legítimo sobre vulnerabilidades locais. Isso fundamenta demandas por inclusão de saberes indígenas nos relatórios do IPCC."},
+  {c:"Teoria Social",q:"A teoria do 'metabolismo socioecológico' (Martinez-Alier, Fischer-Kowalski) mede injustiça ambiental através de:",o:["Cálculo de emissões de CO₂ por capita","Quantificação de fluxos materiais e energéticos entre países — revelando como o Sul exporta baixa entropia (matérias-primas) e importa alta entropia (resíduos e poluição)","Análise de PIB ajustado por qualidade ambiental","Modelos de crescimento verde endógeno"],a:1,e:"A contabilidade de fluxos materiais (MFA) revela o 'intercâmbio ecológico desigual': países do Sul exportam recursos naturais (baixa entropia, alta qualidade) e importam produtos industriais + resíduos (alta entropia). Quantifica em toneladas o que os termos de troca econômicos ocultam."},
+  {c:"Filosofia Política",q:"Axel Honneth, com sua teoria do reconhecimento, aplicada ao clima implica que comunidades climáticamente vulneráveis sofrem:",o:["Apenas injustiças distributivas mensuráveis em termos econômicos","Tríplice injustiça: distributiva (mais impactos), procedimental (menos voz) e de reconhecimento (invisibilização de suas experiências e epistemologias)","Somente injustiça procedimental nas COPs","Injustiças superáveis com compensação financeira adequada"],a:1,e:"A teoria do reconhecimento (Honneth) complementa Fraser: além de redistribuição e participação, comunidades vulneráveis sofrem não-reconhecimento — seus saberes, experiências e formas de vida não são tomados a sério. Isso justifica abordagens interculturais na governança climática, não apenas transferências financeiras."},
+  {c:"Economia Política",q:"A estratégia de 'captura regulatória' no contexto climático ocorre quando:",o:["Reguladores ambientais são capturados por ativistas radicais","Indústrias fósseis influenciam reguladores e moldando políticas climáticas em seu favor, freando ou enfraquecendo ação efetiva","Governos capturam empresas de energia em nome do interesse público","Organizações internacionais assumem controle de políticas nacionais"],a:1,e:"Captura regulatória climática inclui: lobby direto (US$2,8 bi/ano em EUA pela indústria fóssil, 2015-2021), 'revolving door' (executivos em reguladores), desinformação científica (ex.: documentos internos da ExxonMobil desde 1977), e financiamento de think tanks negacionistas."},
+  {c:"Decolonialidade",q:"O 'Tribunal da Natureza' (como o organizado em Lima, 2014) exemplifica a tendência de:",o:["Substituir o sistema ONU por mecanismos alternativos de governança","Criar espaços de narrativa e testemunho que tornam visíveis impactos climáticos ignorados por mecanismos legais formais, mobilizando moral e politicamente","Criminalizar países emissores por meio de sanções internacionais","Processar empresas em cortes nacionais pelos danos causados"],a:1,e:"Tribunais da Natureza (Lima 2014, Bogotá 2017) são espaços performativos de justiça restaurativa: comunidades afetadas narram seus casos, 'juízes' emitem veredictos morais. Sem força legal, têm poder moral e político de tornar visíveis histórias excluídas dos fóruns formais — uma forma de democracia epistêmica."},
+  {c:"Filosofia Política",q:"Kate Raworth e o modelo de 'Economia Donut' propõe que justiça social e sustentabilidade ecológica sejam:",o:["Objetivos em tensão permanente que exigem tradeoffs","Simultaneamente realizáveis dentro de um espaço seguro e justo entre um piso social (necessidades humanas) e um teto ecológico (limites planetários)","Sequencialmente alcançáveis: primeiro crescimento, depois redistribuição, depois ecologia","Metas exclusivamente nacionais sem dimensão global"],a:1,e:"O Donut (Raworth, 2017) visualiza o espaço seguro e justo entre: 12 dimensões de privação social (piso: saúde, alimentação, etc.) e 9 limites planetários (teto: clima, biodiversidade, etc.). Desafia o GDP-centrismo e mostra que nenhum país ainda atingiu o espaço do donut — alguns ultrapassam os limites ecológicos sem garantir o piso social."},
+]
+};
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function shuffleOpts(q){
+  const paired=q.o.map((o,i)=>({text:o,correct:i===q.a}));
+  shuffle(paired);
+  return {text:q.q,cat:q.c,explanation:q.e,opts:paired.map(p=>p.text),correct:paired.findIndex(p=>p.correct)};
+}
+
+let level='basico',qs=[],qi=0,score=0,streak=0,correct=0,total=0,timer=0,timerInt=null,lastSave=null;
+
+function init(){
+  qs=shuffle([...QUESTIONS[level]]).map(q=>shuffleOpts(q));
+  qi=0;score=0;streak=0;correct=0;total=0;timer=0;
+  clearInterval(timerInt);
+  timerInt=setInterval(()=>{timer++;document.getElementById('hTime').textContent=timer+'s';},1000);
+  ['hScore','hStreak'].forEach(id=>document.getElementById(id).textContent='0');
+  document.getElementById('hCorr').textContent='0/0';
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('endScreen').style.display='none';
+  document.getElementById('qCard').style.display='block';
+  document.getElementById('explanation').style.display='none';
+  document.getElementById('nextBtn').style.display='none';
+  document.getElementById('rankLevel').textContent={basico:'Básico',intermediario:'Intermediário',dificil:'Difícil',carbonauta:'Carbonauta'}[level];
+  renderQ();
+  loadRanking();
+}
+
+function renderQ(){
+  if(qi>=qs.length){endGame();return;}
+  const q=qs[qi];
+  document.getElementById('qNum').textContent=`Questão ${qi+1} de ${qs.length}`;
+  document.getElementById('progFill').style.width=`${(qi/qs.length)*100}%`;
+  document.getElementById('qCat').textContent=q.cat;
+  document.getElementById('qText').textContent=q.text;
+  document.getElementById('explanation').style.display='none';
+  document.getElementById('nextBtn').style.display='none';
+  const optsEl=document.getElementById('opts');
+  optsEl.innerHTML=q.opts.map((o,i)=>`<button class="opt" onclick="answer(${i})">${o}</button>`).join('');
+}
+
+function answer(idx){
+  const q=qs[qi];
+  const ok=idx===q.correct;
+  const pts=ok?150+(streak>0?20*streak:0):0;
+  if(ok){streak++;correct++;}else{streak=0;}
+  score+=pts;total++;
+  document.getElementById('hScore').textContent=score;
+  document.getElementById('hStreak').textContent=streak;
+  document.getElementById('hCorr').textContent=`${correct}/${total}`;
+  document.querySelectorAll('.opt').forEach((btn,i)=>{
+    btn.classList.add('locked');
+    if(i===q.correct)btn.classList.add(ok&&i===idx?'correct':'reveal');
+    else if(i===idx)btn.classList.add('wrong');
+  });
+  const expl=document.getElementById('explanation');
+  expl.textContent=q.explanation;expl.style.display='block';
+  document.getElementById('nextBtn').style.display='block';
+}
+window.answer=answer;
+
+function nextQ(){qi++;renderQ();}
+window.nextQ=nextQ;
+
+function endGame(){
+  clearInterval(timerInt);
+  document.getElementById('qCard').style.display='none';
+  document.getElementById('explanation').style.display='none';
+  document.getElementById('nextBtn').style.display='none';
+  document.getElementById('endScreen').style.display='block';
+  document.getElementById('finalScore').textContent=score;
+  const pct=Math.round((correct/qs.length)*100);
+  const grades=[
+    [90,'🌍 Agente Máster de Justiça Climática!'],
+    [75,'⚖️ Defensor(a) do Clima!'],
+    [60,'📚 Aprendiz de Justiça Ambiental'],
+    [0,'🌱 Continue estudando!']
+  ];
+  document.getElementById('gradeLabel').textContent=`${pct}% — ${grades.find(g=>pct>=g[0])[1]}`;
+  lastSave=null;
+}
+
+async function saveScore(){
+  if(lastSave)return;
+  const name=document.getElementById('playerName').value.trim()||'Anônimo';
+  lastSave={name,score,level};
+  try{
+    await addDoc(collection(db,`games/${GAME_ID}/scores`),{name,score,level,seconds:timer,ts:serverTimestamp()});
+    loadRanking();
+  }catch(e){console.warn('offline',e);}
+}
+
+async function loadRanking(){
+  const el=document.getElementById('rankList');
+  try{
+    const q=query(collection(db,`games/${GAME_ID}/scores`),orderBy('score','desc'),limit(80));
+    const snap=await getDocs(q);
+    const rows=snap.docs.map(d=>d.data()).filter(d=>d.level===level).slice(0,15);
+    if(!rows.length){el.innerHTML='<p style="opacity:.5;font-size:.82rem">Seja o(a) primeiro(a)!</p>';return;}
+    el.innerHTML=rows.map((r,i)=>`<div class="rank-item"><span>${i+1}. ${r.name}</span><span>${r.score} pts</span></div>`).join('');
+  }catch(e){el.innerHTML='<p style="opacity:.5;font-size:.82rem">Ranking offline.</p>';}
+}
+
+function setLevel(l,btn){
+  level=l;
+  document.querySelectorAll('.lvl').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  init();
+}
+
+window.setLevel=setLevel;
+window.saveScore=saveScore;
+window.init=init;
+init();
+</script>
+</body>
+</html>

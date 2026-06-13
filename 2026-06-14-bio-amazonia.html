@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bio-Amazônia 🌳 — Quiz de Biodiversidade</title>
+<style>
+:root{--bg1:#0a1f0a;--bg2:#1a3a1a;--accent:#22d36b;--accent2:#16a34a;--card:#1e3a1e;--err:#ef4444;--ok:#22c55e}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI",system-ui,sans-serif;min-height:100vh;background:linear-gradient(160deg,var(--bg1),var(--bg2));color:#e8f5e9;display:flex;flex-direction:column;align-items:center;padding:16px}
+h1{font-size:clamp(1.5rem,4vw,2.2rem);text-align:center;margin:10px 0 2px}
+h1 span{color:var(--accent)}
+.tagline{text-align:center;opacity:.75;font-size:.9rem;margin-bottom:12px}
+.levels{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+.lvl{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:6px 18px;cursor:pointer;font-size:.85rem;color:#e8f5e9;transition:.2s}
+.lvl:hover{background:rgba(255,255,255,.18)}
+.lvl.active{background:var(--accent);color:#0a1f0a;font-weight:700;border-color:transparent}
+.hud{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+.hud-item{background:rgba(255,255,255,.08);border-radius:10px;padding:6px 14px;font-size:.85rem;text-align:center}
+.hud-item span{color:var(--accent);font-weight:700}
+.instr{text-align:center;font-size:.85rem;opacity:.7;margin-bottom:14px}
+.game-area{width:min(720px,98vw);background:rgba(255,255,255,.05);border-radius:16px;padding:22px;margin-bottom:14px}
+.progress-bar{height:5px;background:rgba(255,255,255,.12);border-radius:4px;margin-bottom:16px;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:4px;transition:.4s}
+.qnum{font-size:.78rem;opacity:.6;margin-bottom:4px}
+.question{font-size:1.1rem;font-weight:600;margin-bottom:18px;line-height:1.45}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:500px){.choices{grid-template-columns:1fr}}
+.choice{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:12px;
+  padding:12px 14px;cursor:pointer;font-size:.9rem;line-height:1.3;transition:.2s;text-align:left}
+.choice:hover{background:rgba(255,255,255,.16);transform:translateY(-1px)}
+.choice.correct{background:rgba(34,211,107,.2);border-color:var(--ok);animation:pop .35s ease}
+.choice.wrong{background:rgba(239,68,68,.18);border-color:var(--err);animation:shake .4s ease}
+.choice.disabled{pointer-events:none;opacity:.6}
+@keyframes pop{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.feedback{background:rgba(255,255,255,.06);border-left:3px solid var(--accent);border-radius:8px;
+  padding:10px 14px;margin-top:14px;font-size:.88rem;line-height:1.45;display:none}
+.next-btn{display:none;margin:14px auto 0;background:var(--accent);color:#0a1f0a;border:none;
+  border-radius:10px;padding:10px 28px;font-size:.95rem;font-weight:700;cursor:pointer;transition:.2s}
+.next-btn:hover{filter:brightness(1.1)}
+.ranking{width:min(720px,98vw);background:rgba(255,255,255,.05);border-radius:14px;padding:16px;margin-bottom:14px}
+.ranking h3{font-size:.9rem;opacity:.7;margin-bottom:10px}
+.rank-list{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto}
+.rank-item{display:flex;justify-content:space-between;font-size:.82rem;padding:5px 8px;
+  background:rgba(255,255,255,.05);border-radius:6px}
+.rank-item.me{background:rgba(34,211,107,.12);font-weight:700}
+.endscreen{display:none;text-align:center;padding:24px 16px}
+.endscreen h2{font-size:1.6rem;margin-bottom:10px}
+.score-big{font-size:2.8rem;font-weight:800;color:var(--accent)}
+.save-form{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:16px 0}
+.save-form input{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-radius:8px;
+  padding:8px 14px;color:#e8f5e9;font-size:.9rem;width:200px}
+.save-form button{background:var(--accent);color:#0a1f0a;border:none;border-radius:8px;
+  padding:8px 20px;font-weight:700;cursor:pointer;font-size:.9rem}
+.restart-btn{margin-top:10px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+  border-radius:8px;padding:8px 22px;color:#e8f5e9;cursor:pointer;font-size:.9rem}
+footer{margin-top:20px;opacity:.6;font-size:.8rem;text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+<h1>🌳 <span>Bio-Amazônia</span></h1>
+<p class="tagline">Quiz de Biodiversidade Amazônica · Biologia 🧬</p>
+
+<div class="levels">
+  <button class="lvl active" onclick="setLevel('basico',this)">🌱 Básico</button>
+  <button class="lvl" onclick="setLevel('intermediario',this)">🌿 Intermediário</button>
+  <button class="lvl" onclick="setLevel('dificil',this)">🦁 Difícil</button>
+  <button class="lvl" onclick="setLevel('carbonauta',this)">🛰️ Carbonauta</button>
+</div>
+
+<div class="hud">
+  <div class="hud-item">Tempo: <span id="hTime">0s</span></div>
+  <div class="hud-item">Pontos: <span id="hScore">0</span></div>
+  <div class="hud-item">Acertos: <span id="hAcertos">0</span></div>
+  <div class="hud-item">Sequência: <span id="hStreak">0</span>🔥</div>
+</div>
+<p class="instr">Escolha a alternativa correta. Ganhe pontos em sequência!</p>
+
+<div class="game-area" id="gameArea">
+  <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+  <div class="qnum" id="qNum">Pergunta 1</div>
+  <div class="question" id="qText"></div>
+  <div class="choices" id="qChoices"></div>
+  <div class="feedback" id="feedback"></div>
+  <button class="next-btn" id="nextBtn" onclick="nextQ()">Próxima →</button>
+</div>
+
+<div class="endscreen" id="endScreen">
+  <h2>🎉 Quiz concluído!</h2>
+  <div class="score-big" id="finalScore"></div>
+  <p style="opacity:.75;margin:8px 0">pontos · nível <span id="finalLevel"></span></p>
+  <div class="save-form">
+    <input id="playerName" placeholder="Seu nome" maxlength="20">
+    <button onclick="saveScore()">Salvar ranking</button>
+  </div>
+  <button class="restart-btn" onclick="init()">Jogar novamente</button>
+</div>
+
+<div class="ranking">
+  <h3>🏆 Ranking Global — <span id="rankLevel">Básico</span></h3>
+  <div class="rank-list" id="rankList"><p style="opacity:.5;font-size:.82rem">Carregando…</p></div>
+</div>
+
+<footer>Biologia 🧬 · Biodiversidade e espécies ameaçadas · Amazônia 🌳<br>
+app ambiental do dia (2026-06-14)<br>— Idealizado por Ernandes Sobreira —</footer>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import{getFirestore,collection,addDoc,query,orderBy,limit,getDocs,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+const fbApp=initializeApp({apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"});
+const db=getFirestore(fbApp);
+const GAME_ID="2026-06-14-bio-amazonia";
+
+const LEVELS={
+basico:{label:"Básico",qs:[
+  {t:"Qual é o maior rio do mundo em volume de água?",c:0,op:["Rio Amazonas, no Brasil","Rio Nilo, na África","Rio Congo, no Congo","Rio Mississipi, nos EUA"],fb:"O Rio Amazonas despeja cerca de 20% de toda a água doce que chega aos oceanos, mais que os sete maiores rios seguintes juntos."},
+  {t:"Qual animal é o maior felino das Américas?",c:0,op:["Onça-pintada nativa da floresta","Puma ou leão-da-montanha","Jaguatirica do sul do Brasil","Gato-do-mato pequeno"],fb:"A onça-pintada (Panthera onca) pode pesar até 120 kg e é classificada como quase ameaçada pela IUCN."},
+  {t:"O que significa uma espécie ser 'endêmica' de um lugar?",c:1,op:["Espécie que migra entre regiões","Espécie que vive só naquela área","Espécie extinta de uma região","Espécie trazida de outro lugar"],fb:"Endemismo significa que a espécie ocorre naturalmente apenas em determinada região geográfica e não é encontrada em nenhum outro lugar do mundo."},
+  {t:"Qual fruto amazônico é campeão em vitamina C?",c:2,op:["Açaí, fruto negro rico","Bacuri, fruto amarelo","Camu-camu, fruto pequeno","Cupuaçu, fruto grande"],fb:"O camu-camu (Myrciaria dubia) possui até 2.700 mg de vitamina C por 100 g — 30 vezes mais que a laranja."},
+  {t:"Quantos por cento dos animais terrestres do planeta estão na Amazônia?",c:1,op:["Cerca de 3% das espécies","Cerca de 10% das espécies","Cerca de 50% das espécies","Cerca de 0,5% das espécies"],fb:"A Amazônia abriga cerca de 10% de todas as espécies terrestres conhecidas, incluindo 3.000 espécies de peixes de água doce."},
+  {t:"Qual ave amazônica é famosa por seu canto único?",c:0,op:["Uirapuru, ave-canção","Arara-azul, ave vistosa","Tucano-toco, ave grande","Jaçanã, ave aquática"],fb:"O uirapuru (Cyphorhinus arada) tem um dos cantos mais complexos e melodiosos da Amazônia, sendo considerado sagrado por povos indígenas."},
+  {t:"O que é um bioma?",c:3,op:["Um tipo de rio amazônico","Uma espécie de árvore","Um poluente florestal","Um conjunto de ecossistemas similares"],fb:"Bioma é uma grande região com clima, vegetação e fauna características, como Amazônia, Cerrado e Pantanal."},
+  {t:"Qual principal ameaça afeta mais a biodiversidade amazônica hoje?",c:0,op:["Desmatamento e queimadas ilegais","Chuva ácida vinda das cidades","Poluição sonora em áreas urbanas","Glaciação e recuo de rios"],fb:"O desmatamento já removeu cerca de 20% da Amazônia original. Cada hectare perdido elimina em média 300 espécies de plantas e centenas de animais."}
+]},
+intermediario:{label:"Intermediário",qs:[
+  {t:"Quantas espécies de árvores existem na Amazônia, aproximadamente?",c:2,op:["Cerca de 1.000 espécies","Cerca de 5.000 espécies","Cerca de 16.000 espécies","Cerca de 200.000 espécies"],fb:"Pesquisas publicadas na Science estimam 16.000 espécies de árvores amazônicas, sendo 227 'hiperdominantes' que representam metade de todos os indivíduos."},
+  {t:"O boto-cor-de-rosa pertence a qual ordem de mamíferos?",c:1,op:["Sirênios, como peixes-boi","Cetáceos, como golfinhos","Pinnipedia, como leões-marinhos","Mustelídeos, como lontras"],fb:"Inia geoffrensis é o maior golfinho de água doce do mundo, podendo atingir 2,5 m de comprimento. Está classificado como Em Perigo pela IUCN."},
+  {t:"Qual é o fenômeno que ocorre quando a Amazônia gera sua própria chuva?",c:0,op:["Rios voadores ou bombas bióticas","El Niño tropical e circulação","Monções da América do Sul","Frente fria polar invertida"],fb:"Os 'rios voadores' são correntes de vapor d'água transportadas pela floresta. A Amazônia transpira 20 bilhões de toneladas de água por dia, influenciando o regime hídrico de todo o continente."},
+  {t:"Qual porcentagem da Amazônia já foi desmatada até 2023?",c:1,op:["Menos de 5% da área","Cerca de 20% da área","Cerca de 50% da área","Mais de 70% da área"],fb:"Cerca de 20% da Amazônia original (≈750.000 km²) já foi desmatada. Cientistas alertam que 25–40% pode ser o 'ponto de não retorno' para a floresta."},
+  {t:"Qual é o nome técnico para a camada mais alta das árvores na floresta tropical?",c:2,op:["Sub-bosque, camada baixa","Dossel, cobertura principal","Emergente, árvores gigantes","Estrato herbáceo rasteiro"],fb:"O estrato emergente é composto por árvores que ultrapassam o dossel, chegando a 50–60 m de altura. São habitat essencial para harpia e araras."},
+  {t:"A ariranha (Pteronura brasiliensis) é um predador de topo. Qual seu status na IUCN?",c:3,op:["Preocupação menor (LC)","Quase ameaçada (NT)","Vulnerável (VU) em declínio","Em Perigo (EN) de extinção"],fb:"A ariranha está classificada como 'Em Perigo' (EN) pela IUCN. A caça histórica por sua pele e a destruição de habitat reduziram as populações em mais de 50%."},
+  {t:"O projeto REDD+ visa reduzir emissões protegendo florestas. O que significa a sigla?",c:1,op:["Restauração Ecológica de Danos Diretos","Redução de Emissões por Desmatamento e Degradação","Regulação Econômica do Desmatamento em Declínio","Rede de Espécies Degradadas e Desflorestadas"],fb:"O REDD+ (Reducing Emissions from Deforestation and forest Degradation) é um mecanismo da UNFCCC que remunera países por evitar o desmatamento."},
+  {t:"A Amazônia Legal brasileira cobre qual área aproximada?",c:0,op:["5 milhões de km², 9 estados","2 milhões de km², 5 estados","8 milhões de km², todos estados","1 milhão de km², 4 estados"],fb:"A Amazônia Legal abrange cerca de 5 milhões de km² (59% do território brasileiro), incluindo 9 estados: AM, PA, MT, RO, AC, RR, AP, MA e TO."},
+  {t:"Qual grupo de animais tem maior biodiversidade de espécies na Amazônia?",c:2,op:["Mamíferos, com 400 espécies","Aves, com 1.300 espécies","Insetos, com mais de 2,5 milhões","Répteis, com 500 espécies"],fb:"Os insetos amazônicos representam a maior riqueza de espécies, com estimativas entre 2,5 e 5 milhões de espécies — a maioria ainda sem descrição científica."},
+  {t:"O 'efeito de borda' em fragmentos florestais causa qual impacto principal?",c:1,op:["Aumento de espécies pioneiras raras","Declínio da biodiversidade interna","Melhora do microclima local","Maior produção de sementes"],fb:"O efeito de borda aumenta temperatura e vento na floresta, favorece espécies generalistas e causa declínio de espécies especialistas que precisam do interior florestal."}
+]},
+dificil:{label:"Difícil",qs:[
+  {t:"A hipótese do 'Efeito Allee' em pequenas populações prediz que:",c:0,op:["Populações pequenas têm fitness reduzido","Populações pequenas crescem mais rápido","Populações pequenas resistem a patógenos","Populações pequenas especiam mais rápido"],fb:"O Efeito Allee descreve que populações pequenas têm dificuldade de encontrar parceiros, defender territórios e resistir a doenças, acelerando o declínio rumo à extinção."},
+  {t:"O quelônio Podocnemis expansa (tartaruga-da-Amazônia) usa qual estratégia reprodutiva?",c:2,op:["Incubação oral dos ovos até eclosão","Ninhada de 3–5 ovos em cavernas","Nidificação em praias com 80–110 ovos","Partenogênese quando machos escasseiam"],fb:"Podocnemis expansa deposita entre 80 e 110 ovos em praias fluviais. A temperatura da areia determina o sexo dos filhotes — fenômeno chamado Determinação Sexual Termossensível (TSD)."},
+  {t:"O peixe-boi-da-Amazônia (Trichechus inunguis) é o único sireniano completamente:",c:1,op:["Marinho e carnívoro do Brasil","Dulcícola e herbívoro do mundo","Noturno e solitário da família","Pelágico e migratório do rio"],fb:"Trichechus inunguis é o único sireniano exclusivamente de água doce do mundo. Pode acumular gordura na estação cheia e suportar meses sem comer na seca."},
+  {t:"O padrão filogeográfico das espécies amazônicas resultante das glaciações é explicado pela hipótese dos:",c:3,op:["Corredores ripários paleoclimáticos","Gradientes altitudinais de especiação","Arcos de dispersão da Bacia do Prata","Refúgios florestais do Pleistoceno"],fb:"A hipótese dos Refúgios de Haffer (1969) propõe que durante as glaciações pleistocênicas, partes da Amazônia secaram, isolando populações em refúgios úmidos onde ocorreu especiação alopátrica."},
+  {t:"A Zona de Intensa Biodiversidade (ZIB) da Amazônia, ou 'núcleo duro', localiza-se principalmente:",c:0,op:["No oeste amazônico e Andes orientais","No delta do Amazonas, no Marajó","No Escudo das Guianas apenas","No sul do Pará e Mato Grosso"],fb:"O oeste amazônico e os Andes orientais concentram a maior riqueza de espécies da Amazônia, resultado da sobreposição de múltiplos centros de endemismo."},
+  {t:"A 'savanização' da Amazônia prevista por modelos climáticos se aceleraria com qual combinação?",c:1,op:["Resfriamento global com mais ENSO","Desmatamento e aquecimento regional combinados","Mais chuva e menos temperatura na estação seca","Aumento de CO₂ e maior fotossíntese foliar"],fb:"Modelos como os de Nobre et al. (2016) mostram que a combinação de desmatamento (>20–40%) com aquecimento global de +1,5–2°C pode gerar retroalimentação positiva e converter partes da Amazônia em savana."},
+  {t:"O carbono estocado na biomassa acima do solo na Amazônia brasileira é estimado em:",c:2,op:["Cerca de 5 Pg C na biomassa","Cerca de 30 Pg C na biomassa","Cerca de 60–80 Pg C na biomassa","Cerca de 200 Pg C na biomassa"],fb:"A Amazônia brasileira armazena entre 60 e 80 Pg C (petagramas de carbono) acima do solo. Sua liberação representaria décadas das emissões globais atuais."},
+  {t:"A parasita vegetal Cuscuta (cipo-cravo) possui qual adaptação nutricional?",c:3,op:["Fotossíntese CAM de baixo custo","Simbiose com fungos ectomicorrízicos","Fixação de N₂ com bactérias rizóbio","Haustórios que sugam seiva do hospedeiro"],fb:"Cuscuta é uma planta holoparasita: seus haustórios penetram o xilema e floema do hospedeiro, obtendo água, minerais e fotossintatos. Não realiza fotossíntese significativa."},
+  {t:"O conceito de 'debt of extinction' (dívida de extinção) em ecologia de ilhas afirma que:",c:0,op:["Fragmentos ainda perderão espécies futuras","Ilhas têm mais espécies que o continente","Extinções só ocorrem em espécies invasoras","Dívidas ecológicas são pagáveis com restauração"],fb:"A dívida de extinção descreve o fenômeno de espécies que persistem temporariamente após a fragmentação de habitat, mas estão condenadas à extinção pelo tempo — o chamado 'extinções relictuais'."},
+  {t:"Qual mecanismo explica a alta diversidade de árvores amazônicas segundo a hipótese de Janzen-Connell?",c:1,op:["Maior tamanho corporal aumenta sobrevivência","Predadores e patógenos específicos favorecem distância","Polinizadores especialistas ampliam diversidade","Solos ácidos selecionam espécies tolerantes"],fb:"A hipótese Janzen-Connell propõe que herbívoros e patógenos específicos eliminam plântulas próximas à planta-mãe, favorecendo o estabelecimento de outras espécies e mantendo alta diversidade."},
+  {t:"A Taxa de Especiação Líquida (net diversification rate) mais alta entre vertebrados amazônicos foi documentada em:",c:2,op:["Mamíferos de grande porte migratórios","Répteis escamados e crocodilianos","Aves passeriformes de sub-bosque","Anfíbios dendrobatídeos venenosos"],fb:"Aves passeriformes amazônicas apresentam as maiores taxas líquidas de diversificação entre vertebrados, com estimativas de 1–2 novas espécies por milhão de anos por linhagem."},
+  {t:"A telemetria por satélite de harpia (Harpia harpyja) mostra que cada par precisa de:",c:3,op:["50 ha de floresta por território","200 ha para cada casal nidificante","1.000 ha no mínimo por família","4.000 ha ou mais de floresta"],fb:"Estudos de rádio-telemetria indicam que cada par de harpia requer entre 4.000 e 10.000 ha de floresta contínua. Sua sensibilidade ao desmatamento a torna bioindicadora de qualidade florestal."},
+  {t:"Qual percentual de espécies amazônicas de peixes ainda é desconhecido da ciência?",c:1,op:["Menos de 5% permanece sem descrição","Entre 30 e 40% ainda sem descrição","Mais de 80% nunca foi coletado","Apenas 1–2% aguarda taxonomia"],fb:"Estima-se que entre 30–40% das espécies de peixes da Amazônia ainda não foram descritas cientificamente. A região abriga mais de 3.000 espécies conhecidas de peixes de água doce."}
+]},
+carbonauta:{label:"Carbonauta",qs:[
+  {t:"O 'tipping point' da Amazônia descrito por Lovejoy & Nobre (2018) ocorre com quanto de desmatamento acumulado?",c:1,op:["Entre 10–15% de área desmatada","Entre 20–25% de área desmatada","Entre 40–45% de área desmatada","Entre 60–70% de área desmatada"],fb:"Lovejoy & Nobre (2018) em Science Advances propõem que 20–25% de desmatamento combinado com aquecimento climático pode desencadear retroalimentação positiva irreversível na Amazônia."},
+  {t:"O modelo CPTEC-PVM2 para vegetação dinâmica amazônica usa qual abordagem para prever mortalidade por seca?",c:2,op:["Regressão logística em dados MODIS","Modelo de difusão de calor no solo","Formalismo de Stress Hídrico por PLC","Redes neurais com dados de campo"],fb:"O Pressure-Loss Curve (PLC) formalismo quantifica o percentual de perda de condutividade hidráulica no xilema. Quando o PLC atinge ~50%, ocorre falha hidráulica e morte por dessecação."},
+  {t:"Na análise de eddy covariance de torres FluxNet amazônicas, o NEP (Net Ecosystem Production) médio é:",c:0,op:["Ligeiramente positivo em anos sem seca","Neutro independente de precipitação","Fortemente negativo indicando fonte CO₂","Variável apenas por temperatura do ar"],fb:"Torres FluxNet em florestas maduras mostram NEP ligeiramente positivo em anos sem seca (sumidouro de C), mas florestas submetidas a seca se tornam fonte líquida de CO₂."},
+  {t:"A técnica SIF (Solar-Induced Fluorescence) de satélites GOSAT e OCO-2 mede indiretamente:",c:3,op:["Reflectância espectral no infravermelho","Concentração de clorofila por pixel","Temperatura de superfície florestal","Atividade fotossintética em tempo real"],fb:"SIF é a fluorescência emitida pela clorofila durante a fotossíntese. É mais sensível à atividade fotossintética real do que índices de vegetação tradicionais como NDVI."},
+  {t:"O efeito de 'CO₂ fertilization' na Amazônia é atenuado por qual limitação nutricional primária?",c:1,op:["Limitação por potássio nos solos","Limitação por fósforo em Oxissolos","Limitação por nitrogênio atmosférico","Limitação por magnésio no dossel"],fb:"Solos amazônicos (principalmente Latossolos/Oxissolos) são altamente intemperizados e deficientes em fósforo. Modelos indicam que a fertilização por CO₂ é fortemente limitada por P disponível."},
+  {t:"O processo de 'lateral carbon flux' via hidrologia em bacias amazônicas representa qual fração do NEE florestal?",c:2,op:["Menos de 1% do balanço","Entre 5–10% do balanço","Entre 15–30% do balanço","Mais de 50% do balanço"],fb:"O carbono lateral (exportado via rios como DOC, POC, CO₂ degasado) representa 15–30% do fluxo líquido de ecossistema, sendo frequentemente ignorado em balanços de carbono terrestres."},
+  {t:"A dinâmica de mortalidade florestal pós-seca de 2015–2016 na Amazônia mostrou que a maior mortalidade ocorreu em:",c:0,op:["Árvores grandes com DAP >40 cm","Árvores menores com DAP <10 cm","Lianas e epífitas vasculares","Palmeiras monocotiledôneas"],fb:"A seca 2015–2016 causou mortalidade seletiva de árvores grandes (DAP >40 cm), que são responsáveis por >50% da biomassa. O impacto no balanço de carbono foi desproporcional ao número de indivíduos."},
+  {t:"O índice MAAP (Monitoring of the Andean Amazon Project) revela que a maior taxa de desmatamento secundário em 2023 ocorreu em:",c:3,op:["No Suriname e Guiana Francesa","No estado do Amazonas, Brasil","Na Colômbia andino-amazônica","No leste do Peru e Bolívia"],fb:"Segundo o MAAP, o leste do Peru e nordeste da Bolívia apresentaram taxas crescentes de desmatamento em 2023, impulsionadas por expansão agrícola e extração ilegal de madeira."},
+  {t:"O protocolo de inventário florestal RAINFOR utiliza qual limiar mínimo de DAP?",c:1,op:["DAP mínimo de 5 cm no campo","DAP mínimo de 10 cm no campo","DAP mínimo de 20 cm no campo","DAP mínimo de 30 cm no campo"],fb:"O protocolo RAINFOR (Amazon Forest Inventory Network) adota DAP ≥10 cm como limiar mínimo, com parcelas permanentes de 1 ha remedidas a cada 3–5 anos para monitorar dinâmica florestal."},
+  {t:"A detecção de degradação florestal 'inside the forest' por sensoriamento remoto é mais eficaz com:",c:2,op:["Landsat óptico em resolução 30 m","SAR de abertura sintética em L-band","LiDAR aerotransportado de múltiplos retornos","MODIS em resolução de 500 m"],fb:"LiDAR aerotransportado captura a estrutura tridimensional do dossel, detectando degradação sutil (extração seletiva, ventos, fogo de baixa intensidade) invisible para sensores ópticos passivos."},
+  {t:"Em termos de biomassa, a Amazônia contribui com quanto do total de biomassa florestal tropical mundial?",c:0,op:["Cerca de 50% da biomassa tropical","Cerca de 20% da biomassa tropical","Cerca de 80% da biomassa tropical","Cerca de 10% da biomassa tropical"],fb:"A Amazônia contém aproximadamente 50% da biomassa de todas as florestas tropicais do mundo, armazenando entre 150–200 Pg C no total (acima e abaixo do solo)."},
+  {t:"O modelo ED2 (Ecosystem Demography 2) para a Amazônia representa indivíduos usando qual abordagem?",c:3,op:["Autômatos celulares por pixel 1 km","Modelos de compartimento por bioma","Redes bayesianas de dados de campo","Distribuições de tamanho por PFTs"],fb:"O ED2 usa Plant Functional Types (PFTs) com distribuições de tamanho e cohortes de indivíduos, permitindo simular dinâmica de mortalidade, crescimento e recrutamento em escala ecofisiológica."}
+]}
+};
+
+let level='basico',qs=[],qi=0,score=0,acertos=0,streak=0,timer=0,timerInt=null,lastSave=null;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function init(){
+  const d=LEVELS[level];
+  qs=d.qs.map(q=>{
+    const idx=[0,1,2,3];
+    const cor=q.op[q.c];
+    shuffle(idx);
+    const ops=idx.map(i=>q.op[i]);
+    const newC=ops.indexOf(cor);
+    return{t:q.t,ops,c:newC,fb:q.fb};
+  });
+  qi=0;score=0;acertos=0;streak=0;timer=0;
+  clearInterval(timerInt);
+  timerInt=setInterval(()=>{timer++;document.getElementById('hTime').textContent=timer+'s';},1000);
+  document.getElementById('hScore').textContent='0';
+  document.getElementById('hAcertos').textContent='0';
+  document.getElementById('hStreak').textContent='0';
+  document.getElementById('endScreen').style.display='none';
+  document.getElementById('gameArea').style.display='block';
+  document.getElementById('rankLevel').textContent=d.label;
+  renderQ();
+  loadRanking();
+}
+
+function renderQ(){
+  if(qi>=qs.length){endGame();return;}
+  const q=qs[qi];
+  document.getElementById('qNum').textContent=`Pergunta ${qi+1} de ${qs.length}`;
+  document.getElementById('progFill').style.width=`${(qi/qs.length)*100}%`;
+  document.getElementById('qText').textContent=q.t;
+  document.getElementById('feedback').style.display='none';
+  document.getElementById('nextBtn').style.display='none';
+  const ch=document.getElementById('qChoices');
+  ch.innerHTML=q.ops.map((o,i)=>`<button class="choice" onclick="answer(${i})">${o}</button>`).join('');
+}
+
+function answer(i){
+  const q=qs[qi];
+  const btns=document.querySelectorAll('.choice');
+  btns.forEach(b=>b.classList.add('disabled'));
+  const pts=streak>=3?150:streak>=2?120:100;
+  if(i===q.c){
+    btns[i].classList.add('correct');
+    acertos++;streak++;
+    score+=pts+(streak>1?20*(streak-1):0);
+  } else {
+    btns[i].classList.add('wrong');
+    btns[q.c].classList.add('correct');
+    streak=0;
+  }
+  document.getElementById('hScore').textContent=score;
+  document.getElementById('hAcertos').textContent=acertos;
+  document.getElementById('hStreak').textContent=streak;
+  const fb=document.getElementById('feedback');
+  fb.textContent=q.fb;fb.style.display='block';
+  document.getElementById('nextBtn').style.display='block';
+}
+
+function nextQ(){qi++;renderQ();}
+
+function endGame(){
+  clearInterval(timerInt);
+  document.getElementById('gameArea').style.display='none';
+  document.getElementById('endScreen').style.display='block';
+  document.getElementById('finalScore').textContent=score;
+  document.getElementById('finalLevel').textContent=LEVELS[level].label;
+  lastSave=null;
+}
+
+async function saveScore(){
+  if(lastSave)return;
+  const name=document.getElementById('playerName').value.trim()||'Anônimo';
+  lastSave={name,score,level,seconds:timer};
+  try{
+    await addDoc(collection(db,`games/${GAME_ID}/scores`),{name,score,level,seconds:timer,ts:serverTimestamp()});
+    loadRanking();
+  }catch(e){console.warn('Firebase offline',e);}
+}
+
+async function loadRanking(){
+  const el=document.getElementById('rankList');
+  try{
+    const q=query(collection(db,`games/${GAME_ID}/scores`),orderBy('score','desc'),limit(80));
+    const snap=await getDocs(q);
+    const rows=snap.docs.map(d=>d.data()).filter(d=>d.level===level).slice(0,15);
+    if(!rows.length){el.innerHTML='<p style="opacity:.5;font-size:.82rem">Seja o primeiro no ranking!</p>';return;}
+    el.innerHTML=rows.map((r,i)=>{
+      const me=lastSave&&r.name===lastSave.name&&r.score===lastSave.score;
+      return`<div class="rank-item${me?' me':''}"><span>${i+1}. ${r.name}</span><span>${r.score} pts · ${r.seconds}s</span></div>`;
+    }).join('');
+  }catch(e){el.innerHTML='<p style="opacity:.5;font-size:.82rem">Ranking offline.</p>';}
+}
+
+function setLevel(l,btn){
+  level=l;
+  document.querySelectorAll('.lvl').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  init();
+}
+
+window.setLevel=setLevel;
+window.answer=answer;
+window.nextQ=nextQ;
+window.saveScore=saveScore;
+window.init=init;
+init();
+</script>
+</body>
+</html>

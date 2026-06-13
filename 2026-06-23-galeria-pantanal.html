@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galeria Pantanal 🎨</title>
+<style>
+:root{--bg1:#0d1a2a;--bg2:#1a2e1a;--accent:#fb923c;--accent2:#ea580c;--card-bg:#1e3040;--ok:#4ade80;--err:#f87171}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI",system-ui,sans-serif;min-height:100vh;background:linear-gradient(160deg,var(--bg1),var(--bg2));color:#fef3c7;display:flex;flex-direction:column;align-items:center;padding:16px}
+h1{font-size:clamp(1.4rem,4vw,2.1rem);text-align:center;margin:10px 0 2px}
+h1 span{color:var(--accent)}
+.tagline{text-align:center;opacity:.75;font-size:.88rem;margin-bottom:12px}
+.levels{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+.lvl{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:6px 18px;cursor:pointer;font-size:.85rem;color:#fef3c7;transition:.2s}
+.lvl:hover{background:rgba(255,255,255,.18)}
+.lvl.active{background:var(--accent);color:#0d1a2a;font-weight:700;border-color:transparent}
+.hud{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
+.hud-item{background:rgba(255,255,255,.08);border-radius:10px;padding:6px 14px;font-size:.85rem;text-align:center}
+.hud-item span{color:var(--accent);font-weight:700}
+.gallery-intro{text-align:center;font-size:.85rem;opacity:.75;margin-bottom:14px;max-width:600px}
+.grid{display:grid;gap:10px;margin:0 auto 18px;width:min(720px,98vw)}
+.card{background:var(--card-bg);border-radius:12px;cursor:pointer;position:relative;overflow:hidden;border:2px solid rgba(255,255,255,.08);transition:transform .15s,border-color .2s;aspect-ratio:1}
+.card:hover:not(.flipped):not(.matched){transform:scale(1.04);border-color:rgba(251,146,60,.4)}
+.card.flipped .card-inner{transform:rotateY(180deg)}
+.card.matched{border-color:var(--ok);background:rgba(74,222,128,.1)}
+.card.matched .card-inner{transform:rotateY(180deg)}
+.card.wrong-anim{animation:wrongPulse .4s}
+@keyframes wrongPulse{0%,100%{border-color:rgba(255,255,255,.08)}50%{border-color:var(--err);box-shadow:0 0 14px rgba(248,113,113,.5)}}
+.card-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .4s;transform:rotateY(0deg)}
+.card-front,.card-back{position:absolute;inset:0;backface-visibility:hidden;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:6px}
+.card-front{background:linear-gradient(135deg,#1a3a1a,#0d2a1a);font-size:1.8rem}
+.card-back{transform:rotateY(180deg);flex-direction:column;gap:4px;text-align:center}
+/* type-species: orange, type-art: purple, type-fact: teal */
+.card-back.type-species{background:linear-gradient(135deg,#3d1a00,#5a2c00)}
+.card-back.type-art{background:linear-gradient(135deg,#2a0a3d,#3d1a5a)}
+.card-back.type-fact{background:linear-gradient(135deg,#003d3a,#005a56)}
+.card-back .emoji{font-size:1.6rem;line-height:1}
+.card-back .label{font-size:.65rem;opacity:.9;line-height:1.3;font-weight:600}
+.card-back .badge{font-size:.55rem;padding:2px 6px;border-radius:10px;margin-top:2px;font-weight:700}
+.type-species .badge{background:#fb923c;color:#3d1a00}
+.type-art .badge{background:#c084fc;color:#2a0a3d}
+.type-fact .badge{background:#2dd4bf;color:#003d3a}
+.bottom-info{width:min(720px,98vw);display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+.info-chip{background:rgba(255,255,255,.07);border-radius:10px;padding:8px 14px;font-size:.8rem;text-align:center}
+.info-chip strong{color:var(--accent);display:block;font-size:1rem}
+.ranking{width:min(720px,98vw);background:rgba(255,255,255,.05);border-radius:14px;padding:16px;margin-bottom:14px}
+.ranking h3{font-size:.88rem;opacity:.7;margin-bottom:10px}
+.rank-list{display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto}
+.rank-item{display:flex;justify-content:space-between;font-size:.8rem;padding:5px 8px;background:rgba(255,255,255,.05);border-radius:6px}
+.endscreen{display:none;width:min(720px,98vw);background:rgba(255,255,255,.06);border-radius:16px;padding:24px;text-align:center;margin-bottom:14px}
+.endscreen h2{font-size:1.5rem;margin-bottom:6px}
+.score-big{font-size:2.6rem;font-weight:800;color:var(--accent)}
+.save-form{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.save-form input{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:8px 14px;color:#fef3c7;font-size:.9rem;width:200px}
+.save-form button{background:var(--accent);color:#0d1a2a;border:none;border-radius:8px;padding:8px 20px;font-weight:700;cursor:pointer}
+.restart-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 22px;color:#fef3c7;cursor:pointer;font-size:.9rem;margin-top:6px}
+footer{margin-top:20px;opacity:.6;font-size:.78rem;text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+<h1>🎨 <span>Galeria Pantanal</span></h1>
+<p class="tagline">Arte · Biologia · Memória · Pantanal 🌊</p>
+
+<div class="levels">
+  <button class="lvl active" onclick="setLevel('basico',this)">🌱 Básico (8 pares)</button>
+  <button class="lvl" onclick="setLevel('intermediario',this)">📚 Intermediário (10 pares)</button>
+  <button class="lvl" onclick="setLevel('dificil',this)">🔬 Difícil (12 pares)</button>
+  <button class="lvl" onclick="setLevel('carbonauta',this)">🛰️ Carbonauta (14 pares)</button>
+</div>
+
+<div class="hud">
+  <div class="hud-item">Tempo: <span id="hTime">0s</span></div>
+  <div class="hud-item">Erros: <span id="hErrors">0</span></div>
+  <div class="hud-item">Pares: <span id="hPairs">0</span></div>
+  <div class="hud-item">Pontos: <span id="hScore">0</span></div>
+</div>
+
+<p class="gallery-intro" id="instrLine">Encontre o par entre espécie 🟠 e sua representação artística/científica 🟣 — ou fato ecológico 🩵</p>
+
+<div class="grid" id="grid"></div>
+
+<div class="bottom-info" id="legendLine">
+  <div class="info-chip"><strong>🟠</strong>Espécie</div>
+  <div class="info-chip"><strong>🟣</strong>Arte/Ícone</div>
+  <div class="info-chip"><strong>🩵</strong>Fato Ecológico</div>
+</div>
+
+<div class="endscreen" id="endScreen">
+  <h2>🎨 Galeria completa!</h2>
+  <div class="score-big" id="finalScore"></div>
+  <p style="opacity:.75;margin:6px 0" id="finalDetail"></p>
+  <div class="save-form">
+    <input id="playerName" placeholder="Seu nome" maxlength="20">
+    <button onclick="saveScore()">Salvar no ranking</button>
+  </div>
+  <button class="restart-btn" onclick="init()">Jogar novamente</button>
+</div>
+
+<div class="ranking">
+  <h3>🏆 Ranking — <span id="rankLevel">Básico</span></h3>
+  <div class="rank-list" id="rankList"><p style="opacity:.5;font-size:.82rem">Carregando…</p></div>
+</div>
+
+<footer>Arte · Biologia · Pantanal 🌊<br>
+app ambiental do dia (2026-06-23)<br>— Idealizado por Ernandes Sobreira —</footer>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import{getFirestore,collection,addDoc,query,orderBy,limit,getDocs,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+const fbApp=initializeApp({apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"});
+const db=getFirestore(fbApp);
+const GAME_ID="2026-06-23-galeria-pantanal";
+
+// Each pair: {id, species:{emoji,label,badge:'Espécie'}, art:{emoji,label,badge:'Arte|Fato'} }
+// type: 'species' | 'art' | 'fact'
+const ALL_PAIRS=[
+  {id:'onca',
+   a:{t:'species',e:'🐆',l:'Onça-pintada\nPanthera onca'},
+   b:{t:'art',e:'🎨',l:'Guardiana das\náguas — ícone\nindígena'}},
+  {id:'tuiuiu',
+   a:{t:'species',e:'🦢',l:'Tuiuiú\nJabiru mycteria'},
+   b:{t:'art',e:'🏛️',l:'Ave símbolo\ndo Pantanal\n(brasão MS)'}},
+  {id:'capivara',
+   a:{t:'species',e:'🦫',l:'Capivara\nHydrochoerus hydrochaeris'},
+   b:{t:'fact',e:'🌱',l:'Maior roedor\ndo mundo —\nbase da cadeia'}},
+  {id:'arara',
+   a:{t:'species',e:'🦜',l:'Arara-azul\nAnodorhynchus hyacinthinus'},
+   b:{t:'art',e:'🖼️',l:'Símbolo de\nidentidade cultural\ndo Pantanal'}},
+  {id:'lontra',
+   a:{t:'species',e:'🦦',l:'Lontra-gigante\nPteroneura brasiliensis'},
+   b:{t:'fact',e:'💧',l:'Indicadora da\nqualidade da\nágua — VU'}},
+  {id:'piranha',
+   a:{t:'species',e:'🐟',l:'Piranha-vermelha\nPygocentrus nattereri'},
+   b:{t:'fact',e:'♻️',l:'Detritívora vital:\nrecicla nutrientes\nno fundo dos rios'}},
+  {id:'tatu',
+   a:{t:'species',e:'🦔',l:'Tatu-canastra\nPriodontes maximus'},
+   b:{t:'art',e:'🪨',l:'Engenheiro de\nhabitat — buracos\nusados por 70 sp'}},
+  {id:'sucuri',
+   a:{t:'species',e:'🐍',l:'Sucuri\nEunectes murinus'},
+   b:{t:'fact',e:'⚡',l:'Maior cobra\ndo mundo —\nregula populações'}},
+  {id:'pantaneiro',
+   a:{t:'species',e:'🐴',l:'Cavalo Pantaneiro\n(raça adaptada)'},
+   b:{t:'art',e:'🤠',l:'Cultura do\npeão — patrimônio\nimaterial Brasil'}},
+  {id:'pacu',
+   a:{t:'species',e:'🐠',l:'Pacu\nColossoma macropomum'},
+   b:{t:'fact',e:'🌰',l:'Dispersor de\nsementes de\nárvores ripárias'}},
+  {id:'cervo',
+   a:{t:'species',e:'🦌',l:'Cervo-do-pantanal\nBlastoceros dichotomus'},
+   b:{t:'fact',e:'🌊',l:'Anda em terras\nalagadas — cascos\nadaptados à lama'}},
+  {id:'jaboti',
+   a:{t:'species',e:'🐢',l:'Jabuti-tinga\nChelonoidis denticulata'},
+   b:{t:'art',e:'🎭',l:'Personagem\ncultural: lendas\nindígenas e cordel'}},
+  {id:'garca',
+   a:{t:'species',e:'🕊️',l:'Garça-branca-grande\nArdea alba'},
+   b:{t:'art',e:'🖋️',l:'Inspirou penas\nde escrita na\nEuropa colonial'}},
+  {id:'caiman',
+   a:{t:'species',e:'🐊',l:'Jacaré-do-pantanal\nCaiman yacare'},
+   b:{t:'fact',e:'🌡️',l:'Regulador térmico:\ncor escura absorve\ncalor nas manhãs'}},
+];
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+const LEVEL_PAIRS={basico:8,intermediario:10,dificil:12,carbonauta:14};
+const COLS={basico:4,intermediario:4,dificil:6,carbonauta:6};
+
+let level='basico',cards=[],flipped=[],matched=0,errors=0,total=0,timer=0,timerInt=null,lastSave=null,locked=false;
+
+function init(){
+  const n=LEVEL_PAIRS[level];
+  const pairs=shuffle([...ALL_PAIRS]).slice(0,n);
+  // each pair → 2 card objects
+  const allCards=[];
+  pairs.forEach(p=>{
+    allCards.push({id:p.id,side:'a',type:p.a.t,emoji:p.a.e,label:p.a.l});
+    allCards.push({id:p.id,side:'b',type:p.b.t,emoji:p.b.e,label:p.b.l});
+  });
+  shuffle(allCards);
+  cards=allCards.map((c,i)=>({...c,idx:i,flipped:false,matched:false}));
+  flipped=[];matched=0;errors=0;total=n;timer=0;locked=false;lastSave=null;
+  clearInterval(timerInt);
+  timerInt=setInterval(()=>{timer++;document.getElementById('hTime').textContent=timer+'s';},1000);
+  ['hErrors','hPairs','hScore'].forEach(id=>document.getElementById(id).textContent='0');
+  document.getElementById('hPairs').textContent=`0/${n}`;
+  document.getElementById('endScreen').style.display='none';
+  document.getElementById('rankLevel').textContent={basico:'Básico',intermediario:'Intermediário',dificil:'Difícil',carbonauta:'Carbonauta'}[level];
+  const cols=COLS[level];
+  const grid=document.getElementById('grid');
+  const cardSize=Math.min(Math.floor((Math.min(720,window.innerWidth-32)-cols*10)/(cols)),120);
+  grid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  grid.innerHTML=cards.map((c,i)=>`
+    <div class="card" id="c${i}" onclick="flipCard(${i})">
+      <div class="card-inner">
+        <div class="card-front">🌿</div>
+        <div class="card-back type-${c.type}">
+          <div class="emoji">${c.emoji}</div>
+          <div class="label">${c.label.replace(/\n/g,'<br>')}</div>
+          <div class="badge">${c.type==='species'?'Espécie':c.type==='art'?'Arte':'Fato'}</div>
+        </div>
+      </div>
+    </div>`).join('');
+  loadRanking();
+}
+
+function flipCard(i){
+  if(locked)return;
+  const c=cards[i];
+  if(c.flipped||c.matched)return;
+  if(flipped.length===1&&flipped[0].idx===i)return;
+  c.flipped=true;
+  document.getElementById('c'+i).classList.add('flipped');
+  flipped.push(c);
+  if(flipped.length===2){
+    locked=true;
+    setTimeout(checkPair,700);
+  }
+}
+window.flipCard=flipCard;
+
+function checkPair(){
+  const [a,b]=flipped;
+  if(a.id===b.id&&a.side!==b.side){
+    // match!
+    a.matched=b.matched=true;
+    document.getElementById('c'+a.idx).classList.add('matched');
+    document.getElementById('c'+b.idx).classList.add('matched');
+    matched++;
+    const score=calcScore();
+    document.getElementById('hPairs').textContent=`${matched}/${total}`;
+    document.getElementById('hScore').textContent=score;
+    if(matched===total)setTimeout(endGame,500);
+  } else {
+    errors++;
+    document.getElementById('hErrors').textContent=errors;
+    [a,b].forEach(c=>{
+      c.flipped=false;
+      const el=document.getElementById('c'+c.idx);
+      el.classList.add('wrong-anim');
+      setTimeout(()=>{el.classList.remove('flipped','wrong-anim');},400);
+    });
+  }
+  flipped=[];
+  locked=false;
+}
+
+function calcScore(){return Math.max(0,matched*120-errors*80-Math.floor(timer*0.8));}
+
+function endGame(){
+  clearInterval(timerInt);
+  document.getElementById('endScreen').style.display='block';
+  const score=calcScore();
+  document.getElementById('finalScore').textContent=score;
+  document.getElementById('finalDetail').textContent=`${matched} pares • ${errors} erros • ${timer}s`;
+}
+
+async function saveScore(){
+  if(lastSave)return;
+  const name=document.getElementById('playerName').value.trim()||'Anônimo';
+  const score=calcScore();
+  lastSave={name,score,level};
+  try{
+    await addDoc(collection(db,`games/${GAME_ID}/scores`),{name,score,level,seconds:timer,ts:serverTimestamp()});
+    loadRanking();
+  }catch(e){console.warn('offline',e);}
+}
+window.saveScore=saveScore;
+
+async function loadRanking(){
+  const el=document.getElementById('rankList');
+  try{
+    const q=query(collection(db,`games/${GAME_ID}/scores`),orderBy('score','desc'),limit(80));
+    const snap=await getDocs(q);
+    const rows=snap.docs.map(d=>d.data()).filter(d=>d.level===level).slice(0,15);
+    if(!rows.length){el.innerHTML='<p style="opacity:.5;font-size:.82rem">Seja o(a) primeiro(a)!</p>';return;}
+    el.innerHTML=rows.map((r,i)=>`<div class="rank-item"><span>${i+1}. ${r.name}</span><span>${r.score} pts</span></div>`).join('');
+  }catch(e){el.innerHTML='<p style="opacity:.5;font-size:.82rem">Ranking offline.</p>';}
+}
+
+function setLevel(l,btn){
+  level=l;
+  document.querySelectorAll('.lvl').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  init();
+}
+window.setLevel=setLevel;
+window.init=init;
+init();
+</script>
+</body>
+</html>

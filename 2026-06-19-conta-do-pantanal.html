@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conta do Pantanal 📐 — Cálculo de Carbono</title>
+<style>
+:root{--bg1:#001a33;--bg2:#003366;--accent:#38bdf8;--accent2:#0284c7;--ok:#22c55e;--err:#ef4444}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI",system-ui,sans-serif;min-height:100vh;background:linear-gradient(160deg,var(--bg1),var(--bg2));color:#e0f2fe;display:flex;flex-direction:column;align-items:center;padding:16px}
+h1{font-size:clamp(1.4rem,4vw,2.1rem);text-align:center;margin:10px 0 2px}
+h1 span{color:var(--accent)}
+.tagline{text-align:center;opacity:.75;font-size:.88rem;margin-bottom:12px}
+.levels{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+.lvl{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:6px 18px;cursor:pointer;font-size:.85rem;color:#e0f2fe;transition:.2s}
+.lvl:hover{background:rgba(255,255,255,.18)}
+.lvl.active{background:var(--accent);color:#001a33;font-weight:700;border-color:transparent}
+.hud{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
+.hud-item{background:rgba(255,255,255,.08);border-radius:10px;padding:6px 14px;font-size:.85rem;text-align:center}
+.hud-item span{color:var(--accent);font-weight:700}
+.formula-box{width:min(740px,98vw);background:rgba(255,255,255,.05);border-radius:12px;padding:14px;margin-bottom:12px;font-size:.82rem;line-height:1.55;opacity:.85;font-family:monospace}
+.formula-box strong{color:var(--accent)}
+.sim-grid{width:min(740px,98vw);display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+@media(max-width:520px){.sim-grid{grid-template-columns:1fr}}
+.panel{background:rgba(255,255,255,.06);border-radius:14px;padding:18px}
+.panel h3{font-size:.88rem;opacity:.7;margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px}
+.slider-row{margin-bottom:14px}
+.slider-label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:4px}
+.slider-val{color:var(--accent);font-weight:700}
+input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
+select{width:100%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 12px;color:#e0f2fe;font-size:.88rem;cursor:pointer}
+.metric{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:.85rem}
+.metric:last-child{border-bottom:none}
+.metric-val{font-weight:700;font-size:.95rem;color:var(--accent)}
+.metric-formula{font-size:.72rem;opacity:.55;font-family:monospace;display:block;margin-top:2px}
+.challenge{width:min(740px,98vw);background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.25);border-radius:14px;padding:16px;margin-bottom:12px}
+.challenge h3{color:var(--accent);font-size:.92rem;margin-bottom:6px}
+.challenge p{font-size:.88rem;line-height:1.45;opacity:.9}
+.challenge .hint{font-size:.8rem;opacity:.6;margin-top:6px;font-style:italic}
+.verify-btn{margin-top:10px;background:var(--accent);color:#001a33;border:none;border-radius:8px;padding:8px 22px;font-weight:700;cursor:pointer;font-size:.9rem}
+.result-msg{margin-top:8px;padding:8px 12px;border-radius:8px;font-size:.88rem;display:none}
+.result-msg.ok{background:rgba(34,197,94,.15);color:#86efac}
+.result-msg.err{background:rgba(239,68,68,.15);color:#fca5a5}
+.ranking{width:min(740px,98vw);background:rgba(255,255,255,.05);border-radius:14px;padding:16px;margin-bottom:14px}
+.ranking h3{font-size:.88rem;opacity:.7;margin-bottom:10px}
+.rank-list{display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto}
+.rank-item{display:flex;justify-content:space-between;font-size:.8rem;padding:5px 8px;background:rgba(255,255,255,.05);border-radius:6px}
+.endscreen{display:none;width:min(740px,98vw);background:rgba(255,255,255,.06);border-radius:16px;padding:24px;text-align:center;margin-bottom:14px}
+.endscreen h2{font-size:1.5rem;margin-bottom:8px}
+.score-big{font-size:2.6rem;font-weight:800;color:var(--accent)}
+.save-form{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.save-form input{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:8px 14px;color:#e0f2fe;font-size:.9rem;width:200px}
+.save-form button{background:var(--accent);color:#001a33;border:none;border-radius:8px;padding:8px 20px;font-weight:700;cursor:pointer}
+.restart-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 22px;color:#e0f2fe;cursor:pointer;font-size:.9rem;margin-top:8px}
+footer{margin-top:20px;opacity:.6;font-size:.78rem;text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+<h1>📐 <span>Conta do Pantanal</span></h1>
+<p class="tagline">Cálculo de Sequestro de Carbono · Matemática 📐 · Ciências 🔬 · Pantanal 🐊</p>
+
+<div class="levels">
+  <button class="lvl active" onclick="setLevel('basico',this)">🌱 Básico</button>
+  <button class="lvl" onclick="setLevel('intermediario',this)">📐 Intermediário</button>
+  <button class="lvl" onclick="setLevel('dificil',this)">🔬 Difícil</button>
+  <button class="lvl" onclick="setLevel('carbonauta',this)">🛰️ Carbonauta</button>
+</div>
+
+<div class="hud">
+  <div class="hud-item">Tempo: <span id="hTime">0s</span></div>
+  <div class="hud-item">Pontos: <span id="hScore">0</span></div>
+  <div class="hud-item">Desafios: <span id="hDesafios">0/3</span></div>
+</div>
+
+<div class="formula-box" id="formulaBox"></div>
+
+<div class="sim-grid">
+  <div class="panel" id="slidersPanel"><h3>⚙️ Parâmetros</h3><div id="sliders"></div></div>
+  <div class="panel"><h3>📊 Resultados</h3><div id="metrics"></div></div>
+</div>
+
+<div class="challenge" id="challengeBox">
+  <h3>🎯 Desafio <span id="cNum">1</span>/3</h3>
+  <p id="cText"></p>
+  <p class="hint" id="cHint"></p>
+  <button class="verify-btn" onclick="verify()">Calcular e verificar</button>
+  <div class="result-msg" id="resultMsg"></div>
+</div>
+
+<div class="endscreen" id="endScreen">
+  <h2>🎉 Cálculos concluídos!</h2>
+  <div class="score-big" id="finalScore"></div>
+  <p style="opacity:.75;margin:8px 0">pontos · nível <span id="finalLevel"></span></p>
+  <div class="save-form">
+    <input id="playerName" placeholder="Seu nome" maxlength="20">
+    <button onclick="saveScore()">Salvar ranking</button>
+  </div>
+  <button class="restart-btn" onclick="init()">Jogar novamente</button>
+</div>
+
+<div class="ranking">
+  <h3>🏆 Ranking Global — <span id="rankLevel">Básico</span></h3>
+  <div class="rank-list" id="rankList"><p style="opacity:.5;font-size:.82rem">Carregando…</p></div>
+</div>
+
+<footer>Matemática 📐 · Sequestro de carbono no solo e vegetação · Pantanal 🐊<br>
+app ambiental do dia (2026-06-19)<br>— Idealizado por Ernandes Sobreira —</footer>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import{getFirestore,collection,addDoc,query,orderBy,limit,getDocs,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+const fbApp=initializeApp({apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"});
+const db=getFirestore(fbApp);
+const GAME_ID="2026-06-19-conta-do-pantanal";
+
+// Vegetation types: [name, tC/ha/yr taxa, description]
+const VEG_TYPES=[
+  {label:'Campo inundável',taxa:0.8,desc:'Gramíneas e ciperáceas inundadas sazonalmente'},
+  {label:'Vereda de buritis',taxa:1.5,desc:'Palmeiras buriti em solos hidromórficos'},
+  {label:'Cerradão do Pantanal',taxa:2.5,desc:'Floresta savânica densa com dossel fechado'},
+  {label:'Mata ciliar pantaneira',taxa:3.8,desc:'Floresta ribeirinha de alta biomassa'}
+];
+
+// Model
+function compute(p){
+  const{area=1000,anos=10,vegIdx=0,preco=25,water=50,cSolo=20}=p;
+  const veg=VEG_TYPES[vegIdx];
+  const taxa=veg.taxa;
+  // Carbon sequestration
+  const seqAnual=parseFloat((taxa*area).toFixed(1));
+  const seqTotal=parseFloat((taxa*area*anos).toFixed(1));
+  // CO2 equivalent (1 tC = 3.667 tCO2)
+  const co2Total=parseFloat((seqTotal*3.667).toFixed(1));
+  // Soil carbon
+  const soloTotal=parseFloat((cSolo/100*area*anos*0.3).toFixed(1));
+  const totalC=parseFloat((seqTotal+soloTotal).toFixed(1));
+  const totalCO2=parseFloat((totalC*3.667).toFixed(1));
+  // Economic value
+  const valor=parseFloat((totalCO2*preco).toFixed(0));
+  // CH4 from wet areas (Pantanal specific)
+  const ch4Annual=parseFloat(((water/100)**1.5*area*0.0015).toFixed(2));
+  const ch4CO2eq=parseFloat((ch4Annual*anos*28).toFixed(1));
+  const netCO2=parseFloat((totalCO2-ch4CO2eq).toFixed(1));
+  // Biomass
+  const biomass=parseFloat((seqTotal*2.5).toFixed(0));// rough above-below ratio
+  // Area equivalence
+  const ha_per_car=parseFloat((100000/(co2Total||1)).toFixed(2));
+  return{seqAnual,seqTotal,co2Total,soloTotal,totalC,totalCO2,valor,ch4Annual,ch4CO2eq,netCO2,biomass,taxa,vegName:veg.label,ha_per_car};
+}
+
+const CHALLENGES={
+basico:[
+  {text:"Ajuste a área para 2.000 ha com mata ciliar (tipo 4) por 10 anos. Qual é o total de CO₂ capturado?",check:m=>m.co2Total>10000,hint:"Dica: CO₂ total = taxa × área × anos × 3,667 (conversão C → CO₂)",fb:"✅ Mata ciliar pantaneira tem uma das maiores taxas de sequestro do Pantanal! Com 2.000 ha por 10 anos, você captura mais de 27.000 t CO₂ — equivalente a tirar 6.000 carros das ruas por um ano."},
+  {text:"Configure para que o valor econômico total supere R$ 500.000.",check:m=>m.valor>500000,hint:"Dica: Valor = CO₂ total × preço por tonelada. Aumente área, anos ou preço do carbono.",fb:"✅ Mercados de carbono pagam de R$20 a R$200 por tonelada de CO₂. A Mata Atlântica e o Pantanal têm grande potencial para gerar renda via créditos de carbono para proprietários rurais."},
+  {text:"Ajuste para que o sequestro anual seja entre 3.000 e 4.000 t de carbono.",check:m=>m.seqAnual>=3000&&m.seqAnual<=4000,hint:"Dica: Sequestro anual = taxa da vegetação × área (sem contar anos ainda).",fb:"✅ O Pantanal brasileiro estoca entre 1,5 e 3,5 bilhões de toneladas de carbono no solo e na vegetação. A flutuação sazonal do nível da água afeta diretamente o sequestro anual."}
+],
+intermediario:[
+  {text:"Calcule: para capturar 50.000 t CO₂ em 15 anos com cerradão, qual área mínima (aproximada) você precisa?",check:(m,p)=>p.anos>=15&&p.vegIdx===2&&m.co2Total>=50000,hint:"Dica: Área ≈ 50.000 ÷ (2,5 × 15 × 3,667). Calcule e ajuste os controles.",fb:"✅ Resposta: ≈ 365 ha de cerradão por 15 anos. O sequestro de carbono em escala de paisagem pode gerar créditos REDD+ que financiam a conservação do Pantanal."},
+  {text:"Inclua o carbono do solo (30%). Ajuste para que o carbono total (aéreo + solo) supere 15.000 t C.",check:m=>m.totalC>15000,hint:"Dica: O solo pode armazenar 30% a mais que a biomassa. Ative o controle de carbono do solo no nível intermediário.",fb:"✅ O solo do Pantanal é um imenso reservatório de carbono orgânico. Solos hidromórficos (alagados) acumulam matéria orgânica muito mais devagar mas de forma mais estável."},
+  {text:"Ajuste para que o valor econômico por tonelada de CO₂ fique acima de R$ 100 e o total supere R$ 1 milhão.",check:(m,p)=>p.preco>=100&&m.valor>1000000,hint:"Dica: Carbon pricing de R$100/t é realista para mercados voluntários premium de alta qualidade (VCS+CCBS).",fb:"✅ Créditos de carbono do Pantanal com co-benefícios (biodiversidade, comunidades, água) podem atingir US$20–50/t no mercado voluntário. A Verra (VCS) certifica projetos nesse padrão."}
+],
+dificil:[
+  {text:"Modele emissão de CH₄ com lâmina d'água de 80% e área de 5.000 ha. O balanço líquido de CO₂ (CO₂ capturado − CH₄ equivalente) ainda é positivo?",check:(m,p)=>p.water>=80&&p.area>=5000&&m.netCO2>0,hint:"Dica: CH₄ tem PRG-100 de 28× o CO₂. Em áreas muito alagadas, o metano pode compensar ou superar o sequestro de CO₂.",fb:"✅ O Pantanal é fonte líquida de CH₄ em anos de alta inundação. Pesquisas do INPE mostram que em anos el-Niño, o Pantanal pode ser fonte líquida de GEE em CO₂-equivalente."},
+  {text:"Calcule a 'equivalência em automóveis': quantos carros você tira de circulação por ano com 3.000 ha de mata ciliar por 20 anos? (1 carro ≈ 2,3 t CO₂/ano)",check:m=>m.totalCO2>100000,hint:"Dica: CO₂ total ÷ 2,3 ÷ 20 anos = número de carros/ano. Veja o resultado nos indicadores.",fb:"✅ Com 3.000 ha de mata ciliar por 20 anos, você sequestra ≈ 836.000 t CO₂ — equivalente a tirar 18.000 carros das ruas todo ano durante 20 anos. O Pantanal tem 150.000 km de rios!"},
+  {text:"Monte a equação completa: Sequestro total de C (aéreo + solo) − Emissão de CH₄ em CO₂eq > 10.000 t C líquido.",check:m=>m.netCO2/3.667>10000,hint:"Dica: C líquido = (totalC × 3,667 − ch4CO₂eq) ÷ 3,667. Use as fórmulas mostradas.",fb:"✅ O balanço líquido de carbono é o conceito central do IPCC para contabilidade climática. Incluir todos os gases e sumidouros é essencial para não superestimar o potencial do sequestro florestal."}
+],
+carbonauta:[
+  {text:"Modele um projeto REDD+ com 10.000 ha de mata ciliar por 30 anos. Calcule a linha de base: sem proteção, qual seria o total de CO₂ emitido? (considere que 2% da área seria desmatada por ano)",check:(m,p)=>p.area>=10000&&p.anos>=30&&p.vegIdx===3,hint:"Dica: Linha de base REDD+ = área × taxa desflorestamento × biomassa × 3,667. O projeto gera créditos pela diferença entre linha de base e emissões reais.",fb:"✅ Projetos REDD+ calculam créditos pela diferença entre o cenário 'sem projeto' (baseline) e o cenário 'com proteção'. O Pantanal tem potencial de 500 Mt CO₂ em REDD+ na próxima década."},
+  {text:"Calcule o 'permanence buffer' do VCS: projetos precisam manter 10–20% dos créditos em reserva. Se o projeto gera 500.000 tCO₂, quantos créditos ficam em buffer? Ajuste para gerar pelo menos 1 Mt tCO₂ total.",check:m=>m.totalCO2>=1000000,hint:"Dica: Buffer de 20% = 200.000 t em reserva de 1 Mt. Verifique o total de CO₂ nos indicadores.",fb:"✅ O buffer pool do VCS é a reserva de créditos que garante que, mesmo se parte da floresta for perdida (incêndios, etc.), o projeto ainda honra os créditos vendidos. É mecanismo essencial de credibilidade."},
+  {text:"Modelo avançado: calcule o Valor Presente Líquido (VPL) do projeto assumindo desconto de 8% ao ano. Maximize para VPL > R$ 5 milhões.",check:(m,p)=>{const taxa_desc=0.08;let vpl=0;for(let a=1;a<=p.anos;a++){const cr_anual=m.seqAnual*3.667*p.preco;vpl+=cr_anual/Math.pow(1+taxa_desc,a);}return vpl>5000000;},hint:"Dica: VPL = Σ(créditos_anuais / (1+0,08)^t). Requer anos suficientes e créditos anuais altos. O tempo e o preço do carbono são as principais alavancas.",fb:"✅ O VPL com desconto de 8% aa é a métrica padrão para avaliar projetos de carbono florestal. Projetos com VPL positivo são financeiramente viáveis sem subsídios — meta do mercado voluntário."}
+]
+};
+
+const SLIDERS_DEF={
+basico:[
+  {key:'area',label:'Área restaurada',unit:' ha',min:100,max:5000,val:1000,step:100},
+  {key:'anos',label:'Período (anos)',unit:' anos',min:1,max:30,val:10,step:1},
+  {key:'vegIdx',label:'Tipo de vegetação',unit:'',type:'select'},
+],
+intermediario:[
+  {key:'area',label:'Área restaurada',unit:' ha',min:100,max:10000,val:1000,step:100},
+  {key:'anos',label:'Período (anos)',unit:' anos',min:1,max:30,val:10,step:1},
+  {key:'vegIdx',label:'Tipo de vegetação',unit:'',type:'select'},
+  {key:'preco',label:'Preço do carbono',unit:' R$/t',min:5,max:200,val:25,step:5},
+  {key:'cSolo',label:'Fator solo (%)',unit:'%',min:0,max:80,val:20,step:5},
+],
+dificil:[
+  {key:'area',label:'Área restaurada',unit:' ha',min:100,max:10000,val:1000,step:100},
+  {key:'anos',label:'Período (anos)',unit:' anos',min:1,max:30,val:10,step:1},
+  {key:'vegIdx',label:'Tipo de vegetação',unit:'',type:'select'},
+  {key:'preco',label:'Preço do carbono',unit:' R$/t',min:5,max:200,val:25,step:5},
+  {key:'cSolo',label:'Fator solo (%)',unit:'%',min:0,max:80,val:20,step:5},
+  {key:'water',label:'Lâmina d\'água',unit:'%',min:0,max:100,val:50,step:5},
+],
+carbonauta:[
+  {key:'area',label:'Área restaurada',unit:' ha',min:100,max:15000,val:1000,step:100},
+  {key:'anos',label:'Período (anos)',unit:' anos',min:1,max:30,val:10,step:1},
+  {key:'vegIdx',label:'Tipo de vegetação',unit:'',type:'select'},
+  {key:'preco',label:'Preço do carbono',unit:' R$/t',min:5,max:300,val:25,step:5},
+  {key:'cSolo',label:'Fator solo (%)',unit:'%',min:0,max:80,val:20,step:5},
+  {key:'water',label:'Lâmina d\'água',unit:'%',min:0,max:100,val:50,step:5},
+]
+};
+
+const FORMULAS={
+basico:'<strong>Sequestro anual</strong> = Taxa × Área (t C/ano)\n<strong>CO₂ total</strong> = Taxa × Área × Anos × 3,667 (t CO₂)\n<strong>Valor</strong> = CO₂ total × Preço (R$)',
+intermediario:'<strong>CO₂ total</strong> = Taxa × Área × Anos × 3,667\n<strong>Solo</strong> = Solo% × Área × Anos × 0,3 (t C)\n<strong>Valor</strong> = (CO₂ total + Solo×3,667) × Preço',
+dificil:'<strong>CH₄</strong> = (Lâmina/100)^1.5 × Área × 0,0015 (t/ano)\n<strong>CH₄ em CO₂eq</strong> = CH₄ × Anos × 28 (PRG-100)\n<strong>Balanço líquido</strong> = CO₂ total − CH₄ em CO₂eq',
+carbonauta:'<strong>VPL</strong> = Σ [Créditos_t / (1+0,08)^t] para t=1..n\n<strong>Buffer REDD+</strong> = 20% dos créditos em reserva\n<strong>Linha de base</strong> = Área × 0,02 × Biomassa × 3,667'
+};
+
+let level='basico',cIdx=0,score=0,timer=0,timerInt=null,lastSave=null;
+let params={area:1000,anos:10,vegIdx:0,preco:25,cSolo:20,water:50};
+let desafiosConcluidos=0;
+
+function init(){
+  cIdx=0;score=0;timer=0;desafiosConcluidos=0;
+  clearInterval(timerInt);
+  timerInt=setInterval(()=>{timer++;document.getElementById('hTime').textContent=timer+'s';},1000);
+  document.getElementById('hScore').textContent='0';
+  document.getElementById('hDesafios').textContent='0/3';
+  document.getElementById('endScreen').style.display='none';
+  document.getElementById('rankLevel').textContent=level.charAt(0).toUpperCase()+level.slice(1);
+  params={area:1000,anos:10,vegIdx:0,preco:25,cSolo:20,water:50};
+  document.getElementById('formulaBox').innerHTML=FORMULAS[level].replace(/\n/g,'<br>');
+  buildSliders();
+  renderChallenge();
+  updateSim();
+  loadRanking();
+}
+
+function buildSliders(){
+  const defs=SLIDERS_DEF[level];
+  const el=document.getElementById('sliders');
+  el.innerHTML=defs.map(s=>{
+    if(s.type==='select'){
+      return`<div class="slider-row">
+        <div class="slider-label"><span>${s.label}</span></div>
+        <select id="sl_${s.key}" onchange="updateSim('${s.key}',this.value)">
+          ${VEG_TYPES.map((v,i)=>`<option value="${i}">${v.label} (${v.taxa} tC/ha/a)</option>`).join('')}
+        </select>
+        <div style="font-size:.76rem;opacity:.6;margin-top:3px" id="vdesc"></div>
+      </div>`;
+    }
+    return`<div class="slider-row">
+      <div class="slider-label"><span>${s.label}</span><span class="slider-val" id="val_${s.key}">${s.val}${s.unit}</span></div>
+      <input type="range" min="${s.min}" max="${s.max}" value="${s.val}" step="${s.step||1}" oninput="updateSim('${s.key}',this.value)">
+    </div>`;
+  }).join('');
+}
+
+function updateSim(key,val){
+  if(key&&val!==undefined) params[key]=key==='vegIdx'?parseInt(val):parseFloat(val);
+  SLIDERS_DEF[level].forEach(s=>{const el=document.getElementById('val_'+s.key);if(el)el.textContent=params[s.key]+(s.unit||'');});
+  const vd=document.getElementById('vdesc');
+  if(vd)vd.textContent=VEG_TYPES[params.vegIdx].desc;
+  const m=compute(params);
+  const nCars=Math.round(m.totalCO2/2.3/params.anos);
+  document.getElementById('metrics').innerHTML=`
+    <div class="metric"><span>Sequestro anual</span><span class="metric-val">${m.seqAnual.toLocaleString('pt-BR')} t C/ano</span></div>
+    <div class="metric"><span>CO₂ capturado (total)</span><span class="metric-val">${m.co2Total.toLocaleString('pt-BR')} t CO₂</span></div>
+    ${level!=='basico'?`<div class="metric"><span>+ Carbono no solo</span><span class="metric-val">${m.soloTotal.toLocaleString('pt-BR')} t C</span></div>`:''}
+    ${level==='dificil'||level==='carbonauta'?`<div class="metric"><span>CH₄ emitido (CO₂eq)</span><span class="metric-val" style="color:#f87171">${m.ch4CO2eq.toLocaleString('pt-BR')} t CO₂eq</span></div>
+    <div class="metric"><span>Balanço líquido CO₂</span><span class="metric-val" style="color:${m.netCO2>0?'#4ade80':'#f87171'}">${m.netCO2.toLocaleString('pt-BR')} t</span></div>`:''}
+    <div class="metric"><span>Valor econômico</span><span class="metric-val">R$ ${m.valor.toLocaleString('pt-BR')}</span></div>
+    <div class="metric"><span>Equivalente em carros/ano</span><span class="metric-val">${nCars.toLocaleString('pt-BR')} 🚗</span></div>`;
+}
+window.updateSim=updateSim;
+
+function renderChallenge(){
+  const ch=CHALLENGES[level];
+  if(cIdx>=ch.length){endGame();return;}
+  document.getElementById('cNum').textContent=cIdx+1;
+  document.getElementById('cText').textContent=ch[cIdx].text;
+  document.getElementById('cHint').textContent=ch[cIdx].hint||'';
+  document.getElementById('resultMsg').style.display='none';
+  document.getElementById('challengeBox').style.display='block';
+}
+
+function verify(){
+  const ch=CHALLENGES[level][cIdx];
+  const m=compute(params);
+  const ok=ch.check(m,params);
+  const msg=document.getElementById('resultMsg');
+  if(ok){
+    msg.className='result-msg ok';msg.textContent=ch.fb;msg.style.display='block';
+    score+=200+Math.max(0,60-Math.floor(timer/2));
+    desafiosConcluidos++;
+    document.getElementById('hScore').textContent=score;
+    document.getElementById('hDesafios').textContent=desafiosConcluidos+'/3';
+    setTimeout(()=>{cIdx++;renderChallenge();},2500);
+  } else {
+    msg.className='result-msg err';msg.textContent='❌ Ainda não! Revise os parâmetros e tente de novo.';msg.style.display='block';
+  }
+}
+window.verify=verify;
+
+function endGame(){
+  clearInterval(timerInt);
+  document.getElementById('challengeBox').style.display='none';
+  document.getElementById('endScreen').style.display='block';
+  document.getElementById('finalScore').textContent=score;
+  document.getElementById('finalLevel').textContent=level;
+  lastSave=null;
+}
+
+async function saveScore(){
+  if(lastSave)return;
+  const name=document.getElementById('playerName').value.trim()||'Anônimo';
+  lastSave={name,score,level,seconds:timer};
+  try{
+    await addDoc(collection(db,`games/${GAME_ID}/scores`),{name,score,level,seconds:timer,ts:serverTimestamp()});
+    loadRanking();
+  }catch(e){console.warn('offline',e);}
+}
+
+async function loadRanking(){
+  const el=document.getElementById('rankList');
+  try{
+    const q=query(collection(db,`games/${GAME_ID}/scores`),orderBy('score','desc'),limit(80));
+    const snap=await getDocs(q);
+    const rows=snap.docs.map(d=>d.data()).filter(d=>d.level===level).slice(0,15);
+    if(!rows.length){el.innerHTML='<p style="opacity:.5;font-size:.82rem">Seja o primeiro!</p>';return;}
+    el.innerHTML=rows.map((r,i)=>`<div class="rank-item"><span>${i+1}. ${r.name}</span><span>${r.score} pts</span></div>`).join('');
+  }catch(e){el.innerHTML='<p style="opacity:.5;font-size:.82rem">Ranking offline.</p>';}
+}
+
+function setLevel(l,btn){
+  level=l;
+  document.querySelectorAll('.lvl').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  init();
+}
+
+window.setLevel=setLevel;
+window.saveScore=saveScore;
+window.init=init;
+init();
+</script>
+</body>
+</html>
