@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brigada Pantanal 🔥🐆 — Simulador de Fogo</title>
+<style>
+:root{
+  --bg1:#4a1505; --bg2:#a8430f; --card:#fff7f2; --ink:#2a160d; --muted:#7a5a4c;
+  --accent:#ff7a18; --accent2:#ffd166; --line:#f0d8c8;
+  --ok:#16a34a; --okbg:#dcfce7; --err:#dc2626; --errbg:#fee2e2;
+  --c-green:#3fae5a; --c-yellow:#f5c518; --c-orange:#ff7a18; --c-red:#d11f1f;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:system-ui,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);
+  background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;padding:18px 12px 40px;
+}
+.wrap{width:min(880px,95vw);margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:14px}
+h1{font-size:clamp(1.7rem,5vw,2.7rem);line-height:1.1;text-shadow:0 2px 12px rgba(0,0,0,.4)}
+.sub{opacity:.95;margin-top:6px;font-size:clamp(.85rem,2.6vw,1rem)}
+.levels{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0}
+.pill{border:none;cursor:pointer;font-weight:700;font-size:.95rem;padding:10px 18px;border-radius:999px;
+  background:rgba(255,255,255,.16);color:#fff;transition:all .25s;backdrop-filter:blur(4px)}
+.pill:hover{transform:translateY(-2px);background:rgba(255,255,255,.30)}
+.pill.active{background:var(--accent);color:#2a160d;box-shadow:0 6px 18px rgba(255,122,24,.5)}
+.panel{background:var(--card);border-radius:18px;padding:20px;box-shadow:0 14px 40px rgba(0,0,0,.3);margin-bottom:16px}
+.hud{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:12px}
+.chip{background:#ffeede;border:1px solid var(--line);border-radius:10px;padding:7px 12px;font-weight:700;font-size:.9rem;color:#5a2d18}
+.howto{font-size:.92rem;color:var(--muted);text-align:center;margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:640px){.grid2{grid-template-columns:1fr}}
+.controls label{display:block;font-weight:700;font-size:.9rem;margin:12px 0 4px}
+.controls .val{color:var(--accent);font-weight:800}
+input[type=range]{width:100%;accent-color:var(--accent);height:26px}
+.readouts{margin-top:8px;display:grid;gap:8px}
+.ro{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid var(--line);
+  border-radius:10px;padding:9px 12px;font-weight:700;font-size:.92rem}
+.ro b{font-size:1.05rem}
+/* gauge */
+.gauge{height:18px;border-radius:99px;margin:6px 0 2px;
+  background:linear-gradient(90deg,var(--c-green),var(--c-yellow),var(--c-orange),var(--c-red));position:relative}
+.gauge>.mk{position:absolute;top:-5px;width:6px;height:28px;background:#1a0e08;border-radius:3px;transform:translateX(-3px);transition:left .25s}
+.cat{font-weight:900;font-size:1.05rem}
+/* fire grid */
+.field{display:grid;gap:2px;margin:6px auto 0;width:100%;max-width:340px}
+.cell{aspect-ratio:1;border-radius:3px;background:#bfe3a0;transition:background .12s}
+.cell.veg{background:#9fd17f}
+.cell.burn{background:radial-gradient(circle,#ffe08a,#ff5a1f);animation:flick .4s infinite alternate}
+.cell.ash{background:#4d4036}
+@keyframes flick{from{filter:brightness(1)}to{filter:brightness(1.4)}}
+.btn{border:none;border-radius:12px;cursor:pointer;font-weight:800;font-size:1rem;padding:13px 18px;
+  background:var(--accent);color:#2a160d;transition:all .25s}
+.btn:hover{transform:translateY(-2px);filter:brightness(1.05)}
+.btn.ghost{background:#ffe6d3;color:#5a2d18}
+.btn.full{width:100%}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.row .btn{flex:1;min-width:130px}
+/* mission */
+.mission{margin-top:6px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}
+.mtag{font-size:.78rem;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.05em}
+.mtxt{font-weight:800;font-size:1.05rem;margin:5px 0;line-height:1.35}
+.mhint{font-size:.88rem;color:var(--muted)}
+.bar{height:9px;background:#f0e0d4;border-radius:99px;overflow:hidden;margin:10px 0}
+.bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .35s}
+.fb{margin-top:12px;padding:12px 14px;border-radius:12px;font-size:.95rem;line-height:1.45;display:none}
+.fb.show{display:block;animation:pop .35s}
+.fb.good{background:var(--okbg);border-left:5px solid var(--ok)}
+.fb.bad{background:var(--errbg);border-left:5px solid var(--err)}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.04)}100%{transform:scale(1)}}
+/* final */
+.final{text-align:center;display:none}
+.final.show{display:block;animation:pop .5s}
+.final h2{font-size:clamp(1.5rem,5vw,2.2rem);color:var(--ok)}
+.score-big{font-size:clamp(2.4rem,9vw,3.4rem);font-weight:900;color:var(--accent);margin:6px 0}
+.namebox{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:16px 0}
+.namebox input{flex:1;min-width:180px;border:2px solid var(--line);border-radius:12px;padding:13px 14px;font-size:1rem}
+.rank h3{font-size:1.1rem;margin-bottom:4px}
+.rank .lvl{font-size:.82rem;color:var(--muted);margin-bottom:10px}
+.rk{list-style:none;display:grid;gap:6px}
+.rk li{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:.92rem}
+.rk li .pos{font-weight:900;color:var(--accent);width:26px}
+.rk li .nm{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rk li .sc{font-weight:800;color:#5a2d18}
+.note{font-size:.85rem;color:var(--muted);margin-top:8px;text-align:center}
+footer{text-align:center;color:#ffeede;margin-top:22px;font-size:.9rem;line-height:1.6}
+footer .by{font-weight:800;font-size:1.02rem;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.35)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🔥 Brigada Pantanal 🐆</h1>
+    <div class="sub">Simulador de risco de fogo: mexa no clima e na vegetação, veja o índice mudar ao vivo e cumpra as missões da brigada.</div>
+  </header>
+
+  <div class="levels" id="levels">
+    <button class="pill" data-lv="basico">Básico</button>
+    <button class="pill" data-lv="intermediario">Intermediário</button>
+    <button class="pill" data-lv="dificil">Difícil</button>
+    <button class="pill" data-lv="carbonauta">🛰️ Carbonauta</button>
+  </div>
+
+  <div class="panel" id="gamePanel">
+    <div class="hud">
+      <span class="chip" id="hTime">Tempo: 0s</span>
+      <span class="chip" id="hMissao">Missão: 1/3</span>
+      <span class="chip" id="hConcl">Concluídas: 0</span>
+      <span class="chip" id="hPontos">Pontos: 0</span>
+    </div>
+    <p class="howto">🎚️ Ajuste os controles. O <b>Índice de Perigo de Fogo</b> muda em tempo real. Quando bater a meta, toque em <b>Verificar missão</b>. Algumas missões pedem para <b>rodar a simulação</b> de propagação. 🔥</p>
+
+    <div id="playArea">
+      <div class="grid2">
+        <div class="controls">
+          <label>🌡️ Temperatura do ar: <span class="val" id="vT">34 °C</span></label>
+          <input type="range" id="sT" min="20" max="48" value="34">
+          <label>💧 Umidade relativa: <span class="val" id="vH">45 %</span></label>
+          <input type="range" id="sH" min="5" max="95" value="45">
+          <label>🌬️ Vento: <span class="val" id="vW">15 km/h</span></label>
+          <input type="range" id="sW" min="0" max="60" value="15">
+          <label>🌾 Vegetação seca (carga de combustível): <span class="val" id="vF">50</span></label>
+          <input type="range" id="sF" min="0" max="100" value="50">
+        </div>
+        <div>
+          <div class="ro" style="display:block">
+            <div style="display:flex;justify-content:space-between"><span>Índice de Perigo de Fogo</span><b id="ipfVal">0</b></div>
+            <div class="gauge"><div class="mk" id="mk" style="left:0%"></div></div>
+            <div class="cat" id="catVal" style="text-align:center">—</div>
+          </div>
+          <div class="readouts">
+            <div class="ro"><span>🚀 Veloc. de propagação (ROS)</span><b id="rosVal">0 m/min</b></div>
+            <div class="ro"><span>🔥 Área queimada (última simulação)</span><b id="areaVal">—</b></div>
+          </div>
+          <div class="field" id="field"></div>
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="btn" id="simBtn">🔥 Rodar simulação</button>
+        <button class="btn ghost" id="checkBtn">✅ Verificar missão</button>
+      </div>
+
+      <div class="mission">
+        <div class="mtag" id="mTag">Missão</div>
+        <div class="mtxt" id="mTxt">…</div>
+        <div class="mhint" id="mHint"></div>
+        <div class="bar"><i id="prog"></i></div>
+        <div class="fb" id="fb"></div>
+      </div>
+    </div>
+
+    <div class="final" id="final">
+      <h2>🎉 Operação concluída!</h2>
+      <div class="score-big" id="finalScore">0</div>
+      <div id="finalMsg" style="color:var(--muted);font-weight:600"></div>
+      <div class="namebox">
+        <input id="nameInput" maxlength="20" placeholder="Seu nome (até 20 caracteres)">
+        <button class="btn" id="saveBtn">Salvar no ranking</button>
+      </div>
+      <button class="btn ghost" id="againBtn">Jogar de novo 🔁</button>
+      <div class="note" id="saveNote"></div>
+    </div>
+  </div>
+
+  <div class="panel rank">
+    <h3>🏆 Ranking Global</h3>
+    <div class="lvl" id="rankLvl">Nível: Básico</div>
+    <ol class="rk" id="rankList"><li><span class="nm">Carregando ranking…</span></li></ol>
+    <div class="note" id="rankNote"></div>
+  </div>
+
+  <footer>
+    <div class="by">— Idealizado por Ernandes Sobreira —</div>
+    <div>Tema: Queimadas e fogo no Pantanal · Gênero: Simulação interativa · app ambiental do dia (2026-06-13)</div>
+  </footer>
+</div>
+
+<script>
+/* ===== Firebase ===== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-06-13-pantanal-fogo";
+
+/* ===== Missões por nível =====
+   tipos de verificação:
+   - ipf  {min,max}     -> Índice de Perigo de Fogo na faixa
+   - ros  {min,max}     -> ROS estimada na faixa (m/min)
+   - area {min,max,sim} -> % área queimada após rodar a simulação
+*/
+const LABELS={basico:"Básico",intermediario:"Intermediário",dificil:"Difícil",carbonauta:"🛰️ Carbonauta"};
+const MISS={
+  basico:[
+    {t:"Dia úmido e seguro: deixe o Índice de Perigo de Fogo BAIXO (menor que 25).",hint:"Dica: mais umidade e menos vegetação seca derrubam o índice.",chk:{type:"ipf",min:0,max:24},
+     fb:"Com ar úmido e pouca biomassa seca, a vegetação não pega fogo facilmente: o risco fica baixo."},
+    {t:"Seca severa: faça o índice chegar a EXTREMO (maior que 80).",hint:"Dica: muito calor, ar seco e bastante capim seco.",chk:{type:"ipf",min:80,max:100},
+     fb:"Calor, baixa umidade e capim seco formam a combinação que tornou 2020 e 2024 anos catastróficos no Pantanal."},
+    {t:"Risco controlado: ajuste o índice para a faixa MODERADA (30 a 45).",hint:"Dica: equilibre os controles aos poucos.",chk:{type:"ipf",min:30,max:45},
+     fb:"O risco moderado é a janela em que a brigada ainda consegue agir preventivamente."}
+  ],
+  intermediario:[
+    {t:"Estação chuvosa: mantenha o Índice de Perigo BAIXO (menor que 22).",hint:"Umidade alta é sua maior aliada.",chk:{type:"ipf",min:0,max:21},
+     fb:"Na cheia pantaneira, a alta umidade do ar e do solo mantém o fogo sob controle natural."},
+    {t:"Foco contido: rode a simulação e queime MENOS de 25% da savana.",hint:"Reduza o índice ANTES de rodar a simulação.",chk:{type:"area",min:0,max:25,sim:true},
+     fb:"Quanto menor o índice de perigo, menor a probabilidade de a chama saltar entre touceiras: o fogo morre cedo."},
+    {t:"Incêndio amplo: rode a simulação e queime MAIS de 70% da savana.",hint:"Eleve o índice ao máximo antes de rodar.",chk:{type:"area",min:70,max:100,sim:true},
+     fb:"Com risco extremo, cada célula incendiada acende as vizinhas e o fogo varre quase toda a área."},
+    {t:"Janela de manejo: deixe o índice na faixa MODERADA (35 a 50).",hint:"Ajuste fino dos sliders.",chk:{type:"ipf",min:35,max:50},
+     fb:"O fogo prescrito (manejo) só é seguro em janelas de risco moderado e baixa velocidade do vento."}
+  ],
+  dificil:[
+    {t:"Combustível fino úmido: leve o índice abaixo de 18.",hint:"Maximize a umidade relativa e reduza a carga seca.",chk:{type:"ipf",min:0,max:18},
+     fb:"O teor de umidade do combustível fino morto controla a ignição; acima de ~20% o capim quase não queima."},
+    {t:"Propagação lenta: deixe a ROS estimada abaixo de 6 m/min.",hint:"Vento baixo e ar úmido reduzem a velocidade de propagação.",chk:{type:"ros",min:0,max:6},
+     fb:"A velocidade de propagação (Rate of Spread) cresce de forma quase exponencial com o vento e a secura do combustível."},
+    {t:"Frente rápida: faça a ROS estimada passar de 16 m/min.",hint:"Vento forte + capim muito seco + calor.",chk:{type:"ros",min:16,max:999},
+     fb:"Frentes acima de ~15 m/min superam a capacidade de combate direto e exigem aceiros e contrafogo."},
+    {t:"Mosaico de queima: rode a simulação e atinja entre 40% e 60% de área queimada.",hint:"Busque um índice intermediário antes de rodar.",chk:{type:"area",min:40,max:60,sim:true},
+     fb:"Queimas em mosaico deixam manchas não queimadas que servem de refúgio para a fauna."},
+    {t:"Vento como gatilho: deixe o índice ALTO (acima de 72) mantendo a umidade ≥ 35%.",hint:"Compense a umidade com calor, vento e carga seca.",chk:{type:"ipf",min:72,max:100,minH:35},
+     fb:"Mesmo com umidade não tão baixa, vento forte e muita biomassa seca elevam o perigo — o vento é multiplicador."}
+  ],
+  carbonauta:[
+    {t:"Cenário de cheia plena: índice abaixo de 15 (risco quase nulo).",hint:"Umidade máxima, carga de combustível mínima.",chk:{type:"ipf",min:0,max:15},
+     fb:"No pulso de inundação pantaneiro, a saturação hídrica do solo e da serapilheira inibe a combustão sustentada."},
+    {t:"Reproduza a seca de 2020: índice acima de 88 (ano de ~24% do bioma queimado).",hint:"Empurre calor, secura e carga seca aos limites.",chk:{type:"ipf",min:88,max:100},
+     fb:"Em 2020 o fogo consumiu ~3,6 milhões de ha (~24% do Pantanal), sob seca extrema ligada a uma La Niña e ao Atlântico Norte aquecido."},
+    {t:"Combate inviável: ROS estimada acima de 22 m/min.",hint:"Maximize vento, temperatura e combustível seco.",chk:{type:"ros",min:22,max:999},
+     fb:"Acima de ~22 m/min e com fogo de copa/turfa, o combate direto cessa; sobra conter por aceiros e suprimir focos secundários."},
+    {t:"Linha de intensidade crítica: ROS entre 12 e 16 m/min.",hint:"Ajuste vento e secura para a janela estreita.",chk:{type:"ros",min:12,max:16},
+     fb:"A intensidade da frente (kW/m, Byram) escala com a ROS e a carga; ~12–16 m/min já marca o limite do ataque com retardante."},
+    {t:"Supressão eficaz: rode a simulação e contenha a área queimada abaixo de 12%.",hint:"Derrube índice e ROS antes de simular.",chk:{type:"area",min:0,max:12,sim:true},
+     fb:"Detecção precoce (ex.: BDQueimadas/INPE) somada a baixa conectividade do combustível mantém o incêndio em manchas pequenas."},
+    {t:"Megaincêndio: rode a simulação e ultrapasse 85% de área queimada.",hint:"Condições de perigo extremo em todos os controles.",chk:{type:"area",min:85,max:100,sim:true},
+     fb:"Sob perigo extremo, a alta conectividade da paisagem seca gera propagação em coroa: o fogo percola quase toda a malha."}
+  ]
+};
+
+/* ===== Estado e DOM ===== */
+const $=id=>document.getElementById(id);
+let level="basico", mi=0, done=0, points=0, attempts=0;
+let startT=0, timer=null, finished=false, lastScore=0, lastSeconds=0;
+let areaBurned=-1, simRunning=false, simAnim=null;
+let GRID=10, cells=[], state=[];
+
+function clamp(x,a,b){return Math.max(a,Math.min(b,x));}
+
+/* ===== Física simplificada ===== */
+function params(){
+  return {T:+$('sT').value, H:+$('sH').value, W:+$('sW').value, F:+$('sF').value};
+}
+function calcIPF(p){
+  const tN=(p.T-20)/28, dN=(100-p.H)/95, wN=p.W/60, fN=p.F/100;
+  const ipf=100*(0.30*tN+0.30*dN+0.20*wN+0.20*fN);
+  return clamp(Math.round(ipf),0,100);
+}
+function calcROS(p,ipf){
+  const wN=p.W/60;
+  const ros=Math.pow(ipf/100,1.15)*24 + wN*7;
+  return Math.round(ros*10)/10;
+}
+function category(ipf){
+  if(ipf<25)return["Baixo","#3fae5a"];
+  if(ipf<50)return["Moderado","#f5c518"];
+  if(ipf<75)return["Alto","#ff7a18"];
+  return["Extremo","#d11f1f"];
+}
+function refresh(){
+  const p=params();
+  $('vT').textContent=p.T+" °C"; $('vH').textContent=p.H+" %";
+  $('vW').textContent=p.W+" km/h"; $('vF').textContent=p.F;
+  const ipf=calcIPF(p), ros=calcROS(p,ipf), c=category(ipf);
+  $('ipfVal').textContent=ipf;
+  $('mk').style.left=ipf+"%";
+  $('catVal').textContent="Risco "+c[0]; $('catVal').style.color=c[1];
+  $('rosVal').textContent=ros+" m/min";
+  return {p,ipf,ros};
+}
+
+/* ===== Grade de fogo ===== */
+function buildField(){
+  GRID={basico:10,intermediario:12,dificil:14,carbonauta:16}[level];
+  const f=$('field'); f.style.gridTemplateColumns=`repeat(${GRID},1fr)`; f.innerHTML="";
+  cells=[]; state=[];
+  for(let i=0;i<GRID*GRID;i++){
+    const d=document.createElement('div'); d.className="cell veg"; f.appendChild(d);
+    cells.push(d); state.push(0); // 0 veg,1 burning,2 ash
+  }
+  areaBurned=-1; $('areaVal').textContent="—";
+}
+function resetField(){for(let i=0;i<state.length;i++){state[i]=0;cells[i].className="cell veg";}}
+
+function runSim(){
+  if(simRunning)return;
+  resetField();
+  const {ipf,ros}=refresh();
+  const p=params();
+  const wN=p.W/60;
+  const base=clamp(Math.pow(ipf/100,1.25)*0.96,0,0.96); // prob de propagação por vizinho
+  // foco inicial no centro
+  const c0=Math.floor(GRID/2)*GRID+Math.floor(GRID/2);
+  state[c0]=1; cells[c0].className="cell burn";
+  simRunning=true;
+  const dirBias={r:1+wN*1.2,l:1-wN*0.4,d:1,u:1}; // vento sopra para a direita
+  simAnim=setInterval(()=>{
+    let next=state.slice(), active=false;
+    for(let i=0;i<state.length;i++){
+      if(state[i]===1){
+        next[i]=2; // vira cinza
+        const r=Math.floor(i/GRID), col=i%GRID;
+        const nb=[[r,col+1,'r'],[r,col-1,'l'],[r+1,col,'d'],[r-1,col,'u']];
+        nb.forEach(([rr,cc,dir])=>{
+          if(rr<0||cc<0||rr>=GRID||cc>=GRID)return;
+          const j=rr*GRID+cc;
+          if(state[j]===0&&next[j]===0){
+            if(Math.random()<base*dirBias[dir]){next[j]=1;active=true;}
+          }
+        });
+      }else if(state[i]===1){active=true;}
+    }
+    // detecta se ainda há fogo
+    let burning=false;
+    for(let i=0;i<next.length;i++){if(next[i]===1){burning=true;break;}}
+    state=next;
+    for(let i=0;i<state.length;i++){
+      cells[i].className="cell "+(state[i]===0?"veg":state[i]===1?"burn":"ash");
+    }
+    if(!burning){
+      clearInterval(simAnim); simRunning=false;
+      const ash=state.filter(s=>s===2).length;
+      areaBurned=Math.round(ash/state.length*100);
+      $('areaVal').textContent=areaBurned+"% queimado";
+    }
+  },170);
+}
+
+/* ===== Missões ===== */
+function loadMission(){
+  finished=false; $('final').classList.remove('show'); $('playArea').style.display="block";
+  const list=MISS[level];
+  $('mTag').textContent="Missão "+(mi+1)+" de "+list.length;
+  $('mTxt').textContent=list[mi].t;
+  $('mHint').textContent=list[mi].hint;
+  $('prog').style.width=Math.round(mi/list.length*100)+"%";
+  $('fb').className="fb"; $('fb').textContent="";
+  $('hMissao').textContent="Missão: "+(mi+1)+"/"+list.length;
+}
+function startGame(){
+  mi=0;done=0;points=0;attempts=0;finished=false;areaBurned=-1;
+  startT=Date.now(); clearInterval(timer); timer=setInterval(updTime,250);
+  buildField(); refresh(); updHud(); loadMission();
+}
+function updTime(){if(finished)return;$('hTime').textContent="Tempo: "+Math.floor((Date.now()-startT)/1000)+"s";}
+function updHud(){$('hConcl').textContent="Concluídas: "+done;$('hPontos').textContent="Pontos: "+points;}
+
+function checkMission(){
+  if(finished)return;
+  const m=MISS[level][mi], chk=m.chk;
+  const {ipf,ros}=refresh(); const p=params();
+  let pass=false, why="";
+  if(chk.type==="ipf"){
+    pass = ipf>=chk.min && ipf<=chk.max && (!chk.minH || p.H>=chk.minH);
+    why = `Índice atual: ${ipf}. Meta: ${chk.min}–${chk.max}.`+(chk.minH?` Umidade ≥ ${chk.minH}% (atual ${p.H}%).`:"");
+  }else if(chk.type==="ros"){
+    pass = ros>=chk.min && ros<=chk.max;
+    why = `ROS atual: ${ros} m/min. Meta: ${chk.min}${chk.max>900?"+":"–"+chk.max} m/min.`;
+  }else if(chk.type==="area"){
+    if(areaBurned<0){ feedback(false,"⚠️ Rode a simulação primeiro (botão 🔥) e depois verifique."); return; }
+    pass = areaBurned>=chk.min && areaBurned<=chk.max;
+    why = `Área queimada: ${areaBurned}%. Meta: ${chk.min}–${chk.max}%.`;
+  }
+  attempts++;
+  if(pass){
+    const gain=120 + Math.max(0,60-attempts*5); // menos tentativas, mais bônus
+    points+=Math.max(80,gain); done++;
+    feedback(true,"✅ <b>Missão cumprida!</b> "+m.fb);
+    $('prog').style.width=Math.round((mi+1)/MISS[level].length*100)+"%";
+    updHud();
+    setTimeout(()=>{
+      if(mi+1>=MISS[level].length){ finish(); }
+      else{ mi++; attempts=0; areaBurned=-1; $('areaVal').textContent="—"; loadMission(); }
+    },1400);
+  }else{
+    feedback(false,"❌ Ainda não. "+why+" "+m.hint);
+  }
+}
+function feedback(good,html){
+  const el=$('fb'); el.className="fb show "+(good?"good":"bad"); el.innerHTML=html;
+}
+
+function finish(){
+  finished=true; clearInterval(timer);
+  lastSeconds=Math.floor((Date.now()-startT)/1000); lastScore=points;
+  $('playArea').style.display="none"; $('final').classList.add('show');
+  $('finalScore').textContent=points+" pts";
+  let msg=`Você cumpriu ${done} missões no nível ${LABELS[level]} em ${lastSeconds}s.`;
+  if(done===MISS[level].length)msg="🐆 Brigada nota 10! "+msg+" O Pantanal agradece.";
+  $('finalMsg').textContent=msg; $('saveNote').textContent="";
+}
+
+/* ===== Firebase ranking ===== */
+let db=null,fs=null;
+async function initFirebase(){
+  try{
+    const appMod=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    fs=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    db=fs.getFirestore(appMod.initializeApp(firebaseConfig));
+    return true;
+  }catch(e){console.warn("Firebase off",e);return false;}
+}
+const fbReady=initFirebase();
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+async function loadRanking(){
+  const listEl=$('rankList'); $('rankNote').textContent="";
+  const ok=await fbReady;
+  if(!ok||!db){listEl.innerHTML='<li><span class="nm">Ranking offline — o jogo funciona normalmente. 🐆</span></li>';return;}
+  try{
+    const {collection,query,orderBy,limit,getDocs}=fs;
+    const q=query(collection(db,"games",GAME_ID,"scores"),orderBy("score","desc"),limit(200));
+    const snap=await getDocs(q);
+    let rows=[]; snap.forEach(d=>{const v=d.data(); if(v.level===level)rows.push(v);});
+    rows.sort((a,b)=>(b.score-a.score)||((a.seconds||0)-(b.seconds||0))); rows=rows.slice(0,10);
+    if(!rows.length){listEl.innerHTML='<li><span class="nm">Seja a primeira brigada a pontuar! 🔥</span></li>';return;}
+    listEl.innerHTML="";
+    rows.forEach((r,i)=>{
+      const li=document.createElement('li');
+      li.innerHTML=`<span class="pos">${i+1}º</span><span class="nm">${esc(r.name||'Anônimo')}</span><span class="sc">${r.score} pts · ${r.seconds||0}s</span>`;
+      listEl.appendChild(li);
+    });
+  }catch(e){console.warn(e);listEl.innerHTML='<li><span class="nm">Não foi possível carregar o ranking agora.</span></li>';}
+}
+$('saveBtn').onclick=async()=>{
+  const name=($('nameInput').value||"").trim().slice(0,20)||"Anônimo";
+  const ok=await fbReady;
+  if(!ok||!db){$('saveNote').textContent="Sem conexão: não deu para salvar, mas seu jogo valeu! 🐆";return;}
+  try{
+    const {collection,addDoc,serverTimestamp}=fs;
+    await addDoc(collection(db,"games",GAME_ID,"scores"),{name,level,score:lastScore,seconds:lastSeconds,ts:serverTimestamp()});
+    $('saveNote').textContent="Pontuação salva no ranking! 🏆"; $('saveBtn').disabled=true; loadRanking();
+  }catch(e){console.warn(e);$('saveNote').textContent="Não foi possível salvar agora. Tente novamente.";}
+};
+
+/* ===== Nível ===== */
+function setLevel(lv){
+  level=lv;
+  document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('active',p.dataset.lv===lv));
+  $('rankLvl').textContent="Nível: "+LABELS[lv];
+  startGame(); loadRanking();
+}
+
+/* ===== Eventos ===== */
+['sT','sH','sW','sF'].forEach(id=>$(id).addEventListener('input',refresh));
+$('simBtn').onclick=runSim;
+$('checkBtn').onclick=checkMission;
+$('againBtn').onclick=startGame;
+document.querySelectorAll('.pill').forEach(p=>p.onclick=()=>setLevel(p.dataset.lv));
+setLevel('basico');
+</script>
+</body>
+</html>
