@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brigada Pantanal</title>
+<style>
+:root {
+  --bg1: #1a0600;
+  --bg2: #3d1200;
+  --accent: #ff7020;
+  --accent2: #c05010;
+  --card: rgba(255,255,255,0.97);
+  --card-shadow: 0 6px 28px rgba(0,0,0,0.3);
+  --radius: 16px;
+  --text: #1a0c00;
+  --muted: #7a4020;
+  --success: #2a8a40;
+  --danger: #c02010;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:system-ui,'Segoe UI',sans-serif;
+  background:linear-gradient(160deg,var(--bg1) 0%,var(--bg2) 100%);
+  min-height:100vh;color:var(--text);padding-bottom:40px;
+}
+header{text-align:center;padding:28px 16px 12px;color:#fff;}
+header h1{font-size:clamp(1.7rem,5vw,2.7rem);font-weight:800;text-shadow:0 2px 12px rgba(0,0,0,.5);margin-bottom:4px;}
+header p{color:rgba(255,255,255,.7);font-size:clamp(.85rem,2vw,1rem);}
+.level-bar{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:10px 16px 14px;}
+.level-btn{
+  background:rgba(255,255,255,.13);color:#fff;border:2px solid rgba(255,255,255,.25);
+  border-radius:999px;padding:8px 22px;font-size:.88rem;font-weight:700;cursor:pointer;transition:all .2s;
+}
+.level-btn:hover{background:rgba(255,255,255,.22);transform:translateY(-1px);}
+.level-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 2px 14px rgba(255,112,32,.5);}
+.main-wrap{
+  display:grid;grid-template-columns:1fr min(360px,95vw);
+  gap:16px;max-width:1060px;margin:0 auto;padding:0 16px;
+}
+@media(max-width:680px){.main-wrap{grid-template-columns:1fr;}}
+.game-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--card-shadow);}
+.hud{
+  display:flex;gap:12px;flex-wrap:wrap;padding:11px 16px;
+  background:rgba(0,0,0,.04);border-bottom:1px solid rgba(0,0,0,.07);
+  font-size:.83rem;font-weight:600;color:var(--muted);
+  border-radius:var(--radius) var(--radius) 0 0;
+}
+.hud span{display:flex;align-items:center;gap:4px;}
+.hud .val{color:var(--text);font-weight:800;}
+.instructions{
+  padding:9px 16px;font-size:.82rem;color:var(--muted);
+  border-bottom:1px solid rgba(0,0,0,.06);background:rgba(255,112,32,.06);line-height:1.4;
+}
+/* Challenge area */
+.challenge-area{padding:16px 16px 0;}
+.ch-header{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;}
+.ch-emoji{font-size:2.2rem;flex-shrink:0;line-height:1;}
+.ch-info{flex:1;}
+.ch-title{font-size:1rem;font-weight:800;color:#1a0600;margin-bottom:3px;}
+.ch-desc{font-size:.84rem;line-height:1.5;color:#5a2810;}
+.target-badge{
+  display:inline-flex;align-items:center;gap:5px;margin-top:8px;
+  background:rgba(255,112,32,.12);border:1.5px solid rgba(255,112,32,.35);
+  border-radius:999px;padding:4px 12px;font-size:.8rem;font-weight:700;color:#b03000;
+}
+.tip-box{
+  font-size:.8rem;color:#5a2810;background:rgba(255,200,100,.12);
+  border-left:3px solid #f0a030;border-radius:6px;padding:7px 10px;margin-bottom:14px;line-height:1.4;
+}
+/* Sliders */
+.sliders-section{padding:0 16px;}
+.slider-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.slider-label{font-size:.82rem;font-weight:600;color:var(--muted);min-width:160px;white-space:nowrap;}
+.slider-input{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;
+  background:linear-gradient(90deg,var(--accent),#ff3010);outline:none;cursor:pointer;}
+.slider-input::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+  background:var(--accent);cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.25);}
+.slider-val{font-size:.85rem;font-weight:800;color:var(--text);min-width:52px;text-align:right;}
+/* Fire visualization */
+.fire-viz{margin:14px 16px;padding:12px 14px;background:#fff8f4;border:1.5px solid #f0d0b0;border-radius:12px;}
+.viz-label{font-size:.78rem;font-weight:700;color:var(--muted);margin-bottom:6px;display:flex;justify-content:space-between;}
+.fire-bar-outer{width:100%;height:28px;background:#e8f4e8;border-radius:999px;overflow:hidden;position:relative;border:1.5px solid rgba(0,0,0,.08);}
+.fire-bar-burned{
+  height:100%;background:linear-gradient(90deg,#ff8020,#c02010);
+  border-radius:999px;transition:width .4s ease;position:relative;
+}
+.fire-bar-burned::after{
+  content:'🔥';position:absolute;right:-2px;top:50%;transform:translateY(-50%);
+  font-size:16px;animation:flicker 1.5s ease-in-out infinite;
+}
+@keyframes flicker{0%,100%{opacity:1;transform:translateY(-50%) scale(1);}50%{opacity:.7;transform:translateY(-50%) scale(1.15);}}
+.fire-bar-pct{display:flex;justify-content:space-between;font-size:.78rem;font-weight:700;margin-top:4px;}
+/* Metrics grid */
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;padding:0 16px 14px;}
+.metric-card{
+  padding:10px 12px;border-radius:12px;border:1.5px solid rgba(0,0,0,.08);
+  background:#fff;transition:border-color .3s,background .3s;
+}
+.metric-card.danger{border-color:#c02010;background:rgba(192,32,16,.06);}
+.metric-card.warn{border-color:#e0a020;background:rgba(224,160,32,.06);}
+.metric-card.ok{border-color:#2a8a40;background:rgba(42,138,64,.06);}
+.metric-val{font-size:1.25rem;font-weight:800;color:var(--text);display:block;}
+.metric-label{font-size:.72rem;color:var(--muted);font-weight:600;margin-top:2px;display:block;line-height:1.3;}
+.metric-icon{font-size:1.1rem;}
+/* Verify */
+.verify-btn{
+  display:block;margin:0 16px 12px;width:calc(100% - 32px);
+  padding:12px;background:var(--accent);color:#fff;border:none;
+  border-radius:12px;font-size:1rem;font-weight:800;cursor:pointer;transition:all .2s;
+}
+.verify-btn:hover{background:#e05810;transform:translateY(-1px);box-shadow:0 4px 14px rgba(255,112,32,.4);}
+.verify-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+/* Feedback */
+.feedback-panel{
+  margin:0 16px 14px;padding:12px 14px;
+  background:rgba(255,112,32,.07);border-left:4px solid var(--accent);
+  border-radius:8px;font-size:.88rem;line-height:1.5;color:var(--text);min-height:52px;
+}
+.next-btn{
+  display:block;margin:0 16px 20px;width:calc(100% - 32px);
+  padding:12px;background:#b03000;color:#fff;border:none;
+  border-radius:12px;font-size:1rem;font-weight:800;cursor:pointer;transition:all .2s;
+}
+.next-btn:hover{background:#8a2000;transform:translateY(-1px);}
+/* End */
+.end-screen{padding:22px 20px;text-align:center;}
+.end-emoji{font-size:3.5rem;display:block;margin-bottom:10px;}
+.end-title{font-size:1.55rem;font-weight:800;margin-bottom:8px;color:#1a0600;}
+.end-desc{font-size:.93rem;color:var(--muted);margin-bottom:18px;line-height:1.5;}
+.end-stats{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-bottom:18px;}
+.end-stat{background:rgba(0,0,0,.05);border-radius:12px;padding:10px 16px;font-size:.95rem;font-weight:800;color:var(--text);}
+.end-stat span{display:block;font-size:.74rem;font-weight:400;color:var(--muted);margin-top:2px;}
+.save-area{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px;}
+.save-area input{padding:10px 14px;border:2px solid #f0c0a0;border-radius:10px;font-size:.9rem;flex:1;min-width:140px;max-width:200px;outline:none;}
+.save-area input:focus{border-color:var(--accent);}
+.save-btn{padding:10px 18px;background:#5a1800;color:#fff;border:none;border-radius:10px;font-size:.9rem;font-weight:700;cursor:pointer;transition:all .2s;}
+.save-btn:hover{background:#3a0e00;}
+.save-btn:disabled{opacity:.5;cursor:not-allowed;}
+.restart-btn{margin-top:12px;padding:10px 24px;background:#fff;color:var(--text);border:2px solid #f0c0a0;border-radius:10px;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .2s;display:inline-block;}
+.restart-btn:hover{border-color:var(--accent);background:rgba(255,112,32,.07);}
+/* Ranking */
+.ranking-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--card-shadow);padding:16px;height:fit-content;}
+.ranking-card h3{font-size:1rem;font-weight:800;color:#1a0600;margin-bottom:3px;}
+.rank-level{font-size:.78rem;color:var(--muted);margin-bottom:12px;}
+.rank-list{display:flex;flex-direction:column;gap:8px;}
+.rank-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(0,0,0,.03);border-radius:10px;font-size:.85rem;}
+.rank-pos{font-weight:800;color:var(--muted);min-width:22px;}
+.rank-pos.gold{color:#f0a020;}.rank-pos.silver{color:#9e9e9e;}.rank-pos.bronze{color:#a0522d;}
+.rank-name{flex:1;font-weight:600;color:var(--text);}
+.rank-score{font-weight:700;color:#8a2000;font-size:.9rem;}
+.rank-empty{font-size:.84rem;color:var(--muted);text-align:center;padding:14px;}
+.rank-status{font-size:.77rem;color:var(--muted);text-align:center;margin-top:6px;}
+footer{text-align:center;padding:24px 16px 12px;color:rgba(255,255,255,.62);font-size:.82rem;line-height:1.85;}
+footer strong{color:rgba(255,255,255,.9);font-size:.9rem;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🔥 Brigada Pantanal</h1>
+  <p>Simulação de combate a incêndios no Pantanal Brasileiro</p>
+</header>
+
+<div class="level-bar">
+  <button class="level-btn active" onclick="setLevel('basico',this)">Básico</button>
+  <button class="level-btn" onclick="setLevel('intermediario',this)">Intermediário</button>
+  <button class="level-btn" onclick="setLevel('dificil',this)">Difícil</button>
+  <button class="level-btn" onclick="setLevel('carbonauta',this)">🛰️ Carbonauta</button>
+</div>
+
+<div class="main-wrap">
+  <div>
+    <div class="game-card">
+      <div class="hud">
+        <span>🎯 Desafio: <span class="val" id="hud-ch">1</span></span>
+        <span>✅ Acertos: <span class="val" id="hud-ok">0</span></span>
+        <span>⏱️ Tempo: <span class="val" id="hud-time">0s</span></span>
+        <span>🏆 Pontos: <span class="val" id="hud-score">0</span></span>
+      </div>
+      <div class="instructions">
+        🔥 Mova os controles e observe o impacto em tempo real. Quando atingir a meta, clique em <strong>Verificar</strong>!
+      </div>
+      <div id="game-area"></div>
+      <div class="feedback-panel" id="feedback-panel">Ajuste os controles e observe as mudanças em tempo real!</div>
+      <button class="next-btn" id="next-btn" onclick="nextChallenge()" style="display:none">Próximo desafio →</button>
+    </div>
+  </div>
+  <div>
+    <div class="ranking-card">
+      <h3>🏆 Ranking Global</h3>
+      <div class="rank-level" id="rank-level-label">Nível: Básico</div>
+      <div class="rank-list" id="rank-list"><div class="rank-empty">Carregando...</div></div>
+      <div class="rank-status" id="rank-status"></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <strong>— Idealizado por Ernandes Sobreira —</strong><br>
+  Tema: Queimadas e fogo no Pantanal · Gênero: Simulação interativa<br>
+  App ambiental do dia (2026-06-13)
+</footer>
+
+<script type="module">
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-06-13-brigada-pantanal";
+
+let db = null;
+(async () => {
+  try {
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getFirestore, collection, addDoc, getDocs, orderBy, query, limit, serverTimestamp }
+      = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    window._fb = { collection, addDoc, getDocs, orderBy, query, limit, serverTimestamp, db };
+    loadRanking();
+  } catch(e) {
+    console.warn("Firebase offline", e);
+    document.getElementById("rank-list").innerHTML = '<div class="rank-empty">Sem conexão</div>';
+  }
+})();
+
+// ── Model ──────────────────────────────────────────────────────────────────────
+function compute(p) {
+  const { umidade=50, vento=20, esforco=0, vegetacao=65, mes=8 } = p;
+  const mesFator = [0.3,0.3,0.4,0.55,0.65,0.65,0.75,1.0,1.0,0.85,0.55,0.35][mes];
+  const mc = Math.max(0, (100 - umidade) / 100);
+  const wf = Math.min(1, vento / 70);
+  const vf = Math.min(1.4, vegetacao / 60);
+  const rawFWI = Math.min(100, (mc * 55 + wf * 45) * mesFator * vf);
+  const efat = Math.min(0.82, esforco / 100 * 0.82);
+  const risco = Math.min(100, rawFWI * (1 - efat));
+  const area = Math.min(100, Math.round(risco * 0.88));
+  const biomassa = 48 * (vegetacao / 100);
+  const co2 = parseFloat((area / 100 * biomassa).toFixed(1));
+  const fwi = Math.round(rawFWI);
+  const rec = area < 15 ? 1 : area < 35 ? 3 : area < 60 ? 7 : 15;
+  const rLabel = risco < 20 ? 'Baixo' : risco < 40 ? 'Moderado' : risco < 60 ? 'Alto' : risco < 80 ? 'Muito Alto' : 'Extremo';
+  const rColor = risco < 20 ? '#2a8a40' : risco < 40 ? '#78a820' : risco < 60 ? '#d09010' : risco < 80 ? '#d05010' : '#c01010';
+  return { fwi, risco: Math.round(risco), rLabel, rColor, area, co2, rec, biomassa: biomassa.toFixed(0) };
+}
+
+// ── Game data ──────────────────────────────────────────────────────────────────
+const LEVELS = {
+  basico: {
+    label: 'Básico',
+    sliders: [
+      { id:'umidade', label:'💧 Umidade do ar', min:0, max:100, def:45, unit:'%' },
+      { id:'vento',   label:'💨 Velocidade do vento', min:0, max:60, def:30, unit:' km/h' }
+    ],
+    challenges: [
+      {
+        emoji:'🌤️', title:'Dia de Fiscalização — Setembro Seco',
+        desc:'É setembro no Pantanal Sul, mês de pico de incêndios. Ajuste os controles para um cenário de <strong>baixo risco</strong>.',
+        target:'Risco de incêndio < 25%',
+        check: m => m.risco < 25,
+        tip:'💡 Alta umidade e vento fraco reduzem drasticamente o risco.',
+        fb_ok:'✅ Perfeito! Com umidade > 60% e vento < 10 km/h o risco cai abaixo de 25%. Na realidade, setembro/outubro no Pantanal Sul registram umidade de 20–35% — condições quase sempre de alto risco.',
+        fb_fail:'❌ Risco ainda alto. Tente umidade acima de 65% e vento abaixo de 15 km/h.'
+      },
+      {
+        emoji:'🌪️', title:'La Niña — Vento Imparável',
+        desc:'Ano de La Niña: o vento não para abaixo de 40 km/h. <strong>Mantenha risco < 45%</strong> com essa restrição.',
+        target:'Risco < 45% (vento ≥ 40 km/h)',
+        check: (m,p) => m.risco < 45 && (p.vento||0) >= 40,
+        tip:'💡 Com vento alto fixo, só a umidade pode compensar. Experimente acima de 75%.',
+        fb_ok:'✅ Correto! Em anos de La Niña (como 2020), o Pantanal perdeu ~30% de sua área para incêndios. Alta umidade (chuvas fora de estação) é a única variável favorável quando o vento não cede.',
+        fb_fail:'❌ Verifique se o vento está ≥ 40 km/h E o risco está < 45%.'
+      }
+    ]
+  },
+  intermediario: {
+    label: 'Intermediário',
+    sliders: [
+      { id:'umidade', label:'💧 Umidade do ar', min:0, max:100, def:40, unit:'%' },
+      { id:'vento',   label:'💨 Velocidade do vento', min:0, max:70, def:35, unit:' km/h' },
+      { id:'esforco', label:'🚒 Esforço de combate', min:0, max:100, def:40, unit:' brigadistas/km²' }
+    ],
+    challenges: [
+      {
+        emoji:'🔥', title:'Fogo Ativo — Brigada Limitada',
+        desc:'Incêndio em andamento. Orçamento emergencial: <strong>máximo 50 brigadistas/km²</strong>. Mantenha área queimada < 20%.',
+        target:'Área queimada < 20% (esforço ≤ 50)',
+        check: (m,p) => m.area < 20 && (p.esforco||0) <= 50,
+        tip:'💡 Com brigada limitada, busque condições meteorológicas favoráveis — umidade alta e vento baixo reduzem a necessidade de esforço.',
+        fb_ok:'✅ Ótimo equilíbrio! O Plano de Manejo Integrado do Fogo (MIF/IBAMA) prioriza justamente isso: concentrar brigadas nos pontos de maior eficiência por limitação de orçamento.',
+        fb_fail:'❌ Revise: esforço deve estar ≤ 50 E área queimada < 20%.'
+      },
+      {
+        emoji:'☀️', title:'Seca Extrema — Novembro Crítico',
+        desc:'Novembro com seca histórica: umidade não pode ultrapassar <strong>20%</strong>. Encontre o esforço mínimo para área < 30%.',
+        target:'Área queimada < 30% (umidade ≤ 20%)',
+        check: (m,p) => m.area < 30 && (p.umidade||50) <= 20,
+        tip:'💡 Com umidade no piso, o esforço de combate precisa ser intenso. Calcule o mínimo eficiente.',
+        fb_ok:'✅ Correto! Em secas severas, a demanda por brigadistas cresce de forma não linear. O CBMMT relatou que cada brigadista "extra" tem rendimento decrescente acima de ~60 por km² de frente de fogo.',
+        fb_fail:'❌ Confirme: umidade ≤ 20% E área queimada < 30%.'
+      },
+      {
+        emoji:'🌿', title:'Missão Carbono',
+        desc:'Com esforço máximo de <strong>70</strong>, minimize emissões: CO₂ < 5 tCO₂/ha com área queimada < 15%.',
+        target:'CO₂ < 5 tCO₂/ha; área < 15% (esforço ≤ 70)',
+        check: (m,p) => m.co2 < 5 && m.area < 15 && (p.esforco||0) <= 70,
+        tip:'💡 CO₂ = área × biomassa/ha. Reduza a área primeiro — menos área = menos emissão direta.',
+        fb_ok:'✅ Excelente! O Pantanal estoca 30–65 tCO₂/ha segundo o IPAM. Queimadas controladas emitem muito menos do que incêndios descontrolados — base científica para o Manejo Integrado do Fogo.',
+        fb_fail:'❌ Verifique: esforço ≤ 70, área < 15%, CO₂ < 5.'
+      }
+    ]
+  },
+  dificil: {
+    label: 'Difícil',
+    sliders: [
+      { id:'umidade',   label:'💧 Umidade relativa', min:0, max:100, def:35, unit:'%' },
+      { id:'vento',     label:'💨 Velocidade do vento', min:0, max:80, def:40, unit:' km/h' },
+      { id:'esforco',   label:'🚒 Esforço de combate', min:0, max:100, def:40, unit:' brigadistas/km²' },
+      { id:'vegetacao', label:'🌿 Cobertura vegetal seca', min:10, max:100, def:70, unit:'%' }
+    ],
+    challenges: [
+      {
+        emoji:'🔬', title:'Condições Mínimas de Segurança',
+        desc:'Ache a combinação de sliders que mantém <strong>FWI (Fire Weather Index) < 20</strong> — limiar de risco moderado no Pantanal.',
+        target:'FWI < 20',
+        check: m => m.fwi < 20,
+        tip:'💡 FWI combina umidade, vento e vegetação. Reducione simultaneamente os três.',
+        fb_ok:'✅ FWI < 20 é o limiar "Moderado" do sistema canadense adaptado ao Cerrado/Pantanal. Acima de 40, o fogo torna-se incontrolável com recursos convencionais.',
+        fb_fail:'❌ FWI ainda alto. Tente umidade > 70%, vento < 15 km/h e vegetação < 40%.'
+      },
+      {
+        emoji:'🦜', title:'Proteção de Fauna — Área Núcleo',
+        desc:'Área de nidificação de tuiuiús. Restrição: <strong>área queimada < 10%</strong> com <strong>CO₂ < 3 tCO₂/ha</strong>. Sem limite de esforço.',
+        target:'Área queimada < 10% e CO₂ < 3 tCO₂/ha',
+        check: m => m.area < 10 && m.co2 < 3,
+        tip:'💡 Para CO₂ < 3 com vegetação alta, a área queimada precisa ficar abaixo de ~6%. Vegetação seca baixa ajuda — mas lembre que também reduz o ecossistema.',
+        fb_ok:'✅ Excelente! O tuiuiú (Jabiru mycteria), símbolo do Pantanal, é extremamente sensível a perturbações durante a nidificação (maio–setembro). Incêndios < 10% da área núcleo já causam abandono de ninhos.',
+        fb_fail:'❌ Verifique ambas as condições: área < 10% E CO₂ < 3.'
+      },
+      {
+        emoji:'💰', title:'Brigada com Custo-Benefício',
+        desc:'Mantenha <strong>área queimada < 25%</strong> usando <strong>esforço ≤ 30</strong> (orçamento mínimo). Maximize a eficiência.',
+        target:'Área queimada < 25% (esforço ≤ 30)',
+        check: (m,p) => m.area < 25 && (p.esforco||0) <= 30,
+        tip:'💡 Com esforço mínimo, as condições ambientais precisam colaborar. Umidade alta + vento fraco = brigada pequena funciona.',
+        fb_ok:'✅ Correto! Análises de custo-efetividade do MIF mostram que, em condições favoráveis (umidade > 55%, vento < 20 km/h), uma brigada de 30 brigadistas/km² contém até 75% dos focos antes da expansão.',
+        fb_fail:'❌ Confirme: esforço ≤ 30 e área queimada < 25%.'
+      },
+      {
+        emoji:'🌱', title:'Equilíbrio Regenerativo',
+        desc:'Vegetação alta protege o ecossistema, mas arde mais. Com <strong>vegetação ≥ 75%</strong>, mantenha área queimada < 20% e tempo de recuperação ≤ 3 anos.',
+        target:'Área < 20%, recuperação ≤ 3 anos (vegetação ≥ 75%)',
+        check: (m,p) => m.area < 20 && m.rec <= 3 && (p.vegetacao||60) >= 75,
+        tip:'💡 Alta vegetação amplifica o FWI. Para compensar, maximize o esforço de combate e aposte em umidade alta.',
+        fb_ok:'✅ Recuperação ≤ 3 anos indica que o ecossistema não atingiu limiar de degradação irreversível. Acima de 60% de área queimada, estudos do INPE apontam limiares de savanização no Pantanal, com recuperação > 15 anos.',
+        fb_fail:'❌ Verifique: vegetação ≥ 75%, área < 20%, recuperação ≤ 3 anos.'
+      }
+    ]
+  },
+  carbonauta: {
+    label: '🛰️ Carbonauta',
+    sliders: [
+      { id:'umidade',   label:'💧 Umidade relativa', min:0, max:100, def:30, unit:'%' },
+      { id:'vento',     label:'💨 Velocidade do vento', min:0, max:80, def:45, unit:' km/h' },
+      { id:'esforco',   label:'🚒 Esforço de combate', min:0, max:100, def:30, unit:' brigadistas/km²' },
+      { id:'vegetacao', label:'🌿 Biomassa vegetal seca', min:10, max:100, def:80, unit:' (% saturação)' },
+      { id:'mes',       label:'📅 Mês do ano', min:0, max:11, def:8, unit:'' }
+    ],
+    challenges: [
+      {
+        emoji:'📡', title:'FWI Crítico — Janela ENSO',
+        desc:'Em anos de El Niño intenso, o FWI pantaneiro ultrapassa 70 por semanas. Encontre configuração com <strong>FWI < 15</strong> no mês de pico (agosto ou setembro).',
+        target:'FWI < 15 (mês 7 ou 8)',
+        check: (m,p) => m.fwi < 15 && ((p.mes||8) === 7 || (p.mes||8) === 8),
+        tip:'💡 FWI < 15 é quase impossível em agosto/setembro sem chuvas extraordinárias. Umidade > 85% + vento < 5 km/h é o limite físico possível.',
+        fb_ok:'✅ Excelente! FWI < 15 em mês de pico exige umidade > 85% — situação raramente observada em agosto no Pantanal. Em 2020 (El Niño moderado), o FWI médio de agosto foi 62, resultando em 3,6 Mha queimados.',
+        fb_fail:'❌ Certifique-se de estar no mês 7 ou 8 (agosto/setembro) com FWI < 15.'
+      },
+      {
+        emoji:'🌡️', title:'Orçamento de Carbono Restrito',
+        desc:'O bloco de carbono do Pantanal tem limite de 2 tCO₂/ha para não comprometer o mercado voluntário REDD+. Mantenha <strong>CO₂ < 2 tCO₂/ha</strong> com <strong>área < 5%</strong>.',
+        target:'CO₂ < 2 tCO₂/ha e área queimada < 5%',
+        check: m => m.co2 < 2 && m.area < 5,
+        tip:'💡 CO₂ = (área/100) × biomassa. Para CO₂ < 2 com biomassa alta, área deve ficar < ~4%. Exige condições ideais ou esforço máximo.',
+        fb_ok:'✅ CO₂ < 2 tCO₂/ha permite manter créditos de carbono REDD+ sem "reversão" (leakage). O Pantanal emitiu ~1,7 GtCO₂e no megaincêndio de 2020 — equivalente a 40% das emissões anuais do Brasil.',
+        fb_fail:'❌ Verifique: CO₂ < 2 tCO₂/ha E área queimada < 5%.'
+      },
+      {
+        emoji:'🔭', title:'Ponto de Inflexão Ecossistêmico',
+        desc:'Pesquisas (Coutinho 2016) mostram que acima de 40% de área queimada + recuperação > 7 anos = risco de savanização irreversível. Configure para <strong>área < 12%</strong>, <strong>recuperação ≤ 1 ano</strong> e <strong>FWI < 30</strong>.',
+        target:'Área < 12%, recuperação ≤ 1 ano, FWI < 30',
+        check: m => m.area < 12 && m.rec <= 1 && m.fwi < 30,
+        tip:'💡 Recuperação ≤ 1 ano só ocorre com área < 15%. Combine: esforço alto + umidade moderada + biomassa controlada.',
+        fb_ok:'✅ Correto! O tipping point do Pantanal (analogia ao tipping point amazônico de Lovejoy & Nobre) ocorre quando incêndios recorrentes impedem a regeneração do estrato lenhoso, favorecendo gramíneas invasoras como Urochloa mutica.',
+        fb_fail:'❌ Atenda as três condições: área < 12%, recuperação ≤ 1 ano, FWI < 30.'
+      },
+      {
+        emoji:'🌊', title:'Simulação Integrada — Ano Ideal',
+        desc:'Sem restrições. Configure TODOS os sliders para obter simultaneamente: <strong>risco < 15%</strong>, <strong>CO₂ < 1,5 tCO₂/ha</strong>, <strong>FWI < 25</strong>, <strong>recuperação ≤ 1 ano</strong>.',
+        target:'Risco < 15%, CO₂ < 1,5, FWI < 25, recuperação ≤ 1 ano',
+        check: m => m.risco < 15 && m.co2 < 1.5 && m.fwi < 25 && m.rec <= 1,
+        tip:'💡 Desafio máximo. Só é possível com combinação de mês propício (baixo mesFator) + umidade > 70% + vento < 10 + esforço alto + vegetação moderada.',
+        fb_ok:'✅ Parabéns, Carbonauta! Atingir simultaneamente essas quatro metas representa o cenário de "manejo perfeito" documentado apenas em anos com anomalias positivas de precipitação sobre o Pantanal Sul. Os dados do CPTEC/INPE mostram que isso ocorre em apenas ~8% dos anos da série histórica (1981–2023).',
+        fb_fail:'❌ Cheque todas: risco < 15%, CO₂ < 1,5, FWI < 25, recuperação ≤ 1 ano.'
+      }
+    ]
+  }
+};
+
+// ── State ──────────────────────────────────────────────────────────────────────
+let currentLevel = 'basico';
+let challengeIdx = 0;
+let acertos = 0;
+let score = 0;
+let seconds = 0;
+let timerRef = null;
+let verified = false;
+let savedToRanking = false;
+let params = {};
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+function init() {
+  challengeIdx = 0;
+  acertos = 0;
+  score = 0;
+  seconds = 0;
+  verified = false;
+  savedToRanking = false;
+  params = {};
+  if (timerRef) clearInterval(timerRef);
+  timerRef = setInterval(() => {
+    seconds++;
+    document.getElementById('hud-time').textContent = seconds + 's';
+  }, 1000);
+  renderChallenge();
+  document.getElementById('next-btn').style.display = 'none';
+  updateHUD();
+}
+
+window.setLevel = function(level, btn) {
+  currentLevel = level;
+  document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('rank-level-label').textContent = 'Nível: ' + LEVELS[level].label;
+  if (timerRef) clearInterval(timerRef);
+  init();
+  loadRanking();
+};
+
+// ── Render challenge ───────────────────────────────────────────────────────────
+function renderChallenge() {
+  const lvl = LEVELS[currentLevel];
+  const ch = lvl.challenges[challengeIdx];
+  // init params from slider defaults
+  params = {};
+  lvl.sliders.forEach(s => { params[s.id] = s.def; });
+
+  const mesNames = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+  document.getElementById('game-area').innerHTML = `
+    <div class="challenge-area">
+      <div class="ch-header">
+        <span class="ch-emoji">${ch.emoji}</span>
+        <div class="ch-info">
+          <div class="ch-title">${ch.title}</div>
+          <div class="ch-desc">${ch.desc}</div>
+          <span class="target-badge">🎯 Meta: ${ch.target}</span>
+        </div>
+      </div>
+      <div class="tip-box">${ch.tip}</div>
+    </div>
+    <div class="sliders-section">
+      ${lvl.sliders.map(s => `
+        <div class="slider-row">
+          <span class="slider-label">${s.label}</span>
+          <input type="range" class="slider-input" id="sl-${s.id}"
+            min="${s.min}" max="${s.max}" value="${s.def}"
+            oninput="updateSim('${s.id}', this.value)">
+          <span class="slider-val" id="sv-${s.id}">${s.id==='mes' ? mesNames[s.def] : s.def + s.unit}</span>
+        </div>`).join('')}
+    </div>
+    <div class="fire-viz">
+      <div class="viz-label">
+        <span>🌿 Área preservada: <strong id="pct-safe">12%</strong></span>
+        <span>🔥 Risco/Propagação: <strong id="pct-burned">88%</strong></span>
+      </div>
+      <div class="fire-bar-outer">
+        <div class="fire-bar-burned" id="fire-bar" style="width:88%"></div>
+      </div>
+    </div>
+    <div class="metrics-grid" id="metrics-grid"></div>
+    <button class="verify-btn" id="verify-btn" onclick="verify()">🔍 Verificar Configuração</button>`;
+
+  updateSim(null, null);
+  document.getElementById('feedback-panel').textContent = 'Ajuste os controles e observe as mudanças em tempo real!';
+  document.getElementById('next-btn').style.display = 'none';
+  verified = false;
+  updateHUD();
+}
+
+// ── updateSim ──────────────────────────────────────────────────────────────────
+window.updateSim = function(id, val) {
+  const mesNames = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  if (id !== null) {
+    params[id] = parseInt(val, 10);
+    const s = LEVELS[currentLevel].sliders.find(s => s.id === id);
+    const sv = document.getElementById('sv-' + id);
+    if (sv) sv.textContent = id === 'mes' ? mesNames[params[id]] : (params[id] + (s ? s.unit : ''));
+  }
+  const m = compute(params);
+  // Fire bar
+  const fb = document.getElementById('fire-bar');
+  if (fb) fb.style.width = m.area + '%';
+  const ps = document.getElementById('pct-safe');
+  const pb = document.getElementById('pct-burned');
+  if (ps) ps.textContent = (100 - m.area) + '%';
+  if (pb) pb.textContent = m.area + '%';
+  // Metrics
+  const lvl = LEVELS[currentLevel];
+  const hasVeg = lvl.sliders.some(s => s.id === 'vegetacao');
+  const hasMes = lvl.sliders.some(s => s.id === 'mes');
+  const riscoClass = m.risco < 25 ? 'ok' : m.risco < 55 ? 'warn' : 'danger';
+  const areaClass = m.area < 20 ? 'ok' : m.area < 50 ? 'warn' : 'danger';
+  const co2Class = m.co2 < 5 ? 'ok' : m.co2 < 15 ? 'warn' : 'danger';
+  const fwiClass = m.fwi < 20 ? 'ok' : m.fwi < 50 ? 'warn' : 'danger';
+  const cards = [
+    `<div class="metric-card ${riscoClass}"><span class="metric-val" style="color:${m.rColor}">${m.risco}%</span><span class="metric-label"><span class="metric-icon">⚠️</span> Risco de incêndio<br>${m.rLabel}</span></div>`,
+    `<div class="metric-card ${fwiClass}"><span class="metric-val">${m.fwi}</span><span class="metric-label"><span class="metric-icon">📊</span> FWI (Índice Risco)</span></div>`,
+    `<div class="metric-card ${areaClass}"><span class="metric-val">${m.area}%</span><span class="metric-label"><span class="metric-icon">🔥</span> Área queimada</span></div>`,
+    `<div class="metric-card ${co2Class}"><span class="metric-val">${m.co2}</span><span class="metric-label"><span class="metric-icon">💨</span> CO₂ emitido (tCO₂/ha)</span></div>`,
+    `<div class="metric-card"><span class="metric-val">${m.rec} ano${m.rec > 1 ? 's' : ''}</span><span class="metric-label"><span class="metric-icon">🌱</span> Recuperação estimada</span></div>`,
+    hasVeg ? `<div class="metric-card"><span class="metric-val">${m.biomassa} t</span><span class="metric-label"><span class="metric-icon">🌿</span> Biomassa (tCO₂/ha)</span></div>` : ''
+  ];
+  const mg = document.getElementById('metrics-grid');
+  if (mg) mg.innerHTML = cards.join('');
+};
+
+// ── Verify ─────────────────────────────────────────────────────────────────────
+window.verify = function() {
+  if (verified) return;
+  verified = true;
+  const lvl = LEVELS[currentLevel];
+  const ch = lvl.challenges[challengeIdx];
+  const m = compute(params);
+  const passed = ch.check(m, params);
+  document.getElementById('verify-btn').disabled = true;
+  document.getElementById('feedback-panel').innerHTML = passed ? ch.fb_ok : ch.fb_fail;
+  if (passed) {
+    acertos++;
+    const bonus = Math.max(0, 20 - Math.floor(seconds / 20));
+    score += 100 + bonus;
+    updateHUD();
+  }
+  const nb = document.getElementById('next-btn');
+  const total = lvl.challenges.length;
+  nb.textContent = challengeIdx + 1 >= total
+    ? (passed ? '🏁 Ver resultado final' : '🏁 Ver resultado final')
+    : (passed ? 'Próximo desafio →' : 'Tentar próximo →');
+  nb.style.display = 'block';
+};
+
+// ── Next ───────────────────────────────────────────────────────────────────────
+window.nextChallenge = function() {
+  const total = LEVELS[currentLevel].challenges.length;
+  challengeIdx++;
+  if (challengeIdx >= total) {
+    renderEnd();
+  } else {
+    renderChallenge();
+  }
+};
+
+// ── HUD ────────────────────────────────────────────────────────────────────────
+function updateHUD() {
+  document.getElementById('hud-ch').textContent =
+    (challengeIdx + 1) + '/' + LEVELS[currentLevel].challenges.length;
+  document.getElementById('hud-ok').textContent = acertos;
+  document.getElementById('hud-score').textContent = score;
+}
+
+// ── End ────────────────────────────────────────────────────────────────────────
+function renderEnd() {
+  if (timerRef) clearInterval(timerRef);
+  const total = LEVELS[currentLevel].challenges.length;
+  const pct = Math.round(acertos / total * 100);
+  let emoji, title, desc;
+  if (pct === 100)    { emoji='🏆🔥'; title='Comandante da Brigada!'; desc='Perfeito! Você domina a ciência dos incêndios no Pantanal.'; }
+  else if (pct >= 67) { emoji='🌟🌿'; title='Brigadista Especialista!'; desc='Ótimo! Seus conhecimentos sobre fogo e ecossistema são sólidos.'; }
+  else if (pct >= 34) { emoji='🌱'; title='Em Formação!'; desc='Revise as explicações e avance para o próximo nível.'; }
+  else                { emoji='🍂'; title='Continue Treinando!'; desc='O Pantanal precisa de especialistas preparados. Tente de novo!'; }
+  document.getElementById('game-area').innerHTML = `
+    <div class="end-screen">
+      <span class="end-emoji">${emoji}</span>
+      <div class="end-title">${title}</div>
+      <div class="end-desc">${desc}</div>
+      <div class="end-stats">
+        <div class="end-stat">${acertos}/${total}<span>Acertos</span></div>
+        <div class="end-stat">${pct}%<span>Aproveitamento</span></div>
+        <div class="end-stat">${score}<span>Pontos</span></div>
+        <div class="end-stat">${seconds}s<span>Tempo</span></div>
+      </div>
+      <div class="save-area">
+        <input type="text" id="player-name" maxlength="20" placeholder="Seu nome (até 20 chars)" />
+        <button class="save-btn" id="save-btn" onclick="saveScore()">Salvar no Ranking</button>
+      </div>
+      <div id="save-msg" style="font-size:.82rem;color:#5a1800;margin-top:6px;min-height:18px;"></div>
+      <br>
+      <button class="restart-btn" onclick="init()">🔄 Jogar novamente</button>
+    </div>`;
+  document.getElementById('feedback-panel').textContent = '🏁 Simulação concluída!';
+  document.getElementById('next-btn').style.display = 'none';
+}
+
+// ── Ranking ───────────────────────────────────────────────────────────────────
+async function loadRanking() {
+  const list = document.getElementById('rank-list');
+  if (!window._fb) { list.innerHTML = '<div class="rank-empty">Indisponível</div>'; return; }
+  try {
+    const { collection, getDocs, orderBy, query, limit, db: fdb } = window._fb;
+    const q = query(collection(fdb, `games/${GAME_ID}/scores`), orderBy('score','desc'), limit(80));
+    const snap = await getDocs(q);
+    const lvlLabel = LEVELS[currentLevel].label;
+    const all = []; snap.forEach(d => all.push(d.data()));
+    const filtered = all.filter(d => d.level === lvlLabel).slice(0,10);
+    if (!filtered.length) { list.innerHTML = '<div class="rank-empty">Seja o primeiro! 🏆</div>'; return; }
+    const medals = ['gold','silver','bronze'];
+    list.innerHTML = filtered.map((d,i) => `
+      <div class="rank-item">
+        <span class="rank-pos ${medals[i]||''}">${i+1}º</span>
+        <span class="rank-name">${escHtml(d.name||'?')}</span>
+        <span class="rank-score">${d.score} pts</span>
+      </div>`).join('');
+  } catch(e) { list.innerHTML='<div class="rank-empty">Erro ao carregar</div>'; }
+}
+
+window.saveScore = async function() {
+  if (savedToRanking) return;
+  const nameInput = document.getElementById('player-name');
+  const name = (nameInput ? nameInput.value.trim() : '') || 'Anônimo';
+  const msg = document.getElementById('save-msg');
+  const btn = document.getElementById('save-btn');
+  if (!window._fb) { msg.textContent = '⚠️ Offline. Pontuação: ' + score; return; }
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  try {
+    const { collection, addDoc, serverTimestamp, db: fdb } = window._fb;
+    await addDoc(collection(fdb, `games/${GAME_ID}/scores`), {
+      name: escHtml(name.slice(0,20)), score,
+      level: LEVELS[currentLevel].label, seconds, ts: serverTimestamp()
+    });
+    savedToRanking = true; msg.textContent = '✅ Salvo!'; btn.textContent = 'Salvo ✓';
+    loadRanking();
+  } catch(e) {
+    btn.disabled = false; btn.textContent = 'Salvar no Ranking';
+    msg.textContent = '⚠️ Erro. Tente novamente.';
+  }
+};
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Start ──────────────────────────────────────────────────────────────────────
+window.init = init;
+init();
+</script>
+</body>
+</html>
