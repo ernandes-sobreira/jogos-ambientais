@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>⚡ Pares da Energia Limpa — Jogo da Memória</title>
+<style>
+  :root{
+    --bg1:#0b3d2e;
+    --bg2:#0a6b8a;
+    --accent:#ffd23f;
+    --accent2:#34d399;
+    --card:#ffffff;
+    --card-back:linear-gradient(145deg,#10b981,#0e7490);
+    --ink:#10261f;
+    --muted:#5b6b66;
+    --good:#16a34a;
+    --bad:#dc2626;
+    --shadow:0 8px 24px rgba(0,0,0,.22);
+    --radius:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(160deg,var(--bg1),var(--bg2));
+    background-attachment:fixed;
+    color:#eafff6;
+    min-height:100vh;
+    padding:18px 14px 40px;
+  }
+  .wrap{max-width:980px;margin:0 auto}
+  header.top{text-align:center;margin-bottom:14px}
+  h1{
+    font-size:clamp(1.6rem,4.5vw,2.6rem);
+    line-height:1.1;
+    text-shadow:0 2px 10px rgba(0,0,0,.35);
+    letter-spacing:.3px;
+  }
+  .sub{color:#cdeee3;font-size:clamp(.85rem,2.4vw,1rem);margin-top:6px}
+  .instr{
+    background:rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:12px;padding:10px 14px;margin:12px auto;max-width:760px;
+    text-align:center;font-size:.95rem;
+  }
+  .levels{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0}
+  .levels button{
+    cursor:pointer;border:none;border-radius:999px;
+    padding:10px 16px;font-size:.92rem;font-weight:700;
+    background:rgba(255,255,255,.14);color:#eafff6;
+    border:1px solid rgba(255,255,255,.22);
+    transition:transform .2s,background .25s,box-shadow .25s;
+  }
+  .levels button:hover{transform:translateY(-2px);background:rgba(255,255,255,.24)}
+  .levels button.active{
+    background:var(--accent);color:#3a2e00;box-shadow:var(--shadow);
+    border-color:var(--accent);
+  }
+  .hud{
+    display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:6px 0 14px;
+  }
+  .stat{
+    background:rgba(0,0,0,.22);border-radius:12px;padding:8px 14px;
+    font-weight:700;font-size:.95rem;min-width:96px;text-align:center;
+    border:1px solid rgba(255,255,255,.12);
+  }
+  .stat span{display:block;font-size:.7rem;font-weight:600;color:#bfe6da;letter-spacing:.5px}
+  .feedback{
+    background:rgba(255,255,255,.95);color:var(--ink);
+    border-radius:12px;padding:12px 16px;margin:0 auto 16px;max-width:760px;
+    box-shadow:var(--shadow);font-size:.95rem;min-height:48px;
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    transition:background .3s;
+  }
+  .feedback.good{background:#dcfce7}
+  .feedback.bad{background:#fee2e2}
+  .board{
+    display:grid;gap:10px;margin:0 auto;max-width:760px;
+    grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  }
+  .card{
+    aspect-ratio:3/4;perspective:900px;cursor:pointer;
+  }
+  .card-inner{
+    position:relative;width:100%;height:100%;
+    transition:transform .45s cubic-bezier(.4,.2,.2,1);
+    transform-style:preserve-3d;
+  }
+  .card.flipped .card-inner,.card.matched .card-inner{transform:rotateY(180deg)}
+  .face{
+    position:absolute;inset:0;backface-visibility:hidden;
+    border-radius:var(--radius);display:flex;align-items:center;justify-content:center;
+    padding:8px;text-align:center;box-shadow:var(--shadow);
+  }
+  .back{
+    background:var(--card-back);color:#fff;font-size:2rem;
+  }
+  .back::after{content:"⚡";filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))}
+  .front{
+    background:var(--card);color:var(--ink);transform:rotateY(180deg);
+    font-size:.82rem;font-weight:600;line-height:1.25;flex-direction:column;gap:4px;
+  }
+  .front .tag{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#0e7490}
+  .front.def .tag{color:#b45309}
+  .card.matched{cursor:default}
+  .card.matched .front{outline:3px solid var(--good);background:#ecfdf5}
+  .card.pop .card-inner{animation:pop .4s ease}
+  .card.shake .card-inner{animation:shake .4s ease}
+  .card.shake .front{outline:3px solid var(--bad);background:#fff1f1}
+  @keyframes pop{0%{transform:rotateY(180deg) scale(1)}50%{transform:rotateY(180deg) scale(1.12)}100%{transform:rotateY(180deg) scale(1)}}
+  @keyframes shake{0%,100%{transform:rotateY(180deg) translateX(0)}25%{transform:rotateY(180deg) translateX(-7px)}75%{transform:rotateY(180deg) translateX(7px)}}
+
+  .final{
+    background:rgba(255,255,255,.97);color:var(--ink);border-radius:18px;
+    padding:24px;margin:14px auto;max-width:560px;box-shadow:var(--shadow);
+    text-align:center;animation:pop2 .5s ease;
+  }
+  @keyframes pop2{0%{transform:scale(.85);opacity:0}100%{transform:scale(1);opacity:1}}
+  .final h2{font-size:1.5rem;margin-bottom:6px;color:#0e7490}
+  .final .big{font-size:2.6rem;font-weight:800;color:var(--good);margin:6px 0}
+  .final .row{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin:12px 0;color:var(--muted);font-weight:600}
+  .final input{
+    padding:10px 12px;border-radius:10px;border:1.5px solid #cbd5e1;font-size:1rem;
+    width:min(280px,80%);margin:6px 0;
+  }
+  .btn{
+    cursor:pointer;border:none;border-radius:10px;padding:11px 20px;font-weight:700;
+    font-size:.95rem;background:var(--accent2);color:#04261b;margin:6px 4px;
+    transition:transform .2s,filter .2s;
+  }
+  .btn:hover{transform:translateY(-2px);filter:brightness(1.05)}
+  .btn.alt{background:#0e7490;color:#fff}
+
+  .rank{
+    background:rgba(255,255,255,.95);color:var(--ink);border-radius:14px;
+    padding:16px 18px;margin:18px auto 0;max-width:560px;box-shadow:var(--shadow);
+  }
+  .rank h3{font-size:1.05rem;color:#0e7490;margin-bottom:4px;text-align:center}
+  .rank .lvltag{text-align:center;font-size:.78rem;color:var(--muted);margin-bottom:10px}
+  .rank ol{list-style:none;counter-reset:r}
+  .rank li{
+    counter-increment:r;display:flex;justify-content:space-between;
+    padding:7px 10px;border-radius:8px;font-size:.9rem;
+  }
+  .rank li:nth-child(odd){background:#f1f5f9}
+  .rank li::before{content:counter(r)"º";font-weight:800;color:#0e7490;margin-right:8px;min-width:26px}
+  .rank li .nm{flex:1;text-align:left;font-weight:600}
+  .rank li .sc{font-weight:800;color:var(--good)}
+  .rank .msg{text-align:center;color:var(--muted);font-size:.85rem;padding:6px}
+  footer{
+    text-align:center;margin-top:30px;color:#cdeee3;font-size:.8rem;line-height:1.6;
+    border-top:1px solid rgba(255,255,255,.15);padding-top:16px;
+  }
+  footer strong{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>⚡ Pares da Energia Limpa</h1>
+    <div class="sub">Jogo da memória sobre energias renováveis 🌞💨💧</div>
+  </header>
+
+  <div class="instr" id="instr">Vire duas cartas e forme pares de <b>conceito</b> e <b>definição</b>. Menos erros e menos tempo = pontuação maior!</div>
+
+  <div class="levels" id="levels">
+    <button data-lvl="basico" onclick="setLevel('basico')">Básico</button>
+    <button data-lvl="inter" onclick="setLevel('inter')">Intermediário</button>
+    <button data-lvl="dificil" onclick="setLevel('dificil')">Difícil</button>
+    <button data-lvl="carbonauta" onclick="setLevel('carbonauta')">🛰️ Carbonauta</button>
+  </div>
+
+  <div class="hud">
+    <div class="stat"><span>TEMPO</span><span id="time">Tempo: 0s</span></div>
+    <div class="stat"><span>PONTOS</span><span id="points">Pontos: 0</span></div>
+    <div class="stat"><span>ACERTOS</span><span id="hits">Acertos: 0</span></div>
+    <div class="stat"><span>ERROS</span><span id="errs">Erros: 0</span></div>
+  </div>
+
+  <div class="feedback" id="feedback">Escolha um nível e comece a virar as cartas! 🌱</div>
+
+  <div class="board" id="board"></div>
+
+  <div id="finalSlot"></div>
+
+  <div class="rank" id="rankBox">
+    <h3>🏆 Ranking Global</h3>
+    <div class="lvltag" id="rankLvl">Nível: Básico</div>
+    <div id="rankList"><div class="msg">Carregando ranking…</div></div>
+  </div>
+
+  <footer>
+    <strong>— Idealizado por Ernandes Sobreira —</strong><br>
+    Tema: Energias renováveis · Gênero: Jogo da memória · app ambiental do dia (2026-06-14)
+  </footer>
+</div>
+
+<script type="module">
+/* ====== CONFIG ====== */
+const firebaseConfig = { apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ", authDomain: "jogos-ranking.firebaseapp.com", databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com", projectId: "jogos-ranking", storageBucket: "jogos-ranking.firebasestorage.app", messagingSenderId: "958784915420", appId: "1:958784915420:web:4212d3ad278f02d600f119" };
+const SLUG = "pares-da-energia-limpa";
+const DATE = "2026-06-14";
+const GAME_ID = DATE + "-" + SLUG;
+
+/* ====== DADOS (4 níveis, conteúdo distinto) ====== */
+const DATA = {
+  basico:{ label:"Básico", base:300, pairs:[
+    {a:"Energia solar 🌞", b:"Vem da luz do Sol", fb:"A energia solar usa a luz do Sol, uma fonte que não acaba e não polui."},
+    {a:"Energia eólica 💨", b:"Vem do vento", fb:"O vento gira as hélices e gera eletricidade limpa, sem queimar combustível."},
+    {a:"Hidrelétrica 💧", b:"Usa a força da água dos rios", fb:"A água em movimento gira turbinas. É a principal fonte de eletricidade do Brasil."},
+    {a:"Biomassa 🌿", b:"Vem de restos de plantas", fb:"Cascas, bagaço e madeira podem virar energia. É um aproveitamento de resíduos."},
+    {a:"Energia limpa ✅", b:"Polui pouco a natureza", fb:"Fontes limpas reduzem a poluição do ar e ajudam a combater as mudanças do clima."},
+    {a:"Painel solar 🔆", b:"Capta a luz do Sol", fb:"Os painéis ficam no telhado e transformam a luz solar em eletricidade para a casa."}
+  ]},
+  inter:{ label:"Intermediário", base:420, pairs:[
+    {a:"Energia fotovoltaica", b:"Converte luz solar em eletricidade", fb:"Células de silício transformam fótons diretamente em corrente elétrica."},
+    {a:"Aerogerador", b:"Turbina que gera energia do vento", fb:"As pás capturam a energia cinética do vento e a convertem em eletricidade."},
+    {a:"Energia geotérmica", b:"Aproveita o calor interno da Terra", fb:"Usa o calor do subsolo; muito usada em países vulcânicos como a Islândia."},
+    {a:"Etanol", b:"Biocombustível feito da cana", fb:"No Brasil, o etanol da cana-de-açúcar move milhões de veículos flex."},
+    {a:"Energia maremotriz", b:"Gerada pelo movimento das marés", fb:"Aproveita a subida e descida do mar para girar turbinas costeiras."},
+    {a:"Inversor solar", b:"Converte corrente contínua em alternada", fb:"Os painéis geram corrente contínua; o inversor a adapta para a rede elétrica."},
+    {a:"Fonte renovável", b:"Recurso que se repõe naturalmente", fb:"Sol, vento e água se renovam continuamente, ao contrário dos fósseis."},
+    {a:"Biogás", b:"Produzido pela decomposição de resíduos", fb:"A matéria orgânica em decomposição libera metano, captado para gerar energia."}
+  ]},
+  dificil:{ label:"Difícil", base:560, pairs:[
+    {a:"Efeito fotovoltaico", b:"Geração de tensão em semicondutor exposto à luz", fb:"Descrito por Becquerel em 1839, é a base física das células solares."},
+    {a:"Fator de capacidade", b:"Razão entre energia gerada e a máxima teórica", fb:"Mede o uso real da usina; usinas solares costumam ficar entre 15% e 25%."},
+    {a:"Silício monocristalino", b:"Material de alta eficiência em células solares", fb:"Tem estrutura cristalina uniforme, com eficiências comerciais acima de 20%."},
+    {a:"Energia heliotérmica (CSP)", b:"Concentra a radiação solar para gerar vapor", fb:"Espelhos focam o Sol num ponto, aquecendo um fluido que move turbinas."},
+    {a:"Curva de potência", b:"Relação entre velocidade do vento e potência", fb:"Define quando o aerogerador parte, atinge potência nominal e é frenado."},
+    {a:"Geração distribuída", b:"Produção de energia próxima ao consumo", fb:"Reduz perdas na transmissão e dá autonomia ao consumidor (telhados solares)."},
+    {a:"PCH", b:"Pequena central hidrelétrica de baixo impacto", fb:"Tem potência entre 5 e 30 MW e reservatório reduzido, com menor impacto ambiental."},
+    {a:"Hidrogênio verde", b:"Produzido por eletrólise com energia renovável", fb:"Quebra a água usando eletricidade limpa, sem emitir CO₂ no processo."},
+    {a:"Armazenamento em baterias", b:"Guarda energia para uso na ausência de geração", fb:"Essencial para lidar com a intermitência do Sol e do vento."},
+    {a:"LCOE", b:"Custo nivelado da energia na vida útil da usina", fb:"Permite comparar fontes; solar e eólica já têm o menor LCOE em muitos mercados."}
+  ]},
+  carbonauta:{ label:"🛰️ Carbonauta", base:720, pairs:[
+    {a:"Eletrólise da água", b:"Quebra do H₂O usando eletricidade renovável", fb:"Rota central do hidrogênio verde; a eficiência típica fica entre 60% e 80%."},
+    {a:"EROI", b:"Razão entre energia retornada e energia investida", fb:"Indicador de viabilidade energética; eólica e hidrelétrica têm EROI elevado."},
+    {a:"Intermitência", b:"Variabilidade da geração solar e eólica no tempo", fb:"Exige flexibilidade da rede, armazenamento e previsão meteorológica."},
+    {a:"Curtailment", b:"Corte deliberado de geração por excesso de oferta", fb:"Ocorre quando a rede não consegue absorver toda a energia renovável gerada."},
+    {a:"Bandgap", b:"Energia mínima para excitar elétrons no semicondutor", fb:"Define quais comprimentos de onda a célula aproveita; ~1,1 eV no silício."},
+    {a:"Perovskita", b:"Material emergente de altíssima eficiência solar", fb:"Células em laboratório já superam 25%, mas desafiam-se em estabilidade."},
+    {a:"Power-to-X", b:"Converte eletricidade renovável em combustíveis", fb:"Transforma excedentes em hidrogênio, amônia ou e-fuels para setores difíceis."},
+    {a:"Inércia do sistema", b:"Resistência da rede a variações de frequência", fb:"Geradores síncronos fornecem inércia; inversores exigem soluções sintéticas."},
+    {a:"Capacidade firme", b:"Potência garantida de forma confiável", fb:"Diferencia potência instalada de energia que pode ser assegurada na ponta."},
+    {a:"Repotenciação", b:"Troca de turbinas antigas por modelos eficientes", fb:"O repowering eleva a geração de parques eólicos sem novas áreas."},
+    {a:"Acoplamento setorial", b:"Integra eletricidade, transporte e indústria", fb:"Eletrificar setores com energia limpa amplia a descarbonização sistêmica."},
+    {a:"Matriz elétrica brasileira", b:"Cerca de 88% renovável, liderada por hidrelétricas", fb:"Em 2025 a hidrelétrica respondeu por ~48% e solar+eólica por ~34% da geração."},
+    {a:"Fator de capacidade eólico", b:"No Nordeste pode superar 50%", fb:"Os ventos constantes do litoral nordestino estão entre os melhores do mundo."},
+    {a:"Capacidade instalada renovável", b:"Já passa de 87% no parque elétrico do Brasil", fb:"O país combina hidrelétricas históricas com forte expansão solar e eólica."}
+  ]}
+};
+
+/* ====== ESTADO ====== */
+let level="basico";
+let cards=[];
+let firstIdx=null, lock=false;
+let matches=0, errors=0, points=0, totalPairs=0;
+let seconds=0, timer=null, started=false, finished=false;
+
+/* ====== UTIL ====== */
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+const $=id=>document.getElementById(id);
+
+/* ====== JOGO ====== */
+function setLevel(l){
+  level=l;
+  document.querySelectorAll('#levels button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.lvl===l);
+  });
+  $('rankLvl').textContent="Nível: "+DATA[l].label;
+  startGame();
+  loadRanking();
+}
+
+function startGame(){
+  clearInterval(timer); timer=null; started=false; finished=false;
+  seconds=0; matches=0; errors=0; points=0; firstIdx=null; lock=false;
+  const pairs=DATA[level].pairs;
+  totalPairs=pairs.length;
+  cards=[];
+  pairs.forEach((p,i)=>{
+    cards.push({pid:i, text:p.a, role:"con", fb:p.fb});
+    cards.push({pid:i, text:p.b, role:"def", fb:p.fb});
+  });
+  shuffle(cards);
+  $('finalSlot').innerHTML="";
+  updateHUD();
+  setFeedback("Vire duas cartas para encontrar um par de conceito e definição. 🔎","");
+  render();
+}
+
+function render(){
+  const board=$('board');
+  board.innerHTML="";
+  cards.forEach((c,idx)=>{
+    const card=document.createElement('div');
+    card.className="card";
+    card.dataset.idx=idx;
+    card.innerHTML=
+      '<div class="card-inner">'+
+        '<div class="face back"></div>'+
+        '<div class="face front '+(c.role==="def"?"def":"")+'">'+
+          '<span class="tag">'+(c.role==="con"?"Conceito":"Definição")+'</span>'+
+          '<span>'+c.text+'</span>'+
+        '</div>'+
+      '</div>';
+    card.addEventListener('click',()=>flip(idx));
+    board.appendChild(card);
+  });
+}
+
+function startTimer(){
+  if(started) return;
+  started=true;
+  timer=setInterval(()=>{
+    seconds++;
+    $('time').textContent="Tempo: "+seconds+"s";
+  },1000);
+}
+
+function flip(idx){
+  if(lock||finished) return;
+  const c=cards[idx];
+  const el=document.querySelector('.card[data-idx="'+idx+'"]');
+  if(el.classList.contains('matched')||el.classList.contains('flipped')) return;
+  startTimer();
+  el.classList.add('flipped');
+  if(firstIdx===null){ firstIdx=idx; return; }
+  if(firstIdx===idx) return;
+  // segundo cartão
+  const a=cards[firstIdx], b=cards[idx];
+  const elA=document.querySelector('.card[data-idx="'+firstIdx+'"]');
+  if(a.pid===b.pid){
+    matches++;
+    points+=20;
+    elA.classList.add('matched','pop'); el.classList.add('matched','pop');
+    setFeedback("✅ Par formado! "+b.fb,"good");
+    firstIdx=null;
+    updateHUD();
+    if(matches===totalPairs) endGame();
+  }else{
+    errors++;
+    lock=true;
+    elA.classList.add('shake'); el.classList.add('shake');
+    setFeedback("❌ Não é um par. Observe bem e tente lembrar a posição!","bad");
+    updateHUD();
+    setTimeout(()=>{
+      elA.classList.remove('flipped','shake'); el.classList.remove('flipped','shake');
+      firstIdx=null; lock=false;
+    },900);
+  }
+}
+
+function setFeedback(txt,cls){
+  const f=$('feedback');
+  f.textContent=txt;
+  f.className="feedback"+(cls?" "+cls:"");
+}
+
+function updateHUD(){
+  $('time').textContent="Tempo: "+seconds+"s";
+  $('points').textContent="Pontos: "+points;
+  $('hits').textContent="Acertos: "+matches;
+  $('errs').textContent="Erros: "+errors;
+}
+
+function computeScore(){
+  const base=DATA[level].base;
+  let s=base + matches*20 - errors*25 - seconds*2;
+  if(s<10) s=10;
+  return Math.round(s);
+}
+
+function endGame(){
+  finished=true;
+  clearInterval(timer); timer=null;
+  const score=computeScore();
+  points=score;
+  $('points').textContent="Pontos: "+points;
+  const saved=localStorage.getItem('jogador_nome')||"";
+  setFeedback("🎉 Você completou todos os pares! Veja seu desempenho abaixo.","good");
+  $('finalSlot').innerHTML=
+    '<div class="final">'+
+      '<h2>🎉 Parabéns!</h2>'+
+      '<div>Você dominou o nível <b>'+DATA[level].label+'</b></div>'+
+      '<div class="big">'+score+' pts</div>'+
+      '<div class="row"><span>⏱️ '+seconds+'s</span><span>✅ '+matches+' pares</span><span>❌ '+errors+' erros</span></div>'+
+      '<input id="nameInput" maxlength="18" placeholder="Seu nome para o ranking" value="'+saved.replace(/"/g,'&quot;')+'" />'+
+      '<div>'+
+        '<button class="btn" onclick="submitScore()">Enviar para o ranking 🏆</button>'+
+        '<button class="btn alt" onclick="setLevel(level)">Jogar de novo 🔁</button>'+
+      '</div>'+
+      '<div id="submitMsg" class="msg" style="color:#0e7490;margin-top:8px"></div>'+
+    '</div>';
+}
+
+/* ====== FIREBASE / RANKING ====== */
+let dbRef=null, fsApi=null;
+async function getDB(){
+  if(dbRef) return dbRef;
+  try{
+    const appMod=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const fs=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app=appMod.initializeApp(firebaseConfig);
+    dbRef=fs.getFirestore(app);
+    fsApi=fs;
+    return dbRef;
+  }catch(e){
+    console.warn("Firebase indisponível, jogo segue offline.",e);
+    return null;
+  }
+}
+
+async function submitScore(){
+  const inp=$('nameInput');
+  const name=(inp.value||"Anônimo").trim().slice(0,18)||"Anônimo";
+  localStorage.setItem('jogador_nome',name);
+  const msg=$('submitMsg');
+  msg.textContent="Enviando…";
+  const db=await getDB();
+  if(!db){ msg.textContent="⚠️ Sem conexão com o ranking. Pontuação registrada localmente."; return; }
+  try{
+    const {collection,addDoc,serverTimestamp}=fsApi;
+    await addDoc(collection(db,"games",GAME_ID,"scores"),{
+      name, score:points, level, seconds, ts:serverTimestamp()
+    });
+    msg.textContent="✅ Pontuação enviada! Atualizando ranking…";
+    loadRanking();
+  }catch(e){
+    console.warn(e);
+    msg.textContent="⚠️ Não foi possível enviar agora. Tente novamente.";
+  }
+}
+
+async function loadRanking(){
+  const list=$('rankList');
+  list.innerHTML='<div class="msg">Carregando ranking…</div>';
+  const db=await getDB();
+  if(!db){ list.innerHTML='<div class="msg">Ranking indisponível offline. O jogo continua jogável! 🌱</div>'; return; }
+  try{
+    const {collection,query,orderBy,limit,getDocs}=fsApi;
+    // BUG evitado: sem where + orderBy juntos. Filtro de nível no cliente.
+    const q=query(collection(db,"games",GAME_ID,"scores"),orderBy("score","desc"),limit(80));
+    const snap=await getDocs(q);
+    const rows=[];
+    snap.forEach(d=>{ const v=d.data(); if(v.level===level) rows.push(v); });
+    if(!rows.length){ list.innerHTML='<div class="msg">Ainda não há pontuações neste nível. Seja o primeiro! 🚀</div>'; return; }
+    let html='<ol>';
+    rows.slice(0,10).forEach(r=>{
+      const nm=(r.name||"Anônimo").toString().replace(/</g,'&lt;');
+      html+='<li><span class="nm">'+nm+'</span><span class="sc">'+(r.score||0)+' pts · '+(r.seconds||0)+'s</span></li>';
+    });
+    html+='</ol>';
+    list.innerHTML=html;
+  }catch(e){
+    console.warn(e);
+    list.innerHTML='<div class="msg">Não foi possível carregar o ranking agora.</div>';
+  }
+}
+
+/* ====== EXPOR AO WINDOW (onclick em type=module) ====== */
+window.setLevel=setLevel;
+window.submitScore=submitScore;
+window.flip=flip;
+Object.defineProperty(window,'level',{get:()=>level,configurable:true});
+
+/* ====== INIT ====== */
+function init(){
+  setLevel('basico');
+}
+window.init=init;
+init();
+</script>
+</body>
+</html>
