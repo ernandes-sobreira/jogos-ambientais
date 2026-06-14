@@ -30,7 +30,7 @@ footer{margin-top:12px;opacity:.45;font-size:.68rem;text-align:center}
   <span>Fase: <b id="hP">1/5</b></span>
   <span>Pontos: <b id="hS">0</b></span>
   <span>Vidas: <b id="hL">❤️❤️❤️</b></span>
-  <span>Filhotes: <b id="hC">0/0</b></span>
+  <span>Peixes: <b id="hC">0/0</b></span>
 </div>
 <canvas id="c" width="780" height="420"></canvas>
 <div class="save-box" id="saveBox">
@@ -56,15 +56,15 @@ const GRAV=1250,JSPD=-560,MSPD=185;
 const ICE_MELT_RATE=[.015,.025,.038,.055,.08]; // per phase
 
 const PHASES=[
- {name:"Banquisa Ártica",melt:.015,chicks:5,plats:6,
+ {name:"Banquisa Ártica",melt:.015,fish:5,plats:6,
   fact:"O Ártico perdeu 40% do seu gelo marítimo em setembro desde 1979. À medida que o gelo derrete, ursos polares e pinguins perdem habitat e caçam menos eficientemente."},
- {name:"Mar de Ross",melt:.025,chicks:7,plats:6,
+ {name:"Mar de Ross",melt:.025,fish:7,plats:6,
   fact:"A Antártica tem a maior camada de gelo do mundo — 26,5 milhões de km³. Se derreter completamente, o nível do mar subiria 58 metros, inundando cidades costeiras globalmente."},
- {name:"Plataforma Larsen",melt:.038,chicks:8,plats:7,
+ {name:"Plataforma Larsen",melt:.038,fish:8,plats:7,
   fact:"Em 2022, a plataforma de gelo Conger (do tamanho de Roma) desabou em 72 horas na Antártica — evento sem precedentes. Científicos atribuem ao aquecimento do oceano."},
- {name:"Corrente do Atlântico",melt:.055,chicks:10,plats:7,
+ {name:"Corrente do Atlântico",melt:.055,fish:10,plats:7,
   fact:"A AMOC (corrente do Atlântico) está enfraquecendo devido ao derretimento dos polos. Ela regula o clima da Europa e pode colapsar antes de 2095, alterando padrões globais de chuva."},
- {name:"Última Barreira de Gelo",melt:.08,chicks:12,plats:8,
+ {name:"Última Barreira de Gelo",melt:.08,fish:12,plats:8,
   fact:"O Acordo de Paris visa limitar o aquecimento a 1,5°C. Cada décimo de grau adicional representa 10 cm a mais no nível do mar e impactos em bilhões de pessoas em zonas costeiras."}
 ];
 
@@ -76,7 +76,7 @@ document.addEventListener('keydown',e=>{keys[e.key]=true;if([' ','ArrowUp','Arro
 document.addEventListener('keyup',e=>{keys[e.key]=false;});
 
 let gState='title',phase=0,score=0,lives=3;
-let peng,icePlats=[],chicks=[],parts=[],chickFound=0,meltTimer=0;
+let peng,icePlats=[],fishItems=[],parts=[],fishFound=0,meltTimer=0;
 
 // Ice platform: x, y, w, h, meltPct (0-1, dies at 1), driftX
 function mkPlats(n,melt){
@@ -98,23 +98,24 @@ function mkPlats(n,melt){
   return pls;
 }
 
-function mkChicks(n,plats){
-  const cks=[];
+function mkFish(n,plats){
+  const items=[];
+  const avail=plats.slice(1); // skip ground
   for(let i=0;i<n;i++){
-    const pl=plats[1+Math.floor(Math.random()*(plats.length-1))];
-    cks.push({x:pl.x+pl.w*.3+Math.random()*pl.w*.4,y:pl.y-18,got:false,t:Math.random()*Math.PI*2,platRef:pl});
+    const pl=avail[i%avail.length];
+    items.push({x:pl.x+pl.w/2+(i<avail.length?0:(Math.random()-.5)*20),y:pl.y-20,got:false,t:Math.random()*Math.PI*2,platRef:pl});
   }
-  return cks;
+  return items;
 }
 
 function initPhase(){
   const ph=PHASES[phase];
   icePlats=mkPlats(ph.plats,ph.melt);
   peng={x:80,y:H-80,vx:0,vy:0,w:32,h:38,face:1,grnd:false,inv:0};
-  chicks=mkChicks(ph.chicks,icePlats);
-  parts=[];chickFound=0;meltTimer=0;
+  fishItems=mkFish(ph.fish,icePlats);
+  parts=[];fishFound=0;meltTimer=0;
   document.getElementById('hP').textContent=`${phase+1}/5`;
-  document.getElementById('hC').textContent=`0/${ph.chicks}`;
+  document.getElementById('hC').textContent=`0/${ph.fish}`;
   gState='play';
 }
 
@@ -178,8 +179,9 @@ function update(dt){
     peng.x=80;peng.y=H-90;peng.vx=0;peng.vy=0;peng.inv=1.5;
   }
 
-  // Chicks (move with their platform)
-  chicks.forEach(ch=>{
+  // Fish (follow their platform position)
+  fishItems.forEach(ch=>{
+    if(!ch.got) ch.x = ch.platRef.x + ch.platRef.w/2; // stay centred on platform
     if(ch.got)return;
     ch.t+=dt*2;
     if(ch.platRef&&ch.platRef.melt<1){
@@ -187,11 +189,11 @@ function update(dt){
       ch.x=Math.max(ch.platRef.x+5,Math.min(ch.platRef.x+ch.platRef.w-5,ch.x));
     }
     if(aabb(peng.x,peng.y,peng.w,peng.h,ch.x-10,ch.y-10,20,20)){
-      ch.got=true;chickFound++;score+=25;
+      ch.got=true;fishFound++;score+=25;
       spPart(ch.x,ch.y,'#fbbf24',8);
-      document.getElementById('hC').textContent=`${chickFound}/${ph.chicks}`;
+      document.getElementById('hC').textContent=`${fishFound}/${ph.fish}`;
       document.getElementById('hS').textContent=score;
-      if(chickFound>=ph.chicks){score+=200+phase*100;document.getElementById('hS').textContent=score;gState='phend';}
+      if(fishFound>=ph.fish){score+=200+phase*100;document.getElementById('hS').textContent=score;gState='phend';}
     }
   });
 
@@ -249,12 +251,12 @@ function render(ts){
     ctx.globalAlpha=1;
   });
 
-  // Chicks
-  chicks.forEach(ch=>{
+  // Fish collectibles
+  fishItems.forEach(ch=>{
     if(ch.got)return;
     const bob=Math.sin(ch.t)*.5;
     ctx.font='16px serif';ctx.textAlign='center';
-    ctx.fillText('🐣',ch.x,ch.y+bob);
+    ctx.fillText('🐟',ch.x,ch.y+bob);
   });
 
   // Particles
@@ -293,7 +295,7 @@ function render(ts){
     ctx.fillStyle='#a0c8f0';ctx.font='14px sans-serif';ctx.fillText('← → mover  ·  ↑ ou Espaço pular',W/2,H/2+14);
     ctx.fillStyle='#fbbf24';ctx.font='bold 19px sans-serif';
     if(Math.sin(ts/300)>.2)ctx.fillText('▶  ESPAÇO para começar  ◀',W/2,H/2+57);
-    if(keys[' ']||keys['ArrowUp'])initPhase();
+    if(keys[' ']||keys['ArrowUp']){keys[' ']=false;keys['ArrowUp']=false;initPhase();}
     return;
   }
   if(gState==='phend'){
@@ -305,7 +307,7 @@ function render(ts){
     if(line)ctx.fillText(line.trim(),W/2,py);
     ctx.fillStyle='#fbbf24';ctx.font='bold 17px sans-serif';
     if(Math.sin(ts/300)>.2)ctx.fillText(phase<4?'ESPAÇO → próxima fase':'🎉 ESPAÇO → salvar recorde',W/2,H-38);
-    if(keys[' ']){if(phase<4){phase++;setTimeout(initPhase,80);}else{gState='win';document.getElementById('saveBox').style.display='flex';}}
+    if(keys[' ']){keys[' ']=false;if(phase<4){phase++;initPhase();}else{gState='win';document.getElementById('saveBox').style.display='flex';}}
     return;
   }
   if(gState==='over'){

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vagalume da Mata ✨ | Runner · Biologia</title>
+<title>Vagalume da Mata ✨ | Runner · Poluição Luminosa</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#010508;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:100vh;padding:10px;font-family:"Segoe UI",system-ui,sans-serif;color:#d0f0e0}
@@ -25,7 +25,7 @@ footer{margin-top:12px;opacity:.45;font-size:.68rem;text-align:center}
 </head>
 <body>
 <h1>✨ Vagalume da Mata</h1>
-<p class="tagline">Runner · Biologia · Mata Atlântica — ↑ ↓ navegar · evite as teias!</p>
+<p class="tagline">Runner · Biologia · Mata Atlântica — ↑ ↓ navegar · desvie dos postes de luz!</p>
 <div class="hud">
   <span>Fase: <b id="hP">1/5</b></span>
   <span>Pontos: <b id="hS">0</b></span>
@@ -206,21 +206,26 @@ function render(ts){
 
   // Logs (tree trunks / branches as obstacles)
   logs.forEach(l=>{
-    // Top branch
-    ctx.fillStyle='#2d4a1e';ctx.fillRect(l.x,0,l.w,l.topH);
-    ctx.fillStyle='#1a2d10';ctx.fillRect(l.x,l.topH-24,l.w,24);
-    ctx.fillStyle='#3d6a28';ctx.fillRect(l.x-6,l.topH-16,l.w+12,16);
-    // Web on bottom of top log
-    ctx.strokeStyle='rgba(200,200,220,.4)';ctx.lineWidth=1;
-    for(let j=0;j<4;j++){
-      ctx.beginPath();
-      ctx.moveTo(l.x+j*(l.w/3),l.topH);
-      ctx.lineTo(l.x+l.w/2,l.topH+20);
-      ctx.stroke();
-    }
-    // Bottom branch
-    ctx.fillStyle='#2d4a1e';ctx.fillRect(l.x,l.botY,l.w,H-l.botY);
-    ctx.fillStyle='#3d6a28';ctx.fillRect(l.x-6,l.botY,l.w+12,16);
+    const cx=l.x+l.w/2;
+    // Top light pole (poste de luz — poluição luminosa)
+    ctx.fillStyle='#6b7280';ctx.fillRect(cx-4,0,8,l.topH-18); // pole shaft
+    ctx.fillStyle='#374151';ctx.fillRect(l.x,l.topH-22,l.w,18); // lamp housing
+    ctx.fillStyle='#9ca3af';ctx.fillRect(l.x+3,l.topH-17,l.w-6,11); // lens
+    // Light halo (harmful to fireflies)
+    ctx.save();
+    const grd=ctx.createRadialGradient(cx,l.topH-12,2,cx,l.topH-12,38);
+    grd.addColorStop(0,'rgba(255,250,150,.6)');grd.addColorStop(1,'rgba(255,250,150,0)');
+    ctx.fillStyle=grd;ctx.beginPath();ctx.arc(cx,l.topH-12,38,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+    // Bottom light pole
+    ctx.fillStyle='#6b7280';ctx.fillRect(cx-4,l.botY+22,8,H-l.botY); // shaft
+    ctx.fillStyle='#374151';ctx.fillRect(l.x,l.botY,l.w,18); // lamp housing
+    ctx.fillStyle='#9ca3af';ctx.fillRect(l.x+3,l.botY+4,l.w-6,11); // lens
+    ctx.save();
+    const grd2=ctx.createRadialGradient(cx,l.botY+10,2,cx,l.botY+10,38);
+    grd2.addColorStop(0,'rgba(255,250,150,.6)');grd2.addColorStop(1,'rgba(255,250,150,0)');
+    ctx.fillStyle=grd2;ctx.beginPath();ctx.arc(cx,l.botY+10,38,0,Math.PI*2);ctx.fill();
+    ctx.restore();
   });
 
   // Glows (light eggs / energy orbs)
@@ -238,8 +243,8 @@ function render(ts){
 
   // Bats
   bats.forEach(b=>{
-    ctx.font='20px serif';ctx.textAlign='center';
-    ctx.fillText(b.t%1<.5?'🦇':'🦇',b.x-10,b.y+8);
+    ctx.font='60px serif';ctx.textAlign='center';
+    ctx.fillText('🦇',b.x-10,b.y+8);
   });
 
   // Particles
@@ -271,7 +276,7 @@ function render(ts){
     ctx.fillStyle='#a0d4c0';ctx.font='14px sans-serif';ctx.fillText('↑ subir  ·  ↓ descer  (controle suave)',W/2,H/2+14);
     ctx.fillStyle='#fbbf24';ctx.font='bold 19px sans-serif';
     if(Math.sin(ts/300)>.2)ctx.fillText('▶  ESPAÇO para começar  ◀',W/2,H/2+57);
-    if(keys[' ']||keys['ArrowUp'])initPhase();
+    if(keys[' ']||keys['ArrowUp']){keys[' ']=false;keys['ArrowUp']=false;initPhase();}
     return;
   }
   if(gState==='phend'){
@@ -283,7 +288,7 @@ function render(ts){
     if(line)ctx.fillText(line.trim(),W/2,py);
     ctx.fillStyle='#fbbf24';ctx.font='bold 17px sans-serif';
     if(Math.sin(ts/300)>.2)ctx.fillText(phase<4?'ESPAÇO → próxima fase':'🎉 ESPAÇO → salvar recorde',W/2,H-40);
-    if(keys[' ']){if(phase<4){phase++;setTimeout(initPhase,80);}else{gState='win';document.getElementById('saveBox').style.display='flex';}}
+    if(keys[' ']){keys[' ']=false;if(phase<4){phase++;initPhase();}else{gState='win';document.getElementById('saveBox').style.display='flex';}}
     return;
   }
   if(gState==='over'){

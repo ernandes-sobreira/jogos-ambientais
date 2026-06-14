@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Canoa do Pantanal 🚣 | Top-down · Geografia</title>
+<title>Peixe do Pantanal 🐟 | Top-down · Geografia</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#041a18;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:100vh;padding:10px;font-family:"Segoe UI",system-ui,sans-serif;color:#c8f0e8}
@@ -24,7 +24,7 @@ footer{margin-top:12px;opacity:.45;font-size:.68rem;text-align:center}
 </style>
 </head>
 <body>
-<h1>🚣 Canoa do Pantanal</h1>
+<h1>🐟 Peixe do Pantanal</h1>
 <p class="tagline">Top-down · Geografia · Biologia · Pantanal — ← → ↑ ↓ para navegar</p>
 <div class="hud">
   <span>Fase: <b id="hP">1/5</b></span>
@@ -34,7 +34,7 @@ footer{margin-top:12px;opacity:.45;font-size:.68rem;text-align:center}
 </div>
 <canvas id="c" width="780" height="440"></canvas>
 <div class="save-box" id="saveBox">
-  <p style="font-size:.85rem;opacity:.8">🏆 Expedição concluída! Salve seu recorde:</p>
+  <p style="font-size:.85rem;opacity:.8">🏆 Rio percorrido! Salve seu recorde:</p>
   <input type="text" id="pName" maxlength="24" placeholder="Seu nome…">
   <button onclick="window.saveScore()">Salvar Pontuação</button>
 </div>
@@ -80,13 +80,13 @@ document.addEventListener('keydown',e=>{keys[e.key]=true;if(['ArrowUp','ArrowDow
 document.addEventListener('keyup',e=>{keys[e.key]=false;});
 
 let gState='title',phase=0,score=0,lives=3;
-let boat,species=[],obstacles=[],parts=[],riverY=0,riverH=260,time=0,spFound=0,invTime=0,wave=0;
+let fish,species=[],obstacles=[],parts=[],riverY=0,riverH=260,time=0,spFound=0,invTime=0,wave=0;
 
 function initPhase(){
   const ph=PHASES[phase];
   riverY=H/2-ph.wdth/2;
   riverH=ph.wdth;
-  boat={x:80,y:H/2,vx:0,vy:0,w:32,h:20,angle:0};
+  fish={x:80,y:H/2,vx:0,vy:0,w:28,h:18,angle:0};
   species=[];obstacles=[];parts=[];
   time=0;spFound=0;invTime=0;wave=0;
   // Spawn initial species
@@ -120,19 +120,19 @@ function update(dt){
   const ax=(R?1:0)-(L?1:0);
   const ay=(D?1:0)-(U?1:0);
 
-  boat.vx+=(ax*ph.spd-boat.vx)*8*dt;
-  boat.vy+=(ay*ph.spd-boat.vy)*8*dt;
-  boat.x+=boat.vx*dt;
-  boat.y+=boat.vy*dt;
+  fish.vx+=(ax*ph.spd-fish.vx)*8*dt;
+  fish.vy+=(ay*ph.spd-fish.vy)*8*dt;
+  fish.x+=fish.vx*dt;
+  fish.y+=fish.vy*dt;
 
   // Current: river flows left
-  boat.x-=ph.spd*.15*dt;
+  fish.x-=ph.spd*.15*dt;
 
-  boat.x=Math.max(10,Math.min(W-10,boat.x));
-  boat.y=Math.max(riverY+12,Math.min(riverY+riverH-12,boat.y));
+  fish.x=Math.max(10,Math.min(W-10,fish.x));
+  fish.y=Math.max(riverY+12,Math.min(riverY+riverH-12,fish.y));
 
   // Angle
-  if(ax!==0||ay!==0)boat.angle=Math.atan2(ay,ax);
+  if(ax!==0||ay!==0)fish.angle=Math.atan2(ay,ax);
 
   // Obstacle spawn
   if(Math.random()<ph.obsFreq*dt){
@@ -150,9 +150,9 @@ function update(dt){
     o.x+=o.vx*dt;o.y+=o.vy*dt;o.t+=dt;
     o.y=Math.max(riverY+20,Math.min(riverY+riverH-20,o.y));
     if(o.x<-40)obstacles.splice(i,1);
-    else if(invTime<=0&&aabb(boat.x-14,boat.y-10,28,20,o.x-o.r,o.y-o.r,o.r*2,o.r*2)){
+    else if(invTime<=0&&aabb(fish.x-14,fish.y-10,28,20,o.x-o.r,o.y-o.r,o.r*2,o.r*2)){
       lives--;document.getElementById('hL').textContent='❤️'.repeat(Math.max(0,lives));
-      spPart(boat.x,boat.y,'#ef4444',10);
+      spPart(fish.x,fish.y,'#ef4444',10);
       invTime=2;
       if(lives<=0){gState='over';return;}
     }
@@ -165,7 +165,7 @@ function update(dt){
     s.x+=s.vx*dt+Math.sin(s.t+s.wx)*0.3;
     s.y+=Math.sin(s.t+s.wy)*0.4;
     s.y=Math.max(riverY+18,Math.min(riverY+riverH-18,s.y));
-    if(!s.got&&aabb(boat.x-16,boat.y-12,32,24,s.x-14,s.y-14,28,28)){
+    if(!s.got&&aabb(fish.x-16,fish.y-12,32,24,s.x-14,s.y-14,28,28)){
       s.got=true;spFound++;score+=30;
       spPart(s.x,s.y,'#34d399',8);
       document.getElementById('hE').textContent=`${spFound}/${ph.spNeed}`;
@@ -236,9 +236,9 @@ function render(t){
   // Boat
   if(gState==='play'||gState==='phend'){
     if(!(invTime>0&&Math.floor(invTime*8)%2===0)){
-      ctx.save();ctx.translate(boat.x,boat.y);ctx.rotate(boat.angle);
+      ctx.save();ctx.translate(fish.x,fish.y);ctx.rotate(fish.angle);
       ctx.font='28px serif';ctx.textAlign='center';
-      ctx.fillText('🚣',-14,10);
+      ctx.fillText('🐟',-14,10);
       ctx.restore();
     }
   }
@@ -247,12 +247,12 @@ function render(t){
 
   if(gState==='title'){
     ctx.fillStyle='rgba(0,0,0,.78)';ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#34d399';ctx.font='bold 36px sans-serif';ctx.fillText('🚣 Canoa do Pantanal',W/2,H/2-68);
+    ctx.fillStyle='#34d399';ctx.font='bold 36px sans-serif';ctx.fillText('🐟 Peixe do Pantanal',W/2,H/2-68);
     ctx.fillStyle='#c8f0e8';ctx.font='16px sans-serif';ctx.fillText('Colete as espécies aquáticas e evite a poluição!',W/2,H/2-26);
     ctx.fillStyle='#a0d4c4';ctx.font='14px sans-serif';ctx.fillText('← → ↑ ↓ para remar',W/2,H/2+14);
     ctx.fillStyle='#fbbf24';ctx.font='bold 19px sans-serif';
     if(Math.sin(t/300)>.2)ctx.fillText('▶  ESPAÇO para começar  ◀',W/2,H/2+57);
-    if(keys[' ']||keys['Enter'])initPhase();
+    if(keys[' ']||keys['Enter']){keys[' ']=false;keys['Enter']=false;initPhase();}
     return;
   }
   if(gState==='phend'){
@@ -264,12 +264,12 @@ function render(t){
     if(line)ctx.fillText(line.trim(),W/2,py);
     ctx.fillStyle='#fbbf24';ctx.font='bold 17px sans-serif';
     if(Math.sin(t/300)>.2)ctx.fillText(phase<4?'ESPAÇO → próxima fase':'🎉 ESPAÇO → salvar recorde',W/2,H-40);
-    if(keys[' ']){if(phase<4){phase++;setTimeout(initPhase,80);}else{gState='win';document.getElementById('saveBox').style.display='flex';}}
+    if(keys[' ']){keys[' ']=false;if(phase<4){phase++;initPhase();}else{gState='win';document.getElementById('saveBox').style.display='flex';}}
     return;
   }
   if(gState==='over'){
     ctx.fillStyle='rgba(0,0,0,.85)';ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#ef4444';ctx.font='bold 34px sans-serif';ctx.fillText('🌊 Canoa afundou!',W/2,H/2-45);
+    ctx.fillStyle='#ef4444';ctx.font='bold 34px sans-serif';ctx.fillText('🌊 Canoa encalhou!',W/2,H/2-45);
     ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação: ${score}`,W/2,H/2+5);
     ctx.fillStyle='#fbbf24';ctx.font='17px sans-serif';ctx.fillText('ESPAÇO → tentar novamente',W/2,H/2+48);
     if(keys[' ']){phase=0;score=0;lives=3;document.getElementById('hL').textContent='❤️❤️❤️';document.getElementById('hS').textContent=0;gState='title';}
@@ -277,7 +277,7 @@ function render(t){
   }
   if(gState==='win'){
     ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#4ade80';ctx.font='bold 30px sans-serif';ctx.fillText('🚣 Expedição concluída!',W/2,90);
+    ctx.fillStyle='#4ade80';ctx.font='bold 30px sans-serif';ctx.fillText('🐟 Rio percorrido!',W/2,90);
     ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação: ${score}`,W/2,145);
     ctx.fillStyle='#34d399';ctx.font='14px sans-serif';ctx.fillText('Você catalogou a biodiversidade do Pantanal! 🐊',W/2,183);
     ctx.fillStyle='#fbbf24';ctx.font='15px sans-serif';ctx.fillText('Use o campo abaixo para salvar.',W/2,230);

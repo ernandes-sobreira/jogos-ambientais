@@ -24,13 +24,13 @@ footer{margin-top:12px;opacity:.45;font-size:.68rem;text-align:center}
 </style>
 </head>
 <body>
-<h1>🐢 Caçador de Plástico</h1>
+<h1>🐢 Tartaruga no Oceano</h1>
 <p class="tagline">Top-down · Química · Biologia · Oceano — ← → ↑ ↓ para nadar · colete o plástico!</p>
 <div class="hud">
   <span>Fase: <b id="hP">1/5</b></span>
   <span>Pontos: <b id="hS">0</b></span>
   <span>Oceano: <b id="hO">🌊🌊🌊🌊🌊</b></span>
-  <span>Plástico: <b id="hN">0/0</b></span>
+  <span>Comida: <b id="hN">0/0</b></span>
 </div>
 <canvas id="c" width="780" height="440"></canvas>
 <div class="save-box" id="saveBox">
@@ -82,17 +82,17 @@ document.addEventListener('keydown',e=>{keys[e.key]=true;if(['ArrowUp','ArrowDow
 document.addEventListener('keyup',e=>{keys[e.key]=false;});
 
 let gState='title',phase=0,score=0,ocean=5;
-let turtle,plastics=[],threats=[],fish=[],parts=[],pTimer=0,tTimer=0,fTimer=0,collected=0,time=0;
+let turtle,plastics=[],threats=[],fish=[],food=[],parts=[],pTimer=0,tTimer=0,fTimer=0,collected=0,time=0;
 
 function mkTurtle(){return{x:W/2,y:H/2,vx:0,vy:0,r:18,angle:0,inv:0};}
 
 function initPhase(){
   const ph=PHASES[phase];
   turtle=mkTurtle();
-  plastics=[];threats=[];fish=[];parts=[];
+  plastics=[];threats=[];fish=[];food=[];parts=[];
   pTimer=0;tTimer=0;fTimer=0;collected=0;time=0;ocean=5;
   document.getElementById('hP').textContent=`${phase+1}/5`;
-  document.getElementById('hN').textContent=`0/${ph.need}`;
+  document.getElementById('hN').textContent=`Comida: 0/${ph.need}`;
   document.getElementById('hO').textContent='🌊'.repeat(5);
   // Spawn some fish decoration
   for(let i=0;i<8;i++){
@@ -158,6 +158,25 @@ function update(dt){
     tTimer=2+Math.random()*2;
   }
 
+  // Food spawning (turtle eats fish, shrimp, seagrass)
+  fTimer-=dt;
+  if(fTimer<=0){
+    const FOOD=['🐠','🦐','🌿','🐡','🦀'];
+    food.push({x:40+Math.random()*(W-80),y:40+Math.random()*(H-80),e:FOOD[Math.floor(Math.random()*FOOD.length)],r:16,t:0});
+    fTimer=1.8+Math.random()*1.5;
+    if(food.length>10)food.shift();
+  }
+  // Update food & collection
+  for(let i=food.length-1;i>=0;i--){
+    const fd=food[i];fd.t+=dt;
+    if(dist2(turtle.x,turtle.y,fd.x,fd.y)<turtle.r+fd.r){
+      food.splice(i,1);collected++;score+=25;
+      spPart(fd.x,fd.y,'#4ade80',7);
+      document.getElementById('hN').textContent=`Comida: ${collected}/${ph.need}`;
+      document.getElementById('hS').textContent=score;
+      if(collected>=ph.need){score+=250+phase*100;document.getElementById('hS').textContent=score;gState='phend';return;}
+    }
+  }
   // Fish decorations
   fish.forEach(f=>{
     f.t+=dt;f.x+=f.vx*dt;f.y+=f.vy*dt;
@@ -172,14 +191,14 @@ function update(dt){
     // Wrap
     if(p.x<-30)p.x=W+10;if(p.x>W+30)p.x=-10;
     if(p.y<-30)p.y=H+10;if(p.y>H+30)p.y=-10;
-    // Collect
-    if(dist2(turtle.x,turtle.y,p.x,p.y)<turtle.r+p.r){
-      plastics.splice(i,1);
-      collected++;score+=20;
-      spPart(p.x,p.y,'#38bdf8',7);
-      document.getElementById('hN').textContent=`${collected}/${ph.need}`;
-      document.getElementById('hS').textContent=score;
-      if(collected>=ph.need){score+=250+phase*100;document.getElementById('hS').textContent=score;gState='phend';return;}
+    // Plastic HURTS turtle (scientific!)
+    if(turtle.inv<=0&&dist2(turtle.x,turtle.y,p.x,p.y)<turtle.r+p.r){
+      ocean--;
+      document.getElementById('hO').textContent='🌊'.repeat(Math.max(0,ocean))+'⬛'.repeat(5-Math.max(0,ocean));
+      spPart(turtle.x,turtle.y,'#ef4444',10);
+      turtle.inv=2.5;
+      plastics.splice(i,1); // plastic passes through / dissolves on impact
+      if(ocean<=0){gState='over';return;}
     }
   }
 
@@ -228,22 +247,32 @@ function render(ts){
     ctx.globalAlpha=1;
   });
 
-  // Plastics
+  // Plastics (DANGER! avoid these!)
   plastics.forEach(p=>{
     const bob=Math.sin(p.t*2)*.5;
-    ctx.font='20px serif';ctx.textAlign='center';
-    ctx.fillText(p.e,p.x-10,p.y+6+bob);
-    // Glow / warning
-    ctx.globalAlpha=.3+.2*Math.sin(p.t*3);
+    ctx.globalAlpha=.4+.2*Math.sin(p.t*3);
     ctx.fillStyle='#f87171';
-    ctx.beginPath();ctx.arc(p.x,p.y,p.r+4,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r+8,0,Math.PI*2);ctx.fill();
     ctx.globalAlpha=1;
+    ctx.font='22px serif';ctx.textAlign='center';
+    ctx.fillText(p.e,p.x-11,p.y+6+bob);
   });
 
   // Threats
   threats.forEach(th=>{
     ctx.font='26px serif';ctx.textAlign='center';
     ctx.fillText(th.e,th.x-13,th.y+10);
+  });
+
+  // Food items (turtle should eat these!)
+  food.forEach(fd=>{
+    const bob=Math.sin(fd.t*3)*2;
+    ctx.globalAlpha=.45+.2*Math.sin(fd.t*2);
+    ctx.fillStyle='#4ade80';
+    ctx.beginPath();ctx.arc(fd.x,fd.y,fd.r+5,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;
+    ctx.font='22px serif';ctx.textAlign='center';
+    ctx.fillText(fd.e,fd.x-11,fd.y+bob+8);
   });
 
   // Particles
@@ -283,11 +312,11 @@ function render(ts){
   if(gState==='title'){
     ctx.fillStyle='rgba(0,0,0,.8)';ctx.fillRect(0,0,W,H);
     ctx.fillStyle='#38bdf8';ctx.font='bold 34px sans-serif';ctx.fillText('🐢 Caçador de Plástico',W/2,H/2-70);
-    ctx.fillStyle='#c0e8ff';ctx.font='16px sans-serif';ctx.fillText('Colete o plástico antes que destrua o oceano!',W/2,H/2-28);
-    ctx.fillStyle='#90c0e0';ctx.font='14px sans-serif';ctx.fillText('← → ↑ ↓ para nadar  ·  evite tubarões e polvos!',W/2,H/2+14);
+    ctx.fillStyle='#c0e8ff';ctx.font='16px sans-serif';ctx.fillText('Desvie do plástico, tubarões e polvos — coma peixes e algas!',W/2,H/2-28);
+    ctx.fillStyle='#90c0e0';ctx.font='14px sans-serif';ctx.fillText('🐠 comer = +pontos  ·  🧴🦈🐙 tocar = perder vida',W/2,H/2+14);
     ctx.fillStyle='#fbbf24';ctx.font='bold 19px sans-serif';
     if(Math.sin(ts/300)>.2)ctx.fillText('▶  ESPAÇO para começar  ◀',W/2,H/2+58);
-    if(keys[' ']||keys['Enter'])initPhase();
+    if(keys[' ']||keys['Enter']){keys[' ']=false;keys['Enter']=false;initPhase();}
     return;
   }
   if(gState==='phend'){
@@ -299,7 +328,7 @@ function render(ts){
     if(line)ctx.fillText(line.trim(),W/2,py);
     ctx.fillStyle='#fbbf24';ctx.font='bold 17px sans-serif';
     if(Math.sin(ts/300)>.2)ctx.fillText(phase<4?'ESPAÇO → próxima fase':'🎉 ESPAÇO → salvar recorde',W/2,H-38);
-    if(keys[' ']){if(phase<4){phase++;setTimeout(initPhase,80);}else{gState='win';document.getElementById('saveBox').style.display='flex';}}
+    if(keys[' ']){keys[' ']=false;if(phase<4){phase++;initPhase();}else{gState='win';document.getElementById('saveBox').style.display='flex';}}
     return;
   }
   if(gState==='over'){
@@ -312,7 +341,7 @@ function render(ts){
   }
   if(gState==='win'){
     ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#4ade80';ctx.font='bold 30px sans-serif';ctx.fillText('🐢 Oceano Limpo!',W/2,90);
+    ctx.fillStyle='#4ade80';ctx.font='bold 30px sans-serif';ctx.fillText('🐢 Tartaruga Sobreviveu!',W/2,90);
     ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação: ${score}`,W/2,145);
     ctx.fillStyle='#38bdf8';ctx.font='14px sans-serif';ctx.fillText('A tartaruga marinha sobrevive. O oceano agradece. 🌊',W/2,183);
     ctx.fillStyle='#fbbf24';ctx.font='15px sans-serif';ctx.fillText('Use o campo abaixo para salvar seu recorde.',W/2,230);
