@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🌊 Resgate Azul — Classifique e salve o oceano do plástico</title>
+<style>
+:root{
+  --bg1:#053b5c; --bg2:#0a8aa6;
+  --accent:#23d5c0; --accent-d:#12a892;
+  --success:#34d399; --danger:#f8717a;
+  --ink:#eaf7ff; --ink-soft:#bfe1ee;
+  --card:rgba(255,255,255,.10); --card-b:rgba(255,255,255,.22);
+  --shadow:0 10px 28px rgba(0,0,0,.30);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:system-ui,"Segoe UI",Roboto,Arial,sans-serif;
+  color:var(--ink);
+  background:linear-gradient(160deg,var(--bg1),var(--bg2));
+  background-attachment:fixed;
+  min-height:100vh; padding:18px 14px 40px;
+  -webkit-tap-highlight-color:transparent;
+}
+.wrap{width:min(940px,96vw);margin:0 auto}
+header{text-align:center;margin-bottom:14px}
+h1{font-size:clamp(1.7rem,5vw,2.7rem);line-height:1.1;letter-spacing:.5px;
+   text-shadow:0 2px 10px rgba(0,0,0,.35)}
+.sub{color:var(--ink-soft);margin-top:6px;font-size:clamp(.85rem,2.4vw,1rem)}
+.levels{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0 10px}
+.lvl{border:none;cursor:pointer;font-weight:700;font-size:.92rem;
+  padding:10px 16px;border-radius:999px;color:var(--ink);
+  background:var(--card);border:1px solid var(--card-b);
+  transition:transform .2s,background .25s,box-shadow .25s}
+.lvl:hover{transform:translateY(-2px)}
+.lvl.active{background:var(--accent);color:#04323b;box-shadow:var(--shadow);border-color:transparent}
+.hud{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:10px 0}
+.chip{background:var(--card);border:1px solid var(--card-b);border-radius:12px;
+  padding:8px 14px;font-weight:700;font-size:.9rem;min-width:96px;text-align:center}
+.chip span{color:var(--accent)}
+.howto{text-align:center;color:var(--ink-soft);font-size:.9rem;margin:6px auto 14px;max-width:660px}
+.fb{background:var(--card);border:1px solid var(--card-b);border-left:6px solid var(--accent);
+  border-radius:12px;padding:12px 16px;margin:0 auto 16px;max-width:760px;min-height:54px;
+  display:flex;align-items:center;justify-content:center;text-align:center;font-size:.96rem;
+  transition:border-color .25s,background .25s}
+.fb.ok{border-left-color:var(--success)}
+.fb.bad{border-left-color:var(--danger)}
+.tray{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;
+  background:rgba(0,0,0,.16);border-radius:16px;padding:14px;margin-bottom:16px;min-height:70px}
+.item{background:#ffffff;color:#0b2a38;font-weight:600;font-size:.92rem;
+  padding:11px 15px;border-radius:13px;box-shadow:var(--shadow);cursor:grab;
+  user-select:none;touch-action:none;display:flex;align-items:center;gap:7px;
+  transition:transform .2s,box-shadow .2s,opacity .2s}
+.item:hover{transform:translateY(-2px)}
+.item .emo{font-size:1.15rem}
+.item.dragging{opacity:.35}
+.item.selected{outline:3px solid var(--accent);transform:translateY(-2px)}
+.item.shake{animation:shake .4s ease}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.22)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.zones{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.zone{background:var(--card);border:2.5px dashed var(--card-b);border-radius:16px;
+  padding:12px;min-height:130px;transition:background .2s,border-color .2s,transform .2s}
+.zone.over{background:rgba(35,213,192,.20);border-color:var(--accent);transform:scale(1.02)}
+.zone h3{font-size:1rem;text-align:center;margin-bottom:10px;line-height:1.25}
+.zone .drop{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;min-height:40px}
+.placed{background:rgba(255,255,255,.92);color:#0b2a38;font-weight:600;font-size:.85rem;
+  padding:7px 11px;border-radius:11px;display:flex;align-items:center;gap:6px;
+  border-left:5px solid var(--success);animation:pop .4s ease}
+.floater{position:fixed;z-index:9999;pointer-events:none;background:#fff;color:#0b2a38;
+  font-weight:600;font-size:.92rem;padding:11px 15px;border-radius:13px;box-shadow:0 14px 30px rgba(0,0,0,.45);
+  display:flex;align-items:center;gap:7px;transform:translate(-50%,-50%) scale(1.05)}
+.panel{background:var(--card);border:1px solid var(--card-b);border-radius:16px;padding:16px;margin-top:18px}
+.panel h2{font-size:1.15rem;margin-bottom:4px;text-align:center}
+.panel .lvltag{text-align:center;color:var(--accent);font-weight:700;font-size:.85rem;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
+.rk{list-style:none;display:flex;flex-direction:column;gap:6px}
+.rk li{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.14);border-radius:10px;padding:8px 12px;font-size:.92rem}
+.rk li .pos{font-weight:800;color:var(--accent);min-width:26px}
+.rk li .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rk li .sc{font-weight:700}
+.note{text-align:center;color:var(--ink-soft);font-size:.85rem;margin-top:8px}
+.overlay{position:fixed;inset:0;background:rgba(2,20,32,.78);display:none;
+  align-items:center;justify-content:center;padding:18px;z-index:500}
+.overlay.show{display:flex;animation:fade .3s ease}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal{background:linear-gradient(160deg,#0a5170,#0c93ad);border:1px solid var(--card-b);
+  border-radius:20px;padding:26px 22px;width:min(460px,94vw);text-align:center;box-shadow:var(--shadow)}
+.modal h2{font-size:1.7rem;margin-bottom:6px}
+.modal .res{background:rgba(0,0,0,.2);border-radius:14px;padding:14px;margin:14px 0;font-size:1.05rem}
+.modal .res b{color:var(--accent)}
+.modal input{width:100%;padding:12px 14px;border-radius:12px;border:none;font-size:1rem;margin-bottom:10px}
+.btn{background:var(--accent);color:#04323b;font-weight:800;border:none;cursor:pointer;
+  padding:13px 20px;border-radius:12px;font-size:1rem;transition:transform .2s,background .2s;width:100%}
+.btn:hover{transform:translateY(-2px);background:var(--accent-d);color:#fff}
+.btn.sec{background:var(--card);color:var(--ink);border:1px solid var(--card-b);margin-top:9px}
+footer{text-align:center;margin-top:26px;color:var(--ink-soft);font-size:.88rem;line-height:1.6}
+footer .id{color:var(--ink);font-weight:800;font-size:1.02rem}
+@media(max-width:520px){.chip{min-width:44%}.zones{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🌊 Resgate Azul 🧴</h1>
+    <div class="sub">Arraste cada item para a categoria certa e ajude a salvar o oceano do plástico.</div>
+  </header>
+
+  <div class="levels" id="levels">
+    <button class="lvl active" data-l="basico">Básico</button>
+    <button class="lvl" data-l="intermediario">Intermediário</button>
+    <button class="lvl" data-l="dificil">Difícil</button>
+    <button class="lvl" data-l="carbonauta">🛰️ Carbonauta</button>
+  </div>
+
+  <div class="hud">
+    <div class="chip">Tempo: <span id="hTime">0s</span></div>
+    <div class="chip">Acertos: <span id="hHits">0/0</span></div>
+    <div class="chip">Erros: <span id="hErr">0</span></div>
+    <div class="chip">Pontos: <span id="hScore">0</span></div>
+  </div>
+
+  <div class="howto" id="howto">Toque (ou clique) num item e depois na categoria — ou arraste-o até a zona certa. Pontuação: menor é melhor (tempo + 5s por erro).</div>
+
+  <div class="fb" id="fb">Escolha um nível e comece a classificar! 🐚</div>
+
+  <div class="tray" id="tray"></div>
+  <div class="zones" id="zones"></div>
+
+  <div class="panel">
+    <h2>🏆 Ranking Global</h2>
+    <div class="lvltag" id="rkLvl">Nível Básico</div>
+    <ol class="rk" id="rk"><li><span class="pos">—</span><span class="nm">Carregando…</span></li></ol>
+    <div class="note" id="rkNote"></div>
+  </div>
+
+  <footer>
+    <div class="id">— Idealizado por Ernandes Sobreira —</div>
+    <div>Tema: Poluição plástica e oceanos · Gênero: Arrastar e soltar (classificar) · app ambiental do dia (2026-06-15)</div>
+  </footer>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2 id="mTitle">🎉 Oceano salvo!</h2>
+    <div id="mSub" class="sub" style="color:#d8f6ff"></div>
+    <div class="res" id="mRes"></div>
+    <input id="nameIn" maxlength="20" placeholder="Seu nome (até 20 caracteres)">
+    <button class="btn" id="saveBtn">Salvar no ranking</button>
+    <button class="btn sec" id="againBtn">Jogar de novo</button>
+    <div class="note" id="saveNote"></div>
+  </div>
+</div>
+
+<script>
+/* ===== Firebase config ===== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-06-15-resgate-azul";
+
+/* ===== Conteúdo dos 4 níveis ===== */
+const DATA = {
+  basico:{
+    cats:[{id:"plast",label:"🧴 É plástico"},{id:"nao",label:"🍃 Não é plástico"}],
+    items:[
+      {t:"Garrafa PET",emo:"🥤",cat:"plast",fb:"A garrafa PET é plástico e pode levar centenas de anos para sumir no mar."},
+      {t:"Sacola de mercado",emo:"🛍️",cat:"plast",fb:"Sacolas plásticas levam de 10 a 20 anos para se decompor."},
+      {t:"Canudo",emo:"🥢",cat:"plast",fb:"Canudos plásticos estão entre os itens mais encontrados nas praias."},
+      {t:"Copo descartável",emo:"🥛",cat:"plast",fb:"Copos descartáveis se fragmentam e viram microplástico."},
+      {t:"Casca de banana",emo:"🍌",cat:"nao",fb:"Restos de fruta são orgânicos e somem em poucas semanas."},
+      {t:"Folha de papel",emo:"📄",cat:"nao",fb:"O papel vem de fibra vegetal e se decompõe rápido."},
+      {t:"Caixa de papelão",emo:"📦",cat:"nao",fb:"O papelão é reciclável e biodegradável, não é plástico."},
+      {t:"Galho de árvore",emo:"🌿",cat:"nao",fb:"A madeira é material natural, não é plástico."}
+    ]
+  },
+  intermediario:{
+    cats:[{id:"semanas",label:"⏱️ Semanas a meses"},{id:"decadas",label:"📅 Anos a décadas"},{id:"seculos",label:"🏛️ Séculos"}],
+    items:[
+      {t:"Casca de laranja",emo:"🍊",cat:"semanas",fb:"Restos orgânicos se decompõem em semanas a poucos meses."},
+      {t:"Jornal de papel",emo:"📰",cat:"semanas",fb:"O papel se decompõe em poucos meses na água."},
+      {t:"Restos de comida",emo:"🍲",cat:"semanas",fb:"Matéria orgânica é degradada rapidamente por micro-organismos."},
+      {t:"Sacola plástica",emo:"🛍️",cat:"decadas",fb:"Sacolas plásticas levam de 10 a 20 anos para se degradar."},
+      {t:"Bituca de cigarro",emo:"🚬",cat:"decadas",fb:"O filtro tem acetato de celulose e leva cerca de 5 a 10 anos."},
+      {t:"Goma de mascar",emo:"🍬",cat:"decadas",fb:"O chiclete tem base plástica e leva cerca de 5 anos."},
+      {t:"Garrafa PET",emo:"🥤",cat:"seculos",fb:"Garrafas PET levam de 400 a 600 anos para se decompor."},
+      {t:"Rede de pesca",emo:"🕸️",cat:"seculos",fb:"Redes de pesca chegam a 600 anos e causam a 'pesca fantasma'."},
+      {t:"Copo de isopor",emo:"🧊",cat:"seculos",fb:"O isopor (EPS) quase não se decompõe e se fragmenta por séculos."},
+      {t:"Garrafa de vidro",emo:"🍾",cat:"seculos",fb:"O vidro pode durar mais de mil anos — mas é 100% reciclável."}
+    ]
+  },
+  dificil:{
+    cats:[{id:"prim",label:"🔹 Microplástico primário"},{id:"sec",label:"🔸 Microplástico secundário"},{id:"macro",label:"🧱 Macroplástico"}],
+    items:[
+      {t:"Microesferas de esfoliante",emo:"🧴",cat:"prim",fb:"Microesferas são fabricadas já em escala micro: microplástico primário, banido em vários países."},
+      {t:"Pellets industriais (nurdles)",emo:"⚪",cat:"prim",fb:"Os nurdles são a matéria-prima granulada da indústria: primário por origem."},
+      {t:"Glitter plástico",emo:"✨",cat:"prim",fb:"O glitter é produzido já em tamanho micro, sendo microplástico primário."},
+      {t:"Microcápsulas de fertilizante",emo:"💊",cat:"prim",fb:"As cápsulas de liberação lenta são micropartículas plásticas primárias."},
+      {t:"Pó abrasivo de limpeza",emo:"🧽",cat:"prim",fb:"Abrasivos plásticos em produtos de limpeza são primários por fabricação."},
+      {t:"Fragmento de garrafa ao sol",emo:"🥤",cat:"sec",fb:"A radiação UV fragmenta o plástico maior: microplástico secundário."},
+      {t:"Pedaço de sacola degradada",emo:"🛍️",cat:"sec",fb:"A sacola se quebra em micropartículas pela ação do sol e das ondas: secundário."},
+      {t:"Lascas de bóia desgastada",emo:"🟠",cat:"sec",fb:"O atrito mecânico gera lascas: microplástico secundário."},
+      {t:"Flocos de tinta de casco",emo:"🚢",cat:"sec",fb:"Tintas de casco liberam micropartículas por desgaste: secundário."},
+      {t:"Fibras de corda de náilon",emo:"🧵",cat:"sec",fb:"Cordas se desfiam em microfibras pelo desgaste: secundário."},
+      {t:"Garrafa PET inteira",emo:"🍶",cat:"macro",fb:"Item maior que 25 mm: macroplástico, fonte futura de microplásticos."},
+      {t:"Rede de pesca abandonada",emo:"🕸️",cat:"macro",fb:"Petrechos abandonados são macroplástico e causam emalhamento de fauna."},
+      {t:"Embalagem de salgadinho",emo:"🍟",cat:"macro",fb:"Filme laminado grande é macroplástico de difícil reciclagem."},
+      {t:"Balde plástico",emo:"🪣",cat:"macro",fb:"Objeto rígido grande: macroplástico que se fragmenta com o tempo."},
+      {t:"Cotonete",emo:"🦠",cat:"macro",fb:"A haste plástica é macroplástico comum em emissários de esgoto."}
+    ]
+  },
+  carbonauta:{
+    cats:[{id:"flutua",label:"⬆️ Flutua (ρ < 1,025 g/cm³)"},{id:"afunda",label:"⬇️ Afunda (ρ > 1,025 g/cm³)"},{id:"var",label:"🔄 Comportamento variável"}],
+    items:[
+      {t:"Polipropileno (PP)",emo:"♻️",cat:"flutua",fb:"PP tem ρ ≈ 0,90–0,92 g/cm³, abaixo da água do mar (~1,025): flutua na superfície."},
+      {t:"Polietileno de alta densidade (PEAD)",emo:"♻️",cat:"flutua",fb:"PEAD/HDPE tem ρ ≈ 0,94–0,97 g/cm³: permanece flutuando."},
+      {t:"Polietileno de baixa densidade (PEBD)",emo:"♻️",cat:"flutua",fb:"PEBD/LDPE tem ρ ≈ 0,91–0,94 g/cm³: flutua e domina o lixo de superfície."},
+      {t:"Poliestireno expandido (EPS)",emo:"🧊",cat:"flutua",fb:"O EPS é cerca de 98% ar (ρ ≈ 0,02–0,05): flutua até ser fragmentado."},
+      {t:"Espuma de poliuretano fechada",emo:"🫧",cat:"flutua",fb:"A espuma de célula fechada retém ar e fica menos densa que a água."},
+      {t:"Politereftalato de etileno (PET)",emo:"⬇️",cat:"afunda",fb:"PET tem ρ ≈ 1,38 g/cm³: afunda e se acumula no sedimento."},
+      {t:"Policloreto de vinila (PVC)",emo:"⬇️",cat:"afunda",fb:"PVC tem ρ ≈ 1,16–1,45 g/cm³: afunda na coluna d'água."},
+      {t:"Poliamida / náilon (PA)",emo:"⬇️",cat:"afunda",fb:"O náilon tem ρ ≈ 1,13–1,15 g/cm³: tende a afundar, comum em petrechos de pesca."},
+      {t:"Politetrafluoretileno (PTFE)",emo:"⬇️",cat:"afunda",fb:"O PTFE (teflon) tem ρ ≈ 2,1–2,3 g/cm³: afunda rapidamente."},
+      {t:"Policarbonato (PC)",emo:"⬇️",cat:"afunda",fb:"PC tem ρ ≈ 1,20–1,22 g/cm³: afunda na água do mar."},
+      {t:"Poliestireno sólido (PS)",emo:"⬇️",cat:"afunda",fb:"O PS sólido (ρ ≈ 1,04–1,07) é levemente mais denso que a água do mar e afunda."},
+      {t:"Microplástico com biofilme maduro",emo:"🦠",cat:"var",fb:"A bioincrustação aumenta a densidade efetiva e faz plásticos flutuantes afundarem com o tempo."},
+      {t:"Pellet com incrustação de cracas",emo:"🐚",cat:"var",fb:"Organismos calcários alteram a flutuabilidade do pellet conforme colonizam e se soltam."},
+      {t:"Fragmento com carga mineral (CaCO₃)",emo:"⚖️",cat:"var",fb:"Cargas minerais elevam a densidade do polímero, mudando se ele flutua ou afunda."},
+      {t:"Fibra sintética presa em sedimento",emo:"🧵",cat:"var",fb:"O aprisionamento em partículas pesadas altera o transporte vertical da microfibra."},
+      {t:"PEBD com bioincrustação avançada",emo:"🌿",cat:"var",fb:"Mesmo o PEBD, naturalmente flutuante, afunda quando a biomassa supera o empuxo."}
+    ]
+  }
+};
+
+const LVNAME={basico:"Básico",intermediario:"Intermediário",dificil:"Difícil",carbonauta:"🛰️ Carbonauta"};
+
+/* ===== Estado ===== */
+let level="basico", errors=0, hits=0, total=0, t0=0, timer=null, selId=null, finished=false;
+const $=id=>document.getElementById(id);
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function esc(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
+
+function startTimer(){
+  t0=Date.now();
+  clearInterval(timer);
+  timer=setInterval(()=>{ if(!finished) $("hTime").textContent=elapsed()+"s"; },250);
+}
+function elapsed(){return Math.floor((Date.now()-t0)/1000);}
+function scoreNow(){return elapsed()+errors*5;}
+function updateHud(){
+  $("hHits").textContent=hits+"/"+total;
+  $("hErr").textContent=errors;
+  $("hScore").textContent=scoreNow();
+}
+
+function build(){
+  finished=false; errors=0; hits=0; selId=null;
+  const d=DATA[level]; total=d.items.length;
+  $("hTime").textContent="0s"; updateHud();
+  $("fb").className="fb"; $("fb").textContent="Classifique todos os "+total+" itens. Toque num item e depois na categoria, ou arraste. 🐠";
+  const tray=$("tray"); tray.innerHTML="";
+  shuffle(d.items.slice()).forEach((it)=>{
+    const idx=d.items.indexOf(it);
+    const el=document.createElement("div");
+    el.className="item"; el.dataset.id=idx;
+    el.innerHTML='<span class="emo">'+it.emo+'</span>'+esc(it.t);
+    tray.appendChild(el);
+  });
+  const zones=$("zones"); zones.innerHTML="";
+  d.cats.forEach(c=>{
+    const z=document.createElement("div");
+    z.className="zone"; z.dataset.cat=c.id;
+    z.innerHTML='<h3>'+c.label+'</h3><div class="drop"></div>';
+    zones.appendChild(z);
+  });
+  $("rkLvl").textContent="Nível "+LVNAME[level];
+  startTimer();
+  loadRanking();
+}
+
+/* ===== Colocação ===== */
+function tryPlace(itemEl, zoneEl){
+  if(!itemEl||!zoneEl||finished) return;
+  const idx=+itemEl.dataset.id;
+  const it=DATA[level].items[idx];
+  const cat=zoneEl.dataset.cat;
+  if(it.cat===cat){
+    hits++;
+    const chip=document.createElement("div");
+    chip.className="placed";
+    chip.innerHTML='<span>'+it.emo+'</span>'+esc(it.t);
+    zoneEl.querySelector(".drop").appendChild(chip);
+    itemEl.remove();
+    setFb(true,"✅ "+it.fb);
+    if(navigator.vibrate)navigator.vibrate(20);
+    if(hits===total) win();
+  }else{
+    errors++;
+    itemEl.classList.remove("shake"); void itemEl.offsetWidth; itemEl.classList.add("shake");
+    setFb(false,"❌ Categoria errada. "+it.fb);
+    if(navigator.vibrate)navigator.vibrate([30,40,30]);
+  }
+  selId=null;
+  document.querySelectorAll(".item.selected").forEach(e=>e.classList.remove("selected"));
+  updateHud();
+}
+function setFb(ok,msg){
+  const fb=$("fb"); fb.textContent=msg;
+  fb.className="fb "+(ok?"ok":"bad");
+}
+
+/* ===== Interação: tap-to-select + pointer drag ===== */
+let drag=null;
+document.addEventListener("pointerdown",e=>{
+  const item=e.target.closest(".item");
+  if(!item||finished) return;
+  drag={item,startX:e.clientX,startY:e.clientY,moved:false,floater:null,id:item.dataset.id};
+  try{item.setPointerCapture(e.pointerId);}catch(_){}
+});
+document.addEventListener("pointermove",e=>{
+  if(!drag) return;
+  const dx=e.clientX-drag.startX, dy=e.clientY-drag.startY;
+  if(!drag.moved && Math.hypot(dx,dy)>8){
+    drag.moved=true;
+    drag.item.classList.add("dragging");
+    const f=document.createElement("div");
+    f.className="floater"; f.innerHTML=drag.item.innerHTML;
+    document.body.appendChild(f); drag.floater=f;
+  }
+  if(drag.moved){
+    drag.floater.style.left=e.clientX+"px";
+    drag.floater.style.top=e.clientY+"px";
+    document.querySelectorAll(".zone").forEach(z=>z.classList.remove("over"));
+    const z=zoneAt(e.clientX,e.clientY);
+    if(z)z.classList.add("over");
+  }
+});
+document.addEventListener("pointerup",e=>{
+  if(!drag) return;
+  const d=drag; drag=null;
+  document.querySelectorAll(".zone").forEach(z=>z.classList.remove("over"));
+  if(d.moved){
+    if(d.floater)d.floater.remove();
+    d.item.classList.remove("dragging");
+    const z=zoneAt(e.clientX,e.clientY);
+    if(z) tryPlace(d.item,z);
+  }else{
+    const wasSel=d.item.classList.contains("selected");
+    document.querySelectorAll(".item.selected").forEach(el=>el.classList.remove("selected"));
+    if(wasSel){selId=null;}
+    else{d.item.classList.add("selected");selId=d.item.dataset.id;
+      $("fb").className="fb"; $("fb").textContent="Item selecionado. Agora toque na categoria certa. 👆";}
+  }
+});
+function zoneAt(x,y){
+  const el=document.elementFromPoint(x,y);
+  return el?el.closest(".zone"):null;
+}
+document.addEventListener("click",e=>{
+  const zone=e.target.closest(".zone");
+  if(zone&&selId!==null){
+    const item=document.querySelector('.item[data-id="'+selId+'"]');
+    if(item) tryPlace(item,zone);
+  }
+});
+
+/* ===== Vitória ===== */
+function win(){
+  finished=true; clearInterval(timer);
+  const secs=elapsed(), sc=secs+errors*5;
+  $("mSub").textContent="Nível "+LVNAME[level]+" — você classificou tudo certinho!";
+  $("mRes").innerHTML="Tempo: <b>"+secs+"s</b> · Erros: <b>"+errors+"</b><br>Pontuação final: <b>"+sc+"</b> <small>(menor é melhor)</small>";
+  $("saveNote").textContent="";
+  $("overlay").classList.add("show");
+}
+$("againBtn").onclick=()=>{$("overlay").classList.remove("show");build();};
+$("saveBtn").onclick=saveScore;
+
+/* ===== Níveis ===== */
+$("levels").addEventListener("click",e=>{
+  const b=e.target.closest(".lvl"); if(!b)return;
+  document.querySelectorAll(".lvl").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");
+  level=b.dataset.l;
+  $("overlay").classList.remove("show");
+  build();
+});
+
+/* ===== Firebase Ranking ===== */
+let db=null, fns=null;
+async function initFb(){
+  if(db) return true;
+  try{
+    const appMod=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const fsMod=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app=appMod.initializeApp(firebaseConfig);
+    db=fsMod.getFirestore(app);
+    fns=fsMod;
+    return true;
+  }catch(err){ console.warn("Firebase indisponível",err); return false; }
+}
+async function loadRanking(){
+  const ol=$("rk"); ol.innerHTML='<li><span class="pos">—</span><span class="nm">Carregando…</span></li>';
+  $("rkNote").textContent="";
+  const ok=await initFb();
+  if(!ok){ ol.innerHTML='<li><span class="pos">!</span><span class="nm">Ranking offline — o jogo funciona normalmente.</span></li>'; return; }
+  try{
+    const {collection,query,orderBy,limit,getDocs}=fns;
+    const q=query(collection(db,"games",GAME_ID,"scores"),orderBy("score","asc"),limit(200));
+    const snap=await getDocs(q);
+    const rows=[];
+    snap.forEach(d=>{const v=d.data(); if(v.level===level) rows.push(v);});
+    rows.sort((a,b)=>(a.score-b.score)||((a.seconds||0)-(b.seconds||0)));
+    const top=rows.slice(0,10);
+    if(!top.length){ ol.innerHTML='<li><span class="pos">—</span><span class="nm">Seja o primeiro a pontuar neste nível!</span></li>'; return; }
+    ol.innerHTML="";
+    top.forEach((r,i)=>{
+      const li=document.createElement("li");
+      li.innerHTML='<span class="pos">'+(i+1)+'º</span><span class="nm">'+esc(String(r.name||"Anônimo"))+'</span><span class="sc">'+r.score+' pts</span>';
+      ol.appendChild(li);
+    });
+  }catch(err){
+    console.warn(err);
+    ol.innerHTML='<li><span class="pos">!</span><span class="nm">Não foi possível carregar o ranking agora.</span></li>';
+  }
+}
+async function saveScore(){
+  if(!finished) return;
+  const name=($("nameIn").value||"").trim().slice(0,20)||"Anônimo";
+  $("saveNote").textContent="Salvando…";
+  const ok=await initFb();
+  if(!ok){ $("saveNote").textContent="Sem conexão — não foi possível salvar, mas seu jogo valeu! 🌊"; return; }
+  try{
+    const {collection,addDoc,serverTimestamp}=fns;
+    await addDoc(collection(db,"games",GAME_ID,"scores"),{
+      name, score:elapsed()+errors*5, seconds:elapsed(), errors, level, ts:serverTimestamp()
+    });
+    $("saveNote").textContent="✅ Salvo no ranking!";
+    loadRanking();
+  }catch(err){
+    console.warn(err);
+    $("saveNote").textContent="Não foi possível salvar agora. Tente novamente.";
+  }
+}
+
+/* ===== Início ===== */
+build();
+</script>
+</body>
+</html>
