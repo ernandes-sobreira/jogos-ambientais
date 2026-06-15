@@ -27,6 +27,7 @@
     color:#eafff6;
     min-height:100vh;
     padding:18px 14px 40px;
+    overflow-x:hidden;
   }
   .wrap{max-width:980px;margin:0 auto}
   header.top{text-align:center;margin-bottom:14px}
@@ -75,23 +76,27 @@
   .feedback.good{background:#dcfce7}
   .feedback.bad{background:#fee2e2}
   .board{
-    display:grid;gap:2px;margin:0 auto;max-width:780px;padding:18px 6px;
+    display:grid;gap:2px;margin:0 auto;max-width:780px;padding:24px 8px;
     grid-template-columns:repeat(auto-fill,minmax(118px,1fr));
   }
   .card{
     --rot:0deg;--tx:0px;--ty:0px;--s:1;
     aspect-ratio:3/4;perspective:900px;cursor:pointer;
     transform:translate(var(--tx),var(--ty)) rotate(var(--rot)) scale(var(--s));
-    transition:transform .28s cubic-bezier(.34,1.4,.5,1);
+    transition:transform .38s cubic-bezier(.34,1.3,.5,1);
     will-change:transform;
   }
-  .card:hover{--s:1.07;z-index:99}
-  .card.flipped,.card.matched{z-index:60}
-  .card .card-inner{box-shadow:0 10px 22px rgba(0,0,0,.30)}
+  .card:hover{--s:1.07;z-index:90}
+  .card.flipped,.card.matched{
+    transform:translate(var(--tx),var(--ty)) rotate(0deg) scale(1.08);
+    z-index:60;
+  }
+  .card.dealing{transition:transform .68s cubic-bezier(.2,.85,.25,1),opacity .4s ease}
   .card-inner{
     position:relative;width:100%;height:100%;
     transition:transform .45s cubic-bezier(.4,.2,.2,1);
     transform-style:preserve-3d;
+    box-shadow:0 10px 22px rgba(0,0,0,.30);border-radius:var(--radius);
   }
   .card.flipped .card-inner,.card.matched .card-inner{transform:rotateY(180deg)}
   .face{
@@ -168,7 +173,7 @@
     <div class="sub">Jogo da memória sobre energias renováveis 🌞💨💧</div>
   </header>
 
-  <div class="instr" id="instr">Vire duas cartas e forme pares de <b>conceito</b> e <b>definição</b>. Menos erros e menos tempo = pontuação maior!</div>
+  <div class="instr" id="instr">As cartas caem espalhadas na mesa! Vire duas e forme pares de <b>conceito</b> e <b>definição</b>. Menos erros e menos tempo = pontuação maior!</div>
 
   <div class="levels" id="levels">
     <button data-lvl="basico" onclick="setLevel('basico')">Básico</button>
@@ -276,6 +281,14 @@ function shuffle(arr){
 }
 const $=id=>document.getElementById(id);
 
+// rotacao de descanso bem espalhada: algumas de lado, outras de cabeca pra baixo
+function restRot(){
+  const r=Math.random(), sgn=Math.random()<0.5?-1:1;
+  if(r<0.16) return sgn*(155+Math.random()*30);
+  if(r<0.38) return sgn*(72+Math.random()*28);
+  return (Math.random()*80-40);
+}
+
 /* ====== JOGO ====== */
 function setLevel(l){
   level=l;
@@ -300,22 +313,30 @@ function startGame(){
   shuffle(cards);
   $('finalSlot').innerHTML="";
   updateHUD();
-  setFeedback("Vire duas cartas para encontrar um par de conceito e definição. 🔎","");
+  setFeedback("As cartas estão sendo jogadas na mesa… vire duas para encontrar um par! 🔎","");
   render();
 }
 
 function render(){
   const board=$('board');
   board.innerHTML="";
+  const els=[];
   cards.forEach((c,idx)=>{
     const card=document.createElement('div');
-    card.className="card";
+    card.className="card dealing";
     card.dataset.idx=idx;
-    // espalhar como cartas caídas sobre a mesa
-    card.style.setProperty('--rot',(Math.random()*26-13).toFixed(1)+'deg');
-    card.style.setProperty('--tx',(Math.random()*22-11).toFixed(0)+'px');
-    card.style.setProperty('--ty',(Math.random()*22-11).toFixed(0)+'px');
+    const tx=(Math.random()*40-20).toFixed(0);
+    const ty=(Math.random()*36-18).toFixed(0);
+    const rot=restRot().toFixed(1);
+    card.style.setProperty('--tx',tx+'px');
+    card.style.setProperty('--ty',ty+'px');
+    card.style.setProperty('--rot',rot+'deg');
     card.style.zIndex=Math.floor(Math.random()*12)+1;
+    const sx=(Math.random()*260-130).toFixed(0);
+    const spin=((Math.random()<0.5?-1:1)*(360+Math.random()*420)).toFixed(0);
+    card.style.opacity="0";
+    card.style.transform="translate("+sx+"px,-620px) rotate("+spin+"deg) scale(.62)";
+    card.style.transitionDelay=(idx*55)+"ms";
     card.innerHTML=
       '<div class="card-inner">'+
         '<div class="face back"></div>'+
@@ -326,7 +347,17 @@ function render(){
       '</div>';
     card.addEventListener('click',()=>flip(idx));
     board.appendChild(card);
+    els.push(card);
   });
+  lock=true;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    els.forEach(card=>{ card.style.opacity="1"; card.style.transform=""; });
+  }));
+  const dealMs=cards.length*55+760;
+  setTimeout(()=>{
+    els.forEach(card=>{ card.classList.remove('dealing'); card.style.transitionDelay=""; });
+    if(!finished) lock=false;
+  },dealMs);
 }
 
 function startTimer(){
@@ -347,7 +378,6 @@ function flip(idx){
   el.classList.add('flipped');
   if(firstIdx===null){ firstIdx=idx; return; }
   if(firstIdx===idx) return;
-  // segundo cartão
   const a=cards[firstIdx], b=cards[idx];
   const elA=document.querySelector('.card[data-idx="'+firstIdx+'"]');
   if(a.pid===b.pid){
@@ -367,7 +397,7 @@ function flip(idx){
     setTimeout(()=>{
       elA.classList.remove('flipped','shake'); el.classList.remove('flipped','shake');
       firstIdx=null; lock=false;
-    },900);
+    },950);
   }
 }
 
@@ -459,7 +489,6 @@ async function loadRanking(){
   if(!db){ list.innerHTML='<div class="msg">Ranking indisponível offline. O jogo continua jogável! 🌱</div>'; return; }
   try{
     const {collection,query,orderBy,limit,getDocs}=fsApi;
-    // BUG evitado: sem where + orderBy juntos. Filtro de nível no cliente.
     const q=query(collection(db,"games",GAME_ID,"scores"),orderBy("score","desc"),limit(80));
     const snap=await getDocs(q);
     const rows=[];
@@ -478,7 +507,7 @@ async function loadRanking(){
   }
 }
 
-/* ====== EXPOR AO WINDOW (onclick em type=module) ====== */
+/* ====== EXPOR AO WINDOW ====== */
 window.setLevel=setLevel;
 window.submitScore=submitScore;
 window.flip=flip;
