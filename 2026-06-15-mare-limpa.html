@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Maré Limpa: Resgate dos Oceanos 🌊♻️</title>
+<style>
+  :root{
+    --bg1:#062b45;
+    --bg2:#0b6c8c;
+    --accent:#2dd4bf;
+    --accent2:#37c0ff;
+    --coral:#ff6b6b;
+    --gold:#ffd166;
+    --ink:#06222f;
+    --card:rgba(255,255,255,0.96);
+    --soft:rgba(255,255,255,0.14);
+    --soft2:rgba(255,255,255,0.08);
+    --txt:#eaf7ff;
+    --shadow:0 10px 30px rgba(0,0,0,0.28);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--txt);
+    background:linear-gradient(160deg,var(--bg1),var(--bg2));
+    background-attachment:fixed;
+    min-height:100vh;
+    padding:18px 14px 40px;
+  }
+  .wrap{max-width:960px;margin:0 auto;}
+  header.top{text-align:center;margin-bottom:14px;}
+  h1{
+    font-size:clamp(1.6rem,4.5vw,2.7rem);
+    margin:0 0 4px;
+    line-height:1.1;
+    text-shadow:0 2px 10px rgba(0,0,0,0.35);
+  }
+  .subtitle{font-size:clamp(.85rem,2.4vw,1.05rem);opacity:.92;margin:0;}
+  .levels{
+    display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0 10px;
+  }
+  .levels button{
+    border:none;cursor:pointer;border-radius:14px;
+    padding:10px 16px;font-size:.95rem;font-weight:700;
+    background:var(--soft);color:var(--txt);
+    transition:transform .25s ease,background .25s ease,box-shadow .25s ease;
+    backdrop-filter:blur(4px);
+  }
+  .levels button:hover{transform:translateY(-2px);background:var(--soft2);}
+  .levels button.active{
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color:var(--ink);box-shadow:var(--shadow);transform:translateY(-2px);
+  }
+  .instruction{
+    text-align:center;font-size:.95rem;opacity:.95;margin:6px auto 14px;max-width:680px;
+    background:var(--soft2);padding:8px 14px;border-radius:12px;
+  }
+  .hud{
+    display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:14px;
+  }
+  .hud .chip{
+    background:var(--card);color:var(--ink);
+    border-radius:12px;padding:8px 14px;font-weight:700;font-size:.92rem;
+    box-shadow:var(--shadow);min-width:96px;text-align:center;
+  }
+  .hud .chip small{display:block;font-weight:600;opacity:.6;font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;}
+  .board{display:grid;grid-template-columns:1fr;gap:16px;}
+  @media(min-width:760px){.board{grid-template-columns:1.05fr .95fr;}}
+  .panel{
+    background:var(--card);color:var(--ink);
+    border-radius:16px;padding:16px;box-shadow:var(--shadow);
+  }
+  .panel h2{margin:0 0 12px;font-size:1.05rem;}
+  .tray{display:flex;flex-wrap:wrap;gap:10px;min-height:90px;align-content:flex-start;}
+  .item{
+    border:none;cursor:grab;border-radius:12px;
+    padding:10px 12px;font-size:.92rem;font-weight:600;
+    background:linear-gradient(135deg,#eaf6ff,#d4ecff);
+    color:var(--ink);box-shadow:0 4px 12px rgba(0,0,0,0.14);
+    transition:transform .2s ease,box-shadow .2s ease,opacity .2s ease;
+    display:flex;align-items:center;gap:7px;user-select:none;touch-action:manipulation;
+  }
+  .item .emo{font-size:1.2rem;}
+  .item:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,0.2);}
+  .item.selected{outline:3px solid var(--accent);transform:translateY(-2px) scale(1.03);}
+  .item.dragging{opacity:.45;}
+  .zones{display:grid;gap:12px;}
+  .zone{
+    border-radius:14px;border:2px dashed rgba(6,34,47,0.25);
+    padding:12px;min-height:84px;
+    background:linear-gradient(135deg,#f5fbff,#eef7ff);
+    transition:background .25s ease,border-color .25s ease,transform .2s ease;
+  }
+  .zone.over{border-color:var(--accent);background:linear-gradient(135deg,#e2fff8,#d6f4ff);transform:scale(1.01);}
+  .zone .zone-title{font-weight:800;font-size:.95rem;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+  .zone .placed{display:flex;flex-wrap:wrap;gap:7px;}
+  .placed .item{cursor:default;background:linear-gradient(135deg,#c7f6e9,#bdeede);}
+  @keyframes pop{0%{transform:scale(.6);}60%{transform:scale(1.18);}100%{transform:scale(1);}}
+  @keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-7px);}40%{transform:translateX(7px);}60%{transform:translateX(-5px);}80%{transform:translateX(5px);}}
+  .pop{animation:pop .42s ease;}
+  .shake{animation:shake .42s ease;border:2px solid var(--coral)!important;}
+  .feedback{
+    margin-top:14px;border-radius:14px;padding:12px 14px;font-size:.92rem;line-height:1.4;
+    background:linear-gradient(135deg,#eef7ff,#e3f0ff);color:var(--ink);
+    box-shadow:var(--shadow);min-height:54px;transition:background .3s ease;
+  }
+  .feedback.ok{background:linear-gradient(135deg,#d6fbef,#c4f3e2);}
+  .feedback.bad{background:linear-gradient(135deg,#ffe3e3,#ffd2d2);}
+  .feedback b{display:block;margin-bottom:3px;}
+  .ranking{margin-top:16px;}
+  .ranking ol{margin:6px 0 0;padding-left:20px;}
+  .ranking li{padding:3px 0;font-size:.9rem;}
+  .ranking .rk-status{font-size:.82rem;opacity:.7;}
+  .final{
+    text-align:center;padding:24px 16px;
+  }
+  .final h2{font-size:1.6rem;margin:0 0 8px;}
+  .final .stats{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:14px 0;}
+  .final .stats .chip{background:linear-gradient(135deg,var(--accent),var(--accent2));color:var(--ink);}
+  .final input{
+    padding:10px 12px;border-radius:10px;border:1px solid rgba(6,34,47,.2);
+    font-size:.95rem;width:min(260px,80%);margin:6px 6px;
+  }
+  .btn{
+    border:none;cursor:pointer;border-radius:12px;padding:11px 20px;
+    font-weight:800;font-size:.95rem;color:var(--ink);
+    background:linear-gradient(135deg,var(--gold),#ffb347);
+    box-shadow:var(--shadow);transition:transform .2s ease;margin:6px;
+  }
+  .btn:hover{transform:translateY(-2px);}
+  .btn.secondary{background:linear-gradient(135deg,var(--accent),var(--accent2));}
+  .confetti{font-size:2.6rem;letter-spacing:6px;animation:pop .6s ease;}
+  footer{
+    text-align:center;margin-top:30px;font-size:.82rem;opacity:.85;line-height:1.6;
+  }
+  footer .by{font-weight:700;}
+  .hidden{display:none!important;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>🌊 Maré Limpa: Resgate dos Oceanos ♻️</h1>
+    <p class="subtitle">Classifique os resíduos, salve o mar e vire um(a) guardião(ã) dos oceanos!</p>
+  </header>
+
+  <div class="levels" id="levels">
+    <button data-lvl="basico" onclick="setLevel('basico')">🐚 Básico</button>
+    <button data-lvl="inter" onclick="setLevel('inter')">🐟 Intermediário</button>
+    <button data-lvl="dificil" onclick="setLevel('dificil')">🐬 Difícil</button>
+    <button data-lvl="carbonauta" onclick="setLevel('carbonauta')">🛰️ Carbonauta</button>
+  </div>
+
+  <p class="instruction" id="instruction">Arraste cada item para a categoria certa — ou toque no item e depois na categoria.</p>
+
+  <div class="hud">
+    <div class="chip"><small>Tempo</small><span id="hudTime">0s</span></div>
+    <div class="chip"><small>Pontos</small><span id="hudScore">0</span></div>
+    <div class="chip"><small>Acertos</small><span id="hudHits">0</span></div>
+    <div class="chip"><small>Erros</small><span id="hudErr">0</span></div>
+  </div>
+
+  <div id="gameArea">
+    <div class="board">
+      <div class="panel">
+        <h2>🧺 Itens para classificar</h2>
+        <div class="tray" id="tray"></div>
+        <div class="feedback" id="feedback"><b>Vamos lá! 🌱</b>Selecione um nível e comece a classificar os resíduos.</div>
+      </div>
+      <div class="panel">
+        <h2>🗂️ Categorias</h2>
+        <div class="zones" id="zones"></div>
+      </div>
+    </div>
+
+    <div class="panel ranking">
+      <h2>🏆 Ranking Global — <span id="rkLevelName">Básico</span></h2>
+      <div class="rk-status" id="rkStatus">Carregando ranking…</div>
+      <ol id="rkList"></ol>
+    </div>
+  </div>
+
+  <div id="finalArea" class="panel final hidden"></div>
+
+  <footer>
+    <div class="by">— Idealizado por Ernandes Sobreira —</div>
+    <div>Tema: Poluição plástica e oceanos · Gênero: Arrastar e soltar (classificar) · app ambiental do dia (2026-06-15)</div>
+  </footer>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = { apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ", authDomain: "jogos-ranking.firebaseapp.com", databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com", projectId: "jogos-ranking", storageBucket: "jogos-ranking.firebasestorage.app", messagingSenderId: "958784915420", appId: "1:958784915420:web:4212d3ad278f02d600f119" };
+const GAME_ID = "2026-06-15-mare-limpa";
+
+let db = null;
+try { db = getFirestore(initializeApp(firebaseConfig)); } catch(e){ db = null; }
+
+/* ----------------------- CONTEÚDO DOS NÍVEIS ----------------------- */
+const LEVELS = {
+  basico: {
+    name: "Básico",
+    instruction: "Arraste (ou toque) cada resíduo para a lixeira certa: pode reciclar ou não?",
+    zones: [
+      { id:"rec", title:"♻️ Reciclável" },
+      { id:"nao", title:"🗑️ Não reciclável" }
+    ],
+    items: [
+      { label:"Garrafa de plástico", emo:"🧴", zone:"rec", fb:"Garrafas PET são 100% recicláveis e podem virar novas embalagens e até roupas." },
+      { label:"Lata de refrigerante", emo:"🥫", zone:"rec", fb:"O alumínio pode ser reciclado infinitas vezes sem perder qualidade." },
+      { label:"Jornal", emo:"📰", zone:"rec", fb:"Papel limpo é reciclável e poupa árvores, água e energia." },
+      { label:"Pote de vidro", emo:"🫙", zone:"rec", fb:"O vidro é reciclável e pode ser refundido sem perder qualidade." },
+      { label:"Bituca de cigarro", emo:"🚬", zone:"nao", fb:"O filtro contém microplásticos e químicos tóxicos: vai para o rejeito, nunca no chão ou no mar." },
+      { label:"Casca de banana", emo:"🍌", zone:"nao", fb:"Restos de comida não vão na reciclagem comum — o ideal é compostar." },
+      { label:"Papel sujo de gordura", emo:"🍕", zone:"nao", fb:"Papel engordurado contamina a reciclagem e por isso vira rejeito." },
+      { label:"Fralda descartável", emo:"🧷", zone:"nao", fb:"Fraldas misturam vários materiais e não são recicláveis." }
+    ]
+  },
+  inter: {
+    name: "Intermediário",
+    instruction: "Separe em três frações: reciclável, orgânico (compostável) ou rejeito.",
+    zones: [
+      { id:"rec", title:"♻️ Reciclável" },
+      { id:"org", title:"🌱 Orgânico" },
+      { id:"rej", title:"🚯 Rejeito" }
+    ],
+    items: [
+      { label:"Garrafa PET", emo:"🧴", zone:"rec", fb:"O PET (politereftalato de etileno) é o plástico mais reciclado no Brasil." },
+      { label:"Caixa de papelão", emo:"📦", zone:"rec", fb:"Papelão limpo e seco é reciclável; molhado ou engordurado perde valor." },
+      { label:"Lata de aço", emo:"🥫", zone:"rec", fb:"Aço é separado por ímãs nas usinas e reciclado com alta eficiência." },
+      { label:"Casca de laranja", emo:"🍊", zone:"org", fb:"Resíduos orgânicos viram adubo na compostagem e reduzem o metano dos aterros." },
+      { label:"Borra de café", emo:"☕", zone:"org", fb:"A borra de café é rica em nutrientes e ótima para a compostagem doméstica." },
+      { label:"Folhas e podas", emo:"🍂", zone:"org", fb:"Resíduos verdes são compostáveis e devolvem carbono e nutrientes ao solo." },
+      { label:"Bituca de cigarro", emo:"🚬", zone:"rej", fb:"O filtro é feito de acetato de celulose, um plástico que libera microfibras." },
+      { label:"Fralda usada", emo:"🧷", zone:"rej", fb:"Fraldas combinam celulose, plásticos e gel, sendo destinadas ao rejeito." },
+      { label:"Esponja de cozinha", emo:"🧽", zone:"rej", fb:"Esponjas sintéticas soltam microplásticos e não são recicláveis." },
+      { label:"Espelho quebrado", emo:"🪞", zone:"rej", fb:"O espelho tem uma camada metálica e não entra no vidro reciclável comum." }
+    ]
+  },
+  dificil: {
+    name: "Difícil",
+    instruction: "Estime o tempo de decomposição no oceano (dados NOAA): semanas/anos, décadas ou séculos.",
+    zones: [
+      { id:"curto", title:"⏱️ Até ~5 anos" },
+      { id:"dec", title:"📆 Décadas (10–100 anos)" },
+      { id:"sec", title:"🏛️ Séculos (+100 anos)" }
+    ],
+    items: [
+      { label:"Toalha de papel", emo:"🧻", zone:"curto", fb:"Papel-toalha se decompõe em cerca de 2 a 4 semanas." },
+      { label:"Jornal molhado", emo:"📰", zone:"curto", fb:"O jornal degrada em cerca de 6 semanas na água." },
+      { label:"Sabugo de maçã", emo:"🍎", zone:"curto", fb:"Restos de fruta se decompõem em cerca de 2 meses." },
+      { label:"Bituca de cigarro", emo:"🚬", zone:"dec", fb:"O filtro leva cerca de 10 anos para se fragmentar (NOAA)." },
+      { label:"Sacola plástica", emo:"🛍️", zone:"dec", fb:"Uma sacola leva por volta de 20 anos para se desintegrar no mar." },
+      { label:"Copo de isopor", emo:"🧊", zone:"dec", fb:"O poliestireno expandido (EPS) persiste cerca de 50 anos." },
+      { label:"Lata de alumínio", emo:"🥫", zone:"sec", fb:"O alumínio leva cerca de 200 anos para se decompor no oceano." },
+      { label:"Canudo plástico", emo:"🍹", zone:"sec", fb:"Canudos persistem cerca de 200 anos — recuse-os sempre que puder." },
+      { label:"Garrafa PET", emo:"🧴", zone:"sec", fb:"Garrafas plásticas levam cerca de 450 anos para se degradar (NOAA)." },
+      { label:"Fralda descartável", emo:"🧷", zone:"sec", fb:"As fraldas demoram cerca de 450 anos para se decompor." },
+      { label:"Anéis plásticos de latas", emo:"⭕", zone:"sec", fb:"As argolas de embalagens duram cerca de 400 anos e prendem animais marinhos." },
+      { label:"Linha de pesca de náilon", emo:"🎣", zone:"sec", fb:"A linha de náilon leva até 600 anos — o item mais persistente da lista." }
+    ]
+  },
+  carbonauta: {
+    name: "🛰️ Carbonauta",
+    instruction: "Nível pesquisador: classifique a origem do plástico — microplástico primário, secundário ou macroplástico (>5 mm).",
+    zones: [
+      { id:"prim", title:"🔬 Microplástico primário" },
+      { id:"sec", title:"🌀 Microplástico secundário" },
+      { id:"macro", title:"🌊 Macroplástico (>5 mm)" }
+    ],
+    items: [
+      { label:"Microesferas de cosmético", emo:"💧", zone:"prim", fb:"Microbeads são fabricadas já em escala micrométrica: microplástico primário, banido em vários países." },
+      { label:"Pellets industriais (nurdles)", emo:"⚪", zone:"prim", fb:"Os nurdles são a matéria-prima do plástico e vazam direto na forma micro: primário." },
+      { label:"Microfibras de poliéster", emo:"🧵", zone:"prim", fb:"A lavagem de roupas sintéticas libera microfibras pré-formadas — primário difuso." },
+      { label:"Partículas de desgaste de pneu", emo:"🚗", zone:"prim", fb:"O atrito dos pneus gera partículas micrométricas: uma das maiores fontes primárias." },
+      { label:"Glitter de PET metalizado", emo:"✨", zone:"prim", fb:"O glitter já é produzido em tamanho micro, sendo microplástico primário." },
+      { label:"Fragmentos de garrafa por UV", emo:"🔹", zone:"sec", fb:"A radiação UV fotodegrada o PET e o quebra em fragmentos: microplástico secundário." },
+      { label:"Pedaços de sacola fotodegradada", emo:"🛍️", zone:"sec", fb:"A sacola se fragmenta por luz e ondas, gerando microplástico secundário." },
+      { label:"Esferas de isopor fragmentado", emo:"🧊", zone:"sec", fb:"O EPS se esfarela mecanicamente no mar, originando microplástico secundário." },
+      { label:"Fibras de corda de náilon gasta", emo:"🪢", zone:"sec", fb:"Cordas e redes se desfiam com o uso, liberando microfibras secundárias." },
+      { label:"Rede de pesca fantasma", emo:"🥅", zone:"macro", fb:"Redes abandonadas são macroplástico e causam emalhamento de fauna marinha." },
+      { label:"Garrafa PET inteira", emo:"🧴", zone:"macro", fb:"Acima de 5 mm é macroplástico — fonte futura de fragmentos secundários." },
+      { label:"Tampinha de garrafa", emo:"🔵", zone:"macro", fb:"Tampas estão entre os itens mais coletados em praias: macroplástico." },
+      { label:"Embalagem de salgadinho", emo:"🍟", zone:"macro", fb:"Filmes laminados multicamadas são macroplástico de difícil reciclagem." },
+      { label:"Canudo plástico", emo:"🥤", zone:"macro", fb:"O canudo é macroplástico e fonte recorrente de fragmentação secundária." }
+    ]
+  }
+};
+
+/* ----------------------- ESTADO ----------------------- */
+let level = "basico";
+let items = [];
+let placedCount = 0;
+let score = 0, hits = 0, errors = 0;
+let startTs = 0, timerId = null;
+let selectedId = null;
+let finished = false;
+
+const $ = (id)=>document.getElementById(id);
+
+function shuffle(a){ // Fisher–Yates
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+function setLevel(lvl){
+  level = lvl;
+  finished = false;
+  $("finalArea").classList.add("hidden");
+  $("gameArea").classList.remove("hidden");
+  document.querySelectorAll("#levels button").forEach(b=>{
+    b.classList.toggle("active", b.dataset.lvl===lvl);
+  });
+  const cfg = LEVELS[lvl];
+  $("instruction").textContent = cfg.instruction;
+  $("rkLevelName").textContent = cfg.name.replace("🛰️ ","");
+  // reset state
+  score=0; hits=0; errors=0; placedCount=0; selectedId=null;
+  items = cfg.items.map((it,i)=>({...it, id:"it"+i, done:false}));
+  shuffle(items);
+  renderHUD();
+  renderZones();
+  renderTray();
+  setFeedback("Bora começar! 🌊","Arraste ou toque um item e leve-o até a categoria certa.","");
+  startTimer();
+  loadRanking();
+}
+window.setLevel = setLevel;
+
+function startTimer(){
+  startTs = Date.now();
+  if(timerId) clearInterval(timerId);
+  timerId = setInterval(()=>{
+    if(finished) return;
+    $("hudTime").textContent = Math.floor((Date.now()-startTs)/1000)+"s";
+  },250);
+}
+
+function renderHUD(){
+  $("hudScore").textContent = score;
+  $("hudHits").textContent = hits;
+  $("hudErr").textContent = errors;
+}
+
+function setFeedback(title, body, cls){
+  const f = $("feedback");
+  f.className = "feedback "+(cls||"");
+  f.innerHTML = "<b>"+title+"</b>"+body;
+}
+
+function renderZones(){
+  const cfg = LEVELS[level];
+  const z = $("zones");
+  z.innerHTML = "";
+  cfg.zones.forEach(zone=>{
+    const div = document.createElement("div");
+    div.className = "zone";
+    div.dataset.zone = zone.id;
+    div.innerHTML = '<div class="zone-title">'+zone.title+'</div><div class="placed" id="placed-'+zone.id+'"></div>';
+    div.addEventListener("dragover",(e)=>{e.preventDefault();div.classList.add("over");});
+    div.addEventListener("dragleave",()=>div.classList.remove("over"));
+    div.addEventListener("drop",(e)=>{e.preventDefault();div.classList.remove("over");
+      const id = e.dataTransfer.getData("text/plain"); tryPlace(id, zone.id, div);});
+    div.addEventListener("click",()=>{ if(selectedId){ tryPlace(selectedId, zone.id, div); }});
+    z.appendChild(div);
+  });
+}
+
+function renderTray(){
+  const tray = $("tray");
+  tray.innerHTML = "";
+  items.filter(it=>!it.done).forEach(it=>{
+    const b = document.createElement("div");
+    b.className = "item"+(selectedId===it.id?" selected":"");
+    b.draggable = true;
+    b.dataset.id = it.id;
+    b.innerHTML = '<span class="emo">'+it.emo+'</span>'+it.label;
+    b.addEventListener("dragstart",(e)=>{e.dataTransfer.setData("text/plain",it.id);b.classList.add("dragging");});
+    b.addEventListener("dragend",()=>b.classList.remove("dragging"));
+    b.addEventListener("click",()=>{
+      selectedId = (selectedId===it.id)? null : it.id;
+      renderTray();
+    });
+    tray.appendChild(b);
+  });
+  if(items.every(it=>it.done) && !finished){ finishGame(); }
+}
+
+function tryPlace(id, zoneId, zoneDiv){
+  const it = items.find(x=>x.id===id);
+  if(!it || it.done) return;
+  selectedId = null;
+  if(it.zone === zoneId){
+    it.done = true;
+    placedCount++;
+    hits++;
+    score += 100;
+    renderHUD();
+    // adiciona visualmente na zona
+    const placed = document.getElementById("placed-"+zoneId);
+    const tag = document.createElement("div");
+    tag.className = "item pop";
+    tag.innerHTML = '<span class="emo">'+it.emo+'</span>'+it.label;
+    placed.appendChild(tag);
+    setFeedback("✅ Certo! +100","<span>"+it.label+":</span> "+it.fb,"ok");
+    renderTray();
+  } else {
+    errors++;
+    score = Math.max(0, score-25);
+    renderHUD();
+    zoneDiv.classList.remove("shake"); void zoneDiv.offsetWidth; zoneDiv.classList.add("shake");
+    setTimeout(()=>zoneDiv.classList.remove("shake"),450);
+    const correctZone = LEVELS[level].zones.find(z=>z.id===it.zone).title;
+    setFeedback("❌ Quase! −25","<span>"+it.label+"</span> não é dessa categoria. O lugar certo é <b style='display:inline'>"+correctZone+"</b>. "+it.fb,"bad");
+  }
+}
+window.tryPlace = tryPlace;
+
+function finishGame(){
+  finished = true;
+  if(timerId) clearInterval(timerId);
+  const secs = Math.floor((Date.now()-startTs)/1000);
+  const cfg = LEVELS[level];
+  // bônus de tempo (acerto = maior melhor)
+  const timeBonus = Math.max(0, 200 - secs*2);
+  score += timeBonus;
+  renderHUD();
+  $("gameArea").classList.add("hidden");
+  const fa = $("finalArea");
+  fa.classList.remove("hidden");
+  fa.innerHTML =
+    '<div class="confetti">🌊🎉🐢♻️🐬</div>'+
+    '<h2>Oceano mais limpo!</h2>'+
+    '<p>Você concluiu o nível <b>'+cfg.name+'</b> e classificou tudo corretamente.</p>'+
+    '<div class="stats">'+
+      '<div class="chip"><small>Pontos</small>'+score+'</div>'+
+      '<div class="chip"><small>Acertos</small>'+hits+'</div>'+
+      '<div class="chip"><small>Erros</small>'+errors+'</div>'+
+      '<div class="chip"><small>Tempo</small>'+secs+'s</div>'+
+      '<div class="chip"><small>Bônus tempo</small>+'+timeBonus+'</div>'+
+    '</div>'+
+    '<p>Registre seu nome no <b>Ranking Global</b> ('+cfg.name+'):</p>'+
+    '<input id="playerName" maxlength="18" placeholder="Seu nome ou apelido" />'+
+    '<div><button class="btn" onclick="submitScore()">🏆 Enviar pontuação</button>'+
+    '<button class="btn secondary" onclick="setLevel(\''+level+'\')">🔁 Jogar de novo</button></div>'+
+    '<div class="rk-status" id="submitStatus" style="margin-top:10px;"></div>';
+}
+window.finishGame = finishGame;
+
+async function submitScore(){
+  const name = ($("playerName").value || "Anônimo").trim().slice(0,18) || "Anônimo";
+  const secs = Math.floor((Date.now()-startTs)/1000);
+  const st = $("submitStatus");
+  if(!db){ st.textContent = "Ranking offline — sua pontuação foi registrada só nesta sessão."; return; }
+  st.textContent = "Enviando…";
+  try{
+    await addDoc(collection(db,"games",GAME_ID,"scores"),
+      { name, score, level, seconds: secs, ts: serverTimestamp() });
+    st.textContent = "✅ Pontuação enviada! Veja o ranking abaixo.";
+    $("finalArea").appendChild(buildRankingClone());
+    loadRanking();
+  }catch(e){
+    st.textContent = "Não foi possível enviar agora, mas o jogo segue funcionando.";
+  }
+}
+window.submitScore = submitScore;
+
+function buildRankingClone(){
+  const d = document.createElement("div"); d.style.marginTop="14px"; return d;
+}
+
+async function loadRanking(){
+  const status = $("rkStatus");
+  const listEl = $("rkList");
+  listEl.innerHTML = "";
+  if(!db){ status.textContent = "Ranking indisponível offline — o jogo continua 100% jogável."; return; }
+  status.textContent = "Carregando ranking…";
+  try{
+    const q = query(collection(db,"games",GAME_ID,"scores"), orderBy("score","desc"), limit(80));
+    const snap = await getDocs(q);
+    const rows = [];
+    snap.forEach(doc=>{ const d=doc.data(); if(d.level===level) rows.push(d); });
+    rows.sort((a,b)=> (b.score||0)-(a.score||0));
+    const top = rows.slice(0,10);
+    if(top.length===0){ status.textContent = "Seja o primeiro a pontuar neste nível! 🌊"; return; }
+    status.textContent = "Top "+top.length+" — nível "+LEVELS[level].name.replace("🛰️ ","");
+    top.forEach(r=>{
+      const li = document.createElement("li");
+      li.textContent = (r.name||"Anônimo")+" — "+(r.score||0)+" pts ("+(r.seconds||0)+"s)";
+      listEl.appendChild(li);
+    });
+  }catch(e){
+    status.textContent = "Não foi possível carregar o ranking agora.";
+  }
+}
+window.loadRanking = loadRanking;
+
+/* ----------------------- INICIALIZAÇÃO ----------------------- */
+function init(){ setLevel("basico"); }
+window.init = init;
+init();
+</script>
+</body>
+</html>
