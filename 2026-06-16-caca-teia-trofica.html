@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caça-Teia Trófica 🦉 — Cadeias Alimentares</title>
+<style>
+:root{
+  --bg1:#0b3d2e;
+  --bg2:#1f7a4d;
+  --accent:#ffd23f;
+  --accent2:#7bdcb5;
+  --ink:#0b2018;
+  --card:rgba(255,255,255,0.96);
+  --found:#2bb673;
+  --sel:#ffd23f;
+  --shadow:0 10px 30px rgba(0,0,0,.28);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+  color:var(--ink);
+  background:linear-gradient(160deg,var(--bg1),var(--bg2));
+  min-height:100vh;
+  padding:18px 12px 60px;
+}
+.wrap{max-width:1080px;margin:0 auto}
+header{text-align:center;color:#fff;margin-bottom:14px}
+h1{
+  font-size:clamp(1.6rem,4.5vw,2.8rem);
+  margin:0 0 6px;
+  letter-spacing:.5px;
+  text-shadow:0 3px 12px rgba(0,0,0,.35);
+}
+.sub{font-size:clamp(.85rem,2.5vw,1.05rem);opacity:.95;margin:0}
+.levels{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0}
+.levels button{
+  border:0;cursor:pointer;font-weight:700;font-size:.95rem;
+  padding:10px 16px;border-radius:14px;
+  background:var(--card);color:var(--ink);
+  box-shadow:var(--shadow);transition:all .25s ease;
+}
+.levels button:hover{transform:translateY(-2px)}
+.levels button.active{
+  background:var(--accent);color:#3a2c00;
+  outline:3px solid #fff;transform:translateY(-2px) scale(1.03);
+}
+.hud{
+  display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:10px 0 16px;
+}
+.chip{
+  background:var(--card);border-radius:14px;padding:8px 16px;
+  box-shadow:var(--shadow);font-weight:700;font-size:.95rem;
+}
+.chip b{color:var(--bg2)}
+.instr{
+  text-align:center;color:#fff;background:rgba(0,0,0,.18);
+  border-radius:12px;padding:8px 12px;margin:0 auto 14px;max-width:760px;
+  font-size:clamp(.85rem,2.4vw,1rem);
+}
+.grid-layout{display:grid;grid-template-columns:1.2fr .9fr;gap:16px}
+@media(max-width:820px){.grid-layout{grid-template-columns:1fr}}
+.panel{
+  background:var(--card);border-radius:16px;box-shadow:var(--shadow);
+  padding:16px;transition:transform .3s ease;
+}
+.board{
+  display:grid;gap:3px;margin:0 auto;width:100%;max-width:520px;
+  touch-action:none;user-select:none;
+}
+.cell{
+  display:flex;align-items:center;justify-content:center;
+  aspect-ratio:1/1;border-radius:7px;
+  background:#eef6f1;color:var(--ink);
+  font-weight:800;font-size:clamp(.7rem,2.4vw,1.05rem);
+  cursor:pointer;transition:background .12s,transform .12s,color .12s;
+}
+.cell.sel{background:var(--sel);color:#3a2c00;transform:scale(1.06)}
+.cell.found{background:var(--found);color:#fff}
+.cell.pop{animation:pop .4s ease}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.35)}100%{transform:scale(1)}}
+.board.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+h3{margin:.2em 0 .6em;color:var(--bg2);font-size:1.05rem}
+.words{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.words li{
+  background:#f0f7f3;border-radius:10px;padding:8px 11px;
+  font-size:.9rem;transition:all .25s;border-left:4px solid var(--accent2);
+}
+.words li.done{
+  background:#dff5ea;border-left-color:var(--found);
+  text-decoration:line-through;opacity:.7;
+}
+.words li b{color:var(--bg1)}
+.feedback{
+  margin-top:14px;background:#fff7da;border-radius:12px;
+  padding:12px 14px;font-size:.92rem;min-height:48px;
+  border:1px solid #f0d98a;line-height:1.45;
+}
+.rank h3{display:flex;align-items:center;gap:6px}
+.rank-level{font-size:.78rem;background:var(--accent);color:#3a2c00;
+  padding:2px 8px;border-radius:8px;font-weight:700}
+.rank ol{margin:6px 0 0;padding-left:0;list-style:none;counter-reset:r}
+.rank li{counter-increment:r;display:flex;justify-content:space-between;
+  padding:6px 8px;border-radius:8px;font-size:.85rem}
+.rank li:nth-child(odd){background:#f3f8f5}
+.rank li::before{content:counter(r) ".";font-weight:700;color:var(--bg2);margin-right:6px}
+.rank .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank .sc{font-weight:700;color:var(--bg1)}
+.win{
+  position:fixed;inset:0;background:rgba(6,30,22,.86);
+  display:none;align-items:center;justify-content:center;padding:18px;z-index:50;
+}
+.win.show{display:flex;animation:fade .4s}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.win-card{
+  background:#fff;border-radius:20px;padding:26px 22px;max-width:430px;width:100%;
+  text-align:center;box-shadow:var(--shadow);animation:pop .5s ease;
+}
+.win-card h2{margin:.1em 0;color:var(--bg2);font-size:1.6rem}
+.win-card .big{font-size:2.6rem;font-weight:800;color:var(--accent);margin:8px 0}
+.win-card input{
+  width:100%;padding:11px;border-radius:11px;border:2px solid var(--accent2);
+  font-size:1rem;margin:10px 0;text-align:center;
+}
+.btn{
+  border:0;cursor:pointer;background:var(--bg2);color:#fff;font-weight:700;
+  padding:11px 18px;border-radius:12px;font-size:.95rem;margin:5px;
+  transition:transform .2s;box-shadow:var(--shadow);
+}
+.btn:hover{transform:translateY(-2px)}
+.btn.alt{background:var(--accent);color:#3a2c00}
+footer{
+  text-align:center;color:#eafff4;margin-top:26px;
+  font-size:.82rem;line-height:1.6;opacity:.92;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🦉 Caça-Teia Trófica</h1>
+    <p class="sub">Encontre as palavras escondidas e desvende as cadeias alimentares e teias tróficas!</p>
+  </header>
+
+  <div class="levels" id="levels">
+    <button data-lv="basico" onclick="setLevel('basico')">Básico</button>
+    <button data-lv="intermediario" onclick="setLevel('intermediario')">Intermediário</button>
+    <button data-lv="dificil" onclick="setLevel('dificil')">Difícil</button>
+    <button data-lv="carbonauta" onclick="setLevel('carbonauta')">🛰️ Carbonauta</button>
+  </div>
+
+  <div class="hud">
+    <div class="chip">Tempo: <b id="time">0s</b></div>
+    <div class="chip">Pontos: <b id="score">0</b></div>
+    <div class="chip">Acertos: <b id="hits">0</b> / <b id="total">0</b></div>
+  </div>
+
+  <p class="instr" id="instr">Arraste (ou toque no início e no fim) sobre as letras para marcar uma palavra da lista. Vale na horizontal, vertical e diagonal!</p>
+
+  <div class="grid-layout">
+    <div class="panel">
+      <div class="board" id="board"></div>
+    </div>
+    <div>
+      <div class="panel">
+        <h3>📋 Palavras para encontrar</h3>
+        <ul class="words" id="words"></ul>
+        <div class="feedback" id="feedback">Escolha um nível e comece a caçar! Cada palavra encontrada revela um conceito da ecologia trófica.</div>
+      </div>
+      <div class="panel rank" style="margin-top:16px">
+        <h3>🏆 Ranking Global <span class="rank-level" id="rankLevel">Básico</span></h3>
+        <ol id="rankList"><li style="background:none"><span class="nm">Carregando…</span></li></ol>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div>— Idealizado por Ernandes Sobreira —</div>
+    <div>Tema: Cadeias alimentares e teias tróficas · Gênero: Caça-palavras · app ambiental do dia (2026-06-16)</div>
+  </footer>
+</div>
+
+<div class="win" id="win">
+  <div class="win-card">
+    <h2>🎉 Teia completa!</h2>
+    <div class="big" id="winScore">0</div>
+    <p id="winMsg">Você encontrou todas as palavras!</p>
+    <input id="playerName" maxlength="18" placeholder="Seu nome para o ranking">
+    <div>
+      <button class="btn" onclick="submitScore()">Enviar ao Ranking 🏆</button>
+      <button class="btn alt" onclick="restart()">Jogar de novo 🔄</button>
+    </div>
+    <p id="saveMsg" style="font-size:.8rem;color:#777;margin:8px 0 0"></p>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = { apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ", authDomain: "jogos-ranking.firebaseapp.com", databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com", projectId: "jogos-ranking", storageBucket: "jogos-ranking.firebasestorage.app", messagingSenderId: "958784915420", appId: "1:958784915420:web:4212d3ad278f02d600f119" };
+const GAME_ID = "2026-06-16-caca-teia-trofica";
+
+let db=null;
+try{ db = getFirestore(initializeApp(firebaseConfig)); }catch(e){ db=null; }
+
+/* ---------- Conteúdo por nível ---------- */
+const LEVELS = {
+  basico:{ label:"Básico", size:10, words:[
+    {w:"SOL",d:"Sol",h:"Fonte primária de energia para quase todas as cadeias."},
+    {w:"CAPIM",d:"Capim",h:"Produtor: planta que faz fotossíntese."},
+    {w:"COELHO",d:"Coelho",h:"Herbívoro que se alimenta de plantas."},
+    {w:"ONCA",d:"Onça",h:"Predador de topo dos biomas brasileiros."},
+    {w:"PLANTA",d:"Planta",h:"Ser vivo que produz o próprio alimento."},
+    {w:"PREDADOR",d:"Predador",h:"Animal que captura e come outros (as presas)."},
+    {w:"HERBIVORO",d:"Herbívoro",h:"Animal que se alimenta de plantas."},
+    {w:"FUNGO",d:"Fungo",h:"Decompositor que recicla matéria morta."}
+  ]},
+  intermediario:{ label:"Intermediário", size:12, words:[
+    {w:"PRODUTOR",d:"Produtor",h:"Organismo que sintetiza matéria orgânica (1º nível trófico)."},
+    {w:"CONSUMIDOR",d:"Consumidor",h:"Organismo que se alimenta de outros seres vivos."},
+    {w:"DECOMPOSITOR",d:"Decompositor",h:"Recicla nutrientes a partir de matéria morta."},
+    {w:"HERBIVORO",d:"Herbívoro",h:"Consumidor primário; come produtores."},
+    {w:"CARNIVORO",d:"Carnívoro",h:"Consumidor que se alimenta de outros animais."},
+    {w:"ONIVORO",d:"Onívoro",h:"Come tanto plantas quanto animais."},
+    {w:"FOTOSSINTESE",d:"Fotossíntese",h:"Converte luz solar em energia química."},
+    {w:"CADEIA",d:"Cadeia",h:"Sequência linear de quem come quem."},
+    {w:"ENERGIA",d:"Energia",h:"Flui em sentido único pelos níveis tróficos."},
+    {w:"NUTRIENTE",d:"Nutriente",h:"Matéria reciclada e reutilizada no ecossistema."}
+  ]},
+  dificil:{ label:"Difícil", size:12, words:[
+    {w:"AUTOTROFO",d:"Autótrofo",h:"Produz matéria orgânica a partir de fontes inorgânicas."},
+    {w:"HETEROTROFO",d:"Heterótrofo",h:"Obtém energia consumindo outros organismos."},
+    {w:"BIOMASSA",d:"Biomassa",h:"Massa total de matéria orgânica em um nível."},
+    {w:"TROFICO",d:"Trófico",h:"Relativo à nutrição e à posição na cadeia."},
+    {w:"PIRAMIDE",d:"Pirâmide",h:"Representa energia ou biomassa por nível trófico."},
+    {w:"DETRITIVORO",d:"Detritívoro",h:"Consome matéria orgânica morta (detritos)."},
+    {w:"SAPROFAGO",d:"Saprófago",h:"Alimenta-se de organismos em decomposição."},
+    {w:"CARNIVORO",d:"Carnívoro",h:"Consumidor secundário ou terciário."},
+    {w:"FITOPLANCTON",d:"Fitoplâncton",h:"Produtor microscópico da base das teias aquáticas."},
+    {w:"ZOOPLANCTON",d:"Zooplâncton",h:"Consumidor primário aquático microscópico."},
+    {w:"HERBIVORIA",d:"Herbivoria",h:"Interação de consumo de produtores."},
+    {w:"PREDACAO",d:"Predação",h:"Interação em que um organismo mata e consome outro."}
+  ]},
+  carbonauta:{ label:"🛰️ Carbonauta", size:12, words:[
+    {w:"ASSIMILACAO",d:"Assimilação",h:"Fração do alimento incorporada à biomassa do consumidor."},
+    {w:"EFICIENCIA",d:"Eficiência",h:"Transferência de ~10% de energia entre níveis (lei de Lindeman)."},
+    {w:"MIXOTROFIA",d:"Mixotrofia",h:"Combina autotrofia e heterotrofia no mesmo organismo."},
+    {w:"QUIMIOTROFO",d:"Quimiótrofo",h:"Obtém energia oxidando compostos químicos inorgânicos."},
+    {w:"METABOLISMO",d:"Metabolismo",h:"Conjunto de reações que processam energia e matéria."},
+    {w:"RESPIRACAO",d:"Respiração",h:"Dissipa energia como calor em cada nível trófico."},
+    {w:"HETEROTROFO",d:"Heterótrofo",h:"Consumidor ou decompositor; não fixa carbono."},
+    {w:"FITOPLANCTON",d:"Fitoplâncton",h:"Responde por cerca de 50% da produção primária global."},
+    {w:"DETRITIVORO",d:"Detritívoro",h:"Canaliza energia pela via dos detritos."},
+    {w:"PRODUCAO",d:"Produção",h:"Taxa de fixação de energia pelos produtores."},
+    {w:"TROFICO",d:"Trófico",h:"Define a posição funcional na teia alimentar."},
+    {w:"AUTOTROFO",d:"Autótrofo",h:"Fixa carbono; base energética do ecossistema."},
+    {w:"PIRAMIDE",d:"Pirâmide",h:"Modelo de energia que estreita do produtor ao topo."}
+  ]}
+};
+
+const DIRS=[[0,1],[1,0],[1,1],[1,-1],[0,-1],[-1,0],[-1,-1],[-1,1]];
+const ALPHA="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+let level="basico", size=10, words=[], grid=[], placed=[], found=new Set();
+let seconds=0, score=0, hits=0, timer=null, started=false;
+let selecting=false, startRC=null, selCells=[];
+
+const $=id=>document.getElementById(id);
+
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+function buildGrid(){
+  grid=Array.from({length:size},()=>Array(size).fill(""));
+  placed=[];
+  const list=[...words].sort((a,b)=>b.w.length-a.w.length);
+  for(const item of list){
+    const wd=item.w;
+    let ok=false;
+    for(let t=0;t<400 && !ok;t++){
+      const dir=DIRS[Math.floor(Math.random()*DIRS.length)];
+      const r0=Math.floor(Math.random()*size), c0=Math.floor(Math.random()*size);
+      const rEnd=r0+dir[0]*(wd.length-1), cEnd=c0+dir[1]*(wd.length-1);
+      if(rEnd<0||rEnd>=size||cEnd<0||cEnd>=size) continue;
+      let fits=true;
+      for(let k=0;k<wd.length;k++){
+        const ch=grid[r0+dir[0]*k][c0+dir[1]*k];
+        if(ch!=="" && ch!==wd[k]){ fits=false; break; }
+      }
+      if(!fits) continue;
+      const coords=[];
+      for(let k=0;k<wd.length;k++){
+        const r=r0+dir[0]*k, c=c0+dir[1]*k;
+        grid[r][c]=wd[k]; coords.push(r+"_"+c);
+      }
+      placed.push({w:wd,coords});
+      ok=true;
+    }
+  }
+  for(let r=0;r<size;r++) for(let c=0;c<size;c++)
+    if(grid[r][c]==="") grid[r][c]=ALPHA[Math.floor(Math.random()*26)];
+}
+
+function renderBoard(){
+  const b=$("board");
+  b.style.gridTemplateColumns=`repeat(${size},1fr)`;
+  b.innerHTML="";
+  for(let r=0;r<size;r++) for(let c=0;c<size;c++){
+    const d=document.createElement("div");
+    d.className="cell"; d.textContent=grid[r][c];
+    d.dataset.r=r; d.dataset.c=c;
+    b.appendChild(d);
+  }
+}
+
+function renderWords(){
+  const ul=$("words"); ul.innerHTML="";
+  words.forEach(item=>{
+    const li=document.createElement("li");
+    li.dataset.w=item.w;
+    li.innerHTML=`<b>${item.d}</b> — ${item.h}`;
+    if(found.has(item.w)) li.classList.add("done");
+    ul.appendChild(li);
+  });
+}
+
+function cellAt(r,c){
+  return document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+}
+
+function lineCells(a,b){
+  const dr=Math.sign(b.r-a.r), dc=Math.sign(b.c-a.c);
+  const lenR=Math.abs(b.r-a.r), lenC=Math.abs(b.c-a.c);
+  if(!(dr===0||dc===0||lenR===lenC)) return null; // não alinhado
+  const len=Math.max(lenR,lenC);
+  const cells=[];
+  for(let k=0;k<=len;k++) cells.push({r:a.r+dr*k,c:a.c+dc*k});
+  return cells;
+}
+
+function clearSel(){
+  document.querySelectorAll(".cell.sel").forEach(e=>e.classList.remove("sel"));
+  selCells=[];
+}
+
+function paintSel(cells){
+  clearSel();
+  selCells=cells||[];
+  selCells.forEach(p=>{ const el=cellAt(p.r,p.c); if(el) el.classList.add("sel"); });
+}
+
+function startTimer(){
+  if(timer) return;
+  timer=setInterval(()=>{ seconds++; $("time").textContent=seconds+"s"; },1000);
+}
+
+function ensureStarted(){ if(!started){ started=true; startTimer(); } }
+
+function readWord(cells){ return cells.map(p=>grid[p.r][p.c]).join(""); }
+
+function tryMatch(){
+  if(selCells.length<2){ clearSel(); return; }
+  const s=readWord(selCells);
+  const rev=[...s].reverse().join("");
+  const hit=words.find(it=>(it.w===s||it.w===rev) && !found.has(it.w));
+  if(hit){
+    found.add(hit.w);
+    selCells.forEach(p=>{ const el=cellAt(p.r,p.c); el.classList.remove("sel"); el.classList.add("found","pop"); setTimeout(()=>el.classList.remove("pop"),400); });
+    selCells=[];
+    hits++; score+=100;
+    $("hits").textContent=hits; $("score").textContent=score;
+    const li=document.querySelector(`#words li[data-w="${hit.w}"]`);
+    if(li) li.classList.add("done");
+    $("feedback").innerHTML=`✅ <b>${hit.d}</b> — ${hit.h}`;
+    if(hits===words.length) finish();
+  }else{
+    const b=$("board"); b.classList.add("shake"); setTimeout(()=>b.classList.remove("shake"),400);
+    $("feedback").innerHTML=`❌ "${s}" não está na lista. Procure outra palavra da teia trófica!`;
+    clearSel();
+  }
+}
+
+/* ---- seleção por ponteiro (mouse + toque) ---- */
+function onDown(e){
+  const t=e.target.closest(".cell"); if(!t) return;
+  ensureStarted();
+  selecting=true;
+  startRC={r:+t.dataset.r,c:+t.dataset.c};
+  paintSel([startRC]);
+  e.preventDefault();
+}
+function onMove(e){
+  if(!selecting) return;
+  let x,y;
+  if(e.touches){ x=e.touches[0].clientX; y=e.touches[0].clientY; }
+  else { x=e.clientX; y=e.clientY; }
+  const el=document.elementFromPoint(x,y);
+  const t=el&&el.closest?el.closest(".cell"):null;
+  if(!t) return;
+  const cur={r:+t.dataset.r,c:+t.dataset.c};
+  const line=lineCells(startRC,cur);
+  if(line) paintSel(line);
+}
+function onUp(){
+  if(!selecting) return;
+  selecting=false;
+  tryMatch();
+}
+
+function finish(){
+  clearInterval(timer); timer=null;
+  const bonus=Math.max(0,600-seconds);
+  score+=bonus;
+  $("score").textContent=score;
+  $("winScore").textContent=score+" pts";
+  $("winMsg").innerHTML=`Nível <b>${LEVELS[level].label}</b> · ${hits} palavras · ${seconds}s<br>Bônus de velocidade: +${bonus} pts`;
+  $("win").classList.add("show");
+}
+
+function setLevel(lv){
+  level=lv;
+  document.querySelectorAll("#levels button").forEach(b=>b.classList.toggle("active",b.dataset.lv===lv));
+  $("rankLevel").textContent=LEVELS[lv].label;
+  init();
+  loadRanking();
+}
+
+function init(){
+  const cfg=LEVELS[level];
+  size=cfg.size;
+  words=shuffle([...cfg.words]);
+  found=new Set();
+  seconds=0; score=0; hits=0; started=false;
+  if(timer){ clearInterval(timer); timer=null; }
+  $("time").textContent="0s"; $("score").textContent="0"; $("hits").textContent="0";
+  $("total").textContent=words.length;
+  $("win").classList.remove("show");
+  buildGrid(); renderBoard(); renderWords();
+  $("feedback").innerHTML=`Nível <b>${cfg.label}</b>: encontre ${words.length} palavras escondidas na grade. A teia trófica espera por você!`;
+}
+
+function restart(){ $("win").classList.remove("show"); init(); }
+
+/* ---------- Ranking Firestore ---------- */
+async function submitScore(){
+  const name=($("playerName").value||"Anônimo").trim().slice(0,18);
+  $("saveMsg").textContent="Enviando…";
+  if(!db){ $("saveMsg").textContent="Offline: pontuação não enviada (jogo segue jogável)."; return; }
+  try{
+    await addDoc(collection(db,"games",GAME_ID,"scores"),
+      { name, score, level, seconds, ts:serverTimestamp() });
+    $("saveMsg").textContent="Pontuação registrada! 🎉";
+    loadRanking();
+  }catch(err){ $("saveMsg").textContent="Não foi possível enviar agora."; }
+}
+
+async function loadRanking(){
+  const el=$("rankList");
+  if(!db){ el.innerHTML='<li style="background:none"><span class="nm">Ranking offline</span></li>'; return; }
+  try{
+    const q=query(collection(db,"games",GAME_ID,"scores"), orderBy("score","desc"), limit(80));
+    const snap=await getDocs(q);
+    const rows=[];
+    snap.forEach(d=>{ const v=d.data(); if(v.level===level) rows.push(v); });
+    rows.sort((a,b)=>b.score-a.score);
+    const top=rows.slice(0,10);
+    if(!top.length){ el.innerHTML='<li style="background:none"><span class="nm">Seja o primeiro deste nível!</span></li>'; return; }
+    el.innerHTML="";
+    top.forEach(v=>{
+      const li=document.createElement("li");
+      li.innerHTML=`<span class="nm">${(v.name||"Anônimo")}</span><span class="sc">${v.score}</span>`;
+      el.appendChild(li);
+    });
+  }catch(err){ el.innerHTML='<li style="background:none"><span class="nm">Ranking indisponível</span></li>'; }
+}
+
+/* listeners */
+const board=$("board");
+board.addEventListener("mousedown",onDown);
+board.addEventListener("touchstart",onDown,{passive:false});
+window.addEventListener("mousemove",onMove);
+window.addEventListener("touchmove",onMove,{passive:false});
+window.addEventListener("mouseup",onUp);
+window.addEventListener("touchend",onUp);
+
+/* expor ao window p/ onclick */
+window.setLevel=setLevel;
+window.restart=restart;
+window.submitScore=submitScore;
+window.init=init;
+
+setLevel("basico");
+</script>
+</body>
+</html>
