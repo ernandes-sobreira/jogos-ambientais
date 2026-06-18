@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terra Firme — Verdadeiro ou Falso do Solo</title>
+<style>
+  :root{
+    --c1:#5b3a1a; --c2:#caa472; --accent:#3fa34d; --accent2:#2b7a37;
+    --wrong:#e23b3b; --card:#fffaf2; --ink:#2b2018; --muted:#6b5a48;
+    --gold:#f2b705; --shadow:0 10px 30px rgba(60,40,15,.22);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:system-ui,"Segoe UI",Roboto,sans-serif;
+    background:linear-gradient(160deg,#5b3a1a 0%,#caa472 100%);
+    min-height:100vh;color:var(--ink);padding:18px 12px 40px;
+  }
+  .wrap{max-width:760px;margin:0 auto}
+  header{text-align:center;color:#fff;margin-bottom:16px}
+  h1{font-size:clamp(1.7rem,5vw,2.6rem);text-shadow:0 2px 6px rgba(0,0,0,.3);letter-spacing:.5px}
+  .sub{opacity:.95;font-size:clamp(.85rem,2.5vw,1rem);margin-top:4px}
+  .card{background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:18px;margin-bottom:14px}
+  .levels{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+  .lvl{
+    border:none;cursor:pointer;font-size:.95rem;font-weight:600;color:var(--c1);
+    background:#fff;border:2px solid #e3d4bc;border-radius:12px;padding:10px 14px;
+    transition:all .25s;flex:1 1 auto;min-width:120px;
+  }
+  .lvl:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(60,40,15,.18)}
+  .lvl.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:var(--accent2);box-shadow:0 6px 18px rgba(63,163,77,.4)}
+  .lvl.carb.active{background:linear-gradient(135deg,#3a2a6b,#5e3ea8);border-color:#5e3ea8;box-shadow:0 6px 18px rgba(94,62,168,.5)}
+  .hud{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-around;text-align:center}
+  .hud div{flex:1 1 70px}
+  .hud .k{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .hud .v{font-size:1.35rem;font-weight:700;color:var(--c1)}
+  .progwrap{height:10px;background:#eaddc7;border-radius:8px;overflow:hidden;margin-top:12px}
+  .prog{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--gold));transition:width .4s}
+  .instr{font-size:.92rem;color:var(--muted);text-align:center;margin-bottom:8px}
+  .statement{font-size:clamp(1.05rem,3.4vw,1.45rem);font-weight:600;line-height:1.4;text-align:center;min-height:3.2em;display:flex;align-items:center;justify-content:center;padding:6px}
+  .vf{display:flex;gap:12px;margin-top:10px}
+  .vf button{
+    flex:1;border:none;cursor:pointer;font-size:1.3rem;font-weight:800;color:#fff;
+    border-radius:14px;padding:20px 8px;transition:all .2s;box-shadow:var(--shadow);
+  }
+  .vbtn{background:linear-gradient(135deg,#3fa34d,#2b7a37)}
+  .fbtn{background:linear-gradient(135deg,#e2853b,#c25a1d)}
+  .vf button:hover:not(:disabled){transform:translateY(-2px)}
+  .vf button:disabled{opacity:.55;cursor:default}
+  .feedback{margin-top:14px;border-radius:12px;padding:14px;font-size:.95rem;line-height:1.45;display:none}
+  .feedback.show{display:block;animation:pop .4s ease}
+  .feedback.ok{background:#e7f6ea;border-left:5px solid var(--accent)}
+  .feedback.no{background:#fdeaea;border-left:5px solid var(--wrong)}
+  .feedback b{display:block;margin-bottom:4px;font-size:1rem}
+  .next{margin-top:12px;width:100%;border:none;cursor:pointer;background:var(--c1);color:#fff;font-weight:700;font-size:1rem;border-radius:12px;padding:14px;transition:all .2s;display:none}
+  .next:hover{transform:translateY(-2px);background:#724a22}
+  .next.show{display:block}
+  @keyframes pop{0%{transform:scale(.92)}55%{transform:scale(1.03)}100%{transform:scale(1)}}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+  .shake{animation:shake .4s}
+  .flash-ok{animation:pop .4s}
+  .final{display:none;text-align:center}
+  .final.show{display:block;animation:pop .5s}
+  .final h2{font-size:1.8rem;color:var(--accent2);margin-bottom:8px}
+  .medal{font-size:3.4rem;margin-bottom:6px}
+  .summary{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+  .summary div{background:#f3e9d8;border-radius:12px;padding:12px 16px;min-width:90px}
+  .summary .k{font-size:.7rem;color:var(--muted);text-transform:uppercase}
+  .summary .v{font-size:1.5rem;font-weight:800;color:var(--c1)}
+  .namebox{margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .namebox input{padding:12px;border-radius:10px;border:2px solid #e3d4bc;font-size:1rem;flex:1;min-width:160px;max-width:260px}
+  .namebox button{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:12px 18px;font-weight:700;cursor:pointer;transition:.2s}
+  .namebox button:hover{transform:translateY(-2px)}
+  .rank h3{font-size:1.05rem;color:var(--c1);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+  .rank .lvltag{font-size:.75rem;font-weight:600;background:var(--accent);color:#fff;padding:2px 8px;border-radius:8px}
+  .rank ol{list-style:none;margin-top:8px}
+  .rank li{display:flex;justify-content:space-between;padding:7px 6px;border-bottom:1px solid #eee2cf;font-size:.9rem}
+  .rank li:nth-child(1){font-weight:800;color:var(--accent2)}
+  .rank .nm{display:flex;gap:8px;align-items:center}
+  .rank .pos{display:inline-block;width:22px;text-align:center;color:var(--muted)}
+  .rstatus{font-size:.8rem;color:var(--muted);margin-top:6px}
+  footer{text-align:center;color:#fff;opacity:.92;font-size:.82rem;margin-top:18px;line-height:1.6}
+  footer .by{font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🌱 Terra Firme</h1>
+    <div class="sub">Verdadeiro ou Falso · O solo sob seus pés e a luta contra a erosão</div>
+  </header>
+
+  <div class="card">
+    <div class="levels">
+      <button class="lvl" id="lvl-basico" onclick="setLevel('basico')">🌾 Básico</button>
+      <button class="lvl" id="lvl-inter" onclick="setLevel('inter')">🌍 Intermediário</button>
+      <button class="lvl" id="lvl-dificil" onclick="setLevel('dificil')">⛏️ Difícil</button>
+      <button class="lvl carb" id="lvl-carb" onclick="setLevel('carb')">🛰️ Carbonauta</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="hud">
+      <div><div class="k">Tempo</div><div class="v"><span id="time">0</span>s</div></div>
+      <div><div class="k">Pontos</div><div class="v" id="score">0</div></div>
+      <div><div class="k">Acertos</div><div class="v" id="hits">0</div></div>
+      <div><div class="k">Sequência</div><div class="v" id="streak">0</div></div>
+    </div>
+    <div class="progwrap"><div class="prog" id="prog"></div></div>
+  </div>
+
+  <div class="card" id="play">
+    <div class="instr" id="instr">Leia a afirmação e decida: é Verdadeira ou Falsa?</div>
+    <div class="statement" id="statement">Carregando…</div>
+    <div class="vf">
+      <button class="vbtn" onclick="answer(true)">✔ VERDADEIRO</button>
+      <button class="fbtn" onclick="answer(false)">✘ FALSO</button>
+    </div>
+    <div class="feedback" id="feedback"></div>
+    <button class="next" id="next" onclick="nextQ()">Próxima ➜</button>
+  </div>
+
+  <div class="card final" id="final">
+    <div class="medal" id="medal">🏆</div>
+    <h2 id="finaltitle">Parabéns!</h2>
+    <p id="finalmsg"></p>
+    <div class="summary">
+      <div><div class="k">Pontos</div><div class="v" id="f-score">0</div></div>
+      <div><div class="k">Acertos</div><div class="v" id="f-hits">0</div></div>
+      <div><div class="k">Tempo</div><div class="v" id="f-time">0s</div></div>
+    </div>
+    <div class="namebox">
+      <input id="playername" maxlength="18" placeholder="Seu nome para o ranking">
+      <button onclick="submitScore()">Enviar pontuação</button>
+    </div>
+    <p class="rstatus" id="savestatus"></p>
+    <button class="next show" style="margin-top:14px" onclick="setLevel(currentLevel)">🔄 Jogar de novo</button>
+  </div>
+
+  <div class="card rank">
+    <h3>🏅 Ranking Global <span class="lvltag" id="ranklvl">Básico</span></h3>
+    <ol id="ranklist"></ol>
+    <p class="rstatus" id="rankstatus">Conectando ao ranking…</p>
+  </div>
+
+  <footer>
+    <div class="by">— Idealizado por Ernandes Sobreira —</div>
+    <div>Tema: Solo e erosão · Gênero: Verdadeiro ou Falso · app ambiental do dia (2026-06-18)</div>
+  </footer>
+</div>
+
+<script type="module">
+// ---------- Firebase (somente ranking; jogo 100% offline) ----------
+const firebaseConfig = { apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ", authDomain: "jogos-ranking.firebaseapp.com", databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com", projectId: "jogos-ranking", storageBucket: "jogos-ranking.firebasestorage.app", messagingSenderId: "958784915420", appId: "1:958784915420:web:4212d3ad278f02d600f119" };
+const GAME_ID = "2026-06-18-terra-firme";
+let db=null, fs=null;
+async function initFirebase(){
+  try{
+    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    fs = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app = appMod.initializeApp(firebaseConfig);
+    db = fs.getFirestore(app);
+    return true;
+  }catch(e){ console.warn("Firebase indisponível, jogo segue offline:", e); return false; }
+}
+
+// ---------- Conteúdo: afirmações por nível ----------
+const DATA = {
+  basico:[
+    {t:"O solo é formado por pedaços de rocha, água, ar e restos de seres vivos.",v:true,e:"Isso mesmo! O solo é uma mistura viva de minerais, água, ar e matéria orgânica."},
+    {t:"A minhoca faz mal e estraga o solo.",v:false,e:"Pelo contrário: a minhoca cava túneis que arejam o solo e ajudam a água a entrar."},
+    {t:"Plantar árvores ajuda a segurar o solo e a evitar a erosão.",v:true,e:"As raízes prendem o solo e as folhas amortecem a chuva, reduzindo a erosão."},
+    {t:"A chuva muito forte pode levar embora a camada de cima do solo.",v:true,e:"Sim. A água que escorre carrega a parte mais fértil do solo morro abaixo."},
+    {t:"O solo se forma rapidinho, em poucos dias.",v:false,e:"Demora muito! Formar só 1 cm de solo pode levar de 100 a 400 anos."},
+    {t:"Um terreno sem nenhuma planta fica mais protegido contra a erosão.",v:false,e:"Solo descoberto é mais frágil: sem plantas, a chuva e o vento o levam com facilidade."},
+    {t:"A camada de cima do solo é onde a maioria das plantas cresce.",v:true,e:"Sim, é a camada mais rica em nutrientes e onde ficam a maioria das raízes."},
+    {t:"Todo solo do mundo é exatamente igual.",v:false,e:"Existem muitos tipos de solo, com cores, texturas e fertilidades diferentes."}
+  ],
+  inter:[
+    {t:"Erosão é o desgaste e transporte do solo pela água, pelo vento ou pelo gelo.",v:true,e:"Correto. A erosão remove partículas e as leva para outro lugar."},
+    {t:"A cobertura vegetal reduz o impacto das gotas de chuva sobre o solo.",v:true,e:"As plantas interceptam a chuva e diminuem o salpicamento que desagrega o solo."},
+    {t:"Formar 1 cm de solo pode levar de 100 a 400 anos.",v:true,e:"Por isso o solo é considerado um recurso praticamente não renovável na escala humana."},
+    {t:"Plantar em curvas de nível, acompanhando o relevo, aumenta a erosão.",v:false,e:"É o oposto: as curvas de nível freiam a água e reduzem bastante a erosão."},
+    {t:"O húmus é a matéria orgânica já decomposta que enriquece o solo.",v:true,e:"O húmus melhora a fertilidade, a retenção de água e a estrutura do solo."},
+    {t:"A erosão laminar remove o solo formando grandes sulcos e valas visíveis.",v:false,e:"A laminar retira uma camada fina e uniforme; sulcos e valas são erosão em sulcos e ravinas."},
+    {t:"A erosão eólica é aquela provocada pela ação do vento.",v:true,e:"Comum em solos secos e descobertos, o vento carrega as partículas mais finas."},
+    {t:"Solos muito compactados absorvem melhor a água da chuva.",v:false,e:"A compactação reduz os poros, diminui a infiltração e aumenta o escoamento e a erosão."},
+    {t:"A voçoroca é um tipo leve de erosão que quase não causa danos.",v:false,e:"A voçoroca é uma erosão avançada e severa, com grandes valas difíceis de recuperar."},
+    {t:"A monocultura contínua, sem rotação, melhora a fertilidade do solo a longo prazo.",v:false,e:"É a rotação de culturas que conserva a fertilidade; a monocultura contínua tende a esgotá-la."}
+  ],
+  dificil:[
+    {t:"O perfil do solo é organizado em camadas chamadas horizontes (O, A, B, C, R).",v:true,e:"Cada horizonte tem características próprias de cor, textura e composição."},
+    {t:"Entre os horizontes minerais, o horizonte A é geralmente o mais rico em matéria orgânica.",v:true,e:"O horizonte A concentra húmus e atividade biológica logo abaixo da serapilheira."},
+    {t:"A erosão hídrica costuma evoluir na sequência: laminar → sulcos → ravinas → voçorocas.",v:true,e:"A intensidade cresce à medida que a água se concentra e aprofunda os canais."},
+    {t:"Latossolos são solos rasos e pouco intemperizados, típicos de regiões temperadas frias.",v:false,e:"Latossolos são profundos, muito intemperizados e típicos de regiões tropicais."},
+    {t:"A textura do solo refere-se apenas à cor e ao cheiro do material.",v:false,e:"Textura é a proporção de areia, silte e argila; cor e cheiro são outras propriedades."},
+    {t:"O plantio direto mantém os resíduos vegetais na superfície e reduz a erosão.",v:true,e:"A palhada protege o solo do impacto da chuva e melhora a infiltração."},
+    {t:"A capacidade de troca catiônica (CTC) mede a velocidade da erosão do solo.",v:false,e:"A CTC indica a retenção de cátions e nutrientes pelo solo, não a erosão."},
+    {t:"Solos arenosos retêm mais água que solos argilosos.",v:false,e:"A argila tem partículas finas e muita superfície, retendo bem mais água que a areia."},
+    {t:"A salinização é o acúmulo de sais que pode degradar solos sob irrigação mal manejada.",v:true,e:"Sais em excesso prejudicam as raízes e reduzem a produtividade agrícola."},
+    {t:"O pH do solo não influencia a disponibilidade de nutrientes para as plantas.",v:false,e:"O pH controla fortemente a solubilidade e a absorção de vários nutrientes."},
+    {t:"O terraceamento aumenta a velocidade da enxurrada em encostas.",v:false,e:"Ao contrário: os terraços quebram o comprimento da rampa e reduzem a velocidade da água."},
+    {t:"Erosão acelerada é aquela induzida ou intensificada pela ação humana.",v:true,e:"Difere da erosão geológica natural por ocorrer muito mais rápido que a formação do solo."}
+  ],
+  carb:[
+    {t:"Os solos armazenam mais carbono que a atmosfera e a vegetação terrestre somadas.",v:true,e:"Estima-se ~1.500–2.400 GtC no solo, contra ~760 Gt na atmosfera e ~560 Gt na vegetação."},
+    {t:"A USLE prevê com exatidão a perda de solo de cada evento isolado de chuva.",v:false,e:"A USLE estima perdas médias anuais de longo prazo, não eventos isolados; para isso há modelos como o WEPP."},
+    {t:"Na USLE, o fator K representa a erosividade da chuva.",v:false,e:"K é a erodibilidade do solo; a erosividade da chuva é o fator R."},
+    {t:"A agregação do solo, favorecida por glomalina e exsudatos microbianos, protege o carbono orgânico.",v:true,e:"Agregados estáveis ocluem a matéria orgânica e dificultam o acesso de decompositores."},
+    {t:"Em lavouras convencionais, a formação de solo costuma superar a taxa de erosão.",v:false,e:"Geralmente é o contrário: a erosão excede em muito a lenta formação do solo."},
+    {t:"O carbono associado a minerais (MAOM) tende a ter maior tempo de residência que a matéria orgânica particulada (POM).",v:true,e:"A ligação organo-mineral confere proteção e estabilidade de décadas a milênios."},
+    {t:"O efeito priming descreve a aceleração da decomposição da matéria orgânica nativa após adição de substrato lábil.",v:true,e:"Insumos frescos estimulam a microbiota, que então decompõe também o carbono antigo."},
+    {t:"Latossolos tropicais muito intemperizados são dominados por argilas 2:1 de alta atividade, como a esmectita.",v:false,e:"Predominam caulinita (1:1) e óxidos de Fe e Al, de baixa atividade."},
+    {t:"A erosão pode atuar como fonte ou como sumidouro de carbono, conforme o destino do sedimento.",v:true,e:"Carbono pode ser mineralizado no transporte ou soterrado e preservado na deposição."},
+    {t:"O sequestro de carbono no solo é, em princípio, reversível e satura ao longo do tempo.",v:true,e:"Os estoques tendem a um novo equilíbrio e podem ser perdidos se o manejo mudar."},
+    {t:"O fracionamento por densidade do solo separa o carbono apenas pela sua cor.",v:false,e:"Ele separa frações por densidade e estabilidade, distinguindo frações leves lábeis das pesadas associadas a minerais."},
+    {t:"A relação C:N do solo não tem relação com a taxa de mineralização do nitrogênio.",v:false,e:"Relações C:N altas favorecem a imobilização; baixas favorecem a mineralização do N."},
+    {t:"O manejo conservacionista pode elevar o estoque de carbono, mas o ganho depende de clima, textura e mineralogia.",v:true,e:"Não há resposta universal: o potencial de sequestro é local e dependente do contexto."},
+    {t:"A abundância natural de ¹³C não consegue distinguir carbono de plantas C3 e C4 no solo.",v:false,e:"Justamente distingue: plantas C3 e C4 têm assinaturas isotópicas diferentes, úteis no estudo da dinâmica do COS."}
+  ]
+};
+
+const LABELS={basico:"Básico",inter:"Intermediário",dificil:"Difícil",carb:"🛰️ Carbonauta"};
+const RANK_LABELS={basico:"Básico",inter:"Intermediário",dificil:"Difícil",carb:"Carbonauta"};
+
+let currentLevel="basico";
+let queue=[], idx=0, score=0, hits=0, streak=0, seconds=0, timer=null, answered=false;
+
+function shuffle(a){ // Fisher-Yates
+  const arr=a.slice();
+  for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
+  return arr;
+}
+
+function setLevel(lvl){
+  currentLevel=lvl;
+  window.currentLevel=lvl;
+  document.querySelectorAll(".lvl").forEach(b=>b.classList.remove("active"));
+  const map={basico:"lvl-basico",inter:"lvl-inter",dificil:"lvl-dificil",carb:"lvl-carb"};
+  document.getElementById(map[lvl]).classList.add("active");
+  queue=shuffle(DATA[lvl]); idx=0; score=0; hits=0; streak=0; seconds=0; answered=false;
+  document.getElementById("final").classList.remove("show");
+  document.getElementById("play").style.display="block";
+  document.getElementById("ranklvl").textContent=RANK_LABELS[lvl];
+  updateHud();
+  clearInterval(timer);
+  timer=setInterval(()=>{seconds++;document.getElementById("time").textContent=seconds;},1000);
+  renderQ();
+  loadRanking();
+}
+
+function updateHud(){
+  document.getElementById("score").textContent=score;
+  document.getElementById("hits").textContent=hits;
+  document.getElementById("streak").textContent=streak;
+  document.getElementById("time").textContent=seconds;
+  document.getElementById("prog").style.width=(idx/queue.length*100)+"%";
+}
+
+function renderQ(){
+  answered=false;
+  const q=queue[idx];
+  const el=document.getElementById("statement");
+  el.textContent=q.t;
+  el.className="statement";
+  document.getElementById("instr").textContent=`Afirmação ${idx+1} de ${queue.length} — é Verdadeira ou Falsa?`;
+  const fb=document.getElementById("feedback"); fb.className="feedback"; fb.innerHTML="";
+  document.getElementById("next").classList.remove("show");
+  document.querySelectorAll(".vf button").forEach(b=>b.disabled=false);
+  updateHud();
+}
+
+function answer(choice){
+  if(answered) return;
+  answered=true;
+  const q=queue[idx];
+  const correct=(choice===q.v);
+  document.querySelectorAll(".vf button").forEach(b=>b.disabled=true);
+  const fb=document.getElementById("feedback");
+  const st=document.getElementById("statement");
+  if(correct){
+    hits++; streak++;
+    const bonus=Math.min(streak,5);
+    score+=10+bonus*2;
+    fb.className="feedback ok show";
+    fb.innerHTML="<b>✔ Correto!</b>"+q.e+(streak>1?` <em>(sequência de ${streak} 🔥)</em>`:"");
+    st.classList.add("flash-ok");
+  }else{
+    streak=0;
+    fb.className="feedback no show";
+    fb.innerHTML="<b>✘ Não foi dessa vez.</b>A resposta certa é <strong>"+(q.v?"VERDADEIRO":"FALSO")+"</strong>. "+q.e;
+    st.classList.add("shake");
+  }
+  setTimeout(()=>{st.classList.remove("shake","flash-ok");},450);
+  updateHud();
+  document.getElementById("next").classList.add("show");
+  document.getElementById("next").textContent = (idx>=queue.length-1)?"Ver resultado 🎉":"Próxima ➜";
+}
+
+function nextQ(){
+  idx++;
+  if(idx>=queue.length){ endGame(); return; }
+  renderQ();
+}
+
+function endGame(){
+  clearInterval(timer);
+  document.getElementById("prog").style.width="100%";
+  document.getElementById("play").style.display="none";
+  const fin=document.getElementById("final");
+  fin.classList.add("show");
+  const total=queue.length;
+  const pct=Math.round(hits/total*100);
+  let medal="🌱",title="Continue cultivando!";
+  if(pct>=90){medal="🏆";title="Guardião do Solo!";}
+  else if(pct>=70){medal="🥇";title="Excelente trabalho!";}
+  else if(pct>=50){medal="🥈";title="Muito bom!";}
+  else{medal="🌱";title="Bom começo!";}
+  document.getElementById("medal").textContent=medal;
+  document.getElementById("finaltitle").textContent=title;
+  document.getElementById("finalmsg").textContent=`Você acertou ${hits} de ${total} afirmações (${pct}%) no nível ${RANK_LABELS[currentLevel]}.`;
+  document.getElementById("f-score").textContent=score;
+  document.getElementById("f-hits").textContent=hits+"/"+total;
+  document.getElementById("f-time").textContent=seconds+"s";
+  document.getElementById("savestatus").textContent="";
+  loadRanking();
+}
+
+// ---------- Ranking ----------
+async function submitScore(){
+  const name=(document.getElementById("playername").value||"Anônimo").trim().slice(0,18);
+  const status=document.getElementById("savestatus");
+  if(!db){ status.textContent="⚠️ Ranking offline — pontuação não enviada, mas seu jogo valeu!"; return; }
+  try{
+    status.textContent="Enviando…";
+    const {collection,addDoc,serverTimestamp}=fs;
+    await addDoc(collection(db,"games",GAME_ID,"scores"),{
+      name, score, level:currentLevel, seconds, ts:serverTimestamp()
+    });
+    status.textContent="✅ Pontuação enviada!";
+    loadRanking();
+  }catch(e){ console.warn(e); status.textContent="⚠️ Não foi possível enviar agora."; }
+}
+
+async function loadRanking(){
+  const list=document.getElementById("ranklist");
+  const status=document.getElementById("rankstatus");
+  document.getElementById("ranklvl").textContent=RANK_LABELS[currentLevel];
+  if(!db){ status.textContent="Ranking indisponível offline."; list.innerHTML=""; return; }
+  try{
+    status.textContent="Carregando ranking…";
+    const {collection,query,orderBy,limit,getDocs}=fs;
+    // BUG evitado: sem where+orderBy combinados. Ordena por score e filtra nível no cliente.
+    const q=query(collection(db,"games",GAME_ID,"scores"),orderBy("score","desc"),limit(80));
+    const snap=await getDocs(q);
+    const rows=[];
+    snap.forEach(d=>{const x=d.data(); if(x.level===currentLevel) rows.push(x);});
+    rows.sort((a,b)=>b.score-a.score||(a.seconds-b.seconds));
+    const top=rows.slice(0,10);
+    if(top.length===0){ list.innerHTML=""; status.textContent="Seja o primeiro a pontuar neste nível!"; return; }
+    list.innerHTML=top.map((r,i)=>{
+      const med=i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+".";
+      const nm=(r.name||"Anônimo").replace(/[<>&]/g,"");
+      return `<li><span class="nm"><span class="pos">${med}</span>${nm}</span><span>${r.score} pts · ${r.seconds||0}s</span></li>`;
+    }).join("");
+    status.textContent=`Top ${top.length} — nível ${RANK_LABELS[currentLevel]}`;
+  }catch(e){ console.warn(e); status.textContent="Não foi possível carregar o ranking."; }
+}
+
+// ---------- Expor ao window (onclick com type=module) ----------
+window.setLevel=setLevel;
+window.answer=answer;
+window.nextQ=nextQ;
+window.submitScore=submitScore;
+window.currentLevel=currentLevel;
+
+async function init(){
+  await initFirebase();
+  setLevel("basico");
+}
+window.init=init;
+init();
+</script>
+</body>
+</html>
