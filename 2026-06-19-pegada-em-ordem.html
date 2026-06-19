@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pegada em Ordem 👣 — A trilha do carbono pessoal</title>
+<style>
+  :root{
+    --bg1:#0c3b2e;
+    --bg2:#0a4d5c;
+    --card:#0f2f2a;
+    --card2:#123a44;
+    --ink:#eafff4;
+    --muted:#9fd9c6;
+    --accent:#a3e635;
+    --accent2:#5eead4;
+    --amber:#fbbf24;
+    --ok:#22c55e;
+    --bad:#ef4444;
+    --line:rgba(255,255,255,.10);
+    --radius:16px;
+    --shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:linear-gradient(160deg,var(--bg1),var(--bg2));
+    min-height:100vh;
+    line-height:1.5;
+    padding:18px clamp(10px,3vw,28px) 40px;
+  }
+  .wrap{max-width:880px;margin:0 auto}
+  header.top{text-align:center;margin-bottom:14px}
+  h1{
+    font-size:clamp(1.7rem,5vw,2.7rem);
+    margin:.2em 0 .1em;
+    letter-spacing:-.5px;
+    text-shadow:0 2px 12px rgba(0,0,0,.4);
+  }
+  .subtitle{color:var(--muted);font-size:clamp(.9rem,2.4vw,1.05rem);margin:0 0 4px}
+  .levels{
+    display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0 10px;
+  }
+  .lvl-btn{
+    border:1px solid var(--line);
+    background:var(--card2);
+    color:var(--ink);
+    padding:10px 16px;border-radius:999px;cursor:pointer;font-size:.95rem;font-weight:600;
+    transition:transform .2s ease,background .25s ease,box-shadow .25s ease;
+  }
+  .lvl-btn:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+  .lvl-btn.active{
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color:#05291f;border-color:transparent;box-shadow:0 6px 18px rgba(163,230,53,.35);
+  }
+  .lvl-btn.carb{border-color:rgba(94,234,212,.5)}
+  .lvl-btn.carb.active{background:linear-gradient(135deg,#5eead4,#38bdf8);color:#03212b}
+  .instr{
+    text-align:center;color:var(--muted);font-size:.92rem;margin:6px auto 14px;max-width:640px;
+  }
+  .hud{
+    display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:14px;
+  }
+  .stat{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:8px 14px;min-width:104px;text-align:center;box-shadow:var(--shadow);
+  }
+  .stat .label{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .stat .val{font-size:1.25rem;font-weight:800}
+  .progress{
+    height:9px;background:rgba(255,255,255,.12);border-radius:999px;overflow:hidden;margin:4px 0 16px;
+  }
+  .progress > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s ease}
+  .panel{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:clamp(14px,3vw,22px);box-shadow:var(--shadow);
+  }
+  .prompt{font-size:clamp(1.05rem,3vw,1.3rem);font-weight:700;margin:0 0 4px}
+  .hint{color:var(--accent2);font-size:.88rem;margin:0 0 14px}
+  .list{display:flex;flex-direction:column;gap:10px}
+  .item{
+    display:flex;align-items:center;gap:10px;
+    background:var(--card2);border:1px solid var(--line);border-left:5px solid var(--accent);
+    border-radius:12px;padding:12px 12px;cursor:grab;
+    transition:transform .2s ease,box-shadow .25s ease,border-color .25s ease,background .25s ease;
+  }
+  .item:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+  .item.dragging{opacity:.55;transform:scale(.99)}
+  .item.correct{border-color:var(--ok);border-left-color:var(--ok);background:rgba(34,197,94,.16)}
+  .item.wrong{border-color:var(--bad);border-left-color:var(--bad);background:rgba(239,68,68,.14);animation:shake .4s}
+  .item.pop{animation:pop .4s}
+  .pos{
+    font-weight:800;background:rgba(255,255,255,.10);border-radius:8px;
+    width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex:none;
+  }
+  .txt{flex:1;font-size:.97rem}
+  .arrows{display:flex;flex-direction:column;gap:3px;flex:none}
+  .arrows button{
+    border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink);
+    width:30px;height:22px;border-radius:6px;cursor:pointer;font-size:.7rem;line-height:1;
+    transition:background .2s ease,transform .15s ease;
+  }
+  .arrows button:hover{background:rgba(255,255,255,.16);transform:translateY(-1px)}
+  .arrows button:disabled{opacity:.3;cursor:default}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+  .btn{
+    border:none;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;
+    transition:transform .2s ease,box-shadow .25s ease,opacity .2s ease;
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+  .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#05291f}
+  .btn.ghost{background:var(--card2);color:var(--ink);border:1px solid var(--line)}
+  .btn:disabled{opacity:.4;cursor:default;transform:none;box-shadow:none}
+  .feedback{
+    margin-top:14px;background:rgba(94,234,212,.10);border:1px dashed rgba(94,234,212,.4);
+    border-radius:12px;padding:12px 14px;font-size:.92rem;color:var(--ink);min-height:48px;
+  }
+  .feedback b{color:var(--accent)}
+  .final{text-align:center}
+  .final .big{font-size:clamp(2rem,8vw,3.4rem);margin:.1em 0}
+  .final .score{font-size:1.4rem;font-weight:800;color:var(--accent)}
+  .summary{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:16px 0}
+  .name-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+  .name-row input{
+    padding:11px 14px;border-radius:10px;border:1px solid var(--line);
+    background:var(--card2);color:var(--ink);font-size:1rem;min-width:200px;
+  }
+  .rank{
+    margin-top:18px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 16px;box-shadow:var(--shadow);
+  }
+  .rank h3{margin:0 0 4px;font-size:1.05rem}
+  .rank .lvl-tag{color:var(--accent2);font-size:.82rem;margin:0 0 10px}
+  .rank ol{margin:0;padding-left:6px;list-style:none}
+  .rank li{
+    display:flex;justify-content:space-between;gap:8px;padding:7px 8px;border-radius:8px;font-size:.9rem;
+  }
+  .rank li:nth-child(odd){background:rgba(255,255,255,.04)}
+  .rank li .who{font-weight:600}
+  .rank li .pts{color:var(--accent);font-weight:700}
+  .rank .me{outline:1px solid var(--accent);background:rgba(163,230,53,.12)}
+  .muted{color:var(--muted)}
+  footer{
+    text-align:center;margin-top:26px;color:var(--muted);font-size:.82rem;line-height:1.7;
+  }
+  footer .sign{color:var(--accent2);font-weight:700}
+  .hidden{display:none!important}
+  @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.06)}100%{transform:scale(1)}}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Pegada em Ordem 👣</h1>
+    <p class="subtitle">Coloque cada processo da pegada de carbono na sequência certa</p>
+  </header>
+
+  <div class="levels" id="levels">
+    <button class="lvl-btn" data-level="basico" onclick="setLevel('basico')">🌱 Básico</button>
+    <button class="lvl-btn" data-level="intermediario" onclick="setLevel('intermediario')">🌿 Intermediário</button>
+    <button class="lvl-btn" data-level="dificil" onclick="setLevel('dificil')">🌍 Difícil</button>
+    <button class="lvl-btn carb" data-level="carbonauta" onclick="setLevel('carbonauta')">🛰️ Carbonauta</button>
+  </div>
+
+  <p class="instr" id="instr">Arraste os cartões (ou use ▲▼) para ordenar. Depois toque em <b>Verificar</b>. Verde = posição certa, vermelho = fora do lugar.</p>
+
+  <div class="hud">
+    <div class="stat"><div class="label">Tempo</div><div class="val"><span id="hudTime">0</span>s</div></div>
+    <div class="stat"><div class="label">Pontos</div><div class="val" id="hudScore">0</div></div>
+    <div class="stat"><div class="label">Acertos</div><div class="val" id="hudHits">0</div></div>
+    <div class="stat"><div class="label">Rodada</div><div class="val" id="hudRound">0/0</div></div>
+  </div>
+
+  <div class="progress"><i id="progressBar"></i></div>
+
+  <!-- GAME -->
+  <div class="panel" id="gamePanel">
+    <p class="prompt" id="prompt">Escolha um nível para começar 👆</p>
+    <p class="hint" id="hint"></p>
+    <div class="list" id="list"></div>
+    <div class="actions">
+      <button class="btn primary" id="checkBtn" onclick="verify()" disabled>Verificar ✔</button>
+      <button class="btn ghost" id="nextBtn" onclick="nextRound()" disabled>Próxima ➜</button>
+    </div>
+    <div class="feedback" id="feedback">Dica: a ordem certa conta uma história — pense no que vem antes e no que vem depois.</div>
+  </div>
+
+  <!-- FINAL -->
+  <div class="panel final hidden" id="finalPanel">
+    <div class="big">🎉</div>
+    <h2 id="finalTitle">Trilha concluída!</h2>
+    <p class="muted" id="finalMsg"></p>
+    <div class="summary">
+      <div class="stat"><div class="label">Pontos</div><div class="val score" id="finalScore">0</div></div>
+      <div class="stat"><div class="label">Tempo</div><div class="val"><span id="finalTime">0</span>s</div></div>
+      <div class="stat"><div class="label">Rodadas certas</div><div class="val" id="finalHits">0</div></div>
+    </div>
+    <div class="name-row">
+      <input id="playerName" maxlength="18" placeholder="Seu nome no ranking" />
+      <button class="btn primary" id="saveBtn" onclick="submitScore()">Salvar no ranking 🏆</button>
+    </div>
+    <p class="muted" id="saveMsg"></p>
+    <div class="actions">
+      <button class="btn ghost" onclick="restartLevel()">Jogar de novo 🔁</button>
+    </div>
+  </div>
+
+  <!-- RANKING -->
+  <div class="rank" id="rankBox">
+    <h3>🏆 Ranking Global</h3>
+    <p class="lvl-tag" id="rankLevel">Nível: —</p>
+    <ol id="rankList"><li class="muted">Escolha um nível para ver o ranking.</li></ol>
+  </div>
+
+  <footer>
+    <div class="sign">— Idealizado por Ernandes Sobreira —</div>
+    <div>Tema: Pegada de carbono pessoal · Gênero: Ordenar etapas de um processo</div>
+    <div>app ambiental do dia (2026-06-19)</div>
+  </footer>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = { apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ", authDomain:"jogos-ranking.firebaseapp.com", databaseURL:"https://jogos-ranking-default-rtdb.firebaseio.com", projectId:"jogos-ranking", storageBucket:"jogos-ranking.firebasestorage.app", messagingSenderId:"958784915420", appId:"1:958784915420:web:4212d3ad278f02d600f119" };
+const GAME_ID = "2026-06-19-pegada-em-ordem";
+
+let db=null;
+try{ const app=initializeApp(firebaseConfig); db=getFirestore(app); }catch(e){ db=null; }
+
+/* ===================== CONTEÚDO ===================== */
+const DATA = {
+  basico:{
+    label:"🌱 Básico",
+    rounds:[
+      { prompt:"👕 Ordene o ciclo de vida de uma camiseta, do início ao fim:",
+        hint:"Da lavoura ao descarte.",
+        items:[
+          {t:"Plantar e colher o algodão", f:"Tudo começa na lavoura: cultivar algodão consome água, terra e energia."},
+          {t:"Fiar e fabricar o tecido", f:"Transformar a fibra em tecido gasta bastante energia nas fábricas."},
+          {t:"Comprar e usar a camiseta", f:"Lavar e secar a roupa também emite carbono durante o uso."},
+          {t:"Reciclar ou descartar", f:"Reaproveitar a peça evita lixo e novas emissões."}
+        ]},
+      { prompt:"🚶 Ordene os transportes do que MENOS polui para o que MAIS polui (por pessoa):",
+        hint:"Pense na emissão por passageiro.",
+        items:[
+          {t:"Caminhar ou pedalar", f:"A pé ou de bicicleta a emissão é praticamente zero."},
+          {t:"Ônibus", f:"Dividir o trajeto entre muitos passageiros reduz a emissão de cada um."},
+          {t:"Carro sozinho", f:"Um carro com uma só pessoa emite muito por passageiro."},
+          {t:"Avião", f:"Voar é um dos modos que mais emite CO₂ por quilômetro."}
+        ]}
+    ]
+  },
+  intermediario:{
+    label:"🌿 Intermediário",
+    rounds:[
+      { prompt:"🍽️ Ordene os alimentos do MENOR para o MAIOR impacto de carbono por quilo:",
+        hint:"Leguminosas embaixo, ruminantes no topo.",
+        items:[
+          {t:"Lentilhas (~1 kg CO₂e/kg)", f:"Leguminosas têm a menor pegada e são ótima fonte de proteína."},
+          {t:"Frango (~6 kg CO₂e/kg)", f:"Entre as carnes, o frango emite bem menos que os ruminantes."},
+          {t:"Queijo (~21 kg CO₂e/kg)", f:"Laticínios concentram as emissões da produção de leite."},
+          {t:"Cordeiro (~24 kg CO₂e/kg)", f:"Ovinos são ruminantes e liberam metano na digestão."},
+          {t:"Carne bovina (~60 kg CO₂e/kg)", f:"A carne bovina lidera por causa do metano e do uso de terra."}
+        ]},
+      { prompt:"🧮 Ordene as etapas para calcular sua pegada de carbono pessoal:",
+        hint:"Levantar, medir, converter, somar, agir.",
+        items:[
+          {t:"Listar suas atividades (transporte, energia, comida)", f:"Primeiro mapeie de onde vêm suas emissões."},
+          {t:"Coletar dados de consumo (km, kWh, kg)", f:"Sem dados de consumo não há cálculo confiável."},
+          {t:"Multiplicar cada dado pelo fator de emissão", f:"O fator de emissão converte cada atividade em CO₂."},
+          {t:"Somar tudo em CO₂ equivalente (CO₂e)", f:"O CO₂e reúne todos os gases numa única medida."},
+          {t:"Comparar com a média e planejar reduções", f:"A média mundial é cerca de 1 tonelada por mês por pessoa."}
+        ]}
+    ]
+  },
+  dificil:{
+    label:"🌍 Difícil",
+    rounds:[
+      { prompt:"🏭 Ordene o ciclo de vida de um produto, 'do berço ao túmulo':",
+        hint:"Cradle-to-grave.",
+        items:[
+          {t:"Extração de matérias-primas", f:"O 'berço' é a obtenção de recursos naturais."},
+          {t:"Manufatura e processamento", f:"A transformação industrial costuma ser intensiva em energia."},
+          {t:"Transporte e distribuição", f:"Logística adiciona emissões de combustíveis fósseis."},
+          {t:"Uso pelo consumidor", f:"A fase de uso pode dominar a pegada (ex.: eletrodomésticos)."},
+          {t:"Coleta pós-consumo", f:"Recolher o produto é o primeiro passo do fim de vida."},
+          {t:"Reciclagem ou disposição final", f:"O 'túmulo' fecha o ciclo — reciclar reduz emissões evitadas."}
+        ]},
+      { prompt:"🌡️ Ordene os gases do MENOR para o MAIOR potencial de aquecimento global (GWP-100):",
+        hint:"Referência: CO₂ = 1.",
+        items:[
+          {t:"Dióxido de carbono — CO₂ (GWP 1)", f:"É a referência de todos os cálculos de CO₂e."},
+          {t:"Metano — CH₄ (GWP ~28)", f:"Aquece dezenas de vezes mais que o CO₂ em 100 anos."},
+          {t:"Óxido nitroso — N₂O (GWP ~265)", f:"Vem muito de fertilizantes nitrogenados."},
+          {t:"HFC-134a (GWP ~1.300)", f:"Gás de refrigeração com forte efeito estufa."},
+          {t:"Hexafluoreto de enxofre — SF₆ (GWP ~23.500)", f:"Um dos gases mais potentes já medidos."}
+        ]},
+      { prompt:"📊 Ordene as etapas de um inventário de emissões (GHG Protocol):",
+        hint:"Defina, mapeie escopos, calcule, reporte.",
+        items:[
+          {t:"Definir limites organizacionais e operacionais", f:"Define o que entra e o que fica de fora do inventário."},
+          {t:"Mapear fontes de Escopo 1 (emissões diretas)", f:"Combustão própria: caldeiras, frota, geradores."},
+          {t:"Mapear fontes de Escopo 2 (energia adquirida)", f:"Eletricidade e calor comprados de terceiros."},
+          {t:"Mapear fontes de Escopo 3 (cadeia de valor)", f:"Costuma ser o maior e mais difícil de medir."},
+          {t:"Coletar dados e aplicar fatores de emissão", f:"Cada dado de atividade vira CO₂e via fator."},
+          {t:"Reportar e verificar o inventário", f:"Transparência e auditoria garantem credibilidade."}
+        ]}
+    ]
+  },
+  carbonauta:{
+    label:"🛰️ Carbonauta",
+    rounds:[
+      { prompt:"🛰️ Ordene as etapas metodológicas de uma ACV segundo a ISO 14040/14044:",
+        hint:"Objetivo → inventário → impacto → interpretação.",
+        items:[
+          {t:"Definição de objetivo e escopo (unidade funcional e fronteiras)", f:"A unidade funcional torna comparações coerentes."},
+          {t:"Análise de inventário do ciclo de vida (ICV/LCI)", f:"Quantifica todos os fluxos de entrada e saída."},
+          {t:"Classificação dos fluxos em categorias de impacto", f:"Cada emissão é atribuída a categorias (ex.: aquecimento)."},
+          {t:"Caracterização (fatores de equivalência, ex.: GWP)", f:"Converte fluxos em indicadores como kg CO₂e."},
+          {t:"Normalização dos resultados", f:"Etapa opcional: relaciona impactos a uma referência."},
+          {t:"Ponderação entre categorias", f:"Etapa opcional e subjetiva: prioriza categorias."},
+          {t:"Interpretação e análise de incerteza", f:"Avalia robustez, sensibilidade e conclusões."}
+        ]},
+      { prompt:"🛰️ Ordene os forçantes do MENOR para o MAIOR GWP-100 (IPCC AR6):",
+        hint:"Da referência aos gases fluorados extremos.",
+        items:[
+          {t:"CO₂ (GWP 1)", f:"Base de comparação por definição."},
+          {t:"Metano fóssil — CH₄ (GWP ~29,8)", f:"O AR6 elevou o valor ante relatórios anteriores."},
+          {t:"Óxido nitroso — N₂O (GWP ~273)", f:"Longa permanência na atmosfera (>100 anos)."},
+          {t:"HFC-32 (GWP ~771)", f:"HFC de menor GWP usado em refrigeração mais nova."},
+          {t:"HFC-134a (GWP ~1.526)", f:"Ainda muito presente em ar-condicionado veicular."},
+          {t:"Tetrafluormetano — CF₄ (GWP ~7.380)", f:"PFC com vida atmosférica de milhares de anos."},
+          {t:"Hexafluoreto de enxofre — SF₆ (GWP ~25.200)", f:"O gás de efeito estufa mais potente regulado."}
+        ]}
+    ]
+  }
+};
+
+/* ===================== ESTADO ===================== */
+let level=null, roundIdx=0, order=[], solved=false, attempts=0;
+let score=0, hits=0, seconds=0, timer=null, totalRounds=0;
+let dragFrom=null;
+
+const $=(id)=>document.getElementById(id);
+
+function fyShuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+function setLevel(lv){
+  level=lv; roundIdx=0; score=0; hits=0; seconds=0; attempts=0; solved=false;
+  totalRounds=DATA[lv].rounds.length;
+  document.querySelectorAll(".lvl-btn").forEach(b=>b.classList.toggle("active", b.dataset.level===lv));
+  $("finalPanel").classList.add("hidden");
+  $("gamePanel").classList.remove("hidden");
+  stopTimer(); startTimer();
+  updateHud();
+  loadRound();
+  loadRanking();
+}
+function restartLevel(){ if(level) setLevel(level); }
+
+function startTimer(){ timer=setInterval(()=>{ seconds++; $("hudTime").textContent=seconds; }, 1000); }
+function stopTimer(){ if(timer){ clearInterval(timer); timer=null; } }
+
+function loadRound(){
+  const r=DATA[level].rounds[roundIdx];
+  solved=false; attempts=0;
+  // construir ordem correta com índices, embaralhar exibição
+  order=r.items.map((it,i)=>({ t:it.t, f:it.f, correct:i }));
+  // garantir que não comece já ordenado
+  do{ fyShuffle(order); }while(isSorted() && order.length>1);
+  $("prompt").textContent=r.prompt;
+  $("hint").textContent=r.hint;
+  $("checkBtn").disabled=false;
+  $("nextBtn").disabled=true;
+  $("feedback").innerHTML="Monte a sequência e toque em <b>Verificar</b>.";
+  render();
+  updateHud();
+}
+
+function isSorted(){ return order.every((o,i)=>o.correct===i); }
+
+function render(){
+  const list=$("list"); list.innerHTML="";
+  order.forEach((o,i)=>{
+    const div=document.createElement("div");
+    div.className="item"; div.draggable=true; div.dataset.index=i;
+    div.innerHTML=`
+      <span class="pos">${i+1}</span>
+      <span class="txt">${o.t}</span>
+      <span class="arrows">
+        <button title="Subir" ${i===0?"disabled":""} onclick="moveItem(${i},-1)">▲</button>
+        <button title="Descer" ${i===order.length-1?"disabled":""} onclick="moveItem(${i},1)">▼</button>
+      </span>`;
+    div.addEventListener("dragstart",()=>{ dragFrom=i; div.classList.add("dragging"); });
+    div.addEventListener("dragend",()=>{ div.classList.remove("dragging"); });
+    div.addEventListener("dragover",(e)=>{ e.preventDefault(); });
+    div.addEventListener("drop",(e)=>{ e.preventDefault(); dropOn(i); });
+    list.appendChild(div);
+  });
+}
+
+function moveItem(i,dir){
+  if(solved) return;
+  const j=i+dir;
+  if(j<0||j>=order.length) return;
+  [order[i],order[j]]=[order[j],order[i]];
+  render();
+}
+function dropOn(target){
+  if(solved||dragFrom===null||dragFrom===target) return;
+  const [moved]=order.splice(dragFrom,1);
+  order.splice(target,0,moved);
+  dragFrom=null;
+  render();
+}
+
+function verify(){
+  if(solved) return;
+  attempts++;
+  const cards=$("list").children;
+  let correctCount=0;
+  for(let i=0;i<order.length;i++){
+    const c=cards[i]; c.classList.remove("correct","wrong","pop");
+    if(order[i].correct===i){ c.classList.add("correct"); void c.offsetWidth; c.classList.add("pop"); correctCount++; }
+    else { c.classList.add("wrong"); }
+  }
+  const r=DATA[level].rounds[roundIdx];
+  if(correctCount===order.length){
+    solved=true; hits++;
+    const roundPts=Math.max(40, 160-(attempts-1)*30);
+    score+=roundPts;
+    $("checkBtn").disabled=true;
+    $("nextBtn").disabled=false;
+    const last=(roundIdx===totalRounds-1);
+    $("nextBtn").textContent=last?"Ver resultado 🎉":"Próxima ➜";
+    $("feedback").innerHTML=`✅ <b>Sequência correta!</b> +${roundPts} pontos.<br>`+
+      order.map((o,i)=>`<b>${i+1}.</b> ${o.t} — ${o.f}`).join("<br>");
+  } else {
+    $("feedback").innerHTML=`Quase! <b>${correctCount}/${order.length}</b> na posição certa. Ajuste os cartões em vermelho e verifique de novo.`;
+  }
+  updateHud();
+}
+
+function nextRound(){
+  if(roundIdx<totalRounds-1){ roundIdx++; loadRound(); }
+  else endGame();
+}
+
+function endGame(){
+  stopTimer();
+  const timeBonus=Math.max(0, 300-seconds);
+  score+=timeBonus;
+  $("gamePanel").classList.add("hidden");
+  $("finalPanel").classList.remove("hidden");
+  $("finalScore").textContent=score;
+  $("finalTime").textContent=seconds;
+  $("finalHits").textContent=`${hits}/${totalRounds}`;
+  $("finalMsg").textContent=`Nível ${DATA[level].label} · bônus de tempo: +${timeBonus} pts. Quanto mais rápido e preciso, maior a pontuação!`;
+  const saved=localStorage.getItem("pegadaNome"); if(saved) $("playerName").value=saved;
+  $("saveMsg").textContent="";
+  $("saveBtn").disabled=false;
+  updateHud();
+}
+
+function updateHud(){
+  $("hudTime").textContent=seconds;
+  $("hudScore").textContent=score;
+  $("hudHits").textContent=hits;
+  $("hudRound").textContent=`${Math.min(roundIdx+1,totalRounds||1)}/${totalRounds||0}`;
+  const pct=totalRounds? Math.round((roundIdx+(solved?1:0))/totalRounds*100):0;
+  $("progressBar").style.width=pct+"%";
+}
+
+/* ===================== RANKING (Firestore) ===================== */
+async function submitScore(){
+  const name=($("playerName").value||"Anônimo").trim().slice(0,18);
+  localStorage.setItem("pegadaNome",name);
+  $("saveBtn").disabled=true;
+  if(!db){ $("saveMsg").textContent="Offline: pontuação não enviada, mas o jogo continua valendo. 🌱"; return; }
+  $("saveMsg").textContent="Enviando…";
+  try{
+    await addDoc(collection(db,"games",GAME_ID,"scores"),
+      { name, score, level, seconds, ts:serverTimestamp() });
+    $("saveMsg").textContent="Pontuação salva! 🏆";
+    window._lastName=name;
+    loadRanking();
+  }catch(e){
+    $("saveMsg").textContent="Não foi possível enviar agora — o jogo segue 100% jogável.";
+    $("saveBtn").disabled=false;
+  }
+}
+
+async function loadRanking(){
+  const box=$("rankList");
+  $("rankLevel").textContent="Nível: "+(level?DATA[level].label:"—");
+  if(!level){ return; }
+  if(!db){ box.innerHTML='<li class="muted">Ranking indisponível offline. O jogo continua normalmente. 🌍</li>'; return; }
+  box.innerHTML='<li class="muted">Carregando ranking…</li>';
+  try{
+    const q=query(collection(db,"games",GAME_ID,"scores"), orderBy("score","desc"), limit(80));
+    const snap=await getDocs(q);
+    const rows=[];
+    snap.forEach(d=>{ const v=d.data(); if(v.level===level) rows.push(v); });
+    rows.sort((a,b)=>b.score-a.score);
+    const top=rows.slice(0,10);
+    if(!top.length){ box.innerHTML='<li class="muted">Seja o primeiro a pontuar neste nível! 🚀</li>'; return; }
+    box.innerHTML="";
+    top.forEach((v,i)=>{
+      const li=document.createElement("li");
+      if(window._lastName && v.name===window._lastName) li.classList.add("me");
+      const medal=i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+".";
+      li.innerHTML=`<span class="who">${medal} ${escapeHtml(v.name||"Anônimo")}</span>`+
+                   `<span class="pts">${v.score} pts · ${v.seconds||0}s</span>`;
+      box.appendChild(li);
+    });
+  }catch(e){
+    box.innerHTML='<li class="muted">Ranking indisponível no momento. O jogo continua valendo. 🌱</li>';
+  }
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+
+/* ===================== EXPOR AO WINDOW (onclick) ===================== */
+window.setLevel=setLevel;
+window.restartLevel=restartLevel;
+window.moveItem=moveItem;
+window.verify=verify;
+window.nextRound=nextRound;
+window.submitScore=submitScore;
+
+function init(){ updateHud(); }
+window.init=init;
+init();
+</script>
+</body>
+</html>
