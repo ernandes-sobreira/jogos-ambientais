@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>♻️ Lixo Zero — Quiz da Reciclagem</title>
+<style>
+  :root{
+    --bg1:#0f5132;
+    --bg2:#157f4f;
+    --accent:#ffd23f;
+    --accent2:#36d399;
+    --card:#ffffff;
+    --ink:#143027;
+    --muted:#5b6f66;
+    --ok:#22c55e;
+    --err:#ef4444;
+    --shadow:0 10px 30px rgba(0,0,0,.18);
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:linear-gradient(160deg,var(--bg1),var(--bg2));
+    min-height:100vh;
+    padding:18px;
+  }
+  .wrap{max-width:880px;margin:0 auto}
+  header{text-align:center;color:#fff;margin-bottom:14px}
+  h1{
+    font-size:clamp(1.6rem,4.5vw,2.6rem);
+    margin:.2em 0;
+    text-shadow:0 2px 10px rgba(0,0,0,.25);
+  }
+  .sub{opacity:.92;font-size:clamp(.85rem,2.5vw,1rem);margin:0}
+  .levels{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0}
+  .levels button{
+    border:none;cursor:pointer;font-size:.95rem;font-weight:600;
+    padding:10px 16px;border-radius:999px;
+    background:rgba(255,255,255,.16);color:#fff;
+    transition:all .25s ease;backdrop-filter:blur(4px);
+  }
+  .levels button:hover{transform:translateY(-2px);background:rgba(255,255,255,.28)}
+  .levels button.active{
+    background:var(--accent);color:#3a2d00;box-shadow:var(--shadow);
+    transform:translateY(-2px) scale(1.03);
+  }
+  .hud{
+    display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:12px;
+  }
+  .hud .chip{
+    background:rgba(255,255,255,.92);border-radius:12px;padding:8px 14px;
+    font-weight:700;font-size:.95rem;box-shadow:var(--shadow);min-width:96px;text-align:center;
+  }
+  .chip small{display:block;font-weight:500;color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.04em}
+  .instr{
+    text-align:center;color:#fff;background:rgba(0,0,0,.18);
+    border-radius:10px;padding:8px 12px;font-size:.9rem;margin-bottom:14px;
+  }
+  .card{
+    background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:22px;transition:transform .3s ease;
+  }
+  .progress{height:10px;background:#e6efe9;border-radius:999px;overflow:hidden;margin-bottom:16px}
+  .progress > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width .4s ease}
+  .qmeta{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);margin-bottom:6px}
+  .question{font-size:clamp(1.05rem,2.8vw,1.3rem);font-weight:700;margin:4px 0 16px;line-height:1.35}
+  .opts{display:grid;gap:10px}
+  .opts button{
+    text-align:left;border:2px solid #e2ece6;background:#f7fbf9;color:var(--ink);
+    padding:13px 16px;border-radius:12px;font-size:1rem;cursor:pointer;
+    transition:all .2s ease;font-family:inherit;
+  }
+  .opts button:hover:not(:disabled){transform:translateY(-2px);border-color:var(--accent2);box-shadow:0 6px 16px rgba(0,0,0,.08)}
+  .opts button:disabled{cursor:default}
+  .opts button.correct{background:#e7f9ee;border-color:var(--ok);color:#0d6b34;font-weight:700}
+  .opts button.wrong{background:#fdeaea;border-color:var(--err);color:#9b1c1c}
+  @keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.06)}100%{transform:scale(1)}}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+  .pop{animation:pop .4s ease}
+  .shake{animation:shake .4s ease}
+  .feedback{
+    margin-top:16px;padding:14px 16px;border-radius:12px;background:#eef6f2;
+    border-left:5px solid var(--accent2);font-size:.95rem;line-height:1.45;min-height:24px;
+  }
+  .feedback.good{border-left-color:var(--ok);background:#ecfbf2}
+  .feedback.bad{border-left-color:var(--err);background:#fdefef}
+  .actions{display:flex;justify-content:flex-end;margin-top:16px}
+  .btn-main{
+    border:none;cursor:pointer;background:var(--accent);color:#3a2d00;font-weight:700;
+    padding:12px 24px;border-radius:999px;font-size:1rem;box-shadow:var(--shadow);
+    transition:all .25s ease;font-family:inherit;
+  }
+  .btn-main:hover{transform:translateY(-2px) scale(1.02)}
+  .btn-main:disabled{opacity:.45;cursor:not-allowed;transform:none}
+  .final{text-align:center}
+  .final .big{font-size:clamp(2rem,8vw,3.4rem);margin:.1em 0}
+  .final .medal{font-size:3rem;animation:pop .6s ease}
+  .summary{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:16px 0}
+  .summary .chip{background:#f1f8f4;border-radius:12px;padding:10px 16px;font-weight:700}
+  .namebox{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+  .namebox input{
+    padding:11px 14px;border-radius:10px;border:2px solid #d9e7e0;font-size:1rem;font-family:inherit;min-width:200px;
+  }
+  .rank{
+    background:rgba(255,255,255,.96);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:18px;margin-top:18px;
+  }
+  .rank h3{margin:.1em 0 .5em;font-size:1.1rem}
+  .rank .lvlnote{font-size:.8rem;color:var(--muted);margin-bottom:10px}
+  .rank ol{margin:0;padding-left:0;list-style:none;counter-reset:r}
+  .rank li{
+    counter-increment:r;display:flex;justify-content:space-between;gap:8px;
+    padding:8px 10px;border-radius:8px;font-size:.92rem;
+  }
+  .rank li:nth-child(odd){background:#f4faf7}
+  .rank li::before{content:counter(r)"º";font-weight:700;color:var(--accent2);min-width:30px}
+  .rank li .nm{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rank li .sc{font-weight:700}
+  .rank .status{font-size:.82rem;color:var(--muted)}
+  footer{text-align:center;color:#eaf5ef;font-size:.8rem;margin-top:22px;line-height:1.5;opacity:.92}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>♻️ Lixo Zero — Quiz da Reciclagem</h1>
+    <p class="sub">Separe, reduza e recicle: teste o que você sabe sobre resíduos sólidos!</p>
+  </header>
+
+  <div class="levels" id="levels">
+    <button data-lvl="basico" onclick="setLevel('basico')">🌱 Básico</button>
+    <button data-lvl="inter" onclick="setLevel('inter')">♻️ Intermediário</button>
+    <button data-lvl="dificil" onclick="setLevel('dificil')">🔬 Difícil</button>
+    <button data-lvl="carbonauta" onclick="setLevel('carbonauta')">🛰️ Carbonauta</button>
+  </div>
+
+  <div class="hud">
+    <div class="chip"><small>Tempo</small><span id="hudTime">Tempo: 0s</span></div>
+    <div class="chip"><small>Pontos</small><span id="hudScore">Pontos: 0</span></div>
+    <div class="chip"><small>Acertos</small><span id="hudHits">Acertos: 0</span></div>
+    <div class="chip"><small>Sequência</small><span id="hudStreak">Streak: 0🔥</span></div>
+  </div>
+
+  <div class="instr" id="instr">Escolha um nível para começar. Responda cada pergunta e acumule pontos — quanto maior a pontuação, melhor!</div>
+
+  <div class="card" id="gameArea">
+    <div class="qmeta"><span id="qCount">Pergunta 0 / 0</span><span id="qLevel">Nível: —</span></div>
+    <div class="progress"><i id="progBar"></i></div>
+    <div class="question" id="qText">Toque em um nível acima para iniciar o quiz. ♻️</div>
+    <div class="opts" id="opts"></div>
+    <div class="feedback" id="feedback">O painel de feedback mostrará explicações educativas a cada resposta.</div>
+    <div class="actions"><button class="btn-main" id="nextBtn" onclick="nextQuestion()" disabled>Próxima ➜</button></div>
+  </div>
+
+  <div class="rank" id="rankPanel">
+    <h3>🏆 Ranking Global</h3>
+    <div class="lvlnote" id="rankLvlNote">Nível atual: —</div>
+    <div class="status" id="rankStatus">Conclua um quiz para enviar sua pontuação.</div>
+    <ol id="rankList"></ol>
+  </div>
+
+  <footer>
+    — Idealizado por Ernandes Sobreira —<br>
+    Tema: Reciclagem e resíduos sólidos · Gênero: Quiz · app ambiental do dia (2026-06-20)
+  </footer>
+</div>
+
+<script type="module">
+/* ===================== DADOS DO QUIZ ===================== */
+const DATA = {
+  basico: [
+    {q:"Em qual lixeira você joga uma garrafa PET vazia?", opts:["Vermelha (plástico)","Verde (vidro)","Azul (papel)","Amarela (metal)"], correct:"Vermelha (plástico)", fb:"No padrão de cores brasileiro, a lixeira vermelha é destinada aos plásticos, como as garrafas PET."},
+    {q:"O símbolo de três setas formando um triângulo significa o quê?", opts:["Reciclagem","Toxicidade","Lavagem","Validade"], correct:"Reciclagem", fb:"As três setas em ciclo representam reduzir, reutilizar e reciclar — o símbolo universal da reciclagem."},
+    {q:"Qual destes itens normalmente pode ser reciclado?", opts:["Caixa de papelão","Papel engordurado","Espelho quebrado","Fralda descartável"], correct:"Caixa de papelão", fb:"Papelão limpo e seco é reciclável; papel sujo de gordura, espelhos e fraldas não entram na coleta seletiva comum."},
+    {q:"Para onde vão os restos de comida na coleta seletiva?", opts:["Lixo orgânico","Lixo reciclável","Lixo eletrônico","Lixo hospitalar"], correct:"Lixo orgânico", fb:"Restos de alimentos são resíduos orgânicos e podem virar adubo por meio da compostagem."},
+    {q:"Reciclar latas de alumínio economiza principalmente o quê?", opts:["Muita energia","Água salgada","Luz solar","Ar limpo"], correct:"Muita energia", fb:"Produzir alumínio a partir de latas usadas gasta muito menos energia do que extrair o metal do minério."},
+    {q:"Qual cor de lixeira é usada para papel?", opts:["Azul","Verde","Vermelha","Amarela"], correct:"Azul", fb:"Azul é a cor do papel; verde é vidro, vermelho é plástico e amarelo é metal."},
+    {q:"O que é a coleta seletiva?", opts:["Separar o lixo por tipo","Queimar o lixo do bairro","Enterrar o lixo no quintal","Jogar o lixo no rio"], correct:"Separar o lixo por tipo", fb:"Coleta seletiva é separar os resíduos por tipo para facilitar a reciclagem e reduzir o que vai para o aterro."},
+    {q:"Complete os 3 R: reduzir, reutilizar e...?", opts:["Reciclar","Comprar","Descartar","Acumular"], correct:"Reciclar", fb:"Os 3 R são reduzir, reutilizar e reciclar — nessa ordem de prioridade para gerar menos lixo."}
+  ],
+  inter: [
+    {q:"Quanto tempo uma garrafa PET pode levar para se decompor na natureza?", opts:["Mais de 400 anos","Cerca de 5 anos","Cerca de 50 anos","Menos de 1 ano"], correct:"Mais de 400 anos", fb:"Plásticos como o PET podem levar mais de 400 anos para se decompor, por isso a reciclagem é tão importante."},
+    {q:"Qual material tem a maior taxa de reciclagem no Brasil?", opts:["Latas de alumínio","Garrafas de vidro","Sacolas plásticas","Caixas de papelão"], correct:"Latas de alumínio", fb:"O Brasil reciclou 97,3% das latas de alumínio em 2024, sendo líder mundial nesse índice há mais de 15 anos."},
+    {q:"O que são os resíduos recicláveis \"secos\"?", opts:["Papel, plástico, metal e vidro","Restos de comida e folhas","Pilhas, baterias e lâmpadas","Remédios e seringas usadas"], correct:"Papel, plástico, metal e vidro", fb:"Recicláveis secos são papel, plástico, metal e vidro; orgânicos e perigosos têm destinos diferentes."},
+    {q:"O que ocorre em um aterro sanitário bem operado?", opts:["O lixo é isolado do solo","O lixo é jogado a céu aberto","O lixo é lançado no oceano","O lixo é deixado nas ruas"], correct:"O lixo é isolado do solo", fb:"O aterro sanitário usa mantas impermeáveis para isolar o lixo do solo e captar o chorume e os gases."},
+    {q:"O gás metano gerado em aterros contribui principalmente para...?", opts:["O efeito estufa","A camada de ozônio","A chuva ácida","A erosão do solo"], correct:"O efeito estufa", fb:"A decomposição do lixo libera metano, um gás de efeito estufa muito mais potente que o CO₂."},
+    {q:"O que é compostagem?", opts:["Transformar orgânicos em adubo","Derreter plásticos e moldar peças","Triturar vidros em areia","Prensar metais em fardos"], correct:"Transformar orgânicos em adubo", fb:"Compostagem é a decomposição controlada de resíduos orgânicos, gerando adubo rico em nutrientes."},
+    {q:"Por que não se deve jogar óleo de cozinha na pia?", opts:["Polui a água e entope canos","Deixa a água mais limpa","Ajuda muito as plantas a crescer","Economiza energia elétrica"], correct:"Polui a água e entope canos", fb:"Um litro de óleo pode contaminar milhares de litros de água; o ideal é guardá-lo para reciclagem."},
+    {q:"O número dentro do triângulo nas embalagens plásticas indica...?", opts:["O tipo de resina plástica","A data de validade do produto","O preço de venda","O peso da embalagem"], correct:"O tipo de resina plástica", fb:"O código de 1 a 7 identifica a resina (PET, PEAD, PVC etc.), orientando a separação para reciclagem."},
+    {q:"Lâmpadas fluorescentes devem ser descartadas onde?", opts:["Em pontos de coleta especiais","Na lixeira de papel comum","No vaso sanitário de casa","No quintal de casa com as folhas"], correct:"Em pontos de coleta especiais", fb:"Elas contêm mercúrio e exigem descarte em pontos de coleta específicos para evitar contaminação."},
+    {q:"A \"logística reversa\" obriga as empresas a...?", opts:["Recolher produtos pós-consumo","Aumentar bastante o preço dos itens","Importar mais embalagens","Reduzir os salários pagos"], correct:"Recolher produtos pós-consumo", fb:"A logística reversa responsabiliza fabricantes pelo retorno de produtos usados, como pilhas e eletrônicos."}
+  ],
+  dificil: [
+    {q:"A Política Nacional de Resíduos Sólidos foi instituída por qual lei?", opts:["Lei nº 12.305/2010","Lei nº 9.605/1998","Lei nº 6.938/1981","Lei nº 11.445/2007"], correct:"Lei nº 12.305/2010", fb:"A Lei 12.305/2010 criou a PNRS; a 9.605 trata de crimes ambientais e a 6.938 da Política Nacional do Meio Ambiente."},
+    {q:"O que caracteriza um \"lixão\" frente ao aterro sanitário?", opts:["Ausência de impermeabilização do solo","Presença de mantas e drenos de gás","Tratamento prévio do chorume gerado","Monitoramento contínuo das emissões"], correct:"Ausência de impermeabilização do solo", fb:"O lixão é despejo a céu aberto, sem impermeabilização nem controle de chorume e gases — proibido pela PNRS."},
+    {q:"O chorume é definido como...?", opts:["Líquido da decomposição de resíduos","Gás liberado pela queima do lixo","Resíduo sólido de origem hospitalar","Pó resultante da trituração de vidro"], correct:"Líquido da decomposição de resíduos", fb:"O chorume é o líquido escuro e poluente gerado pela decomposição da matéria orgânica nos aterros."},
+    {q:"Qual polímero corresponde ao código de resina nº 1?", opts:["PET (politereftalato de etileno)","PVC (policloreto de vinila)","PEAD (polietileno de alta densidade)","PP (polipropileno)"], correct:"PET (politereftalato de etileno)", fb:"O código 1 é o PET, comum em garrafas; o 2 é o PEAD, o 3 o PVC e o 5 o PP."},
+    {q:"Reciclar 1 tonelada de papel evita o corte de cerca de quantas árvores?", opts:["15 a 20 árvores adultas","1 a 2 árvores adultas","100 a 150 árvores adultas","500 a 600 árvores adultas"], correct:"15 a 20 árvores adultas", fb:"Estima-se que cada tonelada de papel reciclado poupe de 15 a 20 árvores, além de água e energia."},
+    {q:"Na PNRS, \"resíduo\" difere de \"rejeito\" porque...?", opts:["Resíduo ainda pode ser reaproveitado","Rejeito sempre pode ser reciclado","Resíduo é apenas material orgânico","Rejeito tem maior valor econômico"], correct:"Resíduo ainda pode ser reaproveitado", fb:"Resíduo tem potencial de reaproveitamento; rejeito é o que não pode mais ser reciclado e vai à disposição final."},
+    {q:"A incineração de resíduos com recuperação de energia é chamada de...?", opts:["Waste-to-energy (WtE)","Landfill mining (LM)","Open dumping (OD)","Carbon offset (CO)"], correct:"Waste-to-energy (WtE)", fb:"Waste-to-energy é a queima controlada de resíduos para gerar energia elétrica ou térmica."},
+    {q:"Qual gás é o principal produto da decomposição anaeróbia em aterros?", opts:["Metano (CH₄)","Ozônio (O₃)","Argônio (Ar)","Hélio (He)"], correct:"Metano (CH₄)", fb:"Sem oxigênio, a matéria orgânica gera biogás rico em metano, que pode ser captado e usado como energia."},
+    {q:"A \"economia circular\" se opõe principalmente a qual modelo?", opts:["Linear: extrair, usar, descartar","Cíclico: reduzir e reciclar","Regenerativo: plantar e colher","Sustentável: preservar recursos"], correct:"Linear: extrair, usar, descartar", fb:"A economia circular substitui o modelo linear (extrair-usar-descartar) mantendo materiais em uso o máximo possível."},
+    {q:"Na PNRS, os catadores de materiais recicláveis são reconhecidos como...?", opts:["Agentes essenciais da cadeia","Trabalhadores informais ilegais","Funcionários públicos federais","Voluntários sem qualquer função"], correct:"Agentes essenciais da cadeia", fb:"A PNRS valoriza os catadores e incentiva sua inclusão em cooperativas dentro da cadeia de reciclagem."},
+    {q:"A taxa de reciclagem efetiva do total de resíduos urbanos no Brasil é de cerca de...?", opts:["Apenas 3% a 4%","Cerca de 30% a 40%","Cerca de 60% a 70%","Mais de 90% sempre"], correct:"Apenas 3% a 4%", fb:"Apesar de altos índices em alguns materiais, o Brasil recicla apenas cerca de 3% a 4% do total de resíduos urbanos."},
+    {q:"O tempo de decomposição do vidro na natureza é estimado em...?", opts:["Mais de 1.000 anos","Cerca de 10 anos","Cerca de 100 anos","Menos de 1 ano"], correct:"Mais de 1.000 anos", fb:"O vidro pode levar mais de mil anos para se decompor, mas é 100% reciclável infinitas vezes sem perder qualidade."}
+  ],
+  carbonauta: [
+    {q:"Na Avaliação do Ciclo de Vida (ACV), a \"unidade funcional\" serve para...?", opts:["Padronizar a comparação entre sistemas","Medir o lucro líquido total do fabricante","Definir a cor da embalagem final","Estimar o tempo de uso do produto"], correct:"Padronizar a comparação entre sistemas", fb:"A unidade funcional define a base quantitativa (ex.: \"embalar 1 L\") para comparar sistemas de forma justa na ACV."},
+    {q:"Reciclar alumínio reduz o consumo de energia frente à produção primária em cerca de...?", opts:["95%","50%","25%","10%"], correct:"95%", fb:"A reciclagem do alumínio economiza cerca de 95% da energia exigida para produzir o metal a partir da bauxita."},
+    {q:"O \"downcycling\" caracteriza-se por...?", opts:["Perda de qualidade do material reciclado","Ganho de pureza a cada novo ciclo","Conversão segura do resíduo em energia limpa","Manutenção integral das propriedades"], correct:"Perda de qualidade do material reciclado", fb:"No downcycling o material reciclado perde qualidade (ex.: PET vira fibra), limitando ciclos sucessivos."},
+    {q:"O potencial de aquecimento global do metano em 100 anos (GWP-100) é cerca de quantas vezes o do CO₂?", opts:["Cerca de 28 a 34 vezes","Cerca de 2 a 3 vezes","Cerca de 200 a 300 vezes","Praticamente igual ao CO₂"], correct:"Cerca de 28 a 34 vezes", fb:"Segundo o IPCC, o GWP-100 do metano é da ordem de 28 a 34 vezes o do CO₂ — por isso captar o biogás é crucial."},
+    {q:"A pirólise de resíduos plásticos difere da incineração porque ocorre...?", opts:["Na ausência de oxigênio","Com excesso de oxigênio","Apenas em meio aquoso","Sob luz ultravioleta intensa"], correct:"Na ausência de oxigênio", fb:"A pirólise decompõe o plástico termicamente sem oxigênio, gerando óleos e gases, sem a combustão direta da incineração."},
+    {q:"Microplásticos são, por convenção, partículas menores que...?", opts:["5 milímetros","5 centímetros","5 micrômetros","5 nanômetros"], correct:"5 milímetros", fb:"A definição mais aceita classifica como microplástico fragmentos com menos de 5 mm de diâmetro."},
+    {q:"A hierarquia de resíduos da PNRS prioriza, na ordem correta...?", opts:["Não geração antes da disposição final","Disposição final antes da reciclagem","Tratamento antes da redução na fonte","Reciclagem antes da não geração"], correct:"Não geração antes da disposição final", fb:"A ordem é: não geração, redução, reutilização, reciclagem, tratamento e, por último, disposição final adequada."},
+    {q:"A \"responsabilidade compartilhada pelo ciclo de vida\" envolve...?", opts:["Fabricantes, poder público e consumidores","Apenas as indústrias fabricantes","Somente os governos municipais","Exclusivamente os consumidores finais do item"], correct:"Fabricantes, poder público e consumidores", fb:"A PNRS distribui a responsabilidade entre fabricantes, importadores, distribuidores, poder público e consumidores."},
+    {q:"A taxa de reciclagem \"aparente\" pode superestimar a real porque...?", opts:["Inclui resíduos exportados não rastreados","Exclui por completo todos os materiais coletados","Considera apenas o rejeito aterrado","Mede somente o lixo orgânico tratado"], correct:"Inclui resíduos exportados não rastreados", fb:"Material coletado e exportado nem sempre é efetivamente reciclado no destino, inflando os índices oficiais."},
+    {q:"No tratamento mecânico-biológico (TMB), a fração orgânica é tipicamente submetida a...?", opts:["Digestão anaeróbia ou compostagem","Fundição a altas temperaturas","Eletrólise em meio salino","Destilação fracionada do chorume"], correct:"Digestão anaeróbia ou compostagem", fb:"No TMB, a fração orgânica segue para biodigestão ou compostagem, reduzindo a massa enviada ao aterro."},
+    {q:"O CDR (combustível derivado de resíduos) é produzido a partir de...?", opts:["Frações secas de alto poder calorífico","Resíduos orgânicos úmidos triturados","Vidro moído e metais ferrosos","Chorume concentrado dos aterros"], correct:"Frações secas de alto poder calorífico", fb:"O CDR é feito de frações secas e combustíveis (plástico, papel, têxteis) usadas como combustível, ex.: em cimenteiras."},
+    {q:"A acidogênese e a metanogênese são etapas da...?", opts:["Digestão anaeróbia da matéria orgânica","Combustão completa do plástico PET","Reciclagem mecânica do alumínio","Vitrificação de resíduos perigosos e tóxicos"], correct:"Digestão anaeróbia da matéria orgânica", fb:"A digestão anaeróbia passa por hidrólise, acidogênese, acetogênese e metanogênese, gerando biogás."},
+    {q:"Estudos de ACV indicam que o maior ganho ambiental da reciclagem de plástico vem de...?", opts:["Evitar a produção de resina virgem","Reduzir o transporte até o aterro","Diminuir o uso de água na lavagem","Aumentar a vida útil dos aterros"], correct:"Evitar a produção de resina virgem", fb:"O benefício dominante é substituir resina virgem de origem fóssil, evitando emissões e consumo energético da fabricação."}
+  ]
+};
+
+const LABELS = {basico:"🌱 Básico", inter:"♻️ Intermediário", dificil:"🔬 Difícil", carbonauta:"🛰️ Carbonauta"};
+
+/* ===================== ESTADO ===================== */
+let state = {level:null, order:[], idx:0, score:0, hits:0, streak:0, best:0, t0:0, timer:null, answered:false};
+
+/* ===================== UTIL ===================== */
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function $(id){return document.getElementById(id);}
+
+/* ===================== FLUXO DO JOGO ===================== */
+function setLevel(lvl){
+  state.level = lvl;
+  state.order = shuffle(DATA[lvl].map((_,i)=>i));
+  state.idx = 0; state.score = 0; state.hits = 0; state.streak = 0; state.best = 0;
+  state.answered = false;
+  state.t0 = Date.now();
+  if(state.timer) clearInterval(state.timer);
+  state.timer = setInterval(tick, 1000);
+  document.querySelectorAll('#levels button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.lvl===lvl);
+  });
+  $('instr').textContent = "Leia a pergunta, escolha uma das 4 alternativas e veja a explicação. Mantenha a sequência de acertos para ganhar bônus!";
+  updateHUD();
+  $('rankLvlNote').textContent = "Nível atual: " + LABELS[lvl];
+  loadRanking(lvl);
+  renderQuestion();
+}
+window.setLevel = setLevel;
+
+function tick(){
+  const s = Math.floor((Date.now()-state.t0)/1000);
+  $('hudTime').textContent = "Tempo: " + s + "s";
+}
+function secondsNow(){return Math.floor((Date.now()-state.t0)/1000);}
+
+function updateHUD(){
+  $('hudScore').textContent = "Pontos: " + state.score;
+  $('hudHits').textContent = "Acertos: " + state.hits;
+  $('hudStreak').textContent = "Streak: " + state.streak + "🔥";
+}
+
+function renderQuestion(){
+  state.answered = false;
+  const total = state.order.length;
+  const item = DATA[state.level][state.order[state.idx]];
+  $('qCount').textContent = "Pergunta " + (state.idx+1) + " / " + total;
+  $('qLevel').textContent = "Nível: " + LABELS[state.level];
+  $('progBar').style.width = (100*state.idx/total) + "%";
+  $('qText').textContent = item.q;
+  const opts = shuffle(item.opts);
+  const box = $('opts');
+  box.innerHTML = "";
+  opts.forEach(txt=>{
+    const b = document.createElement('button');
+    b.textContent = txt;
+    b.onclick = ()=>answer(b, txt, item);
+    box.appendChild(b);
+  });
+  const fb = $('feedback');
+  fb.className = "feedback";
+  fb.textContent = "Selecione a alternativa que você acredita ser a correta.";
+  $('nextBtn').disabled = true;
+  $('nextBtn').textContent = (state.idx+1>=total) ? "Ver resultado 🎉" : "Próxima ➜";
+}
+
+function answer(btn, txt, item){
+  if(state.answered) return;
+  state.answered = true;
+  const correct = txt===item.correct;
+  const buttons = Array.from($('opts').children);
+  buttons.forEach(b=>{
+    b.disabled = true;
+    if(b.textContent===item.correct) b.classList.add('correct');
+  });
+  const fb = $('feedback');
+  if(correct){
+    btn.classList.add('pop');
+    state.hits++;
+    state.streak++;
+    if(state.streak>state.best) state.best = state.streak;
+    const bonus = Math.max(0, state.streak-1)*5;
+    state.score += 10 + bonus;
+    fb.className = "feedback good";
+    fb.textContent = "✅ Correto! " + item.fb + (bonus>0 ? " (+"+bonus+" de bônus de sequência)" : "");
+  } else {
+    btn.classList.add('wrong','shake');
+    state.streak = 0;
+    fb.className = "feedback bad";
+    fb.textContent = "❌ Não foi dessa vez. " + item.fb;
+  }
+  updateHUD();
+  $('nextBtn').disabled = false;
+}
+window.answer = answer;
+
+function nextQuestion(){
+  if(!state.answered) return;
+  state.idx++;
+  if(state.idx >= state.order.length){
+    showFinal();
+  } else {
+    renderQuestion();
+  }
+}
+window.nextQuestion = nextQuestion;
+
+function showFinal(){
+  if(state.timer) clearInterval(state.timer);
+  const total = state.order.length;
+  const secs = secondsNow();
+  $('progBar').style.width = "100%";
+  const pct = Math.round(100*state.hits/total);
+  let medal = "🌱", msg = "Bom começo! Continue reciclando conhecimento.";
+  if(pct>=90){medal="🏆"; msg="Mestre da reciclagem! Conhecimento de nível profissional.";}
+  else if(pct>=70){medal="🥇"; msg="Excelente! Você manda muito bem em resíduos sólidos.";}
+  else if(pct>=50){medal="🥈"; msg="Mandou bem! Revise os pontos que escaparam.";}
+  const area = $('gameArea');
+  area.innerHTML = `
+    <div class="final">
+      <div class="medal">${medal}</div>
+      <h2>Quiz concluído!</h2>
+      <div class="big">${state.score} pts</div>
+      <p>${msg}</p>
+      <div class="summary">
+        <div class="chip">Acertos: ${state.hits}/${total} (${pct}%)</div>
+        <div class="chip">Tempo: ${secs}s</div>
+        <div class="chip">Maior sequência: ${state.best}🔥</div>
+        <div class="chip">Nível: ${LABELS[state.level]}</div>
+      </div>
+      <div class="namebox">
+        <input id="playerName" maxlength="18" placeholder="Seu nome para o ranking" />
+        <button class="btn-main" id="sendBtn" onclick="submitScore()">Enviar pontuação 🚀</button>
+      </div>
+      <div class="actions" style="justify-content:center">
+        <button class="btn-main" onclick="setLevel('${state.level}')" style="background:var(--accent2);color:#06351f">Jogar de novo 🔁</button>
+      </div>
+    </div>`;
+}
+
+/* ===================== FIREBASE / RANKING ===================== */
+const firebaseConfig = { apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ", authDomain: "jogos-ranking.firebaseapp.com", databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com", projectId: "jogos-ranking", storageBucket: "jogos-ranking.firebasestorage.app", messagingSenderId: "958784915420", appId: "1:958784915420:web:4212d3ad278f02d600f119" };
+const GAME_ID = "2026-06-20-lixo-zero-quiz";
+
+let db = null, fb = null;
+async function initFirebase(){
+  if(db) return db;
+  try{
+    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const fsMod  = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app = appMod.initializeApp(firebaseConfig);
+    db = fsMod.getFirestore(app);
+    fb = fsMod;
+    return db;
+  }catch(e){
+    console.warn("Firebase indisponível — jogo segue offline.", e);
+    return null;
+  }
+}
+
+async function submitScore(){
+  const nameEl = $('playerName');
+  const name = (nameEl && nameEl.value.trim()) ? nameEl.value.trim().slice(0,18) : "Anônimo";
+  const sendBtn = $('sendBtn');
+  if(sendBtn){sendBtn.disabled = true; sendBtn.textContent = "Enviando...";}
+  const payload = {name, score:state.score, level:state.level, seconds:secondsNow()};
+  try{
+    const d = await initFirebase();
+    if(d){
+      await fb.addDoc(fb.collection(d,"games",GAME_ID,"scores"), {
+        name:payload.name, score:payload.score, level:payload.level, seconds:payload.seconds, ts:fb.serverTimestamp()
+      });
+      if(sendBtn) sendBtn.textContent = "Enviado! ✅";
+    } else {
+      if(sendBtn) sendBtn.textContent = "Offline — não enviado";
+    }
+  }catch(e){
+    console.warn("Falha ao enviar pontuação", e);
+    if(sendBtn) sendBtn.textContent = "Erro ao enviar";
+  }
+  loadRanking(state.level);
+}
+window.submitScore = submitScore;
+
+async function loadRanking(level){
+  const listEl = $('rankList');
+  const statusEl = $('rankStatus');
+  $('rankLvlNote').textContent = "Nível atual: " + (LABELS[level] || "—");
+  statusEl.textContent = "Carregando ranking...";
+  listEl.innerHTML = "";
+  try{
+    const d = await initFirebase();
+    if(!d){ statusEl.textContent = "Ranking offline no momento — o jogo continua funcionando."; return; }
+    const q = fb.query(
+      fb.collection(d,"games",GAME_ID,"scores"),
+      fb.orderBy("score","desc"),
+      fb.limit(80)
+    );
+    const snap = await fb.getDocs(q);
+    const rows = [];
+    snap.forEach(doc=>{ const v = doc.data(); if(v.level===level) rows.push(v); });
+    rows.sort((a,b)=> b.score-a.score || a.seconds-b.seconds);
+    const top = rows.slice(0,10);
+    if(top.length===0){
+      statusEl.textContent = "Ainda não há pontuações neste nível. Seja o primeiro! 🚀";
+      return;
+    }
+    statusEl.textContent = "Top jogadores em " + LABELS[level] + ":";
+    top.forEach(r=>{
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="nm">${escapeHtml(r.name||"Anônimo")}</span><span class="sc">${r.score} pts · ${r.seconds||0}s</span>`;
+      listEl.appendChild(li);
+    });
+  }catch(e){
+    console.warn("Falha ao carregar ranking", e);
+    statusEl.textContent = "Não foi possível carregar o ranking agora.";
+  }
+}
+window.loadRanking = loadRanking;
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+}
+
+/* ===================== INIT ===================== */
+function init(){
+  initFirebase();
+  $('rankStatus').textContent = "Escolha um nível para ver o ranking correspondente.";
+}
+window.init = init;
+init();
+</script>
+</body>
+</html>
