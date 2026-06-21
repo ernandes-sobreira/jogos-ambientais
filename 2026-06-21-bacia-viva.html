@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bacia Viva 💧 — Simulador de Recursos Hídricos</title>
+<style>
+  :root{
+    --c1:#0b3a53;      /* azul profundo */
+    --c2:#1f7a8c;      /* teal */
+    --accent:#21d4b4;  /* ciano vibrante */
+    --accent2:#ffb703; /* âmbar */
+    --good:#2ecc71;
+    --bad:#e74c3c;
+    --ink:#eaf6f6;
+    --ink-soft:#bcd9dd;
+    --card:rgba(255,255,255,0.07);
+    --card-strong:rgba(255,255,255,0.13);
+    --line:rgba(255,255,255,0.18);
+    --shadow:0 10px 30px rgba(0,0,0,0.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:linear-gradient(160deg,#062536 0%,#12586b 100%);
+    min-height:100vh;
+    padding:18px 14px 40px;
+  }
+  .wrap{max-width:1080px;margin:0 auto}
+  header.top{text-align:center;margin-bottom:14px}
+  h1{
+    font-size:clamp(1.6rem,4.6vw,2.7rem);
+    margin:0 0 4px;
+    letter-spacing:.5px;
+    text-shadow:0 2px 14px rgba(0,0,0,.4);
+  }
+  .sub{color:var(--ink-soft);font-size:clamp(.85rem,2.4vw,1rem);margin:0}
+  .tag{
+    display:inline-block;margin-top:8px;padding:4px 12px;border-radius:999px;
+    background:var(--card-strong);border:1px solid var(--line);font-size:.8rem;color:var(--ink-soft)
+  }
+
+  /* Botões de nível */
+  .levels{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:16px 0}
+  .lvl-btn{
+    cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);
+    padding:10px 16px;border-radius:14px;font-size:.95rem;font-weight:600;
+    transition:transform .25s ease,background .25s ease,box-shadow .25s ease;
+  }
+  .lvl-btn:hover{transform:translateY(-2px);background:var(--card-strong)}
+  .lvl-btn.active{
+    background:linear-gradient(135deg,var(--accent),#15a98f);
+    color:#04222a;border-color:transparent;box-shadow:0 8px 22px rgba(33,212,180,.35)
+  }
+  .lvl-btn.carbo.active{background:linear-gradient(135deg,#a78bfa,#7c5cff);color:#fff;box-shadow:0 8px 22px rgba(124,92,255,.4)}
+
+  /* HUD */
+  .hud{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:14px}
+  .hud .pill{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:8px 14px;font-size:.92rem;min-width:108px;text-align:center
+  }
+  .hud .pill b{display:block;font-size:1.25rem;color:var(--accent)}
+
+  .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}
+  @media(max-width:820px){.grid{grid-template-columns:1fr}}
+
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:16px;box-shadow:var(--shadow);transition:transform .3s ease
+  }
+  .card h2{margin:0 0 10px;font-size:1.05rem}
+  .card h3{margin:14px 0 6px;font-size:.95rem;color:var(--ink-soft)}
+
+  /* Cena SVG */
+  .scene{width:100%;height:auto;border-radius:12px;display:block;background:#9fdbe8}
+
+  /* Sliders */
+  .slider-row{margin:14px 0}
+  .slider-row label{display:flex;justify-content:space-between;font-size:.9rem;margin-bottom:6px}
+  .slider-row label b{color:var(--accent2)}
+  input[type=range]{
+    width:100%;height:8px;border-radius:999px;-webkit-appearance:none;appearance:none;
+    background:linear-gradient(90deg,var(--accent),#0e5a6b);outline:none;cursor:pointer
+  }
+  input[type=range]:disabled{opacity:.45;cursor:not-allowed}
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:22px;height:22px;border-radius:50%;
+    background:#fff;border:3px solid var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.35);cursor:pointer
+  }
+  input[type=range]::-moz-range-thumb{
+    width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--accent);cursor:pointer
+  }
+  .lock-note{font-size:.78rem;color:var(--accent2);margin-top:4px}
+
+  /* Medidores */
+  .meter{margin:10px 0}
+  .meter .mlabel{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:4px}
+  .meter .bar{height:12px;border-radius:999px;background:rgba(0,0,0,.25);overflow:hidden}
+  .meter .fill{height:100%;width:0%;border-radius:999px;transition:width .4s ease,background .4s ease}
+
+  /* Desafio */
+  .challenge{
+    background:var(--card-strong);border:1px solid var(--line);border-radius:14px;
+    padding:14px;margin-bottom:14px
+  }
+  .challenge .qn{font-size:.8rem;color:var(--accent);font-weight:700;letter-spacing:.5px}
+  .challenge .ctitle{font-size:1.05rem;font-weight:700;margin:4px 0 6px}
+  .challenge .goal{font-size:.92rem;color:var(--ink-soft)}
+  .goal b{color:var(--accent2)}
+
+  .progress{height:8px;border-radius:999px;background:rgba(0,0,0,.25);overflow:hidden;margin:10px 0}
+  .progress span{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s}
+
+  .btn{
+    cursor:pointer;border:none;border-radius:12px;padding:12px 18px;font-size:1rem;font-weight:700;
+    transition:transform .2s ease,box-shadow .2s ease;width:100%
+  }
+  .btn-primary{background:linear-gradient(135deg,var(--accent),#13957f);color:#04222a;box-shadow:0 6px 18px rgba(33,212,180,.35)}
+  .btn-primary:hover{transform:translateY(-2px)}
+  .btn-ghost{background:var(--card);color:var(--ink);border:1px solid var(--line);margin-top:8px}
+
+  .feedback{
+    margin-top:12px;padding:12px 14px;border-radius:12px;font-size:.92rem;line-height:1.45;
+    background:rgba(0,0,0,.2);border-left:4px solid var(--accent);min-height:48px
+  }
+  .feedback.ok{border-left-color:var(--good);background:rgba(46,204,113,.14)}
+  .feedback.no{border-left-color:var(--bad);background:rgba(231,76,60,.14)}
+
+  /* animações */
+  @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.04)}100%{transform:scale(1)}}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+  .pop{animation:pop .45s ease}
+  .shake{animation:shake .45s ease}
+
+  /* ranking */
+  .rank-list{list-style:none;margin:6px 0 0;padding:0;max-height:260px;overflow:auto}
+  .rank-list li{display:flex;justify-content:space-between;gap:8px;padding:7px 10px;border-radius:9px;font-size:.88rem}
+  .rank-list li:nth-child(odd){background:rgba(255,255,255,.05)}
+  .rank-list li .pos{color:var(--accent2);font-weight:700;min-width:26px}
+  .rank-list li .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rank-list li .sc{font-weight:700;color:var(--accent)}
+  .rank-status{font-size:.8rem;color:var(--ink-soft);margin-top:6px}
+
+  /* final */
+  .final{display:none;text-align:center;padding:22px}
+  .final.show{display:block;animation:pop .5s ease}
+  .final .big{font-size:clamp(2rem,7vw,3.2rem);margin:6px 0}
+  .summary{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:14px 0}
+  .summary .s{background:var(--card-strong);border:1px solid var(--line);border-radius:12px;padding:12px 18px;min-width:120px}
+  .summary .s b{display:block;font-size:1.5rem;color:var(--accent)}
+  .name-in{padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.25);color:var(--ink);font-size:1rem;width:min(280px,90%)}
+
+  footer{margin-top:26px;text-align:center;color:var(--ink-soft);font-size:.82rem;line-height:1.7}
+  footer .by{color:var(--accent2);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>💧 Bacia Viva</h1>
+    <p class="sub">Equilibre a água de uma bacia hidrográfica ajustando chuva, floresta e consumo em tempo real.</p>
+    <div class="tag">Tema: Recursos hídricos e bacias · Gênero: Simulação interativa</div>
+  </header>
+
+  <!-- NÍVEIS -->
+  <div class="levels" id="levels">
+    <button class="lvl-btn" onclick="setLevel('basico')" data-l="basico">🌱 Básico</button>
+    <button class="lvl-btn" onclick="setLevel('inter')" data-l="inter">🌊 Intermediário</button>
+    <button class="lvl-btn" onclick="setLevel('dificil')" data-l="dificil">⚙️ Difícil</button>
+    <button class="lvl-btn carbo" onclick="setLevel('carbo')" data-l="carbo">🛰️ Carbonauta</button>
+  </div>
+
+  <!-- HUD -->
+  <div class="hud">
+    <div class="pill">Tempo<b><span id="hud-time">0</span>s</b></div>
+    <div class="pill">Pontos<b id="hud-score">0</b></div>
+    <div class="pill">Acertos<b id="hud-correct">0</b></div>
+    <div class="pill">Desafio<b id="hud-prog">0/0</b></div>
+  </div>
+
+  <!-- JOGO -->
+  <div id="game">
+    <div class="grid">
+      <!-- ESQUERDA: cena + sliders -->
+      <div class="card" id="panel-sim">
+        <h2>🏞️ A bacia hidrográfica</h2>
+        <svg class="scene" id="scene" viewBox="0 0 400 230" preserveAspectRatio="xMidYMid meet" aria-label="Cena da bacia">
+          <defs>
+            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#bfe9f5"/><stop offset="1" stop-color="#e9f8fb"/>
+            </linearGradient>
+            <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#37c0e0"/><stop offset="1" stop-color="#0e6b8c"/>
+            </linearGradient>
+          </defs>
+          <rect x="0" y="0" width="400" height="230" fill="url(#sky)"/>
+          <!-- nuvem -->
+          <g id="cloud">
+            <ellipse cx="95" cy="34" rx="34" ry="16" fill="#fff"/>
+            <ellipse cx="120" cy="40" rx="26" ry="14" fill="#fff"/>
+            <ellipse cx="70" cy="42" rx="22" ry="12" fill="#f2f7f9"/>
+          </g>
+          <!-- chuva -->
+          <g id="rain" stroke="#3aa6d6" stroke-width="2" stroke-linecap="round" opacity="0.7"></g>
+          <!-- morros / vegetação -->
+          <path id="hill" d="M0,150 Q90,95 180,135 T400,120 L400,230 L0,230 Z" fill="#6fae4a"/>
+          <g id="trees"></g>
+          <!-- solo exposto / erosão -->
+          <path id="bare" d="M0,150 Q90,95 180,135 T400,120 L400,230 L0,230 Z" fill="#b08c4a" opacity="0"/>
+          <!-- rio -->
+          <path id="river" d="M30,228 C120,180 150,205 210,180 C270,155 320,175 392,150"
+                fill="none" stroke="url(#water)" stroke-width="6" stroke-linecap="round" opacity="0.9"/>
+          <!-- reservatório (tanque) -->
+          <rect x="300" y="150" width="78" height="66" rx="6" fill="#0a3a4a" opacity="0.85"/>
+          <rect id="resWater" x="303" y="180" width="72" height="33" rx="4" fill="url(#water)"/>
+          <rect x="300" y="150" width="78" height="66" rx="6" fill="none" stroke="#093140" stroke-width="3"/>
+          <text x="339" y="146" font-size="11" fill="#0a3a4a" text-anchor="middle" font-family="system-ui">Reservatório</text>
+        </svg>
+
+        <h3>🎚️ Ajuste os fatores</h3>
+        <div class="slider-row">
+          <label>🌧️ Precipitação (chuva) <b><span id="v-chuva">1500</span> mm/ano</b></label>
+          <input type="range" id="s-chuva" min="200" max="3000" step="50" value="1500">
+          <div class="lock-note" id="lock-chuva" style="display:none"></div>
+        </div>
+        <div class="slider-row">
+          <label>🌳 Cobertura vegetal <b><span id="v-veg">60</span>%</b></label>
+          <input type="range" id="s-veg" min="0" max="100" step="1" value="60">
+          <div class="lock-note" id="lock-veg" style="display:none"></div>
+        </div>
+        <div class="slider-row">
+          <label>🚰 Demanda hídrica (consumo) <b><span id="v-dem">40</span>%</b></label>
+          <input type="range" id="s-dem" min="0" max="100" step="1" value="40">
+          <div class="lock-note" id="lock-dem" style="display:none"></div>
+        </div>
+
+        <h3>📊 Indicadores ao vivo</h3>
+        <div class="meter"><div class="mlabel"><span>💦 Nível do reservatório</span><span id="m-res-v">0%</span></div><div class="bar"><div class="fill" id="m-res"></div></div></div>
+        <div class="meter"><div class="mlabel"><span>🌊 Vazão de estiagem (rio na seca)</span><span id="m-base-v">0</span></div><div class="bar"><div class="fill" id="m-base"></div></div></div>
+        <div class="meter"><div class="mlabel"><span>🧪 Qualidade da água</span><span id="m-qual-v">0</span></div><div class="bar"><div class="fill" id="m-qual"></div></div></div>
+      </div>
+
+      <!-- DIREITA: desafio + ranking -->
+      <div>
+        <div class="card" id="panel-challenge">
+          <h2>🎯 Desafio</h2>
+          <div class="challenge">
+            <div class="qn" id="ch-n">DESAFIO 1</div>
+            <div class="ctitle" id="ch-title">—</div>
+            <div class="goal" id="ch-goal">—</div>
+          </div>
+          <div class="progress"><span id="ch-prog"></span></div>
+          <button class="btn btn-primary" onclick="checkChallenge()">✅ Verificar</button>
+          <button class="btn btn-ghost" onclick="skipChallenge()">⏭️ Pular desafio</button>
+          <div class="feedback" id="feedback">Escolha um nível e ajuste os controles para cumprir a meta. Os números mudam em tempo real conforme você move os controles.</div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <h2>🏆 Ranking Global <span id="rank-level" style="font-size:.8rem;color:var(--ink-soft)">— Básico</span></h2>
+          <ol class="rank-list" id="rank-list"></ol>
+          <div class="rank-status" id="rank-status">Conclua um jogo para registrar sua pontuação.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TELA FINAL -->
+    <div class="card final" id="final">
+      <div class="big">🎉 Bacia equilibrada!</div>
+      <p id="final-msg" class="sub"></p>
+      <div class="summary">
+        <div class="s">Pontos<b id="f-score">0</b></div>
+        <div class="s">Acertos<b id="f-correct">0</b></div>
+        <div class="s">Tempo<b id="f-time">0s</b></div>
+      </div>
+      <p class="sub">Registre sua pontuação no ranking global:</p>
+      <div>
+        <input class="name-in" id="player-name" maxlength="18" placeholder="Seu nome ou apelido">
+      </div>
+      <div style="max-width:300px;margin:14px auto 0">
+        <button class="btn btn-primary" onclick="submitScore()">📤 Enviar ao ranking</button>
+        <button class="btn btn-ghost" onclick="restartGame()">🔁 Jogar novamente</button>
+      </div>
+      <div class="rank-status" id="submit-status"></div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="by">— Idealizado por Ernandes Sobreira —</div>
+    <div>Tema: Recursos hídricos e bacias · Gênero: Simulação interativa · app ambiental do dia (2026-06-21)</div>
+  </footer>
+</div>
+
+<script type="module">
+/* ===================== FIREBASE (apenas ranking) ===================== */
+const firebaseConfig = { apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ", authDomain: "jogos-ranking.firebaseapp.com", databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com", projectId: "jogos-ranking", storageBucket: "jogos-ranking.firebasestorage.app", messagingSenderId: "958784915420", appId: "1:958784915420:web:4212d3ad278f02d600f119" };
+const GAME_ID = "2026-06-21-bacia-viva";
+let db=null, fb=null;
+async function initFirebase(){
+  try{
+    const app = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    fb = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const a = app.initializeApp(firebaseConfig);
+    db = fb.getFirestore(a);
+  }catch(e){ db=null; /* jogo segue 100% offline */ }
+}
+
+/* ===================== MODELO HIDROLÓGICO ===================== */
+function clamp(x,a,b){return Math.max(a,Math.min(b,x));}
+// P: 200-3000 mm/ano | V: 0-100 % | D: 0-100 %
+function metrics(P,Vp,Dp){
+  const V=Vp/100, D=Dp/100;
+  const Cr = 0.60 - 0.25*V;            // coeficiente de escoamento (mais floresta -> mais infiltração/ET)
+  const Y  = P*Cr;                      // produção hídrica (mm/ano)
+  const yieldv = clamp(Y/18,0,100);
+  const BFI = 0.30 + 0.45*V;            // índice de fluxo de base (vegetação sustenta a estiagem)
+  const baseflow = clamp((Y*BFI)/8,0,100);
+  const W = D*900;                      // retirada (mm-equivalente)
+  const reservoir = clamp(40 + (Y - W)*0.06, 0, 100);
+  const sediment = (1-V)*(P/3000)*100;          // erosão: solo exposto + chuva forte
+  const overEx = Math.max(0,(W - Y*0.6))*0.05;  // sobre-explotação
+  const quality = clamp(100 - sediment*0.9 - overEx, 0, 100);
+  return {yieldv, baseflow, reservoir, quality, P, V:Vp, D:Dp};
+}
+
+/* ===================== DESAFIOS ===================== */
+// check: faixas em {reservoir:[min,max], baseflow:[min,max], quality:[min,max]}
+// lock: trava um slider {chuva|veg|dem: valor}
+const LEVELS = {
+  basico:{nome:"Básico", challenges:[
+    {t:"Encha o reservatório", goal:"Deixe o <b>nível do reservatório entre 60% e 80%</b>.", check:{reservoir:[60,80]},
+     fb:"A água que abastece cidades vem das bacias hidrográficas — áreas onde toda a chuva escorre para o mesmo rio."},
+    {t:"Rio que não seca", goal:"Faça a <b>vazão de estiagem ≥ 55</b> (rio cheio mesmo na seca).", check:{baseflow:[55,100]},
+     fb:"A floresta deixa a água infiltrar no solo; ela volta devagar e mantém o rio vivo na estação seca."},
+    {t:"Água limpa", goal:"Eleve a <b>qualidade da água para ≥ 85</b>.", check:{quality:[85,100]},
+     fb:"Sem vegetação, a chuva arrasta terra para os rios — isso é erosão, que suja a água e assoreia os leitos."},
+    {t:"Seca chegando", goal:"Com pouca chuva, mantenha o <b>reservatório ≥ 55%</b>.", check:{reservoir:[55,100]}, lock:{chuva:900},
+     fb:"Em períodos secos, economizar água (reduzir o consumo) é a forma mais rápida de proteger o abastecimento."},
+    {t:"Cidade sedenta", goal:"Com consumo alto, mantenha o <b>reservatório ≥ 50%</b>.", check:{reservoir:[50,100]}, lock:{dem:80},
+     fb:"Quando o consumo é alto, só uma boa oferta de água (chuva + bacia preservada) evita o colapso."},
+    {t:"Floresta protetora", goal:"Garanta <b>qualidade ≥ 80</b> e <b>vazão de estiagem ≥ 55</b>.", check:{quality:[80,100],baseflow:[55,100]},
+     fb:"A mata ciliar nas margens dos rios filtra a água e segura o solo — dupla proteção para a bacia."},
+    {t:"Equilíbrio", goal:"Reservatório <b>60–80%</b> e <b>qualidade ≥ 75</b> ao mesmo tempo.", check:{reservoir:[60,80],quality:[75,100]},
+     fb:"Gerir uma bacia é equilibrar oferta e demanda: nem desperdiçar, nem deixar faltar."},
+    {t:"Bacia sustentável", goal:"Reservatório <b>55–85%</b>, vazão <b>≥ 55</b> e qualidade <b>≥ 75</b>.", check:{reservoir:[55,85],baseflow:[55,100],quality:[75,100]},
+     fb:"Você uniu água, floresta e consumo numa bacia saudável. O Brasil tem cerca de 12% da água doce do mundo — cuidar dela é essencial."}
+  ]},
+  inter:{nome:"Intermediário", challenges:[
+    {t:"Recarga do aquífero", goal:"Reservatório <b>62–78%</b> (recarga estável).", check:{reservoir:[62,78]},
+     fb:"Parte da água infiltrada recarrega aquíferos subterrâneos, como o Aquífero Guarani, um dos maiores do planeta."},
+    {t:"Vazão de referência", goal:"Vazão de estiagem <b>60–80</b>.", check:{baseflow:[60,80]},
+     fb:"Engenheiros usam vazões mínimas (como a Q7,10) para definir quanta água pode ser captada sem secar o rio."},
+    {t:"Controle de erosão", goal:"Qualidade <b>≥ 88</b> com chuva intensa.", check:{quality:[88,100]}, lock:{chuva:2400},
+     fb:"Chuva forte sobre solo nu gera muito sedimento. Cobertura vegetal reduz o coeficiente de escoamento superficial."},
+    {t:"Outorga de água", goal:"Reservatório <b>≥ 60%</b> mesmo com demanda elevada.", check:{reservoir:[60,100]}, lock:{dem:75},
+     fb:"A outorga é a autorização legal para usar a água — evita que a soma das retiradas ultrapasse a disponibilidade."},
+    {t:"Bacia florestada", goal:"Vazão <b>60–80</b> e qualidade <b>≥ 85</b>.", check:{baseflow:[60,80],quality:[85,100]},
+     fb:"Bacias florestadas têm fluxo mais regular e água mais limpa, mas a evapotranspiração reduz o volume total escoado."},
+    {t:"Trade-off do volume", goal:"Mantenha vazão <b>55–70</b> com vegetação <b>acima de 70%</b>.", check:{baseflow:[55,70]}, lock:{veg:75},
+     fb:"Mais floresta nem sempre significa mais água total: parte volta à atmosfera. O ganho está na regularidade e qualidade."},
+    {t:"Abastecimento urbano", goal:"Reservatório <b>65–80%</b> e qualidade <b>≥ 80</b>.", check:{reservoir:[65,80],quality:[80,100]},
+     fb:"Reservatórios urbanos dependem tanto do volume quanto da qualidade — tratar água suja custa muito mais caro."},
+    {t:"Estiagem prolongada", goal:"Com seca severa, reservatório <b>≥ 55%</b> e vazão <b>≥ 30</b>.", check:{reservoir:[55,100],baseflow:[30,100]}, lock:{chuva:1000},
+     fb:"Em secas longas, a água armazenada no solo e a redução do consumo são a diferença entre crise e estabilidade."},
+    {t:"Gestão integrada", goal:"Reservatório <b>60–78%</b>, vazão <b>≥ 58</b>, qualidade <b>≥ 82</b>.", check:{reservoir:[60,78],baseflow:[58,100],quality:[82,100]},
+     fb:"A Lei das Águas (1997) instituiu a bacia como unidade de gestão dos recursos hídricos no Brasil."},
+    {t:"Bacia modelo", goal:"Tudo no ponto: reservatório <b>65–80%</b>, vazão <b>62–82</b>, qualidade <b>≥ 85</b>.", check:{reservoir:[65,80],baseflow:[62,82],quality:[85,100]},
+     fb:"Equilíbrio fino entre os três pilares — exatamente o desafio real de quem gerencia comitês de bacia."}
+  ]},
+  dificil:{nome:"Difícil", challenges:[
+    {t:"Coeficiente de escoamento", goal:"Reservatório <b>68–76%</b>.", check:{reservoir:[68,76]},
+     fb:"O coeficiente de escoamento (Cr) é a fração da chuva que vira escoamento superficial — varia com solo, declividade e cobertura."},
+    {t:"Índice de fluxo de base", goal:"Vazão de estiagem <b>66–80</b>.", check:{baseflow:[66,80]},
+     fb:"O Baseflow Index (BFI) mede quanto do fluxo do rio vem da água subterrânea — bacias bem infiltradas têm BFI alto."},
+    {t:"Carga de sedimentos", goal:"Qualidade <b>≥ 92</b> sob chuva extrema.", check:{quality:[92,100]}, lock:{chuva:2700},
+     fb:"A produção de sedimentos cresce com a energia da chuva (erosividade) e com o solo descoberto — base da Equação Universal de Perda de Solo."},
+    {t:"Sobre-explotação", goal:"Reservatório <b>≥ 62%</b> com demanda muito alta.", check:{reservoir:[62,100]}, lock:{dem:85},
+     fb:"Quando a retirada supera a recarga, o sistema entra em déficit hídrico — o caso do Cantareira em 2014-2015."},
+    {t:"Vazão ecológica", goal:"Vazão <b>60–72</b> e qualidade <b>≥ 88</b>.", check:{baseflow:[60,72],quality:[88,100]},
+     fb:"A vazão ecológica é o mínimo de água que deve permanecer no rio para manter a vida aquática e os usos a jusante."},
+    {t:"Regularização", goal:"Reservatório <b>66–74%</b> e vazão <b>≥ 60</b> com floresta alta.", check:{reservoir:[66,74],baseflow:[60,100]}, lock:{veg:80},
+     fb:"Reservatórios regularizam a vazão: guardam água da cheia para liberar na estiagem, suavizando os extremos."},
+    {t:"Balanço hídrico", goal:"Reservatório <b>64–76%</b> e qualidade <b>≥ 85</b>.", check:{reservoir:[64,76],quality:[85,100]},
+     fb:"Balanço hídrico: Precipitação = Evapotranspiração + Escoamento ± variação do armazenamento. É a contabilidade da água da bacia."},
+    {t:"Disponibilidade per capita", goal:"Reservatório <b>≥ 60%</b> com demanda alta e chuva baixa.", check:{reservoir:[60,100]}, lock:{dem:70},
+     fb:"A ONU considera estresse hídrico abaixo de 1.700 m³/hab/ano — distribuição desigual deixa regiões brasileiras nesse limite."},
+    {t:"Eutrofização", goal:"Qualidade <b>≥ 90</b> e vazão <b>≥ 58</b>.", check:{quality:[90,100],baseflow:[58,100]},
+     fb:"Excesso de nutrientes e baixa vazão favorecem a eutrofização — proliferação de algas que reduz o oxigênio da água."},
+    {t:"Hidrograma estável", goal:"Vazão <b>62–74</b>, reservatório <b>65–77%</b>, qualidade <b>≥ 86</b>.", check:{baseflow:[62,74],reservoir:[65,77],quality:[86,100]},
+     fb:"Um hidrograma suave, sem picos de cheia nem secas profundas, indica uma bacia hidrologicamente saudável."},
+    {t:"Resiliência climática", goal:"Com chuva irregular, reservatório <b>≥ 60%</b> e vazão <b>≥ 40</b>.", check:{reservoir:[60,100],baseflow:[40,100]}, lock:{chuva:1300},
+     fb:"Bacias com solo protegido e bom armazenamento resistem melhor a eventos extremos das mudanças climáticas."},
+    {t:"Gestão de excelência", goal:"Reservatório <b>67–78%</b>, vazão <b>64–80</b>, qualidade <b>≥ 90</b>.", check:{reservoir:[67,78],baseflow:[64,80],quality:[90,100]},
+     fb:"Atingir as três metas simultaneamente exige otimização — o cerne da gestão de recursos hídricos."}
+  ]},
+  carbo:{nome:"🛰️ Carbonauta", challenges:[
+    {t:"Reciclagem de precipitação", goal:"Vazão <b>66–78</b> com floresta densa.", check:{baseflow:[66,78]}, lock:{veg:90},
+     fb:"Na Amazônia, a evapotranspiração recicla de 20% a mais de 40% da chuva via 'rios voadores' — a floresta gera parte da própria precipitação."},
+    {t:"Partição evapotranspirativa", goal:"Reservatório <b>64–72%</b> mantendo floresta alta.", check:{reservoir:[64,72]}, lock:{veg:85},
+     fb:"Em florestas tropicais, perto de metade da precipitação retorna à atmosfera por evapotranspiração, reduzindo o escoamento total."},
+    {t:"Q7,10 — vazão mínima", goal:"Vazão de estiagem <b>70–82</b>.", check:{baseflow:[70,82]},
+     fb:"A Q7,10 (mínima de 7 dias, recorrência de 10 anos) é a vazão de referência legal para outorga de captação no Brasil."},
+    {t:"Erosividade da chuva (R)", goal:"Qualidade <b>≥ 95</b> sob chuva extrema.", check:{quality:[95,100]}, lock:{chuva:2900},
+     fb:"O fator R da RUSLE quantifica a erosividade: gotas de chuva intensa têm alta energia cinética e desagregam o solo descoberto."},
+    {t:"Tempo de residência subterrâneo", goal:"Vazão <b>64–76</b> e reservatório <b>62–74%</b>.", check:{baseflow:[64,76],reservoir:[62,74]},
+     fb:"A água subterrânea pode levar anos a milênios para reemergir; esse longo tempo de residência sustenta o fluxo de base perene."},
+    {t:"Curva de permanência", goal:"Vazão <b>68–80</b> e qualidade <b>≥ 90</b>.", check:{baseflow:[68,80],quality:[90,100]},
+     fb:"A curva de permanência (flow duration curve) mostra a porcentagem do tempo em que cada vazão é igualada ou superada — base do dimensionamento hídrico."},
+    {t:"Déficit do Cantareira", goal:"Sob demanda crítica, reservatório <b>≥ 65%</b>.", check:{reservoir:[65,100]}, lock:{dem:88},
+     fb:"Na crise de 2014-2015, o Sistema Cantareira chegou ao 'volume morto'; a recuperação exigiu corte severo de demanda e chuvas acima da média."},
+    {t:"Acoplamento solo-vegetação", goal:"Vazão <b>66–78</b>, qualidade <b>≥ 92</b>, floresta alta.", check:{baseflow:[66,78],quality:[92,100]}, lock:{veg:88},
+     fb:"A vegetação aumenta a condutividade hidráulica do solo, favorecendo a infiltração sobre o escoamento — controle de cheias baseado na natureza."},
+    {t:"Vazão ecológica + outorga", goal:"Vazão <b>62–72</b> e reservatório <b>64–74%</b>.", check:{baseflow:[62,72],reservoir:[64,74]},
+     fb:"A outorgável é a disponibilidade menos a vazão ecológica reservada ao ecossistema — alocar mal compromete a vida do rio."},
+    {t:"Balanço de massa da bacia", goal:"Reservatório <b>66–74%</b>, vazão <b>66–78</b>, qualidade <b>≥ 90</b>.", check:{reservoir:[66,74],baseflow:[66,78],quality:[90,100]},
+     fb:"Fechar o balanço de massa (P = ET + Q + ΔS) com as três metas é o objetivo de modelos hidrológicos como SWAT e MGB-IPH."},
+    {t:"Bacia amazônica", goal:"Vazão máxima <b>≥ 85</b> com floresta densa e muita chuva.", check:{baseflow:[85,100]}, lock:{veg:92},
+     fb:"A bacia amazônica escoa ~20% da água doce do planeta — cerca de 200.000 m³/s na foz — e concentra ~80% da água superficial do Brasil."},
+    {t:"Serviços ecossistêmicos", goal:"Vazão <b>70–82</b>, reservatório <b>66–76%</b>, qualidade <b>≥ 93</b>.", check:{baseflow:[70,82],reservoir:[66,76],quality:[93,100]},
+     fb:"Provisão e regulação de água são serviços ecossistêmicos — pagamentos por esses serviços (PSA) recompensam quem conserva nascentes."},
+    {t:"Mestre da bacia", goal:"Excelência total: reservatório <b>68–76%</b>, vazão <b>72–84</b>, qualidade <b>≥ 94</b>.", check:{reservoir:[68,76],baseflow:[72,84],quality:[94,100]},
+     fb:"Otimizar simultaneamente armazenamento, fluxo perene e qualidade é a fronteira da gestão hídrica sustentável. Parabéns, Carbonauta!"}
+  ]}
+};
+
+/* ===================== ESTADO ===================== */
+let level="basico", idx=0, score=0, correct=0, startTime=0, timer=null, finished=false;
+let chuva=1500, veg=60, dem=40;
+let locks={};
+
+const $ = id=>document.getElementById(id);
+
+function startTimer(){
+  startTime=Date.now();
+  if(timer) clearInterval(timer);
+  timer=setInterval(()=>{ if(!finished) $("hud-time").textContent=Math.floor((Date.now()-startTime)/1000); },250);
+}
+
+function setLevel(l){
+  level=l; idx=0; score=0; correct=0; finished=false;
+  document.querySelectorAll(".lvl-btn").forEach(b=>b.classList.toggle("active", b.dataset.l===l));
+  $("rank-level").textContent="— "+LEVELS[l].nome;
+  $("final").classList.remove("show");
+  $("game").querySelector(".grid").style.display="grid";
+  $("hud-score").textContent="0"; $("hud-correct").textContent="0";
+  loadChallenge();
+  startTimer();
+  loadRanking();
+}
+
+function loadChallenge(){
+  const ch=LEVELS[level].challenges[idx];
+  locks = ch.lock || {};
+  // valores iniciais sensatos / travas
+  chuva = ('chuva' in locks)? locks.chuva : 1500;
+  veg   = ('veg'   in locks)? locks.veg   : 60;
+  dem   = ('dem'   in locks)? locks.dem   : 40;
+  $("s-chuva").value=chuva; $("s-veg").value=veg; $("s-dem").value=dem;
+  applyLocks();
+  $("ch-n").textContent="DESAFIO "+(idx+1);
+  $("ch-title").textContent=ch.t;
+  $("ch-goal").innerHTML=ch.goal;
+  $("hud-prog").textContent=(idx+1)+"/"+LEVELS[level].challenges.length;
+  $("ch-prog").style.width=((idx)/LEVELS[level].challenges.length*100)+"%";
+  $("feedback").className="feedback";
+  $("feedback").textContent="Mova os controles disponíveis e clique em Verificar quando os indicadores cumprirem a meta.";
+  render();
+}
+
+function applyLocks(){
+  const map={chuva:["s-chuva","lock-chuva"], veg:["s-veg","lock-veg"], dem:["s-dem","lock-dem"]};
+  const labels={chuva:"🌧️ Chuva travada neste desafio",veg:"🌳 Vegetação travada neste desafio",dem:"🚰 Consumo travado neste desafio"};
+  for(const k in map){
+    const [sId,nId]=map[k];
+    const locked=(k in locks);
+    $(sId).disabled=locked;
+    $(nId).style.display=locked?"block":"none";
+    if(locked) $(nId).textContent=labels[k]+" — use os demais controles.";
+  }
+}
+
+function render(){
+  chuva=+$("s-chuva").value; veg=+$("s-veg").value; dem=+$("s-dem").value;
+  $("v-chuva").textContent=chuva; $("v-veg").textContent=veg; $("v-dem").textContent=dem;
+  const m=metrics(chuva,veg,dem);
+  // medidores
+  setMeter("m-res", m.reservoir, Math.round(m.reservoir)+"%", "m-res-v");
+  setMeter("m-base", m.baseflow, Math.round(m.baseflow), "m-base-v");
+  setMeter("m-qual", m.quality, Math.round(m.quality), "m-qual-v");
+  drawScene(m);
+}
+function setMeter(id,val,label,labId){
+  const f=$(id); f.style.width=clamp(val,0,100)+"%";
+  f.style.background = val>=66 ? "linear-gradient(90deg,#2ecc71,#21d4b4)" : val>=40 ? "linear-gradient(90deg,#ffb703,#ffd166)" : "linear-gradient(90deg,#e74c3c,#ff8a80)";
+  $(labId).textContent=label;
+}
+
+function drawScene(m){
+  // chuva
+  const rain=$("rain"); rain.innerHTML="";
+  const drops=Math.round(chuva/120); // 2 a 25
+  for(let i=0;i<drops;i++){
+    const x=10+Math.random()*380, y=55+Math.random()*40;
+    const ln=document.createElementNS("http://www.w3.org/2000/svg","line");
+    ln.setAttribute("x1",x); ln.setAttribute("y1",y); ln.setAttribute("x2",x-3); ln.setAttribute("y2",y+9);
+    rain.appendChild(ln);
+  }
+  rain.setAttribute("opacity", clamp(chuva/2200,0.2,0.85));
+  // vegetação: cor do morro + solo exposto
+  const g = Math.round(120 + (veg/100)*70);      // verde mais vivo
+  const r = Math.round(150 - (veg/100)*90);
+  $("hill").setAttribute("fill", `rgb(${r},${g},60)`);
+  $("bare").setAttribute("opacity", clamp((100-veg)/140,0,0.7));
+  // árvores
+  const trees=$("trees"); trees.innerHTML="";
+  const nT=Math.round(veg/12);
+  const xs=[40,80,120,165,205,250,285];
+  for(let i=0;i<nT && i<xs.length;i++){
+    const x=xs[i], baseY=132+ (i%2)*6;
+    trees.innerHTML += `<rect x="${x-2}" y="${baseY}" width="4" height="10" fill="#6b4324"/>
+      <circle cx="${x}" cy="${baseY-4}" r="9" fill="rgb(${Math.round(40)},${Math.round(120+veg*0.5)},60)"/>`;
+  }
+  // reservatório: altura da água
+  const full=66, top=150;
+  const h=clamp(m.reservoir/100*full,2,full);
+  $("resWater").setAttribute("y", top + (full-h));
+  $("resWater").setAttribute("height", h);
+  // rio: espessura ~ vazão; cor ~ qualidade
+  const w=clamp(m.baseflow/100*9+2,2,11);
+  $("river").setAttribute("stroke-width", w);
+  const muddy = m.quality<55;
+  $("river").setAttribute("stroke", muddy ? "#9c7a3c" : "url(#water)");
+  $("river").setAttribute("opacity", clamp(0.5+m.baseflow/200,0.5,0.95));
+}
+
+function passes(m,check){
+  for(const k in check){
+    const [mn,mx]=check[k];
+    if(m[k]<mn || m[k]>mx) return false;
+  }
+  return true;
+}
+
+function checkChallenge(){
+  if(finished) return;
+  const ch=LEVELS[level].challenges[idx];
+  const m=metrics(chuva,veg,dem);
+  const card=$("panel-challenge");
+  if(passes(m,ch.check)){
+    correct++;
+    const tBonus=Math.max(0, 40 - Math.floor((Date.now()-startTime)/1000/LEVELS[level].challenges.length));
+    score += 100 + tBonus;
+    $("hud-correct").textContent=correct;
+    $("hud-score").textContent=score;
+    $("feedback").className="feedback ok";
+    $("feedback").innerHTML="✅ <b>Meta cumprida!</b> "+ch.fb;
+    card.classList.remove("pop"); void card.offsetWidth; card.classList.add("pop");
+    setTimeout(nextChallenge, 1400);
+  }else{
+    $("feedback").className="feedback no";
+    $("feedback").innerHTML="❌ Ainda não. Observe os indicadores e ajuste os controles para entrar na faixa da meta. <em>"+ch.fb+"</em>";
+    card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
+  }
+}
+
+function skipChallenge(){
+  if(finished) return;
+  $("feedback").className="feedback";
+  $("feedback").textContent="Desafio pulado. Sem pontos para este.";
+  nextChallenge();
+}
+
+function nextChallenge(){
+  idx++;
+  if(idx>=LEVELS[level].challenges.length){ finishGame(); return; }
+  loadChallenge();
+}
+
+function finishGame(){
+  finished=true;
+  if(timer) clearInterval(timer);
+  const secs=Math.floor((Date.now()-startTime)/1000);
+  $("game").querySelector(".grid").style.display="none";
+  $("final").classList.add("show");
+  $("f-score").textContent=score;
+  $("f-correct").textContent=correct+"/"+LEVELS[level].challenges.length;
+  $("f-time").textContent=secs+"s";
+  $("final-msg").textContent="Nível "+LEVELS[level].nome+" concluído. Quanto maior a pontuação, melhor sua gestão da bacia!";
+  $("final").dataset.secs=secs;
+}
+
+/* ===================== RANKING (Firestore) ===================== */
+async function loadRanking(){
+  const list=$("rank-list"), st=$("rank-status");
+  list.innerHTML=""; st.textContent="Carregando ranking...";
+  if(!db){ st.textContent="Ranking offline — sua pontuação local não será enviada."; return; }
+  try{
+    const {collection,query,orderBy,limit,getDocs}=fb;
+    const q=query(collection(db,"games",GAME_ID,"scores"), orderBy("score","desc"), limit(80));
+    const snap=await getDocs(q);
+    const rows=[];
+    snap.forEach(d=>{const x=d.data(); if(x.level===LEVELS[level].nome) rows.push(x);});
+    rows.sort((a,b)=>b.score-a.score);
+    if(!rows.length){ st.textContent="Seja o primeiro a pontuar neste nível!"; return; }
+    rows.slice(0,15).forEach((x,i)=>{
+      const li=document.createElement("li");
+      li.innerHTML=`<span class="pos">${i+1}º</span><span class="nm">${escapeHtml(x.name||"Anônimo")}</span><span class="sc">${x.score}</span>`;
+      list.appendChild(li);
+    });
+    st.textContent="Ranking do nível "+LEVELS[level].nome+".";
+  }catch(e){ st.textContent="Não foi possível carregar o ranking agora."; }
+}
+
+async function submitScore(){
+  const st=$("submit-status");
+  const name=($("player-name").value||"").trim().slice(0,18) || "Anônimo";
+  if(!db){ st.textContent="Firebase indisponível — pontuação não enviada (o jogo segue funcionando)."; return; }
+  st.textContent="Enviando...";
+  try{
+    const {collection,addDoc,serverTimestamp}=fb;
+    await addDoc(collection(db,"games",GAME_ID,"scores"), {
+      name, score, level:LEVELS[level].nome, seconds:+($("final").dataset.secs||0), ts:serverTimestamp()
+    });
+    st.textContent="✅ Pontuação registrada! Veja o ranking ao escolher o nível.";
+    loadRanking();
+  }catch(e){ st.textContent="Falha ao enviar. Tente novamente."; }
+}
+
+function restartGame(){ setLevel(level); }
+
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+/* ===================== EVENTOS / INIT ===================== */
+function init(){
+  ["s-chuva","s-veg","s-dem"].forEach(id=>$(id).addEventListener("input", render));
+  initFirebase().then(()=>{ setLevel("basico"); });
+  // fallback caso firebase demore
+  setLevel("basico");
+}
+
+// expor ao window (onclick no HTML com type=module)
+window.setLevel=setLevel;
+window.checkChallenge=checkChallenge;
+window.skipChallenge=skipChallenge;
+window.submitScore=submitScore;
+window.restartGame=restartGame;
+window.init=init;
+init();
+</script>
+</body>
+</html>
