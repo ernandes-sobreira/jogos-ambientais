@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Respira, Cidade! — Jogo da Memória do Ar Urbano</title>
+<style>
+  :root{
+    --bg1:#5d6e7e;
+    --bg2:#26333f;
+    --card:#ffffff;
+    --card-back:#eaf6f2;
+    --ink:#1c2630;
+    --muted:#5a6b78;
+    --accent:#00d4a0;
+    --accent-2:#0099d4;
+    --warn:#ff5d5d;
+    --gold:#ffce4a;
+    --shadow:0 8px 24px rgba(0,0,0,.22);
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:#eef4f8;
+    background:linear-gradient(160deg,var(--bg1),var(--bg2));
+    background-attachment:fixed;
+    min-height:100vh;
+    padding:18px 14px 50px;
+  }
+  .wrap{max-width:1000px;margin:0 auto;}
+  header{text-align:center;margin-bottom:14px;}
+  h1{
+    font-size:clamp(1.7rem,4.5vw,2.8rem);
+    margin:.1em 0;
+    letter-spacing:.5px;
+    text-shadow:0 2px 12px rgba(0,0,0,.3);
+  }
+  .sub{color:#cfe6df;font-size:clamp(.85rem,2.2vw,1rem);margin:0;}
+  .levels{
+    display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0 12px;
+  }
+  .levels button{
+    border:none;cursor:pointer;color:#fff;
+    font-size:clamp(.8rem,2vw,.98rem);font-weight:600;
+    padding:10px 16px;border-radius:999px;
+    background:rgba(255,255,255,.14);
+    backdrop-filter:blur(4px);
+    transition:transform .25s ease,background .25s ease,box-shadow .25s ease;
+  }
+  .levels button:hover{transform:translateY(-2px);background:rgba(255,255,255,.26);}
+  .levels button.active{
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    box-shadow:0 6px 18px rgba(0,212,160,.4);
+    transform:translateY(-2px);
+  }
+  .hud{
+    display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:6px 0 10px;
+  }
+  .hud .pill{
+    background:rgba(0,0,0,.28);
+    border-radius:12px;padding:8px 14px;font-size:.92rem;font-weight:600;
+    min-width:96px;text-align:center;
+  }
+  .hud .pill span{display:block;font-size:1.25rem;color:var(--accent);}
+  .instr{
+    text-align:center;background:rgba(255,255,255,.1);
+    border-radius:12px;padding:9px 14px;margin:0 auto 14px;max-width:620px;
+    font-size:.92rem;
+  }
+  .layout{display:grid;grid-template-columns:1fr;gap:16px;}
+  @media(min-width:860px){.layout{grid-template-columns:1fr 270px;}}
+
+  .board{
+    display:grid;gap:10px;
+    grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  }
+  .card{
+    perspective:900px;
+    aspect-ratio:3/4;
+    cursor:pointer;
+  }
+  .card-inner{
+    position:relative;width:100%;height:100%;
+    transition:transform .45s cubic-bezier(.4,.2,.2,1);
+    transform-style:preserve-3d;
+  }
+  .card.flipped .card-inner,.card.matched .card-inner{transform:rotateY(180deg);}
+  .face{
+    position:absolute;inset:0;
+    backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    border-radius:14px;
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    padding:8px;box-shadow:var(--shadow);
+  }
+  .front{
+    background:linear-gradient(150deg,#3a4b5a,#243038);
+    font-size:1.9rem;color:#bfe9dd;
+    border:2px solid rgba(255,255,255,.08);
+  }
+  .back{
+    transform:rotateY(180deg);
+    background:var(--card);color:var(--ink);
+    font-size:clamp(.62rem,1.7vw,.8rem);font-weight:600;line-height:1.2;
+    overflow:hidden;
+  }
+  .back.concept{background:linear-gradient(150deg,#d6fff3,#aef3df);}
+  .back.def{background:linear-gradient(150deg,#ffffff,#eef6fb);font-weight:500;}
+  .card.matched .card-inner{box-shadow:0 0 0 3px var(--accent);border-radius:14px;}
+  .card.matched{animation:pop .4s ease;}
+  .card.wrong .card-inner{animation:shake .4s ease;}
+  .card.wrong .back{outline:3px solid var(--warn);}
+  @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.09)}100%{transform:scale(1)}}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+  .side{display:flex;flex-direction:column;gap:14px;}
+  .panel{
+    background:rgba(255,255,255,.1);border-radius:var(--radius);
+    padding:14px;box-shadow:var(--shadow);
+  }
+  .panel h3{margin:.1em 0 .5em;font-size:1rem;color:var(--accent);}
+  .feedback{font-size:.9rem;line-height:1.4;min-height:64px;}
+  .rank-level{font-size:.78rem;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+  ol.rank{list-style:none;padding:0;margin:8px 0 0;font-size:.85rem;}
+  ol.rank li{display:flex;justify-content:space-between;gap:6px;padding:4px 0;border-bottom:1px dashed rgba(255,255,255,.12);}
+  ol.rank li b{color:var(--accent);}
+  .rank-empty{font-size:.82rem;color:#cfe0ea;}
+
+  .overlay{
+    position:fixed;inset:0;background:rgba(10,18,24,.78);
+    display:none;align-items:center;justify-content:center;padding:20px;z-index:50;
+  }
+  .overlay.show{display:flex;animation:fade .3s ease;}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .modal{
+    background:linear-gradient(160deg,#1f2c36,#15212a);
+    border:2px solid var(--accent);
+    border-radius:20px;padding:26px 22px;max-width:420px;width:100%;text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,.5);
+  }
+  .modal h2{margin:.1em 0 .3em;font-size:1.6rem;}
+  .modal .big{font-size:2.4rem;}
+  .modal .stats{display:flex;justify-content:center;gap:18px;margin:14px 0;flex-wrap:wrap;}
+  .modal .stats div{font-size:.9rem;color:#cfe0ea;}
+  .modal .stats b{display:block;font-size:1.5rem;color:var(--accent);}
+  .modal input{
+    width:100%;padding:11px;border-radius:10px;border:none;font-size:1rem;
+    margin:6px 0 12px;text-align:center;
+  }
+  .modal button{
+    border:none;cursor:pointer;color:#fff;font-weight:700;font-size:1rem;
+    padding:11px 18px;border-radius:999px;margin:4px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    transition:transform .2s ease;
+  }
+  .modal button:hover{transform:translateY(-2px);}
+  .modal button.ghost{background:rgba(255,255,255,.16);}
+  footer{
+    text-align:center;margin-top:30px;font-size:.82rem;color:#cfe0ea;line-height:1.6;
+  }
+  footer .by{font-weight:700;color:#fff;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🌫️ Respira, Cidade! 🏙️</h1>
+    <p class="sub">Jogo da memória sobre a poluição do ar nas cidades — encontre cada conceito e sua definição</p>
+  </header>
+
+  <div class="levels" id="levels">
+    <button data-level="basico" onclick="setLevel('basico')">Básico</button>
+    <button data-level="intermediario" onclick="setLevel('intermediario')">Intermediário</button>
+    <button data-level="dificil" onclick="setLevel('dificil')">Difícil</button>
+    <button data-level="carbonauta" onclick="setLevel('carbonauta')">🛰️ Carbonauta</button>
+  </div>
+
+  <div class="hud">
+    <div class="pill">Tempo:<span id="hudTime">0s</span></div>
+    <div class="pill">Pontos:<span id="hudScore">0</span></div>
+    <div class="pill">Acertos:<span id="hudPairs">0</span></div>
+    <div class="pill">Erros:<span id="hudErrors">0</span></div>
+  </div>
+
+  <p class="instr" id="instr">Toque em duas cartas para virá-las. Combine cada conceito com a sua definição correta!</p>
+
+  <div class="layout">
+    <div class="board" id="board"></div>
+    <div class="side">
+      <div class="panel">
+        <h3>💡 Você sabia?</h3>
+        <div class="feedback" id="feedback">Cada par revela um fato sobre o ar que respiramos. Comece virando as cartas!</div>
+      </div>
+      <div class="panel">
+        <h3>🏆 Ranking Global</h3>
+        <div class="rank-level" id="rankLevel">Nível: Básico</div>
+        <ol class="rank" id="rankList"><li class="rank-empty">Carregando ranking…</li></ol>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="by">— Idealizado por Ernandes Sobreira —</div>
+    <div>Tema: Poluição do ar nas cidades · Gênero: Jogo da memória · app ambiental do dia (2026-06-22)</div>
+  </footer>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="big">🎉</div>
+    <h2 id="winTitle">Ar mais limpo na memória!</h2>
+    <p id="winMsg">Você combinou todos os pares!</p>
+    <div class="stats">
+      <div><b id="winTime">0s</b>Tempo</div>
+      <div><b id="winErrors">0</b>Erros</div>
+      <div><b id="winScore">0</b>Pontos</div>
+    </div>
+    <input id="playerName" maxlength="18" placeholder="Seu nome para o ranking" />
+    <div>
+      <button onclick="submitScore()" id="submitBtn">Enviar pontuação</button>
+      <button class="ghost" onclick="restart()">Jogar de novo</button>
+    </div>
+    <div id="submitMsg" style="font-size:.82rem;color:var(--accent);margin-top:8px;"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = { apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ", authDomain: "jogos-ranking.firebaseapp.com", databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com", projectId: "jogos-ranking", storageBucket: "jogos-ranking.firebasestorage.app", messagingSenderId: "958784915420", appId: "1:958784915420:web:4212d3ad278f02d600f119" };
+const GAME_ID = "2026-06-22-respira-cidade";
+
+let db=null;
+try{ const app=initializeApp(firebaseConfig); db=getFirestore(app); }catch(e){ console.warn("Firebase off",e); }
+
+/* ===== CONTEÚDO ===== */
+const DATA = {
+  basico:[
+    {c:"Poluição do ar",d:"Ar sujo com fumaça e gases que fazem mal à saúde",f:"O ar poluído contém partículas e gases que irritam os olhos e dificultam a respiração."},
+    {c:"Fumaça",d:"Mistura de gases e fuligem que sai de carros e fábricas",f:"A fumaça preta dos canos de escape carrega fuligem que se aloja nos pulmões."},
+    {c:"Carros",d:"Grande fonte de poluição do ar nas cidades",f:"Quanto mais carros nas ruas, mais gases poluentes ficam parados sobre a cidade."},
+    {c:"Máscara",d:"Item que ajuda a proteger os pulmões do ar poluído",f:"Em dias de muita fumaça, máscaras reduzem a entrada de partículas no nariz."},
+    {c:"Árvores",d:"Ajudam a filtrar e limpar o ar das ruas",f:"As folhas das árvores capturam poeira e ajudam a refrescar a cidade."},
+    {c:"Pulmões",d:"Órgãos do corpo mais afetados pelo ar sujo",f:"Respirar ar poluído por muito tempo pode causar tosse e doenças respiratórias."},
+    {c:"Bicicleta",d:"Transporte que não solta poluentes no ar",f:"Pedalar não emite gases e ainda faz bem para a saúde."},
+    {c:"Queimadas",d:"Fogo que solta muita fumaça no ar das cidades",f:"A fumaça de queimadas pode viajar quilômetros e piorar o ar urbano."}
+  ],
+  intermediario:[
+    {c:"PM2.5",d:"Partículas finas de até 2,5 micrômetros que penetram nos pulmões",f:"Por serem minúsculas, as PM2.5 chegam até os alvéolos e entram na corrente sanguínea."},
+    {c:"PM10",d:"Partículas inaláveis de até 10 micrômetros",f:"As PM10 incluem poeira e pólen e ficam retidas nas vias respiratórias superiores."},
+    {c:"Monóxido de carbono",d:"Gás tóxico da queima incompleta de combustíveis",f:"O CO é inodoro e dificulta o transporte de oxigênio pelo sangue."},
+    {c:"Dióxido de nitrogênio",d:"Gás castanho liberado sobretudo por veículos a diesel",f:"O NO₂ irrita as vias respiratórias e contribui para a formação de ozônio."},
+    {c:"Ozônio troposférico",d:"Poluente formado por reações químicas sob luz solar",f:"Ao nível do solo o ozônio é nocivo, diferente do ozônio que nos protege na estratosfera."},
+    {c:"IQAr",d:"Índice que traduz a qualidade do ar em categorias de risco",f:"O IQAr vai de bom a péssimo e orienta quando evitar atividades ao ar livre."},
+    {c:"Transporte público",d:"Estratégia que reduz o número de carros e a poluição",f:"Ônibus e metrôs transportam muitas pessoas emitindo menos por passageiro."},
+    {c:"Combustíveis fósseis",d:"Principal origem dos poluentes do ar urbano",f:"A queima de gasolina, diesel e carvão libera partículas e gases nocivos."},
+    {c:"Asma",d:"Doença respiratória agravada pela poluição do ar",f:"Picos de poluição aumentam as crises e internações por asma nas cidades."},
+    {c:"Limite da OMS",d:"Máximo de 5 µg/m³ de PM2.5 por ano recomendado",f:"A OMS reduziu o limite anual de PM2.5 para 5 µg/m³ em 2021."}
+  ],
+  dificil:[
+    {c:"Material particulado",d:"Mistura de partículas sólidas e líquidas suspensas no ar",f:"O MP é classificado pelo diâmetro aerodinâmico, como MP10 e MP2,5."},
+    {c:"PM2.5",d:"Partículas ≤2,5 µm que atingem os alvéolos pulmonares",f:"A exposição crônica à PM2.5 está ligada a doenças cardiovasculares e respiratórias."},
+    {c:"Inversão térmica",d:"Camada de ar quente que aprisiona poluentes junto ao solo",f:"Comum no inverno, a inversão impede a dispersão vertical dos poluentes."},
+    {c:"Ozônio troposférico",d:"Poluente secundário formado por NOx e COVs sob radiação UV",f:"O ozônio de superfície é oxidante e danifica tecidos pulmonares e plantas."},
+    {c:"Compostos orgânicos voláteis",d:"Precursores gasosos do ozônio e do smog fotoquímico",f:"Os COVs vêm de combustíveis, solventes e tintas."},
+    {c:"Smog fotoquímico",d:"Névoa oxidante resultante de reações sob luz solar intensa",f:"O smog reduz a visibilidade e agrava sintomas respiratórios."},
+    {c:"Óxidos de nitrogênio",d:"Gases (NOx) gerados na combustão a altas temperaturas",f:"Os NOx participam da chuva ácida e da formação de ozônio."},
+    {c:"Dióxido de enxofre",d:"Gás da queima de combustíveis que contêm enxofre",f:"O SO₂ irrita as vias aéreas e é precursor de partículas de sulfato."},
+    {c:"Black carbon",d:"Fuligem que absorve calor e agrava o aquecimento",f:"O carbono negro é poluente do ar e forçador climático de vida curta."},
+    {c:"Chuva ácida",d:"Precipitação acidificada por SO₂ e NOx atmosféricos",f:"A chuva ácida corrói construções e prejudica solos e rios."},
+    {c:"Monóxido de carbono",d:"Liga-se à hemoglobina reduzindo o transporte de oxigênio",f:"O CO forma carboxiemoglobina, perigosa em ambientes fechados."},
+    {c:"IQAr",d:"Índice que converte concentrações em categorias de risco",f:"Cada poluente tem subíndices e prevalece o pior valor do dia."},
+    {c:"Bioindicadores",d:"Líquens sensíveis usados para monitorar a poluição",f:"A ausência de líquens indica ar com altas concentrações de SO₂."},
+    {c:"Aerossóis",d:"Partículas em suspensão que espalham a luz solar",f:"Os aerossóis afetam a visibilidade e o balanço de radiação."},
+    {c:"Estações de monitoramento",d:"Equipamentos que medem poluentes em tempo real",f:"Redes de estações alimentam os índices oficiais de qualidade do ar."},
+    {c:"Limite anual da OMS",d:"5 µg/m³ de PM2.5 recomendados desde 2021",f:"Mais de 90% da população mundial vive acima desse limite."}
+  ],
+  carbonauta:[
+    {c:"Profundidade óptica de aerossóis",d:"Medida de satélite da carga de partículas na coluna atmosférica",f:"A AOD é validada com fotômetros solares da rede AERONET."},
+    {c:"Forçamento radiativo do black carbon",d:"Aquecimento causado pela absorção de radiação pela fuligem",f:"O carbono negro é o segundo maior forçador climático após o CO₂, segundo o IPCC."},
+    {c:"Especiação química da PM2.5",d:"Quantificação de sulfatos, nitratos e carbono no particulado",f:"A especiação permite atribuir o particulado às suas fontes emissoras."},
+    {c:"Aerossol orgânico secundário",d:"Partícula formada pela oxidação de COVs na atmosfera",f:"O AOS responde por boa parte da massa do aerossol fino urbano."},
+    {c:"Razão NO₂/NOx",d:"Indicador do envelhecimento fotoquímico da pluma urbana",f:"A razão cresce conforme a pluma se afasta das fontes de emissão."},
+    {c:"DALYs",d:"Anos de vida ajustados por incapacidade perdidos por doença",f:"A poluição do ar causa milhões de DALYs por ano em estudos de carga global."},
+    {c:"Deposição seca",d:"Remoção de poluentes por contato com superfícies sem chuva",f:"A deposição seca depende da velocidade de deposição de cada gás ou partícula."},
+    {c:"Camada limite planetária",d:"Porção da atmosfera que controla a dispersão dos poluentes",f:"Sua altura varia ao longo do dia e regula a diluição das emissões."},
+    {c:"Espectrometria de mobilidade",d:"Técnica que mede a distribuição de tamanho das partículas",f:"O SMPS dimensiona partículas ultrafinas por mobilidade elétrica."},
+    {c:"Potencial oxidativo do MP",d:"Capacidade das partículas de gerar estresse oxidativo",f:"Métrica emergente que liga a composição do MP a efeitos biológicos."},
+    {c:"Regime limitado por COVs",d:"Condição em que o ozônio responde à redução de orgânicos voláteis",f:"Diagnosticar o regime é essencial para políticas eficazes de controle de ozônio."},
+    {c:"Sensor orbital TROPOMI",d:"Instrumento que monitora colunas de NO₂ a partir do espaço",f:"O TROPOMI, do satélite Sentinel-5P, mapeia plumas urbanas de NO₂ diariamente."},
+    {c:"Razão OC/EC",d:"Proporção entre carbono orgânico e elementar no aerossol",f:"A razão OC/EC ajuda a distinguir emissões de combustão de fontes secundárias."}
+  ]
+};
+
+const LEVEL_NAMES={basico:"Básico",intermediario:"Intermediário",dificil:"Difícil",carbonauta:"🛰️ Carbonauta"};
+
+let level="basico";
+let cards=[];
+let first=null, lock=false;
+let pairsFound=0, errors=0, totalPairs=0;
+let seconds=0, timer=null, started=false, lastScore=0;
+
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+function setLevel(lv){
+  level=lv;
+  document.querySelectorAll('#levels button').forEach(b=>b.classList.toggle('active',b.dataset.level===lv));
+  document.getElementById('rankLevel').textContent="Nível: "+LEVEL_NAMES[lv];
+  restart();
+  loadRanking();
+}
+
+function buildCards(){
+  const pairs=DATA[level];
+  totalPairs=pairs.length;
+  let list=[];
+  pairs.forEach((p,i)=>{
+    list.push({pid:i,kind:'concept',text:p.c,fact:p.f});
+    list.push({pid:i,kind:'def',text:p.d,fact:p.f});
+  });
+  return shuffle(list);
+}
+
+function render(){
+  const board=document.getElementById('board');
+  board.innerHTML="";
+  cards.forEach((c,idx)=>{
+    const el=document.createElement('div');
+    el.className="card";
+    el.dataset.idx=idx;
+    el.innerHTML=`<div class="card-inner">
+        <div class="face front">${c.kind==='concept'?'🌫️':'💨'}</div>
+        <div class="face back ${c.kind}">${c.text}</div>
+      </div>`;
+    el.addEventListener('click',()=>flip(idx,el));
+    board.appendChild(el);
+  });
+}
+
+function startTimer(){
+  if(started) return;
+  started=true;
+  timer=setInterval(()=>{seconds++;document.getElementById('hudTime').textContent=seconds+'s';updateScore();},1000);
+}
+
+function updateScore(){
+  lastScore=Math.max(0,pairsFound*200 - errors*15 - seconds);
+  document.getElementById('hudScore').textContent=lastScore;
+}
+
+function flip(idx,el){
+  if(lock) return;
+  const card=cards[idx];
+  if(el.classList.contains('matched')||el.classList.contains('flipped')) return;
+  startTimer();
+  el.classList.add('flipped');
+  if(!first){ first={idx,el,card}; return; }
+  if(first.idx===idx) return;
+  // segunda carta
+  const second={idx,el,card};
+  if(first.card.pid===second.card.pid && first.card.kind!==second.card.kind){
+    // acerto
+    first.el.classList.add('matched');
+    second.el.classList.add('matched');
+    pairsFound++;
+    document.getElementById('hudPairs').textContent=pairsFound;
+    showFeedback("✅ <b>"+DATA[level][first.card.pid].c+"</b> — "+first.card.fact);
+    first=null;
+    updateScore();
+    if(pairsFound===totalPairs) setTimeout(win,500);
+  }else{
+    // erro
+    errors++;
+    document.getElementById('hudErrors').textContent=errors;
+    lock=true;
+    first.el.classList.add('wrong');second.el.classList.add('wrong');
+    showFeedback("❌ As cartas não formam um par. Tente lembrar onde elas estão!");
+    updateScore();
+    setTimeout(()=>{
+      first.el.classList.remove('flipped','wrong');
+      second.el.classList.remove('flipped','wrong');
+      first=null;lock=false;
+    },1000);
+  }
+}
+
+function showFeedback(html){document.getElementById('feedback').innerHTML=html;}
+
+function restart(){
+  clearInterval(timer);timer=null;started=false;
+  first=null;lock=false;pairsFound=0;errors=0;seconds=0;lastScore=0;
+  document.getElementById('hudTime').textContent='0s';
+  document.getElementById('hudScore').textContent='0';
+  document.getElementById('hudPairs').textContent='0';
+  document.getElementById('hudErrors').textContent='0';
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('submitMsg').textContent='';
+  document.getElementById('feedback').innerHTML="Cada par revela um fato sobre o ar que respiramos. Comece virando as cartas!";
+  cards=buildCards();
+  render();
+}
+
+function win(){
+  clearInterval(timer);timer=null;
+  updateScore();
+  document.getElementById('winTime').textContent=seconds+'s';
+  document.getElementById('winErrors').textContent=errors;
+  document.getElementById('winScore').textContent=lastScore;
+  let msg;
+  if(errors===0) msg="Memória impecável! Nenhum erro — você domina o tema do ar urbano. 🌟";
+  else if(errors<=3) msg="Excelente! Pouquíssimos erros combinando conceitos e definições.";
+  else msg="Você completou o desafio e aprendeu vários conceitos sobre poluição do ar!";
+  document.getElementById('winMsg').textContent=msg;
+  document.getElementById('overlay').classList.add('show');
+}
+
+/* ===== RANKING (Firestore) ===== */
+async function loadRanking(){
+  const listEl=document.getElementById('rankList');
+  if(!db){listEl.innerHTML='<li class="rank-empty">Ranking indisponível offline.</li>';return;}
+  listEl.innerHTML='<li class="rank-empty">Carregando ranking…</li>';
+  try{
+    const q=query(collection(db,"games",GAME_ID,"scores"),orderBy("score","desc"),limit(80));
+    const snap=await getDocs(q);
+    const rows=[];
+    snap.forEach(d=>{const v=d.data();if(v.level===level)rows.push(v);});
+    rows.sort((a,b)=>b.score-a.score);
+    const top=rows.slice(0,10);
+    if(top.length===0){listEl.innerHTML='<li class="rank-empty">Seja o primeiro a pontuar neste nível!</li>';return;}
+    listEl.innerHTML=top.map((r,i)=>`<li><span>${i+1}. ${escapeHtml(r.name||'Anônimo')}</span><b>${r.score}</b></li>`).join('');
+  }catch(e){
+    console.warn(e);
+    listEl.innerHTML='<li class="rank-empty">Não foi possível carregar o ranking.</li>';
+  }
+}
+
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+async function submitScore(){
+  const name=(document.getElementById('playerName').value||'').trim().slice(0,18)||'Anônimo';
+  const msgEl=document.getElementById('submitMsg');
+  if(!db){msgEl.textContent="Ranking indisponível offline, mas seu resultado conta!";return;}
+  document.getElementById('submitBtn').disabled=true;
+  msgEl.textContent="Enviando…";
+  try{
+    await addDoc(collection(db,"games",GAME_ID,"scores"),{
+      name,score:lastScore,level,seconds,ts:serverTimestamp()
+    });
+    msgEl.textContent="Pontuação enviada! 🎉";
+    await loadRanking();
+  }catch(e){
+    console.warn(e);
+    msgEl.textContent="Falha ao enviar, mas o jogo continua!";
+  }finally{
+    document.getElementById('submitBtn').disabled=false;
+  }
+}
+
+function init(){
+  setLevel('basico');
+}
+
+/* expor ao escopo global para onclick */
+window.setLevel=setLevel;
+window.restart=restart;
+window.submitScore=submitScore;
+window.init=init;
+init();
+</script>
+</body>
+</html>
