@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🌊 Missão pH — Classifique o Oceano Ácido</title>
+<style>
+:root{
+  --bg1:#0b3d63;        /* azul profundo */
+  --bg2:#1b8a8f;        /* teal-acidez */
+  --panel:rgba(255,255,255,.10);
+  --panel-solid:#0e2f4a;
+  --card:#0f3a5c;
+  --ink:#eaf6ff;
+  --muted:#a9cfe0;
+  --accent:#ff7a4d;     /* coral vibrante */
+  --accent2:#ffd23f;    /* destaque secundário */
+  --ok:#34d399;
+  --bad:#ff5470;
+  --line:rgba(255,255,255,.18);
+  --shadow:0 10px 28px rgba(0,0,0,.32);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  color:var(--ink);
+  background:linear-gradient(160deg,var(--bg1) 0%,var(--bg2) 100%);
+  background-attachment:fixed;
+  min-height:100vh;
+  padding:14px;
+  line-height:1.45;
+}
+.wrap{width:min(1040px,96vw);margin:0 auto;}
+header.top{text-align:center;margin:6px 0 14px;}
+h1{
+  font-size:clamp(1.6rem,5vw,2.7rem);
+  margin:0 0 4px;letter-spacing:.5px;
+  text-shadow:0 2px 10px rgba(0,0,0,.35);
+}
+.subtitle{color:var(--muted);font-size:clamp(.85rem,2.6vw,1rem);margin:0;}
+.levels{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0;}
+.pill{
+  border:1px solid var(--line);
+  background:var(--panel);
+  color:var(--ink);
+  padding:9px 16px;border-radius:999px;
+  font-size:clamp(.8rem,2.4vw,.98rem);font-weight:600;
+  cursor:pointer;transition:transform .2s,background .25s,box-shadow .25s;
+}
+.pill:hover{transform:translateY(-2px);}
+.pill.active{background:var(--accent);border-color:var(--accent);color:#23110a;box-shadow:0 6px 16px rgba(255,122,77,.45);}
+.howto{
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  padding:10px 14px;font-size:clamp(.82rem,2.4vw,.95rem);color:var(--muted);
+  text-align:center;margin-bottom:12px;
+}
+.howto b{color:var(--ink);}
+.hud{
+  display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:14px;
+}
+.stat{
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:8px 14px;font-weight:700;font-size:clamp(.82rem,2.4vw,1rem);
+  min-width:96px;text-align:center;
+}
+.stat span{color:var(--accent2);}
+.board{display:grid;grid-template-columns:1fr;gap:14px;}
+@media(min-width:780px){.board{grid-template-columns:1.05fr 1fr;}}
+
+.pool-wrap,.zones-wrap{
+  background:var(--panel);border:1px solid var(--line);border-radius:16px;
+  padding:12px;box-shadow:var(--shadow);
+}
+.section-title{font-size:.95rem;color:var(--muted);margin:2px 4px 10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;}
+.pool{display:flex;flex-wrap:wrap;gap:9px;min-height:60px;align-content:flex-start;}
+.chip{
+  background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:10px 13px;font-size:clamp(.8rem,2.5vw,.96rem);font-weight:600;
+  cursor:grab;user-select:none;touch-action:none;
+  transition:transform .18s,box-shadow .2s,background .2s,border-color .2s;
+  box-shadow:0 3px 8px rgba(0,0,0,.2);
+}
+.chip:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,.3);}
+.chip.selected{border-color:var(--accent2);box-shadow:0 0 0 2px var(--accent2);}
+.chip.dragging{opacity:.35;}
+.chip.float{
+  position:fixed;z-index:9999;pointer-events:none;cursor:grabbing;
+  box-shadow:0 14px 30px rgba(0,0,0,.45);transform:scale(1.05) rotate(-1deg);
+}
+.zones{display:grid;gap:11px;}
+.zone{
+  border:2px dashed var(--line);border-radius:14px;padding:11px;
+  min-height:84px;transition:background .2s,border-color .2s,transform .2s;
+  background:rgba(255,255,255,.04);
+}
+.zone .zhead{display:flex;align-items:center;gap:8px;font-weight:800;margin-bottom:8px;font-size:clamp(.88rem,2.6vw,1.02rem);}
+.zone .zemoji{font-size:1.3rem;}
+.zone.hover{border-color:var(--accent2);background:rgba(255,210,63,.12);transform:translateY(-2px);}
+.zbody{display:flex;flex-wrap:wrap;gap:7px;min-height:30px;}
+.placed{
+  padding:7px 11px;border-radius:10px;font-size:clamp(.74rem,2.3vw,.9rem);font-weight:600;
+  background:rgba(52,211,153,.18);border:1px solid var(--ok);
+  animation:pop .35s ease;
+}
+.placed.wrong{background:rgba(255,84,112,.18);border-color:var(--bad);animation:shake .35s ease;}
+@keyframes pop{0%{transform:scale(.6);}60%{transform:scale(1.12);}100%{transform:scale(1);}}
+@keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-6px);}40%{transform:translateX(6px);}60%{transform:translateX(-4px);}80%{transform:translateX(4px);}}
+.feedback{
+  margin-top:14px;background:var(--panel);border:1px solid var(--line);
+  border-left:5px solid var(--accent);border-radius:12px;padding:12px 14px;
+  font-size:clamp(.84rem,2.5vw,.98rem);min-height:48px;transition:border-color .25s;
+}
+.feedback.ok{border-left-color:var(--ok);}
+.feedback.bad{border-left-color:var(--bad);}
+.feedback b{color:var(--accent2);}
+
+/* tela final */
+.final{
+  display:none;text-align:center;background:var(--panel);border:1px solid var(--line);
+  border-radius:18px;padding:22px 16px;margin-top:16px;box-shadow:var(--shadow);
+}
+.final.show{display:block;animation:pop .4s ease;}
+.final h2{font-size:clamp(1.4rem,5vw,2rem);margin:.2em 0;color:var(--ok);}
+.final .score-line{font-size:1.05rem;margin:6px 0;}
+.namebox{margin:14px auto 6px;max-width:360px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.namebox input{
+  flex:1;min-width:180px;padding:11px 13px;border-radius:10px;border:1px solid var(--line);
+  background:rgba(255,255,255,.95);color:#10283a;font-size:1rem;font-weight:600;
+}
+.btn{
+  background:var(--accent);color:#23110a;border:none;border-radius:10px;
+  padding:11px 18px;font-size:1rem;font-weight:800;cursor:pointer;
+  transition:transform .2s,box-shadow .2s;
+}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(255,122,77,.4);}
+.btn.ghost{background:var(--panel);color:var(--ink);border:1px solid var(--line);}
+
+/* ranking */
+.rank-wrap{
+  margin-top:16px;background:var(--panel);border:1px solid var(--line);
+  border-radius:16px;padding:14px;box-shadow:var(--shadow);
+}
+.rank-wrap h3{margin:0 0 4px;font-size:1.05rem;}
+.rank-sub{color:var(--muted);font-size:.82rem;margin:0 0 10px;}
+.rank-msg{color:var(--muted);font-size:.86rem;}
+table.rank{width:100%;border-collapse:collapse;font-size:clamp(.78rem,2.3vw,.92rem);}
+table.rank th,table.rank td{padding:7px 8px;text-align:left;border-bottom:1px solid var(--line);}
+table.rank th{color:var(--muted);font-weight:700;}
+table.rank td.pos{font-weight:800;color:var(--accent2);width:34px;}
+table.rank td.sc{text-align:right;font-weight:700;}
+tr.me{background:rgba(255,210,63,.14);}
+footer{
+  text-align:center;margin:22px 0 8px;color:var(--muted);font-size:.86rem;
+}
+footer .by{color:var(--ink);font-weight:800;font-size:1rem;letter-spacing:.3px;}
+.reset-row{text-align:center;margin:12px 0 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>🌊🧪 Missão pH</h1>
+    <p class="subtitle">Classifique os fatores da <b>acidificação dos oceanos</b> — arraste cada peça para a caixa certa.</p>
+  </header>
+
+  <div class="levels" id="levels">
+    <button class="pill" data-lv="basico">Básico</button>
+    <button class="pill" data-lv="intermediario">Intermediário</button>
+    <button class="pill" data-lv="dificil">Difícil</button>
+    <button class="pill" data-lv="carbonauta">🛰️ Carbonauta</button>
+  </div>
+
+  <div class="howto">
+    <b>Como jogar:</b> arraste (ou toque para selecionar e toque na caixa) cada peça para a categoria correta. Acertos contam pontos; erros somam penalidade. <b>Menor pontuação = melhor</b> no ranking (tempo + erros).
+  </div>
+
+  <div class="hud">
+    <div class="stat">Tempo: <span id="hudTime">0s</span></div>
+    <div class="stat">Erros: <span id="hudErr">0</span></div>
+    <div class="stat">Colocados: <span id="hudDone">0/0</span></div>
+    <div class="stat">Pontos: <span id="hudScore">0</span></div>
+  </div>
+
+  <div class="board">
+    <div class="pool-wrap">
+      <div class="section-title">🧩 Peças para classificar</div>
+      <div class="pool" id="pool"></div>
+    </div>
+    <div class="zones-wrap">
+      <div class="section-title">🗂️ Caixas de categoria</div>
+      <div class="zones" id="zones"></div>
+    </div>
+  </div>
+
+  <div class="feedback" id="feedback">Selecione um nível acima e comece a classificar! 🌊</div>
+
+  <div class="final" id="final">
+    <h2>🎉 Oceano classificado!</h2>
+    <div class="score-line" id="finalSummary"></div>
+    <div class="namebox">
+      <input id="playerName" maxlength="20" placeholder="Seu nome (até 20 caracteres)">
+      <button class="btn" id="saveBtn">Salvar no ranking</button>
+    </div>
+    <div class="reset-row">
+      <button class="btn ghost" id="againBtn">Jogar de novo</button>
+    </div>
+  </div>
+
+  <div class="rank-wrap">
+    <h3>🏆 Ranking Global</h3>
+    <p class="rank-sub" id="rankLevel">Nível: —</p>
+    <div id="rankBody"><p class="rank-msg">Carregando ranking…</p></div>
+  </div>
+
+  <div class="reset-row">
+    <button class="btn ghost" id="restartBtn">🔄 Reiniciar nível</button>
+  </div>
+
+  <footer>
+    <div class="by">— Idealizado por Ernandes Sobreira —</div>
+    <div>Tema: Acidificação dos oceanos · Gênero: Arrastar e soltar (classificar) · app ambiental do dia (2026-06-23)</div>
+  </footer>
+</div>
+
+<script>
+/* ===================== FIREBASE ===================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-06-23-missao-ph";
+
+let db=null, fbReady=false, fb={};
+(async function initFirebase(){
+  try{
+    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const fsMod  = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app = appMod.initializeApp(firebaseConfig);
+    db = fsMod.getFirestore(app);
+    fb = fsMod; fbReady=true;
+    loadRanking();
+  }catch(e){
+    fbReady=false;
+    document.getElementById('rankBody').innerHTML='<p class="rank-msg">⚠️ Ranking indisponível (offline). O jogo funciona normalmente.</p>';
+  }
+})();
+
+/* ===================== CONTEÚDO ===================== */
+/* Cada item: t = rótulo curto (mesmo "peso"), c = índice da categoria correta, fb = explicação (1 frase). */
+const DATA = {
+  basico:{
+    label:"Básico",
+    cats:[
+      {emoji:"🏭", name:"Causa a acidificação"},
+      {emoji:"🐚", name:"Consequência no oceano"}
+    ],
+    items:[
+      {t:"Queima de carvão e petróleo", c:0, fb:"Combustíveis fósseis liberam CO₂, que se dissolve no mar e o deixa mais ácido."},
+      {t:"Escapamento dos automóveis", c:0, fb:"Os carros emitem CO₂, principal gás que acidifica os oceanos."},
+      {t:"Fumaça das fábricas", c:0, fb:"Indústrias lançam CO₂ no ar, e parte dele é absorvida pelo mar."},
+      {t:"Desmatamento das florestas", c:0, fb:"Sem árvores, sobra mais CO₂ no ar e mais entra no oceano."},
+      {t:"Conchas mais finas e frágeis", c:1, fb:"A água ácida dificulta a formação de conchas de carbonato de cálcio."},
+      {t:"Corais em risco de dissolver", c:1, fb:"Recifes calcários enfraquecem quando o mar fica mais ácido."},
+      {t:"Água do mar menos alcalina", c:1, fb:"O pH do oceano caiu de cerca de 8,2 para 8,1 desde a era industrial."},
+      {t:"Menos alimento para os peixes", c:1, fb:"Espécies da base da cadeia sofrem, afetando todo o ecossistema marinho."}
+    ]
+  },
+  intermediario:{
+    label:"Intermediário",
+    cats:[
+      {emoji:"🏭", name:"Causa / fonte de CO₂"},
+      {emoji:"🐠", name:"Efeito nos organismos"},
+      {emoji:"🌱", name:"Solução / mitigação"}
+    ],
+    items:[
+      {t:"Aumento do CO₂ atmosférico", c:0, fb:"Cerca de 25–30% do CO₂ emitido pela humanidade é absorvido pelo oceano."},
+      {t:"Uso de combustíveis fósseis", c:0, fb:"A queima de carvão, petróleo e gás é a maior fonte de CO₂ antropogênico."},
+      {t:"Expansão do transporte a gasolina", c:0, fb:"Frotas a combustão ampliam as emissões de carbono globais."},
+      {t:"Dissolução de conchas de carbonato", c:1, fb:"Mais íons H⁺ reduzem o carbonato disponível para moluscos e plâncton."},
+      {t:"Fragilização dos esqueletos de coral", c:1, fb:"A calcificação dos corais cai à medida que o pH diminui."},
+      {t:"Dificuldade de calcificação do plâncton", c:1, fb:"Cocolitóforos e pterópodes formam carapaças com mais dificuldade."},
+      {t:"Estresse em larvas de ostras", c:1, fb:"Águas ácidas elevam a mortalidade de larvas em criadouros marinhos."},
+      {t:"Energia solar e eólica", c:2, fb:"Fontes renováveis reduzem a emissão de CO₂ que acidifica o mar."},
+      {t:"Restauração de manguezais costeiros", c:2, fb:"Zonas úmidas capturam carbono (blue carbon) e tamponam águas."},
+      {t:"Redução das emissões de carbono", c:2, fb:"Cortar emissões é a forma mais direta de frear a acidificação."}
+    ]
+  },
+  dificil:{
+    label:"Difícil",
+    cats:[
+      {emoji:"⚗️", name:"Processo químico"},
+      {emoji:"🦪", name:"Impacto biológico"},
+      {emoji:"📡", name:"Mitigação / monitoramento"}
+    ],
+    items:[
+      {t:"Hidratação do CO₂ em ácido carbônico", c:0, fb:"CO₂ + H₂O → H₂CO₃, que se dissocia e libera prótons na água do mar."},
+      {t:"Liberação de íons hidrogênio (H⁺)", c:0, fb:"O excesso de H⁺ reduz o pH e caracteriza a acidificação."},
+      {t:"Queda da concentração de carbonato", c:0, fb:"Os H⁺ consomem CO₃²⁻, reduzindo o material para calcificação."},
+      {t:"Redução da saturação da aragonita", c:0, fb:"Quando Ω cai abaixo de 1, conchas de aragonita tendem a se dissolver."},
+      {t:"Aumento da fração de bicarbonato", c:0, fb:"O sistema carbonato desloca-se para HCO₃⁻ com mais CO₂ dissolvido."},
+      {t:"Dissolução de conchas de pterópodes", c:1, fb:"Esses 'borboletas-do-mar' de aragonita são sentinelas da acidificação."},
+      {t:"Menor calcificação de cocolitóforos", c:1, fb:"O fitoplâncton calcário reduz a produção de placas de calcita."},
+      {t:"Bioerosão acelerada de recifes", c:1, fb:"A relação calcificação/dissolução do recife fica negativa."},
+      {t:"Comprometimento sensorial em peixes", c:1, fb:"A hipercapnia altera o comportamento e o olfato de algumas espécies."},
+      {t:"Mortalidade larval em ostreicultura", c:1, fb:"Criadouros do Pacífico já registraram perdas por águas corrosivas."},
+      {t:"Boias da rede global GOA-ON", c:2, fb:"A rede monitora pH e parâmetros do carbonato em tempo real."},
+      {t:"Captura e armazenamento de carbono", c:2, fb:"Reter CO₂ na fonte limita o que chega à atmosfera e ao oceano."},
+      {t:"Cultivo de macroalgas (blue carbon)", c:2, fb:"Algas e vegetação costeira sequestram carbono e elevam o pH local."},
+      {t:"Séries temporais da estação ALOHA", c:2, fb:"Décadas de medições documentam a queda contínua do pH oceânico."},
+      {t:"Alcalinização oceânica experimental", c:2, fb:"Adicionar alcalinidade pode elevar Ω, ainda em fase de pesquisa."},
+      {t:"Metas de corte de emissões globais", c:2, fb:"Acordos climáticos buscam reduzir o CO₂ que acidifica os mares."}
+    ]
+  },
+  carbonauta:{
+    label:"🛰️ Carbonauta",
+    cats:[
+      {emoji:"⚗️", name:"Sistema carbonato / química"},
+      {emoji:"🧬", name:"Resposta fisiológica / ecológica"},
+      {emoji:"📡", name:"Métricas, programas e geoengenharia"}
+    ],
+    items:[
+      {t:"Constantes de dissociação K1 e K2", c:0, fb:"Regem o equilíbrio entre H₂CO₃, HCO₃⁻ e CO₃²⁻ na especiação do DIC."},
+      {t:"Estado de saturação da aragonita (Ω)", c:0, fb:"Ω = [Ca²⁺][CO₃²⁻]/K*sp; valores abaixo de 1 favorecem dissolução."},
+      {t:"Pressão parcial de CO₂ (pCO₂)", c:0, fb:"Mede o CO₂ dissolvido; seu aumento desloca o equilíbrio para H⁺."},
+      {t:"Fator de Revelle do tamponamento", c:0, fb:"Quantifica a resistência do oceano a variações de DIC; cresce com a acidificação."},
+      {t:"Carbono inorgânico dissolvido (DIC)", c:0, fb:"Soma de CO₂(aq), HCO₃⁻ e CO₃²⁻, parâmetro mestre do carbonato."},
+      {t:"Alcalinidade total da água (TA)", c:0, fb:"Capacidade de neutralizar ácidos; com o DIC define o estado do carbonato."},
+      {t:"Supressão da calcificação líquida", c:1, fb:"Calcificadores reduzem a deposição líquida de CaCO₃ sob baixo Ω."},
+      {t:"Acidose dos fluidos extracelulares", c:1, fb:"A hipercapnia perturba o equilíbrio ácido-base interno de invertebrados."},
+      {t:"Falha olfatória em peixes-palhaço", c:1, fb:"Alteração do receptor GABA-A prejudica a detecção de predadores."},
+      {t:"Soerguimento do horizonte de saturação", c:1, fb:"A profundidade de Ω=1 sobe, expondo bentos à corrosão do carbonato."},
+      {t:"Plasticidade transgeracional adaptativa", c:1, fb:"Aclimatação parental pode atenuar efeitos na prole de alguns táxons."},
+      {t:"Dessincronização trófica do plâncton", c:1, fb:"Mudanças na base alteram fenologia e fluxo de energia na teia marinha."},
+      {t:"Intemperismo aprimorado de silicatos", c:2, fb:"Adicionar minerais de silicato consome CO₂ e eleva a alcalinidade."},
+      {t:"Alcalinização oceânica artificial (OAE)", c:2, fb:"Aumenta TA para sequestrar carbono e elevar Ω, sob avaliação de riscos."},
+      {t:"Redes GOA-ON e banco SOCAT", c:2, fb:"Padronizam observações de carbonato e fluxos de CO₂ ar-mar globalmente."},
+      {t:"Séries decadais BATS e HOT", c:2, fb:"Estações no Atlântico e Pacífico medem tendências de pH e DIC."},
+      {t:"Flutuadores biogeoquímicos BGC-Argo", c:2, fb:"Perfilam pH e oxigênio autonomamente, ampliando a cobertura oceânica."},
+      {t:"Projeções de cenários CMIP6 (SSPs)", c:2, fb:"Modelos projetam pH ~7,8 em 2100 sob trajetórias de altas emissões."}
+    ]
+  }
+};
+
+/* ===================== ESTADO E LÓGICA ===================== */
+let level="basico", items=[], errors=0, done=0, total=0, score=0;
+let startTime=0, timerId=null, finished=false;
+
+const $=id=>document.getElementById(id);
+const pool=$("pool"), zones=$("zones"), feedback=$("feedback");
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+
+function setLevel(lv){
+  level=lv;
+  document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('active',p.dataset.lv===lv));
+  $("rankLevel").textContent="Nível: "+DATA[lv].label;
+  startGame();
+  loadRanking();
+}
+
+function startGame(){
+  finished=false; errors=0; done=0; score=0;
+  $("final").classList.remove('show');
+  const cfg=DATA[level];
+  items=shuffle(cfg.items.map((it,i)=>({...it,id:i,placed:false})));
+  total=items.length;
+  zones.innerHTML="";
+  cfg.cats.forEach((cat,ci)=>{
+    const z=document.createElement('div');
+    z.className='zone'; z.dataset.cat=ci;
+    z.innerHTML='<div class="zhead"><span class="zemoji">'+cat.emoji+'</span><span>'+esc(cat.name)+'</span></div><div class="zbody" id="zbody-'+ci+'"></div>';
+    zones.appendChild(z);
+  });
+  pool.innerHTML="";
+  items.forEach(it=>{
+    const c=document.createElement('div');
+    c.className='chip'; c.dataset.id=it.id; c.textContent=it.t;
+    pool.appendChild(c);
+  });
+  updateHUD();
+  feedback.className='feedback';
+  feedback.innerHTML="Arraste cada peça para a categoria correta. 🌊";
+  clearInterval(timerId);
+  startTime=Date.now();
+  timerId=setInterval(updateTime,250);
+}
+
+function updateTime(){
+  if(finished)return;
+  const s=Math.floor((Date.now()-startTime)/1000);
+  $("hudTime").textContent=s+"s";
+}
+function elapsed(){return Math.floor((Date.now()-startTime)/1000);}
+function updateHUD(){
+  $("hudErr").textContent=errors;
+  $("hudDone").textContent=done+"/"+total;
+  $("hudScore").textContent=score;
+}
+
+function tryPlace(itemId, catIdx){
+  const it=items.find(x=>x.id===itemId);
+  if(!it||it.placed||finished)return;
+  const chip=pool.querySelector('.chip[data-id="'+itemId+'"]');
+  const correct = it.c===catIdx;
+  if(correct){
+    it.placed=true; done++; score+=10;
+    if(chip)chip.remove();
+    const span=document.createElement('span');
+    span.className='placed'; span.textContent='✓ '+it.t;
+    $("zbody-"+catIdx).appendChild(span);
+    feedback.className='feedback ok';
+    feedback.innerHTML='<b>Certo!</b> '+esc(it.fb);
+  }else{
+    errors++; score+=5;
+    const span=document.createElement('span');
+    span.className='placed wrong'; span.textContent='✗ '+it.t;
+    $("zbody-"+catIdx).appendChild(span);
+    setTimeout(()=>span.remove(),780);
+    const right=DATA[level].cats[it.c].name;
+    feedback.className='feedback bad';
+    feedback.innerHTML='<b>Não é aqui.</b> '+esc(it.fb)+' <em>(categoria certa: '+esc(right)+')</em>';
+    if(chip){chip.classList.add('selected');setTimeout(()=>chip.classList.remove('selected'),400);}
+  }
+  clearSelection();
+  updateHUD();
+  if(done>=total) endGame();
+}
+
+function endGame(){
+  finished=true; clearInterval(timerId);
+  const t=elapsed();
+  const finalScore = t + errors*10;
+  score=finalScore; $("hudScore").textContent=score;
+  $("finalSummary").innerHTML=
+    'Você classificou <b>'+total+'</b> peças em <b>'+t+'s</b> com <b>'+errors+'</b> erro(s).<br>'+
+    'Pontuação final: <b>'+finalScore+'</b> <span style="color:var(--muted)">(menor = melhor)</span>';
+  $("final").classList.add('show');
+  $("final").scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+/* ===================== DRAG (pointer + tap) ===================== */
+let selectedId=null, dragEl=null, dragGhost=null, startX=0, startY=0, moved=false;
+
+function clearSelection(){
+  selectedId=null;
+  document.querySelectorAll('.chip.selected').forEach(c=>c.classList.remove('selected'));
+}
+function highlightZone(el){
+  document.querySelectorAll('.zone.hover').forEach(z=>z.classList.remove('hover'));
+  if(el)el.classList.add('hover');
+}
+function zoneFromPoint(x,y){
+  const el=document.elementFromPoint(x,y);
+  return el?el.closest('.zone'):null;
+}
+
+pool.addEventListener('pointerdown',e=>{
+  const chip=e.target.closest('.chip');
+  if(!chip||finished)return;
+  dragEl=chip; startX=e.clientX; startY=e.clientY; moved=false;
+  try{chip.setPointerCapture(e.pointerId);}catch(err){}
+});
+pool.addEventListener('pointermove',e=>{
+  if(!dragEl)return;
+  const dx=e.clientX-startX, dy=e.clientY-startY;
+  if(!moved && Math.hypot(dx,dy)<7)return;
+  if(!moved){
+    moved=true;
+    const r=dragEl.getBoundingClientRect();
+    dragGhost=dragEl.cloneNode(true);
+    dragGhost.classList.add('float');
+    dragGhost.style.width=r.width+'px';
+    document.body.appendChild(dragGhost);
+    dragEl.classList.add('dragging');
+  }
+  dragGhost.style.left=(e.clientX-dragGhost.offsetWidth/2)+'px';
+  dragGhost.style.top=(e.clientY-22)+'px';
+  highlightZone(zoneFromPoint(e.clientX,e.clientY));
+});
+pool.addEventListener('pointerup',e=>{
+  if(!dragEl)return;
+  const chip=dragEl;
+  if(moved){
+    const z=zoneFromPoint(e.clientX,e.clientY);
+    if(dragGhost){dragGhost.remove();dragGhost=null;}
+    chip.classList.remove('dragging');
+    highlightZone(null);
+    if(z){tryPlace(parseInt(chip.dataset.id),parseInt(z.dataset.cat));}
+  }else{
+    const id=parseInt(chip.dataset.id);
+    if(selectedId===id){clearSelection();}
+    else{clearSelection();selectedId=id;chip.classList.add('selected');
+      feedback.className='feedback';
+      feedback.innerHTML="Peça selecionada — agora toque na <b>caixa de categoria</b> certa. 👆";}
+  }
+  dragEl=null;
+});
+pool.addEventListener('pointercancel',()=>{
+  if(dragGhost){dragGhost.remove();dragGhost=null;}
+  if(dragEl)dragEl.classList.remove('dragging');
+  dragEl=null;highlightZone(null);
+});
+zones.addEventListener('click',e=>{
+  const z=e.target.closest('.zone');
+  if(!z||selectedId===null||finished)return;
+  tryPlace(selectedId,parseInt(z.dataset.cat));
+});
+
+/* ===================== RANKING (Firestore) ===================== */
+async function loadRanking(){
+  const body=$("rankBody");
+  if(!fbReady){body.innerHTML='<p class="rank-msg">⚠️ Ranking indisponível (offline).</p>';return;}
+  body.innerHTML='<p class="rank-msg">Carregando ranking…</p>';
+  try{
+    const col=fb.collection(db,"games",GAME_ID,"scores");
+    const q=fb.query(col, fb.orderBy("score","asc"), fb.limit(200));
+    const snap=await fb.getDocs(q);
+    const rows=[];
+    snap.forEach(d=>{const x=d.data(); if(x.level===level)rows.push(x);});
+    rows.sort((a,b)=>(a.score-b.score)||((a.seconds||0)-(b.seconds||0)));
+    const top=rows.slice(0,10);
+    if(!top.length){body.innerHTML='<p class="rank-msg">Seja o primeiro a entrar no ranking deste nível! 🌊</p>';return;}
+    let html='<table class="rank"><tr><th>#</th><th>Nome</th><th>Erros</th><th class="sc">Pontos</th></tr>';
+    top.forEach((r,i)=>{
+      const me=(r.name===window._lastName)?' class="me"':'';
+      html+='<tr'+me+'><td class="pos">'+(i+1)+'</td><td>'+esc(r.name||'—')+'</td><td>'+(r.errors==null?'—':r.errors)+'</td><td class="sc">'+r.score+'</td></tr>';
+    });
+    html+='</table>';
+    body.innerHTML=html;
+  }catch(e){
+    body.innerHTML='<p class="rank-msg">⚠️ Não foi possível ler o ranking agora. O jogo continua normal.</p>';
+  }
+}
+
+async function saveScore(){
+  const name=($("playerName").value||'').trim().slice(0,20)||'Anônimo';
+  window._lastName=name;
+  if(!fbReady){feedback.className='feedback bad';feedback.innerHTML='⚠️ Sem conexão — não foi possível salvar, mas seu resultado vale!';return;}
+  const btn=$("saveBtn"); btn.disabled=true; btn.textContent='Salvando…';
+  try{
+    const col=fb.collection(db,"games",GAME_ID,"scores");
+    await fb.addDoc(col,{
+      name, level, score, errors, seconds:elapsed(),
+      ts: fb.serverTimestamp()
+    });
+    btn.textContent='✓ Salvo!';
+    await loadRanking();
+  }catch(e){
+    btn.disabled=false; btn.textContent='Salvar no ranking';
+    feedback.className='feedback bad';feedback.innerHTML='⚠️ Falha ao salvar. Tente de novo.';
+  }
+}
+
+/* ===================== EVENTOS UI ===================== */
+document.querySelectorAll('.pill').forEach(p=>p.addEventListener('click',()=>setLevel(p.dataset.lv)));
+$("saveBtn").addEventListener('click',saveScore);
+$("againBtn").addEventListener('click',()=>{startGame();});
+$("restartBtn").addEventListener('click',()=>{startGame();});
+
+setLevel('basico');
+</script>
+</body>
+</html>
