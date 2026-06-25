@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maré de Decisões 🌿🦀 — Guardião do Manguezal</title>
+<style>
+:root{
+  --bg1:#0b3d2e; --bg2:#0a4f5c;
+  --panel:rgba(255,255,255,.07);
+  --panel2:rgba(255,255,255,.12);
+  --ink:#f1faf5; --muted:#bcd9cf;
+  --accent:#ffce3a; --accent-ink:#3a2e00;
+  --ok:#4ade80; --okdark:#14532d;
+  --bad:#ff6b6b; --baddark:#5b1414;
+  --line:rgba(255,255,255,.16);
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:system-ui,"Segoe UI",Roboto,Arial,sans-serif;
+  background:linear-gradient(160deg,var(--bg1),var(--bg2));
+  background-attachment:fixed;
+  color:var(--ink); min-height:100vh;
+  padding:18px 14px 40px;
+}
+.wrap{width:min(880px,95vw);margin:0 auto}
+header.top{text-align:center;margin-bottom:14px}
+h1{
+  font-size:clamp(1.6rem,5vw,2.7rem);
+  margin:.2em 0 .1em;line-height:1.1;
+  text-shadow:0 2px 10px rgba(0,0,0,.3);
+}
+.sub{color:var(--muted);font-size:clamp(.85rem,2.4vw,1rem);margin:0}
+.levels{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0}
+.lvl{
+  border:1px solid var(--line);background:var(--panel);
+  color:var(--ink);padding:9px 16px;border-radius:999px;
+  font-size:clamp(.8rem,2.3vw,.95rem);font-weight:600;cursor:pointer;
+  transition:transform .2s,background .25s,box-shadow .25s;
+}
+.lvl:hover{transform:translateY(-2px)}
+.lvl.active{background:var(--accent);color:var(--accent-ink);box-shadow:var(--shadow);border-color:transparent}
+.hud{
+  display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:6px 0 14px;
+}
+.chip{
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:8px 12px;font-size:clamp(.78rem,2.2vw,.92rem);font-weight:600;
+  min-width:96px;text-align:center;
+}
+.chip b{color:var(--accent)}
+.healthwrap{margin:4px 0 16px}
+.healthlabel{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);margin-bottom:5px}
+.healthbar{height:18px;border-radius:999px;background:rgba(0,0,0,.28);overflow:hidden;border:1px solid var(--line)}
+.healthfill{height:100%;width:50%;border-radius:999px;transition:width .5s ease,background .5s}
+.howto{
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:10px 14px;font-size:.9rem;color:var(--muted);margin-bottom:14px;text-align:center;
+}
+.card{
+  background:var(--panel2);border:1px solid var(--line);border-radius:16px;
+  padding:18px 18px 20px;box-shadow:var(--shadow);
+}
+.scene-n{color:var(--accent);font-weight:700;font-size:.85rem;letter-spacing:.04em;text-transform:uppercase}
+.scene-txt{font-size:clamp(1.05rem,3vw,1.3rem);line-height:1.45;margin:8px 0 16px}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{
+  text-align:left;border:1px solid var(--line);background:var(--panel);
+  color:var(--ink);padding:14px 16px;border-radius:12px;font-size:clamp(.95rem,2.6vw,1.08rem);
+  font-weight:600;cursor:pointer;transition:transform .2s,background .25s,border-color .25s;
+}
+.opt:hover{transform:translateY(-2px);border-color:var(--accent)}
+.opt:disabled{cursor:default;opacity:.92}
+.opt.good{background:var(--okdark);border-color:var(--ok);animation:pop .35s ease}
+.opt.bad{background:var(--baddark);border-color:var(--bad);animation:shake .4s ease}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.04)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.feedback{
+  margin-top:14px;border-radius:12px;padding:13px 15px;font-size:.96rem;line-height:1.45;
+  border:1px solid var(--line);background:var(--panel);min-height:20px;
+}
+.feedback.show-good{border-color:var(--ok);background:rgba(74,222,128,.12)}
+.feedback.show-bad{border-color:var(--bad);background:rgba(255,107,107,.12)}
+.next{
+  margin-top:14px;width:100%;border:none;border-radius:12px;padding:14px;
+  background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:1.05rem;
+  cursor:pointer;transition:transform .2s,filter .2s;
+}
+.next:hover{transform:translateY(-2px);filter:brightness(1.05)}
+.hidden{display:none!important}
+/* final */
+.final{text-align:center}
+.final h2{font-size:clamp(1.4rem,4.5vw,2.1rem);margin:.2em 0}
+.endtier{font-size:1.25rem;font-weight:800;margin:10px 0;padding:10px;border-radius:12px}
+.tier-top{background:rgba(74,222,128,.18);color:#bbf7d0;border:1px solid var(--ok)}
+.tier-mid{background:rgba(255,206,58,.16);color:#fde68a;border:1px solid var(--accent)}
+.tier-low{background:rgba(255,107,107,.16);color:#fecaca;border:1px solid var(--bad)}
+.summary{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.summary .chip{min-width:120px}
+.namebox{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.namebox input{
+  padding:12px 14px;border-radius:12px;border:1px solid var(--line);
+  background:rgba(0,0,0,.25);color:var(--ink);font-size:1rem;width:min(260px,70vw);
+}
+.namebox button{
+  padding:12px 18px;border-radius:12px;border:none;background:var(--ok);color:var(--okdark);
+  font-weight:800;cursor:pointer;transition:transform .2s}
+.namebox button:hover{transform:translateY(-2px)}
+.replay{margin-top:8px;background:var(--panel);border:1px solid var(--line);color:var(--ink);
+  padding:11px 18px;border-radius:12px;font-weight:700;cursor:pointer}
+/* ranking */
+.rank{
+  margin-top:18px;background:var(--panel);border:1px solid var(--line);
+  border-radius:16px;padding:16px;box-shadow:var(--shadow);
+}
+.rank h3{margin:0 0 4px;font-size:1.1rem}
+.rank .rsub{color:var(--muted);font-size:.82rem;margin-bottom:10px}
+.rrow{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:rgba(0,0,0,.18);margin-bottom:6px;font-size:.92rem}
+.rrow .pos{font-weight:800;color:var(--accent);width:26px;text-align:center}
+.rrow .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rrow .sc{font-weight:800}
+.rrow .tm{color:var(--muted);font-size:.8rem;width:58px;text-align:right}
+.note{color:var(--muted);font-size:.85rem;text-align:center;padding:6px}
+footer{margin-top:26px;text-align:center;color:var(--muted);font-size:.86rem;line-height:1.6}
+footer .idea{color:var(--accent);font-weight:800;font-size:1rem;display:block;margin-bottom:4px}
+@media(max-width:520px){
+  .chip{min-width:calc(50% - 8px)}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>🌿 Maré de Decisões 🦀</h1>
+    <p class="sub">Guie um trecho de manguezal e zonas úmidas: cada escolha muda a saúde do ecossistema.</p>
+  </header>
+
+  <div class="levels" id="levels">
+    <button class="lvl active" data-lv="basico">Básico</button>
+    <button class="lvl" data-lv="inter">Intermediário</button>
+    <button class="lvl" data-lv="dificil">Difícil</button>
+    <button class="lvl" data-lv="carbonauta">🛰️ Carbonauta</button>
+  </div>
+
+  <div class="hud">
+    <div class="chip">Tempo: <b id="hTime">0s</b></div>
+    <div class="chip">Cena: <b id="hScene">0/0</b></div>
+    <div class="chip">Saúde: <b id="hHealth">50</b></div>
+    <div class="chip">Pontos: <b id="hScore">0</b></div>
+  </div>
+
+  <div class="healthwrap">
+    <div class="healthlabel"><span>Saúde do ecossistema 🌊</span><span id="hHealth2">50/100</span></div>
+    <div class="healthbar"><div class="healthfill" id="healthFill"></div></div>
+  </div>
+
+  <div class="howto">Como jogar: leia a situação e escolha uma ação. A barra de saúde sobe quando você protege o mangue e cai quando o prejudica. Decida com cuidado até o fim da jornada!</div>
+
+  <!-- GAME -->
+  <div class="card" id="gameCard">
+    <div class="scene-n" id="sceneN">Cena 1</div>
+    <div class="scene-txt" id="sceneTxt">...</div>
+    <div class="opts" id="opts"></div>
+    <div class="feedback" id="feedback">Escolha uma ação para começar a proteger o manguezal.</div>
+    <button class="next hidden" id="nextBtn">Próxima cena →</button>
+  </div>
+
+  <!-- FINAL -->
+  <div class="card final hidden" id="finalCard">
+    <h2>🎉 Jornada concluída!</h2>
+    <div class="endtier" id="endTier"></div>
+    <div class="summary">
+      <div class="chip">Pontos: <b id="fScore">0</b></div>
+      <div class="chip">Saúde final: <b id="fHealth">0</b></div>
+      <div class="chip">Tempo: <b id="fTime">0s</b></div>
+      <div class="chip">Melhores escolhas: <b id="fBest">0/0</b></div>
+    </div>
+    <div class="namebox">
+      <input id="playerName" maxlength="20" placeholder="Seu nome (até 20 letras)">
+      <button id="saveBtn">Salvar no ranking</button>
+    </div>
+    <div class="note" id="saveNote"></div>
+    <button class="replay" id="replayBtn">Jogar de novo 🔁</button>
+  </div>
+
+  <!-- RANKING -->
+  <div class="rank">
+    <h3>🏆 Ranking Global</h3>
+    <div class="rsub" id="rankSub">Nível: Básico — maior pontuação vence (tempo é desempate)</div>
+    <div id="rankList"><div class="note">Carregando ranking…</div></div>
+  </div>
+
+  <footer>
+    <span class="idea">— Idealizado por Ernandes Sobreira —</span>
+    Tema: Manguezais e zonas úmidas · Gênero: Cenário de decisões ramificado · app ambiental do dia (2026-06-25)
+  </footer>
+</div>
+
+<script>
+/* ================= FIREBASE ================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-06-25-mare-de-decisoes";
+
+let fb = { ready:false, db:null, fns:null };
+async function initFirebase(){
+  try{
+    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const fsMod  = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app = appMod.initializeApp(firebaseConfig);
+    fb.db = fsMod.getFirestore(app);
+    fb.fns = fsMod;
+    fb.ready = true;
+  }catch(e){ fb.ready=false; }
+}
+
+/* ================= CONTEÚDO ================= */
+/* cada cena: { s: situação, opts:[ {t:rótulo curto, h:delta saúde, pts, fb:explicação} ] }
+   melhor escolha: h=+10 pts=10 ; distratores: h negativo pts=0
+   Rótulos com tamanho parelho — detalhe vai só no feedback (DESIGN JUSTO). */
+const DATA = {
+  basico:[
+    {s:"Você encontra lixo plástico preso nas raízes do mangue. O que faz?",opts:[
+      {t:"Recolher o plástico",h:10,pts:10,fb:"Boa! As raízes prendem sedimentos e também lixo; retirar o plástico evita que animais se enrosquem ou o engulam."},
+      {t:"Deixar tudo como está",h:-8,pts:0,fb:"O plástico sufoca as raízes e fere caranguejos e aves que vivem no mangue."},
+      {t:"Empurrar para o mar",h:-10,pts:0,fb:"Jogar no mar só espalha a poluição e prejudica peixes e tartarugas."}
+    ]},
+    {s:"A maré sobe e enche o manguezal de água salgada. Isso é:",opts:[
+      {t:"Normal e muito importante",h:10,pts:10,fb:"Certo! O mangue vive no encontro do rio com o mar; a maré traz nutrientes e é essencial para ele."},
+      {t:"Um grande sinal de perigo",h:-6,pts:0,fb:"A entrada e a saída da maré são o ritmo natural do manguezal, não um problema."},
+      {t:"Sempre culpa da poluição",h:-6,pts:0,fb:"A maré é causada pela Lua e pelo Sol, não pela poluição."}
+    ]},
+    {s:"Um amigo quer aterrar o mangue para construir. Você responde:",opts:[
+      {t:"É melhor preservar tudo",h:10,pts:10,fb:"O manguezal protege a costa e abriga muitas espécies; aterrar destrói tudo isso."},
+      {t:"Pode construir à vontade",h:-10,pts:0,fb:"Aterrar acaba com o berçário de peixes e desprotege a cidade das marés."},
+      {t:"Para mim tanto faz",h:-6,pts:0,fb:"O mangue presta serviços valiosos; ignorar isso traz prejuízos a todos."}
+    ]},
+    {s:"Por que o manguezal é chamado de 'berçário do mar'?",opts:[
+      {t:"Filhotes crescem nele",h:10,pts:10,fb:"Isso! Muitos peixes e camarões nascem e crescem protegidos entre as raízes antes de ir ao mar aberto."},
+      {t:"Porque tem muita areia",h:-6,pts:0,fb:"Não é a areia: é a proteção das raízes que faz dele um berçário."},
+      {t:"Porque é sempre quente",h:-6,pts:0,fb:"A temperatura não define o berçário; a proteção contra predadores sim."}
+    ]},
+    {s:"Você vê um caranguejo-uçá no mangue. O ideal é:",opts:[
+      {t:"Observar e respeitar",h:10,pts:10,fb:"Ótimo! O caranguejo-uçá recicla folhas e areja o solo do mangue; é peça-chave do ecossistema."},
+      {t:"Capturar todos agora",h:-10,pts:0,fb:"A captura sem limite ameaça a espécie e o equilíbrio do mangue."},
+      {t:"Espantar com uma vara",h:-6,pts:0,fb:"Perturbar a fauna estressa os animais e atrapalha seu papel no ambiente."}
+    ]},
+    {s:"As raízes do mangue ficam acima da lama. Elas servem para:",opts:[
+      {t:"Respirar e firmar a planta",h:10,pts:10,fb:"Exato! As raízes aéreas captam ar e firmam a árvore na lama mole e sem oxigênio."},
+      {t:"Apenas enfeitar a paisagem",h:-6,pts:0,fb:"Não são enfeite: as raízes respiram e sustentam a árvore."},
+      {t:"Guardar bastante água doce",h:-6,pts:0,fb:"Elas não guardam água doce; ajudam a planta a respirar no solo encharcado."}
+    ]}
+  ],
+  inter:[
+    {s:"Um manguezal guarda muito carbono no solo. Esse estoque costeiro é chamado de:",opts:[
+      {t:"Carbono azul",h:10,pts:10,fb:"Carbono azul é o carbono capturado por ecossistemas costeiros como mangues, marismas e gramas marinhas."},
+      {t:"Carbono verde",h:-6,pts:0,fb:"Carbono verde se refere a florestas terrestres; o costeiro é o azul."},
+      {t:"Carbono neutro",h:-6,pts:0,fb:"Carbono neutro é um conceito de balanço de emissões, não um estoque costeiro."}
+    ]},
+    {s:"A Convenção de Ramsar, de 1971, trata da proteção de:",opts:[
+      {t:"Zonas úmidas",h:10,pts:10,fb:"A Convenção de Ramsar protege zonas úmidas de importância internacional desde 1971."},
+      {t:"Florestas secas",h:-6,pts:0,fb:"Ramsar foca em áreas úmidas, não em florestas secas."},
+      {t:"Montanhas altas",h:-6,pts:0,fb:"O tratado é sobre áreas alagadas, não regiões montanhosas."}
+    ]},
+    {s:"Cerca de 64% das zonas úmidas do mundo sumiram desde 1900. A principal causa é:",opts:[
+      {t:"Ação humana",h:10,pts:10,fb:"Drenagem, aterro, agricultura e urbanização explicam a maior parte dessa perda histórica."},
+      {t:"Erupção vulcânica",h:-6,pts:0,fb:"Vulcões não respondem por essa perda; a causa é humana."},
+      {t:"Ciclo solar",h:-6,pts:0,fb:"O Sol não drena zonas úmidas; a expansão humana sim."}
+    ]},
+    {s:"O Brasil tem a maior faixa contínua de manguezais. Ela fica na:",opts:[
+      {t:"Costa amazônica",h:10,pts:10,fb:"O litoral do Amapá e do Pará concentra a maior faixa contínua de manguezais do planeta."},
+      {t:"Costa gaúcha",h:-6,pts:0,fb:"O extremo sul é frio demais; o mangue domina o litoral norte e nordeste."},
+      {t:"Região central",h:-6,pts:0,fb:"O mangue precisa da água salgada do mar; não ocorre no interior."}
+    ]},
+    {s:"Manguezais reduzem a força das ondas e protegem a costa. Isso é um:",opts:[
+      {t:"Serviço ecossistêmico valioso",h:10,pts:10,fb:"Cerca de 100 m de mangue reduzem a energia das ondas em torno de 60%, protegendo cidades."},
+      {t:"Sério problema ambiental",h:-6,pts:0,fb:"Proteger a costa é um benefício, não um problema."},
+      {t:"Efeito apenas temporário",h:-6,pts:0,fb:"Enquanto o mangue existe, a proteção é contínua, não passageira."}
+    ]},
+    {s:"Drenar uma zona úmida para plantio costuma causar:",opts:[
+      {t:"Liberação de carbono",h:10,pts:10,fb:"Ao secar o solo encharcado, a matéria orgânica se decompõe e libera CO₂ guardado por séculos."},
+      {t:"Mais biodiversidade",h:-8,pts:0,fb:"Drenar reduz a biodiversidade típica das áreas alagadas, não aumenta."},
+      {t:"Resfriamento local",h:-6,pts:0,fb:"A drenagem tende a liberar gases de efeito estufa, não a resfriar."}
+    ]},
+    {s:"Os serviços dos manguezais brasileiros são avaliados em cerca de:",opts:[
+      {t:"US$ 5 bilhões",h:10,pts:10,fb:"Estudos estimam US$ 5 bilhões anuais em pesca, turismo e proteção costeira no Brasil."},
+      {t:"US$ 5 milhões",h:-6,pts:0,fb:"O valor é muito maior: chega à casa dos bilhões de dólares."},
+      {t:"US$ 5 mil",h:-6,pts:0,fb:"Esse valor é irrisório frente aos bilhões que o mangue gera."}
+    ]},
+    {s:"Uma espécie ameaçada que depende de zonas úmidas no Brasil é o:",opts:[
+      {t:"Guará vermelho",h:10,pts:10,fb:"O guará, ave de cor escarlate, alimenta-se de caranguejos e depende diretamente do manguezal."},
+      {t:"Urso polar",h:-8,pts:0,fb:"O urso polar vive no Ártico, não em manguezais tropicais."},
+      {t:"Camelo árabe",h:-8,pts:0,fb:"Camelos vivem em desertos, ambiente oposto ao do mangue."}
+    ]}
+  ],
+  dificil:[
+    {s:"No mangue, a espécie Rhizophora mangle destaca-se por suas raízes:",opts:[
+      {t:"Escora aéreas",h:10,pts:10,fb:"As rizóforas têm raízes-escora que ancoram a planta no sedimento instável e captam oxigênio."},
+      {t:"Tuberosas subterrâneas",h:-8,pts:0,fb:"Raízes tuberosas são de plantas de reserva, não do mangue-vermelho."},
+      {t:"Aquáticas flutuantes",h:-8,pts:0,fb:"As raízes do mangue são fixas no substrato, não flutuantes."}
+    ]},
+    {s:"Plantas de mangue lidam com a salinidade por mecanismos como:",opts:[
+      {t:"Exclusão e excreção",h:10,pts:10,fb:"Algumas excluem o sal na raiz; outras o excretam por glândulas nas folhas, como a Avicennia."},
+      {t:"Fotossíntese noturna",h:-8,pts:0,fb:"A fotossíntese noturna (CAM) não é o mecanismo central contra o sal no mangue."},
+      {t:"Perda de clorofila",h:-8,pts:0,fb:"Perder clorofila reduziria a fotossíntese, não resolveria o excesso de sal."}
+    ]},
+    {s:"Os pneumatóforos, vistos em Avicennia, são estruturas que permitem:",opts:[
+      {t:"Trocas gasosas radiculares",h:10,pts:10,fb:"Pneumatóforos são raízes que emergem da lama anóxica e fazem a troca de gases com o ar."},
+      {t:"Reprodução vegetativa rápida",h:-8,pts:0,fb:"Pneumatóforos servem à respiração, não à reprodução da planta."},
+      {t:"Captura ativa de presas",h:-8,pts:0,fb:"Mangues não são carnívoros; essas raízes respiram, não capturam."}
+    ]},
+    {s:"A regeneração do mangue ocorre muitas vezes por viviparidade, ou seja:",opts:[
+      {t:"Semente germina ainda presa",h:10,pts:10,fb:"Na viviparidade, o propágulo germina preso à árvore-mãe antes de cair e se fixar."},
+      {t:"Broto cresce sempre submerso",h:-8,pts:0,fb:"O propágulo se desenvolve na planta-mãe, fora d'água, não submerso."},
+      {t:"Raiz vira tronco novo",h:-8,pts:0,fb:"Viviparidade descreve a germinação precoce da semente, não a raiz virando tronco."}
+    ]},
+    {s:"Solos de manguezal acumulam tanto carbono porque são:",opts:[
+      {t:"Anóxicos e alagados",h:10,pts:10,fb:"A falta de oxigênio no sedimento alagado retarda a decomposição, acumulando carbono por séculos."},
+      {t:"Secos e arenosos",h:-8,pts:0,fb:"Solos secos e arejados decompõem rápido e estocam pouco carbono."},
+      {t:"Quentes e rochosos",h:-8,pts:0,fb:"Substrato rochoso não acumula a matéria orgânica típica do mangue."}
+    ]},
+    {s:"Manguezais brasileiros podem estocar carbono em quantidade próxima de:",opts:[
+      {t:"Centenas de t/ha",h:10,pts:10,fb:"Estudos apontam cerca de 468 t de carbono por hectare, várias vezes mais que biomas de terra firme."},
+      {t:"Poucos quilos/ha",h:-8,pts:0,fb:"O estoque é da ordem de centenas de toneladas, não de quilos por hectare."},
+      {t:"Quase zero/ha",h:-8,pts:0,fb:"Mangues estão entre os maiores estoques de carbono do país, longe de zero."}
+    ]},
+    {s:"A zonação do manguezal (onde cada espécie se instala) é regida por:",opts:[
+      {t:"Salinidade e inundação",h:10,pts:10,fb:"O gradiente de salinidade e a frequência das marés definem onde cada espécie se estabelece."},
+      {t:"Cor das folhas",h:-8,pts:0,fb:"A cor foliar não determina a zonação; salinidade e maré sim."},
+      {t:"Idade das árvores",h:-8,pts:0,fb:"A zonação responde a fatores físico-químicos, não à idade das plantas."}
+    ]},
+    {s:"O aumento do nível do mar ameaça mangues quando impede sua:",opts:[
+      {t:"Migração rumo à terra",h:10,pts:10,fb:"Sem espaço para avançar para terra (migração landward), o mangue fica espremido e afoga."},
+      {t:"Floração de verão",h:-8,pts:0,fb:"O problema é o espaço para recuar, não a floração das plantas."},
+      {t:"Queda das folhas",h:-8,pts:0,fb:"A senescência foliar é normal; a ameaça é o afogamento sem recuo."}
+    ]},
+    {s:"A anoxia em solos de manguezal favorece a emissão do gás:",opts:[
+      {t:"Metano (CH₄)",h:10,pts:10,fb:"Em solos alagados, arqueias metanogênicas produzem metano, gás de alto potencial de aquecimento."},
+      {t:"Oxigênio (O₂)",h:-8,pts:0,fb:"Oxigênio não é emitido em ambiente anóxico; ali predomina o metano."},
+      {t:"Hélio (He)",h:-8,pts:0,fb:"Hélio não é produto da decomposição anaeróbia no sedimento."}
+    ]},
+    {s:"A restauração de manguezais tem mais sucesso quando se recupera primeiro a:",opts:[
+      {t:"Hidrologia do sítio",h:10,pts:10,fb:"Restaurar o fluxo de marés e a hidrologia costuma superar o simples plantio de mudas."},
+      {t:"Cor da água",h:-8,pts:0,fb:"A cor da água não guia a restauração; o regime hídrico sim."},
+      {t:"Altura das mudas",h:-8,pts:0,fb:"Plantar mudas altas sem corrigir a hidrologia tende a falhar."}
+    ]}
+  ],
+  carbonauta:[
+    {s:"Em sedimentos de manguezal, a maior fração do estoque de carbono orgânico está como:",opts:[
+      {t:"Carbono autóctone soterrado",h:10,pts:10,fb:"Boa parte é carbono autóctone (raízes, serapilheira) soterrado, somado ao alóctone retido pelas raízes."},
+      {t:"Carbonato de cálcio biogênico",h:-8,pts:0,fb:"Carbonato é carbono inorgânico; o estoque dominante do mangue é orgânico soterrado."},
+      {t:"Grafite metamórfico profundo",h:-8,pts:0,fb:"Grafite é geológico; o carbono do mangue é orgânico recente, não metamórfico."}
+    ]},
+    {s:"A alta eficiência de soterramento de C em mangues decorre sobretudo de:",opts:[
+      {t:"Baixa taxa decompositiva",h:10,pts:10,fb:"A anaerobiose limita a remineralização, elevando a eficiência de soterramento frente à terra firme."},
+      {t:"Alta produtividade primária",h:-8,pts:0,fb:"A produtividade contribui, mas o diferencial é a decomposição lenta no sedimento anóxico."},
+      {t:"Intensa fixação nitrogenada",h:-8,pts:0,fb:"A fixação de N não explica o acúmulo; a preservação no soterramento sim."}
+    ]},
+    {s:"O 'coastal squeeze' afoga mangues quando a acreção vertical fica:",opts:[
+      {t:"Aquém da subida marinha",h:10,pts:10,fb:"Se a acreção sedimentar não acompanha a subida do mar e há barreira a montante, o mangue afoga."},
+      {t:"Acima da copa florestal",h:-8,pts:0,fb:"Acreção é processo de solo; não se compara à altura da copa."},
+      {t:"Igual à salinidade média",h:-8,pts:0,fb:"Salinidade e acreção são variáveis distintas; a comparação não cabe."}
+    ]},
+    {s:"Mangues podem ser fonte líquida de GEE quando emitem, além de CO₂, fluxos de:",opts:[
+      {t:"Metano e óxido nitroso",h:10,pts:10,fb:"CH₄ (metanogênese) e N₂O (desnitrificação) podem reduzir o benefício climático líquido em sítios eutrofizados."},
+      {t:"Ozônio e gases nobres",h:-8,pts:0,fb:"O₃ e gases nobres não são produtos da diagênese do sedimento de mangue."},
+      {t:"Dióxido de enxofre vulcânico",h:-8,pts:0,fb:"O SO₂ vulcânico não advém do metabolismo bêntico do manguezal."}
+    ]},
+    {s:"Na coluna de sedimento, a cascata redox típica termina em:",opts:[
+      {t:"Sulfato e metanogênese",h:10,pts:10,fb:"A cascata segue O₂ → nitrato → Mn/Fe → sulfato → metanogênese conforme aprofunda a anoxia."},
+      {t:"Fotólise e ozonização",h:-8,pts:0,fb:"Fotólise exige luz; não ocorre no sedimento profundo anóxico."},
+      {t:"Calcinação e vitrificação",h:-8,pts:0,fb:"São processos de alta temperatura, alheios à diagênese sedimentar."}
+    ]},
+    {s:"A Avicennia schaueriana, comum no Atlântico-sul, elimina sal por:",opts:[
+      {t:"Glândulas foliares secretoras",h:10,pts:10,fb:"Avicennia é secretora: glândulas salinas nas folhas eliminam o excesso de NaCl absorvido."},
+      {t:"Aerênquima caulinar lenhoso",h:-8,pts:0,fb:"O aerênquima serve à aeração, não à excreção de sal."},
+      {t:"Micorrizas arbusculares radiculares",h:-8,pts:0,fb:"Micorrizas auxiliam na nutrição mineral, não na eliminação de sal foliar."}
+    ]},
+    {s:"O propágulo vivíparo se estabelece bem porque cai ao substrato já com:",opts:[
+      {t:"Hipocótilo e radícula prontos",h:10,pts:10,fb:"O embrião germina na planta-mãe; o propágulo cai com hipocótilo alongado pronto para enraizar."},
+      {t:"Endosperma e tegumento dormentes",h:-8,pts:0,fb:"Sementes ortodoxas dependem de endosperma dormente; o mangue é vivíparo, sem dormência."},
+      {t:"Tubérculo e gema lateral",h:-8,pts:0,fb:"O diferencial vivíparo é o hipocótilo desenvolvido, não estruturas de reserva."}
+    ]},
+    {s:"A produtividade do mangue na costa amazônica é potencializada pelo aporte de:",opts:[
+      {t:"Sedimento do rio Amazonas",h:10,pts:10,fb:"O aporte de sedimentos e nutrientes do rio Amazonas sustenta a maior faixa contínua de mangue do mundo."},
+      {t:"Água de degelo andino",h:-8,pts:0,fb:"O degelo alimenta o rio, mas o fator direto é o sedimento depositado na costa."},
+      {t:"Pluma de ressurgência fria",h:-8,pts:0,fb:"A ressurgência fria é típica de outras costas, não o motor desse mangue."}
+    ]},
+    {s:"Em inventários de carbono azul, o maior reservatório a quantificar costuma ser:",opts:[
+      {t:"Carbono orgânico do solo",h:10,pts:10,fb:"Em mangues, o C do sedimento em profundidade supera em muito a biomassa aérea no estoque total."},
+      {t:"Biomassa lenhosa das árvores",h:-8,pts:0,fb:"A biomassa aérea importa, mas é menor que o vasto estoque no sedimento."},
+      {t:"Necromassa da serapilheira foliar",h:-8,pts:0,fb:"A serapilheira é fração pequena diante do carbono soterrado no solo."}
+    ]},
+    {s:"A metanogênese é suprimida em mangues salinos pela competição com:",opts:[
+      {t:"Bactérias redutoras de sulfato",h:10,pts:10,fb:"O sulfato abundante da água do mar favorece redutoras de sulfato, que vencem as metanogênicas por substrato."},
+      {t:"Cianobactérias fixadoras fotossintéticas",h:-8,pts:0,fb:"Cianobactérias atuam na superfície iluminada, não competem na metanogênese profunda."},
+      {t:"Fungos decompositores estritamente aeróbios",h:-8,pts:0,fb:"Fungos aeróbios não operam no sedimento anóxico onde ocorre metanogênese."}
+    ]},
+    {s:"Para creditar carbono azul em mercados, exige-se adicionalidade e também:",opts:[
+      {t:"Permanência do estoque",h:10,pts:10,fb:"Projetos precisam demonstrar permanência e contabilizar reversões (fogo, erosão) e vazamento (leakage)."},
+      {t:"Aumento da salinidade",h:-8,pts:0,fb:"Elevar salinidade não é critério de crédito; permanência e MRV são."},
+      {t:"Redução da cobertura",h:-8,pts:0,fb:"Reduzir cobertura é o oposto do objetivo; credita-se conservação e restauração."}
+    ]},
+    {s:"Para mapear extensão de mangue por sensoriamento remoto, combina-se o:",opts:[
+      {t:"NDVI com bandas SWIR",h:10,pts:10,fb:"Combina-se NDVI com infravermelho de ondas curtas (SWIR) e dados de maré para discriminar o mangue."},
+      {t:"Albedo de nuvens altas",h:-8,pts:0,fb:"O albedo de nuvens não mapeia vegetação de mangue."},
+      {t:"Gradiente térmico do solo",h:-8,pts:0,fb:"A temperatura isolada do solo não distingue mangue de outra cobertura."}
+    ]},
+    {s:"O carbono azul de mangues difere do de florestas por ser majoritariamente:",opts:[
+      {t:"Alóctone e autóctone soterrado",h:10,pts:10,fb:"Mangues retêm carbono importado pela maré (alóctone) somado ao próprio, soterrado em sedimento anóxico."},
+      {t:"Volátil e rapidamente reciclado",h:-8,pts:0,fb:"O carbono do mangue é preservado por milênios, não rapidamente reciclado."},
+      {t:"Inorgânico e biologicamente inerte",h:-8,pts:0,fb:"O estoque dominante é orgânico e fixado biologicamente, não inorgânico inerte."}
+    ]}
+  ]
+};
+const LV_NAMES = {basico:"Básico",inter:"Intermediário",dificil:"Difícil",carbonauta:"🛰️ Carbonauta"};
+
+/* ================= ESTADO ================= */
+let level="basico", idx=0, health=50, score=0, best=0, total=0;
+let startTs=0, timer=null, elapsed=0, answered=false, savedThis=false;
+
+const $=id=>document.getElementById(id);
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+function setLevel(lv){
+  level=lv;
+  document.querySelectorAll(".lvl").forEach(b=>b.classList.toggle("active",b.dataset.lv===lv));
+  startGame();
+  loadRanking();
+}
+function startGame(){
+  idx=0; health=50; score=0; best=0; savedThis=false;
+  total=DATA[level].length; elapsed=0;
+  $("finalCard").classList.add("hidden");
+  $("gameCard").classList.remove("hidden");
+  clearInterval(timer);
+  startTs=Date.now();
+  timer=setInterval(()=>{elapsed=Math.floor((Date.now()-startTs)/1000);$("hTime").textContent=elapsed+"s";},250);
+  updateHUD();
+  renderScene();
+}
+function updateHUD(){
+  $("hScene").textContent=Math.min(idx+1,total)+"/"+total;
+  $("hHealth").textContent=health;
+  $("hHealth2").textContent=health+"/100";
+  $("hScore").textContent=score;
+  const f=$("healthFill");
+  f.style.width=health+"%";
+  f.style.background = health>=70 ? "linear-gradient(90deg,#22c55e,#4ade80)"
+    : health>=40 ? "linear-gradient(90deg,#eab308,#ffce3a)"
+    : "linear-gradient(90deg,#ef4444,#ff6b6b)";
+}
+function renderScene(){
+  answered=false;
+  const sc=DATA[level][idx];
+  $("sceneN").textContent="Cena "+(idx+1)+" de "+total;
+  $("sceneTxt").textContent=sc.s;
+  const fb=$("feedback"); fb.textContent="Escolha uma ação."; fb.className="feedback";
+  $("nextBtn").classList.add("hidden");
+  const box=$("opts"); box.innerHTML="";
+  const opts=shuffle(sc.opts.slice());
+  opts.forEach(o=>{
+    const b=document.createElement("button");
+    b.className="opt"; b.textContent=o.t;
+    b.onclick=()=>choose(b,o,sc);
+    box.appendChild(b);
+  });
+}
+function choose(btn,o,sc){
+  if(answered)return;
+  answered=true;
+  const good=o.h>0;
+  health=Math.max(0,Math.min(100,health+o.h));
+  score+=o.pts;
+  if(good)best++;
+  btn.classList.add(good?"good":"bad");
+  document.querySelectorAll("#opts .opt").forEach(b=>b.disabled=true);
+  const fb=$("feedback");
+  fb.textContent=(good?"✅ ":"❌ ")+o.fb+"  (Saúde "+(o.h>0?"+":"")+o.h+")";
+  fb.className="feedback "+(good?"show-good":"show-bad");
+  updateHUD();
+  const nb=$("nextBtn");
+  nb.textContent = (idx+1>=total) ? "Ver resultado 🎉" : "Próxima cena →";
+  nb.classList.remove("hidden");
+}
+$("nextBtn").onclick=()=>{
+  idx++;
+  if(idx>=total){ endGame(); } else { renderScene(); updateHUD(); }
+};
+function endGame(){
+  clearInterval(timer);
+  elapsed=Math.floor((Date.now()-startTs)/1000);
+  $("hTime").textContent=elapsed+"s";
+  $("gameCard").classList.add("hidden");
+  $("finalCard").classList.remove("hidden");
+  $("fScore").textContent=score;
+  $("fHealth").textContent=health+"/100";
+  $("fTime").textContent=elapsed+"s";
+  $("fBest").textContent=best+"/"+total;
+  const et=$("endTier");
+  if(health>=80){et.textContent="🌿 Ecossistema Próspero — o mangue floresce!";et.className="endtier tier-top";}
+  else if(health>=50){et.textContent="🌱 Ecossistema Estável — bom equilíbrio.";et.className="endtier tier-mid";}
+  else if(health>=25){et.textContent="⚠️ Ecossistema Degradado — atenção às escolhas.";et.className="endtier tier-low";}
+  else{et.textContent="🆘 Ecossistema em Colapso — recomece e proteja o mangue.";et.className="endtier tier-low";}
+  $("saveNote").textContent="";
+}
+$("replayBtn").onclick=startGame;
+
+/* ================= RANKING ================= */
+$("saveBtn").onclick=async()=>{
+  if(savedThis){ $("saveNote").textContent="Você já salvou este resultado."; return; }
+  const nm=($("playerName").value||"").trim().slice(0,20);
+  if(!nm){ $("saveNote").textContent="Digite um nome para salvar."; return; }
+  if(!fb.ready){ $("saveNote").textContent="⚠️ Sem conexão com o ranking agora — seu jogo valeu mesmo assim!"; return; }
+  try{
+    const {collection,addDoc,serverTimestamp}=fb.fns;
+    await addDoc(collection(fb.db,"games",GAME_ID,"scores"),{
+      name:nm, score:score, seconds:elapsed, level:level, ts:serverTimestamp()
+    });
+    savedThis=true;
+    $("saveNote").textContent="✅ Salvo no ranking!";
+    loadRanking();
+  }catch(e){
+    $("saveNote").textContent="⚠️ Não foi possível salvar agora. Tente novamente mais tarde.";
+  }
+};
+async function loadRanking(){
+  $("rankSub").textContent="Nível: "+LV_NAMES[level]+" — maior pontuação vence (tempo é desempate)";
+  const list=$("rankList");
+  if(!fb.ready){ list.innerHTML='<div class="note">Conectando ao ranking…</div>';
+    setTimeout(()=>{ if(fb.ready) loadRanking(); else list.innerHTML='<div class="note">⚠️ Ranking indisponível (offline). O jogo continua normal.</div>'; },1500);
+    return;
+  }
+  try{
+    const {collection,query,orderBy,limit,getDocs}=fb.fns;
+    // Sem where + orderBy juntos (evita índice composto): ordena por score e filtra nível no cliente
+    const q=query(collection(fb.db,"games",GAME_ID,"scores"),orderBy("score","desc"),limit(120));
+    const snap=await getDocs(q);
+    let rows=[];
+    snap.forEach(d=>{const x=d.data(); if(x.level===level) rows.push(x);});
+    rows.sort((a,b)=> (b.score-a.score) || ((a.seconds||0)-(b.seconds||0)) );
+    rows=rows.slice(0,10);
+    if(!rows.length){ list.innerHTML='<div class="note">Sem pontuações neste nível ainda. Seja o primeiro! 🌱</div>'; return; }
+    list.innerHTML=rows.map((r,i)=>(
+      '<div class="rrow"><span class="pos">'+(i+1)+'</span>'+
+      '<span class="nm">'+esc(r.name||"anônimo")+'</span>'+
+      '<span class="sc">'+(r.score|0)+' pts</span>'+
+      '<span class="tm">'+(r.seconds!=null?r.seconds+'s':'')+'</span></div>'
+    )).join("");
+  }catch(e){
+    list.innerHTML='<div class="note">⚠️ Erro ao carregar o ranking. O jogo continua normal.</div>';
+  }
+}
+
+/* ================= INIT ================= */
+document.querySelectorAll(".lvl").forEach(b=>b.onclick=()=>setLevel(b.dataset.lv));
+startGame();
+initFirebase().then(()=>loadRanking());
+</script>
+</body>
+</html>
