@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚡ Watt Quiz — Energia do Futuro</title>
+<style>
+:root{
+  --bg1:#06301f; --bg2:#0f7a52; --card:#0d3b2b; --card2:#124a37;
+  --accent:#ffd34e; --accent2:#a3e635; --text:#eafaf1; --muted:#a9c9ba;
+  --ok:#3fe08a; --err:#ff6b6b; --shadow:0 10px 30px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:system-ui,'Segoe UI',Roboto,sans-serif;
+  background:linear-gradient(160deg,var(--bg1),var(--bg2));
+  color:var(--text); min-height:100vh; padding:18px 12px 40px;
+  display:flex; flex-direction:column; align-items:center;
+}
+.wrap{width:min(760px,95vw)}
+header{text-align:center;margin-bottom:14px}
+h1{font-size:clamp(1.7rem,5vw,2.7rem);line-height:1.1;text-shadow:0 2px 10px rgba(0,0,0,.4)}
+.sub{color:var(--muted);margin-top:6px;font-size:clamp(.85rem,2.5vw,1rem)}
+.levels{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0}
+.pill{
+  border:none;cursor:pointer;padding:9px 15px;border-radius:999px;
+  background:var(--card2);color:var(--text);font-weight:600;font-size:.92rem;
+  transition:transform .2s,background .2s,box-shadow .2s;box-shadow:var(--shadow)
+}
+.pill:hover{transform:translateY(-2px)}
+.pill.active{background:var(--accent);color:#1a2b00;box-shadow:0 6px 18px rgba(255,211,78,.4)}
+.hud{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:6px 0 12px}
+.chip{background:var(--card);border-radius:12px;padding:7px 13px;font-size:.9rem;box-shadow:var(--shadow);font-weight:600}
+.chip b{color:var(--accent2)}
+.howto{background:rgba(255,255,255,.06);border-radius:12px;padding:9px 14px;font-size:.86rem;color:var(--muted);text-align:center;margin-bottom:12px}
+.card{background:var(--card);border-radius:18px;padding:20px;box-shadow:var(--shadow);margin-bottom:14px}
+.progress{height:10px;background:rgba(0,0,0,.28);border-radius:99px;overflow:hidden;margin-bottom:16px}
+.progress > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width .4s}
+.qtext{font-size:clamp(1.1rem,3.4vw,1.4rem);font-weight:700;line-height:1.3;margin-bottom:16px}
+.opts{display:grid;gap:10px}
+.opt{text-align:left;border:2px solid transparent;cursor:pointer;background:var(--card2);color:var(--text);padding:14px 16px;border-radius:12px;font-size:1rem;font-weight:600;transition:transform .2s,background .2s,border-color .2s}
+.opt:hover:not(:disabled){transform:translateY(-2px);border-color:var(--accent)}
+.opt:disabled{cursor:default}
+.opt.correct{background:rgba(63,224,138,.22);border-color:var(--ok);animation:pop .35s}
+.opt.wrong{background:rgba(255,107,107,.2);border-color:var(--err);animation:shake .4s}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.06)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.feedback{margin-top:16px;padding:14px 16px;border-radius:12px;background:rgba(255,255,255,.07);font-size:.95rem;line-height:1.45;min-height:20px;border-left:4px solid var(--accent)}
+.feedback.good{border-color:var(--ok)}
+.feedback.bad{border-color:var(--err)}
+.nextbtn{margin-top:16px;width:100%;border:none;cursor:pointer;padding:14px;border-radius:12px;background:var(--accent);color:#1a2b00;font-weight:800;font-size:1.05rem;transition:transform .2s,box-shadow .2s;box-shadow:var(--shadow)}
+.nextbtn:hover{transform:translateY(-2px)}
+.nextbtn[disabled]{opacity:.4;cursor:default;transform:none}
+.final{text-align:center}
+.final h2{font-size:clamp(1.5rem,5vw,2.2rem);color:var(--accent2);margin-bottom:8px}
+.final .big{font-size:3rem;margin:4px 0}
+.summary{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:14px 0}
+.summary .chip{background:var(--card2)}
+.namerow{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+.namerow input{padding:12px 14px;border-radius:12px;border:2px solid var(--card2);background:#082419;color:var(--text);font-size:1rem;flex:1;min-width:160px}
+.namerow input:focus{outline:none;border-color:var(--accent)}
+.savebtn{border:none;cursor:pointer;padding:12px 20px;border-radius:12px;background:var(--accent2);color:#152400;font-weight:800;font-size:1rem;transition:transform .2s}
+.savebtn:hover{transform:translateY(-2px)}
+.savebtn[disabled]{opacity:.5;cursor:default}
+.rank h3{font-size:1.15rem;margin-bottom:4px}
+.rank .lvltag{color:var(--muted);font-size:.82rem;margin-bottom:10px}
+.rlist{list-style:none;display:grid;gap:6px}
+.rlist li{display:flex;justify-content:space-between;gap:10px;background:var(--card2);padding:9px 13px;border-radius:10px;font-size:.92rem;align-items:center}
+.rlist li .pos{color:var(--accent);font-weight:800;min-width:26px}
+.rlist li .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rlist li .sc{color:var(--accent2);font-weight:700;white-space:nowrap}
+.note{color:var(--muted);font-size:.85rem;text-align:center;padding:6px}
+footer{margin-top:22px;text-align:center;color:var(--muted);font-size:.85rem;line-height:1.6}
+footer .idz{color:var(--accent);font-weight:800;font-size:.98rem}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>⚡ Watt Quiz</h1>
+    <div class="sub">☀️ 🌬️ 💧 Energia do Futuro — teste seus conhecimentos sobre energias renováveis</div>
+  </header>
+
+  <div class="levels" id="levels">
+    <button class="pill" data-lvl="basico">Básico</button>
+    <button class="pill" data-lvl="intermediario">Intermediário</button>
+    <button class="pill" data-lvl="dificil">Difícil</button>
+    <button class="pill" data-lvl="carbonauta">🛰️ Carbonauta</button>
+  </div>
+
+  <div class="hud">
+    <div class="chip">Tempo: <b><span id="hudTime">0</span>s</b></div>
+    <div class="chip">Acertos: <b><span id="hudHits">0</span>/<span id="hudTotal">0</span></b></div>
+    <div class="chip">Pontos: <b id="hudPts">0</b></div>
+    <div class="chip">Sequência: <b id="hudStreak">0</b></div>
+  </div>
+
+  <div class="howto">Escolha o nível, leia a pergunta e clique na alternativa correta. Cada resposta traz uma explicação. Responda tudo para entrar no ranking!</div>
+
+  <div class="card" id="gameCard">
+    <div class="progress"><i id="progBar"></i></div>
+    <div class="qtext" id="qtext">Carregando…</div>
+    <div class="opts" id="opts"></div>
+    <div class="feedback" id="feedback">Boa sorte! 🍀</div>
+    <button class="nextbtn" id="nextBtn" disabled>Próxima →</button>
+  </div>
+
+  <div class="card final hidden" id="finalCard">
+    <div class="big">🎉</div>
+    <h2>Missão concluída!</h2>
+    <div class="summary" id="finalSummary"></div>
+    <div class="namerow">
+      <input id="nameInput" maxlength="20" placeholder="Seu nome (até 20 caracteres)">
+      <button class="savebtn" id="saveBtn">Salvar no ranking</button>
+    </div>
+    <div class="note" id="saveNote"></div>
+    <button class="nextbtn" id="playAgain" style="margin-top:14px">Jogar de novo 🔁</button>
+  </div>
+
+  <div class="card rank">
+    <h3>🏆 Ranking Global</h3>
+    <div class="lvltag">Nível: <span id="rankLvl">Básico</span> — maior pontuação; empate pelo menor tempo</div>
+    <ul class="rlist" id="rankList"></ul>
+    <div class="note" id="rankNote">Carregando ranking…</div>
+  </div>
+
+  <footer>
+    <div class="idz">— Idealizado por Ernandes Sobreira —</div>
+    <div>Tema: Energias renováveis · Gênero: Quiz · app ambiental do dia (2026-07-14)</div>
+  </footer>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-07-14-watt-quiz";
+
+const DATA = {"basico": [{"q": "Qual destas é uma fonte de energia renovável?", "a": [["Energia solar", 1], ["Carvão mineral", 0], ["Petróleo bruto", 0], ["Gás fóssil", 0]], "fb": "O Sol é inesgotável na escala humana; carvão, petróleo e gás são fósseis e finitos."}, {"q": "O que gera a energia eólica?", "a": [["A força do vento", 1], ["O calor solar", 0], ["A queima de carvão", 0], ["O fluxo dos rios", 0]], "fb": "Turbinas eólicas convertem a energia cinética do vento em eletricidade."}, {"q": "A energia hidrelétrica aproveita o quê?", "a": [["A força da água", 1], ["O calor da terra", 0], ["A luz do sol", 0], ["O sopro do vento", 0]], "fb": "Usinas hidrelétricas usam a queda e o fluxo da água para girar turbinas."}, {"q": "Qual destas NÃO é renovável?", "a": [["Petróleo bruto", 1], ["Energia solar", 0], ["Força eólica", 0], ["Água corrente", 0]], "fb": "Petróleo é combustível fóssil, formado ao longo de milhões de anos e finito."}, {"q": "Painéis solares captam principalmente o quê?", "a": [["A luz do sol", 1], ["O calor do solo", 0], ["A força do mar", 0], ["O gás do ar", 0]], "fb": "Células fotovoltaicas convertem a luz solar diretamente em eletricidade."}, {"q": "A biomassa produz energia a partir de quê?", "a": [["Restos de plantas", 1], ["Rochas do subsolo", 0], ["Metais pesados", 0], ["Plástico novo", 0]], "fb": "Biomassa usa matéria orgânica, como bagaço de cana, madeira e resíduos agrícolas."}, {"q": "Qual é uma vantagem das fontes renováveis?", "a": [["Poluem bem menos", 1], ["Acabam bem rápido", 0], ["Custam sempre mais", 0], ["Sujam mais o ar", 0]], "fb": "Fontes renováveis emitem pouco ou nenhum gás de efeito estufa ao gerar energia."}, {"q": "A energia geotérmica vem de onde?", "a": [["Do calor da Terra", 1], ["Da luz das estrelas", 0], ["Do vento forte", 0], ["Das ondas do mar", 0]], "fb": "A geotérmica aproveita o calor do interior do planeta para gerar energia."}], "intermediario": [{"q": "Qual é a maior fonte de eletricidade do Brasil?", "a": [["Usinas hidrelétricas", 1], ["Termelétricas a carvão", 0], ["Parques eólicos", 0], ["Placas solares", 0]], "fb": "A hidreletricidade responde por cerca de 60% da geração elétrica brasileira."}, {"q": "Qual a fração renovável da matriz elétrica do Brasil?", "a": [["Perto de 88%", 1], ["Cerca de 40%", 0], ["Menos de 20%", 0], ["Ao redor de 55%", 0]], "fb": "Em 2024 a matriz elétrica brasileira foi ~88% renovável, uma das mais limpas do mundo."}, {"q": "O que mede o fator de capacidade de uma usina?", "a": [["Uso real da potência", 1], ["Preço final da conta", 0], ["Peso total da turbina", 0], ["Idade média da usina", 0]], "fb": "Fator de capacidade compara a geração real com a máxima teórica ao longo do tempo."}, {"q": "Como a energia solar fotovoltaica gera eletricidade?", "a": [["Efeito fotovoltaico direto", 1], ["Queima de biomassa seca", 0], ["Vapor girando turbinas", 0], ["Fissão de núcleos pesados", 0]], "fb": "No efeito fotovoltaico, fótons liberam elétrons no semicondutor, gerando corrente elétrica."}, {"q": "Qual fonte depende diretamente da irradiação solar?", "a": [["Energia fotovoltaica", 1], ["Energia geotérmica", 0], ["Energia das marés", 0], ["Energia nuclear", 0]], "fb": "A geração fotovoltaica varia com a irradiância solar ao longo do dia e do ano."}, {"q": "Qual gás é principalmente evitado pelas renováveis?", "a": [["Dióxido de carbono", 1], ["Gás nobre argônio", 0], ["Vapor de água", 0], ["Gás oxigênio puro", 0]], "fb": "Substituir fósseis reduz emissões de CO₂, principal gás de efeito estufa de origem humana."}, {"q": "O que é energia eólica offshore?", "a": [["Turbinas no mar", 1], ["Painéis no telhado", 0], ["Represas em rios", 0], ["Placas no deserto", 0]], "fb": "Offshore são parques eólicos no mar, onde os ventos são mais fortes e constantes."}, {"q": "Qual a vantagem do armazenamento em baterias?", "a": [["Guardar energia excedente", 1], ["Aumentar o consumo total", 0], ["Poluir menos o solo", 0], ["Baixar sempre a tensão", 0]], "fb": "Baterias estocam a sobra de geração para uso quando sol e vento faltam."}, {"q": "Qual biocombustível é comum no Brasil?", "a": [["Etanol de cana", 1], ["Diesel de xisto", 0], ["Gasolina de poço", 0], ["Querosene de aviação", 0]], "fb": "O etanol da cana-de-açúcar é biocombustível renovável amplamente usado no país."}, {"q": "Qual é o principal desafio da solar e da eólica?", "a": [["Geração intermitente", 1], ["Emissão altíssima", 0], ["Combustível caro", 0], ["Resíduo radioativo", 0]], "fb": "Sol e vento variam no tempo; por isso exigem armazenamento e gestão inteligente da rede."}], "dificil": [{"q": "Quanto caiu o LCOE da solar utilitária desde 2010?", "a": [["Cerca de 90%", 1], ["Perto de 30%", 0], ["Menos de 10%", 0], ["Ao redor de 50%", 0]], "fb": "O custo nivelado (LCOE) da solar fotovoltaica em larga escala caiu cerca de 90% desde 2010."}, {"q": "O que é 'curtailment' na operação da rede?", "a": [["Corte de geração excedente", 1], ["Aumento súbito de carga", 0], ["Perda por efeito Joule", 0], ["Falha de isolamento térmico", 0]], "fb": "Curtailment é a redução forçada da geração renovável quando a rede não consegue absorvê-la."}, {"q": "Qual semicondutor domina as células fotovoltaicas?", "a": [["Silício cristalino", 1], ["Grafeno dopado", 0], ["Cobre puro", 0], ["Alumínio anodizado", 0]], "fb": "O silício cristalino lidera o mercado FV por eficiência sólida e custo já maduro."}, {"q": "Como se produz o hidrogênio verde?", "a": [["Eletrólise com renováveis", 1], ["Reforma a vapor", 0], ["Gaseificação de carvão", 0], ["Craqueamento de petróleo", 0]], "fb": "O hidrogênio verde vem da eletrólise da água movida por eletricidade renovável, sem emitir CO₂."}, {"q": "O que a 'inércia' fornece ao sistema elétrico?", "a": [["Estabilidade da frequência", 1], ["Pico de corrente", 0], ["Tensão média medida", 0], ["Perda por atrito", 0]], "fb": "A inércia de massas girantes ajuda a manter a frequência estável; inversores têm baixa inércia."}, {"q": "Qual o fator de capacidade típico da eólica onshore?", "a": [["Entre 30% e 45%", 1], ["Entre 80% e 95%", 0], ["Bem menos de 5%", 0], ["Perto de 100%", 0]], "fb": "Parques eólicos onshore costumam operar com fator de capacidade de cerca de 30 a 45%."}, {"q": "O que descreve o conceito de 'grid parity'?", "a": [["Paridade de custo", 1], ["Perda na linha", 0], ["Pico de demanda", 0], ["Reserva girante", 0]], "fb": "Grid parity ocorre quando gerar renovável custa igual ou menos que a energia da rede."}, {"q": "A tecnologia solar CSP concentra o quê?", "a": [["Radiação solar em foco", 1], ["Vento em um duto", 0], ["Água em alta pressão", 0], ["Calor vindo do subsolo", 0]], "fb": "A CSP (solar concentrada) usa espelhos para focar a radiação, gerando calor e vapor."}, {"q": "Qual é o limite central da geração intermitente?", "a": [["Descasamento entre oferta e demanda", 1], ["Excesso de inércia rotativa", 0], ["Emissão elevada de carbono", 0], ["Combustível caro demais", 0]], "fb": "A geração variável nem sempre coincide com a demanda, exigindo armazenamento e flexibilidade."}, {"q": "Qual a função de um inversor solar?", "a": [["Converter contínua em alternada", 1], ["Elevar a corrente contínua", 0], ["Resfriar o painel solar", 0], ["Armazenar carga elétrica", 0]], "fb": "O inversor transforma a corrente contínua dos painéis na corrente alternada usada na rede."}, {"q": "Para que serve uma hidrelétrica reversível?", "a": [["Estocar energia bombeando água", 1], ["Filtrar sedimentos do rio", 0], ["Aumentar a vazão média", 0], ["Reduzir a evaporação total", 0]], "fb": "Usinas reversíveis (PHS) bombeiam água ao reservatório alto para armazenar energia."}, {"q": "Qual vetor energético não emite CO₂ ao queimar?", "a": [["Hidrogênio verde", 1], ["Gás natural", 0], ["Óleo combustível", 0], ["Carvão vegetal", 0]], "fb": "A queima de hidrogênio gera água; sendo verde, todo o ciclo fica livre de CO₂ fóssil."}], "carbonauta": [{"q": "LCOE médio global da solar FV utilitária em 2023 (IRENA)?", "a": [["Cerca de US$ 44/MWh", 1], ["Cerca de US$ 250/MWh", 0], ["Cerca de US$ 5/MWh", 0], ["Cerca de US$ 900/MWh", 0]], "fb": "A IRENA reportou LCOE global da solar utilitária em torno de US$ 0,044/kWh (≈44/MWh) em 2023."}, {"q": "Eficiência recorde de célula tandem perovskita–silício?", "a": [["Acima de 33%", 1], ["Cerca de 12%", 0], ["Perto de 60%", 0], ["Abaixo de 8%", 0]], "fb": "Células tandem perovskita/silício ultrapassaram 33% de eficiência certificada em laboratório."}, {"q": "O limite de Betz para turbinas eólicas vale quanto?", "a": [["Cerca de 59,3%", 1], ["Exatamente 100%", 0], ["Perto de 25%", 0], ["Cerca de 80%", 0]], "fb": "O limite de Betz mostra que uma turbina extrai no máximo ~59,3% da energia cinética do vento."}, {"q": "O que limita a densidade de potência de um parque eólico?", "a": [["Esteira aerodinâmica das turbinas", 1], ["Peso das pás de fibra", 0], ["Cor da torre metálica", 0], ["Marca do gerador usado", 0]], "fb": "O efeito esteira (wake) reduz o vento a jusante, limitando a potência por área instalada."}, {"q": "O eletrolisador PEM usa qual tipo de eletrólito?", "a": [["Membrana polimérica ácida", 1], ["Solução salina neutra", 0], ["Hidróxido de potássio", 0], ["Óxido sólido cerâmico", 0]], "fb": "PEM usa membrana de troca de prótons (polímero ácido) e opera a baixa temperatura."}, {"q": "Fator de capacidade típico da eólica offshore de fundação fixa?", "a": [["Entre 40% e 55%", 1], ["Entre 5% e 10%", 0], ["Entre 90% e 99%", 0], ["Entre 15% e 20%", 0]], "fb": "Parques offshore de fundação fixa costumam alcançar fatores de capacidade de ~40 a 55%."}, {"q": "O que faz a 'inércia sintética' em inversores?", "a": [["Emulação de inércia rotativa", 1], ["Filtro de harmônicos altos", 0], ["Corte de potência reativa", 0], ["Reforço de tensão contínua", 0]], "fb": "Inversores grid-forming injetam potência rápida emulando a inércia das máquinas síncronas."}, {"q": "Qual é o maior gargalo atual do hidrogênio verde?", "a": [["Custo de eletrólise elevado", 1], ["Excesso de água doce", 0], ["Falta de luz solar", 0], ["Baixa demanda industrial", 0]], "fb": "O CAPEX dos eletrolisadores e o preço da eletricidade renovável ainda encarecem o H₂ verde."}, {"q": "Quais metais críticos os ímãs de turbinas exigem?", "a": [["Neodímio e disprósio", 1], ["Sódio e potássio", 0], ["Cálcio e magnésio", 0], ["Chumbo e estanho", 0]], "fb": "Ímãs permanentes de NdFeB usam terras-raras como neodímio e disprósio, elos críticos da cadeia."}, {"q": "O que a 'duck curve' representa nos sistemas com solar?", "a": [["Curva de demanda líquida", 1], ["Pico de vento noturno", 0], ["Perda térmica anual", 0], ["Reserva girante mínima", 0]], "fb": "A 'duck curve' mostra a demanda líquida caindo ao meio-dia e subindo à noite, exigindo rampas rápidas."}, {"q": "Qual tecnologia favorece o armazenamento de longa duração?", "a": [["Baterias de fluxo redox", 1], ["Pilhas alcalinas comuns", 0], ["Capacitores cerâmicos simples", 0], ["Células a combustível fósseis", 0]], "fb": "Baterias de fluxo (ex.: vanádio) desacoplam potência e energia, favorecendo longa duração."}, {"q": "O curtailment eólico é agravado principalmente por quê?", "a": [["Congestão de transmissão local", 1], ["Excesso de nuvens densas", 0], ["Falta total de vento", 0], ["Baixa tensão do gerador", 0]], "fb": "Sem linhas de transmissão suficientes, a rede corta (curtail) a geração eólica excedente."}, {"q": "Capacidade instalada de solar FV no Brasil em 2024 (~)?", "a": [["Cerca de 48 GW", 1], ["Cerca de 500 GW", 0], ["Cerca de 2 GW", 0], ["Cerca de 150 GW", 0]], "fb": "A capacidade fotovoltaica brasileira alcançou ~48,5 GW em 2024, somando centralizada e distribuída."}]};
+const LVL_NAMES = {basico:"Básico", intermediario:"Intermediário", dificil:"Difícil", carbonauta:"🛰️ Carbonauta"};
+
+let db=null, fs=null;
+async function initFire(){
+  try{
+    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    fs = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app = appMod.initializeApp(firebaseConfig);
+    db = fs.getFirestore(app);
+    return true;
+  }catch(e){ console.warn("Firebase off:", e); return false; }
+}
+
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+let level="basico", queue=[], qi=0, hits=0, streak=0, bestStreak=0, startTime=0, timerId=null, answered=false, lastSaved=false;
+const el=id=>document.getElementById(id);
+
+function setLevel(lvl){
+  level=lvl;
+  document.querySelectorAll(".pill").forEach(p=>p.classList.toggle("active", p.dataset.lvl===lvl));
+  el("rankLvl").textContent=LVL_NAMES[lvl];
+  startGame();
+  loadRanking();
+}
+
+function startGame(){
+  queue = shuffle(DATA[level].map(q=>({...q, a: shuffle(q.a.map(x=>({t:x[0],ok:x[1]===1})))})));
+  qi=0; hits=0; streak=0; bestStreak=0; answered=false; lastSaved=false;
+  el("finalCard").classList.add("hidden");
+  el("gameCard").classList.remove("hidden");
+  el("hudTotal").textContent=queue.length;
+  el("hudHits").textContent=0; el("hudPts").textContent=0; el("hudStreak").textContent=0;
+  startTime=Date.now();
+  clearInterval(timerId);
+  timerId=setInterval(()=>{ el("hudTime").textContent=Math.floor((Date.now()-startTime)/1000); },250);
+  renderQ();
+}
+
+function renderQ(){
+  answered=false;
+  const q=queue[qi];
+  el("progBar").style.width = (qi/queue.length*100)+"%";
+  el("qtext").textContent = `(${qi+1}/${queue.length}) ${q.q}`;
+  const opts=el("opts"); opts.innerHTML="";
+  q.a.forEach((o,i)=>{
+    const b=document.createElement("button");
+    b.className="opt"; b.textContent=o.t;
+    b.onclick=()=>answer(i,b);
+    opts.appendChild(b);
+  });
+  const fb=el("feedback"); fb.className="feedback"; fb.textContent="Escolha uma alternativa.";
+  el("nextBtn").disabled=true;
+  el("nextBtn").textContent = (qi===queue.length-1)?"Ver resultado 🎉":"Próxima →";
+}
+
+function answer(i, btn){
+  if(answered) return;
+  answered=true;
+  const q=queue[qi];
+  const correct=q.a[i].ok;
+  const buttons=[...el("opts").children];
+  buttons.forEach((b,idx)=>{ b.disabled=true; if(q.a[idx].ok) b.classList.add("correct"); });
+  const fb=el("feedback");
+  if(correct){
+    hits++; streak++; bestStreak=Math.max(bestStreak,streak);
+    fb.className="feedback good"; fb.textContent="✅ Certo! "+q.fb;
+  }else{
+    streak=0; btn.classList.add("wrong");
+    fb.className="feedback bad"; fb.textContent="❌ Quase! "+q.fb;
+  }
+  el("hudHits").textContent=hits;
+  el("hudPts").textContent=hits;
+  el("hudStreak").textContent=streak;
+  el("nextBtn").disabled=false;
+}
+
+el("nextBtn").onclick=()=>{
+  if(!answered) return;
+  if(qi<queue.length-1){ qi++; renderQ(); }
+  else finish();
+};
+
+function finish(){
+  clearInterval(timerId);
+  el("progBar").style.width="100%";
+  const secs=Math.floor((Date.now()-startTime)/1000);
+  el("gameCard").classList.add("hidden");
+  const fc=el("finalCard"); fc.classList.remove("hidden");
+  const pct=Math.round(hits/queue.length*100);
+  el("finalSummary").innerHTML=
+    `<div class="chip">Acertos: <b>${hits}/${queue.length}</b></div>`+
+    `<div class="chip">Aproveitamento: <b>${pct}%</b></div>`+
+    `<div class="chip">Tempo: <b>${secs}s</b></div>`+
+    `<div class="chip">Melhor sequência: <b>${bestStreak}</b></div>`;
+  fc.dataset.secs=secs;
+  el("saveNote").textContent="";
+  el("saveBtn").disabled=false;
+  loadRanking();
+}
+
+async function loadRanking(){
+  const list=el("rankList"), note=el("rankNote");
+  list.innerHTML=""; note.textContent="Carregando ranking…";
+  if(!db){ note.textContent="⚠️ Ranking offline — o jogo funciona normalmente."; return; }
+  try{
+    const {collection,query,orderBy,limit,getDocs}=fs;
+    const qref=query(collection(db,"games",GAME_ID,"scores"), orderBy("score","desc"), limit(300));
+    const snap=await getDocs(qref);
+    let rows=[];
+    snap.forEach(d=>{ const v=d.data(); if(v.level===level) rows.push(v); });
+    rows.sort((a,b)=> (b.score-a.score) || (a.seconds-b.seconds));
+    rows=rows.slice(0,10);
+    if(!rows.length){ note.textContent="Seja o primeiro a pontuar neste nível! 🚀"; return; }
+    note.textContent="";
+    rows.forEach((r,i)=>{
+      const li=document.createElement("li");
+      li.innerHTML=`<span class="pos">${i+1}º</span><span class="nm">${esc(r.name||"—")}</span>`+
+                   `<span class="sc">${r.score} pts · ${r.seconds}s</span>`;
+      list.appendChild(li);
+    });
+  }catch(e){ console.warn(e); note.textContent="⚠️ Não foi possível carregar o ranking agora."; }
+}
+
+el("saveBtn").onclick=async()=>{
+  const name=el("nameInput").value.trim().slice(0,20)||"Anônimo";
+  const secs=parseInt(el("finalCard").dataset.secs||"0",10);
+  const note=el("saveNote");
+  if(lastSaved){ note.textContent="Você já salvou esta partida. 👍"; return; }
+  if(!db){ note.textContent="⚠️ Sem conexão com o ranking. Sua pontuação: "+hits+" pts."; return; }
+  el("saveBtn").disabled=true; note.textContent="Salvando…";
+  try{
+    const {collection,addDoc,serverTimestamp}=fs;
+    await addDoc(collection(db,"games",GAME_ID,"scores"), {
+      name, score:hits, seconds:secs, level, ts:serverTimestamp()
+    });
+    lastSaved=true; note.textContent="✅ Pontuação salva no ranking!";
+    loadRanking();
+  }catch(e){ console.warn(e); el("saveBtn").disabled=false; note.textContent="⚠️ Falha ao salvar. Tente de novo."; }
+};
+
+el("playAgain").onclick=()=>{ startGame(); };
+document.querySelectorAll(".pill").forEach(p=> p.onclick=()=>setLevel(p.dataset.lvl));
+
+(async()=>{
+  await initFire();
+  setLevel("basico");
+})();
+</script>
+</body>
+</html>
