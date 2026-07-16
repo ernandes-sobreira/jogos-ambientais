@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🕸️ Memória Trófica — Cadeias Alimentares e Teias Tróficas</title>
+<style>
+:root{
+  --bg1:#0b3d2e; --bg2:#166a48; --accent:#ffcf33; --accent2:#7ed957;
+  --card:#f5fbef; --text:#12261d; --success:#34d399; --error:#ef4444;
+  --muted:#cfe8db; --panel:rgba(255,255,255,.08); --panelbrd:rgba(255,255,255,.16);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:system-ui,'Segoe UI',Roboto,sans-serif;
+  background:linear-gradient(160deg,var(--bg1),var(--bg2));
+  color:#eaf6ee; min-height:100vh; padding:16px; line-height:1.5;
+}
+.wrap{max-width:1100px;margin:0 auto}
+header{text-align:center;margin-bottom:14px}
+h1{font-size:clamp(1.6rem,4.5vw,2.7rem);letter-spacing:-.5px;
+   text-shadow:0 2px 12px rgba(0,0,0,.35)}
+.sub{color:var(--muted);font-size:clamp(.85rem,2.3vw,1rem);margin-top:4px}
+.how{background:var(--panel);border:1px solid var(--panelbrd);border-radius:12px;
+     padding:9px 14px;margin:12px auto;max-width:720px;text-align:center;font-size:.92rem}
+.levels{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.pill{border:none;cursor:pointer;font-weight:700;font-size:.9rem;color:#eaf6ee;
+  background:var(--panel);border:1px solid var(--panelbrd);padding:9px 16px;border-radius:999px;
+  transition:all .25s;white-space:nowrap}
+.pill:hover{transform:translateY(-2px);background:rgba(255,255,255,.15)}
+.pill.active{background:var(--accent);color:#3a2c00;border-color:var(--accent);
+  box-shadow:0 4px 16px rgba(255,207,51,.4)}
+.hud{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+.stat{background:var(--panel);border:1px solid var(--panelbrd);border-radius:12px;
+  padding:8px 14px;font-weight:700;font-size:.95rem;min-width:96px;text-align:center}
+.stat b{color:var(--accent);display:block;font-size:1.15rem;margin-top:2px}
+.layout{display:grid;grid-template-columns:1fr;gap:16px;margin-top:8px}
+@media(min-width:900px){.layout{grid-template-columns:1fr 300px}}
+.board{display:grid;gap:9px;grid-template-columns:repeat(4,1fr)}
+@media(min-width:620px){.board{grid-template-columns:repeat(6,1fr)}}
+@media(min-width:900px){.board.big{grid-template-columns:repeat(8,1fr)}}
+.card{position:relative;aspect-ratio:3/4;cursor:pointer;perspective:700px}
+.card .inner{position:absolute;inset:0;transition:transform .45s;
+  transform-style:preserve-3d;border-radius:12px}
+.card.flip .inner,.card.matched .inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  padding:6px;box-shadow:0 4px 12px rgba(0,0,0,.28);overflow:hidden}
+.back{background:linear-gradient(135deg,#1e7a52,#2ea567);
+  font-size:clamp(1.3rem,4vw,2rem);border:2px solid rgba(255,255,255,.2)}
+.front{background:var(--card);color:var(--text);transform:rotateY(180deg);
+  font-size:clamp(.58rem,1.7vw,.8rem);font-weight:600;flex-direction:column;gap:2px;
+  border:2px solid #dfeed4}
+.front .em{font-size:1.4em;line-height:1}
+.card.matched .front{background:#dff7e3;border-color:var(--success);
+  animation:pop .4s ease}
+.card.wrong .front{animation:shake .4s ease;border-color:var(--error);background:#fde2e2}
+@keyframes pop{0%{transform:rotateY(180deg) scale(1)}50%{transform:rotateY(180deg) scale(1.12)}100%{transform:rotateY(180deg) scale(1)}}
+@keyframes shake{0%,100%{transform:rotateY(180deg) translateX(0)}25%{transform:rotateY(180deg) translateX(-6px)}75%{transform:rotateY(180deg) translateX(6px)}}
+.side{display:flex;flex-direction:column;gap:14px}
+.panel{background:var(--panel);border:1px solid var(--panelbrd);border-radius:14px;padding:14px}
+.panel h3{font-size:1rem;margin-bottom:8px;color:var(--accent)}
+#feedback{min-height:70px;font-size:.9rem;color:#eaf6ee}
+#feedback .term{font-weight:800;color:var(--accent2)}
+.rank-lvl{font-size:.78rem;color:var(--muted);margin-bottom:6px}
+#rankList{list-style:none;font-size:.85rem;display:flex;flex-direction:column;gap:4px;max-height:270px;overflow-y:auto}
+#rankList li{display:flex;justify-content:space-between;gap:8px;padding:5px 8px;
+  background:rgba(255,255,255,.06);border-radius:8px}
+#rankList li span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#rankList li b{color:var(--accent)}
+.rank-note{font-size:.78rem;color:var(--muted);margin-top:6px}
+.overlay{position:fixed;inset:0;background:rgba(4,20,12,.82);display:none;
+  align-items:center;justify-content:center;padding:16px;z-index:50}
+.overlay.show{display:flex}
+.modal{background:linear-gradient(160deg,#12503a,#1c7a53);border:2px solid var(--success);
+  border-radius:18px;padding:26px 22px;max-width:min(440px,95vw);text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.modal h2{font-size:1.6rem;margin-bottom:6px}
+.modal .res{font-size:1rem;color:#eaf6ee;margin:10px 0 4px}
+.modal .res b{color:var(--accent)}
+.modal input{width:100%;padding:11px;border-radius:10px;border:2px solid var(--panelbrd);
+  background:rgba(255,255,255,.9);color:#12261d;font-size:1rem;margin:12px 0 10px;font-weight:600}
+.btn{background:var(--accent);color:#3a2c00;border:none;border-radius:10px;padding:12px 18px;
+  font-weight:800;font-size:1rem;cursor:pointer;transition:transform .2s;width:100%}
+.btn:hover{transform:translateY(-2px)}
+.btn.sec{background:var(--panel);color:#eaf6ee;border:1px solid var(--panelbrd);margin-top:8px}
+.savemsg{font-size:.85rem;color:var(--accent2);margin-top:8px;min-height:18px}
+footer{text-align:center;margin-top:26px;padding:16px;color:var(--muted);font-size:.85rem;
+  border-top:1px solid var(--panelbrd)}
+footer .ideal{font-weight:800;color:var(--accent);font-size:1rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>🕸️ Memória Trófica 🌿</h1>
+  <div class="sub">Encontre os pares <b>conceito ↔ definição</b> das cadeias alimentares e teias tróficas</div>
+</header>
+
+<div class="levels" id="levels">
+  <button class="pill active" data-lvl="basico">Básico</button>
+  <button class="pill" data-lvl="intermediario">Intermediário</button>
+  <button class="pill" data-lvl="dificil">Difícil</button>
+  <button class="pill" data-lvl="carbonauta">🛰️ Carbonauta</button>
+</div>
+
+<div class="how">🎯 Clique em duas cartas para virá-las. Se o <b>conceito</b> casar com a sua <b>definição</b>, o par fica aberto. Ache todos com poucos erros e no menor tempo!</div>
+
+<div class="hud">
+  <div class="stat">Tempo <b><span id="time">0</span>s</b></div>
+  <div class="stat">Erros <b id="errors">0</b></div>
+  <div class="stat">Pares <b id="pairs">0/0</b></div>
+  <div class="stat">Pontos <b id="score">0</b></div>
+</div>
+
+<div class="layout">
+  <div>
+    <div class="board" id="board"></div>
+  </div>
+  <div class="side">
+    <div class="panel">
+      <h3>💡 Feedback educativo</h3>
+      <div id="feedback">Vire as cartas para começar. Cada par certo traz uma explicação científica.</div>
+    </div>
+    <div class="panel">
+      <h3>🏆 Ranking Global</h3>
+      <div class="rank-lvl">Nível: <b id="rankLvlName">Básico</b> · menor pontuação vence</div>
+      <ol id="rankList"><li><span>Carregando…</span></li></ol>
+      <div class="rank-note" id="rankNote"></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="ideal">— Idealizado por Ernandes Sobreira —</div>
+  <div>Tema: Cadeias alimentares e teias tróficas · Gênero: Jogo da memória · app ambiental do dia (2026-07-16)</div>
+</footer>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2>🎉 Você completou!</h2>
+    <div class="res">Nível <b id="mLvl">Básico</b></div>
+    <div class="res">Tempo: <b id="mTime">0</b>s · Erros: <b id="mErr">0</b> · Pontos: <b id="mScore">0</b></div>
+    <input id="nameInput" maxlength="20" placeholder="Seu nome (até 20 letras)">
+    <button class="btn" id="saveBtn">Salvar no ranking</button>
+    <button class="btn sec" id="againBtn">Jogar de novo</button>
+    <div class="savemsg" id="saveMsg"></div>
+  </div>
+</div>
+
+<script type="module">
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-07-16-memoria-trofica";
+
+let db=null, fs=null;
+(async()=>{
+  try{
+    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    fs = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app = appMod.initializeApp(firebaseConfig);
+    db = fs.getFirestore(app);
+    loadRanking();
+  }catch(e){ rankOffline(); }
+})();
+
+/* ============ CONTEÚDO ============ */
+const DATA = {
+  basico:[
+    {a:"☀️ Sol",b:"Fonte de energia para quase toda a vida",fb:"O Sol é a origem da energia que entra nas cadeias alimentares pela fotossíntese."},
+    {a:"🌿 Produtor",b:"Planta que faz o próprio alimento",fb:"Produtores, como as plantas, usam a luz do Sol para produzir açúcar (fotossíntese)."},
+    {a:"🐛 Herbívoro",b:"Animal que só come plantas",fb:"Herbívoros, como a capivara, comem produtores e são consumidores primários."},
+    {a:"🦁 Carnívoro",b:"Animal que come outros animais",fb:"Carnívoros caçam outros animais para obter energia e nutrientes."},
+    {a:"🍄 Decompositor",b:"Ser que recicla restos de seres mortos",fb:"Fungos e bactérias decompõem restos e devolvem nutrientes ao solo."},
+    {a:"🔗 Cadeia alimentar",b:"Sequência de quem come quem",fb:"A cadeia mostra o caminho da energia: planta → herbívoro → carnívoro."},
+    {a:"🐆 Predador",b:"Animal que caça a presa",fb:"O predador, como a onça-pintada, captura e come outros animais."},
+    {a:"🦌 Presa",b:"Animal que serve de alimento",fb:"A presa, como o veado, é caçada e alimenta os predadores."}
+  ],
+  intermediario:[
+    {a:"🌱 Produtor (autótrofo)",b:"Organismo que produz matéria orgânica",fb:"Autótrofos convertem energia luminosa em biomassa; são a base da cadeia."},
+    {a:"🐄 Consumidor primário",b:"Herbívoro que come produtores",fb:"Ocupa o 2º nível trófico, alimentando-se diretamente das plantas."},
+    {a:"🐍 Consumidor secundário",b:"Carnívoro que come herbívoros",fb:"Está no 3º nível trófico, predando os consumidores primários."},
+    {a:"🦅 Consumidor terciário",b:"Predador que come outros carnívoros",fb:"Ocupa o 4º nível trófico, próximo ao topo da cadeia."},
+    {a:"🍂 Decompositor",b:"Recicla matéria de organismos mortos",fb:"Fungos e bactérias liberam nutrientes de volta ao ambiente."},
+    {a:"🕸️ Teia alimentar",b:"Conjunto de cadeias interligadas",fb:"Na natureza, várias cadeias se cruzam formando uma teia trófica complexa."},
+    {a:"📊 Nível trófico",b:"Posição do ser na cadeia",fb:"Indica a que distância da fonte de energia o organismo se alimenta."},
+    {a:"⚡ Regra dos 10%",b:"Fração de energia passada por nível",fb:"Cerca de 10% da energia passa de um nível ao seguinte; o resto vira calor."},
+    {a:"🐆 Predador de topo",b:"Consumidor sem predadores naturais",fb:"A onça-pintada é predador de topo no Pantanal e regula as presas."},
+    {a:"🔺 Pirâmide de energia",b:"Gráfico da energia por nível trófico",fb:"A energia diminui a cada nível, formando uma pirâmide de base larga."}
+  ],
+  dificil:[
+    {a:"🌱 Autótrofo",b:"Fixa carbono inorgânico em matéria orgânica",fb:"Autótrofos fotossintetizantes ou quimiossintetizantes sustentam a produção primária."},
+    {a:"🍄 Heterótrofo",b:"Obtém carbono de matéria orgânica pronta",fb:"Heterótrofos dependem de consumir outros organismos para obter energia."},
+    {a:"☀️ Produção primária bruta",b:"Energia total fixada pelos produtores",fb:"A PPB é toda a energia captada; parte é gasta na respiração do produtor."},
+    {a:"🌿 Produção primária líquida",b:"PPB menos a respiração dos produtores",fb:"A PPL é a biomassa realmente disponível para os herbívoros."},
+    {a:"⚡ Eficiência ecológica",b:"Cerca de 10% de energia entre níveis",fb:"Lindeman (1942): a maior parte da energia se perde como calor (2ª lei da termodinâmica)."},
+    {a:"🔺 Pirâmide de energia",b:"Sempre estreita rumo ao topo",fb:"Diferente da de biomassa, a pirâmide de energia nunca se inverte."},
+    {a:"🐆 Espécie-chave",b:"Grande efeito apesar de pouca biomassa",fb:"Predadores de topo, como a onça, atuam como espécies-chave regulando presas."},
+    {a:"🌊 Cascata trófica",b:"Efeito de um nível propagado aos demais",fb:"A perda de predadores libera herbívoros e altera toda a teia trófica."},
+    {a:"🦠 Detritívoro",b:"Consome detritos e matéria em decomposição",fb:"Minhocas e besouros fragmentam a matéria antes dos decompositores."},
+    {a:"♻️ Cadeia de detritos",b:"Fluxo baseado em matéria morta",fb:"Muitas teias dependem mais do detrito do que do pastoreio direto."},
+    {a:"🧬 Bioacumulação",b:"Acúmulo de substâncias no organismo",fb:"Poluentes se concentram nos tecidos ao longo da vida do indivíduo."},
+    {a:"🐟 Biomagnificação",b:"Concentração cresce a cada nível trófico",fb:"Mercúrio e DDT ficam mais concentrados nos predadores de topo."},
+    {a:"🔄 Onívoro",b:"Alimenta-se de vários níveis tróficos",fb:"Onívoros ocupam posições tróficas mistas, tornando a teia mais complexa."},
+    {a:"📏 Comprimento da cadeia",b:"Número de elos até o topo",fb:"Limitado a ~4-5 níveis pela perda de energia em cada transferência."},
+    {a:"🌡️ Respiração",b:"Perda de energia como calor metabólico",fb:"A respiração celular dissipa a maior parte da energia assimilada."},
+    {a:"🏝️ Nicho trófico",b:"Papel alimentar do organismo",fb:"Define como a espécie obtém energia e interage dentro da teia."}
+  ],
+  carbonauta:[
+    {a:"🔬 Posição trófica fracionária",b:"Nível trófico contínuo, não inteiro",fb:"Estimada por isótopos; onívoros assumem valores intermediários entre níveis."},
+    {a:"⚛️ δ¹⁵N",b:"Traçador isotópico de posição trófica",fb:"O nitrogênio-15 enriquece ~3,4‰ por nível trófico (Post, 2002)."},
+    {a:"🧪 δ¹³C",b:"Traçador da fonte basal de carbono",fb:"Diferencia bases C3/C4 e aquática/terrestre que sustentam a teia."},
+    {a:"📐 Eficiência de transferência",b:"Razão de produção entre níveis",fb:"Mediana ~10%, mas varia de <1% a ~40% conforme fisiologia e digestibilidade."},
+    {a:"🌐 Conectância",b:"Ligações reais sobre as possíveis",fb:"C = L/S² mede a densidade de interações tróficas de uma rede."},
+    {a:"🔗 Grau de ligação",b:"Elos médios por espécie na rede",fb:"L/S resume a complexidade estrutural da teia alimentar."},
+    {a:"🍂 Via detritívora",b:"Fluxo energético via matéria morta",fb:"Frequentemente supera a herbivoria no aporte total de energia da teia."},
+    {a:"🔀 Acoplamento trófico",b:"Predador integra cadeias distintas",fb:"Consumidores móveis unem cadeias rápidas e lentas, estabilizando a rede."},
+    {a:"🧫 Alça microbiana",b:"Reciclagem microbiana do carbono dissolvido",fb:"A microbial loop (Azam, 1983) recupera matéria orgânica dissolvida para a teia."},
+    {a:"⬇️ Controle top-down",b:"Predadores regulam níveis inferiores",fb:"A pressão de predação limita herbívoros e libera os produtores."},
+    {a:"⬆️ Controle bottom-up",b:"Recursos basais limitam os de cima",fb:"A produtividade primária determina a biomassa dos consumidores."},
+    {a:"🧬 Biomagnificação",b:"Contaminante lipofílico cresce por nível",fb:"O metilmercúrio pode amplificar cerca de 10× a cada elo trófico."},
+    {a:"🦎 Espécie-chave (Paine)",b:"Efeito desproporcional à sua biomassa",fb:"Conceito de Paine (1966), a partir de Pisaster em costões rochosos."},
+    {a:"🌊 Magnitude da cascata",b:"Intensidade do efeito trófico indireto",fb:"Meta-análises (Shurin, 2002) apontam cascatas mais fortes em ambientes aquáticos."},
+    {a:"🔋 Estequiometria ecológica",b:"Balanço de C:N:P entre os níveis",fb:"A razão de nutrientes limita a eficiência de transferência de energia."},
+    {a:"🌡️ Teoria metabólica",b:"Taxas escalam com massa e temperatura",fb:"Fluxos ecológicos escalam com M^¾ e a cinética de Arrhenius (Brown, 2004)."},
+    {a:"🕸️ Categorias estruturais",b:"Espécie basal, intermediária e de topo",fb:"Classificam a posição na teia: sem presa, com ambos, ou sem predador."},
+    {a:"🦦 Cascata clássica",b:"Predador → herbívoro → produtor",fb:"Documentada com lontras-marinhas, ouriços e florestas de kelp (Estes, 1974)."}
+  ]
+};
+const LVL_NAMES={basico:"Básico",intermediario:"Intermediário",dificil:"Difícil",carbonauta:"🛰️ Carbonauta"};
+
+/* ============ ESTADO ============ */
+let level="basico", first=null, lock=false, matched=0, errors=0,
+    seconds=0, timer=null, started=false;
+const $=id=>document.getElementById(id);
+
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+
+function build(){
+  clearInterval(timer); timer=null; started=false;
+  seconds=0; errors=0; matched=0; first=null; lock=false;
+  $("time").textContent="0"; $("errors").textContent="0"; $("score").textContent="0";
+  const pairs=DATA[level];
+  $("pairs").textContent="0/"+pairs.length;
+  const deck=[];
+  pairs.forEach((p,i)=>{
+    deck.push({pid:i,txt:p.a,type:"a"});
+    deck.push({pid:i,txt:p.b,type:"b"});
+  });
+  shuffle(deck);
+  const board=$("board");
+  board.innerHTML="";
+  board.classList.toggle("big", pairs.length>=16);
+  deck.forEach(c=>{
+    const el=document.createElement("div");
+    el.className="card";
+    let front;
+    if(c.type==="a"){
+      const parts=c.txt.split(" ");
+      front=`<span class="em">${escapeHtml(parts[0])}</span><span>${escapeHtml(parts.slice(1).join(' '))}</span>`;
+    }else{
+      front=`<span>${escapeHtml(c.txt)}</span>`;
+    }
+    el.innerHTML=`<div class="inner"><div class="face back">❓</div><div class="face front">${front}</div></div>`;
+    el.addEventListener("click",()=>flip(el,c));
+    board.appendChild(el);
+  });
+}
+
+function startTimer(){
+  if(started)return; started=true;
+  timer=setInterval(()=>{seconds++;$("time").textContent=seconds;updateScore();},1000);
+}
+function updateScore(){ $("score").textContent = seconds + errors*5; }
+
+function flip(el,c){
+  if(lock||el.classList.contains("flip")||el.classList.contains("matched"))return;
+  startTimer();
+  el.classList.add("flip");
+  if(!first){ first={el,c}; return; }
+  if(first.el===el)return;
+  lock=true;
+  const second={el,c};
+  if(first.c.pid===second.c.pid){
+    setTimeout(()=>{
+      first.el.classList.add("matched"); second.el.classList.add("matched");
+      first.el.classList.remove("flip"); second.el.classList.remove("flip");
+      matched++;
+      $("pairs").textContent=matched+"/"+DATA[level].length;
+      showFb(DATA[level][c.pid]);
+      first=null;lock=false;
+      if(matched===DATA[level].length) finish();
+    },380);
+  }else{
+    errors++; $("errors").textContent=errors; updateScore();
+    first.el.classList.add("wrong"); second.el.classList.add("wrong");
+    setTimeout(()=>{
+      first.el.classList.remove("flip","wrong"); second.el.classList.remove("flip","wrong");
+      first=null;lock=false;
+    },850);
+  }
+}
+
+function showFb(p){
+  $("feedback").innerHTML=`<span class="term">${escapeHtml(p.a)}</span> — ${escapeHtml(p.b)}.<br>${escapeHtml(p.fb)}`;
+}
+
+function finish(){
+  clearInterval(timer);
+  const score=seconds+errors*5;
+  $("mLvl").textContent=LVL_NAMES[level];
+  $("mTime").textContent=seconds; $("mErr").textContent=errors; $("mScore").textContent=score;
+  $("saveMsg").textContent=""; $("saveBtn").disabled=false;
+  $("overlay").classList.add("show");
+}
+
+/* ============ RANKING ============ */
+async function loadRanking(){
+  $("rankLvlName").textContent=LVL_NAMES[level];
+  if(!db){rankOffline();return;}
+  try{
+    const {collection,query,orderBy,limit,getDocs}=fs;
+    const q=query(collection(db,"games",GAME_ID,"scores"),orderBy("score"),limit(100));
+    const snap=await getDocs(q);
+    const rows=[];
+    snap.forEach(d=>{const v=d.data(); if(v.level===level) rows.push(v);});
+    rows.sort((a,b)=>(a.score-b.score)||((a.seconds||0)-(b.seconds||0)));
+    const top=rows.slice(0,10);
+    const list=$("rankList");
+    if(!top.length){list.innerHTML="<li><span>Seja o primeiro a pontuar!</span></li>";$("rankNote").textContent="";return;}
+    list.innerHTML=top.map((r,i)=>`<li><span>${i+1}. ${escapeHtml(r.name||"—")}</span><b>${r.score} pts</b></li>`).join("");
+    $("rankNote").textContent="Menor pontuação = tempo + 5 por erro.";
+  }catch(e){ rankOffline(); }
+}
+function rankOffline(){
+  $("rankList").innerHTML="<li><span>⚠️ Ranking indisponível (offline). O jogo funciona normalmente!</span></li>";
+  $("rankNote").textContent="";
+}
+
+async function saveScore(){
+  const name=($("nameInput").value||"").trim().slice(0,20)||"Anônimo";
+  const score=seconds+errors*5;
+  if(!db){$("saveMsg").textContent="Offline: não foi possível salvar, mas seu resultado vale!";return;}
+  try{
+    $("saveBtn").disabled=true; $("saveMsg").textContent="Salvando…";
+    const {collection,addDoc,serverTimestamp}=fs;
+    await addDoc(collection(db,"games",GAME_ID,"scores"),{
+      name, level, score, seconds, errors, ts:serverTimestamp()
+    });
+    $("saveMsg").textContent="✅ Salvo no ranking!";
+    loadRanking();
+  }catch(e){ $("saveMsg").textContent="Não foi possível salvar agora. Tente novamente."; $("saveBtn").disabled=false; }
+}
+
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+
+/* ============ EVENTOS ============ */
+document.querySelectorAll(".pill").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll(".pill").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    level=b.dataset.lvl;
+    $("feedback").innerHTML="Vire as cartas para começar. Cada par certo traz uma explicação científica.";
+    build(); loadRanking();
+  });
+});
+$("saveBtn").addEventListener("click",saveScore);
+$("againBtn").addEventListener("click",()=>{$("overlay").classList.remove("show");build();});
+
+build();
+</script>
+</body>
+</html>
