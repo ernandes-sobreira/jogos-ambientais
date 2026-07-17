@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🦋 Alerta Vermelho — Classifique as Espécies Ameaçadas</title>
+<style>
+:root{
+  --bg1:#0b3d2e; --bg2:#7a1420; --card:#0f4436; --card2:#12513f;
+  --ink:#eafaf1; --muted:#a9d6c4; --line:rgba(255,255,255,.14);
+  --accent:#ff5a3c; --accent2:#ffb020; --ok:#3ddc84; --bad:#ff5470;
+  --lc:#3ddc84; --nt:#4aa8ff; --vu:#ffcf3f; --en:#ff8a2b; --cr:#ff4d5e; --am:#ff5470;
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  margin:0;font-family:system-ui,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  color:var(--ink);min-height:100vh;
+  background:linear-gradient(160deg,var(--bg1) 0%, #0a2b3a 55%, var(--bg2) 100%);
+  background-attachment:fixed;padding:14px 12px 40px;
+}
+.wrap{width:min(960px,96vw);margin:0 auto}
+header.top{text-align:center;margin-bottom:10px}
+h1{font-size:clamp(1.5rem,5vw,2.4rem);margin:.2em 0 .1em;letter-spacing:.5px;
+  text-shadow:0 2px 12px rgba(0,0,0,.4)}
+.sub{color:var(--muted);font-size:clamp(.8rem,2.4vw,.98rem);margin:0 auto;max-width:620px}
+.levels{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0}
+.pill{
+  border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink);
+  padding:9px 16px;border-radius:999px;font-size:clamp(.82rem,2.4vw,.95rem);font-weight:600;
+  cursor:pointer;transition:all .25s;white-space:nowrap}
+.pill:hover{transform:translateY(-2px);background:rgba(255,255,255,.12)}
+.pill.active{background:var(--accent);border-color:var(--accent);box-shadow:0 6px 18px rgba(255,90,60,.4);color:#fff}
+.hud{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:6px 0 12px}
+.chip{background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:12px;
+  padding:7px 13px;font-size:clamp(.78rem,2.3vw,.92rem);font-weight:600}
+.chip b{color:var(--accent2)}
+.howto{background:rgba(255,255,255,.06);border:1px dashed var(--line);border-radius:12px;
+  padding:9px 14px;font-size:clamp(.8rem,2.3vw,.92rem);text-align:center;margin-bottom:12px;color:var(--muted)}
+.pool{
+  background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;
+  box-shadow:var(--shadow);margin-bottom:14px;min-height:64px;
+  display:flex;flex-wrap:wrap;gap:9px;justify-content:center;align-items:flex-start}
+.pool .lbl{width:100%;text-align:center;color:var(--muted);font-size:.8rem;margin-bottom:2px;font-weight:600}
+.tok{
+  display:inline-flex;align-items:center;gap:7px;background:linear-gradient(180deg,#15604a,#0e4a39);
+  border:1px solid var(--line);border-radius:12px;padding:9px 13px;cursor:grab;user-select:none;
+  font-size:clamp(.82rem,2.4vw,.98rem);font-weight:600;transition:transform .18s,box-shadow .18s,background .2s;
+  box-shadow:0 3px 10px rgba(0,0,0,.25)}
+.tok .em{font-size:1.25em}
+.tok:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,.35)}
+.tok.sel{outline:3px solid var(--accent2);outline-offset:2px;background:linear-gradient(180deg,#1c7a5e,#12634c)}
+.tok.dragging{opacity:.5}
+@keyframes pop{0%{transform:scale(.6)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.pop{animation:pop .35s ease}
+.shake{animation:shake .4s}
+.zones{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.zone{
+  background:var(--card2);border:2px dashed var(--line);border-radius:16px;padding:12px 10px;
+  min-height:120px;transition:all .25s;display:flex;flex-direction:column}
+.zone.over{border-color:var(--accent2);background:rgba(255,176,32,.12);transform:translateY(-2px)}
+.zone h3{margin:0 0 4px;font-size:clamp(.9rem,2.6vw,1.05rem);text-align:center}
+.zone .zdesc{color:var(--muted);font-size:.74rem;text-align:center;margin-bottom:8px;min-height:1.1em}
+.zbar{height:5px;border-radius:5px;margin-bottom:8px;opacity:.9}
+.zdrop{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;align-items:flex-start;flex:1}
+.placed{
+  display:inline-flex;align-items:center;gap:6px;background:rgba(61,220,132,.16);
+  border:1px solid rgba(61,220,132,.5);border-radius:10px;padding:6px 10px;
+  font-size:clamp(.76rem,2.2vw,.9rem);font-weight:600;animation:pop .35s ease}
+.feedback{
+  background:rgba(0,0,0,.28);border:1px solid var(--line);border-left:5px solid var(--accent2);
+  border-radius:12px;padding:11px 15px;margin:14px 0;font-size:clamp(.84rem,2.4vw,.98rem);min-height:2.4em;
+  transition:border-color .25s}
+.feedback.ok{border-left-color:var(--ok)}
+.feedback.bad{border-left-color:var(--bad)}
+.end{display:none;background:var(--card);border:1px solid var(--line);border-radius:18px;
+  padding:22px 18px;text-align:center;box-shadow:var(--shadow);margin-top:6px}
+.end.show{display:block;animation:pop .4s ease}
+.end h2{font-size:clamp(1.3rem,4.5vw,1.9rem);margin:.1em 0;color:var(--ok)}
+.end .big{font-size:clamp(1.8rem,7vw,2.6rem);font-weight:800;color:var(--accent2);margin:.2em 0}
+.end p{color:var(--muted);margin:.35em 0}
+.saverow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:16px 0 4px}
+.saverow input{padding:11px 14px;border-radius:12px;border:1px solid var(--line);
+  background:rgba(0,0,0,.3);color:var(--ink);font-size:.95rem;width:min(240px,70vw)}
+.btn{background:var(--accent);color:#fff;border:none;border-radius:12px;padding:11px 20px;
+  font-size:.95rem;font-weight:700;cursor:pointer;transition:transform .18s,box-shadow .2s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(255,90,60,.4)}
+.btn.alt{background:rgba(255,255,255,.12)}
+.rank{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;
+  margin-top:16px;box-shadow:var(--shadow)}
+.rank h3{margin:.1em 0 .5em;font-size:1.05rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rank .lvltag{font-size:.72rem;background:var(--accent);padding:3px 9px;border-radius:999px;font-weight:700}
+.rank ol{margin:6px 0 0;padding-left:2px;list-style:none;counter-reset:r}
+.rank li{counter-increment:r;display:flex;justify-content:space-between;gap:10px;padding:7px 10px;
+  border-radius:9px;font-size:.9rem}
+.rank li:nth-child(odd){background:rgba(255,255,255,.05)}
+.rank li::before{content:counter(r) "º";color:var(--accent2);font-weight:700;min-width:30px}
+.rank .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank .sc{font-weight:700;color:var(--ok)}
+.rank .note{color:var(--muted);font-size:.82rem}
+footer{text-align:center;margin-top:26px;color:var(--muted);font-size:.85rem;line-height:1.7}
+footer .cred{color:var(--ink);font-weight:700;font-size:.98rem}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>🦋 Alerta Vermelho 🐆</h1>
+    <p class="sub">Arraste cada espécie brasileira para o seu grau de risco de extinção segundo a Lista Vermelha da IUCN. Toque na espécie e depois na caixa — ou arraste com o mouse.</p>
+  </header>
+
+  <div class="levels" id="levels">
+    <button class="pill active" data-lv="basico">Básico</button>
+    <button class="pill" data-lv="intermediario">Intermediário</button>
+    <button class="pill" data-lv="dificil">Difícil</button>
+    <button class="pill" data-lv="carbonauta">🛰️ Carbonauta</button>
+  </div>
+
+  <div class="hud" id="hud">
+    <div class="chip">Tempo: <b id="hTime">0s</b></div>
+    <div class="chip">Colocados: <b id="hDone">0/0</b></div>
+    <div class="chip">Erros: <b id="hErr">0</b></div>
+    <div class="chip">Pontos: <b id="hScore">—</b></div>
+  </div>
+
+  <div class="howto" id="howto">🎯 Classifique todas as espécies corretamente. Cada erro soma tempo à sua pontuação — <b>menor pontuação = melhor</b>!</div>
+
+  <div id="game">
+    <div class="pool" id="pool"><div class="lbl">Espécies para classificar</div></div>
+    <div class="zones" id="zones"></div>
+    <div class="feedback" id="fb">Comece arrastando uma espécie para a caixa do risco que você acha correto.</div>
+  </div>
+
+  <div class="end" id="end">
+    <h2>🎉 Concluído!</h2>
+    <div class="big" id="endScore">—</div>
+    <p id="endSummary"></p>
+    <div class="saverow">
+      <input id="nameIn" maxlength="20" placeholder="Seu nome (até 20)" />
+      <button class="btn" id="saveBtn">Salvar no ranking</button>
+    </div>
+    <div class="saverow">
+      <button class="btn alt" id="againBtn">Jogar de novo</button>
+    </div>
+    <p id="saveMsg" class="note"></p>
+  </div>
+
+  <div class="rank">
+    <h3>🏆 Ranking Global <span class="lvltag" id="rankLvl">Básico</span></h3>
+    <div id="rankBody"><p class="note">Carregando ranking…</p></div>
+  </div>
+
+  <footer>
+    <div class="cred">— Idealizado por Ernandes Sobreira —</div>
+    <div>Tema: Biodiversidade e espécies ameaçadas · Gênero: Arrastar e soltar (classificar) · app ambiental do dia (2026-07-17)</div>
+  </footer>
+</div>
+
+<script>
+/* ============ FIREBASE ============ */
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-07-17-alerta-vermelho";
+let db=null, fs=null;
+(async()=>{
+  try{
+    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    fs = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app = appMod.initializeApp(firebaseConfig);
+    db = fs.getFirestore(app);
+    loadRanking();
+  }catch(e){ db=null; renderRankOffline(); }
+})();
+
+/* ============ DADOS DOS NÍVEIS ============ */
+const CATS = {
+  lc:{name:'🟢 Pouco preocupante', v:'--lc'},
+  nt:{name:'🔵 Quase ameaçada', v:'--nt'},
+  vu:{name:'🟡 Vulnerável', v:'--vu'},
+  en:{name:'🟠 Em perigo', v:'--en'},
+  cr:{name:'🔴 Criticamente em perigo', v:'--cr'},
+  am:{name:'🔴 Ameaçada de extinção', v:'--am'}
+};
+const DESC = {
+  lc:'Fora de perigo', nt:'Perto de ficar ameaçada', vu:'VU · risco alto',
+  en:'EN · risco muito alto', cr:'CR · risco extremo', am:'Corre risco real'
+};
+
+const LEVELS = {
+  basico:{
+    label:'Básico',
+    cats:['lc','am'],
+    items:[
+      {n:'Capivara', e:'🦫', cat:'lc', fb:'Capivara é o roedor mais abundante do Pantanal; população estável e sem risco (Pouco preocupante).'},
+      {n:'Quati', e:'🦝', cat:'lc', fb:'O quati é adaptável e vive até em cidades; não está ameaçado.'},
+      {n:'Tucano-toco', e:'🦜', cat:'lc', fb:'O tucano-toco ocupa amplo território no Cerrado e Pantanal; população saudável.'},
+      {n:'Jacaré-do-pantanal', e:'🐊', cat:'lc', fb:'Existem milhões de jacarés no Pantanal; espécie fora de perigo.'},
+      {n:'Onça-pintada', e:'🐆', cat:'am', fb:'A onça-pintada perde habitat e sofre caça; está Quase Ameaçada — corre risco real.'},
+      {n:'Arara-azul-grande', e:'🦜', cat:'am', fb:'O tráfico e a falta de ninhos deixaram a arara-azul Vulnerável à extinção.'},
+      {n:'Mico-leão-dourado', e:'🐒', cat:'am', fb:'Restrito a poucos fragmentos de Mata Atlântica, está Em Perigo de extinção.'},
+      {n:'Tamanduá-bandeira', e:'🐾', cat:'am', fb:'Atropelamentos e queimadas tornam o tamanduá-bandeira uma espécie Vulnerável.'}
+    ]
+  },
+  intermediario:{
+    label:'Intermediário',
+    cats:['lc','vu','en'],
+    items:[
+      {n:'Capivara', e:'🦫', cat:'lc', fb:'Hydrochoerus hydrochaeris: abundante e estável — Pouco preocupante (LC).'},
+      {n:'Onça-parda (suçuarana)', e:'🐈', cat:'lc', fb:'Puma concolor tem ampla distribuição nas Américas; classificada como LC globalmente.'},
+      {n:'Baleia-jubarte', e:'🐋', cat:'lc', fb:'Após o fim da caça comercial, a jubarte se recuperou e hoje é Pouco preocupante.'},
+      {n:'Arara-azul-grande', e:'🦜', cat:'vu', fb:'Anodorhynchus hyacinthinus: Vulnerável (VU) por tráfico e perda de ninhos.'},
+      {n:'Tamanduá-bandeira', e:'🐾', cat:'vu', fb:'Myrmecophaga tridactyla: VU por queimadas, atropelamentos e perda de Cerrado.'},
+      {n:'Cervo-do-pantanal', e:'🦌', cat:'vu', fb:'Blastocerus dichotomus depende de áreas alagadas; VU pela perda de habitat.'},
+      {n:'Tatu-bola', e:'🦔', cat:'vu', fb:'Tolypeutes tricinctus, endêmico da Caatinga; Vulnerável e símbolo da Copa 2014.'},
+      {n:'Mico-leão-dourado', e:'🐒', cat:'en', fb:'Leontopithecus rosalia: Em Perigo (EN), preso a fragmentos da Mata Atlântica fluminense.'},
+      {n:'Ariranha', e:'🦦', cat:'en', fb:'Pteronura brasiliensis, a maior lontra do mundo, está Em Perigo (EN).'},
+      {n:'Sauim-de-coleira', e:'🐒', cat:'en', fb:'Saguinus bicolor é endêmico de Manaus e está EN pela expansão urbana.'}
+    ]
+  },
+  dificil:{
+    label:'Difícil',
+    cats:['lc','nt','vu','en'],
+    items:[
+      {n:'Preguiça-de-garganta-marrom', e:'🦥', cat:'lc', fb:'Bradypus variegatus: ampla e comum na Mata Atlântica e Amazônia — LC.'},
+      {n:'Jacaré-do-pantanal', e:'🐊', cat:'lc', fb:'Caiman yacare: populações robustas e monitoradas — Pouco preocupante.'},
+      {n:'Sabiá-laranjeira', e:'🐦', cat:'lc', fb:'Turdus rufiventris, ave-símbolo do Brasil, é comum e abundante (LC).'},
+      {n:'Onça-pintada', e:'🐆', cat:'nt', fb:'Panthera onca: Quase Ameaçada (NT) globalmente por fragmentação e conflito.'},
+      {n:'Lobo-guará', e:'🐺', cat:'nt', fb:'Chrysocyon brachyurus: NT pela IUCN (2024); no Brasil já é Vulnerável.'},
+      {n:'Ema', e:'🦤', cat:'nt', fb:'Rhea americana: NT pela conversão de campos naturais em lavoura e caça.'},
+      {n:'Arara-azul-grande', e:'🦜', cat:'vu', fb:'Anodorhynchus hyacinthinus: Vulnerável (VU).'},
+      {n:'Tamanduá-bandeira', e:'🐾', cat:'vu', fb:'Myrmecophaga tridactyla: VU no Cerrado e no Pantanal.'},
+      {n:'Peixe-boi-amazônico', e:'🦭', cat:'vu', fb:'Trichechus inunguis: VU pela caça histórica e degradação de rios.'},
+      {n:'Tartaruga-de-couro', e:'🐢', cat:'vu', fb:'Dermochelys coriacea, a maior tartaruga marinha, é VU globalmente.'},
+      {n:'Ararajuba', e:'🦜', cat:'vu', fb:'Guaruba guarouba, endêmica da Amazônia oriental, é VU.'},
+      {n:'Mico-leão-dourado', e:'🐒', cat:'en', fb:'Leontopithecus rosalia: Em Perigo (EN).'},
+      {n:'Ariranha', e:'🦦', cat:'en', fb:'Pteronura brasiliensis: EN (critério A2cde+3ce).'},
+      {n:'Sauim-de-coleira', e:'🐒', cat:'en', fb:'Saguinus bicolor: EN, endêmico da região de Manaus.'}
+    ]
+  },
+  carbonauta:{
+    label:'🛰️ Carbonauta',
+    cats:['nt','vu','en','cr'],
+    items:[
+      {n:'Panthera onca', e:'🐆', cat:'nt', fb:'Onça-pintada: NT (A2c), declínio inferido por fragmentação e conflito humano-fauna.'},
+      {n:'Chrysocyon brachyurus', e:'🐺', cat:'nt', fb:'Lobo-guará: NT global (IUCN 2024); reavaliado como VU na lista nacional (2022).'},
+      {n:'Rhea americana', e:'🦤', cat:'nt', fb:'Ema: NT por declínio populacional ligado à expansão agropecuária no Cerrado e Pampa.'},
+      {n:'Anodorhynchus hyacinthinus', e:'🦜', cat:'vu', fb:'Arara-azul-grande: VU; recuperou-se do colapso dos anos 1980, mas depende de ocos de manduvi para ninhos.'},
+      {n:'Myrmecophaga tridactyla', e:'🐾', cat:'vu', fb:'Tamanduá-bandeira: VU (A2c); mortalidade por fogo e rodovias em áreas abertas.'},
+      {n:'Blastocerus dichotomus', e:'🦌', cat:'vu', fb:'Cervo-do-pantanal: VU; maior cervídeo sul-americano, sensível a hidrelétricas e drenagem.'},
+      {n:'Guaruba guarouba', e:'🦜', cat:'vu', fb:'Ararajuba: VU; endêmica do interflúvio Amazônico oriental, pressionada por desmatamento.'},
+      {n:'Trichechus inunguis', e:'🦭', cat:'vu', fb:'Peixe-boi-amazônico: VU; endêmico da bacia amazônica, único sirênio exclusivamente de água doce.'},
+      {n:'Leontopithecus rosalia', e:'🐒', cat:'en', fb:'Mico-leão-dourado: EN; ~2.500 indivíduos em fragmentos da baixada fluminense.'},
+      {n:'Leontopithecus chrysopygus', e:'🐒', cat:'en', fb:'Mico-leão-preto: EN; endêmico do oeste paulista, distribuição altamente fragmentada.'},
+      {n:'Pteronura brasiliensis', e:'🦦', cat:'en', fb:'Ariranha: EN; predador de topo de rios, sensível a mercúrio de garimpo e sobrepesca.'},
+      {n:'Saguinus bicolor', e:'🐒', cat:'en', fb:'Sauim-de-coleira: EN; distribuição restrita cercada pela expansão urbana de Manaus.'},
+      {n:'Brachyteles hypoxanthus', e:'🐵', cat:'cr', fb:'Muriqui-do-norte: CR; maior primata das Américas, menos de 1.000 indivíduos maduros.'},
+      {n:'Cyanopsitta spixii', e:'🐦', cat:'cr', fb:'Ararinha-azul: CR (Possivelmente Extinta na Natureza); em reintrodução na Caatinga da Bahia.'},
+      {n:'Eretmochelys imbricata', e:'🐢', cat:'cr', fb:'Tartaruga-de-pente: CR global; historicamente caçada pelo casco (tartaruga-de-escama).'},
+      {n:'Antilophia bokermanni', e:'🐦', cat:'cr', fb:'Soldadinho-do-araripe: CR; endêmico de nascentes da Chapada do Araripe (CE).'}
+    ]
+  }
+};
+
+/* ============ ESTADO ============ */
+let cur='basico', items=[], errors=0, placedCount=0, total=0, startT=0, timerId=null, running=false, selTok=null;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function cvar(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+
+/* ============ RENDER ============ */
+function initLevel(lv){
+  cur=lv;
+  const L=LEVELS[lv];
+  items=shuffle(L.items.map((x,i)=>({...x,id:lv+'-'+i,done:false})));
+  errors=0;placedCount=0;total=items.length;running=false;startT=0;selTok=null;
+  if(timerId){clearInterval(timerId);timerId=null;}
+  document.getElementById('hTime').textContent='0s';
+  document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('active',p.dataset.lv===lv));
+  document.getElementById('rankLvl').textContent=L.label;
+  document.getElementById('end').classList.remove('show');
+  document.getElementById('game').classList.remove('hidden');
+  updHud();
+  const zc=document.getElementById('zones');zc.innerHTML='';
+  shuffle(L.cats.slice()).forEach(cid=>{
+    const c=CATS[cid];
+    const z=document.createElement('div');z.className='zone';z.dataset.cat=cid;
+    z.innerHTML='<h3>'+c.name+'</h3><div class="zdesc">'+DESC[cid]+'</div>'+
+      '<div class="zbar" style="background:'+cvar(c.v)+'"></div><div class="zdrop"></div>';
+    z.addEventListener('dragover',e=>{e.preventDefault();z.classList.add('over');});
+    z.addEventListener('dragleave',()=>z.classList.remove('over'));
+    z.addEventListener('drop',e=>{e.preventDefault();z.classList.remove('over');
+      const id=e.dataTransfer.getData('text/plain');tryPlace(id,cid,z);});
+    z.addEventListener('click',()=>{ if(selTok){tryPlace(selTok,cid,z);} });
+    zc.appendChild(z);
+  });
+  renderPool();
+  setFb('Comece arrastando uma espécie para a caixa do risco que você acha correto.','');
+}
+
+function renderPool(){
+  const pool=document.getElementById('pool');
+  pool.innerHTML='<div class="lbl">Espécies para classificar</div>';
+  items.filter(it=>!it.done).forEach(it=>{
+    const t=document.createElement('div');t.className='tok';t.draggable=true;t.dataset.id=it.id;
+    t.innerHTML='<span class="em">'+it.e+'</span>'+esc(it.n);
+    t.addEventListener('dragstart',e=>{t.classList.add('dragging');e.dataTransfer.setData('text/plain',it.id);});
+    t.addEventListener('dragend',()=>t.classList.remove('dragging'));
+    t.addEventListener('click',e=>{e.stopPropagation();selectTok(it.id,t);});
+    pool.appendChild(t);
+  });
+}
+function selectTok(id,el){
+  if(selTok===id){selTok=null;el.classList.remove('sel');return;}
+  selTok=id;
+  document.querySelectorAll('.tok').forEach(x=>x.classList.remove('sel'));
+  el.classList.add('sel');
+  setFb('Agora toque na caixa do risco correto para soltar '+esc(itemById(id).n)+'.','');
+}
+function itemById(id){return items.find(x=>x.id===id);}
+
+function tryPlace(id,cid,zoneEl){
+  const it=itemById(id); if(!it||it.done) return;
+  startTimer();
+  if(it.cat===cid){
+    it.done=true;placedCount++;
+    const drop=zoneEl.querySelector('.zdrop');
+    const p=document.createElement('span');p.className='placed';
+    p.innerHTML='<span>'+it.e+'</span>'+esc(it.n);drop.appendChild(p);
+    selTok=null;renderPool();updHud();
+    setFb('✅ '+it.fb,'ok');
+    if(placedCount===total) finish();
+  }else{
+    errors++;updHud();
+    zoneEl.classList.add('shake');setTimeout(()=>zoneEl.classList.remove('shake'),400);
+    const tk=document.querySelector('.tok[data-id="'+id+'"]');
+    if(tk){tk.classList.add('shake');setTimeout(()=>tk.classList.remove('shake'),400);}
+    setFb('❌ Não é aí. '+it.fb,'bad');
+  }
+}
+
+/* ============ TIMER / HUD ============ */
+function startTimer(){
+  if(running)return;running=true;startT=Date.now();
+  timerId=setInterval(()=>{document.getElementById('hTime').textContent=elapsed()+'s';updHud();},250);
+}
+function elapsed(){return startT?Math.floor((Date.now()-startT)/1000):0;}
+function scoreNow(){return elapsed()+errors*10;}
+function updHud(){
+  document.getElementById('hDone').textContent=placedCount+'/'+total;
+  document.getElementById('hErr').textContent=errors;
+  document.getElementById('hScore').textContent=(placedCount||errors)?scoreNow():'—';
+}
+function setFb(t,cls){const f=document.getElementById('fb');f.className='feedback'+(cls?' '+cls:'');f.innerHTML=t;}
+
+/* ============ FIM ============ */
+function finish(){
+  running=false;if(timerId){clearInterval(timerId);timerId=null;}
+  const secs=elapsed(), sc=secs+errors*10;
+  document.getElementById('game').classList.add('hidden');
+  const end=document.getElementById('end');end.classList.add('show');
+  document.getElementById('endScore').textContent=sc+' pts';
+  document.getElementById('endSummary').innerHTML=
+    'Você classificou <b>'+total+'</b> espécies em <b>'+secs+'s</b> com <b>'+errors+'</b> erro(s).<br>'+
+    'Pontuação = tempo + 10×erros — <b>quanto menor, melhor!</b>';
+  document.getElementById('saveMsg').textContent='';
+  window.__lastScore={score:sc,seconds:secs,errors:errors,level:cur};
+}
+
+/* ============ RANKING (Firestore) ============ */
+async function loadRanking(){
+  const body=document.getElementById('rankBody');
+  if(!db){renderRankOffline();return;}
+  try{
+    const {collection,query,orderBy,limit,getDocs}=fs;
+    const q=query(collection(db,'games',GAME_ID,'scores'),orderBy('score','asc'),limit(200));
+    const snap=await getDocs(q);
+    const rows=[];
+    snap.forEach(d=>{const v=d.data();if(v.level===cur)rows.push(v);});
+    rows.sort((a,b)=>(a.score-b.score)||((a.seconds||0)-(b.seconds||0)));
+    const top=rows.slice(0,10);
+    if(!top.length){body.innerHTML='<p class="note">Ainda não há pontuações neste nível. Seja o primeiro! 🏅</p>';return;}
+    body.innerHTML='<ol>'+top.map(r=>
+      '<li><span class="nm">'+esc(r.name||'Anônimo')+'</span>'+
+      '<span class="sc">'+r.score+' pts <span class="note">('+(r.seconds||0)+'s · '+(r.errors||0)+' erros)</span></span></li>'
+    ).join('')+'</ol>';
+  }catch(e){renderRankOffline();}
+}
+function renderRankOffline(){
+  document.getElementById('rankBody').innerHTML=
+    '<p class="note">🔌 Ranking indisponível no momento (offline). O jogo continua 100% jogável — jogue à vontade!</p>';
+}
+async function saveScore(){
+  const msg=document.getElementById('saveMsg');
+  const nm=(document.getElementById('nameIn').value||'').trim().slice(0,20);
+  if(!nm){msg.textContent='Digite um nome para salvar.';return;}
+  if(!window.__lastScore){return;}
+  if(!db){msg.textContent='Sem conexão: não foi possível salvar, mas seu resultado vale! 💚';return;}
+  try{
+    const {collection,addDoc,serverTimestamp}=fs;
+    const s=window.__lastScore;
+    await addDoc(collection(db,'games',GAME_ID,'scores'),
+      {name:nm,score:s.score,seconds:s.seconds,errors:s.errors,level:s.level,ts:serverTimestamp()});
+    msg.textContent='✅ Salvo no ranking global!';
+    loadRanking();
+  }catch(e){msg.textContent='Não foi possível salvar agora, mas seu resultado vale! 💚';}
+}
+
+/* ============ EVENTOS ============ */
+document.getElementById('levels').addEventListener('click',e=>{
+  const b=e.target.closest('.pill');if(!b)return;initLevel(b.dataset.lv);loadRanking();
+});
+document.getElementById('saveBtn').addEventListener('click',saveScore);
+document.getElementById('againBtn').addEventListener('click',()=>initLevel(cur));
+document.addEventListener('click',e=>{ if(!e.target.closest('.tok')&&!e.target.closest('.zone')){ if(selTok){selTok=null;document.querySelectorAll('.tok').forEach(x=>x.classList.remove('sel'));} } });
+
+initLevel('basico');
+</script>
+</body>
+</html>
