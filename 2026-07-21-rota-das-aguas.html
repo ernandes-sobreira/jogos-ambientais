@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌊 Rota das Águas — Ordene as etapas dos recursos hídricos</title>
+<style>
+:root{
+  --bg1:#052a4a;
+  --bg2:#0a6fb0;
+  --panel:rgba(255,255,255,0.09);
+  --panel-brd:rgba(255,255,255,0.18);
+  --card:#eef6ff;
+  --card-ink:#0a2a45;
+  --accent:#22d3ee;
+  --accent-ink:#022c39;
+  --success:#34d399;
+  --success-d:#059669;
+  --danger:#f87171;
+  --danger-d:#dc2626;
+  --text:#eaf4ff;
+  --muted:#a9c6de;
+  --shadow:0 10px 28px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color:var(--text);
+  background:linear-gradient(160deg,var(--bg1) 0%,var(--bg2) 100%);
+  background-attachment:fixed;
+  min-height:100vh;
+  padding:18px 12px 40px;
+  line-height:1.5;
+}
+.wrap{width:min(920px,96vw);margin:0 auto;}
+header.top{text-align:center;margin-bottom:14px;}
+h1{
+  font-size:clamp(1.7rem,5vw,2.7rem);
+  margin:.2em 0 .1em;
+  letter-spacing:.5px;
+  text-shadow:0 2px 10px rgba(0,0,0,.35);
+}
+.subtitle{color:var(--muted);font-size:clamp(.9rem,2.4vw,1.05rem);margin:0 0 4px;}
+.levels{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0;}
+.pill{
+  border:2px solid var(--panel-brd);
+  background:var(--panel);
+  color:var(--text);
+  padding:9px 16px;border-radius:999px;
+  font-size:clamp(.82rem,2.2vw,1rem);font-weight:600;cursor:pointer;
+  transition:transform .2s,background .25s,box-shadow .25s,border-color .25s;
+}
+.pill:hover{transform:translateY(-2px);box-shadow:var(--shadow);}
+.pill.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);box-shadow:0 6px 18px rgba(34,211,238,.45);}
+.hud{
+  display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:10px 0 6px;
+}
+.chip{
+  background:var(--panel);border:1px solid var(--panel-brd);border-radius:12px;
+  padding:7px 13px;font-size:clamp(.8rem,2.1vw,.98rem);font-weight:600;min-width:96px;text-align:center;
+}
+.chip b{color:var(--accent);}
+.howto{
+  text-align:center;color:var(--muted);font-size:.92rem;margin:6px auto 12px;max-width:640px;
+}
+.panel{
+  background:var(--panel);border:1px solid var(--panel-brd);border-radius:16px;
+  padding:16px;margin:12px 0;box-shadow:var(--shadow);backdrop-filter:blur(4px);
+}
+.proc-title{font-size:clamp(1.1rem,3.2vw,1.5rem);margin:0 0 4px;font-weight:700;}
+.proc-sub{color:var(--muted);font-size:.9rem;margin:0 0 14px;}
+#list{display:flex;flex-direction:column;gap:10px;}
+.step-card{
+  display:flex;align-items:center;gap:10px;
+  background:var(--card);color:var(--card-ink);
+  border-radius:13px;padding:11px 12px;
+  box-shadow:0 4px 12px rgba(0,0,0,.22);
+  border:2px solid transparent;
+  transition:transform .25s,box-shadow .25s,border-color .25s,background .25s;
+  user-select:none;position:relative;
+}
+.step-card:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,.28);}
+.step-card.dragging{opacity:.9;box-shadow:0 16px 34px rgba(0,0,0,.45);transform:scale(1.02);z-index:20;cursor:grabbing;border-color:var(--accent);}
+.step-card.correct{border-color:var(--success);background:#e4fbf1;animation:pop .35s ease;}
+.step-card.wrong{border-color:var(--danger);background:#ffecec;animation:shake .4s ease;}
+.pos{
+  flex:none;width:30px;height:30px;border-radius:50%;
+  background:var(--bg2);color:#fff;font-weight:700;
+  display:flex;align-items:center;justify-content:center;font-size:.95rem;
+}
+.step-card.correct .pos{background:var(--success-d);}
+.step-card.wrong .pos{background:var(--danger-d);}
+.handle{
+  flex:none;cursor:grab;font-size:1.3rem;color:#5b86a7;padding:0 2px;touch-action:none;
+  line-height:1;
+}
+.handle:active{cursor:grabbing;}
+.step-text{flex:1;font-size:clamp(.9rem,2.4vw,1.03rem);font-weight:500;}
+.mv{
+  display:flex;flex-direction:column;gap:3px;flex:none;
+}
+.mv button{
+  border:none;background:#d5e6f6;color:var(--card-ink);border-radius:7px;
+  width:30px;height:22px;font-size:.8rem;cursor:pointer;font-weight:700;
+  transition:background .2s,transform .15s;
+}
+.mv button:hover{background:var(--accent);transform:translateY(-1px);}
+.mv button:disabled{opacity:.3;cursor:default;transform:none;}
+.actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:14px;}
+.btn{
+  border:none;border-radius:12px;padding:11px 22px;font-size:1rem;font-weight:700;cursor:pointer;
+  transition:transform .2s,box-shadow .25s,filter .2s;
+}
+.btn:hover{transform:translateY(-2px);box-shadow:var(--shadow);}
+.btn.primary{background:var(--accent);color:var(--accent-ink);}
+.btn.ghost{background:var(--panel);color:var(--text);border:1px solid var(--panel-brd);}
+.btn.save{background:var(--success);color:#043024;}
+#feedback{
+  margin-top:14px;background:rgba(255,255,255,.07);border-left:4px solid var(--accent);
+  border-radius:10px;padding:11px 14px;font-size:.95rem;min-height:20px;transition:border-color .3s;
+}
+#feedback.ok{border-color:var(--success);}
+#feedback.bad{border-color:var(--danger);}
+#final{display:none;text-align:center;}
+#final h2{font-size:clamp(1.4rem,4.5vw,2rem);margin:.1em 0;}
+.result-big{font-size:clamp(2rem,8vw,3rem);font-weight:800;color:var(--accent);margin:6px 0;}
+.result-line{color:var(--muted);}
+.name-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:16px 0;}
+#playerName{
+  padding:11px 14px;border-radius:12px;border:2px solid var(--panel-brd);
+  background:rgba(255,255,255,.95);color:#08243b;font-size:1rem;width:min(260px,70vw);font-weight:600;
+}
+.rank-title{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+.rank-title h3{margin:0;font-size:1.15rem;}
+.rank-badge{background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:3px 12px;font-size:.8rem;font-weight:700;}
+table.rank{width:100%;border-collapse:collapse;font-size:.92rem;}
+table.rank th,table.rank td{padding:7px 8px;text-align:left;border-bottom:1px solid rgba(255,255,255,.12);}
+table.rank th{color:var(--muted);font-weight:600;font-size:.82rem;text-transform:uppercase;letter-spacing:.4px;}
+table.rank td.n{color:var(--accent);font-weight:700;width:30px;}
+table.rank td.sc{text-align:right;font-weight:700;}
+.rank-note{color:var(--muted);font-size:.85rem;margin-top:8px;}
+footer{
+  text-align:center;margin-top:26px;padding-top:16px;border-top:1px solid rgba(255,255,255,.14);
+  color:var(--muted);font-size:.9rem;
+}
+footer .idealizador{font-size:1.05rem;font-weight:700;color:var(--text);letter-spacing:.4px;}
+@keyframes pop{0%{transform:scale(1);}45%{transform:scale(1.06);}100%{transform:scale(1);}}
+@keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-7px);}40%{transform:translateX(6px);}60%{transform:translateX(-4px);}80%{transform:translateX(3px);}}
+.confetti{font-size:2.6rem;animation:pop .6s ease;}
+@media(max-width:520px){
+  .chip{min-width:calc(50% - 8px);}
+  .handle{display:none;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>🌊 Rota das Águas</h1>
+    <p class="subtitle">Coloque as etapas dos recursos hídricos e das bacias na ordem certa 💧</p>
+  </header>
+
+  <div class="levels" id="levels">
+    <button class="pill" data-lvl="basico">Básico</button>
+    <button class="pill" data-lvl="intermediario">Intermediário</button>
+    <button class="pill" data-lvl="dificil">Difícil</button>
+    <button class="pill" data-lvl="carbonauta">🛰️ Carbonauta</button>
+  </div>
+
+  <div class="hud">
+    <div class="chip">Tempo: <b id="hudTime">0s</b></div>
+    <div class="chip">Erros: <b id="hudErr">0</b></div>
+    <div class="chip">Processo: <b id="hudProc">0/0</b></div>
+    <div class="chip">Etapas certas: <b id="hudOk">0</b></div>
+  </div>
+
+  <p class="howto">Arraste pela alça <b>⠿</b> ou use as setas <b>▲▼</b> para reordenar. Quando achar que a sequência está certa, clique em <b>Verificar</b>.</p>
+
+  <div class="panel" id="game">
+    <h2 class="proc-title" id="procTitle">—</h2>
+    <p class="proc-sub" id="procSub">Escolha um nível para começar.</p>
+    <div id="list"></div>
+    <div class="actions">
+      <button class="btn primary" id="checkBtn">Verificar</button>
+      <button class="btn ghost" id="shuffleBtn">Embaralhar</button>
+    </div>
+    <div id="feedback">Selecione <b>Básico</b>, <b>Intermediário</b>, <b>Difícil</b> ou <b>🛰️ Carbonauta</b> para iniciar.</div>
+  </div>
+
+  <div class="panel" id="final">
+    <div class="confetti">🎉</div>
+    <h2 id="finalTitle">Bacia dominada!</h2>
+    <div class="result-big" id="finalScore">—</div>
+    <p class="result-line" id="finalDetail">—</p>
+    <div class="name-row">
+      <input id="playerName" maxlength="20" placeholder="Seu nome (até 20)">
+      <button class="btn save" id="saveBtn">Salvar no ranking</button>
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="againBtn">Jogar de novo</button>
+    </div>
+    <p class="result-line" id="saveMsg" style="min-height:18px;margin-top:8px;"></p>
+  </div>
+
+  <div class="panel" id="rankPanel">
+    <div class="rank-title">
+      <h3>🏆 Ranking Global</h3>
+      <span class="rank-badge" id="rankLevel">—</span>
+    </div>
+    <table class="rank">
+      <thead><tr><th>#</th><th>Nome</th><th style="text-align:right;">Pontos</th></tr></thead>
+      <tbody id="rankBody"><tr><td colspan="3" class="rank-note">Carregando ranking…</td></tr></tbody>
+    </table>
+    <p class="rank-note">Menor pontuação = melhor (tempo em segundos + 10 por erro). O ranking é por nível.</p>
+  </div>
+
+  <footer>
+    <div class="idealizador">— Idealizado por Ernandes Sobreira —</div>
+    <div>Tema: Recursos hídricos e bacias · Gênero: Ordenar etapas de um processo · app ambiental do dia (2026-07-21)</div>
+  </footer>
+</div>
+
+<script>
+/* ===================== FIREBASE (somente ranking) ===================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-07-21-rota-das-aguas";
+
+let fb = { ready:false, db:null, mods:null, error:false };
+async function initFirebase(){
+  try{
+    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const fsMod  = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app = appMod.initializeApp(firebaseConfig);
+    fb.db = fsMod.getFirestore(app);
+    fb.mods = fsMod;
+    fb.ready = true;
+    loadRanking();
+  }catch(e){
+    fb.error = true;
+    renderRankMsg("Ranking indisponível offline — o jogo funciona normalmente. 💧");
+  }
+}
+initFirebase();
+
+/* ===================== CONTEUDO (etapas em ORDEM CORRETA) ===================== */
+const DATA = {
+  basico:{
+    label:"Básico",
+    rounds:[
+      { title:"💧 O ciclo da água", sub:"Como a água se move na natureza e sempre retorna.",
+        hint:"A água muda de estado por causa do calor do Sol e depois volta ao começo.",
+        steps:[
+          "O Sol aquece e evapora a água dos rios e mares",
+          "O vapor sobe, esfria e vira nuvem no céu",
+          "As nuvens ficam pesadas e cai a chuva",
+          "A água escorre pelo solo de volta aos rios"
+        ] },
+      { title:"🚰 Da chuva até a torneira", sub:"O caminho da água na bacia até a sua casa.",
+        hint:"A chuva alimenta os rios, a água é captada, tratada e só então distribuída.",
+        steps:[
+          "A chuva abastece os rios daquela bacia",
+          "A companhia capta a água direto do rio",
+          "A água passa pela estação de tratamento",
+          "A água limpa chega à torneira de casa"
+        ] }
+    ]
+  },
+  intermediario:{
+    label:"Intermediário",
+    rounds:[
+      { title:"🔄 Ciclo hidrológico", sub:"As fases do ciclo, com infiltração no solo.",
+        hint:"Evaporação e transpiração alimentam as nuvens; parte da chuva escoa e parte infiltra.",
+        steps:[
+          "Evaporação da água e evapotranspiração das plantas",
+          "Condensação do vapor formando as nuvens",
+          "Precipitação da chuva sobre a bacia",
+          "Escoamento superficial em direção aos rios",
+          "Infiltração da água e recarga do lençol"
+        ] },
+      { title:"🏭 Tratamento de água (ETA)", sub:"O início do tratamento convencional.",
+        hint:"Primeiro capta-se a água bruta; depois coagula, flocula, decanta e filtra.",
+        steps:[
+          "Captação da água bruta no manancial",
+          "Coagulação rápida com sulfato de alumínio",
+          "Floculação lenta formando os flocos",
+          "Decantação dos flocos suspensos por gravidade",
+          "Filtração final em camadas de areia"
+        ] }
+    ]
+  },
+  dificil:{
+    label:"Difícil",
+    rounds:[
+      { title:"🏭 ETA convencional completa", sub:"Ciclo completo até a distribuição.",
+        hint:"Da captação à rede: coagula, flocula, decanta, filtra, desinfeta, fluoreta e distribui.",
+        steps:[
+          "Captação da água bruta no manancial",
+          "Coagulação por mistura rápida com sulfato de alumínio",
+          "Floculação por agitação lenta e gradual",
+          "Decantação com sedimentação dos flocos",
+          "Filtração em leito de areia e antracito",
+          "Desinfecção por cloração da água clarificada",
+          "Fluoretação para prevenção de cáries dentárias",
+          "Distribuição da água tratada na rede"
+        ] },
+      { title:"♻️ Tratamento de esgoto (ETE)", sub:"Níveis de tratamento até o lançamento.",
+        hint:"Preliminar remove sólidos grosseiros; depois primário, secundário, terciário e desinfecção.",
+        steps:[
+          "Gradeamento e desarenação no tratamento preliminar",
+          "Decantação primária dos sólidos sedimentáveis",
+          "Tratamento biológico por lodos ativados no secundário",
+          "Remoção de nutrientes nitrogênio e fósforo no terciário",
+          "Desinfecção e lançamento no corpo receptor"
+        ] },
+      { title:"📈 Hidrograma de uma cheia", sub:"A resposta do rio a uma chuva intensa.",
+        hint:"Após o retardo, a vazão sobe até o pico e depois recua na recessão.",
+        steps:[
+          "Início da chuva e tempo de retardo da bacia",
+          "Ramo ascendente com subida rápida da vazão",
+          "Pico de vazão máxima registrado no exutório",
+          "Ramo de recessão e retorno ao escoamento de base"
+        ] }
+    ]
+  },
+  carbonauta:{
+    label:"🛰️ Carbonauta",
+    rounds:[
+      { title:"🛰️ Delimitação automática de bacia (SIG)", sub:"Fluxo de geoprocessamento a partir do MDE.",
+        hint:"Sobre o MDE: fill sinks, direção de fluxo D8, acumulação, definição da drenagem e watershed.",
+        steps:[
+          "Aquisição e importação do MDE de base (SRTM ou ALOS)",
+          "Preenchimento de depressões espúrias por fill sinks",
+          "Cálculo da direção de fluxo pelo algoritmo D8",
+          "Cálculo do fluxo acumulado por célula da grade",
+          "Definição da rede de drenagem por limiar de acumulação",
+          "Delimitação da bacia a partir do ponto de exutório"
+        ] },
+      { title:"💦 Ciclo de tratamento avançado", sub:"ETA de ciclo completo com pré-oxidação.",
+        hint:"Pré-oxidação, coagulação por desestabilização coloidal, floculação ortocinética, clarificação, filtração e polimento.",
+        steps:[
+          "Pré-oxidação no manancial para controle de algas e ferro",
+          "Coagulação por desestabilização coloidal em mistura rápida",
+          "Floculação ortocinética em gradiente de velocidade decrescente",
+          "Clarificação por decantação de alta taxa ou flotação",
+          "Filtração rápida descendente em dupla camada filtrante",
+          "Desinfecção com correção de pH e controle de subprodutos",
+          "Fluoretação, reservação e recalque para a adução"
+        ] },
+      { title:"🧪 Autodepuração fluvial (Streeter-Phelps)", sub:"Zonas de oxigênio dissolvido a jusante de um lançamento.",
+        hint:"Após o lançamento o OD cai na degradação, atinge o mínimo na decomposição ativa e sobe na recuperação.",
+        steps:[
+          "Zona de águas limpas a montante do lançamento",
+          "Zona de degradação com queda inicial do oxigênio dissolvido",
+          "Zona de decomposição ativa com déficit crítico de OD",
+          "Zona de recuperação onde a reaeração supera a desoxigenação",
+          "Zona de águas limpas restabelecidas mais a jusante"
+        ] }
+    ]
+  }
+};
+
+/* ===================== ESTADO ===================== */
+const state = {
+  level:null, roundIdx:0, order:[], errors:0, okSteps:0,
+  startTime:0, timer:null, finished:false, totalRounds:0, totalSteps:0
+};
+let drag=null;
+
+const $ = id=>document.getElementById(id);
+const listEl=$("list");
+
+/* ===================== NIVEL ===================== */
+function setLevel(lvl){
+  state.level=lvl; state.roundIdx=0; state.errors=0; state.okSteps=0; state.finished=false;
+  state.startTime=Date.now();
+  const rounds=DATA[lvl].rounds;
+  state.totalRounds=rounds.length;
+  state.totalSteps=rounds.reduce((a,r)=>a+r.steps.length,0);
+  document.querySelectorAll(".pill").forEach(p=>p.classList.toggle("active",p.dataset.lvl===lvl));
+  $("game").style.display="block";
+  $("final").style.display="none";
+  $("rankLevel").textContent=DATA[lvl].label;
+  if(state.timer) clearInterval(state.timer);
+  state.timer=setInterval(updateTime,200);
+  loadRound(0);
+  updateHUD();
+  loadRanking();
+  setFeedback(DATA[lvl].rounds[0].hint,"");
+}
+
+function loadRound(i){
+  state.roundIdx=i;
+  const r=DATA[state.level].rounds[i];
+  $("procTitle").textContent=r.title;
+  $("procSub").textContent=r.sub;
+  const items=r.steps.map((t,idx)=>({t,correct:idx}));
+  state.order=shuffleNoIdentity(items);
+  render();
+  updateHUD();
+}
+
+function shuffleNoIdentity(items){
+  if(items.length<2) return items.slice();
+  let arr; let tries=0;
+  do{
+    arr=items.slice();
+    for(let k=arr.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[arr[k],arr[j]]=[arr[j],arr[k]];}
+    tries++;
+  }while(tries<20 && arr.every((it,i)=>it.correct===i));
+  return arr;
+}
+
+/* ===================== RENDER ===================== */
+function render(){
+  listEl.innerHTML="";
+  state.order.forEach((it,i)=>{
+    const card=document.createElement("div");
+    card.className="step-card";
+    card.innerHTML=
+      '<div class="pos">'+(i+1)+'</div>'+
+      '<div class="handle" title="Arraste">⠿</div>'+
+      '<div class="step-text">'+escapeHTML(it.t)+'</div>'+
+      '<div class="mv">'+
+        '<button data-dir="-1" '+(i===0?"disabled":"")+' aria-label="Subir">▲</button>'+
+        '<button data-dir="1" '+(i===state.order.length-1?"disabled":"")+' aria-label="Descer">▼</button>'+
+      '</div>';
+    const handle=card.querySelector(".handle");
+    handle.addEventListener("pointerdown",e=>startDrag(e,i));
+    card.querySelectorAll(".mv button").forEach(b=>{
+      b.addEventListener("click",()=>moveItem(i,parseInt(b.dataset.dir,10)));
+    });
+    listEl.appendChild(card);
+  });
+}
+
+function moveItem(i,dir){
+  const j=i+dir;
+  if(j<0||j>=state.order.length) return;
+  [state.order[i],state.order[j]]=[state.order[j],state.order[i]];
+  render();
+}
+
+/* ===================== DRAG (mouse + touch via pointer) ===================== */
+function startDrag(e,idx){
+  e.preventDefault();
+  const card=listEl.children[idx];
+  drag={idx,card,startY:e.clientY,targetIdx:idx,moved:false};
+  card.classList.add("dragging");
+  window.addEventListener("pointermove",onMove);
+  window.addEventListener("pointerup",onUp,{once:true});
+}
+function onMove(e){
+  if(!drag) return;
+  drag.card.style.transform="translateY("+(e.clientY-drag.startY)+"px)";
+  drag.moved=true;
+  let ti=0;
+  [...listEl.children].forEach((c,i)=>{
+    if(i===drag.idx) return;
+    const r=c.getBoundingClientRect();
+    if(e.clientY>r.top+r.height/2) ti++;
+  });
+  drag.targetIdx=ti;
+}
+function onUp(){
+  window.removeEventListener("pointermove",onMove);
+  if(!drag) return;
+  drag.card.classList.remove("dragging");
+  drag.card.style.transform="";
+  if(drag.moved && drag.targetIdx!==drag.idx){
+    const it=state.order.splice(drag.idx,1)[0];
+    state.order.splice(drag.targetIdx,0,it);
+    render();
+  }
+  drag=null;
+}
+
+/* ===================== VERIFICAR ===================== */
+function check(){
+  if(state.finished||!state.level) return;
+  const cards=[...listEl.children];
+  let wrong=0;
+  state.order.forEach((it,i)=>{
+    cards[i].classList.remove("correct","wrong");
+    if(it.correct===i){ cards[i].classList.add("correct"); }
+    else { cards[i].classList.add("wrong"); wrong++; }
+  });
+  const r=DATA[state.level].rounds[state.roundIdx];
+  if(wrong===0){
+    state.okSteps+=state.order.length;
+    updateHUD();
+    setFeedback("✅ Sequência correta! "+r.hint,"ok");
+    setTimeout(()=>{
+      if(state.roundIdx+1<state.totalRounds){ loadRound(state.roundIdx+1); setFeedback(DATA[state.level].rounds[state.roundIdx].hint,""); }
+      else finish();
+    },900);
+  }else{
+    state.errors+=wrong;
+    updateHUD();
+    setFeedback("❌ "+wrong+" etapa(s) fora de posição. Dica: "+r.hint,"bad");
+    setTimeout(()=>cards.forEach(c=>c.classList.remove("wrong")),700);
+  }
+}
+
+/* ===================== HUD / TEMPO ===================== */
+function elapsed(){ return Math.floor((Date.now()-state.startTime)/1000); }
+function updateTime(){ if(!state.finished) $("hudTime").textContent=elapsed()+"s"; }
+function updateHUD(){
+  $("hudErr").textContent=state.errors;
+  $("hudProc").textContent=Math.min(state.roundIdx+1,state.totalRounds)+"/"+state.totalRounds;
+  $("hudOk").textContent=state.okSteps+"/"+state.totalSteps;
+}
+function setFeedback(msg,cls){
+  const f=$("feedback"); f.className=""; if(cls) f.classList.add(cls); f.innerHTML=msg;
+}
+
+/* ===================== FINAL ===================== */
+function finish(){
+  state.finished=true;
+  clearInterval(state.timer);
+  const secs=elapsed();
+  const score=secs+state.errors*10;
+  state._score=score; state._secs=secs;
+  $("game").style.display="none";
+  $("final").style.display="block";
+  $("finalTitle").textContent = state.errors===0 ? "Bacia dominada sem erros! 🌟" : "Bacia dominada! 🎉";
+  $("finalScore").textContent=score+" pts";
+  $("finalDetail").innerHTML="Nível <b>"+DATA[state.level].label+"</b> · Tempo: <b>"+secs+"s</b> · Erros: <b>"+state.errors+"</b> · Etapas: <b>"+state.totalSteps+"</b>";
+  $("saveMsg").textContent="";
+  loadRanking();
+}
+
+/* ===================== RANKING (Firestore) ===================== */
+async function saveScore(){
+  if(state._score==null) return;
+  const name=($("playerName").value||"Anônimo").slice(0,20);
+  if(!fb.ready){ $("saveMsg").textContent="Ranking offline — não foi possível salvar agora."; return; }
+  try{
+    const {collection,addDoc,serverTimestamp}=fb.mods;
+    await addDoc(collection(fb.db,"games",GAME_ID,"scores"),{
+      name, level:state.level, score:state._score, seconds:state._secs,
+      errors:state.errors, ts:serverTimestamp()
+    });
+    $("saveMsg").textContent="✅ Pontuação salva no ranking!";
+    loadRanking();
+  }catch(e){
+    $("saveMsg").textContent="Não foi possível salvar agora. Tente novamente.";
+  }
+}
+
+async function loadRanking(){
+  const lvl=state.level||"basico";
+  $("rankLevel").textContent=DATA[lvl].label;
+  if(fb.error){ renderRankMsg("Ranking indisponível offline. 💧"); return; }
+  if(!fb.ready){ return; }
+  try{
+    const {collection,query,orderBy,limit,getDocs}=fb.mods;
+    const q=query(collection(fb.db,"games",GAME_ID,"scores"),orderBy("score"),limit(200));
+    const snap=await getDocs(q);
+    const rows=[];
+    snap.forEach(d=>{const v=d.data(); if(v.level===lvl) rows.push(v);});
+    rows.sort((a,b)=>(a.score-b.score)||((a.seconds||0)-(b.seconds||0)));
+    renderRanking(rows.slice(0,10));
+  }catch(e){
+    renderRankMsg("Não foi possível carregar o ranking agora.");
+  }
+}
+function renderRanking(rows){
+  const tb=$("rankBody");
+  if(!rows.length){ renderRankMsg("Seja o primeiro a marcar pontos neste nível! 🥇"); return; }
+  tb.innerHTML=rows.map((r,i)=>
+    '<tr><td class="n">'+(i+1)+'</td><td>'+escapeHTML(r.name||"Anônimo")+
+    '</td><td class="sc">'+r.score+' <span style="color:var(--muted);font-weight:400;font-size:.8em;">('+(r.seconds||0)+'s)</span></td></tr>'
+  ).join("");
+}
+function renderRankMsg(msg){ $("rankBody").innerHTML='<tr><td colspan="3" class="rank-note">'+escapeHTML(msg)+'</td></tr>'; }
+
+/* ===================== UTIL ===================== */
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+/* ===================== EVENTOS ===================== */
+document.querySelectorAll(".pill").forEach(p=>p.addEventListener("click",()=>setLevel(p.dataset.lvl)));
+$("checkBtn").addEventListener("click",check);
+$("shuffleBtn").addEventListener("click",()=>{ if(state.level&&!state.finished){ const base=state.order.slice().sort((a,b)=>a.correct-b.correct); state.order=shuffleNoIdentity(base); render(); } });
+$("saveBtn").addEventListener("click",saveScore);
+$("againBtn").addEventListener("click",()=>setLevel(state.level));
+$("playerName").addEventListener("keydown",e=>{ if(e.key==="Enter") saveScore(); });
+</script>
+</body>
+</html>
