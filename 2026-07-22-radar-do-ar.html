@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌫️ Radar do Ar — Quiz da Poluição Urbana</title>
+<style>
+:root{
+  --bg1:#4a6572; --bg2:#20313a; --panel:#0f1e26cc; --panel2:#13252f;
+  --accent:#38d6c8; --accent2:#7fe7dd; --ink:#eef6f8; --muted:#9fb6bf;
+  --ok:#3ddc84; --err:#ff6b6b; --line:#2c4552; --gold:#ffd36b;
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:system-ui,"Segoe UI",Roboto,Arial,sans-serif;
+  color:var(--ink);
+  background:linear-gradient(160deg,var(--bg1) 0%,var(--bg2) 100%);
+  min-height:100vh; padding:16px;
+  background-attachment:fixed;
+}
+.wrap{width:min(880px,95vw);margin:0 auto}
+header{text-align:center;margin-bottom:14px}
+h1{
+  font-size:clamp(1.7rem,5vw,2.7rem); margin:.2em 0 .1em;
+  letter-spacing:.5px; text-shadow:0 2px 12px rgba(0,0,0,.4);
+}
+.sub{color:var(--muted);font-size:clamp(.85rem,2.5vw,1rem);margin:0}
+.levels{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0}
+.pill{
+  border:1px solid var(--line); background:var(--panel2); color:var(--ink);
+  padding:9px 16px; border-radius:999px; cursor:pointer; font-size:.95rem;
+  font-weight:600; transition:all .25s; white-space:nowrap;
+}
+.pill:hover{transform:translateY(-2px);border-color:var(--accent)}
+.pill.active{background:var(--accent);color:#04211f;border-color:var(--accent);box-shadow:0 6px 18px rgba(56,214,200,.35)}
+.card{
+  background:var(--panel); border:1px solid var(--line); border-radius:16px;
+  padding:18px; box-shadow:var(--shadow); backdrop-filter:blur(4px);
+  margin-bottom:14px;
+}
+.how{font-size:.9rem;color:var(--muted);text-align:center;margin:0 0 4px}
+.hud{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:10px}
+.stat{
+  background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+  padding:7px 12px;font-size:.9rem;font-weight:600;min-width:92px;text-align:center;
+}
+.stat b{color:var(--accent2)}
+.progress{height:10px;background:#0b1a21;border-radius:999px;overflow:hidden;margin:6px 0 14px;border:1px solid var(--line)}
+.progress>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s}
+.q{font-size:clamp(1.1rem,3.4vw,1.4rem);font-weight:700;margin:4px 0 14px;line-height:1.35}
+.opts{display:grid;gap:10px}
+.opt{
+  text-align:left;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+  padding:14px 16px;border-radius:12px;cursor:pointer;font-size:1rem;
+  transition:transform .2s,background .2s,border-color .2s;line-height:1.3;
+}
+.opt:hover:not(:disabled){transform:translateY(-2px);border-color:var(--accent)}
+.opt:disabled{cursor:default}
+.opt.correct{background:rgba(61,220,132,.16);border-color:var(--ok);animation:pop .35s}
+.opt.wrong{background:rgba(255,107,107,.15);border-color:var(--err);animation:shake .4s}
+.opt .mk{float:right;font-weight:800}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.05)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.fb{
+  margin-top:14px;padding:13px 15px;border-radius:12px;font-size:.96rem;line-height:1.45;
+  background:#12242d;border-left:4px solid var(--accent);display:none;
+}
+.fb.show{display:block;animation:pop .3s}
+.fb.good{border-left-color:var(--ok)}
+.fb.bad{border-left-color:var(--err)}
+.nav{display:flex;justify-content:flex-end;margin-top:14px}
+.btn{
+  background:var(--accent);color:#04211f;border:none;padding:12px 22px;border-radius:12px;
+  font-weight:700;font-size:1rem;cursor:pointer;transition:transform .2s,box-shadow .2s;
+}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(56,214,200,.35)}
+.btn.ghost{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+.hidden{display:none!important}
+/* final */
+.final{text-align:center}
+.final h2{font-size:clamp(1.5rem,5vw,2.2rem);margin:.2em 0}
+.final .score{font-size:2.4rem;font-weight:800;color:var(--ok);margin:.1em 0}
+.medal{font-size:3rem;margin:.1em 0}
+.namebox{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.namebox input{
+  padding:12px 14px;border-radius:12px;border:1px solid var(--line);
+  background:var(--panel2);color:var(--ink);font-size:1rem;width:min(240px,70vw);
+}
+/* ranking */
+.rank h3{margin:.1em 0 .6em;font-size:1.15rem}
+.rank .lvltag{font-size:.8rem;color:var(--muted);font-weight:600}
+.rrow{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:var(--panel2);margin-bottom:6px;font-size:.94rem}
+.rrow .pos{font-weight:800;color:var(--gold);min-width:26px}
+.rrow .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rrow .sc{font-weight:700;color:var(--accent2)}
+.rrow.me{outline:1px solid var(--accent)}
+.note{font-size:.85rem;color:var(--muted);text-align:center;margin:6px 0 0}
+footer{text-align:center;margin:22px 0 6px;color:var(--muted);font-size:.9rem;line-height:1.6}
+footer .by{color:var(--gold);font-weight:700;font-size:1rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🌫️ Radar do Ar</h1>
+    <p class="sub">Quiz da poluição do ar nas cidades — cheque o quanto você respira de ciência</p>
+  </header>
+
+  <div class="levels" id="levels">
+    <button class="pill active" data-lvl="basico">Básico</button>
+    <button class="pill" data-lvl="intermediario">Intermediário</button>
+    <button class="pill" data-lvl="dificil">Difícil</button>
+    <button class="pill" data-lvl="carbonauta">🛰️ Carbonauta</button>
+  </div>
+
+  <!-- GAME -->
+  <div class="card" id="gameCard">
+    <p class="how">Escolha a alternativa correta. Cada resposta traz uma explicação. Responda o mais rápido possível — o tempo é o desempate no ranking.</p>
+    <div class="hud">
+      <div class="stat">Pontos: <b id="hPts">0</b></div>
+      <div class="stat">Acertos: <b id="hHits">0/0</b></div>
+      <div class="stat">Sequência: <b id="hStreak">0</b></div>
+      <div class="stat">Erros: <b id="hErr">0</b></div>
+      <div class="stat">Tempo: <b id="hTime">0s</b></div>
+    </div>
+    <div class="progress"><i id="bar"></i></div>
+    <div id="qWrap">
+      <div class="q" id="qText">Carregando…</div>
+      <div class="opts" id="opts"></div>
+      <div class="fb" id="fb"></div>
+      <div class="nav"><button class="btn hidden" id="nextBtn">Próxima ➜</button></div>
+    </div>
+  </div>
+
+  <!-- FINAL -->
+  <div class="card final hidden" id="finalCard">
+    <div class="medal" id="medal">🎉</div>
+    <h2 id="finalTitle">Fim de jogo!</h2>
+    <div class="score" id="finalScore">0</div>
+    <p id="finalMsg" class="sub"></p>
+    <div class="namebox">
+      <input id="playerName" maxlength="20" placeholder="Seu nome (até 20)" />
+      <button class="btn" id="saveBtn">Salvar no ranking</button>
+    </div>
+    <p class="note" id="saveNote"></p>
+    <div class="nav" style="justify-content:center">
+      <button class="btn ghost" id="againBtn">Jogar de novo ↻</button>
+    </div>
+  </div>
+
+  <!-- RANKING -->
+  <div class="card rank">
+    <h3>🏆 Ranking Global <span class="lvltag" id="rankLvl">— Básico</span></h3>
+    <div id="rankList"><p class="note">Carregando ranking…</p></div>
+  </div>
+
+  <footer>
+    <div class="by">— Idealizado por Ernandes Sobreira —</div>
+    <div>Tema: Poluição do ar nas cidades · Gênero: Quiz · app ambiental do dia (2026-07-22)</div>
+  </footer>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-07-22-radar-do-ar";
+
+/* ---------- BANCO DE PERGUNTAS ---------- */
+const QUESTIONS = {
+basico:[
+ {q:"Qual gás tóxico sai do escapamento dos carros?",
+  o:[["Monóxido de carbono",1],["Oxigênio bem puro",0],["Vapor de água",0],["Gás argônio nobre",0]],
+  fb:"O monóxido de carbono (CO) vem da queima incompleta da gasolina e do diesel e reduz o oxigênio no sangue."},
+ {q:"O que é o 'smog' que encobre as cidades grandes?",
+  o:[["Mistura de poluentes",1],["Neblina de inverno",0],["Poeira das estrelas",0],["Fumaça de vulcão",0]],
+  fb:"Smog é a mistura de fumaça e poluentes que forma aquela névoa acinzentada sobre grandes centros urbanos."},
+ {q:"Qual atitude reduz a poluição do ar na cidade?",
+  o:[["Usar transporte coletivo",1],["Andar sempre sozinho",0],["Queimar bastante lixo",0],["Ligar vários motores",0]],
+  fb:"Um ônibus cheio transporta dezenas de pessoas emitindo muito menos por passageiro do que vários carros individuais."},
+ {q:"Respirar ar poluído faz mal principalmente a quê?",
+  o:[["Pulmões e coração",1],["Apenas ao cabelo",0],["Somente às unhas",0],["Só aos dentes",0]],
+  fb:"As partículas finas atingem os pulmões e entram na circulação, agravando doenças respiratórias e cardíacas."},
+ {q:"Qual meio de transporte não polui o ar diretamente?",
+  o:[["A bicicleta comum",1],["O carro popular",0],["A moto vermelha",0],["O ônibus antigo",0]],
+  fb:"A bicicleta não queima combustível, então não emite gases poluentes enquanto você pedala pela cidade."},
+ {q:"Por que árvores nas cidades ajudam o ar?",
+  o:[["Filtram o ar",1],["Soltam muita fumaça",0],["Aquecem o asfalto",0],["Gastam todo oxigênio",0]],
+  fb:"As folhas retêm poeira e poluentes e liberam oxigênio, melhorando a qualidade do ar ao redor."},
+ {q:"Em qual período o trânsito costuma poluir mais?",
+  o:[["Nos horários de pico",1],["Na madrugada bem vazia",0],["Nos domingos bem calmos",0],["Nas ruas sem carros",0]],
+  fb:"Nos horários de pico, milhares de veículos parados em congestionamentos liberam mais poluentes concentrados no ar."},
+ {q:"O que é uma fonte de poluição do ar?",
+  o:[["As fábricas industriais",1],["As nuvens brancas",0],["Os lagos limpos",0],["As flores coloridas",0]],
+  fb:"Fábricas, veículos e queimadas são fontes que lançam gases e partículas poluentes na atmosfera."}
+],
+intermediario:[
+ {q:"Qual poluente é formado por partículas menores que 2,5 micrômetros?",
+  o:[["Material particulado fino",1],["Gás oxigênio molecular",0],["Vapor de água",0],["Poeira de giz",0]],
+  fb:"O MP2,5 (material particulado fino) tem diâmetro ≤2,5 µm e penetra fundo nos alvéolos pulmonares."},
+ {q:"Junto ao NOx, qual gás é o principal precursor da chuva ácida?",
+  o:[["Dióxido de enxofre",1],["Gás nitrogênio inerte",0],["Vapor de água",0],["Gás hélio leve",0]],
+  fb:"O dióxido de enxofre (SO₂), da queima de combustíveis com enxofre, reage na atmosfera e forma chuva ácida."},
+ {q:"O ozônio do nível do solo é classificado como poluente…",
+  o:[["Secundário e fotoquímico",1],["Primário e direto",0],["Natural e inofensivo",0],["Frio e estável",0]],
+  fb:"O ozônio de superfície não é emitido diretamente: forma-se pela reação de NOx e COV sob luz solar (poluente secundário)."},
+ {q:"Segundo a OMS (2005), qual era o limite anual de MP2,5?",
+  o:[["Dez por metro cúbico",1],["Cem por metro cúbico",0],["Mil por metro cúbico",0],["Zero por metro cúbico",0]],
+  fb:"A diretriz da OMS de 2005 recomendava média anual de 10 µg/m³ de MP2,5; em 2021 foi reduzida para 5 µg/m³."},
+ {q:"Qual fenômeno prende os poluentes perto do solo no inverno?",
+  o:[["A inversão térmica",1],["O vento forte",0],["A chuva intensa",0],["O calor extremo",0]],
+  fb:"Na inversão térmica, uma camada de ar quente sobre o ar frio impede a dispersão, e os poluentes se acumulam."},
+ {q:"No Brasil, quem define os padrões nacionais de qualidade do ar?",
+  o:[["Resolução do CONAMA",1],["Manual do motorista",0],["Regra do bairro",0],["Lei do silêncio",0]],
+  fb:"A Resolução CONAMA nº 491/2018 estabelece os padrões nacionais de qualidade do ar, alinhando-se gradualmente à OMS."},
+ {q:"Qual órgão monitora a qualidade do ar no estado de São Paulo?",
+  o:[["A CETESB paulista",1],["A padaria central",0],["O clube local",0],["A escola próxima",0]],
+  fb:"A CETESB opera estações que medem poluentes como MP, ozônio e NO₂ em tempo real em São Paulo."},
+ {q:"Qual é a principal fonte de poluição do ar nas metrópoles brasileiras?",
+  o:[["Os veículos automotores",1],["As árvores urbanas",0],["Os rios limpos",0],["As nuvens altas",0]],
+  fb:"Em cidades como São Paulo, a frota de veículos responde pela maior parte das emissões de poluentes do ar."},
+ {q:"Qual poluente se liga à hemoglobina e reduz o oxigênio no sangue?",
+  o:[["Monóxido de carbono",1],["Dióxido de silício",0],["Cloreto de sódio",0],["Carbonato de cálcio",0]],
+  fb:"O CO forma carboxihemoglobina ao se ligar à hemoglobina, reduzindo o oxigênio levado aos tecidos."},
+ {q:"O que o catalisador dos carros ajuda a reduzir?",
+  o:[["As emissões poluentes",1],["O preço final",0],["O peso total",0],["O barulho externo",0]],
+  fb:"O conversor catalítico transforma gases tóxicos (CO, NOx, HC) em substâncias menos nocivas antes do escapamento."}
+],
+dificil:[
+ {q:"Na formação fotoquímica do ozônio, qual espécie se fotolisa liberando oxigênio atômico?",
+  o:[["O dióxido de nitrogênio",1],["O metano atmosférico saturado",0],["O nitrogênio molecular estável",0],["O argônio nobre inerte",0]],
+  fb:"A fotólise do NO₂ (NO₂ + hν → NO + O) libera oxigênio atômico, que se une ao O₂ formando O₃ troposférico."},
+ {q:"Qual diâmetro aerodinâmico define o material particulado MP10?",
+  o:[["Até dez micrômetros aerodinâmicos",1],["Cerca de mil micrômetros",0],["Perto de um metro",0],["Acima de cem centímetros",0]],
+  fb:"O MP10 reúne partículas com diâmetro aerodinâmico ≤10 µm; as maiores ficam retidas nas vias aéreas superiores."},
+ {q:"Com muito NOx e pouco COV, qual regime limita a produção de ozônio?",
+  o:[["Regime limitado por COV",1],["Regime saturado de oxigênio",0],["Regime livre de radiação",0],["Regime isento de gases",0]],
+  fb:"Em áreas urbanas com muito NOx, a formação de O₃ é limitada por COV: reduzir compostos orgânicos voláteis controla o ozônio."},
+ {q:"Qual valor a OMS (2021) definiu como média anual segura de MP2,5?",
+  o:[["Cinco microgramas por metro",1],["Cinquenta microgramas por metro",0],["Quinhentos microgramas por metro",0],["Duzentos microgramas por metro",0]],
+  fb:"Em 2021 a OMS reduziu a diretriz anual de MP2,5 de 10 para 5 µg/m³, refletindo o dano em baixas concentrações."},
+ {q:"Como se chama o índice que converte concentrações de poluentes em faixas de risco?",
+  o:[["Índice de qualidade do ar",1],["Índice de massa dos corpos",0],["Índice de preços urbanos",0],["Índice de ruído das ruas",0]],
+  fb:"O IQAr (Índice de Qualidade do Ar) traduz concentrações em categorias como boa, moderada, ruim e péssima."},
+ {q:"Qual processo transforma SO₂ e NOx em ácidos que voltam com a chuva?",
+  o:[["Oxidação atmosférica dos gases",1],["Congelamento total dos gases",0],["Sublimação direta dos sólidos",0],["Condensação simples do vapor",0]],
+  fb:"SO₂ e NOx sofrem oxidação formando ácido sulfúrico e nítrico, que precipitam como chuva ácida."},
+ {q:"Qual poluente é emitido sobretudo por motores a diesel e forma NO₂?",
+  o:[["Óxido nítrico veicular",1],["Metano fóssil profundo",0],["Argônio atmosférico raro",0],["Hélio industrial leve",0]],
+  fb:"Motores a diesel emitem principalmente NO, que se oxida a NO₂ na atmosfera, compondo os NOx urbanos."},
+ {q:"O que caracteriza um poluente primário em relação a um secundário?",
+  o:[["É emitido diretamente da fonte",1],["É formado só por reações",0],["Surge apenas com luz solar",0],["Nasce longe de qualquer fonte",0]],
+  fb:"Primários (CO, SO₂, NO) são lançados diretamente pelas fontes; secundários (O₃) formam-se por reações na atmosfera."},
+ {q:"Qual efeito de longo prazo o MP2,5 tem sobre o coração e vasos?",
+  o:[["Aumenta risco de infarto",1],["Melhora a pressão arterial",0],["Fortalece o músculo cardíaco",0],["Reduz a frequência cardíaca",0]],
+  fb:"A exposição crônica ao MP2,5 provoca inflamação e aterosclerose, elevando o risco de infarto e AVC."},
+ {q:"Qual gás traça as emissões de combustão veicular incompleta?",
+  o:[["O monóxido de carbono",1],["O oxigênio molecular puro",0],["O vapor de água",0],["O gás nobre neônio",0]],
+  fb:"O CO é produto direto da combustão incompleta e indica a contribuição veicular na poluição do ar."},
+ {q:"Por que o ozônio tem picos à tarde e longe do centro emissor?",
+  o:[["Depende de radiação acumulada",1],["Depende de frio noturno",0],["Depende de chuva constante",0],["Depende de vento parado",0]],
+  fb:"O O₃ precisa de tempo e radiação solar para se formar; por isso atinge picos à tarde e a favor do vento."},
+ {q:"Qual política reduz emissões renovando frotas e exigindo filtros rígidos?",
+  o:[["Programa de controle veicular",1],["Programa de festas urbanas",0],["Programa de cores prediais",0],["Programa de horários livres",0]],
+  fb:"Programas como o PROCONVE impõem limites progressivos de emissão a veículos novos, reduzindo poluentes ao longo do tempo."}
+],
+carbonauta:[
+ {q:"Qual radical domina a capacidade oxidativa diurna da troposfera urbana?",
+  o:[["O radical hidroxila OH",1],["O ânion cloreto dissolvido",0],["O cátion sódio hidratado",0],["O radical metila estável",0]],
+  fb:"O radical hidroxila (•OH), gerado por fotólise, inicia a oxidação de COV e CO, governando O₃ e aerossóis secundários."},
+ {q:"No diagrama EKMA, a 'ridge line' separa quais dois regimes do ozônio?",
+  o:[["Limitado por NOx e COV",1],["Limitado por água e sal",0],["Limitado por calor e frio",0],["Limitado por som e luz",0]],
+  fb:"A curva EKMA (isopletas de O₃) distingue o regime NOx-limitado do COV-limitado; a razão COV/NOx define qual precursor controlar."},
+ {q:"Qual fração do aerossol orgânico secundário vem da oxidação de COV?",
+  o:[["Produtos de baixa volatilidade",1],["Cristais de sal marinho",0],["Grãos de areia fina",0],["Gotas de água pura",0]],
+  fb:"A oxidação de COV como isopreno e monoterpenos gera compostos de baixa volatilidade que condensam formando SOA."},
+ {q:"Qual métrica a OMS usa para quantificar mortes atribuíveis ao MP2,5?",
+  o:[["Fração atribuível populacional",1],["Massa corporal média",0],["Renda familiar bruta",0],["Temperatura corporal basal",0]],
+  fb:"A fração atribuível populacional, via funções concentração-resposta (ex.: GEMM), estima a carga de mortalidade ligada ao MP2,5."},
+ {q:"Qual reservatório noturno sequestra NOx e o libera por termólise ou fotólise?",
+  o:[["O pentóxido de dinitrogênio",1],["O carbonato de cálcio",0],["O cloreto de potássio",0],["O sulfato de bário",0]],
+  fb:"À noite, NO₃ e N₂O₅ atuam como reservatórios; a hidrólise heterogênea de N₂O₅ gera HNO₃ e nitrato particulado."},
+ {q:"Qual técnica mede colunas troposféricas de NO₂ a partir do espaço?",
+  o:[["Espectrometria de absorção diferencial",1],["Ressonância magnética de prótons",0],["Difração comum de elétrons",0],["Cromatografia líquida de troca",0]],
+  fb:"Instrumentos como o TROPOMI usam DOAS (espectrometria de absorção óptica diferencial) para recuperar colunas de NO₂."},
+ {q:"Qual parâmetro descreve a eficiência de uma partícula como núcleo de nuvem?",
+  o:[["A higroscopicidade do aerossol",1],["A densidade do concreto",0],["A viscosidade do óleo",0],["A dureza do diamante",0]],
+  fb:"A higroscopicidade (parâmetro κ) determina a capacidade do aerossol de ativar como CCN sob dada supersaturação."},
+ {q:"Qual traçador molecular distingue queima de biomassa de emissão veicular?",
+  o:[["O levoglucosano no aerossol",1],["O grafite no lápis",0],["O oxigênio no oceano",0],["O cálcio no osso",0]],
+  fb:"O levoglucosano, produto da pirólise da celulose, é traçador específico da queima de biomassa em estudos de fonte."},
+ {q:"Qual fenômeno explica o pico de NO₂ e a queda de O₃ junto ao tráfego?",
+  o:[["A titulação do ozônio",1],["A fervura do oxigênio",0],["A fusão do nitrogênio",0],["A sublimação do carbono",0]],
+  fb:"Perto do tráfego, o NO recém-emitido reage com O₃ (NO + O₃ → NO₂ + O₂), consumindo ozônio — a titulação."},
+ {q:"Qual abordagem acopla química atmosférica e meteorologia em alta resolução?",
+  o:[["Modelo de transporte químico",1],["Modelo de mercado financeiro",0],["Modelo de crescimento populacional",0],["Modelo de tráfego rodoviário",0]],
+  fb:"CTMs como WRF-Chem e CMAQ integram emissões, transporte, química e deposição para simular concentrações de poluentes."},
+ {q:"Qual métrica integra concentração e tempo em estudos de coorte de exposição?",
+  o:[["Concentração média ponderada anual",1],["Velocidade média diária urbana",0],["Distância média entre estações",0],["Altitude média das nuvens",0]],
+  fb:"Coortes usam a concentração média anual ponderada por exposição residencial para estimar risco relativo de mortalidade."},
+ {q:"Qual processo heterogêneo em aerossóis remove HO₂ e afeta o O₃ local?",
+  o:[["A captação heterogênea de radicais",1],["A pintura externa dos prédios",0],["A irrigação comum das hortas",0],["A iluminação noturna das ruas",0]],
+  fb:"A captação (uptake) heterogênea de HO₂ em aerossóis remove radicais peroxi, reduzindo a produção fotoquímica de ozônio."}
+]
+};
+
+const LVL_NAMES={basico:"Básico",intermediario:"Intermediário",dificil:"Difícil",carbonauta:"🛰️ Carbonauta"};
+
+/* ---------- ESTADO ---------- */
+let level="basico", order=[], idx=0, pts=0, hits=0, errs=0, streak=0, answered=false;
+let tStart=0, tElapsed=0, timer=null;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function esc(s){return (s+"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function startTimer(){tStart=Date.now();clearInterval(timer);timer=setInterval(()=>{tElapsed=(Date.now()-tStart)/1000;document.getElementById('hTime').textContent=Math.floor(tElapsed)+"s";},250);}
+function stopTimer(){clearInterval(timer);tElapsed=(Date.now()-tStart)/1000;}
+
+function setLevel(l){
+  level=l;
+  document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('active',p.dataset.lvl===l));
+  document.getElementById('rankLvl').textContent="— "+LVL_NAMES[l];
+  newGame();
+  loadRanking();
+}
+
+function newGame(){
+  order=shuffle([...Array(QUESTIONS[level].length).keys()]);
+  idx=0;pts=0;hits=0;errs=0;streak=0;
+  document.getElementById('finalCard').classList.add('hidden');
+  document.getElementById('gameCard').classList.remove('hidden');
+  updateHUD();
+  startTimer();
+  render();
+}
+
+function updateHUD(){
+  document.getElementById('hPts').textContent=pts;
+  document.getElementById('hHits').textContent=hits+"/"+QUESTIONS[level].length;
+  document.getElementById('hStreak').textContent=streak;
+  document.getElementById('hErr').textContent=errs;
+}
+
+function render(){
+  answered=false;
+  const q=QUESTIONS[level][order[idx]];
+  document.getElementById('bar').style.width=(idx/QUESTIONS[level].length*100)+"%";
+  document.getElementById('qText').textContent=(idx+1)+". "+q.q;
+  const fb=document.getElementById('fb');fb.className="fb";fb.textContent="";
+  document.getElementById('nextBtn').classList.add('hidden');
+  const opts=document.getElementById('opts');opts.innerHTML="";
+  const shuffled=shuffle(q.o.map(x=>({t:x[0],ok:x[1]})));
+  shuffled.forEach(op=>{
+    const b=document.createElement('button');
+    b.className="opt";
+    b.innerHTML='<span class="lbl"></span>';
+    b.querySelector('.lbl').textContent=op.t;
+    b.dataset.ok=op.ok?"1":"0";
+    b.onclick=()=>answer(b,op.ok,q.fb);
+    opts.appendChild(b);
+  });
+}
+
+function answer(btn,ok,fb){
+  if(answered)return;answered=true;
+  const buttons=[...document.querySelectorAll('.opt')];
+  buttons.forEach(b=>b.disabled=true);
+  const fbEl=document.getElementById('fb');
+  if(ok){
+    pts+=10;hits++;streak++;pts+=Math.max(0,streak-1); // bônus de sequência
+    btn.classList.add('correct');
+    btn.insertAdjacentHTML('beforeend',' <span class="mk">✔</span>');
+    fbEl.className="fb show good";fbEl.textContent="✅ Correto! "+fb;
+  }else{
+    errs++;streak=0;
+    btn.classList.add('wrong');
+    btn.insertAdjacentHTML('beforeend',' <span class="mk">✕</span>');
+    buttons.forEach(b=>{if(b.dataset.ok==="1"){b.classList.add('correct');b.insertAdjacentHTML('beforeend',' <span class="mk">✔</span>');}});
+    fbEl.className="fb show bad";fbEl.textContent="❌ Não foi dessa vez. "+fb;
+  }
+  updateHUD();
+  document.getElementById('nextBtn').classList.remove('hidden');
+}
+
+function next(){
+  idx++;
+  if(idx>=QUESTIONS[level].length){finish();}
+  else render();
+}
+
+function finish(){
+  stopTimer();
+  document.getElementById('bar').style.width="100%";
+  document.getElementById('gameCard').classList.add('hidden');
+  const fc=document.getElementById('finalCard');fc.classList.remove('hidden');
+  const total=QUESTIONS[level].length;
+  const pct=hits/total;
+  let medal="🌱",msg="Continue estudando o ar que você respira!";
+  if(pct>=1){medal="🏆";msg="Perfeito! Você é um verdadeiro Carbonauta do ar limpo!";}
+  else if(pct>=0.8){medal="🎉";msg="Excelente! Seu radar do ar está afiado.";}
+  else if(pct>=0.5){medal="👍";msg="Bom trabalho! Dá para melhorar ainda mais.";}
+  document.getElementById('medal').textContent=medal;
+  document.getElementById('finalTitle').textContent="Nível "+LVL_NAMES[level]+" concluído!";
+  document.getElementById('finalScore').textContent=pts+" pts";
+  document.getElementById('finalMsg').textContent=`${msg} Você acertou ${hits} de ${total} em ${Math.floor(tElapsed)}s.`;
+  document.getElementById('saveNote').textContent="";
+  loadRanking();
+}
+
+document.getElementById('nextBtn').onclick=next;
+document.getElementById('againBtn').onclick=newGame;
+document.querySelectorAll('.pill').forEach(p=>p.onclick=()=>setLevel(p.dataset.lvl));
+
+/* ---------- FIREBASE / RANKING ---------- */
+let db=null,fs=null;
+async function initFirebase(){
+  try{
+    const appMod=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    fs=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app=appMod.initializeApp(firebaseConfig);
+    db=fs.getFirestore(app);
+    return true;
+  }catch(e){console.warn("Firebase indisponível",e);return false;}
+}
+const fbReady=initFirebase();
+
+async function loadRanking(){
+  const list=document.getElementById('rankList');
+  const ok=await fbReady;
+  if(!ok||!db){list.innerHTML='<p class="note">⚠️ Ranking offline — o jogo continua normal. Conecte-se à internet para ver o ranking global.</p>';return;}
+  try{
+    const {collection,getDocs,query,orderBy,limit}=fs;
+    const q=query(collection(db,"games",GAME_ID,"scores"),orderBy("score","desc"),limit(200));
+    const snap=await getDocs(q);
+    let rows=[];
+    snap.forEach(d=>{const v=d.data();if(v.level===level)rows.push(v);});
+    rows.sort((a,b)=>(b.score-a.score)||((a.seconds||9999)-(b.seconds||9999)));
+    rows=rows.slice(0,10);
+    if(!rows.length){list.innerHTML='<p class="note">Ainda não há pontuações neste nível. Seja o primeiro! 🚀</p>';return;}
+    list.innerHTML=rows.map((r,i)=>`<div class="rrow"><span class="pos">${i+1}º</span><span class="nm">${esc(r.name||"Anônimo")}</span><span class="sc">${r.score} pts · ${r.seconds||0}s</span></div>`).join("");
+  }catch(e){
+    console.warn(e);
+    list.innerHTML='<p class="note">⚠️ Não foi possível carregar o ranking agora. O jogo segue normal.</p>';
+  }
+}
+
+document.getElementById('saveBtn').onclick=async()=>{
+  const name=(document.getElementById('playerName').value||"").trim().slice(0,20)||"Anônimo";
+  const note=document.getElementById('saveNote');
+  const ok=await fbReady;
+  if(!ok||!db){note.textContent="⚠️ Sem conexão: não foi possível salvar, mas seu resultado vale!";return;}
+  try{
+    const {collection,addDoc,serverTimestamp}=fs;
+    await addDoc(collection(db,"games",GAME_ID,"scores"),{
+      name,score:pts,seconds:Math.floor(tElapsed),hits,total:QUESTIONS[level].length,level,ts:serverTimestamp()
+    });
+    note.textContent="✅ Pontuação salva no ranking global!";
+    document.getElementById('saveBtn').disabled=true;
+    loadRanking();
+  }catch(e){console.warn(e);note.textContent="⚠️ Erro ao salvar. Tente novamente mais tarde.";}
+};
+
+/* ---------- START ---------- */
+setLevel("basico");
+</script>
+</body>
+</html>
