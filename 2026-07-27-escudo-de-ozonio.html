@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🛰️ Escudo de Ozônio — Missão na Estratosfera</title>
+<style>
+:root{
+  --bg1:#0c1636; --bg2:#123a63; --panel:rgba(255,255,255,0.07);
+  --panel2:rgba(255,255,255,0.12); --accent:#39d9c8; --accent2:#7c8cff;
+  --ok:#34d399; --bad:#f87171; --gold:#ffd166; --txt:#eaf2ff; --muted:#a9bcd8;
+  --line:rgba(255,255,255,0.16);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:system-ui,"Segoe UI",Roboto,sans-serif;color:var(--txt);
+  min-height:100vh;background:linear-gradient(160deg,var(--bg1) 0%,var(--bg2) 100%);
+  background-attachment:fixed;padding:16px;line-height:1.5;
+}
+.wrap{width:min(860px,95vw);margin:0 auto}
+header{text-align:center;padding:14px 0 6px}
+h1{font-size:clamp(1.6rem,5vw,2.6rem);letter-spacing:.5px;
+  text-shadow:0 2px 18px rgba(57,217,200,.35)}
+.sub{color:var(--muted);font-size:clamp(.85rem,2.6vw,1rem);margin-top:4px}
+.levels{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0}
+.lvl{
+  border:1px solid var(--line);background:var(--panel);color:var(--txt);
+  padding:9px 16px;border-radius:999px;font-size:.92rem;font-weight:600;
+  cursor:pointer;transition:all .25s;
+}
+.lvl:hover{transform:translateY(-2px);border-color:var(--accent)}
+.lvl.active{background:var(--accent);color:#062024;border-color:var(--accent);
+  box-shadow:0 6px 20px rgba(57,217,200,.4)}
+.hud{
+  display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:6px 0 14px;
+}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:7px 13px;font-size:.9rem;font-weight:600}
+.chip b{color:var(--accent)}
+.howto{background:var(--panel);border:1px dashed var(--line);border-radius:12px;
+  padding:10px 14px;font-size:.9rem;color:var(--muted);text-align:center;margin-bottom:14px}
+.healthbox{margin-bottom:16px}
+.healthlabel{display:flex;justify-content:space-between;font-size:.85rem;
+  color:var(--muted);margin-bottom:5px;font-weight:600}
+.healthbar{height:18px;border-radius:999px;background:rgba(0,0,0,.28);
+  overflow:hidden;border:1px solid var(--line)}
+.healthfill{height:100%;width:50%;border-radius:999px;
+  background:linear-gradient(90deg,var(--bad),var(--gold),var(--ok));
+  transition:width .5s ease}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;
+  padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.28)}
+.progress{height:8px;border-radius:999px;background:rgba(0,0,0,.28);
+  overflow:hidden;margin-bottom:16px}
+.progressfill{height:100%;width:0;background:var(--accent2);transition:width .4s}
+.scene-emoji{font-size:2.1rem;text-align:center}
+.situation{font-size:clamp(1.05rem,3.2vw,1.3rem);font-weight:600;
+  text-align:center;margin:8px 0 18px}
+.opts{display:flex;flex-direction:column;gap:11px}
+.opt{
+  text-align:left;background:var(--panel2);border:1px solid var(--line);
+  color:var(--txt);padding:14px 16px;border-radius:13px;font-size:1rem;
+  font-weight:600;cursor:pointer;transition:all .2s;
+}
+.opt:hover:not(:disabled){transform:translateY(-2px);border-color:var(--accent)}
+.opt:disabled{cursor:default}
+.opt.correct{background:rgba(52,211,153,.22);border-color:var(--ok);
+  animation:pop .4s}
+.opt.wrong{background:rgba(248,113,113,.20);border-color:var(--bad);
+  animation:shake .4s}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.04)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}
+  75%{transform:translateX(6px)}}
+.feedback{margin-top:16px;padding:14px 16px;border-radius:13px;font-size:.96rem;
+  border:1px solid var(--line);display:none}
+.feedback.show{display:block;animation:pop .35s}
+.feedback.good{background:rgba(52,211,153,.14);border-color:var(--ok)}
+.feedback.poor{background:rgba(248,113,113,.14);border-color:var(--bad)}
+.feedback b{color:var(--accent)}
+.nextbtn{margin-top:16px;width:100%;padding:14px;border:none;border-radius:13px;
+  background:var(--accent);color:#062024;font-size:1.05rem;font-weight:700;
+  cursor:pointer;transition:all .2s;display:none}
+.nextbtn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(57,217,200,.4)}
+.nextbtn.show{display:block}
+.final{text-align:center;display:none}
+.final.show{display:block;animation:pop .5s}
+.final h2{font-size:clamp(1.5rem,5vw,2.2rem);margin-bottom:6px}
+.final .verdict{font-size:1.05rem;color:var(--muted);margin-bottom:14px}
+.summary{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:18px}
+.scard{background:var(--panel2);border:1px solid var(--line);border-radius:14px;
+  padding:14px 18px;min-width:120px}
+.scard .n{font-size:1.8rem;font-weight:800;color:var(--accent)}
+.scard .l{font-size:.82rem;color:var(--muted)}
+.namebox{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px}
+.namebox input{padding:12px 14px;border-radius:12px;border:1px solid var(--line);
+  background:rgba(0,0,0,.25);color:var(--txt);font-size:1rem;width:min(240px,60vw)}
+.savebtn{padding:12px 20px;border:none;border-radius:12px;background:var(--ok);
+  color:#04241a;font-weight:700;cursor:pointer;transition:all .2s}
+.savebtn:hover{transform:translateY(-2px)}
+.savebtn:disabled{opacity:.5;cursor:default;transform:none}
+.replay{margin-top:6px;background:none;border:1px solid var(--line);color:var(--muted);
+  padding:10px 18px;border-radius:12px;cursor:pointer;font-weight:600}
+.replay:hover{border-color:var(--accent);color:var(--txt)}
+.rank{margin-top:20px;background:var(--panel);border:1px solid var(--line);
+  border-radius:18px;padding:16px}
+.rank h3{font-size:1.05rem;margin-bottom:4px}
+.rank .rlvl{font-size:.82rem;color:var(--muted);margin-bottom:10px}
+.rank ol{list-style:none;counter-reset:r}
+.rank li{counter-increment:r;display:flex;align-items:center;gap:10px;
+  padding:8px 6px;border-bottom:1px solid var(--line);font-size:.92rem}
+.rank li:before{content:counter(r);width:24px;height:24px;flex:none;
+  display:grid;place-items:center;background:var(--panel2);border-radius:50%;
+  font-size:.8rem;font-weight:700;color:var(--accent)}
+.rank li .nm{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank li .sc{color:var(--gold);font-weight:700}
+.rank li .tm{color:var(--muted);font-size:.8rem}
+footer{text-align:center;margin:26px 0 8px;color:var(--muted);font-size:.86rem}
+footer .made{color:var(--gold);font-weight:700;font-size:.98rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>🛰️ Escudo de Ozônio ☀️</h1>
+  <div class="sub">Missão na estratosfera — cada decisão sua muda a saúde da camada de ozônio</div>
+</header>
+
+<div class="levels" id="levels">
+  <button class="lvl active" data-lvl="basico">Básico</button>
+  <button class="lvl" data-lvl="intermediario">Intermediário</button>
+  <button class="lvl" data-lvl="dificil">Difícil</button>
+  <button class="lvl" data-lvl="carbonauta">🛰️ Carbonauta</button>
+</div>
+
+<div class="hud" id="hud">
+  <div class="chip">Tempo: <b id="hTime">0s</b></div>
+  <div class="chip">Decisão: <b id="hStep">1/8</b></div>
+  <div class="chip">Boas escolhas: <b id="hGood">0</b></div>
+  <div class="chip">Erros: <b id="hBad">0</b></div>
+  <div class="chip">Saúde: <b id="hHealth">50</b></div>
+</div>
+
+<div class="howto">Como jogar: leia a situação e escolha a ação que mais protege a camada de ozônio. Boas decisões elevam a <b>Saúde do Ecossistema</b>; escolhas ruins a derrubam. Pontuação = saúde final (maior é melhor); o tempo é desempate.</div>
+
+<div class="healthbox">
+  <div class="healthlabel"><span>Saúde do Ecossistema</span><span id="healthPct">50%</span></div>
+  <div class="healthbar"><div class="healthfill" id="healthFill"></div></div>
+</div>
+
+<div class="card" id="playArea">
+  <div class="progress"><div class="progressfill" id="progressFill"></div></div>
+  <div class="scene-emoji" id="sceneEmoji">🌍</div>
+  <div class="situation" id="situation">Carregando...</div>
+  <div class="opts" id="opts"></div>
+  <div class="feedback" id="feedback"></div>
+  <button class="nextbtn" id="nextbtn">Próxima decisão →</button>
+
+  <div class="final" id="final">
+    <h2 id="finalTitle">🎉 Missão concluída!</h2>
+    <div class="verdict" id="finalVerdict"></div>
+    <div class="summary">
+      <div class="scard"><div class="n" id="fHealth">0</div><div class="l">Saúde final</div></div>
+      <div class="scard"><div class="n" id="fGood">0</div><div class="l">Boas escolhas</div></div>
+      <div class="scard"><div class="n" id="fTime">0s</div><div class="l">Tempo</div></div>
+    </div>
+    <div class="namebox">
+      <input id="playerName" maxlength="20" placeholder="Seu nome (até 20 letras)">
+      <button class="savebtn" id="saveBtn">Salvar no ranking</button>
+    </div>
+    <button class="replay" id="replayBtn">Jogar de novo ↺</button>
+  </div>
+</div>
+
+<div class="rank">
+  <h3>🏆 Ranking Global</h3>
+  <div class="rlvl" id="rankLevel">Nível: Básico</div>
+  <ol id="rankList"><li class="note" style="border:none">Carregando ranking...</li></ol>
+</div>
+
+<footer>
+  <div class="made">— Idealizado por Ernandes Sobreira —</div>
+  <div>Tema: Camada de ozônio · Gênero: Cenário de decisões ramificado · app ambiental do dia (2026-07-27)</div>
+</footer>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-07-27-escudo-de-ozonio";
+
+const LEVELS = {
+  basico: {
+    label: "Básico",
+    scenes: [
+      {e:"❄️", s:"Vai comprar uma geladeira nova para casa. Qual escolher?", o:[
+        {t:"Uma sem gás CFC", d:6, fb:"Geladeiras antigas usam CFC, que sobe à estratosfera e destrói o ozônio."},
+        {t:"A antiga mais barata", d:-6, fb:"Modelos velhos vazam CFC, o principal vilão histórico da camada de ozônio."},
+        {t:"A maior da loja", d:-2, fb:"O tamanho não importa: o que agride o ozônio é o gás refrigerante usado."}
+      ]},
+      {e:"🧴", s:"O sol está muito forte hoje. Como se proteger dos raios UV?", o:[
+        {t:"Passar protetor solar", d:6, fb:"A camada de ozônio filtra parte do UV, mas o protetor completa a defesa da pele."},
+        {t:"Ficar horas exposto", d:-6, fb:"Muito UV causa queimaduras e câncer de pele; o ozônio nos protege dele."},
+        {t:"Olhar direto o sol", d:-6, fb:"Olhar o sol machuca os olhos; o UV também causa catarata."}
+      ]},
+      {e:"📣", s:"Sua escola fará uma campanha ambiental. Qual tema propor?", o:[
+        {t:"Proteger a camada de ozônio", d:6, fb:"Informar colegas sobre os gases CFC ajuda a manter o hábito de evitá-los."},
+        {t:"Ignorar o assunto todo", d:-6, fb:"Ignorar o problema atrasa a recuperação da camada de ozônio."},
+        {t:"Falar mal da ciência", d:-6, fb:"A ciência foi quem descobriu o buraco e apontou a solução."}
+      ]},
+      {e:"🥫", s:"Você achou um spray velho na garagem. O que fazer com ele?", o:[
+        {t:"Descartar no local certo", d:6, fb:"Sprays antigos com CFC devem ir ao descarte adequado, não ao lixo comum."},
+        {t:"Furar a lata fora", d:-6, fb:"Furar libera todo o gás CFC guardado direto na atmosfera."},
+        {t:"Usar até esvaziar", d:-4, fb:"Esvaziar na atmosfera espalha o gás que ataca o ozônio."}
+      ]},
+      {e:"🧊", s:"O maior buraco na camada de ozônio se forma sobre qual região?", o:[
+        {t:"Bem sobre a Antártida", d:6, fb:"O maior buraco surge sobre a Antártida na primavera do Hemisfério Sul."},
+        {t:"Sobre o deserto quente", d:-6, fb:"Não é o calor: o buraco depende do frio extremo e da química polar."},
+        {t:"Sobre as grandes cidades", d:-4, fb:"As cidades poluem o ar, mas o buraco de ozônio é um fenômeno polar."}
+      ]},
+      {e:"📜", s:"Um acordo propõe banir gases que destroem o ozônio. Você apoia?", o:[
+        {t:"Sim, apoio o acordo", d:6, fb:"O Protocolo de Montreal (1987) baniu os CFCs; é o acordo ambiental mais bem-sucedido."},
+        {t:"Não, deixa como está", d:-6, fb:"Sem o acordo, o buraco de ozônio seria muito pior hoje."},
+        {t:"Tanto faz pra mim", d:-4, fb:"A indiferença atrasa a recuperação que já está em curso."}
+      ]},
+      {e:"♻️", s:"Qual atitude do dia a dia ajuda a camada de ozônio?", o:[
+        {t:"Evitar produtos com CFC", d:6, fb:"Escolher aerossóis e refrigeração sem CFC/HCFC protege a camada."},
+        {t:"Queimar lixo no quintal", d:-6, fb:"Queimar lixo solta poluentes e não ajuda em nada o ozônio."},
+        {t:"Deixar o carro ligado", d:-4, fb:"Motor à toa gasta combustível e polui o ar sem necessidade."}
+      ]},
+      {e:"🌤️", s:"A camada de ozônio está começando a se recuperar. Por quê?", o:[
+        {t:"Paramos de usar CFC", d:6, fb:"Sem os CFCs, a camada deve voltar aos níveis de 1980 entre ~2040 e 2066."},
+        {t:"O sol esfriou sozinho", d:-6, fb:"O Sol não mudou; foi banir os CFCs que fez a diferença."},
+        {t:"A Terra ficou maior", d:-6, fb:"O tamanho da Terra não mudou; a recuperação vem do acordo global."}
+      ]}
+    ]
+  },
+  intermediario: {
+    label: "Intermediário",
+    scenes: [
+      {e:"🏭", s:"Uma fábrica ainda emite CFC-12. Que política você propõe?", o:[
+        {t:"Adotar gás sem cloro", d:6, fb:"HFCs e outras alternativas sem cloro não atacam o ozônio (embora aqueçam o clima)."},
+        {t:"Manter a emissão atual", d:-6, fb:"Cada molécula de CFC libera cloro que destrói milhares de moléculas de ozônio."},
+        {t:"Aumentar um pouco agora", d:-6, fb:"Elevar o CFC contraria o Protocolo de Montreal e agrava o buraco."}
+      ]},
+      {e:"📏", s:"Qual unidade mede a espessura da camada de ozônio?", o:[
+        {t:"A unidade Dobson", d:6, fb:"A coluna de ozônio é medida em unidades Dobson (UD); ~300 UD é o valor típico."},
+        {t:"A escala Richter", d:-6, fb:"Richter mede a força de terremotos, não o ozônio."},
+        {t:"O grau Celsius", d:-6, fb:"Celsius mede temperatura, não a quantidade de ozônio."}
+      ]},
+      {e:"🌅", s:"Por que o buraco aparece justamente na primavera antártica?", o:[
+        {t:"Luz volta sobre nuvens polares", d:6, fb:"A luz que retorna ativa o cloro acumulado nas nuvens estratosféricas polares."},
+        {t:"O verão derrete o gelo", d:-6, fb:"Não é o degelo: é a química do cloro ativada pela luz na primavera."},
+        {t:"O frio soma com poluição", d:-4, fb:"O frio importa, mas o gatilho é a luz solar sobre as nuvens polares."}
+      ]},
+      {e:"🔁", s:"Depois dos CFCs, a indústria adotou os HCFCs. E agora?", o:[
+        {t:"Eliminar também os HCFCs", d:6, fb:"HCFCs ainda têm cloro; o Protocolo prevê eliminá-los gradualmente até ~2030-2040."},
+        {t:"Usar HCFC para sempre", d:-6, fb:"HCFCs agridem menos, mas ainda destroem ozônio e serão banidos."},
+        {t:"Voltar a usar CFC", d:-6, fb:"Retomar o CFC seria um enorme retrocesso ambiental."}
+      ]},
+      {e:"🌡️", s:"A Emenda de Kigali (2016) tem como alvo quais gases?", o:[
+        {t:"Os HFCs do clima", d:6, fb:"HFCs não atacam o ozônio, mas são potentes gases-estufa; Kigali reduz seu uso."},
+        {t:"Apenas o gás carbônico", d:-6, fb:"Kigali trata dos HFCs, não do CO2."},
+        {t:"Somente o gás metano", d:-6, fb:"Kigali foca nos HFCs, não no metano."}
+      ]},
+      {e:"🩺", s:"Como o buraco de ozônio afeta a saúde humana?", o:[
+        {t:"Mais câncer de pele", d:6, fb:"Mais UV-B aumenta câncer de pele, catarata e ainda afeta a imunidade."},
+        {t:"Melhora a visão noturna", d:-6, fb:"O UV não melhora a visão; ao contrário, causa catarata."},
+        {t:"Ossos ficam mais fortes", d:-6, fb:"Excesso de UV é nocivo e não fortalece os ossos."}
+      ]},
+      {e:"🌊", s:"O UV extra do buraco afeta os oceanos de que forma?", o:[
+        {t:"Prejudica o fitoplâncton marinho", d:6, fb:"UV-B danifica o fitoplâncton, base da cadeia alimentar e grande fixador de CO2."},
+        {t:"Faz os peixes crescerem", d:-6, fb:"UV em excesso prejudica; não faz os peixes crescerem."},
+        {t:"Deixa a água mais doce", d:-6, fb:"O UV não muda a salinidade da água do mar."}
+      ]},
+      {e:"🛰️", s:"O buraco foi detectado por dados. Que fonte priorizar?", o:[
+        {t:"Monitoramento científico contínuo", d:6, fb:"Satélites e estações Dobson dão a série histórica que guia as decisões."},
+        {t:"Boatos de redes sociais", d:-6, fb:"Boatos não substituem dados medidos por satélite."},
+        {t:"Palpites sem qualquer medição", d:-6, fb:"Sem medição não há como acompanhar o ozônio."}
+      ]},
+      {e:"✅", s:"O Protocolo de Montreal é considerado um sucesso porque...", o:[
+        {t:"Eliminou 99% dos CFCs", d:6, fb:"Já eliminou mais de 99% das substâncias controladas que destroem o ozônio."},
+        {t:"Nunca foi mesmo aplicado", d:-6, fb:"Foi ratificado por todos os países e é amplamente cumprido."},
+        {t:"Só vale no papel hoje", d:-6, fb:"Ele funciona na prática: a camada já se recupera."}
+      ]},
+      {e:"🌡️", s:"Recuperar a camada também ajuda o clima. Por quê?", o:[
+        {t:"CFCs também aquecem o planeta", d:6, fb:"CFCs são gases-estufa potentes; bani-los evitou cerca de 0,5°C de aquecimento."},
+        {t:"O ozônio esfria o núcleo", d:-6, fb:"O ozônio está na estratosfera, sem ligação com o núcleo da Terra."},
+        {t:"Frio polar resfria tudo", d:-6, fb:"O benefício vem de eliminar gases-estufa, não do frio polar."}
+      ]}
+    ]
+  },
+  dificil: {
+    label: "Difícil",
+    scenes: [
+      {e:"⚗️", s:"Qual ciclo catalítico domina a perda de ozônio na baixa estratosfera polar?", o:[
+        {t:"O dímero de ClO (Cl2O2)", d:6, fb:"O ciclo do dímero de ClO e o ciclo misto Cl/Br dominam a destruição polar."},
+        {t:"O ciclo puro do oxigênio", d:-6, fb:"O ciclo de Chapman (só O/O2/O3) não explica a perda rápida polar."},
+        {t:"A fotólise direta da água", d:-6, fb:"A fotólise da água não é o mecanismo dominante do buraco."}
+      ]},
+      {e:"☁️", s:"O que são as PSCs, cruciais para o buraco antártico?", o:[
+        {t:"Nuvens polares estratosféricas altas", d:6, fb:"PSCs (Polar Stratospheric Clouds) hospedam as reações que ativam o cloro."},
+        {t:"Poeira vulcânica tropical", d:-6, fb:"PSCs são nuvens polares de frio extremo, não poeira tropical."},
+        {t:"Correntes oceânicas frias", d:-6, fb:"PSCs estão na estratosfera, não no oceano."}
+      ]},
+      {e:"🔄", s:"Por que uma molécula de cloro destrói milhares de ozônios?", o:[
+        {t:"Age como catalisador regenerado", d:6, fb:"O Cl é regenerado no ciclo catalítico, destruindo O3 muitas vezes antes de ser sequestrado."},
+        {t:"Ela é consumida na reação", d:-6, fb:"O cloro não se gasta: é reciclado, por isso o efeito é enorme."},
+        {t:"Ela absorve todo o UV", d:-6, fb:"O cloro não age absorvendo UV, e sim catalisando reações."}
+      ]},
+      {e:"🧪", s:"Qual reservatório inativa temporariamente o cloro na estratosfera?", o:[
+        {t:"O ClONO2 com HCl", d:6, fb:"Nitrato de cloro (ClONO2) e ácido clorídrico (HCl) são reservatórios que guardam o cloro."},
+        {t:"O gás O2 comum", d:-6, fb:"O O2 não sequestra cloro; os reservatórios são ClONO2 e HCl."},
+        {t:"O vapor de mercúrio", d:-6, fb:"Mercúrio não é reservatório de cloro estratosférico."}
+      ]},
+      {e:"🧬", s:"O bromo importa mesmo sendo escasso. Por quê?", o:[
+        {t:"Destrói ozônio com alta eficiência", d:6, fb:"Átomo por átomo, o Br é ~60x mais eficiente que o Cl em destruir ozônio."},
+        {t:"É totalmente inofensivo ao ozônio", d:-6, fb:"O bromo é altamente destrutivo, apesar de menos abundante."},
+        {t:"Só existe no polo norte", d:-6, fb:"O bromo atua nos dois hemisférios, não só no norte."}
+      ]},
+      {e:"📐", s:"Qual afirmação sobre a unidade Dobson é correta?", o:[
+        {t:"Mede a coluna de ozônio", d:6, fb:"1 UD = camada de 0,01 mm de O3 puro na CNTP; ~220 UD já define condição de buraco."},
+        {t:"Mede a temperatura do ar", d:-6, fb:"UD mede quantidade de ozônio, não temperatura."},
+        {t:"Mede a força do vento", d:-6, fb:"A UD nada tem a ver com vento."}
+      ]},
+      {e:"📜", s:"Sobre o Protocolo de Montreal, qual dado é preciso?", o:[
+        {t:"Assinado em 1987, bem-sucedido", d:6, fb:"Firmado em 1987, eliminou >99% das SDOs; é tido como o tratado ambiental mais eficaz."},
+        {t:"Assinado em 2015 sem adesão", d:-6, fb:"É de 1987 e tem ratificação universal."},
+        {t:"Assinado, porém nunca cumprido", d:-6, fb:"É cumprido e monitorado; por isso deu certo."}
+      ]},
+      {e:"🌀", s:"O 'vórtice polar' contribui para o buraco como?", o:[
+        {t:"Isola e resfria o ar", d:6, fb:"O vórtice isola a massa de ar, mantém frio extremo e concentra a química destrutiva."},
+        {t:"Aquece e mistura tudo", d:-6, fb:"Ele isola e resfria; não aquece nem mistura com o ar externo."},
+        {t:"Traz ozônio dos trópicos", d:-6, fb:"Ao isolar, ele impede a chegada de ozônio dos trópicos."}
+      ]},
+      {e:"📅", s:"Qual é a previsão de recuperação da camada de ozônio?", o:[
+        {t:"Voltar ao normal por 2066", d:6, fb:"WMO 2022: níveis de 1980 ~2040 (global), ~2045 (Ártico), ~2066 (Antártida)."},
+        {t:"Já recuperada em 2025 total", d:-6, fb:"2025 ainda teve buraco; a plena recuperação leva décadas."},
+        {t:"Nunca vai se recuperar", d:-6, fb:"A tendência de recuperação já é observada e projetada."}
+      ]},
+      {e:"🗺️", s:"Além do polo, onde a perda de ozônio preocupa?", o:[
+        {t:"Afinamento em médias latitudes", d:6, fb:"Há afinamento em médias latitudes, com impacto de UV sobre áreas povoadas."},
+        {t:"No fundo dos oceanos", d:-6, fb:"O ozônio relevante está na estratosfera, não no fundo do mar."},
+        {t:"No centro da Terra", d:-6, fb:"Não há ozônio no interior do planeta."}
+      ]},
+      {e:"🌍", s:"Qual gás substituiu os CFCs e hoje se combate no clima?", o:[
+        {t:"Os HFCs de Kigali", d:6, fb:"HFCs substituíram CFC/HCFC sem atacar o ozônio, mas com alto potencial de aquecimento (GWP)."},
+        {t:"O nitrogênio do ar", d:-6, fb:"O N2 é inerte e não é alvo de Kigali."},
+        {t:"O oxigênio que respiramos", d:-6, fb:"O O2 não é um gás fluorado controlado."}
+      ]},
+      {e:"📉", s:"O buraco recorde em área ocorreu por volta de qual época?", o:[
+        {t:"Por volta dos anos 2000", d:6, fb:"Os maiores buracos (área ~29 milhões de km²) ocorreram por volta de 2000-2006."},
+        {t:"Ainda na década de 1950", d:-6, fb:"Nos anos 1950 o CFC mal era usado; o buraco veio depois."},
+        {t:"No começo do século XIX", d:-6, fb:"No século XIX não existia CFC industrial."}
+      ]}
+    ]
+  },
+  carbonauta: {
+    label: "🛰️ Carbonauta",
+    scenes: [
+      {e:"🛰️", s:"Na destruição polar, qual par de ciclos catalíticos responde pela maior fração da perda?", o:[
+        {t:"ClO-ClO (dímero) e ClO-BrO acoplados", d:6, fb:"O ciclo do dímero ClOOCl e o ciclo misto ClO/BrO respondem pela maior parte da perda na baixa estratosfera polar."},
+        {t:"HOx e NOx em fase gasosa pura", d:-6, fb:"HOx/NOx importam em outras altitudes, mas não dominam o buraco polar."},
+        {t:"Chapman puro com Ox apenas", d:-6, fb:"O ciclo de Chapman superestima o O3 e não explica a perda catalítica."}
+      ]},
+      {e:"🧊", s:"Qual reação heterogênea nas PSCs converte reservatórios em cloro ativo?", o:[
+        {t:"ClONO2 + HCl em superfície gelada", d:6, fb:"Nas PSCs, ClONO2 + HCl → Cl2 + HNO3; a fotólise de Cl2 libera cloro reativo na primavera."},
+        {t:"Oxidação direta do N2 gasoso", d:-6, fb:"O N2 é inerte; não gera cloro ativo."},
+        {t:"Redução do CO2 pela luz UV", d:-6, fb:"O CO2 não é fonte de cloro reativo estratosférico."}
+      ]},
+      {e:"❄️", s:"A desnitrificação do vórtice antártico intensifica a perda porque...", o:[
+        {t:"Remove NOx que trava ClO", d:6, fb:"A queda de HNO3 nas PSCs remove NOx, impede formar ClONO2 e prolonga o ClO ativo."},
+        {t:"Adiciona ozônio novo ao polo", d:-6, fb:"A desnitrificação não cria ozônio; ela agrava a perda."},
+        {t:"Aquece a estratosfera polar inferior", d:-6, fb:"Ela não aquece; associa-se ao frio extremo do vórtice."}
+      ]},
+      {e:"⚛️", s:"Sobre a eficiência relativa Br vs Cl, qual valor é aceito?", o:[
+        {t:"Bromo é 60x mais eficaz", d:6, fb:"A eficiência do Br por átomo é ~45-65x a do Cl, por reciclar sem formar reservatórios estáveis."},
+        {t:"Bromo é 10x menos eficaz", d:-6, fb:"O Br é muito mais eficaz que o Cl, não menos."},
+        {t:"Bromo é quase totalmente inerte", d:-6, fb:"O Br tem forte efeito catalítico sobre o O3."}
+      ]},
+      {e:"🔢", s:"O ODP (Ozone Depletion Potential) é definido em relação a qual referência?", o:[
+        {t:"Ao CFC-11 de ODP 1", d:6, fb:"O ODP é normalizado pelo CFC-11 (=1); ex.: CFC-12 ~1, HCFC-22 ~0,05, halon-1301 ~10."},
+        {t:"Ao dióxido de carbono padrão", d:-6, fb:"O CO2 é referência do GWP, não do ODP."},
+        {t:"Ao metano de origem agrícola", d:-6, fb:"O metano não é a referência do ODP."}
+      ]},
+      {e:"🌡️", s:"Qual métrica separa forçamento climático de destruição de ozônio?", o:[
+        {t:"GWP para clima, ODP ozônio", d:6, fb:"GWP quantifica aquecimento (ref. CO2); ODP quantifica destruição de ozônio (ref. CFC-11)."},
+        {t:"Ambos medem só o ozônio", d:-6, fb:"O GWP mede clima, não ozônio; são métricas distintas."},
+        {t:"Ambos medem só o clima", d:-6, fb:"O ODP mede ozônio, não clima; não são a mesma coisa."}
+      ]},
+      {e:"🔥", s:"A Emenda de Kigali, se plenamente cumprida, evita quanto de aquecimento até 2100?", o:[
+        {t:"Por volta de 0,5 grau", d:6, fb:"Kigali pode evitar até ~0,5 °C até 2100 ao cortar >80% dos HFCs em 30 anos."},
+        {t:"Por volta de 6 graus", d:-6, fb:"O valor evitado é ~0,5 °C, não vários graus."},
+        {t:"Praticamente nenhum grau é evitado", d:-6, fb:"O impacto é significativo, não nulo."}
+      ]},
+      {e:"💨", s:"Um efeito colateral climático da recuperação do ozônio no Hemisfério Sul é...", o:[
+        {t:"Reversão do deslocamento do jato", d:6, fb:"A perda de O3 empurrou o jato subtropical ao sul; recuperar tende a reverter parte desse deslocamento."},
+        {t:"Congelamento total dos oceanos hoje", d:-6, fb:"Não há congelamento global associado à recuperação."},
+        {t:"Fim de todo El Niño", d:-6, fb:"A recuperação não encerra o fenômeno El Niño."}
+      ]},
+      {e:"📊", s:"Qual observação sustenta atribuir a recuperação ao Protocolo?", o:[
+        {t:"Queda do cloro estratosférico medido", d:6, fb:"O EESC (cloro+bromo equivalente efetivo) caiu do pico de ~2000, coerente com a cura observada."},
+        {t:"Aumento contínuo dos CFCs atmosféricos", d:-6, fb:"Os CFCs estão em queda, não em alta."},
+        {t:"Buraco estável desde 1985 sempre", d:-6, fb:"O buraco variou e agora tende a encolher; não ficou estável."}
+      ]},
+      {e:"🕵️", s:"Sobre as emissões inesperadas de CFC-11 detectadas por volta de 2018-2019...", o:[
+        {t:"Produção ilegal no leste asiático", d:6, fb:"Estudos atribuíram parte do repique de CFC-11 a produção ilegal no leste da Ásia, depois reduzida."},
+        {t:"Fontes naturais de vulcões oceânicos", d:-6, fb:"O CFC-11 é sintético; não tem fonte vulcânica natural."},
+        {t:"Vinham do gelo antártico derretido", d:-6, fb:"O degelo não emite CFC-11 em escala relevante."}
+      ]},
+      {e:"🧊", s:"Por que os HFCs, embora 'ozone-safe', entraram na mira regulatória?", o:[
+        {t:"Alto GWP como gases-estufa sintéticos", d:6, fb:"Muitos HFCs têm GWP de centenas a milhares; por isso Kigali reduz seu uso apesar do ODP ~0."},
+        {t:"Destroem ozônio mais que CFCs", d:-6, fb:"HFCs têm ODP ~0; a questão é o clima, não o ozônio."},
+        {t:"São tóxicos como o cianeto", d:-6, fb:"O problema regulatório é climático, não a toxicidade aguda."}
+      ]},
+      {e:"⚠️", s:"Qual proposta é geoengenharia arriscada, não substituta do Protocolo?", o:[
+        {t:"Injetar sulfato na estratosfera alta", d:6, fb:"A injeção de sulfato resfriaria, mas ativa cloro e pode agravar a perda de ozônio: não substitui Montreal."},
+        {t:"Eliminar CFCs por acordo global", d:-6, fb:"Essa é justamente a via comprovada do Protocolo, não geoengenharia."},
+        {t:"Trocar sprays por versões limpas", d:-6, fb:"Trocar propelentes é mitigação padrão, não geoengenharia arriscada."}
+      ]},
+      {e:"🔭", s:"Interpretando o buraco de 2025 (pequeno e curto), a leitura correta é...", o:[
+        {t:"Coerente com a recuperação gradual", d:6, fb:"WMO: o buraco pequeno de 2025 é consistente com a tendência de recuperação, apesar da variabilidade anual."},
+        {t:"Prova do fim do ozônio", d:-6, fb:"Um buraco menor indica melhora, não o desaparecimento do ozônio."},
+        {t:"Erro total dos satélites atuais", d:-6, fb:"Os dados de satélite são robustos e concordantes."}
+      ]}
+    ]
+  }
+};
+
+let level = "basico";
+let scenes = [];
+let idx = 0;
+let health = 50;
+let good = 0, bad = 0;
+let startTime = 0, elapsed = 0, timer = null;
+let answered = false;
+
+const $ = id => document.getElementById(id);
+
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    const tmp=a[i]; a[i]=a[j]; a[j]=tmp;
+  }
+  return a;
+}
+
+function startTimer(){
+  startTime = Date.now();
+  clearInterval(timer);
+  timer = setInterval(()=>{
+    elapsed = Math.floor((Date.now()-startTime)/1000);
+    $("hTime").textContent = elapsed+"s";
+  },250);
+}
+
+function setLevel(lv){
+  level = lv;
+  document.querySelectorAll(".lvl").forEach(b=>b.classList.toggle("active",b.dataset.lvl===lv));
+  $("rankLevel").textContent = "Nível: "+LEVELS[lv].label;
+  resetGame();
+  loadRanking();
+}
+
+function resetGame(){
+  scenes = LEVELS[level].scenes.map(s=>({e:s.e,s:s.s,o:s.o}));
+  idx = 0; health = 50; good = 0; bad = 0; elapsed = 0; answered = false;
+  $("final").classList.remove("show");
+  $("opts").style.display = "flex";
+  $("sceneEmoji").style.display = "block";
+  $("situation").style.display = "block";
+  $("progressFill").parentElement.style.display = "block";
+  updateHUD();
+  startTimer();
+  renderScene();
+}
+
+function updateHUD(){
+  $("hStep").textContent = (Math.min(idx+1,scenes.length))+"/"+scenes.length;
+  $("hGood").textContent = good;
+  $("hBad").textContent = bad;
+  $("hHealth").textContent = Math.round(health);
+  const pct = Math.max(0,Math.min(100,health));
+  $("healthFill").style.width = pct+"%";
+  $("healthPct").textContent = Math.round(pct)+"%";
+}
+
+function renderScene(){
+  answered = false;
+  const sc = scenes[idx];
+  $("sceneEmoji").textContent = sc.e;
+  $("situation").textContent = sc.s;
+  $("progressFill").style.width = ((idx)/scenes.length*100)+"%";
+  $("feedback").className = "feedback";
+  $("nextbtn").className = "nextbtn";
+  const bestD = Math.max.apply(null, sc.o.map(o=>o.d));
+  const opts = shuffle(sc.o.map(o=>({t:o.t,d:o.d,fb:o.fb})));
+  const box = $("opts");
+  box.innerHTML = "";
+  opts.forEach(o=>{
+    const btn = document.createElement("button");
+    btn.className = "opt";
+    btn.textContent = o.t;
+    btn.onclick = function(){ choose(btn,o,bestD,box); };
+    box.appendChild(btn);
+  });
+}
+
+function choose(btn,o,bestD,box){
+  if(answered) return;
+  answered = true;
+  const isBest = o.d === bestD;
+  health = Math.max(0,Math.min(100,health + o.d));
+  if(isBest) good++; else bad++;
+  Array.prototype.forEach.call(box.children,function(b){
+    b.disabled = true;
+    if(b.textContent === o.t) b.classList.add(isBest?"correct":"wrong");
+  });
+  const fb = $("feedback");
+  fb.className = "feedback show " + (isBest?"good":"poor");
+  fb.innerHTML = (isBest?"✅ <b>Boa escolha!</b> ":"⚠️ <b>Consequência ruim.</b> ") + o.fb;
+  updateHUD();
+  $("nextbtn").className = "nextbtn show";
+  $("nextbtn").textContent = (idx+1<scenes.length)?"Próxima decisão →":"Ver resultado final 🎉";
+}
+
+$("nextbtn").onclick = function(){
+  if(idx+1<scenes.length){ idx++; updateHUD(); renderScene(); }
+  else finish();
+};
+
+function finish(){
+  clearInterval(timer);
+  $("progressFill").style.width = "100%";
+  $("opts").style.display = "none";
+  $("feedback").className = "feedback";
+  $("nextbtn").className = "nextbtn";
+  $("sceneEmoji").style.display = "none";
+  $("situation").style.display = "none";
+  $("progressFill").parentElement.style.display = "none";
+  const h = Math.round(health);
+  let title, verdict;
+  if(h>=90){ title="🎉 Guardião Estratosférico!"; verdict="O escudo de ozônio está firme sobre o planeta. Missão exemplar!"; }
+  else if(h>=70){ title="🌤️ Bom trabalho!"; verdict="Suas decisões colocaram a camada de ozônio no rumo da recuperação."; }
+  else if(h>=50){ title="🌍 Resultado misto"; verdict="A camada resistiu, mas várias escolhas custaram caro. Dá para melhorar!"; }
+  else { title="🕳️ O buraco cresceu"; verdict="Decisões erradas enfraqueceram o escudo. Tente de novo com mais cuidado."; }
+  $("finalTitle").textContent = title;
+  $("finalVerdict").textContent = verdict;
+  $("fHealth").textContent = h;
+  $("fGood").textContent = good+"/"+scenes.length;
+  $("fTime").textContent = elapsed+"s";
+  $("saveBtn").disabled = false;
+  $("saveBtn").textContent = "Salvar no ranking";
+  $("final").classList.add("show");
+}
+
+$("replayBtn").onclick = resetGame;
+
+document.querySelectorAll(".lvl").forEach(function(b){
+  b.onclick = function(){ setLevel(b.dataset.lvl); };
+});
+
+let db=null, fx=null;
+async function initFirebase(){
+  if(db) return db;
+  try{
+    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    fx = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app = appMod.initializeApp(firebaseConfig);
+    db = fx.getFirestore(app);
+    return db;
+  }catch(e){ return null; }
+}
+
+function esc(s){
+  return String(s).replace(/[&<>"']/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+
+async function loadRanking(){
+  const list = $("rankList");
+  list.innerHTML = '<li class="note" style="border:none">Carregando ranking...</li>';
+  const cur = level;
+  const database = await initFirebase();
+  if(!database){
+    list.innerHTML = '<li class="note" style="border:none">⚠️ Ranking offline — o jogo continua normal. Conecte-se para ver as pontuações.</li>';
+    return;
+  }
+  try{
+    const {collection,query,orderBy,limit,getDocs} = fx;
+    const q = query(collection(database,"games",GAME_ID,"scores"), orderBy("score","desc"), limit(300));
+    const snap = await getDocs(q);
+    let rows = [];
+    snap.forEach(function(d){ const v=d.data(); if(v.level===cur) rows.push(v); });
+    rows.sort(function(a,b){ return (b.score-a.score) || (a.seconds-b.seconds); });
+    rows = rows.slice(0,10);
+    if(cur!==level) return;
+    if(!rows.length){
+      list.innerHTML = '<li class="note" style="border:none">Ainda sem pontuações neste nível. Seja o primeiro! 🚀</li>';
+      return;
+    }
+    list.innerHTML = "";
+    rows.forEach(function(r){
+      const li = document.createElement("li");
+      li.innerHTML = '<span class="nm">'+esc(r.name||"Anônimo")+'</span>'+
+        '<span class="sc">'+Math.round(r.score)+' pts</span>'+
+        '<span class="tm">'+(r.seconds||0)+'s</span>';
+      list.appendChild(li);
+    });
+  }catch(e){
+    list.innerHTML = '<li class="note" style="border:none">⚠️ Não foi possível carregar o ranking agora. O jogo segue normal.</li>';
+  }
+}
+
+$("saveBtn").onclick = async function(){
+  const name = ($("playerName").value||"").trim().slice(0,20) || "Anônimo";
+  const btn = $("saveBtn");
+  btn.disabled = true; btn.textContent = "Salvando...";
+  const database = await initFirebase();
+  if(!database){
+    btn.textContent = "Ranking offline";
+    return;
+  }
+  try{
+    const {collection,addDoc,serverTimestamp} = fx;
+    await addDoc(collection(database,"games",GAME_ID,"scores"),{
+      name:name, level:level, score:Math.round(health), seconds:elapsed, ts:serverTimestamp()
+    });
+    btn.textContent = "Salvo! ✅";
+    loadRanking();
+  }catch(e){
+    btn.textContent = "Erro ao salvar";
+    btn.disabled = false;
+  }
+};
+
+setLevel("basico");
+</script>
+</body>
+</html>
