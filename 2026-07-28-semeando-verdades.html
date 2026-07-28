@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌱 Semeando Verdades — Agricultura Sustentável</title>
+<style>
+  :root{
+    --bg1:#1b3b1f;
+    --bg2:#5a7d24;
+    --card:#ffffff;
+    --card2:#f3f8ec;
+    --ink:#20301a;
+    --muted:#5f6f54;
+    --accent:#7cbb2a;
+    --accent-d:#4e8a12;
+    --earth:#8a5a2b;
+    --true:#2e9e4b;
+    --false:#d64545;
+    --gold:#e7b12b;
+    --shadow:0 8px 26px rgba(20,40,15,.22);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+    background:linear-gradient(160deg,var(--bg1),var(--bg2));
+    background-attachment:fixed;
+    color:var(--ink);
+    min-height:100vh;
+    padding:18px 12px 40px;
+    display:flex;flex-direction:column;align-items:center;
+  }
+  .wrap{width:min(760px,96vw);display:flex;flex-direction:column;gap:14px}
+  header.top{text-align:center;color:#fff}
+  h1{font-size:clamp(1.7rem,5vw,2.7rem);letter-spacing:.5px;text-shadow:0 3px 12px rgba(0,0,0,.35);line-height:1.1}
+  .sub{margin-top:4px;font-size:clamp(.85rem,2.6vw,1rem);opacity:.92}
+  /* niveis */
+  .levels{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+  .lvl{
+    border:none;cursor:pointer;font-weight:700;font-size:clamp(.8rem,2.4vw,.98rem);
+    padding:10px 16px;border-radius:999px;background:rgba(255,255,255,.16);color:#fff;
+    backdrop-filter:blur(3px);transition:all .25s;border:2px solid rgba(255,255,255,.25);
+  }
+  .lvl:hover{transform:translateY(-2px);background:rgba(255,255,255,.28)}
+  .lvl.active{background:var(--accent);border-color:#fff;color:#173a10;box-shadow:0 6px 16px rgba(124,187,42,.5)}
+  /* card base */
+  .card{background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:18px}
+  /* HUD */
+  .hud{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+  .chip{
+    background:var(--card2);border-radius:12px;padding:8px 13px;font-weight:700;font-size:.9rem;
+    color:var(--ink);display:flex;align-items:center;gap:6px;box-shadow:inset 0 0 0 1px rgba(78,138,18,.15);
+  }
+  .chip b{color:var(--accent-d)}
+  .howto{font-size:.9rem;color:var(--muted);text-align:center;margin-top:4px}
+  /* progress */
+  .bar{height:12px;border-radius:8px;background:#e4ecd8;overflow:hidden;margin-top:6px}
+  .bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent-d));transition:width .35s}
+  /* pergunta */
+  .qbox{min-height:110px;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px 6px}
+  .qtext{font-size:clamp(1.1rem,3.6vw,1.5rem);font-weight:600;line-height:1.35}
+  .tags{display:flex;gap:8px;justify-content:center;margin-bottom:6px;flex-wrap:wrap}
+  .tag{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--accent-d);background:var(--card2);padding:4px 10px;border-radius:999px}
+  /* botoes VF */
+  .vf{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+  .vf button{
+    cursor:pointer;border:none;border-radius:16px;padding:20px 10px;font-size:clamp(1.1rem,4vw,1.5rem);font-weight:800;
+    color:#fff;transition:transform .18s,box-shadow .18s,filter .18s;box-shadow:0 6px 0 rgba(0,0,0,.15)
+  }
+  .vf .btrue{background:var(--true)}
+  .vf .bfalse{background:var(--false)}
+  .vf button:hover{transform:translateY(-2px);filter:brightness(1.06)}
+  .vf button:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.15)}
+  .vf button:disabled{opacity:.55;cursor:default;transform:none}
+  /* feedback */
+  .fb{margin-top:12px;border-radius:14px;padding:14px 15px;font-size:.96rem;line-height:1.4;display:none;border-left:6px solid var(--accent)}
+  .fb.show{display:block;animation:pop .35s}
+  .fb.ok{background:#e8f7ea;border-color:var(--true);color:#1c5c2c}
+  .fb.no{background:#fdeaea;border-color:var(--false);color:#8f2323}
+  .fb .verdict{font-weight:800;display:block;margin-bottom:3px}
+  .next{margin-top:12px;text-align:center}
+  .next button{
+    background:var(--accent-d);color:#fff;border:none;border-radius:12px;padding:12px 26px;font-size:1rem;font-weight:700;
+    cursor:pointer;transition:all .2s;box-shadow:0 5px 14px rgba(78,138,18,.4)
+  }
+  .next button:hover{transform:translateY(-2px);background:var(--accent)}
+  /* animacoes */
+  @keyframes pop{0%{transform:scale(.9)}55%{transform:scale(1.04)}100%{transform:scale(1)}}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+  .pop{animation:pop .4s}
+  .shake{animation:shake .45s}
+  /* final */
+  .final{display:none;text-align:center}
+  .final.show{display:block;animation:pop .5s}
+  .final h2{font-size:clamp(1.5rem,5vw,2.2rem);color:var(--accent-d)}
+  .final .score-big{font-size:clamp(2.4rem,9vw,3.6rem);font-weight:800;color:var(--gold);margin:6px 0}
+  .final .resumo{color:var(--muted);font-size:1rem;margin-bottom:12px}
+  .saverow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+  .saverow input{padding:11px 14px;border-radius:12px;border:2px solid #cfe0b8;font-size:1rem;width:min(240px,70vw)}
+  .saverow button{background:var(--accent);color:#173a10;border:none;border-radius:12px;padding:11px 20px;font-weight:800;cursor:pointer;transition:all .2s}
+  .saverow button:hover{transform:translateY(-2px);filter:brightness(1.05)}
+  .final .again{background:transparent;border:2px solid var(--accent-d);color:var(--accent-d);border-radius:12px;padding:10px 22px;font-weight:700;cursor:pointer;margin-top:4px}
+  /* ranking */
+  .rank h3{font-size:1.1rem;color:var(--accent-d);display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .rank .lvlnote{font-size:.8rem;color:var(--muted);font-weight:600;margin-left:auto}
+  .rlist{list-style:none;display:flex;flex-direction:column;gap:5px}
+  .rlist li{display:flex;align-items:center;gap:10px;background:var(--card2);border-radius:10px;padding:8px 12px;font-size:.92rem}
+  .rlist li .pos{font-weight:800;color:var(--accent-d);width:26px}
+  .rlist li .nm{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rlist li .sc{font-weight:800;color:var(--earth)}
+  .rlist li.me{outline:2px solid var(--accent);background:#eef7df}
+  .rmsg{font-size:.86rem;color:var(--muted);text-align:center;padding:6px}
+  .medal{width:26px;text-align:center}
+  footer{margin-top:8px;text-align:center;color:#fff}
+  footer .ideal{font-weight:800;font-size:1.02rem;text-shadow:0 2px 8px rgba(0,0,0,.35)}
+  footer .meta{font-size:.82rem;opacity:.85;margin-top:3px}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>🌱 Semeando Verdades</h1>
+    <div class="sub">Verdadeiro ou Falso sobre Agricultura Sustentável 🚜</div>
+  </header>
+
+  <div class="levels" id="levels">
+    <button class="lvl active" data-lvl="basico">Básico</button>
+    <button class="lvl" data-lvl="intermediario">Intermediário</button>
+    <button class="lvl" data-lvl="dificil">Difícil</button>
+    <button class="lvl" data-lvl="carbonauta">🛰️ Carbonauta</button>
+  </div>
+
+  <!-- JOGO -->
+  <div class="card" id="gameCard">
+    <div class="hud">
+      <div class="chip">⏱️ Tempo: <b id="hTime">0s</b></div>
+      <div class="chip">✅ Acertos: <b id="hHits">0/0</b></div>
+      <div class="chip">❌ Erros: <b id="hErr">0</b></div>
+      <div class="chip">🔥 Sequência: <b id="hStreak">0</b></div>
+      <div class="chip">🏆 Pontos: <b id="hPts">0</b></div>
+    </div>
+    <div class="howto" id="howto">Leia a afirmação e decida: é <b>Verdadeiro</b> ou <b>Falso</b>? Acerte o máximo no menor tempo.</div>
+    <div class="bar"><i id="prog"></i></div>
+
+    <div class="tags" id="tags" style="margin-top:14px">
+      <span class="tag" id="tagLvl">Básico</span>
+      <span class="tag" id="tagCount">Afirmação 1</span>
+    </div>
+    <div class="qbox"><div class="qtext" id="qtext">Carregando…</div></div>
+
+    <div class="vf" id="vf">
+      <button class="btrue" data-ans="true">✔️ Verdadeiro</button>
+      <button class="bfalse" data-ans="false">✖️ Falso</button>
+    </div>
+
+    <div class="fb" id="fb"><span class="verdict" id="verdict"></span><span id="fbtext"></span></div>
+    <div class="next hidden" id="nextWrap"><button id="nextBtn">Próxima →</button></div>
+  </div>
+
+  <!-- FINAL -->
+  <div class="card final" id="finalCard">
+    <h2>🎉 Colheita concluída!</h2>
+    <div class="score-big" id="fScore">0/0</div>
+    <div class="resumo" id="fResumo"></div>
+    <div class="saverow">
+      <input id="nameInput" maxlength="20" placeholder="Seu nome (até 20)" />
+      <button id="saveBtn">Salvar no ranking</button>
+    </div>
+    <div class="rmsg" id="saveMsg"></div>
+    <button class="again" id="againBtn">🔄 Jogar de novo</button>
+  </div>
+
+  <!-- RANKING -->
+  <div class="card rank">
+    <h3>🏅 Ranking Global <span class="lvlnote" id="rankLvlNote">Nível: Básico</span></h3>
+    <ul class="rlist" id="rlist"></ul>
+    <div class="rmsg" id="rankMsg">Carregando ranking…</div>
+  </div>
+
+  <footer>
+    <div class="ideal">— Idealizado por Ernandes Sobreira —</div>
+    <div class="meta">Tema: Agricultura sustentável · Gênero: Verdadeiro ou Falso · app ambiental do dia (2026-07-28)</div>
+  </footer>
+</div>
+
+<script>
+/* ============== FIREBASE (somente ranking) ============== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-07-28-semeando-verdades";
+
+let db=null, fs=null, fbReady=false;
+(async()=>{
+  try{
+    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    fs = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app = appMod.initializeApp(firebaseConfig);
+    db = fs.getFirestore(app);
+    fbReady=true;
+    loadRanking();
+  }catch(e){
+    document.getElementById('rankMsg').textContent="Ranking indisponível offline — o jogo funciona normalmente. 🌾";
+  }
+})();
+
+/* ============== CONTEÚDO ============== */
+const LEVELS = {
+  basico:{
+    nome:"Básico",
+    q:[
+      {t:"A rotação de culturas ajuda a manter o solo saudável.", v:true, fb:"Alternar culturas repõe nutrientes e quebra ciclos de pragas."},
+      {t:"Cobrir o solo com palha protege contra a erosão.", v:true, fb:"A palhada reduz o impacto da chuva e a perda de terra fértil."},
+      {t:"Queimar a vegetação toda safra melhora o solo a longo prazo.", v:false, fb:"A queima destrói a matéria orgânica e os microrganismos do solo."},
+      {t:"Usar veneno em excesso é bom para os polinizadores.", v:false, fb:"Agrotóxicos em excesso matam abelhas e outros polinizadores."},
+      {t:"A compostagem transforma restos orgânicos em adubo natural.", v:true, fb:"A compostagem recicla nutrientes e reduz o lixo orgânico."},
+      {t:"Plantar árvores perto das lavouras nunca traz benefícios.", v:false, fb:"Árvores dão sombra, abrigam inimigos naturais e seguram o solo."},
+      {t:"Usar a água com desperdício prejudica a produção sustentável.", v:true, fb:"O uso eficiente da água garante colheitas mesmo em secas."},
+      {t:"Solo sem cobertura vegetal resiste mais à erosão.", v:false, fb:"Solo descoberto perde terra fértil com chuva e vento."}
+    ]
+  },
+  intermediario:{
+    nome:"Intermediário",
+    q:[
+      {t:"O plantio direto reduz o revolvimento do solo e a erosão.", v:true, fb:"Menos aração conserva a matéria orgânica e a estrutura do solo."},
+      {t:"A adubação verde usa plantas para melhorar a fertilidade do solo.", v:true, fb:"Leguminosas de cobertura fixam nitrogênio e nutrem a lavoura."},
+      {t:"O manejo integrado de pragas dispensa totalmente o monitoramento da lavoura.", v:false, fb:"O MIP depende de monitoramento constante para decidir intervenções."},
+      {t:"Culturas de cobertura aumentam o carbono estocado no solo.", v:true, fb:"Raízes e resíduos incorporam carbono à matéria orgânica do solo."},
+      {t:"A monocultura contínua reduz a incidência de pragas e doenças.", v:false, fb:"A monocultura favorece o acúmulo de pragas e patógenos específicos."},
+      {t:"A rotação com leguminosas reduz a necessidade de adubo nitrogenado.", v:true, fb:"Leguminosas fixam nitrogênio do ar e enriquecem o solo."},
+      {t:"Terraços em curva de nível aumentam a erosão nas encostas.", v:false, fb:"Os terraços freiam a enxurrada e reduzem a erosão em declives."},
+      {t:"A irrigação por gotejamento economiza água em relação à aspersão.", v:true, fb:"O gotejamento leva água direto à raiz, com menos perdas por evaporação."},
+      {t:"O solo compactado melhora a infiltração da água da chuva.", v:false, fb:"A compactação reduz os poros e dificulta a infiltração da água."},
+      {t:"Aplicar agrotóxico sem receituário agronômico é uma prática recomendada.", v:false, fb:"A aplicação exige receituário agronômico e critérios técnicos rigorosos."}
+    ]
+  },
+  dificil:{
+    nome:"Difícil",
+    q:[
+      {t:"A fixação biológica de nitrogênio na soja é realizada por Bradyrhizobium.", v:true, fb:"A simbiose com Bradyrhizobium supre grande parte do nitrogênio da soja."},
+      {t:"O revolvimento intenso do solo oxida carbono e o libera como CO2.", v:true, fb:"A aração acelera a decomposição e a emissão de CO2 do solo."},
+      {t:"Os sistemas de integração lavoura-pecuária-floresta reduzem a diversificação da produção.", v:false, fb:"A ILPF aumenta a diversificação e a ciclagem de nutrientes no sistema."},
+      {t:"O óxido nitroso emitido por fertilizantes tem alto potencial de aquecimento.", v:true, fb:"O N2O aquece muito mais que o CO2 por molécula liberada."},
+      {t:"A calagem do solo aumenta a acidez e reduz o pH.", v:false, fb:"A calagem corrige a acidez, elevando o pH e a disponibilidade de nutrientes."},
+      {t:"Agrotóxicos de amplo espectro preservam integralmente os inimigos naturais da lavoura.", v:false, fb:"Produtos de amplo espectro também eliminam predadores e parasitoides benéficos."},
+      {t:"A matéria orgânica do solo tem papel irrelevante na retenção de água.", v:false, fb:"A matéria orgânica aumenta muito a capacidade de retenção hídrica do solo."},
+      {t:"O plantio direto no Brasil integra os compromissos de redução de emissões.", v:true, fb:"O SPD compõe as metas do Plano ABC de agricultura de baixo carbono."},
+      {t:"A erosão laminar remove a camada superficial mais fértil do solo.", v:true, fb:"A erosão laminar carrega o horizonte superficial rico em nutrientes."},
+      {t:"O uso contínuo de um mesmo herbicida impede a resistência de plantas daninhas.", v:false, fb:"A pressão de seleção contínua favorece o surgimento de daninhas resistentes."},
+      {t:"A salinização do solo melhora a absorção de água pelas raízes.", v:false, fb:"O excesso de sais reduz o potencial hídrico e dificulta a absorção de água."},
+      {t:"A ciclagem de nutrientes é intensificada pela diversidade de plantas de cobertura.", v:true, fb:"Coquetéis de plantas de cobertura ampliam a reciclagem de nutrientes."}
+    ]
+  },
+  carbonauta:{
+    nome:"🛰️ Carbonauta",
+    q:[
+      {t:"A inoculação com Bradyrhizobium pode suprir até 100% da demanda de nitrogênio da soja.", v:true, fb:"Estirpes selecionadas podem substituir integralmente a adubação nitrogenada mineral na soja."},
+      {t:"A dose recomendada de inoculante mira 1,2 milhão de células viáveis por semente de soja.", v:true, fb:"A Embrapa recomenda essa carga mínima de células por semente para nodulação eficiente."},
+      {t:"O óxido nitroso aquece cerca de 265 vezes mais que o CO2 em 100 anos.", v:true, fb:"O N2O é um gás traço de altíssimo forçamento radiativo em horizonte de 100 anos."},
+      {t:"O plantio direto no Brasil acumula 16 a 17 milhões de toneladas de carbono por ano.", v:true, fb:"A estimativa considera a área nacional atual sob sistema plantio direto consolidado."},
+      {t:"A reinoculação anual da soja reduz a produtividade média de grãos em torno de 8%.", v:false, fb:"Ao contrário: a reinoculação anual eleva a produtividade em cerca de 8,4%."},
+      {t:"Sistemas diversificados sob plantio direto sequestram acima de 0,6 tonelada de carbono por hectare ao ano.", v:true, fb:"A diversidade de espécies potencializa o acúmulo de carbono orgânico no solo."},
+      {t:"A fotossíntese das bactérias do solo é a principal rota de emissão de N2O agrícola.", v:false, fb:"As emissões de N2O vêm da nitrificação e da desnitrificação microbianas do solo."},
+      {t:"A fixação biológica de nitrogênio beneficia cerca de 3 milhões de hectares de soja no Brasil.", v:false, fb:"A FBN beneficia aproximadamente 33 milhões de hectares de soja no país."},
+      {t:"O micélio de fungos micorrízicos arbusculares reduz a absorção de fósforo pelas raízes da planta.", v:false, fb:"As micorrizas arbusculares ampliam a absorção de fósforo e a agregação do solo."},
+      {t:"A glomalina de origem micorrízica contribui para a agregação e a estabilidade estrutural do solo.", v:true, fb:"Essa glicoproteína cimenta os agregados e ajuda a proteger o carbono orgânico."},
+      {t:"A concentração de inoculante recomendada é inferior a 1,0 x 10^6 células por grama do produto.", v:false, fb:"A recomendação exige concentração superior a 1,0 x 10^9 células por grama."},
+      {t:"A aração convencional profunda aumenta o estoque de carbono orgânico no horizonte superficial do solo.", v:false, fb:"A aração oxida a matéria orgânica e reduz o carbono do horizonte superficial."},
+      {t:"O priming effect descreve a aceleração da decomposição de matéria orgânica nativa após aporte de resíduos.", v:true, fb:"O efeito priming altera a dinâmica líquida de carbono ao estimular a microbiota."},
+      {t:"A relação C/N alta dos resíduos acelera a mineralização imediata de nitrogênio no solo.", v:false, fb:"Resíduos com C/N alta imobilizam nitrogênio temporariamente, em vez de mineralizá-lo."}
+    ]
+  }
+};
+
+/* ============== ESTADO ============== */
+let level="basico", order=[], idx=0, hits=0, errs=0, streak=0, points=0, answered=false;
+let startTime=0, timerId=null, elapsed=0, lastRunSeconds=0;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const $=id=>document.getElementById(id);
+
+function startTimer(){startTime=Date.now();timerId=setInterval(()=>{elapsed=Math.floor((Date.now()-startTime)/1000);$('hTime').textContent=elapsed+"s";},250);}
+function stopTimer(){if(timerId){clearInterval(timerId);timerId=null;}}
+
+function startGame(){
+  stopTimer();
+  order = shuffle([...Array(LEVELS[level].q.length).keys()]);
+  idx=0;hits=0;errs=0;streak=0;points=0;answered=false;elapsed=0;
+  $('finalCard').classList.remove('show');
+  $('gameCard').style.display="block";
+  $('hTime').textContent="0s";
+  $('tagLvl').textContent=LEVELS[level].nome;
+  updateHUD();
+  startTimer();
+  renderQ();
+}
+
+function updateHUD(){
+  const total=LEVELS[level].q.length;
+  $('hHits').textContent=hits+"/"+total;
+  $('hErr').textContent=errs;
+  $('hStreak').textContent=streak;
+  $('hPts').textContent=points;
+  $('prog').style.width=((idx)/total*100)+"%";
+}
+
+function renderQ(){
+  answered=false;
+  const total=LEVELS[level].q.length;
+  const item=LEVELS[level].q[order[idx]];
+  $('tagCount').textContent="Afirmação "+(idx+1)+" de "+total;
+  const qt=$('qtext'); qt.textContent=item.t; qt.classList.remove('pop','shake'); void qt.offsetWidth; qt.classList.add('pop');
+  $('fb').className="fb";
+  $('nextWrap').classList.add('hidden');
+  [...document.querySelectorAll('#vf button')].forEach(b=>{b.disabled=false;});
+  updateHUD();
+}
+
+function answer(choice){
+  if(answered)return; answered=true;
+  const item=LEVELS[level].q[order[idx]];
+  const correct = (choice===item.v);
+  const qt=$('qtext');
+  [...document.querySelectorAll('#vf button')].forEach(b=>b.disabled=true);
+  const fb=$('fb'), verdict=$('verdict'), fbtext=$('fbtext');
+  if(correct){
+    hits++; streak++; points += 10 + Math.min(streak,5)*2;
+    fb.className="fb ok show";
+    verdict.textContent="✅ Correto! (" + (item.v?"Verdadeiro":"Falso") + ")";
+    qt.classList.add('pop');
+  }else{
+    errs++; streak=0;
+    fb.className="fb no show";
+    verdict.textContent="❌ Errou. Era " + (item.v?"Verdadeiro":"Falso") + ".";
+    qt.classList.remove('pop'); void qt.offsetWidth; qt.classList.add('shake');
+  }
+  fbtext.textContent=item.fb;
+  updateHUD();
+  $('nextWrap').classList.remove('hidden');
+}
+
+function nextQ(){
+  idx++;
+  if(idx>=LEVELS[level].q.length){ endGame(); }
+  else { renderQ(); }
+}
+
+function endGame(){
+  stopTimer();
+  lastRunSeconds=elapsed;
+  const total=LEVELS[level].q.length;
+  $('gameCard').style.display="none";
+  $('prog').style.width="100%";
+  $('fScore').textContent=hits+"/"+total+" acertos";
+  const pct=Math.round(hits/total*100);
+  let msg;
+  if(pct===100) msg="Colheita perfeita! Você domina a agricultura sustentável. 🌾";
+  else if(pct>=70) msg="Ótima safra! Poucos deslizes no campo. 🚜";
+  else if(pct>=40) msg="Solo em recuperação — reveja os conceitos e tente de novo. 🌱";
+  else msg="Terra batida! Bora estudar e plantar de novo. 💪";
+  $('fResumo').innerHTML=msg+"<br>⏱️ Tempo: <b>"+elapsed+"s</b> · 🔥 Pontos: <b>"+points+"</b> · ❌ Erros: <b>"+errs+"</b>";
+  $('finalCard').classList.add('show');
+  $('saveMsg').textContent="";
+  loadRanking();
+}
+
+/* ============== RANKING (Firestore) ============== */
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+async function loadRanking(){
+  $('rankLvlNote').textContent="Nível: "+LEVELS[level].nome;
+  if(!fbReady){$('rankMsg').textContent="Ranking indisponível offline — o jogo funciona normalmente. 🌾";return;}
+  $('rankMsg').textContent="Carregando ranking…";
+  try{
+    const {collection,query,orderBy,limit,getDocs} = fs;
+    // NAO combinar where(level) com orderBy(score): filtra nivel no cliente
+    const q = query(collection(db,"games",GAME_ID,"scores"), orderBy("score","desc"), limit(100));
+    const snap = await getDocs(q);
+    let rows=[];
+    snap.forEach(d=>{const x=d.data(); if(x.level===level) rows.push(x);});
+    rows.sort((a,b)=> (b.score-a.score) || ((a.seconds||9999)-(b.seconds||9999)));
+    rows=rows.slice(0,10);
+    const ul=$('rlist'); ul.innerHTML="";
+    if(!rows.length){$('rankMsg').textContent="Ainda sem pontuações neste nível. Seja o primeiro! 🌟";return;}
+    $('rankMsg').textContent="";
+    const medals=["🥇","🥈","🥉"];
+    rows.forEach((r,i)=>{
+      const li=document.createElement('li');
+      const medal = i<3?medals[i]:"";
+      li.innerHTML='<span class="pos">'+(i+1)+'</span><span class="medal">'+medal+'</span>'+
+        '<span class="nm">'+esc(r.name||"Anônimo")+'</span>'+
+        '<span class="sc">'+r.score+' ✔️ · '+(r.seconds||0)+'s</span>';
+      ul.appendChild(li);
+    });
+  }catch(e){
+    $('rankMsg').textContent="Não foi possível carregar o ranking agora. 🌱";
+  }
+}
+
+async function saveScore(){
+  const name=($('nameInput').value||"").trim().slice(0,20)||"Anônimo";
+  if(!fbReady){$('saveMsg').textContent="Sem conexão: pontuação não salva, mas seu jogo valeu! 🌾";return;}
+  $('saveBtn').disabled=true; $('saveMsg').textContent="Salvando…";
+  try{
+    const {collection,addDoc,serverTimestamp}=fs;
+    await addDoc(collection(db,"games",GAME_ID,"scores"),{
+      name, score:hits, seconds:lastRunSeconds, level, ts:serverTimestamp()
+    });
+    $('saveMsg').textContent="✅ Pontuação salva no ranking!";
+    loadRanking();
+  }catch(e){
+    $('saveMsg').textContent="Não foi possível salvar agora. Tente novamente. 🌱";
+  }finally{$('saveBtn').disabled=false;}
+}
+
+/* ============== EVENTOS ============== */
+document.querySelectorAll('#levels .lvl').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#levels .lvl').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    level=b.dataset.lvl;
+    loadRanking();
+    startGame();
+  });
+});
+document.querySelectorAll('#vf button').forEach(b=>{
+  b.addEventListener('click',()=>answer(b.dataset.ans==="true"));
+});
+$('nextBtn').addEventListener('click',nextQ);
+$('againBtn').addEventListener('click',startGame);
+$('saveBtn').addEventListener('click',saveScore);
+
+startGame();
+</script>
+</body>
+</html>
