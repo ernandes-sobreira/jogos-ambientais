@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌱 Sumidouro Vivo — Simulador de Sequestro de Carbono</title>
+<style>
+:root{
+  --bg1:#0b2c1e; --bg2:#123c25;
+  --card:rgba(15,49,37,0.72);
+  --card2:rgba(11,38,26,0.9);
+  --line:rgba(120,200,150,0.18);
+  --accent:#37e08a; --accent2:#a3e635;
+  --text:#eafff3; --muted:#a3c6b3;
+  --success:#22c55e; --danger:#f0574f;
+  --shadow:0 10px 30px rgba(0,0,0,0.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:system-ui,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  color:var(--text);
+  background:linear-gradient(160deg,var(--bg1),var(--bg2));
+  background-attachment:fixed;
+  min-height:100vh;
+  padding:16px;
+  line-height:1.5;
+}
+.wrap{width:min(1080px,96vw);margin:0 auto}
+header{text-align:center;margin-bottom:14px}
+h1{
+  font-size:clamp(1.6rem,4.6vw,2.7rem);
+  margin:0 0 4px;letter-spacing:-0.5px;
+  text-shadow:0 2px 14px rgba(0,0,0,0.35);
+}
+.sub{color:var(--muted);font-size:clamp(.85rem,2.4vw,1rem);margin:0}
+.pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0}
+.pill{
+  border:1px solid var(--line);
+  background:var(--card2);
+  color:var(--text);
+  padding:9px 16px;border-radius:999px;
+  font-size:.92rem;font-weight:600;cursor:pointer;
+  transition:transform .2s ease, background .25s ease, box-shadow .25s ease;
+}
+.pill:hover{transform:translateY(-2px)}
+.pill.active{background:var(--accent);color:#06331f;border-color:transparent;box-shadow:0 6px 18px rgba(55,224,138,.35)}
+.howto{
+  text-align:center;color:var(--muted);font-size:.92rem;
+  background:var(--card2);border:1px solid var(--line);
+  border-radius:12px;padding:10px 14px;margin:0 auto 16px;max-width:760px;
+}
+.grid{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:880px){.grid{grid-template-columns:1.25fr .95fr}}
+.card{
+  background:var(--card);border:1px solid var(--line);
+  border-radius:16px;padding:16px;box-shadow:var(--shadow);
+  backdrop-filter:blur(4px);
+}
+.hud{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.stat{
+  flex:1 1 auto;min-width:96px;text-align:center;
+  background:var(--card2);border:1px solid var(--line);
+  border-radius:12px;padding:8px 6px;
+}
+.stat .lab{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.stat .val{font-size:1.15rem;font-weight:800}
+svg#scene{width:100%;height:auto;display:block;border-radius:12px;background:linear-gradient(180deg,#0e3b28,#0c2f20)}
+.tree{transition:transform .45s cubic-bezier(.2,1.3,.5,1),opacity .45s ease;transform-origin:center bottom}
+.tree.off{opacity:0;transform:scale(0)}
+.gaugewrap{margin-top:12px}
+.gaugebar{height:22px;border-radius:999px;background:rgba(0,0,0,.28);overflow:hidden;border:1px solid var(--line)}
+.gaugefill{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width .4s ease}
+.gaugetop{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.bignum{font-size:clamp(1.5rem,4.8vw,2.1rem);font-weight:900;color:var(--accent)}
+.bignum.pop{animation:pop .45s ease}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+.controls{margin-top:16px;display:flex;flex-direction:column;gap:14px}
+.ctrl label{display:flex;justify-content:space-between;font-weight:600;font-size:.92rem;margin-bottom:4px}
+.ctrl .cv{color:var(--accent2);font-weight:800}
+input[type=range]{width:100%;-webkit-appearance:none;height:8px;border-radius:999px;background:rgba(255,255,255,.14);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4);border:3px solid #06331f}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;border:3px solid #06331f}
+.rows{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rowitem{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.rowitem .rl{font-size:.72rem;color:var(--muted)}
+.rowitem .rv{font-size:1rem;font-weight:800}
+.mission{
+  margin-top:16px;background:linear-gradient(135deg,rgba(55,224,138,.12),rgba(163,230,53,.08));
+  border:1px solid var(--line);border-radius:14px;padding:14px;
+}
+.mission.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.mission .mtag{font-size:.72rem;text-transform:uppercase;letter-spacing:.6px;color:var(--accent2);font-weight:800}
+.mission .mtext{font-size:1.02rem;font-weight:600;margin:4px 0 10px}
+.btn{
+  border:none;border-radius:12px;padding:12px 18px;font-size:1rem;font-weight:800;cursor:pointer;
+  background:var(--accent);color:#06331f;transition:transform .2s ease, box-shadow .2s;
+  box-shadow:0 6px 16px rgba(55,224,138,.3);
+}
+.btn:hover{transform:translateY(-2px)}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line);box-shadow:none}
+.feedback{
+  background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;
+  font-size:.95rem;min-height:64px;transition:border-color .3s;
+}
+.feedback.ok{border-color:var(--success)}
+.feedback.bad{border-color:var(--danger)}
+.feedback b{color:var(--accent2)}
+.rankhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.rankhead h3{margin:0;font-size:1.05rem}
+.ranklvl{font-size:.72rem;color:var(--muted);background:var(--card2);padding:3px 8px;border-radius:999px;border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:600;font-size:.72rem;text-transform:uppercase}
+td.rk{color:var(--accent2);font-weight:800}
+.warn{font-size:.82rem;color:var(--muted);font-style:italic}
+.final{
+  display:none;text-align:center;
+  background:linear-gradient(135deg,rgba(34,197,94,.18),rgba(163,230,53,.1));
+  border:1px solid var(--success);border-radius:16px;padding:22px;margin-top:16px;
+}
+.final.show{display:block;animation:pop .5s ease}
+.final h2{font-size:1.8rem;margin:0 0 6px}
+.final .fsum{color:var(--muted);margin-bottom:14px}
+.namein{width:min(280px,80vw);padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--text);font-size:1rem;text-align:center}
+footer{text-align:center;margin-top:26px;padding-top:14px;border-top:1px solid var(--line);color:var(--muted);font-size:.85rem}
+footer .idea{color:var(--accent2);font-weight:800;font-size:1rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>🌱 Sumidouro Vivo</h1>
+  <p class="sub">Ajuste a paisagem e veja, em tempo real, quanto carbono o solo e a vegetação sequestram.</p>
+</header>
+
+<div class="pills" id="pills">
+  <button class="pill active" data-lvl="basico">Básico</button>
+  <button class="pill" data-lvl="intermediario">Intermediário</button>
+  <button class="pill" data-lvl="dificil">Difícil</button>
+  <button class="pill" data-lvl="carbonauta">🛰️ Carbonauta</button>
+</div>
+
+<div class="howto">Como jogar: mova os controles deslizantes para mudar a paisagem. Leia os números ao vivo e clique em <b>Verificar meta</b> quando atingir cada desafio. Complete todos e salve seu tempo no ranking!</div>
+
+<div class="grid">
+  <!-- SIMULAÇÃO -->
+  <section class="card">
+    <div class="hud">
+      <div class="stat"><div class="lab">Tempo</div><div class="val" id="hTime">0s</div></div>
+      <div class="stat"><div class="lab">Desafio</div><div class="val" id="hProg">1/8</div></div>
+      <div class="stat"><div class="lab">Concluídos</div><div class="val" id="hDone">0</div></div>
+      <div class="stat"><div class="lab">Erros</div><div class="val" id="hErr">0</div></div>
+    </div>
+
+    <svg id="scene" viewBox="0 0 400 220" preserveAspectRatio="xMidYMid meet" aria-label="Paisagem de sequestro de carbono">
+      <defs>
+        <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0%" stop-color="#fff3b0"/><stop offset="100%" stop-color="#ffd34d"/>
+        </radialGradient>
+      </defs>
+      <rect x="0" y="0" width="400" height="150" fill="#12482e"/>
+      <circle cx="345" cy="34" r="20" fill="url(#sun)"/>
+      <rect x="0" y="146" width="400" height="6" fill="#2f7d4f"/>
+      <rect id="soil" x="0" y="152" width="400" height="68" fill="#b8894f"/>
+      <g id="soilspecks"></g>
+      <g id="trees"></g>
+      <text id="co2label" x="200" y="24" text-anchor="middle" font-size="13" fill="#eafff3" font-weight="bold" opacity="0.85"></text>
+    </svg>
+
+    <div class="gaugewrap">
+      <div class="gaugetop">
+        <span style="color:var(--muted);font-size:.85rem">Sequestro total</span>
+        <span class="bignum" id="mainNum">0</span>
+      </div>
+      <div class="gaugebar"><div class="gaugefill" id="gauge"></div></div>
+    </div>
+
+    <div class="controls" id="controls"></div>
+
+    <div class="rows" id="rows"></div>
+
+    <div class="mission" id="missionCard">
+      <div class="mtag" id="mTag">Desafio 1</div>
+      <div class="mtext" id="mText">—</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn" id="verifyBtn">Verificar meta ✓</button>
+        <button class="btn ghost" id="resetBtn">Reiniciar nível</button>
+      </div>
+    </div>
+
+    <div class="final" id="final">
+      <h2>🎉 Missão cumprida!</h2>
+      <div class="fsum" id="finalSum"></div>
+      <div style="display:flex;flex-direction:column;gap:10px;align-items:center">
+        <input class="namein" id="nameIn" maxlength="20" placeholder="Seu nome (até 20 letras)">
+        <button class="btn" id="saveBtn">Salvar no ranking</button>
+        <div class="warn" id="saveMsg"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEEDBACK + RANKING -->
+  <aside style="display:flex;flex-direction:column;gap:16px">
+    <div class="card">
+      <h3 style="margin:0 0 10px;font-size:1.05rem">💡 Painel educativo</h3>
+      <div class="feedback" id="feedback">Mova os controles para começar. Cada ajuste muda o quanto de CO₂ a paisagem retira da atmosfera.</div>
+    </div>
+    <div class="card">
+      <div class="rankhead">
+        <h3>🏆 Ranking Global</h3>
+        <span class="ranklvl" id="rankLvl">Básico</span>
+      </div>
+      <table>
+        <thead><tr><th>#</th><th>Nome</th><th>Metas</th><th>Tempo</th></tr></thead>
+        <tbody id="rankBody"><tr><td colspan="4" class="warn">Carregando ranking…</td></tr></tbody>
+      </table>
+      <div class="warn" id="rankWarn" style="margin-top:8px"></div>
+    </div>
+  </aside>
+</div>
+
+<footer>
+  <div class="idea">— Idealizado por Ernandes Sobreira —</div>
+  <div>Tema: Sequestro de carbono no solo e vegetação · Gênero: Simulação interativa · app ambiental do dia</div>
+</footer>
+</div>
+
+<script>
+/* ===================== FIREBASE (somente ranking) ===================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-07-31-sumidouro-vivo";
+let db=null, fbReady=false, FS=null;
+async function initFirebase(){
+  try{
+    const appMod = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+    FS = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+    const app = appMod.initializeApp(firebaseConfig);
+    db = FS.getFirestore(app);
+    fbReady = true;
+    loadRanking();
+  }catch(e){
+    fbReady=false;
+    document.getElementById('rankWarn').textContent='Ranking offline — o jogo funciona normalmente.';
+    document.getElementById('rankBody').innerHTML='<tr><td colspan="4" class="warn">Sem conexão com o ranking.</td></tr>';
+  }
+}
+function escHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+/* ===================== MODELO / NÍVEIS ===================== */
+const CO2=44/12; // 3.667
+const near=(a,b,t)=>Math.abs(a-b)<=t;
+const fmt=n=>Math.round(n).toLocaleString('pt-BR');
+const fmt1=n=>n.toLocaleString('pt-BR',{maximumFractionDigits:1});
+
+const LEVELS={
+  basico:{
+    name:'Básico', maxTrees:16,
+    sliders:[
+      {id:'arv',label:'🌳 Árvores plantadas',unit:'ha',min:0,max:40,step:1,val:0},
+      {id:'solo',label:'🌱 Cuidado com o solo',unit:'%',min:0,max:100,step:5,val:0}
+    ],
+    compute(v){
+      const veg=v.arv*18;
+      const soil=(v.solo/100)*40*1.8;
+      const main=veg+soil;
+      return {main, gaugeMax:792, unit:'t CO₂/ano',
+        vegFrac:v.arv/40, soilFrac:v.solo/100,
+        rows:[
+          {rl:'CO₂ das árvores',rv:fmt(veg)+' t/ano'},
+          {rl:'CO₂ do solo',rv:fmt(soil)+' t/ano'},
+          {rl:'Total',rv:fmt(main)+' t/ano'},
+          {rl:'Área com árvores',rv:v.arv+' ha'}
+        ], _veg:veg,_soil:soil};
+    },
+    live(v,c){return `Agora sua fazenda captura <b>${fmt(c.main)} t de CO₂ por ano</b>. As árvores respondem por ${fmt(c._veg)} t e o solo por ${fmt(c._soil)} t.`;},
+    missions:[
+      {t:'Plante árvores em pelo menos 5 hectares.', ok:v=>v.arv>=5, tip:'Aumente o controle das árvores até 5 ha.', fb:'Árvores retiram CO₂ do ar e guardam o carbono na madeira, nas folhas e nas raízes.'},
+      {t:'Deixe o solo pelo menos 50% bem cuidado.', ok:v=>v.solo>=50, tip:'Suba o controle do solo até 50%.', fb:'Solo bem manejado acumula matéria orgânica — carbono guardado dentro do chão.'},
+      {t:'Faça a fazenda capturar 200 t de CO₂ por ano.', ok:(v,c)=>c.main>=200, tip:'Combine mais árvores com cuidado do solo.', fb:'Cada hectare de floresta jovem captura cerca de 18 t de CO₂ por ano.'},
+      {t:'Reflorestar toda a fazenda: 40 hectares.', ok:v=>v.arv>=40, tip:'Leve o controle das árvores ao máximo.', fb:'Reflorestar áreas degradadas é uma das formas mais rápidas de sequestrar carbono.'},
+      {t:'Cuide de 100% do solo e plante ao menos 10 ha.', ok:v=>v.solo>=100&&v.arv>=10, tip:'Solo no máximo e árvores em 10 ha ou mais.', fb:'Floresta e solo saudável somam esforços: os dois guardam carbono ao mesmo tempo.'},
+      {t:'Capture 400 t de CO₂ por ano no total.', ok:(v,c)=>c.main>=400, tip:'Você vai precisar de bastante floresta.', fb:'Quanto maior a área vegetada, maior o sumidouro de carbono.'},
+      {t:'Faça o solo, sozinho, capturar ao menos 70 t de CO₂/ano.', ok:(v,c)=>c._soil>=70, tip:'Leve o cuidado do solo perto de 100%.', fb:'O solo é um reservatório gigante de carbono, muitas vezes maior que a vegetação acima dele.'},
+      {t:'Capture 600 t de CO₂ por ano no total.', ok:(v,c)=>c.main>=600, tip:'Combine floresta quase cheia com solo bem cuidado.', fb:'Você montou um sumidouro poderoso: vegetação + solo trabalhando juntos.'}
+    ]
+  },
+
+  intermediario:{
+    name:'Intermediário', maxTrees:16,
+    sliders:[
+      {id:'area',label:'🌳 Área reflorestada',unit:'ha',min:0,max:50,step:1,val:0},
+      {id:'solo',label:'🌱 Manejo conservacionista',unit:'%',min:0,max:100,step:5,val:0},
+      {id:'anos',label:'⏳ Horizonte de tempo',unit:'anos',min:1,max:30,step:1,val:1}
+    ],
+    compute(v){
+      const cVeg=v.area*5.5;
+      const cSolo=(v.solo/100)*50*0.5;
+      const cTot=cVeg+cSolo;
+      const co2A=cTot*CO2;
+      const co2C=co2A*v.anos;
+      return {main:co2A, gaugeMax:1130, unit:'t CO₂/ano',
+        vegFrac:v.area/50, soilFrac:v.solo/100,
+        rows:[
+          {rl:'Sequestro (carbono)',rv:fmt1(cTot)+' t C/ano'},
+          {rl:'Sequestro (CO₂)',rv:fmt(co2A)+' t/ano'},
+          {rl:'Acumulado',rv:fmt(co2C)+' t CO₂'},
+          {rl:'Tempo',rv:v.anos+' anos'}
+        ], _cVeg:cVeg,_cSolo:cSolo,_co2C:co2C};
+    },
+    live(v,c){return `Taxa anual: <b>${fmt(c.main)} t CO₂/ano</b> (${fmt1(c._cVeg+c._cSolo)} t C). Em ${v.anos} anos, o acumulado chega a ${fmt(c._co2C)} t CO₂.`;},
+    missions:[
+      {t:'Reflorestar exatamente 30 ha.', ok:v=>v.area===30, tip:'Coloque a área em 30 ha.', fb:'A biomassa florestal jovem sequestra cerca de 5,5 t de carbono por hectare ao ano.'},
+      {t:'Atingir cerca de 165 t C/ano só na biomassa.', ok:(v,c)=>near(c._cVeg,165,6), tip:'165 ÷ 5,5 = 30 ha de floresta.', fb:'Taxa de sequestro = área × produtividade de carbono da biomassa.'},
+      {t:'Colocar o manejo conservacionista do solo em 100%.', ok:v=>v.solo>=100, tip:'Suba o controle do solo ao máximo.', fb:'Plantio direto e culturas de cobertura elevam a matéria orgânica do solo.'},
+      {t:'Alcançar 1.000 t CO₂/ano de sequestro total.', ok:(v,c)=>c.main>=1000, tip:'Combine bastante área e solo bem manejado.', fb:'Multiplicamos o carbono (t C) por 3,67 para obter o CO₂ equivalente.'},
+      {t:'Acumular cerca de 10.000 t CO₂ em 10 anos.', ok:(v,c)=>v.anos===10&&near(c._co2C,10000,700), tip:'Fixe 10 anos e ajuste a área.', fb:'O sequestro acumulado é, aproximadamente, a taxa anual vezes o tempo.'},
+      {t:'Definir o horizonte de tempo em 30 anos.', ok:v=>v.anos===30, tip:'Leve o tempo ao máximo.', fb:'Projetos de carbono costumam ser avaliados em horizontes de 20 a 30 anos.'},
+      {t:'Com 20 ha, atingir 110 t C/ano na biomassa.', ok:(v,c)=>v.area===20&&near(c._cVeg,110,3), tip:'20 ha × 5,5 = 110 t C/ano.', fb:'A taxa cresce de forma proporcional à área reflorestada.'},
+      {t:'Acumular 30.000 t CO₂ ajustando área e tempo.', ok:(v,c)=>c._co2C>=30000, tip:'Área grande e muitos anos.', fb:'Mais área e mais tempo elevam o estoque total sequestrado.'},
+      {t:'Fazer o solo contribuir com cerca de 90 t CO₂/ano.', ok:(v,c)=>near(c._cSolo*CO2,90,10), tip:'O solo chega perto de 92 t CO₂/ano no máximo.', fb:'Mesmo com taxa menor por hectare, o solo soma um fluxo constante de carbono.'},
+      {t:'Sequestrar cerca de 1.100 t CO₂/ano (perto do máximo).', ok:(v,c)=>c.main>=1090, tip:'Maximize área e solo.', fb:'Você otimizou biomassa e solo — o sistema completo captura mais que cada parte isolada.'}
+    ]
+  },
+
+  dificil:{
+    name:'Difícil', maxTrees:16,
+    sliders:[
+      {id:'area',label:'🌳 Área',unit:'ha',min:0,max:100,step:5,val:0},
+      {id:'incB',label:'🌿 Incremento de biomassa',unit:'t MS/ha/ano',min:0,max:20,step:1,val:0},
+      {id:'socR',label:'🟤 Acúmulo de COS',unit:'t C/ha/ano',min:0,max:1,step:0.05,val:0}
+    ],
+    compute(v){
+      const agbC=v.area*v.incB*0.47;
+      const bioC=agbC*1.24;      // + raízes (razão raiz:parte aérea 0,24)
+      const socC=v.area*v.socR;
+      const totC=bioC+socC;
+      const co2=totC*CO2;
+      return {main:co2, gaugeMax:4640, unit:'t CO₂/ano',
+        vegFrac:v.area/100, soilFrac:v.socR/1,
+        rows:[
+          {rl:'Biomassa aérea (AGB)',rv:fmt(agbC)+' t C/ano'},
+          {rl:'Biomassa total (+raízes)',rv:fmt(bioC)+' t C/ano'},
+          {rl:'Carbono do solo (COS)',rv:fmt(socC)+' t C/ano'},
+          {rl:'Total em CO₂',rv:fmt(co2)+' t/ano'}
+        ], _agbC:agbC,_bioC:bioC,_socC:socC,_totC:totC};
+    },
+    live(v,c){return `Fluxo bruto: <b>${fmt(c.main)} t CO₂/ano</b> = biomassa (${fmt(c._bioC)} t C) + COS (${fmt(c._socC)} t C), convertido por 3,67.`;},
+    missions:[
+      {t:'Com 100 ha, obter 470 t C/ano na parte aérea (AGB).', ok:(v,c)=>v.area===100&&near(c._agbC,470,20), tip:'100 × 10 × 0,47 = 470.', fb:'C da biomassa = matéria seca × 0,47 (fração de carbono padrão do IPCC).'},
+      {t:'Contabilizar as raízes: biomassa total ≈ 583 t C/ano.', ok:(v,c)=>near(c._bioC,583,25), tip:'AGB × 1,24 inclui as raízes.', fb:'As raízes equivalem a cerca de 24% da parte aérea (razão raiz:parte aérea).'},
+      {t:'Ajustar o acúmulo de COS para 0,50 t C/ha/ano.', ok:v=>near(v.socR,0.5,0.001), tip:'Controle do solo no meio da escala.', fb:'De 0,3 a 0,6 t C/ha/ano é a faixa típica de acúmulo de COS em manejo melhorado.'},
+      {t:'Fazer o solo sequestrar 50 t C/ano.', ok:(v,c)=>near(c._socC,50,3), tip:'100 ha × 0,5 = 50 t C/ano.', fb:'COS = área × taxa de acúmulo de carbono no solo.'},
+      {t:'Converter para CO₂: atingir 2.000 t CO₂/ano.', ok:(v,c)=>c.main>=2000, tip:'Aumente biomassa e solo.', fb:'t CO₂ = t C × 44/12 ≈ 3,67.'},
+      {t:'Maximizar a produtividade: incremento de 20 t MS/ha/ano.', ok:v=>v.incB>=20, tip:'Leve o incremento ao máximo.', fb:'Espécies de rápido crescimento elevam o incremento médio anual de biomassa.'},
+      {t:'Sequestrar 4.000 t CO₂/ano no total.', ok:(v,c)=>c.main>=4000, tip:'Quase tudo no máximo.', fb:'Somamos biomassa aérea, radicular e COS para obter o fluxo bruto.'},
+      {t:'Com 60 ha e incremento máximo, obter ≈ 699 t C/ano de biomassa.', ok:(v,c)=>v.area===60&&near(c._bioC,699,30), tip:'60 × 20 × 0,47 × 1,24 ≈ 699.', fb:'A escala com a área é linear quando a produtividade por hectare é fixa.'},
+      {t:'Deixar o COS responder por 100 t C/ano.', ok:(v,c)=>v.area===100&&near(c._socC,100,5), tip:'100 ha × 1,0 t C/ha/ano.', fb:'No máximo do manejo, o solo isolado sequestra 100 t C/ano nesta área.'},
+      {t:'Atingir 1.265 t C/ano de carbono total (biomassa + solo).', ok:(v,c)=>near(c._totC,1265,45), tip:'Máximo de área, incremento e COS.', fb:'O estoque anual total soma biomassa (aérea + radicular) e COS.'},
+      {t:'Chegar a 4.600 t CO₂/ano (perto do teto do sistema).', ok:(v,c)=>c.main>=4600, tip:'Tudo no máximo.', fb:'O teto depende de área, produtividade da biomassa e taxa de acúmulo do solo.'},
+      {t:'Com 25 ha, incremento 20 e COS 1,0, obter ≈ 1.160 t CO₂/ano.', ok:(v,c)=>v.area===25&&v.incB===20&&near(v.socR,1,0.02), tip:'Reduza a área mas mantenha a intensidade.', fb:'Menos área significa menos fluxo total, mesmo com produtividade máxima por hectare.'}
+    ]
+  },
+
+  carbonauta:{
+    name:'🛰️ Carbonauta', maxTrees:16,
+    sliders:[
+      {id:'area',label:'🛰️ Área do projeto',unit:'ha',min:0,max:100,step:5,val:0},
+      {id:'aporteC',label:'🍂 Aporte de C ao solo',unit:'t C/ha/ano',min:0,max:4,step:0.1,val:0},
+      {id:'satDef',label:'🧲 Déficit de saturação',unit:'%',min:0,max:100,step:5,val:0}
+    ],
+    compute(v){
+      const EPS=0.35, IMA_C=3.0, SOCref=65;
+      const stab=EPS*(v.satDef/100);            // fração estabilizada (MAOM)
+      const socPerha=v.aporteC*stab;            // t C/ha/ano estabilizado
+      const soilNet=v.area*socPerha;
+      const bioC=v.area*IMA_C;
+      const totC=bioC+soilNet;
+      const co2=totC*CO2;
+      const Rh=v.aporteC*(1-stab);              // respiração heterotrófica
+      const MRT=SOCref/(Rh+0.01);
+      return {main:co2, gaugeMax:1613, unit:'t CO₂e/ano',
+        vegFrac:v.area/100, soilFrac:Math.min(1,socPerha/1.4),
+        rows:[
+          {rl:'Biomassa (AGB+BGB)',rv:fmt(bioC)+' t C/ano'},
+          {rl:'COS estabilizado (MAOM)',rv:fmt1(soilNet)+' t C/ano'},
+          {rl:'Respiração heterotrófica',rv:fmt1(Rh)+' t C/ha/ano'},
+          {rl:'Sequestro líquido',rv:fmt1(totC)+' t C/ano'},
+          {rl:'CO₂e total',rv:fmt(co2)+' t/ano'},
+          {rl:'MRT do C no solo',rv:fmt(MRT)+' anos'}
+        ], _stab:stab,_socPerha:socPerha,_soilNet:soilNet,_bioC:bioC,_totC:totC,_Rh:Rh,_MRT:MRT};
+    },
+    live(v,c){return `Líquido: <b>${fmt(c.main)} t CO₂e/ano</b>. Fração estabilizada = ${fmt1(c._stab*100)}%; MAOM = ${fmt1(c._socPerha)} t C/ha/ano; MRT ≈ ${fmt(c._MRT)} anos.`;},
+    missions:[
+      {t:'Fixar a eficiência máxima: déficit de saturação em 100%.', ok:v=>v.satDef>=100, tip:'Solo longe da saturação.', fb:'Solos distantes da saturação estabilizam mais carbono novo; perto do teto, a eficiência despenca.'},
+      {t:'Com aporte 2,0 e déficit 100%, obter 0,70 t C/ha/ano estabilizados.', ok:(v,c)=>near(v.aporteC,2,0.05)&&v.satDef>=100&&near(c._socPerha,0.7,0.03), tip:'2,0 × 0,35 × 1,0 = 0,70.', fb:'Estabilização = aporte × eficiência (0,35) × déficit de saturação.'},
+      {t:'Levar o COS estabilizado do sistema a 70 t C/ano.', ok:(v,c)=>v.area===100&&near(c._soilNet,70,4), tip:'100 ha × 0,70 t C/ha/ano.', fb:'O MAOM (carbono ligado a minerais) é a fração de maior tempo de residência do solo.'},
+      {t:'Reduzir o MRT do carbono do solo para cerca de 25 anos.', ok:(v,c)=>near(c._MRT,25,4), tip:'Aumente o aporte para acelerar o fluxo.', fb:'MRT = estoque ÷ fluxo de saída; aportes altos elevam a respiração e reduzem o tempo de residência.'},
+      {t:'Atingir 300 t C/ano só na biomassa (área máxima).', ok:(v,c)=>v.area>=100&&near(c._bioC,300,5), tip:'100 ha × 3,0 t C/ha/ano.', fb:'Um incremento de carbono de ~3 t C/ha/ano é típico de plantios em crescimento pleno.'},
+      {t:'Sequestrar 1.500 t CO₂e/ano no total.', ok:(v,c)=>c.main>=1500, tip:'Área, aporte e déficit altos.', fb:'CO₂e = (biomassa + COS estabilizado) × 3,67.'},
+      {t:'Demonstrar saturação: com déficit 20%, manter estabilização ≤ 0,29 t C/ha/ano.', ok:(v,c)=>v.satDef<=20&&c._socPerha<=0.29&&c._socPerha>0, tip:'Déficit baixo, mesmo com aporte alto.', fb:'Perto da saturação, aportes altos rendem pouco COS novo — retornos decrescentes.'},
+      {t:'Colocar o aporte de C ao solo no máximo: 4,0 t C/ha/ano.', ok:v=>v.aporteC>=4, tip:'Aporte no topo da escala.', fb:'O aporte, via serapilheira e rizodeposição, é a matéria-prima do carbono orgânico do solo.'},
+      {t:'Fazer a respiração heterotrófica ficar em ≈ 2,6 t C/ha/ano.', ok:(v,c)=>near(c._Rh,2.6,0.15), tip:'Ajuste aporte e déficit juntos.', fb:'Rh = aporte × (1 − fração estabilizada): é o carbono que retorna à atmosfera.'},
+      {t:'Obter sequestro líquido total de 440 t C/ano.', ok:(v,c)=>near(c._totC,440,20), tip:'Biomassa cheia + bom COS.', fb:'O líquido é a biomassa mais o COS estabilizado, descontada a respiração.'},
+      {t:'Com 50 ha, atingir 150 t C/ano de biomassa.', ok:(v,c)=>v.area===50&&near(c._bioC,150,5), tip:'50 ha × 3,0.', fb:'Metade da área, metade do fluxo de biomassa — escala linear com a área.'},
+      {t:'Maximizar o COS: 100 ha, aporte 4,0 e déficit 100%.', ok:v=>v.area>=100&&v.aporteC>=4&&v.satDef>=100, tip:'Tudo no máximo do solo.', fb:'Entrada máxima somada à capacidade máxima de estabilização gera o maior fluxo de COS possível.'},
+      {t:'Chegar ao teto do sistema: ≈ 1.600 t CO₂e/ano.', ok:(v,c)=>c.main>=1590, tip:'Todos os controles no topo.', fb:'O teto reflete o limite biofísico de captura por área nesta configuração.'},
+      {t:'Configuração realista: 100 ha, aporte 3,0, déficit 60% → COS líquido ≈ 63 t C/ano.', ok:(v,c)=>v.area===100&&near(v.aporteC,3,0.05)&&near(v.satDef,60,2)&&near(c._soilNet,63,5), tip:'100 × (3,0 × 0,35 × 0,60) = 63.', fb:'Cenário de médio prazo: aporte moderado num solo que ainda tem espaço de saturação disponível.'}
+    ]
+  }
+};
+
+/* ===================== ESTADO / MOTOR ===================== */
+let curLvl='basico';
+let state={};      // valores dos sliders
+let mIdx=0, done=0, errs=0, startT=0, timer=null, finished=false;
+
+const $=id=>document.getElementById(id);
+
+function lerp(a,b,t){return a+(b-a)*t;}
+function soilColor(f){
+  // pálido (pouco carbono) -> escuro/rico
+  const c1=[184,137,79], c2=[46,28,13];
+  const r=Math.round(lerp(c1[0],c2[0],f)),g=Math.round(lerp(c1[1],c2[1],f)),b=Math.round(lerp(c1[2],c2[2],f));
+  return `rgb(${r},${g},${b})`;
+}
+
+// cria árvores no SVG uma vez
+function buildTrees(max){
+  const g=$('trees'); g.innerHTML='';
+  const cols=8, rowY=[132,118];
+  for(let i=0;i<max;i++){
+    const col=i%cols, row=Math.floor(i/cols);
+    const x=26+col*44, y=rowY[row]||132;
+    const el=document.createElementNS('http://www.w3.org/2000/svg','g');
+    el.setAttribute('class','tree off');
+    el.setAttribute('transform',`translate(${x},${y})`);
+    el.innerHTML=`<rect x="-2" y="6" width="4" height="14" rx="1.5" fill="#6b4423"/>
+      <circle cx="0" cy="2" r="10" fill="#2f9e57"/>
+      <circle cx="-6" cy="6" r="7" fill="#3cb371"/>
+      <circle cx="6" cy="6" r="7" fill="#3cb371"/>
+      <circle cx="0" cy="-4" r="7" fill="#4fd07a"/>`;
+    g.appendChild(el);
+  }
+}
+function buildSpecks(){
+  const g=$('soilspecks'); g.innerHTML='';
+  for(let i=0;i<40;i++){
+    const x=Math.random()*398+1, y=156+Math.random()*60, r=Math.random()*1.6+0.5;
+    const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx',x.toFixed(1));c.setAttribute('cy',y.toFixed(1));c.setAttribute('r',r.toFixed(1));
+    c.setAttribute('fill','rgba(20,10,0,0.35)');
+    g.appendChild(c);
+  }
+}
+
+function renderControls(){
+  const L=LEVELS[curLvl];
+  const box=$('controls'); box.innerHTML='';
+  L.sliders.forEach(s=>{
+    const wrap=document.createElement('div'); wrap.className='ctrl';
+    const dec = (s.step<1)?1:0;
+    wrap.innerHTML=`<label>${s.label} <span class="cv" id="cv_${s.id}">${state[s.id].toLocaleString('pt-BR',{minimumFractionDigits:dec,maximumFractionDigits:dec})} ${s.unit}</span></label>
+      <input type="range" id="sl_${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${state[s.id]}">`;
+    box.appendChild(wrap);
+    wrap.querySelector('input').addEventListener('input',e=>{
+      state[s.id]=parseFloat(e.target.value);
+      $('cv_'+s.id).textContent=state[s.id].toLocaleString('pt-BR',{minimumFractionDigits:dec,maximumFractionDigits:dec})+' '+s.unit;
+      update(true);
+    });
+  });
+}
+
+function renderRows(c){
+  const box=$('rows'); box.innerHTML='';
+  c.rows.forEach(r=>{
+    const d=document.createElement('div'); d.className='rowitem';
+    d.innerHTML=`<div class="rl">${r.rl}</div><div class="rv">${r.rv}</div>`;
+    box.appendChild(d);
+  });
+}
+
+function renderViz(c){
+  $('soil').setAttribute('fill',soilColor(c.soilFrac));
+  const L=LEVELS[curLvl];
+  const count=Math.round(c.vegFrac*L.maxTrees);
+  const trees=$('trees').children;
+  for(let i=0;i<trees.length;i++){ trees[i].classList.toggle('off', i>=count); }
+  const pct=Math.max(0,Math.min(100,(c.main/c.gaugeMax)*100));
+  $('gauge').style.width=pct+'%';
+  $('mainNum').textContent=fmt(c.main)+' '+c.unit;
+  $('co2label').textContent=c.main>0?('CO₂ ↓ '+fmt(c.main)+' '+c.unit):'';
+}
+
+function update(fromUser){
+  const L=LEVELS[curLvl];
+  const c=L.compute(state);
+  renderViz(c); renderRows(c);
+  if(fromUser){ $('feedback').className='feedback'; $('feedback').innerHTML=L.live(state,c); }
+  return c;
+}
+
+function loadMission(){
+  const L=LEVELS[curLvl];
+  if(mIdx>=L.missions.length){ showFinal(); return; }
+  const m=L.missions[mIdx];
+  $('mTag').textContent='Desafio '+(mIdx+1);
+  $('mText').textContent=m.t;
+  $('hProg').textContent=(mIdx+1)+'/'+L.missions.length;
+}
+
+function verify(){
+  if(finished) return;
+  const L=LEVELS[curLvl];
+  const m=L.missions[mIdx];
+  const c=L.compute(state);
+  const fb=$('feedback');
+  if(m.ok(state,c)){
+    done++; $('hDone').textContent=done;
+    $('mainNum').classList.add('pop'); setTimeout(()=>$('mainNum').classList.remove('pop'),450);
+    fb.className='feedback ok'; fb.innerHTML='✅ <b>Meta atingida!</b> '+m.fb;
+    mIdx++;
+    loadMission();
+  }else{
+    errs++; $('hErr').textContent=errs;
+    const card=$('missionCard'); card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),400);
+    fb.className='feedback bad'; fb.innerHTML='❌ Ainda não. '+(m.tip||'Ajuste os controles e tente de novo.');
+  }
+}
+
+function startTimer(){
+  startT=Date.now();
+  if(timer) clearInterval(timer);
+  timer=setInterval(()=>{ if(!finished) $('hTime').textContent=Math.floor((Date.now()-startT)/1000)+'s'; },250);
+}
+function elapsed(){return Math.floor((Date.now()-startT)/1000);}
+
+function resetLevel(lvl){
+  curLvl=lvl; finished=false; mIdx=0; done=0; errs=0;
+  state={};
+  LEVELS[lvl].sliders.forEach(s=>state[s.id]=s.val);
+  buildTrees(LEVELS[lvl].maxTrees);
+  $('hDone').textContent='0'; $('hErr').textContent='0'; $('hTime').textContent='0s';
+  $('final').className='final'; $('saveMsg').textContent='';
+  $('missionCard').style.display='';
+  renderControls();
+  update(false);
+  loadMission();
+  $('feedback').className='feedback';
+  $('feedback').innerHTML='Nível <b>'+LEVELS[lvl].name+'</b> iniciado. Mova os controles e leia os números ao vivo.';
+  $('rankLvl').textContent=LEVELS[lvl].name;
+  startTimer();
+  loadRanking();
+}
+
+function showFinal(){
+  finished=true;
+  const L=LEVELS[curLvl];
+  $('missionCard').style.display='none';
+  $('finalSum').innerHTML=`Você completou <b>${done}/${L.missions.length}</b> desafios do nível <b>${L.name}</b> em <b>${elapsed()}s</b>, com ${errs} tentativa(s) errada(s).`;
+  $('final').className='final show';
+}
+
+/* ===================== RANKING ===================== */
+async function loadRanking(){
+  if(!fbReady){ return; }
+  const body=$('rankBody');
+  try{
+    const {collection,getDocs,query,orderBy,limit}=FS;
+    const q=query(collection(db,'games',GAME_ID,'scores'),orderBy('score','desc'),limit(200));
+    const snap=await getDocs(q);
+    let rows=[]; snap.forEach(d=>rows.push(d.data()));
+    rows=rows.filter(r=>r.level===curLvl);
+    rows.sort((a,b)=>(b.score-a.score)||(a.seconds-b.seconds));
+    rows=rows.slice(0,10);
+    if(!rows.length){ body.innerHTML='<tr><td colspan="4" class="warn">Seja o primeiro a pontuar neste nível!</td></tr>'; return; }
+    body.innerHTML=rows.map((r,i)=>`<tr><td class="rk">${i+1}</td><td>${escHtml(r.name||'—')}</td><td>${r.score}</td><td>${r.seconds}s</td></tr>`).join('');
+  }catch(e){
+    body.innerHTML='<tr><td colspan="4" class="warn">Não foi possível carregar o ranking.</td></tr>';
+  }
+}
+
+async function saveScore(){
+  const name=($('nameIn').value||'').trim().slice(0,20)||'Anônimo';
+  const msg=$('saveMsg');
+  if(!fbReady){ msg.textContent='Ranking offline: seu resultado não pôde ser enviado, mas o jogo está completo!'; return; }
+  msg.textContent='Salvando…';
+  try{
+    const {collection,addDoc,serverTimestamp}=FS;
+    await addDoc(collection(db,'games',GAME_ID,'scores'),{
+      name, score:done, seconds:elapsed(), level:curLvl, ts:serverTimestamp()
+    });
+    msg.textContent='✅ Salvo no ranking!';
+    $('saveBtn').disabled=true;
+    loadRanking();
+  }catch(e){
+    msg.textContent='Não foi possível salvar agora. Tente novamente.';
+  }
+}
+
+/* ===================== EVENTOS ===================== */
+document.querySelectorAll('.pill').forEach(p=>{
+  p.addEventListener('click',()=>{
+    document.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));
+    p.classList.add('active');
+    resetLevel(p.dataset.lvl);
+  });
+});
+$('verifyBtn').addEventListener('click',verify);
+$('resetBtn').addEventListener('click',()=>resetLevel(curLvl));
+$('saveBtn').addEventListener('click',saveScore);
+
+/* ===================== INIT ===================== */
+buildSpecks();
+resetLevel('basico');
+initFirebase();
+</script>
+</body>
+</html>
