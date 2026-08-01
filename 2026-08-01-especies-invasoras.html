@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memória Invasora 🐗 — Espécies Exóticas Invasoras</title>
+<style>
+:root{
+  --bg1:#0c3b39; --bg2:#3d1247; --card:#12494a; --card2:#173a55;
+  --accent:#ff7a45; --accent2:#ffd23f; --success:#2ecc71; --danger:#ff5a5f;
+  --ink:#f3fbf9; --muted:#a7c4c0; --pill:#1e5a58; --shadow:0 8px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+  color:var(--ink); min-height:100vh;
+  background:linear-gradient(160deg,var(--bg1) 0%,var(--bg2) 100%);
+  padding:16px;
+}
+.wrap{max-width:1100px; margin:0 auto}
+header{text-align:center; margin-bottom:10px}
+h1{
+  font-size:clamp(1.6rem,5vw,2.7rem); margin:.2em 0 .1em; line-height:1.1;
+  text-shadow:0 2px 10px rgba(0,0,0,.4);
+}
+.sub{color:var(--muted); font-size:clamp(.85rem,2.5vw,1rem); margin:0 0 6px}
+.levels{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:14px 0}
+.pill{
+  border:none; cursor:pointer; padding:10px 16px; border-radius:999px;
+  background:var(--pill); color:var(--ink); font-weight:700; font-size:.92rem;
+  transition:all .25s ease; box-shadow:var(--shadow);
+}
+.pill:hover{transform:translateY(-2px)}
+.pill.active{background:var(--accent); color:#241000; box-shadow:0 6px 18px rgba(255,122,69,.45)}
+.hud{
+  display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:10px 0 6px;
+}
+.chip{
+  background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12);
+  padding:8px 14px; border-radius:12px; font-weight:700; font-size:.95rem;
+}
+.chip b{color:var(--accent2)}
+.howto{
+  text-align:center; color:var(--muted); font-size:.9rem; margin:6px auto 12px; max-width:640px;
+}
+.board{
+  display:grid; gap:10px; margin:0 auto 16px;
+  grid-template-columns:repeat(auto-fit,minmax(clamp(78px,20vw,150px),1fr));
+}
+.card{
+  perspective:900px; aspect-ratio:3/4; min-height:96px; cursor:pointer;
+}
+.inner{
+  position:relative; width:100%; height:100%; transition:transform .45s cubic-bezier(.4,.2,.2,1);
+  transform-style:preserve-3d;
+}
+.card.flip .inner, .card.matched .inner{transform:rotateY(180deg)}
+.face{
+  position:absolute; inset:0; backface-visibility:hidden; border-radius:14px;
+  display:flex; align-items:center; justify-content:center; text-align:center;
+  padding:6px; box-shadow:var(--shadow); overflow:hidden;
+}
+.front{
+  background:linear-gradient(150deg,var(--card),var(--card2));
+  font-size:clamp(1.6rem,6vw,2.4rem);
+  border:1px solid rgba(255,255,255,.10);
+}
+.back{
+  transform:rotateY(180deg); background:#eafaf6; color:#0c2b2a;
+  font-size:clamp(.6rem,1.8vw,.82rem); line-height:1.15; font-weight:600;
+  border:2px solid var(--accent);
+}
+.back.term{background:#fff2e6; border-color:var(--accent2); font-weight:800; font-size:clamp(.68rem,2vw,.92rem)}
+.card.matched .back{border-color:var(--success); box-shadow:0 0 0 3px rgba(46,204,113,.4) inset}
+.pop{animation:pop .4s ease}
+@keyframes pop{0%{transform:rotateY(180deg) scale(1)}50%{transform:rotateY(180deg) scale(1.12)}100%{transform:rotateY(180deg) scale(1)}}
+.shake{animation:shake .4s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.panel{
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+  border-radius:16px; padding:14px 16px; margin:12px auto; box-shadow:var(--shadow);
+}
+.feedback{min-height:44px; text-align:center; font-size:.95rem}
+.feedback .ok{color:var(--success); font-weight:700}
+.feedback .no{color:var(--danger); font-weight:700}
+.rank h3{margin:.1em 0 .5em; font-size:1.05rem}
+.rank .lvltag{color:var(--accent2)}
+.rank ol{margin:.2em 0; padding-left:1.4em}
+.rank li{padding:3px 0; font-size:.92rem}
+.rank .warn{color:var(--muted); font-size:.86rem}
+.final{
+  display:none; text-align:center;
+}
+.final.show{display:block; animation:pop2 .5s ease}
+@keyframes pop2{0%{transform:scale(.9);opacity:0}100%{transform:scale(1);opacity:1}}
+.final h2{font-size:clamp(1.4rem,5vw,2.1rem); color:var(--success); margin:.2em 0}
+.final .stats{font-size:1.05rem; margin:8px 0}
+.saverow{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:12px}
+input[type=text]{
+  padding:11px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.9); color:#0c2b2a; font-size:1rem; font-weight:600; max-width:220px;
+}
+.btn{
+  border:none; cursor:pointer; padding:11px 20px; border-radius:12px; font-weight:800;
+  background:var(--accent); color:#241000; font-size:1rem; transition:all .2s; box-shadow:var(--shadow);
+}
+.btn:hover{transform:translateY(-2px)}
+.btn.alt{background:var(--pill); color:var(--ink)}
+footer{text-align:center; margin:22px auto 8px; color:var(--muted); font-size:.9rem; line-height:1.6}
+footer .hi{color:var(--accent2); font-weight:800; font-size:1rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Memória Invasora 🐗🐌</h1>
+  <p class="sub">Encontre os pares <b>conceito ↔ definição</b> das espécies exóticas invasoras</p>
+  <div class="levels" id="levels">
+    <button class="pill active" data-lvl="basico">Básico</button>
+    <button class="pill" data-lvl="intermediario">Intermediário</button>
+    <button class="pill" data-lvl="dificil">Difícil</button>
+    <button class="pill" data-lvl="carbonauta">🛰️ Carbonauta</button>
+  </div>
+</header>
+
+<div class="hud" id="hud">
+  <div class="chip">Tempo: <b id="time">0s</b></div>
+  <div class="chip">Erros: <b id="errors">0</b></div>
+  <div class="chip">Pares: <b id="pairs">0/0</b></div>
+</div>
+<p class="howto">Clique em duas cartas para virá-las. Combine o <b>termo</b> com a sua <b>definição</b> para formar um par. Menos tempo e menos erros = melhor pontuação.</p>
+
+<div id="game">
+  <div class="board" id="board"></div>
+  <div class="panel feedback" id="feedback">Vire duas cartas para começar a caçar as invasoras! 🐾</div>
+</div>
+
+<div class="panel final" id="final">
+  <h2>🎉 Você limpou o ecossistema!</h2>
+  <div class="stats" id="finalStats"></div>
+  <div class="saverow">
+    <input type="text" id="playerName" maxlength="20" placeholder="Seu nome (até 20)">
+    <button class="btn" id="saveBtn">Salvar no ranking</button>
+    <button class="btn alt" id="againBtn">Jogar de novo</button>
+  </div>
+  <p class="warn" id="saveMsg" style="color:var(--accent2);margin-top:8px"></p>
+</div>
+
+<div class="panel rank">
+  <h3>🏆 Ranking Global — <span class="lvltag" id="rankLvl">Básico</span></h3>
+  <ol id="rankList"><li class="warn">Carregando ranking…</li></ol>
+</div>
+
+<footer>
+  <div class="hi">— Idealizado por Ernandes Sobreira —</div>
+  <div>Tema: Espécies invasoras · Gênero: Jogo da memória · app ambiental do dia (2026-08-01)</div>
+</footer>
+</div>
+
+<script>
+/* ============ FIREBASE (somente ranking) ============ */
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-08-01-especies-invasoras";
+let db=null, fs=null;
+(async()=>{
+  try{
+    const app = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    fs = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const a = app.initializeApp(firebaseConfig);
+    db = fs.getFirestore(a);
+    loadRanking();
+  }catch(e){ document.getElementById('rankList').innerHTML='<li class="warn">Ranking offline — o jogo funciona normalmente. 🌱</li>'; }
+})();
+
+/* ============ CONTEUDO (4 niveis) ============ */
+const DATA = {
+  basico:[
+    {t:"Caramujo-africano",d:"Molusco gigante trazido para virar comida, hoje é praga urbana",fb:"O Achatina fulica foi solto no Brasil nos anos 1980 e virou praga que pode transmitir doenças."},
+    {t:"Javali",d:"Porco selvagem que destrói lavouras e revolve o solo",fb:"O javali ataca plantações e é a única invasora cuja caça é permitida no Brasil."},
+    {t:"Mexilhão-dourado",d:"Molusco de água doce que entope canos de usinas",fb:"Chegou na água de lastro dos navios e forma incrustações que travam tubulações."},
+    {t:"Espécie invasora",d:"Ser vivo trazido de fora que causa danos ao ambiente",fb:"É a espécie exótica introduzida fora de sua área natural que prejudica o ecossistema."},
+    {t:"Espécie nativa",d:"Ser vivo original daquele lugar, parte do equilíbrio",fb:"Espécies nativas evoluíram na região e ajudam a manter o ecossistema em equilíbrio."},
+    {t:"Água de lastro",d:"Água dos navios que carrega bichos de longe",fb:"Navios enchem tanques com água do mar e liberam espécies em outro continente."},
+    {t:"Abelha-africanizada",d:"Abelha mais agressiva que se espalhou pelo país",fb:"Um cruzamento acidental nos anos 1950 gerou abelhas resistentes e agressivas."},
+    {t:"Capim invasor",d:"Planta de fora que sufoca o mato nativo",fb:"Gramíneas como a braquiária tomam o espaço e atrapalham a mata nativa."}
+  ],
+  intermediario:[
+    {t:"Achatina fulica",d:"Caramujo-gigante-africano, vetor de vermes pulmonares",fb:"Pode transmitir o Angiostrongylus, causador de meningite eosinofílica em humanos."},
+    {t:"Limnoperna fortunei",d:"Mexilhão-dourado incrustante de origem asiática",fb:"Forma incrustações densas (bioincrustação) em usinas hidrelétricas e tomadas d'água."},
+    {t:"Sus scrofa",d:"Javali, ungulado que causa erosão e predação",fb:"Revolve o solo (rooting), espalha doenças e ameaça a fauna e a flora nativas."},
+    {t:"Braquiária (Urochloa)",d:"Gramínea africana que domina pastagens",fb:"Compete na sucessão ecológica e altera os regimes naturais de fogo."},
+    {t:"Água de lastro",d:"Principal vetor de invasão em ambientes aquáticos",fb:"Transporta larvas e microrganismos entre bacias e continentes distintos."},
+    {t:"Introdução",d:"Chegada da espécie a uma nova região",fb:"É a primeira etapa da invasão; nem toda introdução vira estabelecimento."},
+    {t:"Estabelecimento",d:"População que se reproduz sozinha no novo local",fb:"Ocorre quando a espécie forma população viável sem novas chegadas externas."},
+    {t:"Competição",d:"Disputa por recursos com as espécies nativas",fb:"Invasoras costumam vencer nativas por luz, água, alimento ou espaço."},
+    {t:"Bioinvasão",d:"Processo de dispersão e dano de uma exótica",fb:"É apontada como uma das maiores causas de perda de biodiversidade global."},
+    {t:"Tucunaré fora da Amazônia",d:"Peixe nativo que vira invasor em outras bacias",fb:"Solto em açudes do Sudeste, predou peixes nativos e desestruturou comunidades locais."}
+  ],
+  dificil:[
+    {t:"Pressão de propágulos",d:"Nº de indivíduos e de eventos de introdução",fb:"É o preditor mais consistente do sucesso de estabelecimento de exóticas."},
+    {t:"Liberação de inimigos",d:"Escape de predadores e parasitas do local nativo",fb:"Enemy Release Hypothesis: sem inimigos, a exótica realoca energia ao crescimento."},
+    {t:"Regra dos dez",d:"~10% introduzidas estabelecem, ~10% destas invadem",fb:"A 'tens rule' ilustra a raridade do sucesso invasor, embora seja contestada."},
+    {t:"Invasional meltdown",d:"Invasoras facilitam umas às outras em cascata",fb:"Interações positivas entre exóticas intensificam impactos e novas invasões."},
+    {t:"Continuum de invasão",d:"Etapas introdução–naturalização–invasão",fb:"Cada barreira (geográfica, ambiental, reprodutiva, de dispersão) filtra espécies."},
+    {t:"Naturalização",d:"Reprodução autossustentável sem subsídio humano",fb:"É o estágio anterior à expansão populacional propriamente invasora."},
+    {t:"Resistência biótica",d:"Comunidade nativa dificulta a invasão",fb:"Hipótese de Elton: maior riqueza de espécies aumenta a resistência à invasão."},
+    {t:"Bioincrustação",d:"Adesão de organismos em superfícies submersas",fb:"O mexilhão-dourado incrusta tubulações e reduz a vazão em usinas (biofouling)."},
+    {t:"Hibridização introgressiva",d:"Fluxo gênico da exótica para a nativa",fb:"Ameaça a integridade genética das populações nativas por introgressão."},
+    {t:"Espécie-engenheira",d:"Modifica a estrutura física do habitat",fb:"Ex.: capins invasores alteram a carga de combustível e o ciclo do fogo."},
+    {t:"Prey naïveté",d:"Presa nativa não reconhece o novo predador",fb:"A ingenuidade da presa reduz a defesa e amplia o impacto do predador exótico."},
+    {t:"Vetor antropogênico",d:"Via de dispersão ligada à atividade humana",fb:"Comércio, aquarismo, ornamentais e água de lastro são vetores comuns."},
+    {t:"Nicho vago",d:"Recurso não explorado ocupado pela exótica",fb:"Hipótese do 'empty niche' de Elton sobre oportunidades de invasão."},
+    {t:"Alelopatia",d:"Compostos que inibem plantas vizinhas",fb:"Base da hipótese das 'armas novas' (novel weapons) em plantas invasoras."},
+    {t:"Espécie criptogênica",d:"Origem nativa ou exótica indefinida",fb:"Não se sabe com certeza se a espécie é introduzida ou natural da região."},
+    {t:"Fase de latência",d:"Intervalo antes da expansão populacional",fb:"'Lag phase': período em que a exótica parece inofensiva antes de explodir."}
+  ],
+  carbonauta:[
+    {t:"Novel weapons hypothesis",d:"Aleloquímicos ineficazes na comunidade de origem",fb:"A (±)-catequina de Centaurea é o exemplo clássico, ainda que controverso."},
+    {t:"Hipótese EICA",d:"Evolução de maior competitividade após perder defesas",fb:"Blossey & Nötzold: recursos antes de defesa são realocados ao crescimento."},
+    {t:"Propagule pressure (Lockwood)",d:"Integra tamanho e número de eventos de introdução",fb:"Propagule size e propagule number atuam como preditores independentes."},
+    {t:"Fluctuating resources",d:"Invasibilidade sobe com pulsos de recursos livres",fb:"Davis, Grime & Thompson (2000): janelas de oportunidade para invasão."},
+    {t:"Darwin's conundrum",d:"Parentesco filogenético com nativas puxa para os dois lados",fb:"Preadaptação favorece; competição por nicho similar dificulta o estabelecimento."},
+    {t:"Paradoxo invasional",d:"Relação riqueza–invasão muda com a escala",fb:"Negativa em microescala (resistência biótica), positiva em macroescala."},
+    {t:"Meltdown (Simberloff)",d:"Facilitação mutualística entre co-invasores",fb:"Simberloff & Von Holle (1999): feedback positivo em nível populacional."},
+    {t:"Limnoperna fortunei",d:"Bivalve dulcícola epifaunal fixado por bisso",fb:"Macrofouling nas hidrelétricas das bacias do Prata e do Paraná."},
+    {t:"Angiostrongylus cantonensis",d:"Metastrongilídeo vetorado por moluscos exóticos",fb:"Agente da meningoencefalite eosinofílica, ligado ao caramujo-africano."},
+    {t:"Ciclo capim-fogo",d:"Gramíneas C4 elevam biomassa e frequência de queima",fb:"'Grass-fire cycle' de Cenchrus/Melinis retroalimenta invasão e incêndios."},
+    {t:"Introgressão adaptativa",d:"Transferência de alelos vantajosos por hibridização",fb:"Pode erodir genótipos nativos ou conferir vigor à população invasora."},
+    {t:"Residence time",d:"Tempo desde a introdução prediz área ocupada",fb:"Preditor robusto da extensão de invasão em floras exóticas regionais."},
+    {t:"Banco de propágulos dormente",d:"Reservatório de sementes que sustenta reinvasão",fb:"Complica a erradicação por causa do rebrote após o controle inicial."},
+    {t:"Efeito Allee em exóticas",d:"Baixa densidade reduz o crescimento inicial",fb:"Explica falhas de estabelecimento e as longas fases de latência."},
+    {t:"Competição aparente",d:"Invasora amplifica inimigo compartilhado com a nativa",fb:"'Enemy of my enemy': predador ou patógeno amplificado prejudica a nativa."},
+    {t:"Espécie transformadora",d:"Invasora que altera funções ecossistêmicas",fb:"Categoria de Richardson et al. (2000), além de casual e naturalizada."},
+    {t:"Continuum ITN",d:"Sequência introdução–naturalização–invasão com barreiras",fb:"Cada barreira filtra espécies ao longo do continuum de Richardson/Blackburn."},
+    {t:"Context-dependência",d:"Sucesso varia com escala e comunidade receptora",fb:"Meta-análises mostram suporte desigual e declinante às hipóteses de invasão."}
+  ]
+};
+const LVL_NAME={basico:"Básico",intermediario:"Intermediário",dificil:"Difícil",carbonauta:"🛰️ Carbonauta"};
+
+/* ============ ESTADO ============ */
+let level="basico", cards=[], first=null, lock=false;
+let errors=0, matched=0, totalPairs=0, seconds=0, timer=null, started=false;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function startTimer(){
+  if(timer) return;
+  timer=setInterval(()=>{seconds++; document.getElementById('time').textContent=seconds+'s';},1000);
+}
+function stopTimer(){clearInterval(timer); timer=null;}
+
+function build(){
+  stopTimer();
+  const data=DATA[level];
+  totalPairs=data.length; matched=0; errors=0; seconds=0; first=null; lock=false; started=false;
+  document.getElementById('time').textContent='0s';
+  document.getElementById('errors').textContent='0';
+  document.getElementById('pairs').textContent='0/'+totalPairs;
+  document.getElementById('feedback').innerHTML='Vire duas cartas para começar a caçar as invasoras! 🐾';
+  document.getElementById('final').classList.remove('show');
+  document.getElementById('game').style.display='block';
+  document.getElementById('saveMsg').textContent='';
+  document.getElementById('rankLvl').textContent=LVL_NAME[level];
+
+  let deck=[];
+  data.forEach((p,i)=>{
+    deck.push({pid:i,side:'term',text:p.t,fb:p.fb});
+    deck.push({pid:i,side:'def',text:p.d,fb:p.fb});
+  });
+  shuffle(deck);
+  cards=deck;
+  const board=document.getElementById('board');
+  board.innerHTML='';
+  deck.forEach((c,idx)=>{
+    const el=document.createElement('div');
+    el.className='card'; el.dataset.idx=idx;
+    el.innerHTML='<div class="inner">'+
+      '<div class="face front">'+(c.side==='term'?'🐗':'🔎')+'</div>'+
+      '<div class="face back '+(c.side==='term'?'term':'')+'">'+esc(c.text)+'</div>'+
+    '</div>';
+    el.addEventListener('click',()=>flip(idx,el));
+    board.appendChild(el);
+  });
+  loadRanking();
+}
+
+function flip(idx,el){
+  if(lock||el.classList.contains('flip')||el.classList.contains('matched'))return;
+  if(!started){started=true; startTimer();}
+  el.classList.add('flip');
+  const c=cards[idx];
+  if(!first){first={idx,el,c};return;}
+  if(first.idx===idx)return;
+  const a=first.c, b=c;
+  if(a.pid===b.pid && a.side!==b.side){
+    lock=true;
+    setTimeout(()=>{
+      first.el.classList.add('matched','pop'); el.classList.add('matched','pop');
+      matched++;
+      document.getElementById('pairs').textContent=matched+'/'+totalPairs;
+      document.getElementById('feedback').innerHTML='<span class="ok">✔ Par correto!</span> '+esc(c.fb);
+      first=null; lock=false;
+      if(matched===totalPairs) win();
+    },260);
+  }else{
+    lock=true; errors++;
+    document.getElementById('errors').textContent=errors;
+    first.el.classList.add('shake'); el.classList.add('shake');
+    document.getElementById('feedback').innerHTML='<span class="no">✗ Não formam par.</span> Observe o termo e a definição e tente lembrar as posições.';
+    setTimeout(()=>{
+      first.el.classList.remove('flip','shake'); el.classList.remove('flip','shake');
+      first=null; lock=false;
+    },900);
+  }
+}
+
+function score(){return seconds + errors*5;}
+
+function win(){
+  stopTimer();
+  document.getElementById('game').style.display='none';
+  const f=document.getElementById('final');
+  f.classList.add('show');
+  document.getElementById('finalStats').innerHTML=
+    'Nível <b>'+LVL_NAME[level]+'</b> · '+totalPairs+' pares<br>'+
+    '⏱️ Tempo: <b>'+seconds+'s</b> · ❌ Erros: <b>'+errors+'</b><br>'+
+    'Pontuação (menor é melhor): <b>'+score()+'</b>';
+}
+
+/* ============ RANKING (Firestore) ============ */
+async function loadRanking(){
+  const list=document.getElementById('rankList');
+  if(!db){list.innerHTML='<li class="warn">Ranking offline — o jogo funciona normalmente. 🌱</li>';return;}
+  try{
+    const {collection,query,orderBy,limit,getDocs}=fs;
+    const q=query(collection(db,"games",GAME_ID,"scores"),orderBy("score"),limit(200));
+    const snap=await getDocs(q);
+    let rows=[];
+    snap.forEach(d=>{const v=d.data(); if(v.level===level) rows.push(v);});
+    rows=rows.slice(0,10);
+    if(!rows.length){list.innerHTML='<li class="warn">Ainda sem pontuações neste nível. Seja o primeiro! 🥇</li>';return;}
+    list.innerHTML=rows.map(r=>'<li>'+esc(r.name||'anônimo')+' — <b>'+r.score+'</b> pts ('+(r.seconds||'?')+'s, '+(r.errors!=null?r.errors:'?')+' erros)</li>').join('');
+  }catch(e){
+    list.innerHTML='<li class="warn">Não foi possível carregar o ranking agora. 🌐</li>';
+  }
+}
+
+async function saveScore(){
+  const msg=document.getElementById('saveMsg');
+  const name=(document.getElementById('playerName').value||'').trim().slice(0,20)||'anônimo';
+  if(!db){msg.textContent='Ranking offline: pontuação não enviada, mas seu jogo valeu! 🌱';return;}
+  try{
+    const {collection,addDoc,serverTimestamp}=fs;
+    await addDoc(collection(db,"games",GAME_ID,"scores"),{
+      name, score:score(), seconds, errors, level, ts:serverTimestamp()
+    });
+    msg.textContent='✅ Pontuação salva no ranking global!';
+    loadRanking();
+  }catch(e){ msg.textContent='Não foi possível salvar agora — tente novamente. 🌐'; }
+}
+
+/* ============ EVENTOS ============ */
+document.querySelectorAll('#levels .pill').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#levels .pill').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    level=b.dataset.lvl;
+    build();
+  });
+});
+document.getElementById('saveBtn').addEventListener('click',saveScore);
+document.getElementById('againBtn').addEventListener('click',build);
+
+build();
+</script>
+</body>
+</html>
