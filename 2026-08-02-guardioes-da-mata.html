@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌳 Guardiões da Mata — Classifique a Mata Atlântica</title>
+<style>
+:root{
+  --bg1:#0b3d2e; --bg2:#052018;
+  --panel:#0f4a37; --panel2:#12583f;
+  --card:#e8f5e9; --card-ink:#0b3d2e;
+  --accent:#ffd23f; --accent-ink:#3a2c00;
+  --ok:#3ddc84; --ok-deep:#158a4f;
+  --bad:#ff5a5a; --line:#2a7a5c;
+  --txt:#eafcf3; --muted:#a9d9c5;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; color:var(--txt);
+  font-family:system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:linear-gradient(160deg,var(--bg1),var(--bg2));
+  padding:16px;
+}
+.wrap{max-width:960px; width:min(960px,95vw); margin:0 auto}
+header{text-align:center; margin-bottom:10px}
+h1{font-size:clamp(1.6rem,4.5vw,2.6rem); margin:.2em 0; line-height:1.1}
+.sub{color:var(--muted); font-size:clamp(.85rem,2.5vw,1rem); margin:0 0 4px}
+.howto{background:rgba(255,255,255,.07); border:1px solid var(--line);
+  border-radius:12px; padding:8px 14px; font-size:.92rem; color:var(--txt); display:inline-block}
+
+.levels{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:14px 0}
+.pill{
+  border:2px solid var(--line); background:var(--panel); color:var(--txt);
+  padding:9px 16px; border-radius:999px; font-size:.95rem; font-weight:700;
+  cursor:pointer; transition:all .25s ease;
+}
+.pill:hover{transform:translateY(-2px)}
+.pill.active{background:var(--accent); color:var(--accent-ink); border-color:var(--accent); box-shadow:0 6px 18px rgba(255,210,63,.3)}
+
+.hud{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:6px 0 14px}
+.stat{background:var(--panel); border:1px solid var(--line); border-radius:12px;
+  padding:7px 14px; font-weight:700; font-size:.95rem; box-shadow:0 3px 10px rgba(0,0,0,.2)}
+.stat b{color:var(--accent)}
+
+.zones{display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); margin-bottom:14px}
+.zone{
+  border:3px dashed var(--line); border-radius:16px; padding:10px; min-height:130px;
+  background:rgba(255,255,255,.04); transition:all .25s ease;
+}
+.zone.over{border-color:var(--accent); background:rgba(255,210,63,.12); transform:translateY(-2px)}
+.zone h3{margin:.1em 0 8px; text-align:center; font-size:1.02rem}
+.zone .slots{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; align-content:flex-start}
+
+.pool{
+  border:1px solid var(--line); border-radius:16px; padding:12px; margin-bottom:14px;
+  background:linear-gradient(160deg,var(--panel),var(--panel2));
+  display:flex; flex-wrap:wrap; gap:8px; justify-content:center; min-height:70px;
+}
+.card{
+  background:var(--card); color:var(--card-ink); border-radius:12px;
+  padding:10px 14px; font-weight:700; font-size:.95rem; cursor:grab;
+  box-shadow:0 4px 12px rgba(0,0,0,.25); border:2px solid transparent;
+  transition:transform .2s ease, box-shadow .2s ease, background .2s ease;
+  touch-action:none; user-select:none; -webkit-user-select:none;
+}
+.card:hover{transform:translateY(-2px); box-shadow:0 8px 18px rgba(0,0,0,.3)}
+.card.dragging{cursor:grabbing; z-index:999; box-shadow:0 14px 30px rgba(0,0,0,.45); transform:scale(1.05)}
+.card.done{background:var(--ok); color:#04351f; cursor:default; border-color:var(--ok-deep)}
+.card.pop{animation:pop .4s ease}
+.card.shake{animation:shake .4s ease; background:var(--bad); color:#fff}
+@keyframes pop{0%{transform:scale(.6)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+
+.fb{background:rgba(255,255,255,.07); border-left:5px solid var(--accent);
+  border-radius:10px; padding:11px 14px; margin-bottom:14px; min-height:44px; font-size:.95rem}
+
+.rank{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:14px; margin-bottom:14px}
+.rank h3{margin:.1em 0 8px; font-size:1.05rem}
+.rank .lvl{color:var(--accent); font-weight:800}
+.rank ol{margin:6px 0 0; padding-left:26px}
+.rank li{padding:3px 0; border-bottom:1px dashed rgba(255,255,255,.08)}
+.rank .warn{color:var(--muted); font-size:.9rem}
+.rank .me{color:var(--accent); font-weight:800}
+
+.final{display:none; text-align:center; background:linear-gradient(160deg,#12583f,#0b3d2e);
+  border:2px solid var(--ok); border-radius:18px; padding:20px; margin-bottom:14px;
+  box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.final.show{display:block; animation:pop .5s ease}
+.final h2{margin:.1em 0; font-size:1.5rem; color:var(--ok)}
+.final .row{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:12px 0}
+.final input{padding:10px 12px; border-radius:10px; border:2px solid var(--line);
+  font-size:1rem; background:#eafcf3; color:#0b3d2e; font-weight:700; max-width:220px}
+.final button{padding:10px 18px; border-radius:10px; border:none; cursor:pointer;
+  background:var(--accent); color:var(--accent-ink); font-weight:800; font-size:1rem; transition:transform .2s}
+.final button:hover{transform:translateY(-2px)}
+.final button:disabled{opacity:.5; cursor:default; transform:none}
+
+footer{text-align:center; margin:20px 0 8px; color:var(--muted); font-size:.9rem; line-height:1.6}
+footer .idea{color:var(--accent); font-weight:800; font-size:1.02rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🌳 Guardiões da Mata 🦜</h1>
+    <p class="sub">Classifique os elementos da <b>Mata Atlântica</b> arrastando cada carta para a zona certa.</p>
+    <span class="howto">👉 Arraste cada carta do banco para a categoria correta. Acerto: encaixa 🟢 · Erro: treme 🔴</span>
+  </header>
+
+  <div class="levels" id="levels">
+    <button class="pill" data-lv="basico">Básico</button>
+    <button class="pill" data-lv="intermediario">Intermediário</button>
+    <button class="pill" data-lv="dificil">Difícil</button>
+    <button class="pill" data-lv="carbonauta">🛰️ Carbonauta</button>
+  </div>
+
+  <div class="hud">
+    <div class="stat">Tempo: <b id="hTime">0s</b></div>
+    <div class="stat">Acertos: <b id="hHits">0/0</b></div>
+    <div class="stat">Erros: <b id="hErr">0</b></div>
+    <div class="stat">Pontos: <b id="hScore">0</b> <span style="font-weight:400;color:var(--muted)">(menor=melhor)</span></div>
+  </div>
+
+  <div class="zones" id="zones"></div>
+  <div class="pool" id="pool"></div>
+  <div class="fb" id="fb">Escolha um nível e comece a classificar! Cada jogada traz uma explicação. 🌱</div>
+
+  <div class="final" id="final">
+    <h2>🎉 Mata classificada!</h2>
+    <p id="finalMsg"></p>
+    <div class="row">
+      <input id="nameInput" maxlength="20" placeholder="Seu nome (até 20)">
+      <button id="saveBtn">Salvar no ranking</button>
+    </div>
+    <p id="saveMsg" style="color:var(--muted);min-height:20px"></p>
+  </div>
+
+  <div class="rank">
+    <h3>🏆 Ranking Global — nível <span class="lvl" id="rankLvl">Básico</span></h3>
+    <div id="rankBody"><p class="warn">Carregando ranking…</p></div>
+  </div>
+
+  <footer>
+    <div class="idea">— Idealizado por Ernandes Sobreira —</div>
+    <div>Tema: Mata Atlântica · Gênero: Arrastar e soltar (classificar) · app ambiental do dia (2026-08-02)</div>
+  </footer>
+</div>
+
+<script>
+/* ===================== FIREBASE ===================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-08-02-guardioes-da-mata";
+let db=null, fbMod=null, fbReady=false;
+(async ()=>{
+  try{
+    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    fbMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app = appMod.initializeApp(firebaseConfig);
+    db = fbMod.getFirestore(app);
+    fbReady=true;
+    loadRanking();
+  }catch(e){
+    fbReady=false;
+    document.getElementById('rankBody').innerHTML='<p class="warn">Ranking indisponível (offline). O jogo continua 100% jogável. 🌿</p>';
+  }
+})();
+
+/* ===================== DADOS ===================== */
+const LEVELS = {
+  basico:{
+    label:"Básico",
+    zones:[{id:"fauna",name:"Fauna 🐾"},{id:"flora",name:"Flora 🌳"}],
+    items:[
+      {t:"Mico-leão-dourado", z:"fauna", fb:"Primata símbolo do bioma; é um animal, faz parte da fauna."},
+      {t:"Tucano-toco", z:"fauna", fb:"Ave de bico grande e colorido; pertence à fauna."},
+      {t:"Onça-pintada", z:"fauna", fb:"Maior felino das Américas; animal, portanto fauna."},
+      {t:"Preguiça-de-coleira", z:"fauna", fb:"Mamífero arborícola e lento; faz parte da fauna."},
+      {t:"Pau-brasil", z:"flora", fb:"Árvore que deu nome ao país; planta, logo flora."},
+      {t:"Palmito-juçara", z:"flora", fb:"Palmeira nativa do bioma; vegetal, portanto flora."},
+      {t:"Bromélia", z:"flora", fb:"Planta que junta água entre as folhas; é flora."},
+      {t:"Jequitibá", z:"flora", fb:"Árvore gigante da floresta; planta, logo flora."}
+    ]
+  },
+  intermediario:{
+    label:"Intermediário",
+    zones:[{id:"end",name:"Endêmica 🎯"},{id:"ame",name:"Ameaça ⚠️"},{id:"con",name:"Conservação 🛡️"}],
+    items:[
+      {t:"Muriqui-do-norte", z:"end", fb:"Maior primata das Américas, exclusivo da Mata Atlântica."},
+      {t:"Sagui-da-serra", z:"end", fb:"Pequeno primata restrito às serras do Sudeste atlântico."},
+      {t:"Jacutinga", z:"end", fb:"Ave frugívora endêmica, grande dispersora de sementes."},
+      {t:"Palmito-juçara", z:"end", fb:"Palmeira típica e praticamente restrita ao bioma."},
+      {t:"Desmatamento", z:"ame", fb:"Retira a floresta e fragmenta o habitat das espécies."},
+      {t:"Urbanização", z:"ame", fb:"Cidades avançam sobre os remanescentes naturais do bioma."},
+      {t:"Caça-ilegal", z:"ame", fb:"Captura de animais silvestres reduz as populações."},
+      {t:"Invasoras", z:"ame", fb:"Espécies exóticas competem com as nativas do bioma."},
+      {t:"Corredores", z:"con", fb:"Corredores ecológicos ligam fragmentos e ativam o fluxo gênico."},
+      {t:"Reservas", z:"con", fb:"Unidades de conservação protegem por lei a biodiversidade."}
+    ]
+  },
+  dificil:{
+    label:"Difícil",
+    zones:[{id:"pol",name:"Polinizador 🐝"},{id:"dis",name:"Dispersor 🌰"},{id:"pred",name:"Predador de topo 🦅"}],
+    items:[
+      {t:"Beija-flor", z:"pol", fb:"Leva pólen ao visitar flores tubulares em busca de néctar."},
+      {t:"Abelha-euglossina", z:"pol", fb:"Machos coletam aromas e polinizam orquídeas do bioma."},
+      {t:"Morcego-nectarívoro", z:"pol", fb:"Poliniza flores noturnas ao se alimentar de néctar."},
+      {t:"Mariposa-esfingídea", z:"pol", fb:"Poliniza flores de tubo longo com sua probóscide."},
+      {t:"Abelha-mandaçaia", z:"pol", fb:"Abelha sem ferrão que poliniza plantas nativas."},
+      {t:"Tucano-toco", z:"dis", fb:"Engole frutos inteiros e espalha as sementes longe."},
+      {t:"Muriqui", z:"dis", fb:"Grande primata frugívoro que dispersa muitas sementes."},
+      {t:"Anta", z:"dis", fb:"Dispersora de grandes sementes por longas distâncias."},
+      {t:"Cutia", z:"dis", fb:"Roedor que enterra sementes e ajuda a germinação."},
+      {t:"Jacutinga", z:"dis", fb:"Ave que engole frutos e dispersa sementes grandes."},
+      {t:"Onça-pintada", z:"pred", fb:"Grande felino no topo da cadeia; controla presas."},
+      {t:"Onça-parda", z:"pred", fb:"Puma; predador de topo que regula os herbívoros."},
+      {t:"Gavião-pega-macaco", z:"pred", fb:"Águia florestal que caça primatas e preguiças."},
+      {t:"Jaguatirica", z:"pred", fb:"Felino que preda pequenos vertebrados da floresta."}
+    ]
+  },
+  carbonauta:{
+    label:"🛰️ Carbonauta",
+    zones:[{id:"end",name:"Endêmica ✅"},{id:"nat",name:"Nativa ampla 🌎"},{id:"exo",name:"Exótica invasora 🚫"}],
+    items:[
+      {t:"Leontopithecus rosalia", z:"end", fb:"Mico-leão-dourado, primata endêmico do Rio de Janeiro."},
+      {t:"Brachyteles hypoxanthus", z:"end", fb:"Muriqui-do-norte, primata exclusivo do bioma atlântico."},
+      {t:"Callithrix aurita", z:"end", fb:"Sagui-da-serra-escuro, endêmico do Sudeste atlântico."},
+      {t:"Aburria jacutinga", z:"end", fb:"Jacutinga, ave endêmica e ameaçada da Mata Atlântica."},
+      {t:"Euterpe edulis", z:"end", fb:"Palmito-juçara, palmeira restrita à floresta atlântica."},
+      {t:"Paubrasilia echinata", z:"end", fb:"Pau-brasil, árvore endêmica e símbolo do bioma."},
+      {t:"Panthera onca", z:"nat", fb:"Onça-pintada, nativa presente em vários biomas do país."},
+      {t:"Tapirus terrestris", z:"nat", fb:"Anta, nativa de ampla distribuição no território."},
+      {t:"Handroanthus albus", z:"nat", fb:"Ipê-amarelo, árvore nativa de vários biomas."},
+      {t:"Leopardus pardalis", z:"nat", fb:"Jaguatirica, felino nativo de ampla ocorrência."},
+      {t:"Cedrela fissilis", z:"nat", fb:"Cedro-rosa, árvore nativa de distribuição bem ampla."},
+      {t:"Sus scrofa", z:"exo", fb:"Javali, mamífero exótico invasor de origem euroasiática."},
+      {t:"Achatina fulica", z:"exo", fb:"Caramujo-africano, molusco invasor introduzido no país."},
+      {t:"Pinus elliottii", z:"exo", fb:"Pínus, conífera exótica que invade áreas abertas."},
+      {t:"Hedychium coronarium", z:"exo", fb:"Lírio-do-brejo, ornamental invasora de áreas úmidas."},
+      {t:"Urochloa decumbens", z:"exo", fb:"Capim-braquiária, gramínea africana muito invasora."}
+    ]
+  }
+};
+
+/* ===================== ESTADO ===================== */
+const ERR_PENALTY=5;
+let curLv="basico", items=[], hits=0, errs=0, total=0, seconds=0, timer=null, running=false, finished=false;
+
+const $=id=>document.getElementById(id);
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function scoreNow(){return seconds + errs*ERR_PENALTY;}
+
+function setLevel(lv){
+  curLv=lv; finished=false; running=false;
+  document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('active',p.dataset.lv===lv));
+  $('rankLvl').textContent=LEVELS[lv].label.replace('🛰️ ','');
+  $('final').classList.remove('show');
+  $('saveMsg').textContent=''; $('saveBtn').disabled=false;
+  clearInterval(timer); seconds=0; hits=0; errs=0;
+  const L=LEVELS[lv];
+  total=L.items.length;
+  items=shuffle(L.items.map((it,i)=>({...it,uid:lv+i})));
+  // zones
+  const zc=$('zones'); zc.innerHTML='';
+  L.zones.forEach(z=>{
+    const d=document.createElement('div');
+    d.className='zone'; d.dataset.zone=z.id;
+    d.innerHTML=`<h3>${z.name}</h3><div class="slots"></div>`;
+    zc.appendChild(d);
+  });
+  // pool
+  const pool=$('pool'); pool.innerHTML='';
+  items.forEach(it=>{
+    const c=document.createElement('div');
+    c.className='card'; c.dataset.zone=it.z; c.dataset.fb=it.fb; c.dataset.uid=it.uid;
+    c.textContent=it.t;
+    attachDrag(c);
+    pool.appendChild(c);
+  });
+  updHud();
+  $('fb').innerHTML=`Nível <b>${esc(L.label)}</b>: arraste as <b>${total}</b> cartas para a categoria certa. 🌿`;
+  loadRanking();
+}
+
+function updHud(){
+  $('hTime').textContent=seconds+'s';
+  $('hHits').textContent=hits+'/'+total;
+  $('hErr').textContent=errs;
+  $('hScore').textContent=scoreNow();
+}
+function startTimer(){
+  if(running) return; running=true;
+  timer=setInterval(()=>{seconds++; updHud();},1000);
+}
+
+/* ===================== DRAG (pointer, mouse+touch) ===================== */
+let drag=null;
+function attachDrag(card){
+  card.addEventListener('pointerdown',e=>{
+    if(card.classList.contains('done')||finished) return;
+    startTimer();
+    e.preventDefault();
+    const r=card.getBoundingClientRect();
+    drag={el:card, dx:e.clientX-r.left, dy:e.clientY-r.top, w:r.width, h:r.height};
+    card.classList.add('dragging');
+    card.style.width=r.width+'px';
+    card.style.position='fixed';
+    card.style.left=r.left+'px';
+    card.style.top=r.top+'px';
+    card.setPointerCapture(e.pointerId);
+    moveTo(e.clientX,e.clientY);
+  });
+  card.addEventListener('pointermove',e=>{
+    if(!drag||drag.el!==card) return;
+    moveTo(e.clientX,e.clientY);
+    highlight(e.clientX,e.clientY);
+  });
+  card.addEventListener('pointerup',e=>{
+    if(!drag||drag.el!==card) return;
+    drop(e.clientX,e.clientY);
+  });
+  card.addEventListener('pointercancel',()=>{ if(drag&&drag.el===card) reset(); });
+}
+function moveTo(x,y){ drag.el.style.left=(x-drag.dx)+'px'; drag.el.style.top=(y-drag.dy)+'px'; }
+function zoneAt(x,y){
+  drag.el.style.pointerEvents='none';
+  const el=document.elementFromPoint(x,y);
+  drag.el.style.pointerEvents='';
+  return el?el.closest('.zone'):null;
+}
+function highlight(x,y){
+  const z=zoneAt(x,y);
+  document.querySelectorAll('.zone').forEach(zn=>zn.classList.toggle('over',zn===z));
+}
+function reset(){
+  const c=drag.el;
+  c.classList.remove('dragging');
+  c.style.position=''; c.style.left=''; c.style.top=''; c.style.width='';
+  document.querySelectorAll('.zone').forEach(zn=>zn.classList.remove('over'));
+  drag=null;
+}
+function drop(x,y){
+  const zone=zoneAt(x,y);
+  const c=drag.el;
+  if(zone && zone.dataset.zone===c.dataset.zone){
+    reset();
+    c.classList.add('done','pop');
+    setTimeout(()=>c.classList.remove('pop'),400);
+    zone.querySelector('.slots').appendChild(c);
+    hits++;
+    $('fb').innerHTML='✅ <b>Certo!</b> '+esc(c.dataset.fb);
+    updHud();
+    if(hits===total) win();
+  }else if(zone){
+    reset();
+    c.classList.add('shake');
+    setTimeout(()=>c.classList.remove('shake'),400);
+    errs++;
+    $('fb').innerHTML='❌ <b>Ops!</b> Essa não é a categoria. '+esc(c.dataset.fb);
+    updHud();
+  }else{
+    reset();
+  }
+}
+
+/* ===================== FIM ===================== */
+function win(){
+  finished=true; running=false; clearInterval(timer);
+  const sc=scoreNow();
+  $('finalMsg').innerHTML=`Você classificou <b>${total}</b> cartas em <b>${seconds}s</b> com <b>${errs}</b> erro(s).<br>Pontuação: <b>${sc}</b> — quanto menor, melhor! 🌎`;
+  $('final').classList.add('show');
+  $('final').scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+/* ===================== RANKING ===================== */
+async function loadRanking(){
+  const body=$('rankBody');
+  if(!fbReady){ body.innerHTML='<p class="warn">Ranking indisponível (offline). 🌿</p>'; return; }
+  body.innerHTML='<p class="warn">Carregando ranking…</p>';
+  try{
+    const {collection,query,orderBy,limit,getDocs}=fbMod;
+    const q=query(collection(db,"games",GAME_ID,"scores"),orderBy("score","asc"),limit(100));
+    const snap=await getDocs(q);
+    const rows=[];
+    snap.forEach(d=>{const v=d.data(); if(v.level===curLv) rows.push(v);});
+    rows.sort((a,b)=>(a.score-b.score)||(a.seconds-b.seconds));
+    const top=rows.slice(0,10);
+    if(!top.length){ body.innerHTML='<p class="warn">Ainda sem pontuações neste nível. Seja o primeiro! 🥇</p>'; return; }
+    let html='<ol>';
+    top.forEach(r=>{
+      html+=`<li><b>${esc(r.name||'—')}</b> — ${r.score} pts <span class="warn">(${r.seconds}s · ${r.errors||0} erros)</span></li>`;
+    });
+    html+='</ol>';
+    body.innerHTML=html;
+  }catch(e){
+    body.innerHTML='<p class="warn">Não foi possível carregar o ranking agora. 🌿</p>';
+  }
+}
+$('saveBtn').addEventListener('click',async ()=>{
+  const name=($('nameInput').value||'').trim().slice(0,20)||'Anônimo';
+  if(!fbReady){ $('saveMsg').textContent='Offline: pontuação não enviada, mas seu resultado vale! 🌿'; return; }
+  $('saveBtn').disabled=true; $('saveMsg').textContent='Salvando…';
+  try{
+    const {collection,addDoc,serverTimestamp}=fbMod;
+    await addDoc(collection(db,"games",GAME_ID,"scores"),{
+      name, level:curLv, score:scoreNow(), seconds, errors:errs, ts:serverTimestamp()
+    });
+    $('saveMsg').textContent='Salvo! 🏆';
+    loadRanking();
+  }catch(e){
+    $('saveBtn').disabled=false;
+    $('saveMsg').textContent='Falha ao salvar. Tente novamente.';
+  }
+});
+
+/* ===================== INIT ===================== */
+document.querySelectorAll('.pill').forEach(p=>p.addEventListener('click',()=>setLevel(p.dataset.lv)));
+setLevel('basico');
+</script>
+</body>
+</html>
