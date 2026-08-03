@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Caça-Amazônia 🌳 — Selva de Letras</title>
+<style>
+:root{
+  --bg1:#0b3d2e;
+  --bg2:#166b3a;
+  --panel:rgba(255,255,255,0.07);
+  --panel-solid:#0f4a35;
+  --card:#0d5238;
+  --accent:#ffd24a;
+  --accent2:#7be08a;
+  --ink:#eafff2;
+  --ink-dim:#b9e6cd;
+  --ok:#3ddc84;
+  --err:#ff6b6b;
+  --grid:#e9fff4;
+  --grid-ink:#0b3d2e;
+  --shadow:0 8px 24px rgba(0,0,0,.28);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  color:var(--ink);
+  background:linear-gradient(160deg,var(--bg1) 0%,var(--bg2) 100%);
+  min-height:100vh;
+  padding:16px 12px 40px;
+  line-height:1.45;
+}
+.wrap{width:min(1080px,96vw);margin:0 auto}
+header.top{text-align:center;margin-bottom:14px}
+h1{
+  font-size:clamp(1.6rem,5vw,2.6rem);
+  margin:.2em 0 .1em;
+  letter-spacing:.5px;
+  text-shadow:0 2px 10px rgba(0,0,0,.3);
+}
+.sub{color:var(--ink-dim);font-size:clamp(.85rem,2.4vw,1rem);margin:0}
+.levels{
+  display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0 10px;
+}
+.pill{
+  border:none;cursor:pointer;
+  background:var(--panel);color:var(--ink);
+  padding:10px 16px;border-radius:999px;
+  font-size:clamp(.82rem,2.3vw,.98rem);font-weight:600;
+  transition:all .25s ease;backdrop-filter:blur(4px);
+  border:1px solid rgba(255,255,255,.12);
+}
+.pill:hover{transform:translateY(-2px);background:rgba(255,255,255,.14)}
+.pill.active{background:var(--accent);color:#20331f;box-shadow:var(--shadow);border-color:transparent}
+.howto{
+  text-align:center;color:var(--ink-dim);
+  font-size:clamp(.8rem,2.3vw,.95rem);margin:6px auto 14px;max-width:640px;
+}
+.hud{
+  display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:14px;
+}
+.chip{
+  background:var(--panel);border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;padding:8px 14px;font-weight:600;
+  font-size:clamp(.8rem,2.2vw,.95rem);min-width:92px;text-align:center;
+}
+.chip b{color:var(--accent);font-size:1.05em}
+.layout{
+  display:grid;grid-template-columns:auto 300px;gap:18px;align-items:start;justify-content:center;
+}
+@media(max-width:820px){.layout{grid-template-columns:1fr}}
+.board-wrap{display:flex;flex-direction:column;align-items:center;gap:12px}
+.grid{
+  display:grid;gap:3px;
+  background:rgba(255,255,255,.06);
+  padding:8px;border-radius:16px;box-shadow:var(--shadow);
+  touch-action:none;user-select:none;-webkit-user-select:none;
+}
+.cell{
+  background:var(--grid);color:var(--grid-ink);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;border-radius:7px;
+  cursor:pointer;transition:transform .12s,background .15s,color .15s;
+  aspect-ratio:1/1;
+}
+.cell.sel{background:var(--accent);color:#20331f;transform:scale(1.04)}
+.cell.found{color:#fff}
+.cell.pop{animation:pop .38s ease}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.28)}100%{transform:scale(1)}}
+.board-wrap.shake{animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.side{display:flex;flex-direction:column;gap:14px}
+.card{
+  background:var(--panel);border:1px solid rgba(255,255,255,.12);
+  border-radius:16px;padding:14px;box-shadow:var(--shadow);
+}
+.card h3{margin:0 0 10px;font-size:1rem;color:var(--accent);letter-spacing:.4px}
+.wordlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.wordlist li{
+  display:flex;gap:8px;align-items:flex-start;
+  font-size:.9rem;padding:7px 9px;border-radius:10px;
+  background:rgba(255,255,255,.05);transition:all .3s;
+}
+.wordlist li .wd{font-weight:700;white-space:nowrap}
+.wordlist li .ht{color:var(--ink-dim);font-size:.82rem}
+.wordlist li.done{opacity:.55}
+.wordlist li.done .wd{text-decoration:line-through}
+.wordlist li.done{background:rgba(61,220,132,.16)}
+#feedback{
+  min-height:56px;font-size:.92rem;
+  background:rgba(255,255,255,.05);border-radius:12px;padding:11px 13px;
+  border-left:4px solid var(--accent);transition:all .25s;
+}
+#feedback.good{border-left-color:var(--ok);background:rgba(61,220,132,.12)}
+#feedback.bad{border-left-color:var(--err);background:rgba(255,107,107,.12)}
+.rank-level{font-size:.78rem;color:var(--ink-dim);margin:-4px 0 8px}
+#ranking{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px;font-size:.86rem}
+#ranking li{display:flex;justify-content:space-between;gap:8px;padding:5px 8px;border-radius:8px;background:rgba(255,255,255,.05)}
+#ranking li .pos{color:var(--accent);font-weight:700;margin-right:6px}
+#ranking .me{background:rgba(255,210,74,.18)}
+.rank-note{font-size:.76rem;color:var(--ink-dim);margin-top:8px}
+button.act{
+  border:none;cursor:pointer;background:var(--accent2);color:#0b3d2e;
+  font-weight:700;padding:10px 14px;border-radius:12px;transition:all .2s;font-size:.92rem;
+}
+button.act:hover{transform:translateY(-2px);filter:brightness(1.06)}
+.overlay{
+  position:fixed;inset:0;background:rgba(6,30,20,.82);
+  display:none;align-items:center;justify-content:center;padding:18px;z-index:50;backdrop-filter:blur(4px);
+}
+.overlay.show{display:flex}
+.modal{
+  background:linear-gradient(160deg,#0f5a3d,#0b3d2e);
+  border:1px solid rgba(255,255,255,.16);border-radius:22px;
+  padding:26px 22px;width:min(440px,94vw);text-align:center;box-shadow:var(--shadow);
+  animation:pop .4s ease;
+}
+.modal h2{margin:.1em 0 .3em;font-size:clamp(1.4rem,5vw,2rem);color:var(--accent)}
+.modal p{margin:.3em 0;color:var(--ink-dim)}
+.modal .big{font-size:2.2rem;color:var(--ok);font-weight:800;margin:.2em 0}
+.modal input{
+  width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.1);color:var(--ink);font-size:1rem;margin:12px 0;text-align:center;
+}
+.modal input::placeholder{color:var(--ink-dim)}
+.modal .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+footer{
+  text-align:center;margin-top:30px;padding-top:16px;
+  border-top:1px solid rgba(255,255,255,.12);color:var(--ink-dim);font-size:.86rem;
+}
+footer .credit{font-weight:700;color:var(--accent);font-size:1rem;margin-bottom:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>🌳 Caça-Amazônia 🦜</h1>
+    <p class="sub">Encontre as palavras escondidas na maior floresta tropical do mundo</p>
+  </header>
+
+  <div class="levels" id="levels">
+    <button class="pill" data-lv="basico">Básico</button>
+    <button class="pill" data-lv="intermediario">Intermediário</button>
+    <button class="pill" data-lv="dificil">Difícil</button>
+    <button class="pill" data-lv="carbonauta">🛰️ Carbonauta</button>
+  </div>
+
+  <p class="howto">Clique e arraste sobre as letras (em linha reta: horizontal, vertical ou diagonal) para marcar cada palavra da lista. Palavras podem estar de trás para frente!</p>
+
+  <div class="hud">
+    <div class="chip">Tempo: <b id="hTime">0s</b></div>
+    <div class="chip">Palavras: <b id="hWords">0/0</b></div>
+    <div class="chip">Erros: <b id="hErr">0</b></div>
+    <div class="chip">Pontos: <b id="hScore">0</b></div>
+  </div>
+
+  <div class="layout">
+    <div class="board-wrap" id="boardWrap">
+      <div class="grid" id="grid"></div>
+      <button class="act" id="newGame">🔄 Novo tabuleiro</button>
+    </div>
+
+    <div class="side">
+      <div class="card">
+        <h3>🔎 Palavras a encontrar</h3>
+        <ul class="wordlist" id="wordlist"></ul>
+      </div>
+      <div class="card">
+        <h3>💡 Sabia?</h3>
+        <div id="feedback">Selecione um nível e comece a caçar palavras. A cada acerto você aprende algo sobre a Amazônia!</div>
+      </div>
+      <div class="card">
+        <h3>🏆 Ranking Global</h3>
+        <div class="rank-level" id="rankLevel">Nível: Básico</div>
+        <ol id="ranking"><li><span>Carregando…</span></li></ol>
+        <div class="rank-note">Menor pontuação vence (tempo + penalidade por erro).</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="credit">— Idealizado por Ernandes Sobreira —</div>
+    <div>Tema: Amazônia e floresta tropical · Gênero: Caça-palavras · app ambiental do dia (2026-08-03)</div>
+  </footer>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div style="font-size:2.4rem">🎉</div>
+    <h2>Floresta desvendada!</h2>
+    <p id="mLevel">Nível Básico</p>
+    <div class="big" id="mScore">0</div>
+    <p id="mDetail">Tempo 0s · 0 erros</p>
+    <input id="nameInput" maxlength="20" placeholder="Seu nome (até 20 letras)">
+    <div class="row">
+      <button class="act" id="saveScore">Salvar no ranking</button>
+      <button class="act" id="playAgain" style="background:var(--accent)">Jogar de novo</button>
+    </div>
+    <p id="saveMsg" style="font-size:.82rem;min-height:18px"></p>
+  </div>
+</div>
+
+<script>
+/* ================= FIREBASE (somente ranking) ================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-08-03-caca-amazonia";
+
+let fs=null, fsApi=null;
+async function initFirebase(){
+  try{
+    const app = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const store = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const a = app.initializeApp(firebaseConfig);
+    fs = store.getFirestore(a);
+    fsApi = store;
+    return true;
+  }catch(e){ console.warn("Firebase indisponível:", e); return false; }
+}
+
+/* ================= DADOS DO JOGO ================= */
+const LEVELS = {
+  basico:{ label:"Básico", size:8, words:[
+    {w:"ARVORE",  h:"Planta grande de tronco lenhoso que forma a floresta."},
+    {w:"RIO",     h:"O Amazonas é o maior do mundo em volume de água."},
+    {w:"ONCA",    h:"A onça-pintada é o maior felino das Américas."},
+    {w:"TUCANO",  h:"Ave de bico grande e colorido, símbolo da mata."},
+    {w:"CHUVA",   h:"A floresta ajuda a formar e reciclar as chuvas."},
+    {w:"MACACO",  h:"Primatas como o bugio vivem nas copas das árvores."},
+    {w:"FOLHA",   h:"Capta a luz do sol para a fotossíntese."},
+    {w:"PEIXE",   h:"Os rios amazônicos têm milhares de espécies deles."}
+  ]},
+  intermediario:{ label:"Intermediário", size:10, words:[
+    {w:"SUMIDOURO", h:"A floresta funciona como um sumidouro de carbono, absorvendo CO₂."},
+    {w:"VARZEA",    h:"Floresta inundada por rios de água branca, rica em sedimentos."},
+    {w:"IGAPO",     h:"Floresta alagada por rios de água preta e solo pobre."},
+    {w:"IGARAPE",   h:"Pequeno curso de água típico da Amazônia."},
+    {w:"BIOMA",     h:"Conjunto de ecossistemas: a Amazônia é o maior do Brasil."},
+    {w:"DOSSEL",    h:"Camada superior formada pelas copas das árvores."},
+    {w:"ENDEMICA",  h:"Espécie que só existe em uma determinada região."},
+    {w:"ANACONDA",  h:"Uma das maiores serpentes do mundo, vive em áreas úmidas."},
+    {w:"PIRARUCU",  h:"Gigante peixe amazônico que respira ar atmosférico."},
+    {w:"MANDIOCA",  h:"Raiz base da alimentação dos povos da floresta."}
+  ]},
+  dificil:{ label:"Difícil", size:13, words:[
+    {w:"TERRAFIRME",  h:"Floresta em terreno alto que não sofre alagamento sazonal."},
+    {w:"SUCESSAO",    h:"Substituição gradual de espécies na regeneração da mata."},
+    {w:"FENOLOGIA",   h:"Estudo dos ciclos de floração e frutificação das plantas."},
+    {w:"LATOSSOLO",   h:"Solo profundo, intemperizado e ácido, comum na Amazônia."},
+    {w:"HIDROLOGIA",  h:"Ciência que estuda a água e as bacias da floresta."},
+    {w:"SIMBIOSE",    h:"Relação de benefício mútuo entre organismos."},
+    {w:"EPIFITA",     h:"Planta que vive sobre outra, como bromélias e orquídeas."},
+    {w:"POLINIZACAO", h:"Transporte de pólen feito por abelhas, aves e morcegos."},
+    {w:"DECOMPOSICAO",h:"Processo que recicla nutrientes da serapilheira."},
+    {w:"NUTRIENTES",  h:"Elementos reciclados rapidamente no solo pobre da mata."},
+    {w:"HERBIVORO",   h:"Animal que se alimenta de plantas na cadeia trófica."},
+    {w:"BROMELIA",    h:"Planta que acumula água entre as folhas, mini-habitat."},
+    {w:"SEDIMENTO",   h:"Material que rios de água branca depositam na várzea."},
+    {w:"QUELONIO",    h:"Grupo dos quelônios inclui os tracajás e tartarugas."}
+  ]},
+  carbonauta:{ label:"🛰️ Carbonauta", size:14, words:[
+    {w:"RIOSVOADORES",h:"Massas de vapor da evapotranspiração que transportam umidade pelo continente."},
+    {w:"BIOMASSA",    h:"Estoque de matéria orgânica; a Amazônia guarda ~150–200 Gt C."},
+    {w:"SENESCENCIA", h:"Envelhecimento e mortalidade de árvores que libera carbono."},
+    {w:"ALOMETRIA",   h:"Relações usadas para estimar biomassa a partir de diâmetro e altura."},
+    {w:"FITOMASSA",   h:"Massa vegetal viva acima e abaixo do solo."},
+    {w:"DENDROMETRIA",h:"Medição de dimensões de árvores em parcelas permanentes."},
+    {w:"ESPODOSSOLO", h:"Solo arenoso e lixiviado das campinaranas de água preta."},
+    {w:"MICORRIZA",   h:"Simbiose fungo-raiz que otimiza a absorção de fósforo."},
+    {w:"ENDEMISMO",   h:"Ocorrência exclusiva de táxons em áreas de interflúvio."},
+    {w:"RESILIENCIA", h:"Capacidade do ecossistema de retornar após perturbações."},
+    {w:"SAVANIZACAO", h:"Ponto de virada em que a floresta degrada para vegetação aberta."},
+    {w:"LATERIZACAO", h:"Enriquecimento de óxidos de ferro e alumínio em solos tropicais."},
+    {w:"OMBROFILA",   h:"Floresta ombrófila densa: fitofisionomia de alta pluviosidade."},
+    {w:"METANO",      h:"Gás de efeito estufa emitido por áreas alagadas e igapós."},
+    {w:"SUCESSAO",    h:"Trajetória sucessional que regula a rebrota de carbono florestal."},
+    {w:"FENOLOGIA",   h:"Sazonalidade foliar que modula a produtividade primária bruta."}
+  ]}
+};
+const FOUND_COLORS=["#e0533f","#2f9e6e","#b5652f","#7a4fc0","#2f7fb5","#c0392b","#1f8a70","#a06cd5","#d9822b","#3f7d20","#b03a5b","#26788a","#8a6d1f","#5a3fa0","#307a4f","#b5453f"];
+
+/* ================= ESTADO ================= */
+let curLevel="basico";
+let placed=[];
+let gridData=[];
+let cellEls=[];
+let errors=0, foundCount=0;
+let startTs=0, timerId=null, finished=false;
+
+/* ================= UTILIDADES DE GRADE ================= */
+const DIRS=[[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]];
+function randInt(n){return Math.floor(Math.random()*n);}
+
+function buildGrid(size, words){
+  for(let attempt=0; attempt<200; attempt++){
+    const g=Array.from({length:size},()=>Array(size).fill(null));
+    const pl=[];
+    const sorted=[...words].sort((a,b)=>b.w.length-a.w.length);
+    let ok=true;
+    for(const item of sorted){
+      const word=item.w;
+      let done=false;
+      for(let t=0;t<900 && !done;t++){
+        const dir=DIRS[randInt(DIRS.length)];
+        const dr=dir[0], dc=dir[1];
+        const r0=randInt(size), c0=randInt(size);
+        const rEnd=r0+dr*(word.length-1), cEnd=c0+dc*(word.length-1);
+        if(rEnd<0||rEnd>=size||cEnd<0||cEnd>=size) continue;
+        let fits=true;
+        for(let i=0;i<word.length;i++){
+          const rr=r0+dr*i, cc=c0+dc*i;
+          const cur=g[rr][cc];
+          if(cur!==null && cur!==word[i]){fits=false;break;}
+        }
+        if(!fits) continue;
+        const cells=[];
+        for(let i=0;i<word.length;i++){
+          const rr=r0+dr*i, cc=c0+dc*i;
+          g[rr][cc]=word[i];
+          cells.push({r:rr,c:cc});
+        }
+        pl.push({w:word,h:item.h,cells,found:false});
+        done=true;
+      }
+      if(!done){ok=false;break;}
+    }
+    if(!ok) continue;
+    const letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    for(let r=0;r<size;r++)for(let c=0;c<size;c++){
+      if(g[r][c]===null) g[r][c]=letters[randInt(26)];
+    }
+    return {g,pl};
+  }
+  return null;
+}
+
+/* ================= RENDER ================= */
+function renderLevel(lv){
+  curLevel=lv;
+  finished=false; errors=0; foundCount=0;
+  clearInterval(timerId);
+  document.querySelectorAll(".pill").forEach(p=>p.classList.toggle("active",p.dataset.lv===lv));
+  const conf=LEVELS[lv];
+  const built=buildGrid(conf.size, conf.words);
+  gridData=built.g; placed=built.pl;
+
+  const gridEl=document.getElementById("grid");
+  const size=conf.size;
+  gridEl.style.gridTemplateColumns="repeat("+size+",1fr)";
+  const px=Math.min(Math.floor((Math.min(window.innerWidth*0.92,560))/size), 46);
+  gridEl.style.width=(px*size+(size-1)*3+16)+"px";
+  gridEl.style.maxWidth="95vw";
+  gridEl.innerHTML="";
+  cellEls=Array.from({length:size},()=>Array(size));
+  const fontSize=Math.max(11, Math.min(20, px*0.5));
+  for(let r=0;r<size;r++)for(let c=0;c<size;c++){
+    const d=document.createElement("div");
+    d.className="cell";
+    d.textContent=gridData[r][c];
+    d.dataset.r=r; d.dataset.c=c;
+    d.style.fontSize=fontSize+"px";
+    gridEl.appendChild(d);
+    cellEls[r][c]=d;
+  }
+
+  const wl=document.getElementById("wordlist");
+  wl.innerHTML="";
+  placed.forEach((p,i)=>{
+    const li=document.createElement("li");
+    li.dataset.i=i;
+    li.innerHTML='<span class="wd">'+p.w+'</span><span class="ht">— '+escapeHtml(p.h)+'</span>';
+    wl.appendChild(li);
+  });
+
+  document.getElementById("hWords").textContent="0/"+placed.length;
+  document.getElementById("hErr").textContent="0";
+  document.getElementById("hScore").textContent="0";
+  document.getElementById("hTime").textContent="0s";
+  document.getElementById("rankLevel").textContent="Nível: "+conf.label;
+  setFeedback("Boa caçada! Encontre as "+placed.length+" palavras arrastando sobre as letras.","");
+  startTs=Date.now();
+  timerId=setInterval(tick,250);
+  loadRanking();
+}
+function tick(){
+  if(finished)return;
+  const s=Math.floor((Date.now()-startTs)/1000);
+  document.getElementById("hTime").textContent=s+"s";
+  document.getElementById("hScore").textContent=liveScore(s);
+}
+function liveScore(s){return s + errors*15;}
+
+function setFeedback(txt,cls){
+  const f=document.getElementById("feedback");
+  f.textContent=txt; f.className=cls||"";
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,function(m){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m];});}
+
+/* ================= SELEÇÃO ================= */
+let selecting=false, startCell=null, curLine=[];
+function cellFromPoint(x,y){
+  const el=document.elementFromPoint(x,y);
+  if(!el||!el.classList.contains("cell"))return null;
+  return {r:+el.dataset.r,c:+el.dataset.c};
+}
+function lineCells(a,b){
+  const dr=Math.sign(b.r-a.r), dc=Math.sign(b.c-a.c);
+  const len=Math.max(Math.abs(b.r-a.r),Math.abs(b.c-a.c))+1;
+  const straight=(a.r===b.r)||(a.c===b.c)||(Math.abs(b.r-a.r)===Math.abs(b.c-a.c));
+  if(!straight)return null;
+  const cells=[];
+  for(let i=0;i<len;i++)cells.push({r:a.r+dr*i,c:a.c+dc*i});
+  return cells;
+}
+function clearSel(){document.querySelectorAll(".cell.sel").forEach(function(e){e.classList.remove("sel");});}
+function paintSel(cells){
+  clearSel();
+  cells.forEach(function(p){if(cellEls[p.r]&&cellEls[p.r][p.c])cellEls[p.r][p.c].classList.add("sel");});
+}
+function onDown(e){
+  if(finished)return;
+  const pt=e.touches?e.touches[0]:e;
+  const c=cellFromPoint(pt.clientX,pt.clientY);
+  if(!c)return;
+  e.preventDefault();
+  selecting=true; startCell=c; curLine=[c]; paintSel(curLine);
+}
+function onMove(e){
+  if(!selecting)return;
+  const pt=e.touches?e.touches[0]:e;
+  const c=cellFromPoint(pt.clientX,pt.clientY);
+  if(!c)return;
+  const line=lineCells(startCell,c);
+  if(line){curLine=line;paintSel(line);}
+}
+function onUp(){
+  if(!selecting)return;
+  selecting=false;
+  validate(curLine);
+  clearSel();
+  curLine=[];
+}
+function readWord(cells){return cells.map(function(p){return gridData[p.r][p.c];}).join("");}
+function validate(cells){
+  if(cells.length<2)return;
+  const fwd=readWord(cells);
+  const rev=fwd.split("").reverse().join("");
+  const idx=placed.findIndex(function(p){return !p.found && (p.w===fwd||p.w===rev);});
+  if(idx>=0){
+    const p=placed[idx];p.found=true;foundCount++;
+    const color=FOUND_COLORS[idx%FOUND_COLORS.length];
+    p.cells.forEach(function(cc){
+      const el=cellEls[cc.r][cc.c];
+      el.classList.remove("sel");el.classList.add("found","pop");
+      el.style.background=color;
+      setTimeout(function(){el.classList.remove("pop");},400);
+    });
+    document.querySelector('#wordlist li[data-i="'+idx+'"]').classList.add("done");
+    document.getElementById("hWords").textContent=foundCount+"/"+placed.length;
+    setFeedback("✅ "+p.w+" — "+p.h,"good");
+    if(foundCount===placed.length)finish();
+  }else{
+    errors++;
+    document.getElementById("hErr").textContent=errors;
+    const bw=document.getElementById("boardWrap");
+    bw.classList.add("shake");setTimeout(function(){bw.classList.remove("shake");},350);
+    setFeedback("❌ Essa sequência não é uma das palavras. Tente outra direção!","bad");
+  }
+}
+
+/* ================= FINAL ================= */
+function finish(){
+  finished=true;clearInterval(timerId);
+  const s=Math.floor((Date.now()-startTs)/1000);
+  const score=liveScore(s);
+  document.getElementById("hScore").textContent=score;
+  document.getElementById("mLevel").textContent="Nível "+LEVELS[curLevel].label;
+  document.getElementById("mScore").textContent=score+" pts";
+  document.getElementById("mDetail").textContent="Tempo "+s+"s · "+errors+" erro(s) · penalidade 15 pts/erro";
+  document.getElementById("saveMsg").textContent="";
+  document.getElementById("overlay").classList.add("show");
+  window._lastRun={score:score,seconds:s,errors:errors,level:curLevel};
+}
+
+/* ================= RANKING (Firestore) ================= */
+async function loadRanking(){
+  const ol=document.getElementById("ranking");
+  if(!fs){ol.innerHTML='<li><span>Ranking offline</span></li>';return;}
+  try{
+    const {collection,query,orderBy,limit,getDocs}=fsApi;
+    const q=query(collection(fs,"games",GAME_ID,"scores"),orderBy("score","asc"),limit(100));
+    const snap=await getDocs(q);
+    const rows=[];
+    snap.forEach(function(d){const v=d.data();if(v.level===curLevel)rows.push(v);});
+    rows.sort(function(a,b){return (a.score-b.score)||((a.seconds||0)-(b.seconds||0));});
+    const top=rows.slice(0,10);
+    if(!top.length){ol.innerHTML='<li><span>Seja o primeiro a pontuar!</span></li>';return;}
+    ol.innerHTML=top.map(function(r,i){return '<li><span><span class="pos">'+(i+1)+'º</span>'+escapeHtml(r.name||"—")+'</span><span>'+r.score+' pts · '+(r.seconds||0)+'s</span></li>';}).join("");
+  }catch(e){
+    console.warn(e);
+    ol.innerHTML='<li><span>Ranking indisponível agora</span></li>';
+  }
+}
+async function saveScore(){
+  const msg=document.getElementById("saveMsg");
+  const name=(document.getElementById("nameInput").value||"").trim().slice(0,20);
+  if(!name){msg.textContent="Digite um nome para salvar.";return;}
+  if(!fs){msg.textContent="Sem conexão: pontuação não salva, mas o jogo continua!";return;}
+  const run=window._lastRun;if(!run)return;
+  msg.textContent="Salvando…";
+  try{
+    const {collection,addDoc,serverTimestamp}=fsApi;
+    await addDoc(collection(fs,"games",GAME_ID,"scores"),{
+      name:name,score:run.score,seconds:run.seconds,errors:run.errors,level:run.level,ts:serverTimestamp()
+    });
+    msg.textContent="✅ Salvo no ranking!";
+    loadRanking();
+  }catch(e){console.warn(e);msg.textContent="Não foi possível salvar agora.";}
+}
+
+/* ================= EVENTOS ================= */
+document.getElementById("levels").addEventListener("click",function(e){
+  const b=e.target.closest(".pill");if(!b)return;renderLevel(b.dataset.lv);
+});
+document.getElementById("newGame").addEventListener("click",function(){renderLevel(curLevel);});
+const gridEl=document.getElementById("grid");
+gridEl.addEventListener("mousedown",onDown);
+window.addEventListener("mousemove",onMove);
+window.addEventListener("mouseup",onUp);
+gridEl.addEventListener("touchstart",onDown,{passive:false});
+gridEl.addEventListener("touchmove",function(e){onMove(e);e.preventDefault();},{passive:false});
+window.addEventListener("touchend",onUp);
+document.getElementById("saveScore").addEventListener("click",saveScore);
+document.getElementById("playAgain").addEventListener("click",function(){
+  document.getElementById("overlay").classList.remove("show");renderLevel(curLevel);
+});
+
+/* ================= INÍCIO ================= */
+(async function(){
+  await initFirebase();
+  renderLevel("basico");
+})();
+</script>
+</body>
+</html>
