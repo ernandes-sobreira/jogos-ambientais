@@ -1,321 +1,77 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Abelha Mensageira 🐝 | Flappy · Mata Atlântica</title>
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#07140d">
+<title>Abelha Mensageira — Missão Colmeia</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:#0a1a10;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:100vh;padding:10px;font-family:"Segoe UI",system-ui,sans-serif;color:#d4edd4}
-h1{font-size:1.4rem;margin:6px 0 2px;text-align:center}
-.tagline{font-size:.78rem;opacity:.65;margin-bottom:6px;text-align:center}
-.hud{display:flex;gap:10px;margin:4px 0 6px;font-size:.82rem;flex-wrap:wrap;justify-content:center}
-.hud span{background:rgba(255,255,255,.09);border-radius:8px;padding:3px 10px}
-.hud b{color:#fbbf24}
-canvas{border:2px solid rgba(255,255,255,.13);border-radius:8px;display:block;max-width:100%}
-.save-box{margin-top:10px;display:none;flex-direction:column;align-items:center;gap:8px}
-.save-box input{padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-size:.95rem;width:220px;outline:none}
-.save-box button{padding:8px 20px;border-radius:8px;border:none;background:#d97706;color:#fff;font-size:.9rem;cursor:pointer;font-weight:600}
-.save-box button:hover{background:#b45309}
-.ranking{width:min(780px,98vw);background:rgba(255,255,255,.05);border-radius:10px;padding:10px;margin-top:8px}
-.ranking h3{font-size:.78rem;opacity:.6;margin-bottom:6px}
-.rank-list{display:flex;flex-direction:column;gap:3px;max-height:150px;overflow-y:auto}
-.rank-item{display:flex;justify-content:space-between;font-size:.76rem;padding:3px 8px;background:rgba(255,255,255,.04);border-radius:5px}
-footer{margin-top:12px;opacity:.45;font-size:.68rem;text-align:center}
-</style>
-</head>
-<body>
-<h1>🐝 Abelha Mensageira</h1>
-<p class="tagline">Flappy · Biologia · Mata Atlântica — ↑ ou Espaço para bater as asas!</p>
-<div class="hud">
-  <span>Fase: <b id="hP">1/5</b></span>
-  <span>Pontos: <b id="hS">0</b></span>
-  <span>Flores: <b id="hF">0/0</b></span>
-  <span>Vidas: <b id="hL">❤️❤️❤️</b></span>
-</div>
-<canvas id="c" width="780" height="410"></canvas>
-<div class="save-box" id="saveBox">
-  <p style="font-size:.85rem;opacity:.8">🏆 Missão cumprida! Salve seu recorde:</p>
-  <input type="text" id="pName" maxlength="24" placeholder="Seu nome…">
-  <button onclick="window.saveScore()">Salvar Pontuação</button>
-</div>
-<div class="ranking">
-  <h3>🏆 Ranking</h3>
-  <div class="rank-list" id="rankList"><p style="opacity:.45;font-size:.76rem;padding:4px">Carregando…</p></div>
-</div>
-<footer>Biologia · Polinizadores · Mata Atlântica 🌺 | 2026-06-25 — Idealizado por Ernandes Sobreira</footer>
-
-<script type="module">
-import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import{getFirestore,collection,addDoc,query,orderBy,limit,getDocs,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-const fbApp=initializeApp({apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"});
-const db=getFirestore(fbApp);
-const GAME_ID="2026-06-25-abelha-mensageira";
-
-const W=780,H=410;
-const GRAV=900;
-const FLAP=-320;
-
-// Phase configs: obstacle speed, gap size, flowers needed, bg colors, fact
-const PHASES=[
- {spd:140,gap:170,need:8, bgTop:'#0a1e05',bgBot:'#0f350a',
-  fact:"As abelhas silvestres são responsáveis por polinizar 73% das plantas que os humanos usam para alimentação. Sem elas, nossa dieta seria muito mais limitada.",
-  name:"Dossel da Mata Atlântica"},
- {spd:165,gap:155,need:10,bgTop:'#05180a',bgBot:'#0a2d12',
-  fact:"A Mata Atlântica é um dos 5 hotspots de biodiversidade mais ricos do mundo — e um dos mais ameaçados. Restam menos de 12% da cobertura original.",
-  name:"Sub-bosque das Epífitas"},
- {spd:195,gap:140,need:12,bgTop:'#030f08',bgBot:'#082212',
-  fact:"Existem mais de 300 espécies de abelhas nativas no Brasil. Diferente das abelhas europeias, a maioria não tem ferrão e vive em ninhos únicos.",
-  name:"Corredor Ecológico"},
- {spd:225,gap:125,need:14,bgTop:'#020a05',bgBot:'#051808',
-  fact:"O agrotóxico neonicotinoide é a principal ameaça às abelhas nativas. Quando aplicado em flores, destrói a capacidade de navegação e memória das abelhas.",
-  name:"Zona de Perigo — Pesticidas"},
- {spd:260,gap:110,need:16,bgTop:'#010805',bgBot:'#030e06',
-  fact:"Produtores que preservam matas e usam agricultura sem pesticidas têm colheitas até 3x maiores graças às abelhas polinizadoras. Natureza e economia andam juntas.",
-  name:"Renovação da Floresta"}
-];
-
-const c=document.getElementById('c');
-const ctx=c.getContext('2d');
-const keys={};
-document.addEventListener('keydown',e=>{keys[e.key]=true;if([' ','ArrowUp'].includes(e.key))e.preventDefault();});
-document.addEventListener('keyup',e=>{keys[e.key]=false;});
-
-let gState='title',phase=0,score=0,lives=3;
-let bee=null,pipes=[],flowers=[],parts=[],pipeTimer=0,flowerTimer=0,dist=0,phFlowers=0,flFound=0,justFlapped=false;
-
-function mkBee(){return{x:120,y:H/2,vy:0,wing:0,inv:0};}
-
-function initPhase(){
-  bee=mkBee();
-  pipes=[];flowers=[];parts=[];
-  pipeTimer=0;flowerTimer=0;dist=0;phFlowers=0;flFound=0;
-  justFlapped=false;
-  document.getElementById('hP').textContent=`${phase+1}/5`;
-  document.getElementById('hF').textContent=`0/${PHASES[phase].need}`;
-  gState='play';
-}
-
-function spPart(x,y,col){for(let i=0;i<8;i++)parts.push({x,y,vx:(Math.random()-.5)*160,vy:-Math.random()*160-40,c:col,t:.8});}
-
-function aabb(ax,ay,aw,ah,bx,by,bw,bh){return ax<bx+bw&&ax+aw>bx&&ay<by+bh&&ay+ah>by;}
-
-function update(dt){
-  if(gState!=='play')return;
-  const ph=PHASES[phase];
-
-  // Flap
-  const wantFlap=keys['ArrowUp']||keys[' ']||keys['w'];
-  if(wantFlap&&!justFlapped){bee.vy=FLAP;bee.wing=1;spPart(bee.x-10,bee.y+8,'rgba(255,220,80,0.7)');justFlapped=true;}
-  if(!wantFlap)justFlapped=false;
-
-  bee.vy+=GRAV*dt;
-  if(bee.vy>600)bee.vy=600;
-  bee.y+=bee.vy*dt;
-  bee.wing=Math.max(0,bee.wing-dt*6);
-
-  // Boundaries
-  if(bee.y<0){bee.y=0;bee.vy=80;}
-  if(bee.y>H-20){if(bee.inv<=0){hitBee();return;}}
-
-  // Pipe spawn
-  pipeTimer-=dt;
-  if(pipeTimer<=0){
-    const gap=ph.gap;
-    const topH=50+Math.random()*(H-gap-100);
-    pipes.push({x:W,topH,botY:topH+gap,w:58,spd:ph.spd,passed:false});
-    pipeTimer=1.5+Math.random()*.5;
-  }
-
-  // Flower spawn (every ~2 pipes)
-  flowerTimer-=dt;
-  if(flowerTimer<=0){
-    flowers.push({x:W+20,y:60+Math.random()*(H-120),got:false,t:0});
-    flowerTimer=2.2+Math.random()*1.2;
-  }
-
-  // Update pipes
-  for(let i=pipes.length-1;i>=0;i--){
-    const p=pipes[i];
-    p.x-=p.spd*dt;
-    if(!p.passed&&p.x+p.w<bee.x){p.passed=true;score+=10;document.getElementById('hS').textContent=score;}
-    if(bee.inv<=0&&(aabb(bee.x-12,bee.y-12,24,24,p.x,0,p.w,p.topH)||aabb(bee.x-12,bee.y-12,24,24,p.x,p.botY,p.w,H-p.botY))){hitBee();return;}
-    if(p.x+p.w<0)pipes.splice(i,1);
-  }
-
-  // Update flowers
-  for(let i=flowers.length-1;i>=0;i--){
-    const f=flowers[i];
-    f.x-=ph.spd*.4*dt;
-    f.t+=dt*4;
-    if(!f.got&&aabb(bee.x-14,bee.y-14,28,28,f.x-14,f.y-14,28,28)){
-      f.got=true;flFound++;score+=25;
-      spPart(f.x,f.y,'#f9a8d4');
-      document.getElementById('hF').textContent=`${flFound}/${ph.need}`;
-      document.getElementById('hS').textContent=score;
-      if(flFound>=ph.need){score+=150+phase*80;document.getElementById('hS').textContent=score;gState='phend';return;}
-    }
-    if(f.x<-30)flowers.splice(i,1);
-  }
-
-  // Particles
-  parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=300*dt;p.t-=dt;});
-  parts=parts.filter(p=>p.t>0);
-
-  dist+=dt;
-  if(bee.inv>0)bee.inv-=dt;
-}
-
-function hitBee(){
-  lives--;document.getElementById('hL').textContent='❤️'.repeat(Math.max(0,lives));
-  if(lives<=0){gState='over';return;}
-  spPart(bee.x,bee.y,'#ef4444');
-  bee=mkBee();bee.inv=2;
-}
-
-function render(t){
-  const ph=PHASES[phase]||PHASES[0];
-  const g=ctx.createLinearGradient(0,0,0,H);
-  g.addColorStop(0,ph.bgTop);g.addColorStop(1,ph.bgBot);
-  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-
-  // Ground line
-  ctx.fillStyle='#1a4a0a';ctx.fillRect(0,H-8,W,8);
-
-  // Parallax leaves (decorative)
-  ctx.fillStyle='rgba(20,80,10,.3)';
-  for(let i=0;i<6;i++){
-    const lx=((i*200+dist*30)%W+W)%W;
-    ctx.fillRect(lx,10+i*15,35,8);
-    ctx.fillRect(lx+15,5+i*15,20,5);
-  }
-
-  // Galhos de árvore (tree branches — real ecology)
-  pipes.forEach(p=>{
-    const bx=p.x+p.w/2; // centre of gap
-    // ── TOP BRANCH (hanging down from canopy) ──
-    // Thin trunk/stem descending
-    ctx.fillStyle='#5c3510';ctx.fillRect(bx-5,0,10,p.topH-14);
-    // Main horizontal branch
-    ctx.fillStyle='#4a2800';ctx.fillRect(p.x-8,p.topH-22,p.w+16,14);
-    // Sub-branches angled out
-    ctx.fillStyle='#5c3510';
-    ctx.fillRect(p.x-18,p.topH-32,p.w*.55,8);
-    ctx.fillRect(p.x+p.w*.45,p.topH-42,p.w*.55,8);
-    // Leaf clusters
-    ctx.fillStyle='rgba(28,95,10,.92)';
-    ctx.fillRect(p.x-22,p.topH-48,44,20);
-    ctx.fillRect(p.x+p.w-18,p.topH-56,44,22);
-    ctx.fillRect(p.x+p.w*.3-16,p.topH-38,38,18);
-    ctx.fillStyle='rgba(40,120,15,.65)';
-    ctx.fillRect(p.x-28,p.topH-38,24,14);
-    ctx.fillRect(p.x+p.w+8,p.topH-44,22,14);
-    // ── BOTTOM BRANCH (rising from forest floor) ──
-    ctx.fillStyle='#5c3510';ctx.fillRect(bx-5,p.botY+14,10,H-p.botY);
-    ctx.fillStyle='#4a2800';ctx.fillRect(p.x-8,p.botY+8,p.w+16,14);
-    ctx.fillStyle='#5c3510';
-    ctx.fillRect(p.x-18,p.botY+22,p.w*.55,8);
-    ctx.fillRect(p.x+p.w*.45,p.botY+30,p.w*.55,8);
-    ctx.fillStyle='rgba(28,95,10,.92)';
-    ctx.fillRect(p.x-22,p.botY+28,44,20);
-    ctx.fillRect(p.x+p.w-18,p.botY+34,44,22);
-    ctx.fillRect(p.x+p.w*.3-16,p.botY+20,38,18);
-    ctx.fillStyle='rgba(40,120,15,.65)';
-    ctx.fillRect(p.x-28,p.botY+24,24,14);
-    ctx.fillRect(p.x+p.w+8,p.botY+28,22,14);
-  });
-
-  // Flowers
-  flowers.forEach(f=>{
-    if(f.got)return;
-    const bob=Math.sin(f.t)*.5;
-    ctx.font='22px serif';ctx.fillText(['🌸','🌺','🌼','🌻','💐'][phase%5],f.x-11,f.y+8+bob);
-  });
-
-  // Particles
-  parts.forEach(p=>{
-    ctx.globalAlpha=Math.max(0,p.t/.8);
-    ctx.fillStyle=p.c;ctx.fillRect(p.x-3,p.y-3,6,6);
-    ctx.globalAlpha=1;
-  });
-
-  // Bee
-  if(gState==='play'||gState==='phend'){
-    if(!(bee.inv>0&&Math.floor(bee.inv*8)%2===0)){
-      const tilt=Math.atan2(bee.vy,300);
-      ctx.save();ctx.translate(bee.x,bee.y);ctx.rotate(Math.max(-0.4,Math.min(.5,tilt)));
-      ctx.font='28px serif';ctx.fillText('🐝',-14,10);
-      ctx.restore();
-    }
-  }
-
-  ctx.textAlign='center';
-
-  if(gState==='title'){
-    ctx.fillStyle='rgba(0,0,0,.75)';ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#fbbf24';ctx.font='bold 36px sans-serif';ctx.fillText('🐝 Abelha Mensageira',W/2,H/2-65);
-    ctx.fillStyle='#d4edd4';ctx.font='16px sans-serif';ctx.fillText('Colete flores nativas e desvie das árvores!',W/2,H/2-25);
-    ctx.fillStyle='#a0d0a0';ctx.font='15px sans-serif';ctx.fillText('↑ ou Espaço — bater as asas',W/2,H/2+15);
-    ctx.fillStyle='#fbbf24';ctx.font='bold 19px sans-serif';
-    if(Math.sin(t/300)>.2)ctx.fillText('▶  ESPAÇO para começar  ◀',W/2,H/2+58);
-    if(keys[' ']||keys['ArrowUp']){keys[' ']=false;keys['ArrowUp']=false;initPhase();}
-    ctx.textAlign='left';return;
-  }
-  if(gState==='phend'){
-    ctx.fillStyle='rgba(0,0,0,.8)';ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#fbbf24';ctx.font='bold 27px sans-serif';ctx.fillText(`🌺 Fase ${phase+1} — ${ph.name}`,W/2,68);
-    ctx.fillStyle='#fffde7';ctx.font='13.5px sans-serif';
-    const words=ph.fact.split(' ');let line='',py=110;
-    for(const w of words){const t2=line+w+' ';if(ctx.measureText(t2).width>680&&line){ctx.fillText(line.trim(),W/2,py);py+=21;line=w+' ';}else line=t2;}
-    if(line){ctx.fillText(line.trim(),W/2,py);}
-    ctx.fillStyle='#fbbf24';ctx.font='bold 17px sans-serif';
-    if(Math.sin(t/300)>.2)ctx.fillText(phase<4?'ESPAÇO → próxima fase':'🎉 ESPAÇO → salvar recorde',W/2,H-40);
-    if(keys[' ']){keys[' ']=false;if(phase<4){phase++;initPhase();}else{gState='win';document.getElementById('saveBox').style.display='flex';}}
-    ctx.textAlign='left';return;
-  }
-  if(gState==='over'){
-    ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#ef4444';ctx.font='bold 34px sans-serif';ctx.fillText('💀 Game Over',W/2,H/2-40);
-    ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação: ${score}`,W/2,H/2+10);
-    ctx.fillStyle='#fbbf24';ctx.font='17px sans-serif';ctx.fillText('ESPAÇO → recomeçar',W/2,H/2+52);
-    if(keys[' ']){phase=0;score=0;lives=3;document.getElementById('hL').textContent='❤️❤️❤️';document.getElementById('hS').textContent=0;gState='title';}
-    ctx.textAlign='left';return;
-  }
-  if(gState==='win'){
-    ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#fbbf24';ctx.font='bold 30px sans-serif';ctx.fillText('🐝 Polinização Completa!',W/2,90);
-    ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação: ${score}`,W/2,145);
-    ctx.fillStyle='#a0d4a0';ctx.font='14px sans-serif';ctx.fillText('A Mata Atlântica floresce graças à sua abelha! 🌺',W/2,185);
-    ctx.fillStyle='#fbbf24';ctx.font='15px sans-serif';ctx.fillText('Use o campo abaixo para salvar seu recorde.',W/2,240);
-    ctx.textAlign='left';return;
-  }
-  ctx.textAlign='left';
-}
-
-let lastT=0;
-function loop(t){requestAnimationFrame(loop);const dt=Math.min((t-(lastT||t))/1000,.05);lastT=t;update(dt);render(t);}
-
-async function saveScore(){
-  const name=(document.getElementById('pName').value||'Anônimo').trim().slice(0,24);
-  await addDoc(collection(db,'games',GAME_ID,'scores'),{name,score,level:'Completo',seconds:0,ts:serverTimestamp()});
-  document.getElementById('saveBox').style.display='none';
-  loadRanking();
-}
-
-async function loadRanking(){
-  const rl=document.getElementById('rankList');
-  try{
-    const q=query(collection(db,'games',GAME_ID,'scores'),orderBy('score','desc'),limit(80));
-    const snap=await getDocs(q);
-    const docs=snap.docs.map(d=>d.data()).slice(0,10);
-    if(!docs.length){rl.innerHTML='<p style="opacity:.45;font-size:.76rem;padding:4px">Nenhum recorde ainda.</p>';return;}
-    rl.innerHTML=docs.map((d,i)=>`<div class="rank-item"><span>${['🥇','🥈','🥉'][i]||`${i+1}.`} ${d.name}</span><span>${d.score} pts</span></div>`).join('');
-  }catch(e){rl.innerHTML='<p style="opacity:.35;font-size:.76rem">Não foi possível carregar.</p>';}
-}
-
-window.saveScore=saveScore;
-requestAnimationFrame(loop);
-loadRanking();
-</script>
-</body>
-</html>
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#06110b;color:#edf8ef;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;overscroll-behavior:none}body{display:flex;justify-content:center;padding:8px}.app{width:min(1120px,100%)}.top{display:flex;justify-content:space-between;align-items:center;margin:4px 0 8px}.brand{display:flex;gap:9px;align-items:center}.brand b{font-size:20px}.brand small{display:block;color:#9db6a2}.actions{display:flex;gap:6px}button,input{font:inherit}button{cursor:pointer}.ib,.btn{border:1px solid #ffffff22;background:#ffffff12;color:#fff;border-radius:12px;font-weight:800}.ib{width:40px;height:40px}.btn{padding:11px 16px}.btn.primary{background:#efb92e;color:#241a05;border-color:#ffd76a}.hud{display:grid;grid-template-columns:1.1fr 1fr 1fr 1fr;gap:7px;margin-bottom:7px}.hc{background:#0b1f15e8;border:1px solid #ffffff18;border-radius:13px;padding:8px 10px}.lab{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#9db6a2}.val{font-size:14px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bar{height:6px;margin-top:5px;background:#ffffff13;border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;width:100%;background:#7fce73;border-radius:9px}.shell{position:relative;overflow:hidden;border-radius:18px;border:1px solid #ffffff22;box-shadow:0 20px 70px #0009;touch-action:none}.shell canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;background:#356d4b}.overlay{display:none;position:absolute;inset:0;z-index:8;align-items:center;justify-content:center;padding:16px;background:#05110be9;backdrop-filter:blur(4px)}.overlay.show{display:flex}.card{width:min(760px,95%);max-height:95%;overflow:auto;padding:clamp(18px,4vw,32px);background:linear-gradient(155deg,#143622,#07170f);border:1px solid #ffffff22;border-radius:22px;text-align:center;box-shadow:0 24px 80px #000b}.ey{font-size:11px;color:#f6c445;font-weight:900;letter-spacing:1.5px;text-transform:uppercase}.card h1{font-size:clamp(34px,7vw,62px);line-height:.95;margin:9px 0}.card h2{font-size:clamp(25px,4vw,38px);margin:8px 0}.card p{color:#cadbce;line-height:1.45}.name{width:min(350px,95%);padding:11px 13px;border-radius:12px;border:1px solid #ffffff22;background:#ffffff0b;color:#fff}.buttons{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:15px}.phases,.stats,.learn{display:grid;gap:7px}.phases{grid-template-columns:repeat(5,1fr);margin:17px 0}.pd,.st,.ln{background:#ffffff08;border:1px solid #ffffff16;border-radius:12px;padding:9px}.pd b{display:block;font-size:18px}.pd{font-size:10px;color:#bed0c2}.stats{grid-template-columns:repeat(3,1fr);margin:12px 0}.st small{display:block;color:#9db6a2;font-size:9px;text-transform:uppercase}.st strong{font-size:16px}.learn{grid-template-columns:repeat(2,1fr);text-align:left}.ln b{font-size:11px;color:#f6c445}.ln p{font-size:11px;margin:4px 0}.msg{position:absolute;top:13px;left:50%;z-index:5;transform:translate(-50%,-8px);opacity:0;transition:.25s;max-width:82%;padding:9px 13px;border-radius:13px;background:#06130eea;border:1px solid #ffffff24;text-align:center;font-size:13px;pointer-events:none}.msg.show{opacity:1;transform:translate(-50%,0)}.danger{position:absolute;top:13px;right:13px;z-index:4;opacity:0;padding:7px 10px;border-radius:999px;background:#4b1714dd;border:1px solid #ff7c6d66;font-size:11px;font-weight:900}.danger.show{opacity:1}.mobile{display:none;position:absolute;inset:0;z-index:4;pointer-events:none}.joy{position:absolute;left:18px;bottom:18px;width:110px;height:110px;border-radius:50%;background:#06130e66;border:1px solid #ffffff38;pointer-events:auto;touch-action:none}.stick{position:absolute;left:35px;top:35px;width:40px;height:40px;border-radius:50%;background:#ffffff2c;transform:translate(0,0)}.boost{position:absolute;right:22px;bottom:27px;width:76px;height:76px;border-radius:50%;background:#f6c4452a;border:1px solid #f6c44577;color:#ffe69c;font-size:11px;font-weight:900;pointer-events:auto;touch-action:none}.bottom{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:#91a899;font-size:11px;margin-top:6px}.rank{display:grid;grid-template-columns:32px 1fr auto auto;gap:8px;padding:8px;border-bottom:1px solid #ffffff10;text-align:left;font-size:12px}.rank small{color:#9db6a2}
+@media(max-width:720px){body{padding:4px}.brand small{display:none}.hud{grid-template-columns:1fr 1fr}.mobile{display:block}.stats,.learn{grid-template-columns:1fr 1fr}.rank{grid-template-columns:28px 1fr auto}.rank .extra{display:none}.card{padding:17px 13px}.pd{font-size:8px;padding:7px 2px}}
+</style></head><body><div class="app">
+<div class="top"><div class="brand"><span style="font-size:27px">🐝</span><div><b>Abelha Mensageira</b><small>Missão: voltar viva para a colmeia</small></div></div><div class="actions"><button class="ib" id="sound">🔊</button><button class="ib" id="pause">⏸</button></div></div>
+<div class="hud"><div class="hc"><div class="lab">Fase</div><div class="val" id="hPhase">1 · Caminho das Flores</div><div class="bar"><i id="hProg" style="background:#86c9ff;width:0"></i></div></div><div class="hc"><div class="lab">Energia</div><div class="val"><span id="hEnergy">100</span>%</div><div class="bar"><i id="hEnergyBar"></i></div></div><div class="hc"><div class="lab" id="hRiskLab">Qualidade ambiental</div><div class="val" id="hRisk">Boa</div><div class="bar"><i id="hRiskBar" style="background:#86c9ff"></i></div></div><div class="hc"><div class="lab">Missão</div><div class="val"><span id="hScore">0</span> pts · 🌼 <span id="hPollen">0</span></div><div class="bar"><i id="hMission" style="background:#f6c445;width:4%"></i></div></div></div>
+<div class="shell"><canvas id="game" width="960" height="540"></canvas><div class="msg" id="msg"></div><div class="danger" id="danger">⚠ PERIGO</div>
+<div class="mobile"><div class="joy" id="joy"><div class="stick" id="stick"></div></div><button class="boost" id="boost">IMPULSO</button></div>
+<div class="overlay show" id="menu"><div class="card"><div class="ey">Jogo educativo ambiental · sobrevivência e navegação</div><h1>ABELHA<br>MENSAGEIRA</h1><p>Você saiu para buscar recursos. Agora precisa atravessar uma paisagem em transformação e <b>voltar viva para a colmeia</b>. Colete alimento, leia os sinais do ambiente e escolha rotas seguras.</p><input class="name" id="name" maxlength="22" placeholder="Seu nome para o ranking"><div class="phases"><div class="pd"><b>1</b>Flores</div><div class="pd"><b>2</b>Predadores</div><div class="pd"><b>3</b>Fogo</div><div class="pd"><b>4</b>Agrotóxico</div><div class="pd"><b>5</b>Colmeia</div></div><div class="buttons"><button class="btn primary" id="start">INICIAR MISSÃO</button><button class="btn" id="showRank">TOP 10</button></div><p style="font-size:12px">💻 WASD/setas + Shift · 📱 joystick + Impulso · Esc pausa</p></div></div>
+<div class="overlay" id="phase"><div class="card" id="phaseCard"></div></div><div class="overlay" id="end"><div class="card" id="endCard"></div></div>
+<div class="overlay" id="ranking"><div class="card"><div class="ey">Ranking local deste dispositivo</div><h2>TOP 10</h2><div id="rankList"></div><div class="buttons"><button class="btn primary" id="rankBack">VOLTAR</button></div></div></div>
+<div class="overlay" id="paused"><div class="card"><div class="ey">Missão pausada</div><h2>A colmeia ainda espera.</h2><div class="buttons"><button class="btn primary" id="resume">CONTINUAR</button><button class="btn" id="quit">VOLTAR AO MENU</button></div></div></div>
+</div><div class="bottom"><span>🌼 recurso floral · 🌿 abrigo/corredor · ⚠ ameaça ambiental</span><span id="best">Seu melhor resultado: —</span></div></div>
+<script>
+(function(){'use strict';
+var C=document.getElementById('game'),X=C.getContext('2d'),W=C.width,H=C.height,$=function(i){return document.getElementById(i)},keys={},joy={x:0,y:0},boost=false,sound=true,audio=null,last=0,state='menu',paused=false,G;
+var clamp=function(v,a,b){return Math.max(a,Math.min(b,v))},rnd=function(a,b){return a+Math.random()*(b-a)};
+var LEVELS=[
+{name:'Caminho das Flores',goal:4300,speed:58,flora:.95,risk:'Qualidade ambiental',msg:'Visite flores diferentes. Diversidade representa mais opções de alimento na paisagem.'},
+{name:'Predadores',goal:5000,speed:65,flora:.8,risk:'Perigo',msg:'Predadores reagem à sua proximidade. Vegetação pode servir de abrigo.'},
+{name:'Fogo e perda de habitat',goal:5600,speed:70,flora:.48,risk:'Ar / fumaça',msg:'O fogo muda o ambiente: menos flores, fumaça e corredores fragmentados.'},
+{name:'Agrotóxico',goal:6200,speed:74,flora:.58,risk:'Exposição tóxica',msg:'Leia os sinais ambientais. Nem toda flor de uma área agrícola é um recurso seguro.'},
+{name:'A volta à colmeia',goal:7000,speed:78,flora:.5,risk:'Risco acumulado',msg:'A rota curta pode ser perigosa; desvios podem recuperar energia. Chegue à colmeia.'}];
+var FT=[['Ipê','#ffd84b'],['Cambará','#ff8c7e'],['Assa-peixe','#c6a6ff'],['Alecrim-do-campo','#89d98d'],['Flor silvestre','#ff8fd3']];
+function fresh(){return{phase:0,score:0,energy:100,pollen:0,flowers:0,species:{},pred:0,smoke:0,pest:0,distance:0,time:0,start:0,spawn:0,entities:[],parts:[],cool:0,hive:false,bee:{x:180,y:H/2,vx:0,vy:0,a:0,w:0,hit:0,conf:0}}}
+function tone(f,d,type,g){if(!sound)return;try{if(!audio)audio=new (window.AudioContext||window.webkitAudioContext)();var o=audio.createOscillator(),v=audio.createGain();o.type=type||'sine';o.frequency.value=f;v.gain.setValueAtTime(g||.035,audio.currentTime);v.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+(d||.08));o.connect(v);v.connect(audio.destination);o.start();o.stop(audio.currentTime+(d||.08))}catch(e){}}
+function message(s,ms){$('msg').textContent=s;$('msg').classList.add('show');clearTimeout(message.t);message.t=setTimeout(function(){$('msg').classList.remove('show')},ms||2200)}
+function hide(){['menu','phase','end','ranking','paused'].forEach(function(i){$(i).classList.remove('show')})}
+function start(){G=fresh();hide();state='play';init(0);last=performance.now()}
+function init(i){G.phase=i;G.entities=[];G.parts=[];G.start=G.distance;G.spawn=G.distance+W;G.bee.x=180;G.bee.y=H/2;G.bee.vx=G.bee.vy=G.bee.conf=0;seed(2600);message(LEVELS[i].msg,3200);hud(0)}
+function prog(){return clamp((G.distance-G.start)/LEVELS[G.phase].goal,0,1)}
+function sx(e){return e.x-G.distance}
+function add(e){G.entities.push(e)}
+function flower(x){var t=Math.floor(Math.random()*FT.length),farm=G.entities.some(function(e){return e.type==='farm'&&Math.abs(e.x-x)<250});add({type:'flower',x:x,y:rnd(95,H-85),r:16,t:t,used:false,bad:G.phase>=3&&farm&&Math.random()<.48,bob:rnd(0,6)})}
+function predator(x){add({type:'pred',kind:['bird','spider','mantis'][Math.floor(Math.random()*3)],x:x,y:rnd(85,H-90),r:23,active:false,escaped:false})}
+function seed(amount){var L=LEVELS[G.phase],to=G.spawn+amount;while(G.spawn<to){G.spawn+=rnd(135,235);var x=G.spawn;if(Math.random()<L.flora)flower(x);if(G.phase>=1&&Math.random()<.2+G.phase*.02)predator(x+rnd(90,260));if(G.phase>=2&&Math.random()<.28)add({type:'burn',x:x,y:H-48,w:rnd(160,330),h:40});if(G.phase>=2&&Math.random()<.18)add({type:'smoke',x:x,y:rnd(130,H-150),w:rnd(180,300),h:rnd(150,250)});if(G.phase>=3&&Math.random()<.22){var sp=Math.random()<.62;add({type:'farm',x:x,y:H-82,w:rnd(300,500),h:82,sprayed:sp,sign:sp&&Math.random()<.72});if(sp&&Math.random()<.62)add({type:'drift',x:x+rnd(50,180),y:rnd(130,H-150),w:rnd(170,280),h:rnd(120,220)})}if(G.phase>=4&&Math.random()<.08)add({type:'gust',x:x,y:H/2,w:rnd(180,320),h:H,dir:Math.random()<.5?-1:1});if(Math.random()<.2)add({type:'shelter',x:x,y:rnd(100,H-110),w:rnd(100,170),h:rnd(70,130)})}}
+function inside(e){var x=sx(e),b=G.bee,w=e.w||e.r*2||40,h=e.h||e.r*2||40;return b.x>x-w/2&&b.x<x+w/2&&b.y>e.y-h/2&&b.y<e.y+h/2}
+function sheltered(){return G.entities.some(function(e){return e.type==='shelter'&&inside(e)})}
+function particles(x,y,c,n){for(var i=0;i<(n||8);i++)G.parts.push({x:x,y:y,vx:rnd(-70,70),vy:rnd(-70,70),t:rnd(.4,.8),c:c,s:rnd(2,5)})}
+function update(dt){if(state!=='play'||paused)return;var L=LEVELS[G.phase],b=G.bee;G.time+=dt;G.cool=Math.max(0,G.cool-dt);var ix=(keys.ArrowRight||keys.d?1:0)-(keys.ArrowLeft||keys.a?1:0)+joy.x,iy=(keys.ArrowDown||keys.s?1:0)-(keys.ArrowUp||keys.w?1:0)+joy.y;if(b.conf>0){b.conf-=dt;var q=ix;ix=-iy*.8;iy=q*.8}var m=Math.hypot(ix,iy);if(m>1){ix/=m;iy/=m}var fast=boost||keys.Shift,acc=fast?560:410;b.vx+=(ix*acc-b.vx*3.2)*dt;b.vy+=(iy*acc-b.vy*3.2)*dt;b.x=clamp(b.x+b.vx*dt,78,W-95);b.y=clamp(b.y+b.vy*dt,55,H-55);b.a+=(clamp(b.vy/260,-.48,.48)-b.a)*dt*7;b.w+=dt*(fast?34:25);b.hit=Math.max(0,b.hit-dt);G.distance+=(L.speed+(b.x-180)*.055+(fast?14:0))*dt;G.energy-=(.72+(Math.abs(b.vx)+Math.abs(b.vy))*.0014+(fast?1.15:0))*dt;var risk=0,near=999,safe=sheltered();
+G.entities.forEach(function(e){var x=sx(e),d;
+if(e.type==='flower'&&!e.used){e.bob+=dt*2.5;d=Math.hypot(b.x-x,b.y-e.y);if(d<29){e.used=true;G.flowers++;G.pollen++;var first=!G.species[e.t];G.species[e.t]=1;if(e.bad){G.pest+=4;G.energy-=7;b.conf=Math.max(b.conf,1.7);G.score=Math.max(0,G.score-12);particles(b.x,b.y,'#d8e36b',12);message('Sinais de contaminação: orientação e energia foram afetadas.',2600);tone(120,.2,'sawtooth',.045)}else{G.energy=Math.min(100,G.energy+11);G.score+=30+(first?30:0);particles(b.x,b.y,FT[e.t][1],10);tone(first?760:620,.08);if(first)message('Nova espécie floral: bônus de biodiversidade +30.',1600)}}}
+if(e.type==='pred'){d=Math.hypot(b.x-x,b.y-e.y);near=Math.min(near,d);if(d<260){e.active=true;if(!safe){var k=1-d/280;e.x+=((G.distance+b.x)-e.x)*dt*(.38+k*.5);e.y+=(b.y-e.y)*dt*(.48+k*.8)}}if(e.active&&!e.escaped&&x<-80){e.escaped=true;G.pred++;G.score+=50;message('Predador evitado: cobertura vegetal e mudança de rota reduzem risco.',1700)}if(d<31&&b.hit<=0&&!safe){b.hit=1.1;G.energy-=14;G.score=Math.max(0,G.score-25);particles(b.x,b.y,'#ff6b5f',13);message('Contato com predador: energia perdida. Procure cobertura vegetal.',2200);tone(90,.2,'sawtooth',.05)}}
+if(e.type==='smoke'&&inside(e)){risk=Math.max(risk,.72);G.smoke+=dt;G.energy-=1.25*dt}
+if(e.type==='drift'&&inside(e)){risk=Math.max(risk,.92);G.pest+=dt;G.energy-=2.1*dt;b.conf=Math.max(b.conf,.35)}
+if(e.type==='gust'&&inside(e)){b.vy+=e.dir*38*dt;risk=Math.max(risk,.45)}});if(near<250)risk=Math.max(risk,1-near/260);$('danger').classList.toggle('show',risk>.63);if(G.phase===2&&risk>.55&&G.cool<=0){message('A fumaça reduz visibilidade e aumenta o custo do voo.',2200);G.cool=7}if(G.phase===3&&risk>.7&&G.cool<=0){message('Deriva de pulverização: afaste-se e procure vegetação natural.',2200);G.cool=7}
+G.energy=clamp(G.energy,0,100);G.parts.forEach(function(p){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.97;p.vy*=.97;p.t-=dt});G.parts=G.parts.filter(function(p){return p.t>0});G.entities=G.entities.filter(function(e){return sx(e)>-650});if(G.spawn-G.distance<1900)seed(1500);if(G.energy<=0){lose('ENERGIA ESGOTADA','Sem energia suficiente, a abelha não consegue manter o voo. Paisagens com poucos recursos tornam o retorno mais arriscado.');return}if(prog()>=1)finish();hud(risk)}
+function finish(){state='phase';G.score+=100+Math.round(G.energy*1.2);var i=G.phase;if(i===4){win();return}var notes=['Flores distribuídas na paisagem fornecem recursos; diversidade oferece mais opções de alimentação.','Predadores são naturais, e a estrutura da vegetação oferece abrigo e rotas de escape.','Áreas queimadas reduzem recursos e conectividade; a fumaça adiciona custo ao voo.','Efeitos subletais também importam: alterações de energia, movimento e orientação aumentam o risco.'];$('phaseCard').innerHTML='<div class="ey">Fase '+(i+1)+' concluída</div><h2>'+LEVELS[i].name+'</h2><p>'+notes[i]+'</p><div class="stats"><div class="st"><small>Energia</small><strong>'+Math.round(G.energy)+'%</strong></div><div class="st"><small>Pontuação</small><strong>'+G.score+'</strong></div><div class="st"><small>Pólen</small><strong>'+G.pollen+'</strong></div></div><div class="buttons"><button class="btn primary" id="next">CONTINUAR → FASE '+(i+2)+'</button></div>';hide();$('phase').classList.add('show');$('next').onclick=function(){hide();state='play';init(i+1)}}
+function lose(t,why){state='end';save(false);$('endCard').innerHTML='<div class="ey">A missão terminou na fase '+(G.phase+1)+'</div><h2>'+t+'</h2><p>'+why+'</p><div class="stats"><div class="st"><small>Pontuação</small><strong>'+G.score+'</strong></div><div class="st"><small>Flores</small><strong>'+G.flowers+'</strong></div><div class="st"><small>Fase</small><strong>'+(G.phase+1)+'/5</strong></div></div><div class="buttons"><button class="btn primary" id="retry">TENTAR NOVAMENTE</button><button class="btn" id="menuBtn">VOLTAR AO MENU</button></div>';hide();$('end').classList.add('show');$('retry').onclick=start;$('menuBtn').onclick=menu}
+function win(){state='end';G.score+=250+Math.round(G.energy*2)+Object.keys(G.species).length*20;save(true);tone(660,.12);setTimeout(function(){tone(880,.18)},120);$('endCard').innerHTML='<div class="ey">MISSÃO CONCLUÍDA</div><h2>VOCÊ CONSEGUIU VOLTAR PARA A COLMEIA.</h2><p>A abelha entrou na colmeia trazendo recursos. Sua sobrevivência dependeu da qualidade e da conectividade da paisagem.</p><div class="stats"><div class="st"><small>Pontuação total</small><strong>'+G.score+'</strong></div><div class="st"><small>Flores visitadas</small><strong>'+G.flowers+'</strong></div><div class="st"><small>Pólen coletado</small><strong>'+G.pollen+'</strong></div><div class="st"><small>Distância</small><strong>'+Math.round(G.distance/10)+' m</strong></div><div class="st"><small>Predadores evitados</small><strong>'+G.pred+'</strong></div><div class="st"><small>Energia restante</small><strong>'+Math.round(G.energy)+'%</strong></div><div class="st"><small>Exposição à fumaça</small><strong>'+G.smoke.toFixed(1)+' s</strong></div><div class="st"><small>Exposição a agrotóxico</small><strong>'+G.pest.toFixed(1)+'</strong></div><div class="st"><small>Bônus biodiversidade</small><strong>+'+(Object.keys(G.species).length*30)+'</strong></div></div><div class="learn"><div class="ln"><b>POLINIZAÇÃO + BIODIVERSIDADE</b><p>Flores diferentes sustentaram energia e aumentaram sua recompensa.</p></div><div class="ln"><b>PERDA DE HABITAT + INCÊNDIOS</b><p>Trechos degradados reduziram alimento e criaram rotas difíceis.</p></div><div class="ln"><b>AGROTÓXICOS</b><p>Sinais do ambiente ajudaram a reconhecer maior risco de exposição.</p></div><div class="ln"><b>CONECTIVIDADE DA PAISAGEM</b><p>Vegetação funcionou como alimento, abrigo e ligação entre áreas.</p></div></div><div class="buttons"><button class="btn primary" id="again">JOGAR NOVAMENTE</button><button class="btn" id="rankWin">VER TOP 10</button></div>';hide();$('end').classList.add('show');$('again').onclick=start;$('rankWin').onclick=ranking}
+function hud(r){var L=LEVELS[G.phase];$('hPhase').textContent=(G.phase+1)+' · '+L.name;$('hProg').style.width=(prog()*100)+'%';$('hEnergy').textContent=Math.round(G.energy);$('hEnergyBar').style.width=G.energy+'%';$('hRiskLab').textContent=L.risk;$('hRisk').textContent=r>.75?'Alta':r>.42?'Atenção':G.phase===3?'Leia os sinais':'Boa';$('hRiskBar').style.width=(100-r*100)+'%';$('hScore').textContent=G.score;$('hPollen').textContent=G.pollen;$('hMission').style.width=clamp((G.pollen%10)*10,4,100)+'%'}
+function save(ok){var n=($('name').value||'Anônimo').trim().slice(0,22)||'Anônimo',r={name:n,score:G.score,date:new Date().toLocaleDateString('pt-BR'),seconds:Math.round(G.time),phase:G.phase+1,status:ok?'chegou à colmeia':'não conseguiu retornar',energy:Math.round(G.energy)},a=JSON.parse(localStorage.getItem('abelhaMensageiraRankingV2')||'[]');a.push(r);a.sort(function(x,y){return y.score-x.score||x.seconds-y.seconds||y.energy-x.energy});localStorage.setItem('abelhaMensageiraRankingV2',JSON.stringify(a.slice(0,50)));best()}
+function fmt(s){return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}function esc(s){return String(s).replace(/[&<>"']/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]})}
+function best(){var a=JSON.parse(localStorage.getItem('abelhaMensageiraRankingV2')||'[]');$('best').textContent=a.length?'Seu melhor resultado: '+a[0].score+' pts · '+fmt(a[0].seconds)+' · '+a[0].status:'Seu melhor resultado: —'}
+function ranking(){var a=JSON.parse(localStorage.getItem('abelhaMensageiraRankingV2')||'[]').slice(0,10);$('rankList').innerHTML=a.length?a.map(function(r,i){return'<div class="rank"><b>'+(i+1)+'º</b><span>'+esc(r.name)+'<br><small>'+r.date+'</small></span><strong>'+r.score+'</strong><small class="extra">'+fmt(r.seconds)+' · '+r.energy+'%</small></div>'}).join(''):'<p>Nenhum resultado salvo neste dispositivo.</p>';hide();state='ranking';$('ranking').classList.add('show')}
+function menu(){paused=false;state='menu';hide();$('menu').classList.add('show');best()}
+function togglePause(){if(state!=='play'&&state!=='paused')return;paused=!paused;hide();if(paused){state='paused';$('paused').classList.add('show')}else{state='play';last=performance.now()}}
+function bg(){var p=G?G.phase:0,g=X.createLinearGradient(0,0,0,H),top=['#72b9cf','#5ba7b5','#a48b6b','#88b1b2','#5d879f'],bot=['#2f7654','#245d42','#5e4b32','#62824f','#314f52'];g.addColorStop(0,top[p]);g.addColorStop(1,bot[p]);X.fillStyle=g;X.fillRect(0,0,W,H);var cam=G?G.distance:0;for(var l=0;l<3;l++){X.fillStyle=['#173a2b55','#214b315f','#173d276f'][l];X.beginPath();X.moveTo(0,H);for(var x=-50;x<=W+50;x+=80)X.lineTo(x,H-100-l*48+Math.sin((x+cam*(.05+l*.03))*.01+l)*24);X.lineTo(W,H);X.closePath();X.fill()}if(p>=3){X.strokeStyle='#d7c78055';for(var i=0;i<8;i++){var xx=((i*170-cam*.22)%1300+1300)%1300;X.beginPath();X.moveTo(xx,H-125);X.lineTo(xx,H);X.stroke()}}}
+function entity(e,t){var x=sx(e);if(x<-700||x>W+700)return;if(e.type==='flower'){if(e.used)return;X.save();X.translate(x,e.y+Math.sin(e.bob)*3);X.strokeStyle='#2f7a42';X.lineWidth=3;X.beginPath();X.moveTo(0,12);X.lineTo(0,31);X.stroke();X.fillStyle=e.bad?'#c7cb76':FT[e.t][1];for(var i=0;i<5;i++){X.rotate(Math.PI*2/5);X.beginPath();X.ellipse(0,-10,6,10,0,0,7);X.fill()}X.fillStyle='#5c4120';X.beginPath();X.arc(0,0,5,0,7);X.fill();if(e.bad){X.fillStyle='#dbe77a';X.beginPath();X.arc(9,-13,2.5,0,7);X.fill()}X.restore()}
+if(e.type==='shelter'){X.fillStyle='#1e5d35bb';X.beginPath();X.ellipse(x,e.y,e.w/2,e.h/2,0,0,7);X.fill()}
+if(e.type==='burn'){X.fillStyle='#302a24';X.fillRect(x,e.y,e.w,e.h);X.fillStyle='#151513';for(var j=0;j<5;j++)X.fillRect(x+j*e.w/5,e.y-rnd(5,15),5,rnd(12,26))}
+if(e.type==='smoke'||e.type==='drift'){X.save();X.globalAlpha=e.type==='smoke'?.22:.18;X.fillStyle=e.type==='smoke'?'#c6c8c2':'#d7e870';for(var k=0;k<10;k++){X.beginPath();X.arc(x+(k%4)*e.w/4+Math.sin(t*.001+k)*18,e.y-e.h/2+Math.floor(k/4)*e.h/3,38+(k%3)*12,0,7);X.fill()}X.restore()}
+if(e.type==='farm'){X.fillStyle=e.sprayed?'#8c9758':'#69934e';X.fillRect(x,H-82,e.w,82);if(e.sign){X.fillStyle='#eadcaf';X.fillRect(x+25,H-154,78,42);X.fillStyle='#403726';X.font='bold 11px sans-serif';X.textAlign='center';X.fillText('ÁREA',x+64,H-137);X.fillText('PULVERIZADA',x+64,H-122);X.textAlign='left'}}
+if(e.type==='pred'){X.save();X.translate(x,e.y);X.fillStyle=e.kind==='mantis'?'#5d8538':'#303238';if(e.kind==='bird'){X.beginPath();X.ellipse(0,0,24,12,0,0,7);X.fill();X.strokeStyle='#303238';X.lineWidth=6;X.beginPath();X.moveTo(-8,0);X.quadraticCurveTo(-24,-22,-40,-8);X.moveTo(8,0);X.quadraticCurveTo(24,-22,40,-8);X.stroke()}else if(e.kind==='spider'){X.beginPath();X.arc(0,0,13,0,7);X.fill();X.strokeStyle='#3e2b26';for(var z=-1;z<=1;z+=2){X.beginPath();X.moveTo(z*8,-5);X.lineTo(z*28,-20);X.moveTo(z*8,5);X.lineTo(z*28,20);X.stroke()}}else X.fillRect(-10,-18,20,36);X.restore()}}
+function bee(){var b=G.bee;X.save();X.translate(b.x,b.y);X.rotate(b.a);var f=Math.sin(b.w)*8;X.globalAlpha=.7;X.fillStyle='#dff6ff';X.beginPath();X.ellipse(-5,-13,13,6,-.45+f*.01,0,7);X.fill();X.beginPath();X.ellipse(-6,13,13,6,.45-f*.01,0,7);X.fill();X.globalAlpha=1;X.fillStyle=b.hit>0?'#ff8b73':'#f6c445';X.beginPath();X.ellipse(0,0,18,11,0,0,7);X.fill();X.fillStyle='#272119';X.fillRect(-8,-10,5,20);X.fillRect(4,-10,5,20);X.beginPath();X.arc(15,0,7,0,7);X.fill();X.restore()}
+function hive(t){if(!G||G.phase!==4||prog()<.72)return;var p=prog(),x=W-(p-.72)/.28*(W*.62);X.save();X.translate(x,H-135);X.fillStyle='#b37a2d';for(var i=0;i<4;i++){X.beginPath();X.ellipse(0,i*18,55-i*5,22,0,0,7);X.fill()}X.fillStyle='#281a10';X.beginPath();X.ellipse(0,60,14,9,0,0,7);X.fill();for(var j=0;j<9;j++){var a=t*.002+j;X.fillStyle='#f6c445';X.beginPath();X.arc(Math.cos(a)*70,30+Math.sin(a*1.7)*45,3,0,7);X.fill()}X.restore()}
+function render(t){bg();if(!G)return;G.entities.forEach(function(e){entity(e,t)});hive(t);G.parts.forEach(function(p){X.globalAlpha=clamp(p.t/.8,0,1);X.fillStyle=p.c;X.beginPath();X.arc(p.x,p.y,p.s,0,7);X.fill()});X.globalAlpha=1;if(G.phase===4&&prog()>.86&&!G.hive){G.hive=true;message('A colmeia está à vista. Preserve energia para o trecho final!',2600);tone(520,.1)}bee();if(G.phase===2){X.fillStyle='rgba(95,95,88,'+clamp(G.smoke/18,0,.08)+')';X.fillRect(0,0,W,H)}if(G.bee.conf>0){X.fillStyle='rgba(210,230,110,.07)';X.fillRect(0,0,W,H)}}
+function loop(t){requestAnimationFrame(loop);var dt=Math.min(.033,(t-(last||t))/1000);last=t;update(dt);render(t)}
+document.addEventListener('keydown',function(e){keys[e.key]=true;keys[e.key.toLowerCase()]=true;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].indexOf(e.key)>=0)e.preventDefault();if(e.key==='Escape')togglePause()});document.addEventListener('keyup',function(e){keys[e.key]=false;keys[e.key.toLowerCase()]=false});
+(function(){var base=$('joy'),stick=$('stick'),id=null,rect=null;function move(e){var a=Array.from(e.changedTouches).find(function(t){return t.identifier===id});if(!a)return;var dx=a.clientX-(rect.left+rect.width/2),dy=a.clientY-(rect.top+rect.height/2),m=Math.hypot(dx,dy),max=35;if(m>max){dx=dx/m*max;dy=dy/m*max}joy.x=dx/max;joy.y=dy/max;stick.style.transform='translate('+dx+'px,'+dy+'px)'}base.addEventListener('touchstart',function(e){e.preventDefault();id=e.changedTouches[0].identifier;rect=base.getBoundingClientRect();move(e)},{passive:false});base.addEventListener('touchmove',function(e){e.preventDefault();move(e)},{passive:false});function end(e){if(Array.from(e.changedTouches).some(function(t){return t.identifier===id})){id=null;joy.x=joy.y=0;stick.style.transform='translate(0,0)'}}base.addEventListener('touchend',end);base.addEventListener('touchcancel',end);var bt=$('boost');bt.addEventListener('touchstart',function(e){e.preventDefault();boost=true},{passive:false});['touchend','touchcancel'].forEach(function(ev){bt.addEventListener(ev,function(e){e.preventDefault();boost=false},{passive:false})})})();
+$('start').onclick=start;$('showRank').onclick=ranking;$('rankBack').onclick=menu;$('pause').onclick=togglePause;$('resume').onclick=togglePause;$('quit').onclick=menu;$('sound').onclick=function(){sound=!sound;$('sound').textContent=sound?'🔊':'🔇';if(sound)tone(520,.05)};best();requestAnimationFrame(loop);
+window.__ABELHA_TEST__={start:start,get:function(){return G},advance:function(){G.distance=G.start+LEVELS[G.phase].goal+1},state:function(){return state},phase:function(){return G&&G.phase},ranking:function(){return JSON.parse(localStorage.getItem('abelhaMensageiraRankingV2')||'[]')}};
+})();
+</script></body></html>
