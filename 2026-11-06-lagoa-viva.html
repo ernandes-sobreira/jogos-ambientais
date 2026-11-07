@@ -38,7 +38,7 @@ const species={
  traira:{name:'Traíra',icon:'🐠',color:'#a8c77a',speed:1.08,food:'peixes menores',vuln:.9,desc:'Caça peixes menores e disputa presas com outras traíras.',role:'Predadora de emboscada',ability:'Bote rápido'},
  cascudo:{name:'Cascudo',icon:'🐡',color:'#b9a47e',speed:1.02,food:'perifíton e biofilme',vuln:.96,desc:'Raspa algas e biofilme de troncos e raízes.',role:'Raspador de superfícies submersas',ability:'Aderir ao tronco'}
 };
-let W=0,H=0,worldW=0,cameraX=0,dpr=1,mode='menu',fish=null,selected='lambari',stageIndex=0,menuSwimmers=[],items=[],particles=[],predators=[],hazards=[],coverSpots=[],logs=[],ecologySeen={},refuge={x:0,y:0,r:44},stageFood=0,rivalFeeds=0,hideUsed=false,hideCooldown=0,refugeHint=false,bird={state:'idle',timer:11,x:0,y:0,dir:1},hook={state:'idle',timer:15,x:0,y:0,life:0,phase:0,castX:0,castY:0,targetX:0,targetY:0},time=0,last=0,acc=0,keys={},touchDirs={},boost=0,score=0,stamina=100,sound=false,audio=null;
+let W=0,H=0,worldW=0,cameraX=0,dpr=1,mode='menu',fish=null,selected='lambari',stageIndex=0,menuSwimmers=[],shoalFish=[],items=[],particles=[],predators=[],hazards=[],coverSpots=[],logs=[],ecologySeen={},refuge={x:0,y:0,r:44},stageFood=0,rivalFeeds=0,hideUsed=false,hideCooldown=0,refugeHint=false,bird={state:'idle',timer:11,x:0,y:0,dir:1},hook={state:'idle',timer:15,x:0,y:0,life:0,phase:0,castX:0,castY:0,targetX:0,targetY:0},time=0,last=0,acc=0,keys={},touchDirs={},boost=0,score=0,stamina=100,sound=false,audio=null;
 const rand=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function resize(){const r=frame.getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,2);W=r.width;H=r.height;worldW=W*4.2;cameraX=clamp(cameraX,0,worldW-W);canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);if(fish){fish.x=clamp(fish.x,38,W-38);fish.y=clamp(fish.y,H*.19+fish.r*.85,H*.84-fish.r*.65)}}new ResizeObserver(resize).observe(frame);resize();
 function splash(x,y,count,color){for(let i=0;i<count;i++)particles.push({x,y,vx:rand(-24,24),vy:rand(-40,-8),life:rand(.35,.9),r:rand(1,4),color})}
@@ -49,6 +49,7 @@ function newStage(){
  const s=stages[stageIndex];
  cameraX=0;refugeHint=false;refuge={x:worldW*.97,y:H*.50,r:22};logs=[{x:worldW*.19,y:H*.73,len:W*.26},{x:worldW*.43,y:H*.79,len:W*.22},{x:worldW*.68,y:H*.74,len:W*.28},{x:worldW*.88,y:H*.80,len:W*.24}];coverSpots=[.16,.38,.61,.84,.97].map((x,i)=>({x:worldW*x,y:H*(.29+(i%2)*.035),r:52}));stageFood=0;hideUsed=false;hideCooldown=0;bird={state:'idle',timer:rand(8,11),x:0,y:0,dir:1};hook={state:'idle',timer:selected==='traira'?rand(7,10):rand(13,16),x:0,y:0,life:0,phase:rand(0,6),castX:0,castY:0,targetX:0,targetY:0};
  fish={x:worldW*.04,y:H*.53,vx:0,vy:0,dir:1,r:selected==='traira'?23:selected==='lambari'?13:18,health:100,stress:14,energy:72,invuln:0,hideTimer:0};
+ shoalFish=selected==='lambari'?Array.from({length:6},(_,i)=>({x:fish.x-(i%3+1)*18,y:fish.y+(i<3?-1:1)*14,r:7,phase:i*1.7})):[];
  items=[];predators=[];hazards=[];rivalFeeds=0;
  for(let i=0;i<s.food;i++){let kind,x,y;if(selected==='traira'){kind='prey';x=rand(worldW*.12,worldW*.9);y=rand(H*.27,H*.68)}else if(selected==='cascudo'){kind=Math.random()<.52?'periphyton':'biofilm';const log=logs[i%logs.length];x=log.x+rand(-log.len*.35,log.len*.35);y=log.y+rand(-7,7)}else if(Math.random()<.78){kind='benthos';const log=logs[i%logs.length];x=log.x+rand(-log.len*.42,log.len*.42);y=log.y+rand(7,19)}else{kind='zooplankton';x=rand(worldW*.12,worldW*.9);y=rand(H*.23,H*.39)}items.push({x,y,kind,taken:false,phase:rand(0,6.28)})}
 // Pequenos agregados para observação, todos na faixa iluminada da água.
@@ -79,13 +80,13 @@ ctx.save();
  const sand=s.tone===0?'#d4c98e':'#b6b893';
  ctx.fillStyle=bank;ctx.fillRect(0,0,W,H*.112);
  ctx.fillStyle=s.tone===0?'#9cba82':s.tone===1?'#899f7c':'#6d8275';
- ctx.beginPath();ctx.moveTo(0,H*.055);for(let x=0;x<=W+20;x+=20)ctx.lineTo(x,H*(.065+Math.sin(x*.012+time*.12)*.018));ctx.lineTo(W,H*.125);ctx.lineTo(0,H*.125);ctx.fill();
- ctx.fillStyle=sand;ctx.beginPath();ctx.moveTo(0,H*.112);for(let x=0;x<=W+12;x+=12)ctx.lineTo(x,H*(.112+Math.sin(x*.025+time*.5)*.008));ctx.lineTo(W,H*.184);ctx.lineTo(0,H*.184);ctx.fill();
+ ctx.beginPath();ctx.moveTo(0,H*.055);for(let x=0;x<=W+20;x+=20)ctx.lineTo(x,H*(.065+Math.sin((x+cameraX*.38)*.012+time*.12)*.018));ctx.lineTo(W,H*.125);ctx.lineTo(0,H*.125);ctx.fill();
+ ctx.fillStyle=sand;ctx.beginPath();ctx.moveTo(0,H*.112);for(let x=0;x<=W+12;x+=12)ctx.lineTo(x,H*(.112+Math.sin((x+cameraX*.72)*.025+time*.5)*.008));ctx.lineTo(W,H*.184);ctx.lineTo(0,H*.184);ctx.fill();
  // Reflexo da luz e uma linha de água tranquila.
  ctx.fillStyle='#f1dfa0';ctx.globalAlpha=.48;ctx.beginPath();ctx.arc(W*.83,H*.045,Math.min(W,H)*.026,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
  ctx.strokeStyle='rgba(214,246,209,.58)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,H*.18);for(let x=0;x<=W+8;x+=8)ctx.lineTo(x,H*(.18+Math.sin(x*.026+time*.8)*.004));ctx.stroke();
  // Moitas de junco e capim variam de altura e direção na margem.
- for(let i=0;i<Math.ceil(W/58)+2;i++){const x=(i*58+Math.sin(i*3.1)*12)% (W+30)-10,base=H*(.119+(i%3)*.012),h=H*(.035+(i%4)*.012),lean=Math.sin(i*2.3)*10;
+ const shoreScroll=cameraX*.82,firstReed=Math.floor(shoreScroll/58)-1,lastReed=firstReed+Math.ceil(W/58)+3;for(let i=firstReed;i<lastReed;i++){const x=i*58+Math.sin(i*3.1)*12-shoreScroll,base=H*(.119+(i%3)*.012),h=H*(.035+(i%4)*.012),lean=Math.sin(i*2.3)*10;
   ctx.strokeStyle=i%2?'#426b4d':'#507a50';ctx.lineWidth=2.4;ctx.lineCap='round';
   for(let k=-1;k<=1;k++){const bx=x+k*5,top=base-h*(.72+(k===0?.24:0));ctx.beginPath();ctx.moveTo(bx,base);ctx.quadraticCurveTo(bx+lean*.35,base-h*.55,bx+lean+k*5,top);ctx.stroke();
    if(k!==0){ctx.fillStyle=i%2?'#547d50':'#668651';ctx.beginPath();ctx.ellipse(bx+lean*.6+k*5,base-h*.55,7,2.4,k*.48,0,Math.PI*2);ctx.fill()}
@@ -104,7 +105,7 @@ ctx.save();
   ctx.strokeStyle='#d5bd8a';ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(4,-19);ctx.lineTo(7,-16);ctx.lineTo(5,-12);ctx.moveTo(-4,-6);ctx.lineTo(-6,0);ctx.moveTo(3,-6);ctx.lineTo(5,0);ctx.stroke();ctx.restore()
  }
  // Pequenas folhas flutuantes junto à margem, sem formar uma cerca repetitiva.
- for(let i=0;i<6;i++){const x=(i*W/5+W*.08+time*3)%W,y=H*(.177+(i%2)*.004);ctx.fillStyle=i%2?'#477d63':'#578a68';ctx.beginPath();ctx.ellipse(x,y,7,2.5,Math.sin(time+i)*.12,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#b8d7a1';ctx.lineWidth=.7;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+2,y-1);ctx.stroke()}
+ for(let i=0;i<6;i++){const x=(i*W/5+W*.08+time*3-cameraX*.62%W+W)%W,y=H*(.177+(i%2)*.004);ctx.fillStyle=i%2?'#477d63':'#578a68';ctx.beginPath();ctx.ellipse(x,y,7,2.5,Math.sin(time+i)*.12,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#b8d7a1';ctx.lineWidth=.7;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+2,y-1);ctx.stroke()}
  ctx.restore();
 // Light is strongest in the shallow zone and fades toward the bottom.
 ctx.save();ctx.globalCompositeOperation='screen';const rayClarity=s.tone===0?1:s.tone===1?.58:.34;for(let i=0;i<4;i++){const top=W*(.57+i*.105),shift=Math.sin(time*.18+i*.8)*W*.018,bottom=top+(i-1.5)*W*.105;const beam=ctx.createLinearGradient(top,0,bottom,H*.48);beam.addColorStop(0,`rgba(255,244,190,${.16*rayClarity})`);beam.addColorStop(.38,`rgba(215,248,213,${.10*rayClarity})`);beam.addColorStop(1,'rgba(211,244,220,0)');ctx.fillStyle=beam;ctx.beginPath();ctx.moveTo(top-4, H*.145);ctx.bezierCurveTo(top+shift-8,H*.25,bottom+shift-W*.035,H*.39,bottom+shift-W*.06,H*.52);ctx.lineTo(bottom+shift+W*.035,H*.52);ctx.bezierCurveTo(bottom+shift+W*.018,H*.38,top+shift+9,H*.25,top+4,H*.145);ctx.closePath();ctx.fill()}ctx.globalCompositeOperation='source-over';ctx.restore();
@@ -161,73 +162,67 @@ for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;ctx.globalAlpha=c
 }
 function drawFish(x,y,dir,color,r=20,type='player',tilt=0,context=ctx){
  const kind=type==='predator'?'traira':type==='prey'?'lambari':type;
- context.save();context.translate(x,y);context.scale(dir,1);context.rotate(tilt);context.scale(kind==='lambari' ? .94 : 1,kind==='lambari' ? .70 : .88);
- context.shadowColor=kind==='traira'?'#d3b980':kind==='cascudo'?'#b9aa83':'#d9f3ee';
- context.shadowBlur=type==='player'?8:2;
- const shape=(path,fill,stroke='#172c32',width=1)=>{context.beginPath();path();context.fillStyle=fill;context.fill();context.strokeStyle=stroke;context.lineWidth=width;context.stroke()};
- const gradient=(a,b,c)=>{const g=context.createLinearGradient(0,-r,0,r);g.addColorStop(0,a);g.addColorStop(.48,b);g.addColorStop(1,c);return g};
+ context.save();context.translate(x,y);context.scale(dir,1);context.rotate(tilt);
+ context.scale(kind==='lambari' ? .96 : 1,kind==='lambari' ? .68 : 1);
+ context.shadowColor=kind==='traira'?'#2d4234':kind==='cascudo'?'#413e32':'#47605a';
+ context.shadowBlur=type==='player'?3:1;
+ const shape=(path,fill,stroke='#31413b',width=1)=>{context.beginPath();path();context.fillStyle=fill;context.fill();context.strokeStyle=stroke;context.lineWidth=width;context.lineJoin='round';context.stroke()};
+ const gradient=(a,b,c)=>{const g=context.createLinearGradient(0,-r,0,r);g.addColorStop(0,a);g.addColorStop(.52,b);g.addColorStop(1,c);return g};
+ const tailSwing=Math.sin(time*8.5+x*.022)*.19;
  if(kind==='traira'){
-  const body=gradient('#738b62','#abb184','#d9c99a');
-  shape(()=>{context.moveTo(-1.22*r,-.03*r);context.quadraticCurveTo(-.96*r,-.60*r,-.30*r,-.67*r);context.quadraticCurveTo(.48*r,-.72*r,1.05*r,-.42*r);context.quadraticCurveTo(1.34*r,-.36*r,1.46*r,-.20*r);context.quadraticCurveTo(1.53*r,-.08*r,1.48*r,.10*r);context.quadraticCurveTo(1.35*r,.29*r,1.02*r,.34*r);context.quadraticCurveTo(.48*r,.59*r,-.20*r,.58*r);context.quadraticCurveTo(-.95*r,.58*r,-1.22*r,.15*r);context.closePath()},body,'#465643',1.2);
-  context.shadowBlur=0;
-  // Rounded tail, rear dorsal fin, anal fin, and broad paired pectoral fin.
-  context.save();context.translate(-1.10*r,0);context.rotate(Math.sin(time*9+x*.02)*.19);shape(()=>{context.moveTo(0,0);context.quadraticCurveTo(-.48*r,-.35*r,-.68*r,-.54*r);context.quadraticCurveTo(-.60*r,-.10*r,-.70*r,.48*r);context.quadraticCurveTo(-.34*r,.28*r,0,.12*r);context.closePath()},'#87906a','#4a5948',1);context.restore();
-  shape(()=>{context.moveTo(-.12*r,-.62*r);context.quadraticCurveTo(.08*r,-1.04*r,.36*r,-.72*r);context.quadraticCurveTo(.69*r,-1.00*r,.88*r,-.54*r);context.closePath()},'#747c57','#4b5948',1);
-  shape(()=>{context.moveTo(-.18*r,.52*r);context.quadraticCurveTo(.08*r,.88*r,.36*r,.57*r);context.closePath()},'#89906a','#4b5948',.8);
-  shape(()=>{context.moveTo(.10*r,.27*r);context.quadraticCurveTo(-.08*r,.75*r,.52*r,.42*r);context.closePath()},'#b7a77e','#5d6250',.8);
-  // Mottled camouflage and the characteristic large terminal mouth.
-  const spots=[[-.78,-.28],[-.48,.12],[-.12,-.34],[.18,.18],[.48,-.25],[.77,.10],[.98,-.10]];
-  for(let i=0;i<spots.length;i++){const [sx,sy]=spots[i];context.fillStyle=i%2?'rgba(54,66,49,.54)':'rgba(72,80,55,.42)';context.beginPath();context.ellipse(sx*r,sy*r,(.075+(i%3)*.018)*r,(.045+(i%2)*.02)*r,-.35,0,Math.PI*2);context.fill()}
-  // Face redesenhada: mandíbula cheia, boca terminal ampla, opérculo e olho vivo em tons âmbar.
-  context.fillStyle='rgba(67,55,40,.50)';context.beginPath();context.moveTo(1.14*r,-.065*r);context.quadraticCurveTo(1.31*r,-.045*r,1.46*r,-.075*r);context.quadraticCurveTo(1.39*r,.035*r,1.18*r,.10*r);context.closePath();context.fill();
-  context.strokeStyle='#4f4937';context.lineWidth=1.05;context.beginPath();context.moveTo(1.13*r,-.055*r);context.quadraticCurveTo(1.31*r,-.025*r,1.47*r,-.075*r);context.stroke();
-  context.strokeStyle='#e0c99a';context.lineWidth=1.1;context.beginPath();context.moveTo(1.18*r,.105*r);context.quadraticCurveTo(1.35*r,.07*r,1.47*r,-.02*r);context.stroke();
-  context.fillStyle='rgba(219,183,113,.25)';context.beginPath();context.ellipse(.73*r,-.20*r,.18*r,.10*r,-.12,0,Math.PI*2);context.fill();
-  context.strokeStyle='#65704f';context.lineWidth=1.3;context.beginPath();context.arc(.08*r,-.03*r,.39*r,-.58,.56);context.stroke();
-  context.strokeStyle='rgba(239,218,165,.62)';context.lineWidth=.9;context.beginPath();context.moveTo(-.74*r,.38*r);context.quadraticCurveTo(.16*r,.58*r,1.00*r,.32*r);context.stroke();
-  context.fillStyle='#d3b976';context.beginPath();context.ellipse(.98*r,-.34*r,.15*r,.12*r,-.08,0,Math.PI*2);context.fill();
-  context.fillStyle='#f1d99a';context.beginPath();context.arc(.98*r,-.34*r,.092*r,0,Math.PI*2);context.fill();
-  context.fillStyle='#946c3b';context.beginPath();context.arc(.997*r,-.34*r,.061*r,0,Math.PI*2);context.fill();
-  context.fillStyle='#172820';context.beginPath();context.arc(1.01*r,-.34*r,.034*r,0,Math.PI*2);context.fill();
-  context.fillStyle='#fff4d3';context.beginPath();context.arc(.982*r,-.367*r,.024*r,0,Math.PI*2);context.fill();
-  context.fillStyle='#554d38';context.beginPath();context.ellipse(1.25*r,-.20*r,.025*r,.018*r,0,0,Math.PI*2);context.fill();
+  const body=gradient('#667a57','#a7a57b','#d6c698');
+  context.save();context.translate(-1.08*r,0);context.rotate(tailSwing);
+  shape(()=>{context.moveTo(0,0);context.quadraticCurveTo(-.40*r,-.30*r,-.68*r,-.48*r);context.quadraticCurveTo(-.56*r,-.08*r,-.66*r,.46*r);context.quadraticCurveTo(-.34*r,.25*r,0,.10*r);context.closePath()},'#87916a','#59694f',.9);context.restore();
+  shape(()=>{context.moveTo(-1.16*r,-.02*r);context.quadraticCurveTo(-.92*r,-.55*r,-.30*r,-.63*r);context.quadraticCurveTo(.42*r,-.68*r,.88*r,-.43*r);context.quadraticCurveTo(1.20*r,-.38*r,1.43*r,-.18*r);context.quadraticCurveTo(1.50*r,-.07*r,1.46*r,.09*r);context.quadraticCurveTo(1.27*r,.25*r,.94*r,.32*r);context.quadraticCurveTo(.40*r,.55*r,-.24*r,.55*r);context.quadraticCurveTo(-.92*r,.51*r,-1.16*r,.13*r);context.closePath()},body,'#465640',1.15);
+  // Barbatana dorsal baixa, nadadeiras pares e pequenas manchas de camuflagem.
+  shape(()=>{context.moveTo(-.14*r,-.58*r);context.quadraticCurveTo(.04*r,-.88*r,.26*r,-.66*r);context.quadraticCurveTo(.55*r,-.91*r,.80*r,-.48*r);context.closePath()},'#74805c','#59664d',.8);
+  shape(()=>{context.moveTo(-.14*r,.46*r);context.quadraticCurveTo(.08*r,.76*r,.34*r,.51*r);context.closePath()},'#92916f','#686b52',.7);
+  shape(()=>{context.moveTo(.08*r,.20*r);context.quadraticCurveTo(-.11*r,.61*r,.50*r,.37*r);context.closePath()},'#c1aa7d','#777257',.65);
+  const spots=[[-.78,-.25],[-.58,.08],[-.33,-.31],[-.13,.16],[.10,-.38],[.34,.13],[.58,-.25],[.80,.08]];
+  for(let i=0;i<spots.length;i++){const [sx,sy]=spots[i];context.fillStyle=i%2?'rgba(57,70,48,.42)':'rgba(75,82,56,.34)';context.beginPath();context.ellipse(sx*r,sy*r,.065*r,.09*r,-.32,0,Math.PI*2);context.fill()}
+  // Opérculo e boca terminal larga, com olho âmbar sem sobrancelha agressiva.
+  context.strokeStyle='#667151';context.lineWidth=1.1;context.beginPath();context.arc(.02*r,-.035*r,.38*r,-.58,.57);context.stroke();
+  context.fillStyle='rgba(68,55,39,.52)';context.beginPath();context.moveTo(1.10*r,-.055*r);context.quadraticCurveTo(1.31*r,-.025*r,1.46*r,-.075*r);context.quadraticCurveTo(1.35*r,.04*r,1.13*r,.08*r);context.closePath();context.fill();
+  context.strokeStyle='#554d3a';context.lineWidth=1;context.beginPath();context.moveTo(1.10*r,-.055*r);context.quadraticCurveTo(1.30*r,-.02*r,1.46*r,-.075*r);context.stroke();
+  context.fillStyle='#d4ba7b';context.beginPath();context.ellipse(.89*r,-.30*r,.14*r,.115*r,-.08,0,Math.PI*2);context.fill();
+  context.fillStyle='#f0d99b';context.beginPath();context.arc(.90*r,-.30*r,.083*r,0,Math.PI*2);context.fill();
+  context.fillStyle='#8a683d';context.beginPath();context.arc(.915*r,-.30*r,.055*r,0,Math.PI*2);context.fill();
+  context.fillStyle='#192820';context.beginPath();context.arc(.93*r,-.30*r,.031*r,0,Math.PI*2);context.fill();
+  context.fillStyle='#fff5d9';context.beginPath();context.arc(.89*r,-.327*r,.021*r,0,Math.PI*2);context.fill();
+  context.fillStyle='#514a38';context.beginPath();context.ellipse(1.22*r,-.18*r,.024*r,.016*r,0,0,Math.PI*2);context.fill();
  }else if(kind==='cascudo'){
-  const armor=gradient('#665d48','#96886a','#c0b28e');
-  // Flattened underside, armored body, broad pectorals, and high dorsal fin.
-  shape(()=>{context.moveTo(-1.12*r,-.02*r);context.quadraticCurveTo(-.74*r,-.66*r,.20*r,-.57*r);context.quadraticCurveTo(.82*r,-.50*r,1.12*r,-.20*r);context.lineTo(1.18*r,.25*r);context.quadraticCurveTo(.56*r,.52*r,-.35*r,.43*r);context.quadraticCurveTo(-.98*r,.35*r,-1.12*r,-.02*r);context.closePath()},armor,'#494535',1.2);
-  context.shadowBlur=0;
-  context.save();context.translate(-1.02*r,0);context.rotate(Math.sin(time*8.5+x*.02)*.17);shape(()=>{context.moveTo(0,0);context.lineTo(-.60*r,-.46*r);context.lineTo(-.46*r,.43*r);context.closePath()},'#786c50','#494535',1);context.restore();
-  shape(()=>{context.moveTo(-.05*r,-.48*r);context.lineTo(.14*r,-1.02*r);context.lineTo(.42*r,-.51*r);context.lineTo(.75*r,-.43*r);context.closePath()},'#877a59','#4e4938',1);
-  shape(()=>{context.moveTo(-.52*r,.28*r);context.quadraticCurveTo(-.78*r,.80*r,-.02*r,.40*r);context.closePath()},'#877b5c','#4e4938',.8);
-  shape(()=>{context.moveTo(.15*r,.30*r);context.quadraticCurveTo(.00*r,.70*r,.65*r,.34*r);context.closePath()},'#a0926d','#4e4938',.8);
-  // Bony plate rows make this loricariid distinct from scaled fishes.
-  context.strokeStyle='rgba(45,48,39,.48)';context.lineWidth=.8;
-  for(let row=-1;row<=1;row++){context.beginPath();context.moveTo(-.83*r,row*.18*r);context.quadraticCurveTo(-.20*r,(row*.18-.05)*r,.89*r,row*.15*r);context.stroke()}
-  for(let i=0;i<5;i++){const sx=(-.62+i*.29)*r;context.beginPath();context.moveTo(sx,-.34*r);context.lineTo(sx+.06*r,.31*r);context.stroke()}
-  // Ventral sucker mouth and short barbels.
-  context.fillStyle='#d2c49b';context.beginPath();context.ellipse(1.02*r,.27*r,.20*r,.105*r,-.12,0,Math.PI*2);context.fill();context.strokeStyle='#514b3c';context.stroke();
-  context.strokeStyle='#5d5541';context.lineWidth=.8;context.beginPath();context.moveTo(1.12*r,.29*r);context.quadraticCurveTo(1.28*r,.42*r,1.38*r,.38*r);context.moveTo(1.06*r,.33*r);context.quadraticCurveTo(1.20*r,.52*r,1.30*r,.50*r);context.stroke();
-  context.fillStyle='#e1d7b6';context.beginPath();context.arc(.82*r,-.19*r,.09*r,0,Math.PI*2);context.fill();context.fillStyle='#161d18';context.beginPath();context.arc(.84*r,-.19*r,.045*r,0,Math.PI*2);context.fill();
+  const armor=gradient('#645d49','#a19470','#c8b88e');
+  context.save();context.translate(-1.02*r,0);context.rotate(tailSwing*.82);
+  shape(()=>{context.moveTo(0,0);context.lineTo(-.62*r,-.40*r);context.lineTo(-.48*r,.40*r);context.closePath()},'#827658','#56513e',.9);context.restore();
+  shape(()=>{context.moveTo(-1.10*r,-.02*r);context.quadraticCurveTo(-.78*r,-.55*r,-.12*r,-.55*r);context.quadraticCurveTo(.70*r,-.48*r,1.02*r,-.20*r);context.quadraticCurveTo(1.20*r,-.04*r,1.12*r,.22*r);context.quadraticCurveTo(.63*r,.48*r,-.30*r,.43*r);context.quadraticCurveTo(-.93*r,.36*r,-1.10*r,-.02*r);context.closePath()},armor,'#514d3c',1.15);
+  shape(()=>{context.moveTo(-.10*r,-.49*r);context.lineTo(.10*r,-.99*r);context.lineTo(.36*r,-.54*r);context.lineTo(.70*r,-.43*r);context.closePath()},'#877b5e','#5c5540',.8);
+  shape(()=>{context.moveTo(-.53*r,.27*r);context.quadraticCurveTo(-.75*r,.70*r,-.02*r,.40*r);context.closePath()},'#958567','#625a42',.7);
+  shape(()=>{context.moveTo(.10*r,.27*r);context.quadraticCurveTo(.02*r,.64*r,.59*r,.34*r);context.closePath()},'#a99a73','#6d6349',.7);
+  // Placas discretas sugerem a armadura do cascudo.
+  context.strokeStyle='rgba(67,64,48,.38)';context.lineWidth=.8;
+  for(let i=0;i<5;i++){const sx=(-.55+i*.28)*r;context.beginPath();context.arc(sx,-.02*r,.22*r,.10,2.85);context.stroke()}
+  context.strokeStyle='#615a46';context.lineWidth=1;context.beginPath();context.arc(.36*r,-.03*r,.28*r,-.72,.67);context.stroke();
+  context.fillStyle='#eed9a4';context.beginPath();context.arc(.78*r,-.22*r,.07*r,0,Math.PI*2);context.fill();
+  context.fillStyle='#1b2922';context.beginPath();context.arc(.795*r,-.22*r,.035*r,0,Math.PI*2);context.fill();
+  context.strokeStyle='#514b3d';context.lineWidth=1.1;context.beginPath();context.moveTo(1.00*r,.14*r);context.quadraticCurveTo(1.13*r,.22*r,1.02*r,.29*r);context.stroke();
  }else{
-  const silver=gradient('#8d9b83','#d4d8c4','#f1e1b8');
-  // Deep, laterally compressed lambari with forked tail and silvery flank.
-  shape(()=>{context.moveTo(-1.10*r,0);context.quadraticCurveTo(-.83*r,-.73*r,-.05*r,-.72*r);context.quadraticCurveTo(.72*r,-.65*r,1.07*r,-.17*r);context.quadraticCurveTo(1.18*r,0,1.04*r,.19*r);context.quadraticCurveTo(.62*r,.66*r,-.12*r,.68*r);context.quadraticCurveTo(-.88*r,.58*r,-1.10*r,0);context.closePath()},silver,'#52635a',1);
-  context.shadowBlur=0;
-  context.save();context.translate(-1.04*r,0);context.rotate(Math.sin(time*10+x*.02)*.21);shape(()=>{context.moveTo(0,0);context.lineTo(-.76*r,-.56*r);context.lineTo(-.60*r,-.08*r);context.lineTo(-.76*r,.49*r);context.closePath()},'#c68d61','#775a45',.8);context.restore();
-  shape(()=>{context.moveTo(-.32*r,-.61*r);context.quadraticCurveTo(-.08*r,-.93*r,.20*r,-.66*r);context.lineTo(.39*r,-.55*r);context.closePath()},'#ad805d','#715744',.7);
-  shape(()=>{context.moveTo(-.35*r,.57*r);context.quadraticCurveTo(-.12*r,.88*r,.14*r,.64*r);context.closePath()},'#c98c63','#775a45',.7);
-  shape(()=>{context.moveTo(.05*r,.16*r);context.quadraticCurveTo(-.18*r,.57*r,.48*r,.40*r);context.closePath()},'#d6a16f','#896a50',.7);
-  // Humeral mark, side stripe, and the dark caudal-peduncle patch.
-  context.fillStyle='#32443c';context.beginPath();context.ellipse(-.48*r,-.015*r,.10*r,.19*r,-.08,0,Math.PI*2);context.fill();
-  context.fillStyle='rgba(53,63,53,.78)';context.beginPath();context.ellipse(-1.00*r,-.01*r,.085*r,.13*r,0,0,Math.PI*2);context.fill();
-  context.strokeStyle='rgba(245,250,225,.72)';context.lineWidth=1.3;context.beginPath();context.moveTo(-.33*r,.13*r);context.quadraticCurveTo(.30*r,.18*r,.87*r,.03*r);context.stroke();
-  context.strokeStyle='rgba(91,101,82,.45)';context.lineWidth=.65;
-  for(let i=0;i<5;i++){const sx=(-.25+i*.22)*r;context.beginPath();context.arc(sx,0,.16*r,.12,2.85);context.stroke()}
-  context.strokeStyle='#667268';context.lineWidth=1;context.beginPath();context.arc(.53*r,-.03*r,.25*r,-.85,.85);context.stroke();
-  context.fillStyle='#f8f1d9';context.beginPath();context.arc(.84*r,-.23*r,.105*r,0,Math.PI*2);context.fill();context.fillStyle='#18251f';context.beginPath();context.arc(.87*r,-.23*r,.052*r,0,Math.PI*2);context.fill();
+  const body=gradient('#7f8d7c','#dce0ca','#b9b18d');
+  context.save();context.translate(-1.10*r,0);context.rotate(tailSwing);
+  shape(()=>{context.moveTo(0,0);context.quadraticCurveTo(-.38*r,-.25*r,-.66*r,-.40*r);context.quadraticCurveTo(-.57*r,-.06*r,-.67*r,.38*r);context.quadraticCurveTo(-.30*r,.20*r,0,.08*r);context.closePath()},'#d39a68','#796a56',.85);context.restore();
+  shape(()=>{context.moveTo(-1.20*r,-.02*r);context.quadraticCurveTo(-.76*r,-.40*r,-.08*r,-.40*r);context.quadraticCurveTo(.66*r,-.40*r,1.14*r,-.13*r);context.quadraticCurveTo(1.28*r,-.02*r,1.16*r,.12*r);context.quadraticCurveTo(.63*r,.38*r,-.10*r,.39*r);context.quadraticCurveTo(-.82*r,.38*r,-1.20*r,.09*r);context.closePath()},body,'#59635b',1);
+  shape(()=>{context.moveTo(-.20*r,-.36*r);context.quadraticCurveTo(-.03*r,-.68*r,.16*r,-.38*r);context.closePath()},'#8f9a82','#667065',.65);
+  shape(()=>{context.moveTo(-.34*r,.32*r);context.quadraticCurveTo(-.12*r,.59*r,.12*r,.33*r);context.closePath()},'#c47d62','#8b6b5b',.65);
+  shape(()=>{context.moveTo(.12*r,.18*r);context.quadraticCurveTo(-.05*r,.49*r,.49*r,.29*r);context.closePath()},'#c27d60','#8b6b5b',.65);
+  // Fileira lateral dourada e mancha escapular identificam o lambari.
+  context.strokeStyle='rgba(191,151,74,.88)';context.lineWidth=1.15;context.beginPath();context.moveTo(-.86*r,.04*r);context.quadraticCurveTo(-.10*r,.14*r,.90*r,-.02*r);context.stroke();
+  context.fillStyle='rgba(62,68,56,.62)';context.beginPath();context.ellipse(-.45*r,-.01*r,.075*r,.15*r,-.12,0,Math.PI*2);context.fill();
+  context.strokeStyle='rgba(75,88,79,.42)';context.lineWidth=.65;context.beginPath();context.arc(.44*r,-.015*r,.24*r,-.78,.70);context.stroke();
+  context.fillStyle='#f6edce';context.beginPath();context.arc(.87*r,-.19*r,.084*r,0,Math.PI*2);context.fill();
+  context.fillStyle='#18241f';context.beginPath();context.arc(.89*r,-.19*r,.042*r,0,Math.PI*2);context.fill();
+  context.fillStyle='#fff9e7';context.beginPath();context.arc(.865*r,-.215*r,.018*r,0,Math.PI*2);context.fill();
  }
- // Soft highlight and gill crease complete the hand-drawn, natural finish.
- context.shadowBlur=0;context.strokeStyle='rgba(248,255,232,.44)';context.lineWidth=.8;context.beginPath();context.moveTo(-.68*r,-.39*r);context.quadraticCurveTo(-.05*r,-.60*r,.56*r,-.42*r);context.stroke();
+ // brilho dorsal leve mantém a leitura de ilustração semitranslúcida.
+ context.shadowBlur=0;context.strokeStyle='rgba(249,255,233,.45)';context.lineWidth=.75;context.beginPath();context.moveTo(-.68*r,-.30*r);context.quadraticCurveTo(-.08*r,-.50*r,.50*r,-.34*r);context.stroke();
  context.restore()
 }
 function drawItems(){for(const it of items){if(it.taken)continue;const bob=it.kind==='zooplankton'||it.kind==='phyto'?Math.sin(time*1.1+it.phase)*1.4:0;ctx.save();ctx.translate(it.x-cameraX,it.y+bob);ctx.shadowBlur=it.kind==='zooplankton'||it.kind==='phyto'?2:3;
@@ -302,7 +297,7 @@ for(const p of predators)if(p.type==='predator'&&p.state==='waiting'&&Math.hypot
 if(inRefuge){if(stageFood>=s.goal&&fish.energy>=18){stageClear()}else if(!refugeHint){refugeHint=true;showToast(stageFood<s.goal?`Coma ${s.goal-stageFood} alimento(s) adequado(s) para chegar ao refúgio.`:'Energia baixa: procure mais alimento antes de concluir a travessia.')}}else refugeHint=false;if(fish.health<=0){stageClear()}
 if(Math.random()<dt*1.2)splash(rand(0,W),H+2,1,'#bff7ed');if(Math.random()<dt*.07)splash(rand(0,W),H+2,1,'#bff7ed');hud()}}
 function hideInCover(){if(mode!=='playing'||!fish)return;if(hideCooldown>0){showToast('A camuflagem está se recuperando.');return}const spot=coverSpots.find(s=>Math.hypot(fish.x-s.x,fish.y-s.y)<s.r);const log=logs.find(l=>Math.abs(fish.x-l.x)<l.len*.58&&Math.abs(fish.y-l.y)<36);if(!spot&&!log){showToast('Aproxime-se de um tronco ou das raízes do aguapé.');return}fish.hideTimer=3.5;fish.blend=log?'wood':'roots';hideCooldown=4.5;hideUsed=true;splash(fish.x,fish.y,8,log?'#9c8964':'#b8f1c0');showToast(log?'Camuflado com o tronco!':'Camuflado nas raízes!');}function useAbility(){if(mode!=='playing'||!fish)return;if(selected==='cascudo'){const log=logs.find(l=>Math.abs(fish.x-l.x)<l.len*.58&&Math.abs(fish.y-l.y)<36);if(!log){showToast('Aproxime-se de um tronco para aderir.');return}fish.blend='wood';fish.hideTimer=4;hideCooldown=Math.max(hideCooldown,4.5);hideUsed=true;showToast('Cascudo aderido: biofilme e perifíton ao alcance.');return}boost=.78;splash(fish.x-fish.dir*14,fish.y,6,selected==='traira'?'#d7d2a0':'#d4ffcf');showToast(selected==='traira'?'Bote! Aproxime-se de um peixe menor.':'Arrancada! Use-a para escapar da traíra.')}function updateAbilityButton(){const b=$('boostBtn');if(!b)return;b.textContent=selected==='cascudo'?'⌁':'»';b.setAttribute('aria-label',species[selected].ability);b.title=species[selected].ability}function stageClear(){if(mode!=='playing')return;finishStage()}
-function draw(){const dt=Math.min(.05,(performance.now()-last)/1000||0);last=performance.now();if($('ecologyPop').classList.contains('hidden'))time+=dt;drawBackground(dt);drawItems();if(fish){let inv=fish.invuln>0&&Math.floor(time*14)%2;ctx.globalAlpha=fish.hideTimer>0?(fish.blend==='wood'?.24:.38):inv?.48:1;const s=species[selected];drawFish(fish.x-cameraX,fish.y,fish.dir,s.color,fish.r,selected,Math.sin(time*2.8)*.035);ctx.globalAlpha=1;if(mode==='playing')tick(dt)}drawThreats();if(mode==='menu'){for(let i=0;i<menuSwimmers.length;i++){const m=menuSwimmers[i];m.x+=m.v*dt;if(m.x>W+45)m.x=-45;const y=H*(m.y+Math.sin(time*1.2+i*1.7)*.025);drawFish(m.x,y,1,species[m.kind].color,m.r,m.kind,Math.sin(time*2+i)*.035)}}requestAnimationFrame(draw)}requestAnimationFrame(draw);
+function draw(){const dt=Math.min(.05,(performance.now()-last)/1000||0);last=performance.now();if($('ecologyPop').classList.contains('hidden'))time+=dt;drawBackground(dt);drawItems();if(fish&&selected==='lambari'){for(let i=0;i<shoalFish.length;i++){const m=shoalFish[i],col=i%3,row=i<3?-1:1,tx=fish.x-fish.dir*(25+col*16),ty=fish.y+row*(10+col*8)+Math.sin(time*2.2+m.phase)*4,follow=1-Math.pow(.0008,dt);m.x+=(tx-m.x)*follow;m.y+=(ty-m.y)*follow;drawFish(m.x-cameraX,m.y,fish.dir,species.lambari.color,m.r,'lambari',Math.sin(time*3+m.phase)*.045)}}if(fish){let inv=fish.invuln>0&&Math.floor(time*14)%2;ctx.globalAlpha=fish.hideTimer>0?(fish.blend==='wood'?.24:.38):inv?.48:1;const s=species[selected];drawFish(fish.x-cameraX,fish.y,fish.dir,s.color,fish.r,selected,Math.sin(time*2.8)*.035);ctx.globalAlpha=1;if(mode==='playing')tick(dt)}drawThreats();if(mode==='menu'){for(let i=0;i<menuSwimmers.length;i++){const m=menuSwimmers[i];m.x+=m.v*dt;if(m.x>W+45)m.x=-45;const y=H*(m.y+Math.sin(time*1.2+i*1.7)*.025);drawFish(m.x,y,1,species[m.kind].color,m.r,m.kind,Math.sin(time*2+i)*.035)}}requestAnimationFrame(draw)}requestAnimationFrame(draw);
 function playTone(freq,dur){if(!sound)return;try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();const o=audio.createOscillator(),g=audio.createGain();o.frequency.value=freq;o.type='sine';g.gain.setValueAtTime(.04,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+dur);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+dur)}catch{}}
 window.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(k==='escape'){pause();return}if(k==='h'){hideInCover();return}if(k===' '&&mode==='playing'){useAbility()}keys[k]=true});window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);window.addEventListener('blur',()=>{keys={};touchDirs={}});
 document.querySelectorAll('[data-dir]').forEach(b=>{const d=b.dataset.dir,down=e=>{e.preventDefault();b.setPointerCapture?.(e.pointerId);touchDirs[d]=true},up=e=>{e.preventDefault();touchDirs[d]=false};b.addEventListener('pointerdown',down);['pointerup','pointercancel','lostpointercapture'].forEach(ev=>b.addEventListener(ev,up))});$('boostBtn').addEventListener('pointerdown',e=>{e.preventDefault();useAbility()});$('hideBtn').addEventListener('pointerdown',e=>{e.preventDefault();hideInCover()});$('ecoOpen').onclick=()=>showEcology('biofilm',true);$('ecoClose').onclick=closeEcology;document.querySelectorAll('[data-eco]').forEach(b=>b.onclick=()=>showEcology(b.dataset.eco,true));$('pauseBtn').onclick=pause;$('helpBtn').onclick=help;$('soundBtn').onclick=()=>{sound=!sound;$('soundLabel').textContent='Som: '+(sound?'on':'off');if(sound)playTone(440,.08)};let canvasPointer=null;function steerFromPointer(e){if(!fish)return;const r=canvas.getBoundingClientRect(),dx=e.clientX-r.left+cameraX-fish.x,dy=e.clientY-r.top-fish.y;keys={};if(Math.abs(dx)>22)keys[dx>0?'d':'a']=true;if(Math.abs(dy)>22)keys[dy>0?'s':'w']=true}canvas.addEventListener('pointerdown',e=>{if(mode!=='playing')return;e.preventDefault();canvasPointer=e.pointerId;canvas.setPointerCapture?.(e.pointerId);steerFromPointer(e)});canvas.addEventListener('pointermove',e=>{if(e.pointerId===canvasPointer&&mode==='playing')steerFromPointer(e)});function endCanvasPointer(e){if(e.pointerId!==canvasPointer)return;canvasPointer=null;keys={}}canvas.addEventListener('pointerup',endCanvasPointer);canvas.addEventListener('pointercancel',endCanvasPointer);canvas.addEventListener('lostpointercapture',endCanvasPointer);
