@@ -191,7 +191,7 @@ h1 em{font-style:normal;color:#85f5db}
 @keyframes glow{to{opacity:.55;transform:scale(1.22)}}
 .thermo-tube{position:absolute;top:15px;left:60px;width:46px;height:169px;border-radius:30px;background:linear-gradient(90deg,#d2e5ff52,#fff9,#d2e5ff47);border:3px solid #dbe9ffdd;box-shadow:inset 0 0 10px #aab9e78f,0 0 28px #6aeed629}
 .thermo-tube:before{content:"";position:absolute;inset:7px 11px;background:#111c3a;border-radius:20px}
-.thermo-fill{position:absolute;bottom:5px;left:12px;right:12px;height:var(--heat,35%);border-radius:17px;background:linear-gradient(0deg,#fe537c,#ff9e78);box-shadow:0 0 20px #ff6688ad;transition:height .85s cubic-bezier(.2,.85,.25,1),background .4s}
+.thermo-fill{position:absolute;bottom:5px;left:12px;right:12px;height:var(--heat,0%);border-radius:17px;background:linear-gradient(0deg,#fe537c,#ff9e78);box-shadow:0 0 20px #ff6688ad;transition:height .85s cubic-bezier(.2,.85,.25,1),background .4s}
 .thermo-bulb{position:absolute;bottom:20px;left:44px;width:78px;height:78px;background:radial-gradient(circle at 38% 30%,#ffc49e,#ff6c80 45%,#e94483);border:7px solid #f5f8ffea;border-radius:50%;box-shadow:0 0 20px #fe718a75,inset -7px -8px 15px #a62266}
 .thermo-widget .tick{position:absolute;left:111px;width:20px;height:2px;background:#d3e9fc88}
 .thermo-widget .tick.a{top:47px}.thermo-widget .tick.b{top:83px}.thermo-widget .tick.c{top:119px}
@@ -256,7 +256,7 @@ footer .meta{font-size:.74rem;color:#98adc9}
       <span class="thermo-tube"><span class="thermo-fill" id="thermoFill"></span></span>
       <span class="thermo-bulb"></span>
       <span class="tick a"></span><span class="tick b"></span><span class="tick c"></span>
-      <span class="thermo-caption" id="thermoCaption">Seu desempenho</span>
+      <span class="thermo-caption" id="thermoCaption">0% do desafio</span>
     </div>
   </header>
 
@@ -407,11 +407,13 @@ function startLevel(lv){
 function updateThermometer(outcome){
   const meter=$("thermoWidget"),fill=$("thermoFill"),caption=$("thermoCaption");
   if(!meter||!fill||!caption)return;
-  // A escala indica desempenho no quiz, e NÃO temperatura física ou tendência climática.
-  const answeredCount=hits+errs;
-  const ratio=answeredCount?hits/answeredCount:0.5;
-  fill.style.setProperty("--heat",(10+80*ratio).toFixed(1)+"%");
-  caption.textContent=answeredCount?Math.round(ratio*100)+"% de acertos":"Seu desempenho";
+  // Barra de conquista acumulada: cada acerto acrescenta 1/N da escala.
+  // Assim, 100% só é alcançado com todas as questões corretas.
+  // Não representa temperatura física nem aquecimento global.
+  const total=queue.length||1;
+  const progress=Math.max(0,Math.min(100,(hits/total)*100));
+  fill.style.setProperty("--heat",progress.toFixed(2)+"%");
+  caption.textContent=Math.round(progress)+"% do desafio · "+hits+"/"+total+" acertos";
   meter.classList.remove("is-correct","is-wrong");
   void meter.offsetWidth;
   if(outcome===true)meter.classList.add("is-correct");
