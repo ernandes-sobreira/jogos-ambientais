@@ -115,9 +115,8 @@ ctx.beginPath();ctx.roundRect(cx-w/2,cy-h/2,w,h,focus?22:13);ctx.fill();ctx.stro
 const sc=Math.min(w*.65,h*.76),rot=spin,cr=Math.cos(rot),sr=Math.sin(rot),ct=Math.cos(tilt),st=Math.sin(tilt);
 function project(p){const xr=p.x*cr+p.z*sr,zr=-p.x*sr+p.z*cr,yr=p.y*ct-zr*st,depth=zr*ct+p.y*st,pers=1+depth/500;return{x:cx+xr*sc/length*pers,y:cy+yr*sc/length*pers,d:depth,pers}}
 function strokePath(points,color,width,dash){ctx.beginPath();points.forEach((p,i)=>{const q=project(p);if(i)ctx.lineTo(q.x,q.y);else ctx.moveTo(q.x,q.y)});ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap='round';ctx.lineJoin='round';ctx.setLineDash(dash||[]);ctx.shadowColor=color;ctx.shadowBlur=focus?9:5;ctx.stroke();ctx.setLineDash([]);ctx.shadowBlur=0}
-const steps=42,oldA=[],oldB=[],newA=[],newB=[],rungs=[];
+const prog=Math.max(0,Math.min(1,fork)),steps=42,oldA=[],oldB=[],newA=[],newB=[],rungs=[];
 const trunkEnd=-length*.46*prog;for(let i=0;i<=steps;i++){const u=i/steps,y=length*.5-u*(length*.5-trunkEnd),a=u*Math.PI*11+spin*.28;const p={x:radius*Math.cos(a),y,z:radius*Math.sin(a)},q={x:-radius*Math.cos(a),y,z:-radius*Math.sin(a)};oldA.push(p);oldB.push(q);if(i%3===0)rungs.push([p,q])}
-const prog=Math.max(0,Math.min(1,fork));
 for(const side of [-1,1]){const armA=[],armB=[];for(let i=0;i<=steps*prog;i++){const u=prog*i/(steps*prog||1),s=u*length*.93,centerX=side*s*.42,centerY=trunkEnd-s*.68,a=u*Math.PI*12+spin*.25+(side>0?Math.PI:0);const p={x:centerX+radius*Math.cos(a),y:centerY,z:radius*Math.sin(a)},q={x:centerX-radius*Math.cos(a),y:centerY,z:-radius*Math.sin(a)};armA.push(p);armB.push(q);if(i%3===0)rungs.push([p,q])}if(armA.length>1){newA.push(...armA);newB.push(...armB)}}
 for(const [p,q] of rungs){const a=project(p),b=project(q);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle='rgba(196,224,201,.48)';ctx.lineWidth=focus?2:1.2;ctx.stroke()}
 strokePath(oldA,'#9cf0ca',focus?5:3);strokePath(oldB,'#56c9c4',focus?5:3);
