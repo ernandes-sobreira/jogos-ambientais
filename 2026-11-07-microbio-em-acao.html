@@ -63,7 +63,7 @@
 </main>
 <script>
 (()=>{'use strict';
-const W=1000,H=600,MAX={C:6,N:2,P:1,E:6},COST={C:3,N:2,P:1,E:3},GOAL={divisions:1,co2:2},DURATION=90,RECOVERY_ZONE={x:132,y:485,r:72};
+const W=1000,H=600,MAX={C:6,N:2,P:1,E:6},COST={C:3,N:2,P:1,E:3},GOAL={divisions:1,co2:2},DURATION=90,RECOVERY_ZONE={x:132,y:420,r:66};
 const $=id=>document.getElementById(id),canvas=$('scene'),ctx=canvas.getContext('2d');
 const ui={time:$('time'),divisions:$('divisions'),captured:$('captured'),overlay:$('overlay'),overlayTitle:$('overlayTitle'),overlayText:$('overlayText'),start:$('startBtn'),info:$('infoBtn'),normal:$('modeNormal'),low:$('modeLow'),run:$('runLabel'),status:$('statusText'),result:$('results'),resultTitle:$('resultTitle'),resultBody:$('resultBody'),challenge:$('challenge'),env:$('envTitle'),csv:$('csvBtn'),co2Hud:$('co2Count'),toxinCount:$('toxinCount'),breathe:$('breatheBtn'),build:$('buildBtn'),repair:$('repairBtn'),autoBreath:$('autoBreathBtn'),arenaHint:$('arenaHint'),outCO2:$('outCO2'),carbonBalance:$('carbonBalance'),missionTitle:$('missionTitle'),missionDesc:$('missionDesc'),missionState:$('missionState'),goalDiv:$('goalDiv'),goalCO2:$('goalCO2'),goalDivBar:$('goalDivBar'),goalCO2Bar:$('goalCO2Bar')};
 let state='ready',lowO2=false,clock=DURATION,last=0,objects=[],bursts=[],emissions=[],collected={C:0,N:0,P:0,O:0},r={C:0,N:0,P:0,E:0},divisions=0,co2=0,biomassC=0,missionAwarded=false,history=[],seed=1121,frame=0,toxinHits=0,stress=0,autoRespire=true,autoBreathCooldown=0,recoveryCooldown=0;
@@ -95,7 +95,7 @@ ui.overlayTitle.textContent=dead?'A bactéria perdeu a viabilidade.':success?'Te
 function checkMission(){if(!missionAwarded&&divisions>=GOAL.divisions&&co2>=GOAL.co2){missionAwarded=true;setStatus('<b>Meta inicial alcançada!</b> A partida continua: forme mais células e libere mais CO₂.');refresh();}}
 function collect(o){const t=o.type;let message='',absorbed=false;
 if(t==='X'){toxinHits++;stress=Math.min(3,stress+1);r.E=Math.max(0,r.E-1);message='Contaminante! Estresse '+stress+'/3; ATP −1 e a motilidade ficou mais lenta.';history.push({t:Math.round(DURATION-clock),event:'exposição a contaminante',C:r.C,N:r.N,P:r.P,ATP:r.E,CO2:co2,C_biomassa:biomassC,stress});absorbed=true;
-}else if(t==='O'){const useful=collected.O<3&&r.E<=MAX.E-2;if(!useful)return false;collected.O++;absorbed=true;message='O₂ guardado. Use Respirar para liberar CO₂ e produzir ATP.';
+}else if(t==='O'){const useful=collected.O<3&&r.E<=MAX.E-2;if(!useful)return false;collected.O++;absorbed=true;message=autoRespire?'O₂ guardado; a respiração automática usa esse recurso quando necessário.':'O₂ guardado; respire para liberar CO₂ e produzir ATP.';
 }else if(t==='C'){if(r.C>=MAX.C)return false;r.C++;collected.C++;absorbed=true;message='Carbono captado; você decide se ele vai para biomassa ou respiração.';
 }else if(t==='N'||t==='P'){if(r[t]>=COST[t])return false;r[t]++;collected[t]++;absorbed=true;message=t==='N'?'Amônio captado; serve para construir biomoléculas.':'Fosfato captado; serve para construir biomoléculas.'}
 if(!absorbed)return false;if(t!=='X'&&history.length<800)history.push({t:Math.round(DURATION-clock),event:'captação '+t,C:r.C,N:r.N,P:r.P,ATP:r.E,CO2:co2,C_biomassa:biomassC,stress});
