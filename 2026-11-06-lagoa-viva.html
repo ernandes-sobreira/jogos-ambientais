@@ -78,38 +78,25 @@ function finishStage(){if(mode!=='playing'||!fish||stageFood<stageGoal||fish.ene
 function results(){mode='result';overlay.classList.remove('hidden');const surviv=fish.health>20&&fish.energy>8;dialog.innerHTML=`<div class="symbol">${surviv?'🏆':'🌊'}</div><h2>${surviv?'Teia explorada':'Lagoa sob pressão'}</h2><p>${surviv?'Você explorou três condições de lagoa e observou relações entre alimento, abrigo e qualidade da água.':'A partida mostra como alimento, abrigo e qualidade da água limitaram a sobrevivência.'}</p><div class="species" style="grid-template-columns:repeat(3,1fr)"><div class="meter"><div class="meter-head">Fases</div><div class="meter-value">${stageIndex+1}/3</div></div><div class="meter"><div class="meter-head">Recursos</div><div class="meter-value">${score}</div></div><div class="meter"><div class="meter-head">Saúde</div><div class="meter-value">${Math.round(fish.health)}%</div></div></div><p class="note">Cada espécie ocupa um papel diferente na rede alimentar. A simulação simplifica processos reais para facilitar a observação.</p><div class="dialog-actions"><button class="primary" id="again">Jogar novamente</button><button class="secondary" id="readHelp">Rever controles</button></div>`;$('again').onclick=menu;$('readHelp').onclick=help}
 function anglerSiteFractions(){return selected==='traira'?[.20,.50,.80]:[.50]}
 const plantArtRibbon=new Image(),plantArtFeathery=new Image();
+const shoreArt=['game-assets/margem-equilibrio.svg','game-assets/margem-aquecimento.svg','game-assets/margem-pressao.svg'].map(src=>{const img=new Image();img.decoding='async';img.src=src;return img});
 plantArtRibbon.decoding='async';plantArtRibbon.src='game-assets/macrofitas-fitas.webp';
 plantArtFeathery.decoding='async';plantArtFeathery.src='game-assets/macrofitas-penadas.webp';
 function drawBackground(dt){const s=stages[stageIndex]||stages[0],g=ctx.createLinearGradient(0,0,0,H);if(s.tone===0){g.addColorStop(0,'#72c8b5');g.addColorStop(.16,'#63b7a9');g.addColorStop(.19,'#378f8a');g.addColorStop(.48,'#247a7d');g.addColorStop(1,'#145467')}else if(s.tone===1){g.addColorStop(0,'#719383');g.addColorStop(.16,'#648579');g.addColorStop(.19,'#3e6865');g.addColorStop(.48,'#285661');g.addColorStop(1,'#174351')}else{g.addColorStop(0,'#617b7b');g.addColorStop(.16,'#536f72');g.addColorStop(.19,'#365461');g.addColorStop(.48,'#29495b');g.addColorStop(1,'#19394c')}ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-// Margem, céu e linha da água deixam a lagoa legível como habitat, não só como fundo azul.
+// Margem panorâmica ilustrada: cada etapa tem sua própria paisagem e acompanha a câmera.
 ctx.save();
- // Margem com barranco em camadas e vegetação de brejo em pequenos agrupamentos.
- const bank=s.tone===0?'#83bd83':s.tone===1?'#9c9b75':'#888778';
- const sand=s.tone===0?'#dfd09a':s.tone===1?'#c8bd91':'#b5ad98';
- ctx.fillStyle=bank;ctx.fillRect(0,0,W,H*.112);
- // Margens distantes: copa, arbustos e galhos secos mudam conforme a lagoa.
- const horizonScroll=cameraX*.24,horizonFirst=Math.floor(horizonScroll/105)-1,horizonLast=horizonFirst+Math.ceil(W/105)+3;
- for(let i=horizonFirst;i<horizonLast;i++){const x=i*105+Math.sin(i*2.7)*16-horizonScroll,base=H*.094,seed=Math.abs(Math.sin(i*7.17)),treeH=H*(.025+seed*.034),bare=s.tone===2&&Math.sin(i*3.91)>.18;
-  if(s.tone===1&&Math.sin(i*4.31)>.52)continue;
-  if(s.tone===2&&Math.sin(i*5.17)>.22)continue;
-  if(bare){ctx.strokeStyle='#81765f';ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(x,base);ctx.lineTo(x-2,base-treeH);ctx.moveTo(x-1,base-treeH*.55);ctx.lineTo(x-11,base-treeH*.78);ctx.moveTo(x-1,base-treeH*.38);ctx.lineTo(x+8,base-treeH*.62);ctx.stroke();continue}
-  const trunk=s.tone===0?'#6d7950':s.tone===1?'#817958':'#746e5e',canopy=s.tone===0?(i%2?'#5d986b':'#6daa70'):s.tone===1?'#949369':'#777d71';ctx.strokeStyle=trunk;ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(x,base);ctx.lineTo(x,base-treeH*.72);ctx.stroke();ctx.fillStyle=canopy;ctx.beginPath();ctx.ellipse(x,base-treeH*.80,treeH*.43,treeH*.28,0,0,Math.PI*2);ctx.ellipse(x-treeH*.29,base-treeH*.70,treeH*.30,treeH*.22,-.2,0,Math.PI*2);ctx.ellipse(x+treeH*.30,base-treeH*.68,treeH*.32,treeH*.23,.2,0,Math.PI*2);ctx.fill();
- }
- ctx.fillStyle=s.tone===0?'#9fc887':s.tone===1?'#aaa57a':'#878577';
- ctx.beginPath();ctx.moveTo(0,H*.055);for(let x=0;x<=W+20;x+=20)ctx.lineTo(x,H*(.065+Math.sin((x+cameraX*.38)*.012+time*.12)*.018));ctx.lineTo(W,H*.125);ctx.lineTo(0,H*.125);ctx.fill();
- ctx.fillStyle=sand;ctx.beginPath();ctx.moveTo(0,H*.112);for(let x=0;x<=W+12;x+=12)ctx.lineTo(x,H*(.112+Math.sin((x+cameraX*.72)*.025+time*.5)*.008));ctx.lineTo(W,H*.184);ctx.lineTo(0,H*.184);ctx.fill();
- // Reflexo da luz e uma linha de água tranquila.
- ctx.fillStyle=s.tone===0?'#fff0b2':s.tone===1?'#fff0a1':'#ddd6b1';ctx.globalAlpha=s.tone===0?.48:s.tone===1?.72:.40;ctx.beginPath();ctx.arc(W*.83,H*.045,Math.min(W,H)*(s.tone===1?.035:.026),0,Math.PI*2);ctx.fill();if(s.tone===1){ctx.strokeStyle='rgba(255,236,154,.22)';ctx.lineWidth=5;ctx.beginPath();ctx.arc(W*.83,H*.045,Math.min(W,H)*.047,0,Math.PI*2);ctx.stroke()}ctx.globalAlpha=1;
- ctx.strokeStyle='rgba(214,246,209,.58)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,H*.18);for(let x=0;x<=W+8;x+=8)ctx.lineTo(x,H*(.18+Math.sin(x*.026+time*.8)*.004));ctx.stroke();
- // Moitas de junco e capim variam de altura e direção na margem.
- const shoreScroll=cameraX*.82,firstReed=Math.floor(shoreScroll/58)-1,lastReed=firstReed+Math.ceil(W/58)+3,reedDensity=s.tone===0?1:s.tone===1?.62:.34;for(let i=firstReed;i<lastReed;i++){const x=i*58+Math.sin(i*3.1)*12-shoreScroll,base=H*(.119+(i%3)*.012),h=H*(.035+(i%4)*.012),lean=Math.sin(i*2.3)*10,reedHash=Math.abs(Math.sin(i*12.9898)*43758.5453)%1;if(reedHash>reedDensity)continue;
-  ctx.strokeStyle=s.tone===0?(i%2?'#426b4d':'#507a50'):s.tone===1?'#827d4e':'#766f5d';ctx.lineWidth=s.tone===2?2:2.4;ctx.lineCap='round';
-  for(let k=-1;k<=1;k++){const bx=x+k*5,top=base-h*(.72+(k===0?.24:0));ctx.beginPath();ctx.moveTo(bx,base);ctx.quadraticCurveTo(bx+lean*.35,base-h*.55,bx+lean+k*5,top);ctx.stroke();
-   if(k!==0){ctx.fillStyle=s.tone===0?(i%2?'#547d50':'#668651'):s.tone===1?'#9a925c':'#827b65';ctx.beginPath();ctx.ellipse(bx+lean*.6+k*5,base-h*.55,7,2.4,k*.48,0,Math.PI*2);ctx.fill()}
-  }
-  ctx.fillStyle=s.tone===0?(i%2?'#52764b':'#698751'):s.tone===1?'#8e8755':'#77715e';ctx.beginPath();ctx.ellipse(x+lean,base-h*.72,3.2,1.4,-.2,0,Math.PI*2);ctx.fill();
- }
- // Pescador inteiro à margem: cabeça, braços, tronco, calças e dois pés apoiados no barranco.
+const shore=shoreArt[stageIndex]||shoreArt[0];
+const shoreH=H*.22;
+if(shore.complete&&shore.naturalWidth){
+ const sourceW=shore.naturalWidth*(W/worldW);
+ const sourceX=clamp((cameraX/worldW)*shore.naturalWidth,0,Math.max(0,shore.naturalWidth-sourceW));
+ ctx.drawImage(shore,sourceX,0,sourceW,shore.naturalHeight,0,0,W,shoreH);
+}else{
+ const bank=s.tone===0?'#87b77e':s.tone===1?'#9e9875':'#898779';
+ ctx.fillStyle=bank;ctx.fillRect(0,0,W,shoreH);
+ ctx.fillStyle=s.tone===0?'#dfd09a':s.tone===1?'#c8bd91':'#aaa18d';
+ ctx.fillRect(0,H*.145,W,H*.075);
+}
+// Pescador inteiro à margem: cabeça, braços, tronco, calças e dois pés apoiados no barranco.
  const spots=anglerSiteFractions(),shirts=['#9b6748','#536f65','#8a7651'],q=clamp(W/255,1.05,1.62);
  for(let i=0;i<spots.length;i++){const x=worldW*spots[i]-cameraX,ground=H*.115;if(x<-62||x>W+62)continue;
   ctx.save();ctx.translate(x,ground);ctx.scale(q,q);
@@ -131,11 +118,7 @@ ctx.save();
   ctx.fillStyle='#503c30';ctx.beginPath();ctx.arc(1,-33,0.85,0,Math.PI*2);ctx.fill();
   ctx.restore()
  }
- // Pequenas folhas flutuantes junto à margem, sem formar uma cerca repetitiva.
- for(let i=0;i<6;i++){const x=(i*W/5+W*.08+time*3-cameraX*.62%W+W)%W,y=H*(.177+(i%2)*.004);ctx.fillStyle=s.tone===0?(i%2?'#477d63':'#578a68'):s.tone===1?'#777b5b':'#6e7668';ctx.beginPath();ctx.ellipse(x,y,7,2.5,Math.sin(time+i)*.12,0,Math.PI*2);ctx.fill();ctx.strokeStyle=s.tone===0?'#b8d7a1':'#9faf91';ctx.lineWidth=.7;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+2,y-1);ctx.stroke()}
- // Flores pequenas iluminam a margem equilibrada; a fase quente mostra solo rachado.
- if(s.tone===0){for(let i=0;i<8;i++){const x=(i*W/7+18-cameraX*.5%W+W)%W,y=H*(.126+(i%3)*.012);ctx.fillStyle=i%2?'#f0d8a0':'#e6b9c0';for(let k=0;k<4;k++){const a=k*Math.PI/2;ctx.beginPath();ctx.arc(x+Math.cos(a)*2.6,y+Math.sin(a)*2.6,1.8,0,Math.PI*2);ctx.fill()}ctx.fillStyle='#f4d56d';ctx.beginPath();ctx.arc(x,y,1.5,0,Math.PI*2);ctx.fill()}}
- if(s.tone===1){ctx.strokeStyle='rgba(128,112,74,.48)';ctx.lineWidth=1.2;for(let i=0;i<8;i++){const x=(i*W/7+23-cameraX*.72%W+W)%W,y=H*(.144+(i%3)*.009);ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+4,y+2);ctx.lineTo(x+8,y+1);ctx.moveTo(x+4,y+2);ctx.lineTo(x+2,y+5);ctx.moveTo(x+4,y+2);ctx.lineTo(x+7,y+5);ctx.stroke()}}
+ // A ilustração panorâmica já traz vegetação e reflexos próprios para cada fase.
  if(s.tone===2){
   // Resíduos visíveis no barranco e na lâmina d’água, distribuídos ao longo da margem.
   for(let i=0;i<12;i++){const wx=worldW*(.035+i*.084)+Math.sin(i*4.3)*W*.08,x=wx-cameraX;if(x<-18||x>W+18)continue;const y=H*(.168+(i%4)*.009),rot=Math.sin(i*2.1)*.35;ctx.save();ctx.translate(x,y);ctx.rotate(rot);if(i%3===0){ctx.fillStyle='rgba(227,226,194,.82)';ctx.strokeStyle='rgba(105,130,116,.82)';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(-3,-7,6,14,2);ctx.fill();ctx.stroke();ctx.fillStyle='#b77962';ctx.fillRect(-2,-9,4,2)}else{ctx.fillStyle=i%2?'rgba(217,205,154,.72)':'rgba(201,225,207,.68)';ctx.strokeStyle='rgba(103,126,112,.56)';ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(-7,-2);ctx.quadraticCurveTo(-3,-5,0,-2);ctx.lineTo(6,-4);ctx.lineTo(4,3);ctx.quadraticCurveTo(0,6,-5,2);ctx.closePath();ctx.fill();ctx.stroke()}ctx.restore()}
