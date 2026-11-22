@@ -3,87 +3,165 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Memória Hídrica 💧</title>
+<title>Memória Hídrica</title>
 <style>
   :root{
-    --bg1:#052a3a; --bg2:#0e7490; --accent:#38bdf8; --accent2:#0ea5e9;
-    --card:#ffffff; --ok:#14b8a6; --text:#06283d; --err:#e76f51;
+    --ink:#0f2f44; --soft:#4b6a7d; --blue:#0ea5e9; --blue2:#38bdf8; --deep:#0369a1;
+    --ok:#16a34a; --err:#dc2626; --paper:#fffdf5; --line:#dbe7ee;
+    --cols:4; --cw:96px; --gap:12px; --fs:12px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{
-    font-family:"Segoe UI",system-ui,sans-serif;
-    min-height:100vh;color:#fff;
-    background:linear-gradient(160deg,var(--bg1),var(--bg2));
-    display:flex;flex-direction:column;align-items:center;padding:18px;
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+    min-height:100vh;color:var(--ink);background:#ffffff;
+    display:flex;flex-direction:column;align-items:center;padding:12px 14px 40px;
   }
-  header{text-align:center;max-width:720px}
-  h1{font-size:clamp(1.5rem,5vw,2.3rem);margin-bottom:2px;letter-spacing:.5px}
-  h1 .spark{color:var(--accent)}
-  .sub{opacity:.85;font-size:.95rem;margin-bottom:14px}
-  .levels{display:flex;gap:10px;justify-content:center;margin-bottom:12px;flex-wrap:wrap}
+  .top{width:100%;max-width:1040px;display:flex;justify-content:flex-start}
+  .hub{display:inline-flex;align-items:center;gap:6px;color:var(--deep);text-decoration:none;
+    font-weight:600;font-size:.9rem;padding:7px 12px;border-radius:20px;border:1.5px solid var(--line)}
+  .hub:hover{background:#f0f9ff}
+  .hub svg{width:14px;height:14px}
+  header{text-align:center;max-width:720px;margin-top:6px}
+  h1{font-size:clamp(1.45rem,5vw,2.2rem);display:flex;align-items:center;justify-content:center;gap:10px}
+  h1 svg{width:.9em;height:.9em}
+  h1 .spark{color:var(--blue)}
+  .sub{color:var(--soft);font-size:.95rem;margin:4px 0 12px}
+  .levels{display:flex;gap:8px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
   .levels button{
-    border:2px solid rgba(255,255,255,.5);background:transparent;color:#fff;
-    padding:9px 18px;border-radius:30px;font-size:.95rem;cursor:pointer;transition:.2s;font-weight:600;
+    border:2px solid var(--line);background:#fff;color:var(--ink);
+    padding:8px 16px;border-radius:30px;font-size:.92rem;cursor:pointer;transition:.2s;font-weight:600;font-family:inherit;
   }
-  .levels button.active{background:var(--accent);border-color:var(--accent);color:var(--text)}
-  .hud{display:flex;gap:18px;justify-content:center;margin:8px 0 14px;font-size:.95rem;flex-wrap:wrap}
-  .hud b{color:var(--accent)}
-  .board{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:min(560px,95vw)}
-  .board.hard{gap:7px;width:min(960px,96vw)}
-  @media(min-width:700px){.board.hard{grid-template-columns:repeat(8,1fr)}}
-  .board.hard .back{font-size:.6rem;padding:4px;line-height:1.1}
-  .board.hard .back.term{font-size:.7rem}
-  .board.hard .front{font-size:1.2rem}
-  .card{aspect-ratio:3/4;perspective:800px;cursor:pointer}
-  .inner{position:relative;width:100%;height:100%;transition:transform .45s;transform-style:preserve-3d}
+  .levels button.active{background:var(--blue);border-color:var(--blue);color:#fff}
+  .hud{display:flex;gap:18px;justify-content:center;margin:4px 0 12px;font-size:.95rem;flex-wrap:wrap;color:var(--soft)}
+  .hud b{color:var(--deep)}
+  .hud{align-items:center}
+  .mini{border:2px solid var(--line);background:#fff;color:var(--deep);padding:5px 12px;border-radius:20px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit}
+  .mini:hover{background:#f0f9ff}
+
+  /* mesa clara, com veios de madeira */
+  .mesa{
+    padding:22px;border-radius:24px;max-width:100%;position:relative;z-index:1;isolation:isolate;
+    background-image:
+      repeating-linear-gradient(91deg,rgba(150,100,40,.07) 0 2px,transparent 2px 23px),
+      repeating-linear-gradient(89deg,rgba(150,100,40,.04) 0 1px,transparent 1px 9px),
+      linear-gradient(180deg,#f9efd9,#f2e1bf);
+    box-shadow:inset 0 0 0 3px #e6cf9f, inset 0 0 0 9px rgba(255,255,255,.35), 0 10px 26px rgba(15,47,68,.10);
+  }
+  .board{position:relative;width:var(--tw,300px);height:var(--th,300px);max-width:100%}
+
+  .card{
+    position:absolute;left:0;top:0;z-index:var(--z,1);
+    width:var(--cw);height:calc(var(--cw)*1.32);border:0;background:none;padding:0;font-family:inherit;
+    perspective:700px;cursor:grab;touch-action:none;-webkit-tap-highlight-color:transparent;user-select:none;
+    transform:translate(var(--x,0px),var(--y,0px)) rotate(var(--r,0deg)) scale(var(--s,1));
+    transition:transform .18s ease;
+  }
+  /* arremesso: a carta sai da mao do jogador, gira e desliza ate parar */
+  .card.deal{animation:throw .6s cubic-bezier(.14,.78,.28,1) backwards;animation-delay:var(--d,0ms)}
+  @keyframes throw{
+    0%{opacity:0;transform:translate(var(--sx,0px),var(--sy,0px)) rotate(calc(var(--r,0deg) - 230deg)) scale(.9)}
+    14%{opacity:1}
+    82%{transform:translate(var(--x,0px),var(--y,0px)) rotate(calc(var(--r,0deg) + 5deg)) scale(1.02)}
+  }
+  @media(hover:hover){.card:hover{--s:1.04}}
+  .card:focus-visible{--s:1.04;outline:none}
+  .card:focus-visible .inner{box-shadow:0 0 0 3px var(--blue)}
+  .card.flip{z-index:9000;transform:translate(var(--x,0px),var(--y,0px)) rotate(calc(var(--r,0deg)*.25)) scale(1.07)}
+  .card.matched{z-index:0;transform:translate(var(--x,0px),var(--y,0px)) rotate(var(--r,0deg)) scale(1)}
+  .card.drag{transition:none;cursor:grabbing;z-index:9500;--s:1.1}
+  .card.drag.flip,.card.drag.matched{transform:translate(var(--x,0px),var(--y,0px)) rotate(calc(var(--r,0deg)*.25)) scale(1.1)}
+  .card.drag .face{box-shadow:0 14px 26px rgba(15,47,68,.30)}
+  .inner{position:relative;width:100%;height:100%;transition:transform .42s;transform-style:preserve-3d;border-radius:10px}
   .card.flip .inner,.card.matched .inner{transform:rotateY(180deg)}
   .face{
-    position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;
-    display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;
-    font-weight:600;box-shadow:0 4px 10px rgba(0,0,0,.25)
+    position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:10px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+    box-shadow:0 3px 0 rgba(15,47,68,.10),0 6px 12px rgba(15,47,68,.18);overflow:hidden;
   }
-  .front{background:linear-gradient(145deg,var(--accent),var(--accent2));color:var(--text);font-size:1.8rem}
-  .back{background:var(--card);color:var(--text);transform:rotateY(180deg);font-size:.78rem;line-height:1.15}
-  .back.term{font-size:.95rem;font-weight:700;background:#e0f2fe}
-  .card.matched .inner{box-shadow:0 0 0 3px var(--ok)}
-  .card.matched{cursor:default;animation:pop .4s}
-  @keyframes pop{50%{transform:scale(1.05)}}
-  .feedback{
-    margin-top:16px;background:rgba(255,255,255,.12);border-radius:12px;padding:12px 16px;
-    width:min(560px,95vw);min-height:60px;font-size:.9rem;line-height:1.35
+  .front{
+    background:
+      radial-gradient(circle at 50% 50%,rgba(255,255,255,.0) 0 34%,rgba(255,255,255,.16) 35% 37%,transparent 38%),
+      repeating-linear-gradient(45deg,rgba(255,255,255,.13) 0 6px,transparent 6px 12px),
+      linear-gradient(150deg,var(--blue2),var(--blue));
+    border:4px solid #fff;
   }
-  .feedback b{color:var(--accent)}
-  .win{text-align:center;margin-top:16px;background:rgba(20,184,166,.25);border:1px solid var(--ok);
-    border-radius:12px;padding:18px;width:min(560px,95vw);display:none}
+  .front svg{width:38%;height:auto}
+  .back{transform:rotateY(180deg);color:var(--ink);font-size:var(--fs);line-height:1.18;font-weight:600;padding:6%}
+  .back.term{background:#fff;border:2px solid #bae6fd;justify-content:space-between;padding:7% 5% 8%}
+  .back.term .art{width:74%;flex:1;display:flex;align-items:center;justify-content:center;min-height:0}
+  .back.term .art svg{width:100%;height:100%;max-height:100%}
+  .back.term .lbl{font-weight:800;font-size:calc(var(--fs)*1.06);color:var(--deep);line-height:1.1;max-width:100%;flex:none;hyphens:auto;-webkit-hyphens:auto;overflow-wrap:anywhere}
+  .back.def{background:var(--paper);border:2px solid #f0d9a4}
+  .back.def::before{content:"";position:absolute;left:0;right:0;top:0;height:7%;background:#f6d98a}
+  .card.matched .back{border-color:var(--ok);box-shadow:0 0 0 3px rgba(22,163,74,.35),0 6px 12px rgba(15,47,68,.14)}
+  .card.wrong .back{border-color:var(--err)}
+
+  /* leitor: mostra por extenso o texto das cartas abertas */
+  .reader{
+    position:sticky;bottom:10px;z-index:6;margin-top:14px;width:min(640px,100%);
+    background:#fff;border:2px solid var(--line);border-radius:16px;padding:12px 16px;
+    font-size:1rem;line-height:1.35;min-height:76px;box-shadow:0 8px 22px rgba(15,47,68,.14);
+  }
+  .reader .row{display:flex;gap:8px;align-items:baseline}
+  .reader .row + .row{margin-top:4px}
+  .reader .tag{flex:none;font-size:.72rem;font-weight:800;letter-spacing:.4px;text-transform:uppercase;
+    padding:2px 7px;border-radius:8px;background:#e0f2fe;color:var(--deep)}
+  .reader .tag.d{background:#fdf0c9;color:#8a5a00}
+  .reader .msg{margin-top:6px;font-weight:700}
+  .reader .msg.ok{color:var(--ok)} .reader .msg.no{color:var(--err)}
+  .reader .hint{color:var(--soft);font-weight:400;font-size:.88rem}
+  .reader .exp{color:var(--soft);margin-top:4px}
+
+  .win{display:none;margin-top:16px;width:min(640px,100%);background:#f0fdf4;border:2px solid #86efac;
+    border-radius:16px;padding:18px;text-align:center}
   .win.show{display:block}
-  .win h2{margin-bottom:6px}
-  .savebox{margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-  .savebox input{
-    padding:10px 14px;border-radius:30px;border:none;font-size:.95rem;width:min(220px,60vw);
-    text-align:center;color:var(--text)
-  }
-  .btn{background:var(--accent);color:var(--text);border:none;padding:11px 22px;
-    border-radius:30px;font-weight:700;cursor:pointer;font-size:.95rem}
+  .win h2{font-size:1.3rem;margin-bottom:6px;color:#166534}
+  .savebox{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+  .savebox input{padding:10px 12px;border-radius:10px;border:2px solid var(--line);font-size:1rem;width:220px;font-family:inherit}
+  .btn{background:var(--blue);color:#fff;border:0;padding:10px 18px;border-radius:10px;font-weight:700;cursor:pointer;font-size:.95rem;font-family:inherit}
   .btn:disabled{opacity:.5;cursor:default}
-  .btn.ghost{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.5)}
-  .ranking{
-    margin-top:16px;background:rgba(255,255,255,.10);border-radius:12px;padding:14px 16px;
-    width:min(560px,95vw)
+  .btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--line)}
+
+  .ranking{margin-top:16px;width:min(640px,100%);background:#fff;border:2px solid var(--line);border-radius:16px;padding:16px}
+  .ranking h3{font-size:1.02rem;margin-bottom:8px}
+  .ranking h3 span{color:var(--blue)}
+  .ranking ol{list-style:none}
+  .ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.93rem}
+  .ranking li:last-child{border-bottom:0}
+  .ranking .pos{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+  .note{font-size:.8rem;color:var(--soft);margin-top:6px}
+  footer{margin-top:22px;font-size:.8rem;color:var(--soft);text-align:center;line-height:1.6}
+  footer .credit{font-weight:700;color:var(--ink)}
+
+  @media(max-width:560px){
+    body{padding:8px 8px 32px}
+    .mesa{padding:12px;border-radius:18px}
+    .sub{display:none}
+    header{margin-top:2px}
+    h1{margin-bottom:8px}
+    .hub{padding:4px 10px;font-size:.82rem}
+    .levels{margin-bottom:6px}
+    .hud{gap:10px;font-size:.86rem;margin:2px 0 8px}
+    .mini{padding:3px 10px;font-size:.8rem}
+    .reader{min-height:64px;font-size:.86rem;padding:8px 12px;margin-top:10px}
+    .reader .hint{font-size:.8rem}
+    .levels button{padding:7px 12px;font-size:.85rem}
   }
-  .ranking h3{margin-bottom:8px;font-size:1rem}
-  .ranking h3 span{color:var(--accent)}
-  .ranking ol{list-style:none;font-size:.9rem}
-  .ranking li{display:flex;justify-content:space-between;padding:5px 4px;border-bottom:1px solid rgba(255,255,255,.12)}
-  .ranking li:first-child{color:var(--accent);font-weight:700}
-  .ranking .note{font-size:.8rem;opacity:.7;margin-top:6px;line-height:1.3}
-  footer{margin-top:22px;opacity:.75;font-size:.82rem;text-align:center;line-height:1.5}
-  footer .credit{font-weight:600;opacity:1}
+  @media(prefers-reduced-motion:reduce){.card.deal{animation:none}.inner{transition:none}}
 </style>
 </head>
 <body>
+<div class="top">
+  <a class="hub" href="index.html">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Todos os jogos
+  </a>
+</div>
+
 <header>
-  <h1>💧 Memória <span class="spark">Hídrica</span></h1>
-  <p class="sub">Encontre os pares conceito ↔ definição sobre a água. Menos erros e menos tempo = topo do ranking! 🌊</p>
+  <h1><svg viewBox="-8 -11 16 22" aria-hidden="true"><path d="M0-10C5-3 7 0 7 4a7 7 0 0 1-14 0C-7 0-5-3 0-10z" fill="#0ea5e9"/><path d="M-3.5 4.5a3.6 3.6 0 0 0 2.6 3.4" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/></svg>
+  Memória <span class="spark">Hídrica</span></h1>
+  <p class="sub">Junte cada desenho com a sua definição. Arraste as cartas para arrumar a mesa.</p>
 </header>
 
 <div class="levels">
@@ -96,32 +174,33 @@
   <span>Pares: <b id="pairs">0</b>/<span id="total">8</span></span>
   <span>Erros: <b id="errors">0</b></span>
   <span>Tempo: <b id="timer">0s</b></span>
+  <button class="mini" type="button" onclick="restart()">Embaralhar</button>
 </div>
 
-<div class="board" id="board"></div>
+<div class="mesa"><div class="board" id="board"></div></div>
 
-<div class="feedback" id="feedback">Vire duas cartas para começar — o cronômetro dispara na primeira carta. Quando achar um par, a explicação aparece aqui. 💦</div>
+<div class="reader" id="reader" aria-live="polite"></div>
 
 <div class="win" id="win">
-  <h2>🌊 Você completou!</h2>
+  <h2>Você completou!</h2>
   <p id="winMsg"></p>
   <div class="savebox">
     <input id="playerName" maxlength="20" placeholder="Seu nome (até 20 letras)">
-    <button class="btn" id="saveBtn" onclick="saveScore()">Salvar no ranking 🏆</button>
+    <button class="btn" id="saveBtn" onclick="saveScore()">Salvar no ranking</button>
   </div>
   <p id="saveStatus" style="margin-top:8px;font-size:.85rem"></p>
   <button class="btn ghost" style="margin-top:10px" onclick="restart()">Jogar de novo</button>
 </div>
 
 <div class="ranking" id="rankingBox">
-  <h3>🏆 Ranking Global — nível <span id="rankLevel">Básico</span></h3>
-  <ol id="rankList"><li>Carregando…</li></ol>
+  <h3>Ranking Global, nível <span id="rankLevel">Básico</span></h3>
+  <ol id="rankList"><li><span>Carregando o ranking...</span></li></ol>
   <p class="note" id="rankNote"></p>
 </div>
 
 <footer>
-  App ambiental do dia · Água e Recursos Hídricos · Jogo da Memória<br>
-  <span class="credit">— Idealizado por Ernandes Sobreira —</span>
+  Água e Recursos Hídricos · Jogo da Memória<br>
+  <span class="credit">Idealizado por Ernandes Sobreira</span>
 </footer>
 
 <script>
@@ -135,6 +214,64 @@ const firebaseConfig = {
   appId: "1:958784915420:web:4212d3ad278f02d600f119"
 };
 const GAME_ID = "2026-06-06-memoria-hidrica";
+
+/* ---------- desenhos das cartas (SVG, viewBox 64x64) ---------- */
+const svg = inner => `<svg viewBox="0 0 64 64" aria-hidden="true">${inner}</svg>`;
+const cloud = (x,y,s=1,f='#cbd5e1') => `<g transform="translate(${x} ${y}) scale(${s})" fill="${f}"><circle cx="10" cy="14" r="9"/><circle cx="22" cy="11" r="11"/><circle cx="33" cy="15" r="8"/><rect x="2" y="13" width="38" height="11" rx="5.5"/></g>`;
+const drop = (x,y,s=1,f='#0ea5e9') => `<path transform="translate(${x} ${y}) scale(${s})" d="M0-9C4-3 6 0 6 3a6 6 0 0 1-12 0C-6 0-4-3 0-9z" fill="${f}"/>`;
+const sun = (x,y,r=8) => {
+  let rays='';
+  for(let i=0;i<8;i++){const a=i*Math.PI/4,c=Math.cos(a),s=Math.sin(a);
+    rays+=`M${(x+c*(r+3)).toFixed(1)} ${(y+s*(r+3)).toFixed(1)}L${(x+c*(r+7)).toFixed(1)} ${(y+s*(r+7)).toFixed(1)}`;}
+  return `<path d="${rays}" stroke="#f59e0b" stroke-width="2.6" stroke-linecap="round"/><circle cx="${x}" cy="${y}" r="${r}" fill="#fbbf24"/>`;
+};
+const arrow = (x1,y1,x2,y2,c='#0ea5e9',w=3.2) => {
+  const a=Math.atan2(y2-y1,x2-x1),h=w*2.1;
+  const p=(d,k)=>`${(x2-Math.cos(a+d)*h*k).toFixed(1)} ${(y2-Math.sin(a+d)*h*k).toFixed(1)}`;
+  return `<path d="M${x1} ${y1}L${x2} ${y2}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/><path d="M${p(.55,1)}L${x2} ${y2}L${p(-.55,1)}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
+};
+const waves = (y,f='#38bdf8') => `<path d="M2 ${y}q7.5-6 15 0t15 0 15 0 15 0V62H2z" fill="${f}"/>`;
+const tree = (x,y,s=1) => `<g transform="translate(${x} ${y}) scale(${s})"><rect x="-2" y="0" width="4" height="12" fill="#92400e"/><circle cx="0" cy="-6" r="10" fill="#22c55e"/><circle cx="-6" cy="0" r="6" fill="#16a34a"/><circle cx="6" cy="0" r="6" fill="#4ade80"/></g>`;
+const soil = (y,f='#c08457') => `<rect x="2" y="${y}" width="60" height="${62-y}" fill="${f}"/><rect x="2" y="${y-4}" width="60" height="6" rx="2" fill="#4ade80"/>`;
+const fish = (x,y,s=1,f='#f59e0b') => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-9 0c4-6 12-6 16 0-4 6-12 6-16 0z" fill="${f}"/><path d="M-9 0l-6-5v10z" fill="${f}"/><circle cx="3" cy="-1" r="1.3" fill="#0f2f44"/></g>`;
+
+const ART = {
+  "Chuva": svg(cloud(10,6,1.05)+`<path d="M20 40l-3 8M32 40l-3 8M44 40l-3 8M26 51l-2.5 7M38 51l-2.5 7" stroke="#0ea5e9" stroke-width="4" stroke-linecap="round"/>`),
+  "Rio": svg(`<rect x="2" y="2" width="60" height="60" rx="8" fill="#bbf7d0"/><path d="M30 2c16 12-16 22-2 32s12 18 4 28" stroke="#0ea5e9" stroke-width="13" fill="none"/><path d="M30 4c15 12-16 21-2 31s11 17 4 26" stroke="#7dd3fc" stroke-width="2.5" fill="none" stroke-dasharray="5 6" stroke-linecap="round"/>`+tree(50,20,.6)+tree(12,44,.6)),
+  "Torneira": svg(`<rect x="19" y="12" width="6" height="12" fill="#64748b"/><rect x="11" y="8" width="22" height="6" rx="3" fill="#ef4444"/><path d="M6 22h28a12 12 0 0 1 12 12v6H35v-5a2 2 0 0 0-2-2H6z" fill="#94a3b8"/><rect x="33" y="40" width="15" height="4" rx="2" fill="#64748b"/>`+drop(40.5,56,.95)),
+  "Gelo": svg(`<path d="M32 10 54 21 32 32 10 21z" fill="#e0f2fe"/><path d="M10 21 32 32v24L10 45z" fill="#7dd3fc"/><path d="M54 21 32 32v24l22-11z" fill="#38bdf8"/><path d="M16 29v10M21 31.5v5" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>`),
+  "Vapor": svg(waves(44)+`<path d="M18 36c-5-7 5-9 0-17M32 36c-5-7 5-9 0-17M46 36c-5-7 5-9 0-17" stroke="#94a3b8" stroke-width="3.6" fill="none" stroke-linecap="round"/>`+sun(54,10,5)),
+  "Nuvem": svg(sun(46,18,9)+cloud(4,18,1.3,'#bae6fd')+cloud(22,36,.75,'#e0f2fe')),
+  "Poço": svg(`<path d="M10 18 32 4l22 14z" fill="#b45309"/><rect x="17" y="18" width="4" height="20" fill="#92400e"/><rect x="43" y="18" width="4" height="20" fill="#92400e"/><path d="M32 18v10" stroke="#78716c" stroke-width="1.6"/><path d="M28 28h8l-1 8h-6z" fill="#64748b"/><rect x="13" y="38" width="38" height="20" rx="3" fill="#a8a29e"/><path d="M13 45h38M13 52h38M24 38v7M38 38v7M31 45v7M20 52v6M44 52v6" stroke="#78716c" stroke-width="1.3"/><ellipse cx="32" cy="38.5" rx="15" ry="3" fill="#0ea5e9"/>`),
+  "Sede": svg(`<path d="M19 10h26l-4 46H23z" fill="#f0f9ff" stroke="#0284c7" stroke-width="2.6" stroke-linejoin="round"/><path d="M21 28h22l-2.3 26H23.3z" fill="#38bdf8"/><path d="M25 16l1.2 9" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>`),
+
+  "Evaporação": svg(waves(46)+sun(50,12,7)+arrow(16,40,16,20,'#f97316')+arrow(30,40,30,24,'#f97316')),
+  "Condensação": svg(cloud(8,4,1.15,'#cbd5e1')+`<g fill="#0ea5e9"><circle cx="22" cy="22" r="2.2"/><circle cx="32" cy="18" r="2.2"/><circle cx="42" cy="23" r="2.2"/><circle cx="30" cy="27" r="2.2"/></g><path d="M20 58c-4-6 4-8 0-14M32 58c-4-6 4-8 0-14M44 58c-4-6 4-8 0-14" stroke="#94a3b8" stroke-width="3.2" fill="none" stroke-linecap="round"/>`),
+  "Precipitação": svg(cloud(10,4,1.05)+drop(18,48,.8)+`<path d="M32 38v14M26 41.5l12 7M38 41.5l-12 7" stroke="#38bdf8" stroke-width="2.6" stroke-linecap="round"/><circle cx="47" cy="46" r="5" fill="#e0f2fe" stroke="#7dd3fc" stroke-width="2"/>`),
+  "Infiltração": svg(drop(18,12,.7)+drop(46,12,.7)+drop(32,9,.7)+soil(26)+arrow(18,30,18,52)+arrow(32,30,32,56)+arrow(46,30,46,52)),
+  "Bacia hidrográfica": svg(`<path d="M32 4c18 2 28 16 24 32S42 60 32 60 8 50 8 34 14 2 32 4z" fill="#bbf7d0" stroke="#16a34a" stroke-width="2.2" stroke-dasharray="5 3.5"/><path d="M32 60V38M32 38 19 21M32 38l12-18M26 30H14M38 29l12 4M32 47l-11-2" stroke="#0ea5e9" stroke-width="3.6" stroke-linecap="round" fill="none"/>`),
+  "Aquífero": svg(`<rect x="2" y="6" width="60" height="6" rx="2" fill="#4ade80"/><rect x="2" y="12" width="60" height="16" fill="#c08457"/><rect x="2" y="28" width="60" height="20" fill="#38bdf8"/><g fill="#e0f2fe"><circle cx="12" cy="34" r="2.6"/><circle cx="26" cy="41" r="2.6"/><circle cx="38" cy="33" r="2.6"/><circle cx="52" cy="40" r="2.6"/><circle cx="18" cy="44" r="2"/><circle cx="46" cy="45" r="2"/></g><rect x="2" y="48" width="60" height="12" fill="#78716c"/><path d="M2 54h60" stroke="#57534e" stroke-width="1.4" stroke-dasharray="7 5"/>`),
+  "Escoamento": svg(drop(14,10,.65)+drop(30,8,.65)+drop(46,12,.65)+`<path d="M2 22 62 52v10H2z" fill="#a16207"/><path d="M2 22 62 52" stroke="#4ade80" stroke-width="4" stroke-linecap="round"/>`+arrow(10,18,26,26)+arrow(30,28,48,37)),
+  "Transpiração": svg(tree(32,36,1.25)+`<rect x="2" y="52" width="60" height="10" rx="2" fill="#c08457"/>`+arrow(14,22,14,6,'#7dd3fc',2.8)+arrow(32,12,32,2,'#7dd3fc',2.8)+arrow(50,22,50,6,'#7dd3fc',2.8)),
+
+  "Ciclo hidrológico": svg(`<path d="M14 40a20 20 0 0 1 30-25" fill="none" stroke="#0ea5e9" stroke-width="4" stroke-linecap="round"/><path d="M37 11.5l8 3-2 8" fill="none" stroke="#0ea5e9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M50 26a20 20 0 0 1-30 25" fill="none" stroke="#0369a1" stroke-width="4" stroke-linecap="round"/><path d="M27 54.5l-8-3 2-8" fill="none" stroke="#0369a1" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`+drop(32,33,1.15)),
+  "Evapotranspiração": svg(`<rect x="2" y="48" width="60" height="14" rx="2" fill="#c08457"/>`+tree(42,36,1.05)+arrow(14,46,14,26,'#f97316')+arrow(42,16,42,4,'#22c55e')+arrow(24,46,24,34,'#f97316')),
+  "Lençol freático": svg(`<rect x="2" y="6" width="60" height="6" rx="2" fill="#4ade80"/><rect x="2" y="12" width="60" height="22" fill="#d6a97a"/><rect x="2" y="34" width="60" height="26" fill="#38bdf8"/><path d="M2 34h60" stroke="#0369a1" stroke-width="2.6" stroke-dasharray="6 4"/><path d="M26 22h12l-6 10z" fill="#0369a1"/><path d="M27 39h10M29.5 43h5" stroke="#0369a1" stroke-width="1.8" stroke-linecap="round"/>`),
+  "Zona vadosa": svg(`<rect x="2" y="6" width="60" height="6" rx="2" fill="#4ade80"/><rect x="2" y="12" width="60" height="30" fill="#fcd34d"/><g fill="#fff" stroke="#d97706" stroke-width="1.2"><circle cx="12" cy="20" r="3"/><circle cx="26" cy="27" r="3"/><circle cx="40" cy="19" r="3"/><circle cx="52" cy="30" r="3"/><circle cx="16" cy="34" r="3"/><circle cx="36" cy="35" r="3"/></g><rect x="2" y="42" width="60" height="18" fill="#7dd3fc"/><path d="M2 42h60" stroke="#0369a1" stroke-width="2.4" stroke-dasharray="6 4"/>`),
+  "Vazão": svg(`<rect x="2" y="26" width="60" height="26" rx="5" fill="#94a3b8"/><rect x="2" y="31" width="60" height="16" fill="#38bdf8"/>`+arrow(8,39,24,39,'#fff',3)+arrow(34,39,54,39,'#fff',3)+`<circle cx="32" cy="13" r="9" fill="#fff" stroke="#0369a1" stroke-width="2.6"/><path d="M32 8v5l4 3M29 2h6" stroke="#0369a1" stroke-width="2.4" stroke-linecap="round" fill="none"/>`),
+  "Recarga de aquífero": svg(cloud(14,0,.8)+`<rect x="2" y="24" width="60" height="5" rx="2" fill="#4ade80"/><rect x="2" y="29" width="60" height="13" fill="#c08457"/><rect x="2" y="42" width="60" height="18" fill="#38bdf8"/>`+arrow(22,22,22,46,'#0369a1')+arrow(42,22,42,46,'#0369a1')+`<path d="M32 46v10M27 51h10" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/>`),
+  "Eutrofização": svg(`<rect x="2" y="16" width="60" height="44" rx="6" fill="#a3e635"/><path d="M2 22q8-5 15 0t15 0 15 0 15 0V16H2z" fill="#65a30d"/><g fill="#4d7c0f"><circle cx="12" cy="30" r="4"/><circle cx="50" cy="28" r="5"/><circle cx="44" cy="50" r="4"/><circle cx="14" cy="50" r="3"/></g><g transform="rotate(180 30 40)">`+fish(30,40,1.2,'#e2e8f0')+`</g><path d="M24.5 39l3 3M27.5 39l-3 3" stroke="#0f2f44" stroke-width="1.3" stroke-linecap="round"/>`),
+  "Turbidez": svg(`<path d="M17 8h30l-4 50H21z" fill="#fff" stroke="#0284c7" stroke-width="2.6" stroke-linejoin="round"/><path d="M18.6 20h26.8l-3 36H21.6z" fill="#b08968"/><g fill="#5b3a1a"><circle cx="26" cy="28" r="1.8"/><circle cx="36" cy="26" r="1.5"/><circle cx="31" cy="36" r="2"/><circle cx="39" cy="40" r="1.6"/><circle cx="25" cy="44" r="1.6"/><circle cx="34" cy="49" r="1.8"/><circle cx="29" cy="52" r="1.3"/></g>`),
+  "Salinização": svg(sun(52,10,5)+`<rect x="2" y="38" width="60" height="22" rx="3" fill="#d6a97a"/><path d="M10 38l6 9-4 13M30 38l-3 10 6 12M48 38l4 8-5 14" stroke="#92400e" stroke-width="1.6" fill="none"/><g fill="#fff" stroke="#94a3b8" stroke-width="1"><path d="M18 44l3 3-3 3-3-3z"/><path d="M38 50l3 3-3 3-3-3z"/><path d="M54 52l2.5 2.5L54 57l-2.5-2.5z"/><path d="M24 54l2.5 2.5L24 59l-2.5-2.5z"/></g><path d="M30 38c0-10 0-14-8-17" stroke="#a16207" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M22 21c-6 0-8 4-8 8 5 0 8-3 8-8z" fill="#ca8a04"/>`),
+  "Permeabilidade": svg(`<rect x="4" y="22" width="25" height="38" rx="3" fill="#fde68a"/><g fill="#d97706"><circle cx="10" cy="30" r="2.4"/><circle cx="20" cy="28" r="2.4"/><circle cx="15" cy="38" r="2.4"/><circle cx="24" cy="42" r="2.4"/><circle cx="9" cy="48" r="2.4"/><circle cx="19" cy="52" r="2.4"/></g>`+drop(16.5,10,.7)+arrow(16.5,22,16.5,56,'#0ea5e9',2.8)+`<rect x="35" y="22" width="25" height="38" rx="3" fill="#b45309"/><path d="M35 30h25M35 38h25M35 46h25M35 54h25" stroke="#92400e" stroke-width="1.4"/>`+drop(47.5,10,.7)+`<ellipse cx="47.5" cy="21.5" rx="10" ry="2.6" fill="#0ea5e9"/>`),
+  "Estiagem": svg(sun(32,16,10)+`<rect x="2" y="42" width="60" height="18" rx="3" fill="#e2b77f"/><path d="M12 42l5 8-4 10M26 42l-2 9 5 9M40 42l4 7-3 11M52 42l-3 8 4 10M17 50l7 1M44 49l5 1" stroke="#92400e" stroke-width="1.6" fill="none" stroke-linecap="round"/>`),
+  "Outorga de água": svg(`<path d="M14 6h28l10 10v42H14z" fill="#fff" stroke="#64748b" stroke-width="2.4" stroke-linejoin="round"/><path d="M42 6v10h10" fill="#e2e8f0" stroke="#64748b" stroke-width="2.4" stroke-linejoin="round"/><path d="M20 18h14M20 46h12M20 52h8" stroke="#94a3b8" stroke-width="2.4" stroke-linecap="round"/>`+drop(28,33,1)+`<circle cx="44" cy="46" r="9" fill="#16a34a"/><path d="M39.5 46l3.2 3.4 6-6.6" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`),
+  "Dessalinização": svg(drop(14,34,1.7,'#0369a1')+`<g fill="#fff"><circle cx="11" cy="36" r="1.7"/><circle cx="17" cy="40" r="1.7"/><circle cx="14" cy="31" r="1.4"/></g><path d="M32 8v48" stroke="#64748b" stroke-width="3.4" stroke-dasharray="4 4"/><g fill="#94a3b8"><circle cx="27" cy="20" r="1.8"/><circle cx="26" cy="46" r="1.8"/><circle cx="28" cy="54" r="1.5"/></g>`+arrow(22,12,42,12,'#f97316',2.8)+drop(50,36,1.5,'#38bdf8')),
+  "Mata ciliar": svg(`<rect x="2" y="40" width="60" height="20" rx="3" fill="#86efac"/><path d="M22 40c4 6 16 6 20 0v20H22z" fill="#38bdf8"/><path d="M22 60V44c5 5 15 5 20 0v16z" fill="#0ea5e9"/>`+tree(11,30,.85)+tree(53,30,.85)+tree(21,34,.55)+tree(44,34,.55)),
+  "Vazão ecológica": svg(`<path d="M2 22q6-4 12 0t10 0v38H2z" fill="#0ea5e9"/><path d="M24 10h10l6 50H22z" fill="#94a3b8"/><path d="M26 22h9M25 34h12M24 46h14" stroke="#64748b" stroke-width="1.4"/><path d="M38 50q7-4 12 0t12 0v10H38z" fill="#38bdf8"/><path d="M34 42q4 2 5 8" stroke="#38bdf8" stroke-width="3.6" fill="none" stroke-linecap="round"/>`+fish(52,43,.75)),
+  "Pegada hídrica": svg(`<g fill="#0ea5e9"><path d="M22 26c10-5 22 0 22 12 0 8-4 12-5 17s-4 7-8 7-7-3-7-8c0-6-4-9-5-15s0-11 3-13z"/><ellipse cx="18" cy="16" rx="4" ry="5.4"/><ellipse cx="27" cy="10" rx="3.6" ry="5"/><ellipse cx="35.5" cy="9" rx="3.2" ry="4.6"/><ellipse cx="43" cy="12" rx="2.8" ry="4"/><ellipse cx="48.5" cy="18" rx="2.4" ry="3.4"/></g>`+drop(32,42,1.05,'#e0f2fe'))
+};
+const BACK_ART = `<svg viewBox="-9 -12 18 24" aria-hidden="true"><path d="M0-10C5-3 7 0 7 4a7 7 0 0 1-14 0C-7 0-5-3 0-10z" fill="#fff" opacity=".92"/><path d="M-3.4 4.6a3.5 3.5 0 0 0 2.5 3.2" fill="none" stroke="#38bdf8" stroke-width="1.4" stroke-linecap="round"/></svg>`;
 
 const DATA = {
   basico:[
@@ -168,33 +305,38 @@ const DATA = {
     {t:"Turbidez", d:"Medida das partículas em suspensão que turvam a água.", e:"Alta turbidez encarece o tratamento e bloqueia a luz para a vida aquática."},
     {t:"Salinização", d:"Acúmulo de sais na água ou no solo.", e:"Irrigação mal manejada pode salinizar e inutilizar terras agrícolas."},
     {t:"Permeabilidade", d:"Capacidade do solo de deixar a água passar.", e:"Solos arenosos são permeáveis; argilosos retêm mais a água."},
-    {t:"Estiagem", d:"Período prolongado de baixa precipitação.", e:"Diferente da seca, é um déficit temporário de chuvas."},
+    {t:"Estiagem", d:"Período prolongado de baixa precipitação.", e:"Quando se prolonga a ponto de causar grave desequilíbrio hidrológico, passa a ser chamada de seca."},
     {t:"Outorga de água", d:"Autorização legal para usar um recurso hídrico.", e:"Instrumento da política de águas para evitar uso excessivo e conflito."},
-    {t:"Dessalinização", d:"Remoção do sal da água do mar para torná-la potável.", e:"Usa osmose reversa; é cara em energia, mas vital em regiões áridas."},
+    {t:"Dessalinização", d:"Remoção do sal da água do mar para torná-la potável.", e:"Usa principalmente osmose reversa; é cara em energia, mas vital em regiões áridas."},
     {t:"Mata ciliar", d:"Vegetação que protege as margens dos rios.", e:"Filtra poluentes, evita erosão e mantém a água mais limpa."},
-    {t:"Caudal ecológico", d:"Vazão mínima para manter vivo o ecossistema do rio.", e:"Garante que represas não sequem o trecho de rio a jusante."},
+    {t:"Vazão ecológica", d:"Vazão mínima para manter vivo o ecossistema do rio.", e:"Garante que represas não sequem o trecho de rio a jusante."},
     {t:"Pegada hídrica", d:"Volume total de água usado para produzir um bem.", e:"Produzir 1 kg de carne consome milhares de litros de água."}
   ]
 };
 
 const LEVEL_NAMES={basico:'Básico',inter:'Intermediário',dificil:'Difícil'};
+const HINT_START='Vire duas cartas para começar. O cronômetro dispara na primeira carta.';
 let level='basico', deck=[], firstCard=null, lock=false, matched=0, errors=0;
 let startTime=null, timerInt=null, elapsed=0, scoreSaved=false;
-let db=null, fsFns=null;
+let pendingClose=null, pendingTimer=null;
+let db=null, fsFns=null, fbState='loading';
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 function setLevel(l){
   level=l;
-  document.getElementById('btnBasico').classList.toggle('active',l==='basico');
-  document.getElementById('btnInter').classList.toggle('active',l==='inter');
-  document.getElementById('btnDificil').classList.toggle('active',l==='dificil');
-  document.getElementById('rankLevel').textContent = LEVEL_NAMES[l];
+  $('btnBasico').classList.toggle('active',l==='basico');
+  $('btnInter').classList.toggle('active',l==='inter');
+  $('btnDificil').classList.toggle('active',l==='dificil');
+  $('rankLevel').textContent=LEVEL_NAMES[l];
   restart(); loadRanking();
 }
 
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
 function buildDeck(){
-  let cards=[];
+  const cards=[];
   DATA[level].forEach((p,i)=>{
     cards.push({id:i,kind:'term',label:p.t});
     cards.push({id:i,kind:'def',label:p.d});
@@ -202,21 +344,123 @@ function buildDeck(){
   return shuffle(cards);
 }
 
-function render(){
-  const board=document.getElementById('board');
-  board.classList.toggle('hard',level==='dificil');
+/* mesa livre: escolhe linhas x colunas que dividem o baralho sem sobra,
+   define o tamanho da carta e sorteia posicao e giro de cada uma */
+let zTop=100, TABLE={tw:0,th:0,w:0,h:0};
+const rnd=()=>Math.random()*2-1;
+
+function layout(deal){
+  const n=deck.length, board=$('board'), mesa=board.parentElement;
+  const small=window.innerWidth<=560;
+  const mesaPad=small?12:22, bodyPad=small?8:14;
+  const Wt=Math.min(window.innerWidth-2*bodyPad,1054)-2*mesaPad;
+  const top=mesa.getBoundingClientRect().top+window.scrollY;
+  const Hav=Math.max(300,window.innerHeight-top-2*mesaPad-(small?132:118));
+  const R=1.32, MAXW=150, MINW=small?54:84, m=small?7:14;
+  const ov=small?0.45:0.28;            /* sobreposicao vertical maxima entre fileiras */
+  let best=null;
+  for(let c=2;c<=10;c++){
+    if(n%c)continue;
+    const r=n/c;
+    const wByW=(Wt-2*m)/c-(small?5:10);
+    const hMax=(Hav-2*m)/(1+(1-ov)*(r-1));
+    const w=Math.min(MAXW,wByW,hMax/R);
+    if(!best||w>best.w) best={c,r,w,wByW};
+  }
+  const c=best.c, r=best.r;
+  const w=Math.floor(Math.max(Math.min(MINW,best.wByW),best.w)), h=w*R;
+  const tw=Math.min(Wt,c*(w+(small?8:24))+2*m);
+  const natural=r*(h+(small?10:20))+2*m;
+  const tight=2*m+h*(1+(1-ov)*(r-1));
+  const th=Math.round(Math.max(tight,Math.min(Hav,natural)));
+  const stepX=c>1?(tw-2*m-w)/(c-1):0, stepY=r>1?(th-2*m-h)/(r-1):0;
+  const jx=Math.max(2,Math.min(small?5:11,(stepX-w)/2+4)), jy=small?5:9;
+  const rot=small?8:(n>16?9:11);
+  TABLE={tw,th,w,h};
+  const st=document.documentElement.style;
+  st.setProperty('--tw',tw+'px'); st.setProperty('--th',th+'px');
+  st.setProperty('--cw',w+'px');
+  st.setProperty('--fs',Math.max(8.5,Math.min(14.5,w*0.108)).toFixed(1)+'px');
+  [...board.children].forEach((el,i)=>{
+    const col=i%c,row=Math.floor(i/c);
+    setPos(el,m+col*stepX+rnd()*jx,m+row*stepY+rnd()*jy);
+    el.style.setProperty('--r',(rnd()*rot).toFixed(1)+'deg');
+    el.style.setProperty('--z',i+1);
+    el.style.setProperty('--sx',(tw/2-w/2).toFixed(0)+'px');
+    el.style.setProperty('--sy',(th-h*0.35).toFixed(0)+'px');
+    el.style.setProperty('--d',(i*(n>16?34:55))+'ms');
+    el.classList.toggle('deal',!!deal);
+  });
+  zTop=100;
+}
+function setPos(el,x,y){
+  const T=TABLE;
+  el._x=Math.max(-T.w*0.25,Math.min(T.tw-T.w*0.75,x));
+  el._y=Math.max(-T.h*0.25,Math.min(T.th-T.h*0.75,y));
+  el.style.setProperty('--x',el._x.toFixed(1)+'px');
+  el.style.setProperty('--y',el._y.toFixed(1)+'px');
+}
+
+/* arrastar: puxa a carta de cima da outra; toque curto continua virando a carta */
+function makeDraggable(el){
+  let g=null;
+  el.addEventListener('pointerdown',e=>{
+    if(e.button!==undefined&&e.button!==0)return;
+    g={px:e.clientX,py:e.clientY,ox:el._x,oy:el._y,moved:false,id:e.pointerId};
+    try{el.setPointerCapture(e.pointerId);}catch(_){}
+  });
+  el.addEventListener('pointermove',e=>{
+    if(!g||e.pointerId!==g.id)return;
+    const dx=e.clientX-g.px, dy=e.clientY-g.py;
+    if(!g.moved){
+      if(Math.hypot(dx,dy)<8)return;
+      g.moved=true; el.classList.remove('deal'); el.classList.add('drag');
+    }
+    setPos(el,g.ox+dx,g.oy+dy);
+  });
+  const end=e=>{
+    if(!g||e.pointerId!==g.id)return;
+    if(g.moved){
+      el.classList.remove('drag');
+      el.style.setProperty('--z',++zTop);
+      el._dragged=true; setTimeout(()=>{el._dragged=false;},60);
+    }
+    g=null;
+  };
+  el.addEventListener('pointerup',end);
+  el.addEventListener('pointercancel',end);
+}
+
+function render(deal){
+  const board=$('board');
   board.innerHTML='';
   deck.forEach((c,idx)=>{
-    const el=document.createElement('div');
+    const el=document.createElement('button');
+    el.type='button';
     el.className='card';
-    el.innerHTML=`<div class="inner">
-        <div class="face front">💧</div>
-        <div class="face back ${c.kind==='term'?'term':''}">${c.label}</div>
-      </div>`;
-    el.addEventListener('click',()=>flip(idx,el));
+    el.setAttribute('aria-label','Carta '+(idx+1)+', virada para baixo');
+    const back=c.kind==='term'
+      ? `<div class="face back term"><div class="art">${ART[c.label]||''}</div><div class="lbl">${esc(c.label)}</div></div>`
+      : `<div class="face back def">${esc(c.label)}</div>`;
+    el.innerHTML=`<div class="inner"><div class="face front">${BACK_ART}</div>${back}</div>`;
+    el.addEventListener('click',()=>{ if(el._dragged){el._dragged=false;return;} flip(idx,el); });
+    makeDraggable(el);
     board.appendChild(el);
   });
-  document.getElementById('total').textContent=DATA[level].length;
+  $('total').textContent=DATA[level].length;
+  layout(deal);
+  fitText();
+}
+
+/* reduz a fonte so das cartas cujo texto nao cabe */
+function fitText(){
+  document.querySelectorAll('#board .back.def, #board .lbl').forEach(el=>{
+    el.style.fontSize='';
+    const box=el.classList.contains('lbl')?el.parentElement:el;
+    let fs=parseFloat(getComputedStyle(el).fontSize), n=0;
+    const over=()=>box.scrollHeight>box.clientHeight+1||el.scrollWidth>el.clientWidth+1;
+    while(over()&&fs>6.5&&n++<24){fs-=0.5;el.style.fontSize=fs+'px';}
+  });
 }
 
 function startTimer(){
@@ -224,76 +468,97 @@ function startTimer(){
   startTime=Date.now();
   timerInt=setInterval(()=>{
     elapsed=Math.floor((Date.now()-startTime)/1000);
-    document.getElementById('timer').textContent=elapsed+'s';
+    $('timer').textContent=elapsed+'s';
   },500);
 }
 
+function rowHtml(c){
+  return `<div class="row"><span class="tag ${c.kind==='def'?'d':''}">${c.kind==='def'?'Definição':'Conceito'}</span><span>${esc(c.label)}</span></div>`;
+}
+function setReader(html){ $('reader').innerHTML=html; }
+
+function closePending(){
+  if(!pendingClose)return;
+  clearTimeout(pendingTimer);
+  const f=pendingClose; pendingClose=null; pendingTimer=null; f();
+}
+
 function flip(idx,el){
+  if(pendingClose) closePending();
   if(lock||el.classList.contains('flip')||el.classList.contains('matched'))return;
   startTimer();
   el.classList.add('flip');
-  if(!firstCard){firstCard={idx,el};return;}
-  lock=true;
-  const a=deck[firstCard.idx], b=deck[idx];
+  el.setAttribute('aria-label',deck[idx].label);
+  if(!firstCard){
+    firstCard={idx,el};
+    setReader(rowHtml(deck[idx])+`<div class="hint" style="margin-top:6px">Agora vire a carta que combina com esta.</div>`);
+    return;
+  }
+  const a=deck[firstCard.idx], b=deck[idx], first=firstCard;
   if(a.id===b.id){
+    lock=true;
+    const p=DATA[level][a.id];
+    setReader(`<div class="msg ok" style="margin-top:0">Par certo: ${esc(p.t)}</div><div>${esc(p.d)}</div><div class="exp">${esc(p.e)}</div>`);
     setTimeout(()=>{
-      firstCard.el.classList.add('matched');el.classList.add('matched');
-      matched++;document.getElementById('pairs').textContent=matched;
-      const p=DATA[level][a.id];
-      document.getElementById('feedback').innerHTML=`✅ <b>${p.t}</b> → ${p.d}<br>${p.e}`;
+      first.el.classList.add('matched');el.classList.add('matched');
+      matched++;$('pairs').textContent=matched;
       firstCard=null;lock=false;
       if(matched===DATA[level].length)win();
     },450);
   }else{
-    errors++;document.getElementById('errors').textContent=errors;
-    document.getElementById('feedback').innerHTML="💦 Não formam par (+1 erro). Memorize a posição e tente de novo!";
-    setTimeout(()=>{
-      firstCard.el.classList.remove('flip');el.classList.remove('flip');
-      firstCard=null;lock=false;
-    },900);
+    errors++;$('errors').textContent=errors;
+    first.el.classList.add('wrong');el.classList.add('wrong');
+    setReader(rowHtml(a)+rowHtml(b)+`<div class="msg no">Não formam par. <span class="hint">Toque em outra carta para continuar.</span></div>`);
+    firstCard=null;
+    /* tempo de leitura proporcional ao tamanho do texto; tocar em outra carta fecha antes */
+    const ms=Math.min(6000,1800+(a.label.length+b.label.length)*38);
+    pendingClose=()=>{
+      [first.el,el].forEach(x=>{x.classList.remove('flip','wrong');x.setAttribute('aria-label','Carta virada para baixo');});
+    };
+    pendingTimer=setTimeout(closePending,ms);
   }
 }
 
 function win(){
   clearInterval(timerInt);
-  const w=document.getElementById('win');
-  const nivel=LEVEL_NAMES[level];
-  document.getElementById('winMsg').textContent=
-    `Nível ${nivel}: ${DATA[level].length} pares, ${errors} erro(s), ${elapsed}s. Coloque seu nome e entre para o Ranking Global! 🌊`;
-  document.getElementById('saveStatus').textContent='';
-  document.getElementById('saveBtn').disabled=false;
+  $('winMsg').textContent=`Nível ${LEVEL_NAMES[level]}: ${DATA[level].length} pares, ${errors} erro(s), ${elapsed}s. Coloque seu nome e entre para o Ranking Global.`;
+  $('saveStatus').textContent='';
+  $('saveBtn').disabled=false;
   scoreSaved=false;
+  const w=$('win');
   w.classList.add('show');
-  w.scrollIntoView({behavior:'smooth'});
+  w.scrollIntoView({behavior:'smooth',block:'center'});
 }
 
 function restart(){
-  clearInterval(timerInt);startTime=null;elapsed=0;
+  clearInterval(timerInt);clearTimeout(pendingTimer);pendingClose=null;pendingTimer=null;
+  startTime=null;elapsed=0;
   deck=buildDeck();firstCard=null;lock=false;matched=0;errors=0;
-  document.getElementById('pairs').textContent=0;
-  document.getElementById('errors').textContent=0;
-  document.getElementById('timer').textContent='0s';
-  document.getElementById('feedback').innerHTML="Vire duas cartas para começar — o cronômetro dispara na primeira carta. 💦";
-  document.getElementById('win').classList.remove('show');
-  render();
+  $('pairs').textContent=0;
+  $('errors').textContent=0;
+  $('timer').textContent='0s';
+  setReader(`<div class="hint" style="font-size:1rem">${HINT_START}</div>`);
+  $('win').classList.remove('show');
+  render(true);
 }
 
+let resizeT=null;
+window.addEventListener('resize',()=>{clearTimeout(resizeT);resizeT=setTimeout(()=>{layout(false);fitText();},150);});
+
+/* ---------- ranking (Firestore) ---------- */
 async function initFirebase(){
-  const note=document.getElementById('rankNote');
-  if(!firebaseConfig.apiKey){
-    document.getElementById('rankList').innerHTML='<li><span>Ranking online ainda não configurado</span></li>';
-    note.textContent='Para ativar: cole o firebaseConfig no topo do código.';
-    return;
-  }
   try{
     const appM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
     const fsM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
     const app=appM.initializeApp(firebaseConfig);
     db=fsM.getFirestore(app);
     fsFns=fsM;
+    fbState='ok';
     loadRanking();
   }catch(e){
-    note.textContent='Sem conexão — o ranking online aparece quando houver internet.';
+    fbState='off';
+    $('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';
+    $('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';
   }
 }
 
@@ -301,47 +566,49 @@ function scoreOf(err,sec){return err*1000+sec;}
 
 async function saveScore(){
   if(scoreSaved)return;
-  const name=document.getElementById('playerName').value.trim();
-  const st=document.getElementById('saveStatus');
-  if(!name){st.textContent='Digite seu nome primeiro 😉';return;}
-  if(!db){st.textContent='Ranking online não configurado — resultado válido só localmente.';return;}
+  const name=$('playerName').value.trim();
+  const st=$('saveStatus');
+  if(!name){st.textContent='Digite seu nome primeiro.';return;}
+  if(!db){st.textContent='Sem conexão com o ranking. Seu resultado não foi enviado.';return;}
   try{
-    document.getElementById('saveBtn').disabled=true;
+    $('saveBtn').disabled=true;
     await fsFns.addDoc(
       fsFns.collection(db,'games',GAME_ID,'scores'),
       {name:name.slice(0,20),score:scoreOf(errors,elapsed),errors:errors,seconds:elapsed,
        level:level,ts:fsFns.serverTimestamp()}
     );
     scoreSaved=true;
-    st.textContent='✅ Salvo no Ranking Global!';
+    st.textContent='Salvo no Ranking Global!';
     loadRanking();
   }catch(e){
-    document.getElementById('saveBtn').disabled=false;
-    st.textContent='Erro ao salvar — verifique a internet e as regras do Firestore.';
+    $('saveBtn').disabled=false;
+    st.textContent='Erro ao salvar. Verifique a internet e tente de novo.';
   }
 }
 
 async function loadRanking(){
   if(!db)return;
-  const list=document.getElementById('rankList');
+  const list=$('rankList'), asked=level;
   try{
+    /* filtra por nível no servidor e ordena aqui: cada nível tem o seu ranking completo,
+       sem depender de índice composto no Firestore */
     const q=fsFns.query(
       fsFns.collection(db,'games',GAME_ID,'scores'),
-      fsFns.orderBy('score','asc'), fsFns.limit(50)
+      fsFns.where('level','==',asked), fsFns.limit(1000)
     );
     const snap=await fsFns.getDocs(q);
+    if(asked!==level)return;
     const rows=[];
-    snap.forEach(d=>{const v=d.data();if(v.level===level)rows.push(v);});
-    if(!rows.length){list.innerHTML='<li><span>Seja o primeiro do ranking! 🚀</span></li>';return;}
+    snap.forEach(d=>rows.push(d.data()));
+    rows.sort((a,b)=>(a.score-b.score));
+    if(!rows.length){list.innerHTML='<li><span>Seja o primeiro do ranking!</span></li>';return;}
     list.innerHTML=rows.slice(0,10).map((r,i)=>
-      `<li><span>${['🥇','🥈','🥉'][i]||(i+1)+'º'} ${escapeHtml(r.name)}</span><span>${r.errors} erro(s) · ${r.seconds}s</span></li>`
+      `<li><span><span class="pos">${i+1}º</span>${esc(r.name)}</span><span>${Number(r.errors)||0} erro(s) · ${Number(r.seconds)||0}s</span></li>`
     ).join('');
   }catch(e){
     list.innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';
   }
 }
-
-function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 restart();
 initFirebase();
