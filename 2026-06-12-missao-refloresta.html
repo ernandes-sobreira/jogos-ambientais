@@ -28,7 +28,7 @@
   .levels{display:flex;gap:8px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
   .levels button{border:2px solid var(--line);background:#fff;color:var(--ink);padding:8px 16px;border-radius:30px;
     font-size:.92rem;cursor:pointer;transition:.2s;font-weight:600;font-family:inherit}
-  .levels button{border-color:var(--pale);color:var(--deep)}
+  .levels button{border-color:var(--main);color:var(--deep)}
   .levels button:hover{background:var(--tint)}
   .levels button.active{background:var(--main);border-color:var(--main);color:#fff;box-shadow:0 4px 12px var(--glow)}
   .hud{display:flex;gap:8px;justify-content:center;align-items:center;margin:4px 0 12px;font-size:.9rem;flex-wrap:wrap}
@@ -141,7 +141,7 @@
 </div>
 
 <header>
-  <h1><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="10.5" y="14" width="3" height="8" rx="1" fill="#92400e"/><circle cx="12" cy="9" r="7" fill="#16a34a"/><circle cx="8" cy="12" r="4.5" fill="#22c55e"/><circle cx="16" cy="12" r="4.5" fill="#15803d"/></svg> Missão <span class="spark">Refloresta</span></h1>
+  <h1><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="10.5" y="14" width="3" height="8" rx="1" fill="#92400e"/><circle cx="12" cy="9" r="7" fill="#16a34a"/><circle cx="8" cy="12" r="4.5" fill="#22c55e"/><circle cx="16" cy="12" r="4.5" fill="#15803d"/></svg> <span>Missão <span class="spark">Refloresta</span></span></h1>
   <p class="sub">Desmatamento, regeneração e restauração florestal no Brasil. Cada acerto planta uma árvore.</p>
 </header>
 
@@ -845,6 +845,7 @@ const LEVELS = {
 /* pontos por acerto, igual a versao anterior do jogo */
 function pointsFor(streak){ return 10 + Math.max(0,(streak-1)*2); }
 const END_MSG = [[100, "Floresta em pé!", "Você acertou tudo e plantou a mata inteira."], [75, "Mata quase fechada", "Resultado forte. Reveja os poucos tocos que ficaram."], [50, "Capoeira em crescimento", "Boa base. Leia as explicações abaixo e tente de novo."], [0, "Área para restaurar", "Leia as explicações abaixo e jogue outra vez."]];
+const levelVal = k => LEVELS[k].label;
 
 const KEYS = Object.keys(LEVELS);
 let level = KEYS[0], qs = [], qi = 0, order = [], answered = false;
@@ -908,8 +909,9 @@ function answer(oi){
   results.push(ok); hud(); strip(true);
   const fb = $('fb');
   fb.className = 'fb '+(ok?'ok':'no');
-  fb.innerHTML = ok ? `<b>Certo.</b>${q.fb[0]}`
-    : `<b>Não é essa.</b>${q.fb[oi]}<div class="more"><b>Resposta certa: ${q.o[0]}</b>${q.fb[0]}</div>`;
+  const one = typeof q.fb==='string', exp = one ? q.fb : q.fb[0];
+  fb.innerHTML = ok ? `<b>Certo.</b>${exp}`
+    : `<b>Não é essa.</b>${one?'':q.fb[oi]}<div class="more"><b>Resposta certa: ${q.o[0]}</b>${exp}</div>`;
   const nb = $('next');
   nb.textContent = qi+1>=qs.length ? 'Ver resultado' : 'Próxima pergunta';
   nb.classList.add('show'); nb.focus({preventScroll:true});
@@ -937,7 +939,7 @@ function renderEnd(){
       </div>
       <p id="saveStatus" style="margin-top:8px;font-size:.85rem"></p>
       <button class="btn ghost" style="margin-top:10px" onclick="restart()">Jogar de novo</button>
-      ${misses.length?`<div class="review"><h3>Para rever (${misses.length})</h3><ul>${misses.map(q=>`<li>${q.q}<br><span class="a">${q.o[0]}</span><br>${q.fb[0]}</li>`).join('')}</ul></div>`:''}
+      ${misses.length?`<div class="review"><h3>Para rever (${misses.length})</h3><ul>${misses.map(q=>`<li>${q.q}<br><span class="a">${q.o[0]}</span><br>${typeof q.fb==='string'?q.fb:q.fb[0]}</li>`).join('')}</ul></div>`:''}
     </div>`;
 }
 
@@ -965,9 +967,9 @@ async function saveScore(){
   if(!db){st.textContent='Sem conexão com o ranking. Seu resultado não foi enviado.';return;}
   try{
     $('saveBtn').disabled=true;
-    /* o nivel e gravado pelo rotulo, como na versao anterior, para o ranking antigo continuar valendo */
+    /* o nivel e gravado do mesmo jeito da versao anterior, para o ranking antigo continuar valendo */
     await fsFns.addDoc(fsFns.collection(db,'games',GAME_ID,'scores'),
-      {name:name.slice(0,20),score:score,level:LEVELS[level].label,seconds:elapsed,hits:hits,total:qs.length,ts:fsFns.serverTimestamp()});
+      {name:name.slice(0,20),score:score,level:levelVal(level),seconds:elapsed,hits:hits,total:qs.length,ts:fsFns.serverTimestamp()});
     scoreSaved=true; st.textContent='Salvo no Ranking Global!'; loadRanking();
   }catch(e){ $('saveBtn').disabled=false; st.textContent='Erro ao salvar. Verifique a internet e tente de novo.'; }
 }
@@ -976,7 +978,7 @@ async function loadRanking(){
   const list=$('rankList'), asked=level;
   try{
     /* filtra por nivel no servidor e ordena aqui: cada nivel tem o seu ranking completo */
-    const q=fsFns.query(fsFns.collection(db,'games',GAME_ID,'scores'),fsFns.where('level','==',LEVELS[asked].label),fsFns.limit(1000));
+    const q=fsFns.query(fsFns.collection(db,'games',GAME_ID,'scores'),fsFns.where('level','==',levelVal(asked)),fsFns.limit(1000));
     const snap=await fsFns.getDocs(q);
     if(asked!==level) return;
     const rows=[]; snap.forEach(d=>rows.push(d.data()));
