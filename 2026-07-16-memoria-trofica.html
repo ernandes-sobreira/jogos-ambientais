@@ -3,153 +3,208 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🕸️ Memória Trófica — Cadeias Alimentares e Teias Tróficas</title>
+<title>Memória Trófica</title>
 <style>
-:root{
-  --bg1:#0b3d2e; --bg2:#166a48; --accent:#ffcf33; --accent2:#7ed957;
-  --card:#f5fbef; --text:#12261d; --success:#34d399; --error:#ef4444;
-  --muted:#cfe8db; --panel:rgba(255,255,255,.08); --panelbrd:rgba(255,255,255,.16);
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{
-  font-family:system-ui,'Segoe UI',Roboto,sans-serif;
-  background:linear-gradient(160deg,var(--bg1),var(--bg2));
-  color:#eaf6ee; min-height:100vh; padding:16px; line-height:1.5;
-}
-.wrap{max-width:1100px;margin:0 auto}
-header{text-align:center;margin-bottom:14px}
-h1{font-size:clamp(1.6rem,4.5vw,2.7rem);letter-spacing:-.5px;
-   text-shadow:0 2px 12px rgba(0,0,0,.35)}
-.sub{color:var(--muted);font-size:clamp(.85rem,2.3vw,1rem);margin-top:4px}
-.how{background:var(--panel);border:1px solid var(--panelbrd);border-radius:12px;
-     padding:9px 14px;margin:12px auto;max-width:720px;text-align:center;font-size:.92rem}
-.levels{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
-.pill{border:none;cursor:pointer;font-weight:700;font-size:.9rem;color:#eaf6ee;
-  background:var(--panel);border:1px solid var(--panelbrd);padding:9px 16px;border-radius:999px;
-  transition:all .25s;white-space:nowrap}
-.pill:hover{transform:translateY(-2px);background:rgba(255,255,255,.15)}
-.pill.active{background:var(--accent);color:#3a2c00;border-color:var(--accent);
-  box-shadow:0 4px 16px rgba(255,207,51,.4)}
-.hud{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:12px 0}
-.stat{background:var(--panel);border:1px solid var(--panelbrd);border-radius:12px;
-  padding:8px 14px;font-weight:700;font-size:.95rem;min-width:96px;text-align:center}
-.stat b{color:var(--accent);display:block;font-size:1.15rem;margin-top:2px}
-.layout{display:grid;grid-template-columns:1fr;gap:16px;margin-top:8px}
-@media(min-width:900px){.layout{grid-template-columns:1fr 300px}}
-.board{display:grid;gap:9px;grid-template-columns:repeat(4,1fr)}
-@media(min-width:620px){.board{grid-template-columns:repeat(6,1fr)}}
-@media(min-width:900px){.board.big{grid-template-columns:repeat(8,1fr)}}
-.card{position:relative;aspect-ratio:3/4;cursor:pointer;perspective:700px}
-.card .inner{position:absolute;inset:0;transition:transform .45s;
-  transform-style:preserve-3d;border-radius:12px}
-.card.flip .inner,.card.matched .inner{transform:rotateY(180deg)}
-.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;
-  display:flex;align-items:center;justify-content:center;text-align:center;
-  padding:6px;box-shadow:0 4px 12px rgba(0,0,0,.28);overflow:hidden}
-.back{background:linear-gradient(135deg,#1e7a52,#2ea567);
-  font-size:clamp(1.3rem,4vw,2rem);border:2px solid rgba(255,255,255,.2)}
-.front{background:var(--card);color:var(--text);transform:rotateY(180deg);
-  font-size:clamp(.58rem,1.7vw,.8rem);font-weight:600;flex-direction:column;gap:2px;
-  border:2px solid #dfeed4}
-.front .em{font-size:1.4em;line-height:1}
-.card.matched .front{background:#dff7e3;border-color:var(--success);
-  animation:pop .4s ease}
-.card.wrong .front{animation:shake .4s ease;border-color:var(--error);background:#fde2e2}
-@keyframes pop{0%{transform:rotateY(180deg) scale(1)}50%{transform:rotateY(180deg) scale(1.12)}100%{transform:rotateY(180deg) scale(1)}}
-@keyframes shake{0%,100%{transform:rotateY(180deg) translateX(0)}25%{transform:rotateY(180deg) translateX(-6px)}75%{transform:rotateY(180deg) translateX(6px)}}
-.side{display:flex;flex-direction:column;gap:14px}
-.panel{background:var(--panel);border:1px solid var(--panelbrd);border-radius:14px;padding:14px}
-.panel h3{font-size:1rem;margin-bottom:8px;color:var(--accent)}
-#feedback{min-height:70px;font-size:.9rem;color:#eaf6ee}
-#feedback .term{font-weight:800;color:var(--accent2)}
-.rank-lvl{font-size:.78rem;color:var(--muted);margin-bottom:6px}
-#rankList{list-style:none;font-size:.85rem;display:flex;flex-direction:column;gap:4px;max-height:270px;overflow-y:auto}
-#rankList li{display:flex;justify-content:space-between;gap:8px;padding:5px 8px;
-  background:rgba(255,255,255,.06);border-radius:8px}
-#rankList li span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#rankList li b{color:var(--accent)}
-.rank-note{font-size:.78rem;color:var(--muted);margin-top:6px}
-.overlay{position:fixed;inset:0;background:rgba(4,20,12,.82);display:none;
-  align-items:center;justify-content:center;padding:16px;z-index:50}
-.overlay.show{display:flex}
-.modal{background:linear-gradient(160deg,#12503a,#1c7a53);border:2px solid var(--success);
-  border-radius:18px;padding:26px 22px;max-width:min(440px,95vw);text-align:center;
-  box-shadow:0 20px 60px rgba(0,0,0,.5)}
-.modal h2{font-size:1.6rem;margin-bottom:6px}
-.modal .res{font-size:1rem;color:#eaf6ee;margin:10px 0 4px}
-.modal .res b{color:var(--accent)}
-.modal input{width:100%;padding:11px;border-radius:10px;border:2px solid var(--panelbrd);
-  background:rgba(255,255,255,.9);color:#12261d;font-size:1rem;margin:12px 0 10px;font-weight:600}
-.btn{background:var(--accent);color:#3a2c00;border:none;border-radius:10px;padding:12px 18px;
-  font-weight:800;font-size:1rem;cursor:pointer;transition:transform .2s;width:100%}
-.btn:hover{transform:translateY(-2px)}
-.btn.sec{background:var(--panel);color:#eaf6ee;border:1px solid var(--panelbrd);margin-top:8px}
-.savemsg{font-size:.85rem;color:var(--accent2);margin-top:8px;min-height:18px}
-footer{text-align:center;margin-top:26px;padding:16px;color:var(--muted);font-size:.85rem;
-  border-top:1px solid var(--panelbrd)}
-footer .ideal{font-weight:800;color:var(--accent);font-size:1rem}
+  :root{
+    --ink:#0f2f44; --soft:#4b6a7d; --blue:#16a34a; --blue2:#86efac; --deep:#166534;
+    --ok:#16a34a; --err:#dc2626; --paper:#fffdf5; --line:#dbe7ee;
+    --cols:4; --cw:96px; --gap:12px; --fs:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+    min-height:100vh;color:var(--ink);background:#ffffff;
+    display:flex;flex-direction:column;align-items:center;padding:12px 14px 40px;
+  }
+  .top{width:100%;max-width:1040px;display:flex;justify-content:flex-start}
+  .hub{display:inline-flex;align-items:center;gap:6px;color:var(--deep);text-decoration:none;
+    font-weight:600;font-size:.9rem;padding:7px 12px;border-radius:20px;border:1.5px solid var(--line)}
+  .hub:hover{background:#f0fdf4}
+  .hub svg{width:14px;height:14px}
+  header{text-align:center;max-width:720px;margin-top:6px}
+  h1{font-size:clamp(1.45rem,5vw,2.2rem);display:flex;align-items:center;justify-content:center;gap:10px}
+  h1 svg{width:.9em;height:.9em}
+  h1 .spark{color:var(--blue)}
+  .sub{color:var(--soft);font-size:.95rem;margin:4px 0 12px}
+  .levels{display:flex;gap:8px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+  .levels button{
+    border:2px solid var(--line);background:#fff;color:var(--ink);
+    padding:8px 16px;border-radius:30px;font-size:.92rem;cursor:pointer;transition:.2s;font-weight:600;font-family:inherit;
+  }
+  .levels button.active{background:var(--blue);border-color:var(--blue);color:#fff}
+  .hud{display:flex;gap:18px;justify-content:center;margin:4px 0 12px;font-size:.95rem;flex-wrap:wrap;color:var(--soft)}
+  .hud b{color:var(--deep)}
+  .hud{align-items:center}
+  .mini{border:2px solid var(--line);background:#fff;color:var(--deep);padding:5px 12px;border-radius:20px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit}
+  .mini:hover{background:#f0fdf4}
+
+  /* mesa clara, com veios de madeira */
+  .mesa{
+    padding:22px;border-radius:24px;max-width:100%;position:relative;z-index:1;isolation:isolate;
+    background-image:
+      repeating-linear-gradient(91deg,rgba(150,100,40,.07) 0 2px,transparent 2px 23px),
+      repeating-linear-gradient(89deg,rgba(150,100,40,.04) 0 1px,transparent 1px 9px),
+      linear-gradient(180deg,#f9efd9,#f2e1bf);
+    box-shadow:inset 0 0 0 3px #e6cf9f, inset 0 0 0 9px rgba(255,255,255,.35), 0 10px 26px rgba(15,47,68,.10);
+  }
+  .board{position:relative;width:var(--tw,300px);height:var(--th,300px);max-width:100%}
+
+  .card{
+    position:absolute;left:0;top:0;z-index:var(--z,1);
+    width:var(--cw);height:calc(var(--cw)*1.32);border:0;background:none;padding:0;font-family:inherit;
+    perspective:700px;cursor:grab;touch-action:none;-webkit-tap-highlight-color:transparent;user-select:none;
+    transform:translate(var(--x,0px),var(--y,0px)) rotate(var(--r,0deg)) scale(var(--s,1));
+    transition:transform .18s ease;
+  }
+  /* arremesso: a carta sai da mao do jogador, gira e desliza ate parar */
+  .card.deal{animation:throw .6s cubic-bezier(.14,.78,.28,1) backwards;animation-delay:var(--d,0ms)}
+  @keyframes throw{
+    0%{opacity:0;transform:translate(var(--sx,0px),var(--sy,0px)) rotate(calc(var(--r,0deg) - 230deg)) scale(.9)}
+    14%{opacity:1}
+    82%{transform:translate(var(--x,0px),var(--y,0px)) rotate(calc(var(--r,0deg) + 5deg)) scale(1.02)}
+  }
+  @media(hover:hover){.card:hover{--s:1.04}}
+  .card:focus-visible{--s:1.04;outline:none}
+  .card:focus-visible .inner{box-shadow:0 0 0 3px var(--blue)}
+  .card.flip{z-index:9000;transform:translate(var(--x,0px),var(--y,0px)) rotate(calc(var(--r,0deg)*.25)) scale(1.07)}
+  .card.matched{z-index:0;transform:translate(var(--x,0px),var(--y,0px)) rotate(var(--r,0deg)) scale(1)}
+  .card.drag{transition:none;cursor:grabbing;z-index:9500;--s:1.1}
+  .card.drag.flip,.card.drag.matched{transform:translate(var(--x,0px),var(--y,0px)) rotate(calc(var(--r,0deg)*.25)) scale(1.1)}
+  .card.drag .face{box-shadow:0 14px 26px rgba(15,47,68,.30)}
+  .inner{position:relative;width:100%;height:100%;transition:transform .42s;transform-style:preserve-3d;border-radius:10px}
+  .card.flip .inner,.card.matched .inner{transform:rotateY(180deg)}
+  .face{
+    position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:10px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+    box-shadow:0 3px 0 rgba(15,47,68,.10),0 6px 12px rgba(15,47,68,.18);overflow:hidden;
+  }
+  .front{
+    background:
+      radial-gradient(circle at 50% 50%,rgba(255,255,255,.0) 0 34%,rgba(255,255,255,.16) 35% 37%,transparent 38%),
+      repeating-linear-gradient(45deg,rgba(255,255,255,.13) 0 6px,transparent 6px 12px),
+      linear-gradient(160deg,#a3e635,#15803d);
+    border:4px solid #fff;
+  }
+  .front svg{width:50%;height:auto}
+  .back{transform:rotateY(180deg);color:var(--ink);font-size:var(--fs);line-height:1.18;font-weight:600;padding:6%;hyphens:auto;-webkit-hyphens:auto;overflow-wrap:anywhere}
+  .back.term{background:#fff;border:2px solid #bbf7d0;justify-content:space-between;padding:7% 5% 8%}
+  .back.term .art{width:74%;flex:1;display:flex;align-items:center;justify-content:center;min-height:0}
+  .back.term .art svg{width:100%;height:100%;max-height:100%}
+  .back.term .lbl{font-weight:800;font-size:calc(var(--fs)*1.06);color:var(--deep);line-height:1.1;max-width:100%;flex:none;hyphens:auto;-webkit-hyphens:auto;overflow-wrap:anywhere}
+  .back.def{background:var(--paper);border:2px solid #f0d9a4}
+  .back.def::before{content:"";position:absolute;left:0;right:0;top:0;height:7%;background:#f6d98a}
+  .card.matched .back{border-color:var(--ok);box-shadow:0 0 0 3px rgba(22,163,74,.35),0 6px 12px rgba(15,47,68,.14)}
+  .card.wrong .back{border-color:var(--err)}
+
+  /* leitor: mostra por extenso o texto das cartas abertas */
+  .reader{
+    position:sticky;bottom:10px;z-index:6;margin-top:14px;width:min(640px,100%);
+    background:#fff;border:2px solid var(--line);border-radius:16px;padding:12px 16px;
+    font-size:1rem;line-height:1.35;min-height:76px;box-shadow:0 8px 22px rgba(15,47,68,.14);
+  }
+  .reader .row{display:flex;gap:8px;align-items:baseline}
+  .reader .row + .row{margin-top:4px}
+  .reader .tag{flex:none;font-size:.72rem;font-weight:800;letter-spacing:.4px;text-transform:uppercase;
+    padding:2px 7px;border-radius:8px;background:#dcfce7;color:var(--deep)}
+  .reader .tag.d{background:#fdf0c9;color:#8a5a00}
+  .reader .msg{margin-top:6px;font-weight:700}
+  .reader .msg.ok{color:var(--ok)} .reader .msg.no{color:var(--err)}
+  .reader .hint{color:var(--soft);font-weight:400;font-size:.88rem}
+  .reader .exp{color:var(--soft);margin-top:4px}
+
+  .win{display:none;margin-top:16px;width:min(640px,100%);background:#f0fdf4;border:2px solid #86efac;
+    border-radius:16px;padding:18px;text-align:center}
+  .win.show{display:block}
+  .win h2{font-size:1.3rem;margin-bottom:6px;color:#166534}
+  .savebox{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+  .savebox input{padding:10px 12px;border-radius:10px;border:2px solid var(--line);font-size:1rem;width:220px;font-family:inherit}
+  .btn{background:var(--blue);color:#fff;border:0;padding:10px 18px;border-radius:10px;font-weight:700;cursor:pointer;font-size:.95rem;font-family:inherit}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--line)}
+
+  .ranking{margin-top:16px;width:min(640px,100%);background:#fff;border:2px solid var(--line);border-radius:16px;padding:16px}
+  .ranking h3{font-size:1.02rem;margin-bottom:8px}
+  .ranking h3 span{color:var(--blue)}
+  .ranking ol{list-style:none}
+  .ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.93rem}
+  .ranking li:last-child{border-bottom:0}
+  .ranking .pos{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+  .note{font-size:.8rem;color:var(--soft);margin-top:6px}
+  footer{margin-top:22px;font-size:.8rem;color:var(--soft);text-align:center;line-height:1.6}
+  footer .credit{font-weight:700;color:var(--ink)}
+
+  @media(max-width:560px){
+    body{padding:8px 8px 32px}
+    .mesa{padding:12px;border-radius:18px}
+    .sub{display:none}
+    header{margin-top:2px}
+    h1{margin-bottom:8px}
+    .hub{padding:4px 10px;font-size:.82rem}
+    .levels{margin-bottom:6px}
+    .hud{gap:10px;font-size:.86rem;margin:2px 0 8px}
+    .mini{padding:3px 10px;font-size:.8rem}
+    .reader{min-height:64px;font-size:.86rem;padding:8px 12px;margin-top:10px}
+    .reader .hint{font-size:.8rem}
+    .levels button{padding:7px 12px;font-size:.85rem}
+  }
+  @media(prefers-reduced-motion:reduce){.card.deal{animation:none}.inner{transition:none}}
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="top">
+  <a class="hub" href="index.html">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Todos os jogos
+  </a>
+</div>
+
 <header>
-  <h1>🕸️ Memória Trófica 🌿</h1>
-  <div class="sub">Encontre os pares <b>conceito ↔ definição</b> das cadeias alimentares e teias tróficas</div>
+  <h1><svg style="width:.95em;height:.95em" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 5 10l3 9h8l3-9zM12 4v15M5 10h14M8 19l11-9M16 19 5 10" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-linejoin="round"/><g fill="#16a34a"><circle cx="12" cy="4" r="2.4"/><circle cx="5" cy="10" r="2.4"/><circle cx="19" cy="10" r="2.4"/><circle cx="8" cy="19" r="2.4"/><circle cx="16" cy="19" r="2.4"/></g></svg>
+  Memória <span class="spark">Trófica</span></h1>
+  <p class="sub">Cadeias e teias alimentares. Junte cada desenho com a sua definição e arraste as cartas para arrumar a mesa.</p>
 </header>
 
-<div class="levels" id="levels">
-  <button class="pill active" data-lvl="basico">Básico</button>
-  <button class="pill" data-lvl="intermediario">Intermediário</button>
-  <button class="pill" data-lvl="dificil">Difícil</button>
-  <button class="pill" data-lvl="carbonauta">🛰️ Carbonauta</button>
+<div class="levels">
+  <button data-lvl="basico" class="active" onclick="setLevel('basico')">Básico</button>
+  <button data-lvl="intermediario" onclick="setLevel('intermediario')">Intermediário</button>
+  <button data-lvl="dificil" onclick="setLevel('dificil')">Difícil</button>
+  <button data-lvl="carbonauta" onclick="setLevel('carbonauta')">Carbonauta</button>
 </div>
-
-<div class="how">🎯 Clique em duas cartas para virá-las. Se o <b>conceito</b> casar com a sua <b>definição</b>, o par fica aberto. Ache todos com poucos erros e no menor tempo!</div>
 
 <div class="hud">
-  <div class="stat">Tempo <b><span id="time">0</span>s</b></div>
-  <div class="stat">Erros <b id="errors">0</b></div>
-  <div class="stat">Pares <b id="pairs">0/0</b></div>
-  <div class="stat">Pontos <b id="score">0</b></div>
+  <span>Pares: <b id="pairs">0</b>/<span id="total">8</span></span>
+  <span>Erros: <b id="errors">0</b></span>
+  <span>Tempo: <b id="timer">0s</b></span>
+  <button class="mini" type="button" onclick="restart()">Embaralhar</button>
 </div>
 
-<div class="layout">
-  <div>
-    <div class="board" id="board"></div>
+<div class="mesa"><div class="board" id="board"></div></div>
+
+<div class="reader" id="reader" aria-live="polite"></div>
+
+<div class="win" id="win">
+  <h2>Você completou!</h2>
+  <p id="winMsg"></p>
+  <div class="savebox">
+    <input id="playerName" maxlength="20" placeholder="Seu nome (até 20 letras)">
+    <button class="btn" id="saveBtn" onclick="saveScore()">Salvar no ranking</button>
   </div>
-  <div class="side">
-    <div class="panel">
-      <h3>💡 Feedback educativo</h3>
-      <div id="feedback">Vire as cartas para começar. Cada par certo traz uma explicação científica.</div>
-    </div>
-    <div class="panel">
-      <h3>🏆 Ranking Global</h3>
-      <div class="rank-lvl">Nível: <b id="rankLvlName">Básico</b> · menor pontuação vence</div>
-      <ol id="rankList"><li><span>Carregando…</span></li></ol>
-      <div class="rank-note" id="rankNote"></div>
-    </div>
-  </div>
+  <p id="saveStatus" style="margin-top:8px;font-size:.85rem"></p>
+  <button class="btn ghost" style="margin-top:10px" onclick="restart()">Jogar de novo</button>
+</div>
+
+<div class="ranking" id="rankingBox">
+  <h3>Ranking Global, nível <span id="rankLevel">Básico</span></h3>
+  <ol id="rankList"><li><span>Carregando o ranking...</span></li></ol>
+  <p class="note" id="rankNote"></p>
 </div>
 
 <footer>
-  <div class="ideal">— Idealizado por Ernandes Sobreira —</div>
-  <div>Tema: Cadeias alimentares e teias tróficas · Gênero: Jogo da memória · app ambiental do dia (2026-07-16)</div>
+  Cadeias alimentares e teias tróficas · Jogo da Memória<br>
+  <span class="credit">Idealizado por Ernandes Sobreira</span>
 </footer>
-</div>
 
-<div class="overlay" id="overlay">
-  <div class="modal">
-    <h2>🎉 Você completou!</h2>
-    <div class="res">Nível <b id="mLvl">Básico</b></div>
-    <div class="res">Tempo: <b id="mTime">0</b>s · Erros: <b id="mErr">0</b> · Pontos: <b id="mScore">0</b></div>
-    <input id="nameInput" maxlength="20" placeholder="Seu nome (até 20 letras)">
-    <button class="btn" id="saveBtn">Salvar no ranking</button>
-    <button class="btn sec" id="againBtn">Jogar de novo</button>
-    <div class="savemsg" id="saveMsg"></div>
-  </div>
-</div>
-
-<script type="module">
+<script>
 const firebaseConfig = {
   apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
   authDomain: "jogos-ranking.firebaseapp.com",
@@ -161,221 +216,457 @@ const firebaseConfig = {
 };
 const GAME_ID = "2026-07-16-memoria-trofica";
 
-let db=null, fs=null;
-(async()=>{
-  try{
-    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
-    fs = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
-    const app = appMod.initializeApp(firebaseConfig);
-    db = fs.getFirestore(app);
-    loadRanking();
-  }catch(e){ rankOffline(); }
-})();
+/* ---------- desenhos das cartas (SVG, viewBox 64x64) ---------- */
+const svg = inner => `<svg viewBox="0 0 64 64" aria-hidden="true">${inner}</svg>`;
+const cloud = (x,y,s=1,f='#cbd5e1') => `<g transform="translate(${x} ${y}) scale(${s})" fill="${f}"><circle cx="10" cy="14" r="9"/><circle cx="22" cy="11" r="11"/><circle cx="33" cy="15" r="8"/><rect x="2" y="13" width="38" height="11" rx="5.5"/></g>`;
+const drop = (x,y,s=1,f='#0ea5e9') => `<path transform="translate(${x} ${y}) scale(${s})" d="M0-9C4-3 6 0 6 3a6 6 0 0 1-12 0C-6 0-4-3 0-9z" fill="${f}"/>`;
+const sun = (x,y,r=8) => {
+  let rays='';
+  for(let i=0;i<8;i++){const a=i*Math.PI/4,c=Math.cos(a),s=Math.sin(a);
+    rays+=`M${(x+c*(r+3)).toFixed(1)} ${(y+s*(r+3)).toFixed(1)}L${(x+c*(r+7)).toFixed(1)} ${(y+s*(r+7)).toFixed(1)}`;}
+  return `<path d="${rays}" stroke="#f59e0b" stroke-width="2.6" stroke-linecap="round"/><circle cx="${x}" cy="${y}" r="${r}" fill="#fbbf24"/>`;
+};
+const arrow = (x1,y1,x2,y2,c='#0ea5e9',w=3.2) => {
+  const a=Math.atan2(y2-y1,x2-x1),h=w*2.1;
+  const p=(d,k)=>`${(x2-Math.cos(a+d)*h*k).toFixed(1)} ${(y2-Math.sin(a+d)*h*k).toFixed(1)}`;
+  return `<path d="M${x1} ${y1}L${x2} ${y2}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/><path d="M${p(.55,1)}L${x2} ${y2}L${p(-.55,1)}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
+};
+const waves = (y,f='#38bdf8') => `<path d="M2 ${y}q7.5-6 15 0t15 0 15 0 15 0V62H2z" fill="${f}"/>`;
+const tree = (x,y,s=1) => `<g transform="translate(${x} ${y}) scale(${s})"><rect x="-2" y="0" width="4" height="12" fill="#92400e"/><circle cx="0" cy="-6" r="10" fill="#22c55e"/><circle cx="-6" cy="0" r="6" fill="#16a34a"/><circle cx="6" cy="0" r="6" fill="#4ade80"/></g>`;
+const soil = (y,f='#c08457') => `<rect x="2" y="${y}" width="60" height="${62-y}" fill="${f}"/><rect x="2" y="${y-4}" width="60" height="6" rx="2" fill="#4ade80"/>`;
+const fish = (x,y,s=1,f='#f59e0b') => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-9 0c4-6 12-6 16 0-4 6-12 6-16 0z" fill="${f}"/><path d="M-9 0l-6-5v10z" fill="${f}"/><circle cx="3" cy="-1" r="1.3" fill="#0f2f44"/></g>`;
 
-/* ============ CONTEÚDO ============ */
+const txt = (x,y,t,size=14,f='#0f2f44') => `<text x="${x}" y="${y}" font-size="${size}" font-weight="800" text-anchor="middle" fill="${f}" font-family="Segoe UI,system-ui,sans-serif">${t}</text>`;
+const dots = (pts,r,f) => `<g fill="${f}">`+pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="${p[2]||r}"/>`).join('')+`</g>`;
+const plant = (x,y,s=1) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 0v-22" stroke="#15803d" stroke-width="3" stroke-linecap="round"/><path d="M0-10c-12 0-14-8-13-14 8 0 13 4 13 14zM0-16c12 0 14-8 13-14-8 0-13 4-13 14z" fill="#22c55e"/></g>`;
+const leafd = (x,y,s=1,f='#a16207') => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 10C-9 2-6-8 0-12 6-8 9 2 0 10z" fill="${f}"/><path d="M0 9V-7" stroke="#713f12" stroke-width="1.3" stroke-linecap="round"/></g>`;
+const worm = (x,y,s=1) => `<path transform="translate(${x} ${y}) scale(${s})" d="M-12 2c4-8 8 8 12 0s8 8 12 0" fill="none" stroke="#f472b6" stroke-width="5" stroke-linecap="round"/>`;
+const node = (x,y,r,f) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${f}" stroke="#fff" stroke-width="1.5"/>`;
+const onca = `<circle cx="16" cy="16" r="8" fill="#d97706"/><circle cx="48" cy="16" r="8" fill="#d97706"/><circle cx="16" cy="16" r="4" fill="#fcd34d"/><circle cx="48" cy="16" r="4" fill="#fcd34d"/><ellipse cx="32" cy="34" rx="23" ry="21" fill="#f59e0b"/><ellipse cx="32" cy="44" rx="12" ry="9" fill="#fef3c7"/><path d="M27.5 38h9l-4.5 5z" fill="#1f2937"/><path d="M32 43v3.500M32 46.500q-3 3-6.5 1M32 46.500q3 3 6.5 1" fill="none" stroke="#1f2937" stroke-width="1.6" stroke-linecap="round"/><ellipse cx="22.5" cy="30" rx="3.4" ry="3" fill="#fef9c3"/><ellipse cx="41.5" cy="30" rx="3.4" ry="3" fill="#fef9c3"/><circle cx="22.5" cy="30" r="1.6" fill="#1f2937"/><circle cx="41.5" cy="30" r="1.6" fill="#1f2937"/><g fill="none" stroke="#1f2937" stroke-width="1.7"><circle cx="13" cy="33" r="2.4"/><circle cx="51" cy="33" r="2.4"/><circle cx="24" cy="19" r="2.2"/><circle cx="40" cy="19" r="2.2"/><circle cx="15" cy="44" r="2.2"/><circle cx="49" cy="44" r="2.2"/></g>`;
+const ten = (extra='') => `<rect x="6" y="14" width="18" height="42" rx="3" fill="#22c55e"/><rect x="40" y="48" width="18" height="8" rx="2" fill="#f59e0b"/>`+arrow(26,34,38,46,'#475569',2.6)+txt(44,30,'10%',11,'#b45309')+extra;
+const pyramid = `<path d="M32 6l7 12H25z" fill="#ef4444"/><path d="M24 20h16l6 11H18z" fill="#f97316"/><path d="M17 33h30l6 11H11z" fill="#facc15"/><path d="M10 46h44l6 12H4z" fill="#22c55e"/>`;
+const net = (extra='') => `<path d="M32 10 12 26l8 26h24l8-26zM32 10v42M12 26h40M20 52l32-26M44 52 12 26" fill="none" stroke="#94a3b8" stroke-width="1.8"/>`+node(32,10,5.5,'#ef4444')+node(12,26,5,'#f97316')+node(52,26,5,'#f97316')+node(20,52,5,'#22c55e')+node(44,52,5,'#22c55e')+extra;
+const detr = leafd(12,26,1.1)+arrow(22,30,30,36,'#475569',2.4)+worm(40,42,.85)+`<rect x="2" y="52" width="60" height="8" rx="3" fill="#a16207"/>`;
+const bioma = fish(12,46,.7,'#94a3b8')+dots([[12,46,1.2]],0,'#dc2626')+fish(30,34,1.05,'#64748b')+dots([[28,33,1.3],[33,35,1.3],[31,31,1.3]],0,'#dc2626')+fish(46,16,1.5,'#475569')+dots([[42,14,1.5],[47,18,1.5],[50,13,1.5],[45,10,1.5],[52,17,1.5],[40,18,1.5]],0,'#dc2626');
+const box = (x,y,w,h,f,t) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="${f}"/>`+txt(x+w/2,y+h/2+2.8,t,7.5,'#fff');
+
+const ART = {
+  "Sol": svg(sun(32,32,14)),
+  "Produtor": svg(sun(52,10,5)+plant(28,54,1.5)+`<rect x="8" y="54" width="48" height="6" rx="3" fill="#a16207"/>`),
+  "Herbívoro": svg(`<path d="M6 46C10 22 34 12 58 14 56 38 34 52 10 50z" fill="#86efac"/><path d="M8 48C22 34 38 24 56 16" stroke="#16a34a" stroke-width="1.8" fill="none"/>`+dots([[22,36,6],[31,31,6],[40,27,6]],0,'#65a30d')+`<circle cx="48" cy="23" r="6.5" fill="#4d7c0f"/><circle cx="50" cy="21.5" r="1.4" fill="#fff"/><path d="M52 17l3-4M48 16l1-5" stroke="#365314" stroke-width="1.5" stroke-linecap="round"/>`),
+  "Carnívoro": svg(fish(14,40,.85,'#94a3b8')+`<path d="M58 30l-12-9v18z" fill="#475569"/><ellipse cx="38" cy="30" rx="18" ry="12" fill="#64748b"/><path d="M20 30l12-5v10z" fill="#fff"/><path d="M20 30l12-5-3 5 3 5z" fill="#1f2937"/><path d="M23 28.800l2 1.2-2 1.200M26.5 27.500l2 2.5-2 2.5" fill="#fff"/><circle cx="38" cy="25" r="2.6" fill="#fff"/><circle cx="38" cy="25" r="1.3" fill="#111827"/>`+waves(52,'#bae6fd')),
+  "Decompositor": svg(`<rect x="6" y="44" width="52" height="12" rx="6" fill="#92400e"/><ellipse cx="58" cy="50" rx="3" ry="6" fill="#d6a97a"/><rect x="18" y="30" width="6" height="16" rx="2" fill="#fef3c7"/><path d="M8 32a13 11 0 0 1 26 0z" fill="#ef4444"/><circle cx="16" cy="27" r="2" fill="#fff"/><circle cx="24" cy="25" r="1.6" fill="#fff"/><rect x="41" y="36" width="4.5" height="10" rx="2" fill="#fef3c7"/><path d="M34 38a9 8 0 0 1 18 0z" fill="#f97316"/>`),
+  "Cadeia alimentar": svg(plant(10,44,.75)+arrow(18,34,26,34,'#475569',2.4)+fish(34,34,.7,'#f59e0b')+arrow(42,34,48,34,'#475569',2.4)+`<g transform="translate(56 34) scale(.38)">`+`<circle r="18" fill="#f59e0b"/><circle cx="-7" cy="-4" r="2.5" fill="#1f2937"/><circle cx="7" cy="-4" r="2.5" fill="#1f2937"/><path d="M-4 4h8l-4 5z" fill="#1f2937"/>`+`</g>`),
+  "Predador": svg(onca),
+  "Presa": svg(`<ellipse cx="12" cy="24" rx="9" ry="5" fill="#c2410c" transform="rotate(-25 12 24)"/><ellipse cx="52" cy="24" rx="9" ry="5" fill="#c2410c" transform="rotate(25 52 24)"/><ellipse cx="12" cy="24" rx="5" ry="2.5" fill="#fed7aa" transform="rotate(-25 12 24)"/><ellipse cx="52" cy="24" rx="5" ry="2.5" fill="#fed7aa" transform="rotate(25 52 24)"/><path d="M18 16h28l-4 32a10 10 0 0 1-20 0z" fill="#c2410c"/><ellipse cx="32" cy="50" rx="7.5" ry="6" fill="#1f2937"/><circle cx="24.5" cy="28" r="3" fill="#1f2937"/><circle cx="39.5" cy="28" r="3" fill="#1f2937"/><circle cx="25.3" cy="27" r="1" fill="#fff"/><circle cx="40.3" cy="27" r="1" fill="#fff"/>`),
+
+  "Produtor (autótrofo)": 0, "Autótrofo": 0,
+  "Consumidor primário": svg(`<rect x="2" y="54" width="60" height="5" rx="2.5" fill="#86efac"/><rect x="15" y="44" width="6" height="12" rx="2" fill="#78350f"/><rect x="25" y="44" width="6" height="12" rx="2" fill="#78350f"/><rect x="36" y="44" width="6" height="12" rx="2" fill="#78350f"/><rect x="44" y="42" width="6" height="14" rx="2" fill="#78350f"/><rect x="8" y="24" width="42" height="24" rx="12" fill="#a16207"/><rect x="38" y="15" width="21" height="18" rx="7" fill="#92400e"/><ellipse cx="43" cy="15" rx="3.4" ry="3" fill="#78350f"/><circle cx="50" cy="21.5" r="1.8" fill="#1f2937"/><path d="M57 31l3 6M59 30l4 4" stroke="#16a34a" stroke-width="2" stroke-linecap="round"/>`),
+  "Consumidor secundário": svg(`<ellipse cx="29" cy="38" rx="23" ry="17" fill="none" stroke="#65a30d" stroke-width="8"/><ellipse cx="29" cy="38" rx="11" ry="7" fill="none" stroke="#4d7c0f" stroke-width="7.5"/><path d="M46 28c2-8 6-12 10-14" fill="none" stroke="#65a30d" stroke-width="8" stroke-linecap="round"/><ellipse cx="56" cy="13" rx="6.5" ry="5" fill="#65a30d"/><circle cx="57.5" cy="11.5" r="1.4" fill="#1f2937"/><path d="M61 15l3 1M61 15l2 3" stroke="#dc2626" stroke-width="1.2" stroke-linecap="round"/>`+dots([[10,30],[22,22.5],[36,22],[8,44],[18,53],[34,55],[46,50]],2,'#365314')),
+  "Consumidor terciário": svg(`<path d="M10 58c0-22 8-40 26-44 12-2 18 6 18 14l-12 2c2 10-4 22-10 28z" fill="#78350f"/><path d="M36 14c12-2 18 6 18 14l-12 2c-4-2-8-8-6-16z" fill="#fef3c7"/><path d="M54 26l6 4-7 5-4-5z" fill="#f59e0b"/><path d="M53 35l-2 5-3-7z" fill="#d97706"/><circle cx="44" cy="22" r="3" fill="#facc15"/><circle cx="44" cy="22" r="1.5" fill="#111827"/><path d="M38 17l10 2" stroke="#451a03" stroke-width="2" stroke-linecap="round"/>`),
+  "Teia alimentar": svg(net()),
+  "Nível trófico": svg(`<rect x="6" y="46" width="52" height="11" rx="2" fill="#22c55e"/><rect x="14" y="33" width="36" height="11" rx="2" fill="#facc15"/><rect x="22" y="20" width="20" height="11" rx="2" fill="#f97316"/><rect x="27" y="7" width="10" height="11" rx="2" fill="#ef4444"/>`+txt(32,54.5,'1',7.5,'#fff')+txt(32,41.5,'2',7.5,'#713f12')+txt(32,28.5,'3',7.5,'#fff')+txt(32,15.5,'4',7.5,'#fff')),
+  "Regra dos 10%": svg(ten()),
+  "Predador de topo": svg(`<g transform="translate(0 6) scale(1 .92)">`+onca+`</g><path d="M20 12l4-10 8 7 8-7 4 10z" fill="#facc15" stroke="#b45309" stroke-width="1.4" stroke-linejoin="round"/>`),
+  "Pirâmide de energia": svg(pyramid),
+
+  "Heterótrofo": svg(`<path d="M30 32 52 16A24 24 0 1 0 52 48z" fill="#f59e0b"/><circle cx="30" cy="20" r="3" fill="#1f2937"/>`+leafd(54,32,.7,'#22c55e')),
+  "Produção primária bruta": svg(sun(14,14,7)+arrow(22,22,30,30,'#f59e0b',2.6)+plant(36,56,1.15)+`<rect x="50" y="10" width="10" height="46" rx="3" fill="#22c55e"/>`),
+  "Produção primária líquida": svg(plant(22,56,1.15)+`<rect x="44" y="10" width="12" height="46" rx="3" fill="#e2e8f0"/><rect x="44" y="28" width="12" height="28" rx="3" fill="#22c55e"/><path d="M44 28h12" stroke="#dc2626" stroke-width="2" stroke-dasharray="3 2"/>`+txt(50,23,'R',10,'#dc2626')),
+  "Eficiência ecológica": svg(ten(`<path d="M28 20c-3-4 3-5 0-9M34 20c-3-4 3-5 0-9" stroke="#dc2626" stroke-width="2.4" fill="none" stroke-linecap="round"/>`)),
+  "Espécie-chave": svg(`<path d="M6 58V36a26 26 0 0 1 52 0v22H46V36a14 14 0 0 0-28 0v22z" fill="#cbd5e1" stroke="#64748b" stroke-width="1.8"/><path d="M8 44h10M46 44h10M10 30l9 4M54 30l-9 4M18 18l7 7M46 18l-7 7" stroke="#64748b" stroke-width="1.6"/><path d="M26 9h12l-3 14h-6z" fill="#f59e0b" stroke="#b45309" stroke-width="1.8" stroke-linejoin="round"/>`),
+  "Cascata trófica": svg(box(6,4,40,14,'#ef4444','predador')+box(6,25,40,14,'#f59e0b','herbívoro')+box(6,46,40,14,'#22c55e','planta')+arrow(54,8,54,16,'#16a34a',2.8)+arrow(54,37,54,28,'#dc2626',0)+arrow(54,28,54,37,'#dc2626',2.8)+arrow(54,58,54,49,'#16a34a',2.8)),
+  "Detritívoro": svg(`<rect x="2" y="34" width="60" height="26" rx="4" fill="#a16207"/>`+leafd(16,24,1.1)+leafd(46,28,.8,'#ca8a04')+worm(32,46,1.3)),
+  "Cadeia de detritos": svg(detr),
+  "Bioacumulação": svg(`<path d="M52 32l10-9v18z" fill="#475569"/><ellipse cx="30" cy="32" rx="24" ry="15" fill="#64748b"/><circle cx="14" cy="27" r="2.8" fill="#fff"/><circle cx="14" cy="27" r="1.4" fill="#111827"/>`+dots([[24,28],[32,24],[38,32],[28,38],[44,28],[34,40],[22,34],[42,38],[30,31]],1.8,'#dc2626')),
+  "Biomagnificação": svg(bioma),
+  "Onívoro": svg(`<circle cx="32" cy="32" r="26" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2.4"/><path d="M32 6v52" stroke="#94a3b8" stroke-width="2"/>`+leafd(19,32,1.2,'#22c55e')+fish(46,32,.75,'#f59e0b')),
+  "Comprimento da cadeia": svg(`<g fill="none" stroke="#475569" stroke-width="4"><rect x="4" y="16" width="18" height="12" rx="6"/><rect x="17" y="16" width="18" height="12" rx="6"/><rect x="30" y="16" width="18" height="12" rx="6"/><rect x="43" y="16" width="18" height="12" rx="6"/></g><rect x="4" y="40" width="57" height="12" rx="2" fill="#fde68a" stroke="#b45309" stroke-width="1.6"/><path d="M12 40v5M20 40v7M28 40v5M36 40v7M44 40v5M52 40v7" stroke="#b45309" stroke-width="1.4"/>`),
+  "Respiração": svg(`<circle cx="26" cy="38" r="16" fill="#86efac" stroke="#16a34a" stroke-width="2.4"/><circle cx="26" cy="38" r="5" fill="#16a34a"/><path d="M44 24c-3-5 3-6 0-11M52 30c-3-5 3-6 0-11M36 18c-3-5 3-6 0-11" stroke="#dc2626" stroke-width="2.6" fill="none" stroke-linecap="round"/>`+txt(52,52,'CO₂',9,'#475569')),
+  "Nicho trófico": svg(`<path d="M10 14h16a6 6 0 1 1 12 0h16v16a6 6 0 1 0 0 12v12H38a6 6 0 1 0-12 0H10V42a6 6 0 1 1 0-12z" fill="#a78bfa" stroke="#6d28d9" stroke-width="2"/>`+leafd(32,34,.9,'#22c55e')),
+
+  "Posição trófica fracionária": svg(`<path d="M6 40h52" stroke="#475569" stroke-width="3" stroke-linecap="round"/><path d="M10 34v12M32 34v12M54 34v12" stroke="#475569" stroke-width="2.6"/>`+txt(10,58,'2',10,'#475569')+txt(32,58,'3',10,'#475569')+txt(54,58,'4',10,'#475569')+`<path d="M21 34l-5-12h10z" fill="#dc2626"/>`+txt(21,16,'2,5',11,'#dc2626')),
+  "δ¹⁵N": svg(`<rect x="8" y="10" width="48" height="44" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="2.6"/>`+txt(32,40,'δ¹⁵N',16,'#1d4ed8')),
+  "δ¹³C": svg(`<rect x="8" y="10" width="48" height="44" rx="8" fill="#f1f5f9" stroke="#475569" stroke-width="2.6"/>`+txt(32,40,'δ¹³C',16,'#334155')),
+  "Eficiência de transferência": svg(txt(32,24,'P₂',15,'#166534')+`<path d="M14 31h36" stroke="#166534" stroke-width="3" stroke-linecap="round"/>`+txt(32,50,'P₁',15,'#166534')),
+  "Conectância": svg(net(txt(32,36,'L/S²',9,'#0f2f44'))),
+  "Grau de ligação": svg(`<path d="M32 30 12 12M32 30l20-18M32 30 10 46M32 30l22 16M32 30v26" stroke="#94a3b8" stroke-width="2.2"/>`+node(32,30,8,'#16a34a')+node(12,12,4.5,'#f97316')+node(52,12,4.5,'#f97316')+node(10,46,4.5,'#f97316')+node(54,46,4.5,'#f97316')+node(32,56,4.5,'#f97316')+txt(32,33,'L/S',6.5,'#fff')),
+  "Via detritívora": 0,
+  "Acoplamento trófico": svg(`<path d="M12 54V40l20-16M52 54V40L32 24v-8" fill="none" stroke="#94a3b8" stroke-width="2.6"/>`+node(12,54,5,'#22c55e')+node(12,40,5,'#f59e0b')+node(52,54,5,'#a16207')+node(52,40,5,'#f59e0b')+node(32,14,8,'#ef4444')),
+  "Alça microbiana": svg(`<path d="M46 16a20 20 0 1 0 6 14" fill="none" stroke="#0ea5e9" stroke-width="4" stroke-linecap="round"/><path d="M38 14l9 2-2 9" fill="none" stroke="#0ea5e9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`+dots([[26,28,3],[36,32,3],[30,38,3],[22,36,2.2],[38,40,2.2]],0,'#7c3aed')+txt(32,58,'COD',8,'#475569')),
+  "Controle top-down": svg(box(10,6,44,16,'#ef4444','predador')+arrow(32,26,32,44,'#dc2626',4)+box(14,46,36,14,'#22c55e','base')),
+  "Controle bottom-up": svg(box(14,6,36,14,'#ef4444','topo')+arrow(32,42,32,24,'#16a34a',4)+box(10,44,44,16,'#22c55e','recursos')),
+  "Espécie-chave (Paine)": svg(`<path d="M32 4l6.5 18.5 19.5 1-15.5 12.5 5.5 19-16-11-16 11 5.5-19L6 23.500l19.5-1z" fill="#f97316" stroke="#c2410c" stroke-width="2" stroke-linejoin="round"/>`+dots([[32,18],[32,28],[24,30],[40,30],[27,40],[37,40],[32,36]],1.6,'#fed7aa')),
+  "Magnitude da cascata": svg(`<path d="M8 10v46h50" fill="none" stroke="#475569" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="16" y="20" width="10" height="36" fill="#0ea5e9"/><rect x="38" y="40" width="10" height="16" fill="#a16207"/>`+waves(4,'transparent')+drop(21,12,.6,'#0ea5e9')+leafd(43,32,.5,'#22c55e')),
+  "Estequiometria ecológica": svg(txt(32,22,'C : N : P',11,'#166534')+`<path d="M32 28v24M12 34h40" stroke="#475569" stroke-width="3" stroke-linecap="round"/><path d="M6 44a7 6 0 0 0 14 0zM44 44a7 6 0 0 0 14 0z" fill="#94a3b8"/><path d="M13 34v10M51 34v10" stroke="#475569" stroke-width="1.6"/><rect x="22" y="54" width="20" height="5" rx="2" fill="#475569"/>`),
+  "Teoria metabólica": svg(`<path d="M8 6v48h50" fill="none" stroke="#475569" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 50c10-4 22-16 42-36" fill="none" stroke="#16a34a" stroke-width="3.6" stroke-linecap="round"/>`+txt(40,48,'M¾',12,'#166534')),
+  "Categorias estruturais": svg(`<path d="M32 14v36" stroke="#94a3b8" stroke-width="2.6"/>`+node(32,12,8,'#ef4444')+node(32,32,8,'#f59e0b')+node(32,52,8,'#22c55e')+txt(52,15,'topo',6.5,'#475569')+txt(54,35,'interm.',6.5,'#475569')+txt(52,55,'basal',6.5,'#475569')),
+  "Cascata clássica": svg(`<circle cx="12" cy="13" r="2.8" fill="#5b2a0a"/><circle cx="30" cy="13" r="2.8" fill="#5b2a0a"/><ellipse cx="21" cy="19" rx="12" ry="10" fill="#78350f"/><ellipse cx="21" cy="23" rx="6.5" ry="4.5" fill="#fde68a"/><ellipse cx="21" cy="20.5" rx="2.6" ry="1.8" fill="#1f2937"/><circle cx="16" cy="16.5" r="1.5" fill="#1f2937"/><circle cx="26" cy="16.5" r="1.5" fill="#1f2937"/>`+arrow(34,24,42,30,'#475569',2.4)+`<g stroke="#7c3aed" stroke-width="2" stroke-linecap="round"><path d="M50 26v20M40 36h20M43 29l14 14M57 29 43 43"/></g><circle cx="50" cy="36" r="6" fill="#7c3aed"/>`+arrow(42,44,34,50,'#475569',2.4)+`<path d="M14 62c-4-8 4-10 0-18s4-8 2-12M24 62c-4-8 4-10 0-16" fill="none" stroke="#15803d" stroke-width="4" stroke-linecap="round"/>`)
+};
+ART["Produtor (autótrofo)"]=ART["Autótrofo"]=ART["Produtor"];
+ART["Via detritívora"]=ART["Cadeia de detritos"];
+const BACK_ART = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 5 10l3 9h8l3-9zM12 4v15M5 10h14M8 19l11-9M16 19 5 10" fill="none" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/><g fill="#fff"><circle cx="12" cy="4" r="2.4"/><circle cx="5" cy="10" r="2.4"/><circle cx="19" cy="10" r="2.4"/><circle cx="8" cy="19" r="2.4"/><circle cx="16" cy="19" r="2.4"/></g></svg>`;
+
 const DATA = {
   basico:[
-    {a:"☀️ Sol",b:"Fonte de energia para quase toda a vida",fb:"O Sol é a origem da energia que entra nas cadeias alimentares pela fotossíntese."},
-    {a:"🌿 Produtor",b:"Planta que faz o próprio alimento",fb:"Produtores, como as plantas, usam a luz do Sol para produzir açúcar (fotossíntese)."},
-    {a:"🐛 Herbívoro",b:"Animal que só come plantas",fb:"Herbívoros, como a capivara, comem produtores e são consumidores primários."},
-    {a:"🦁 Carnívoro",b:"Animal que come outros animais",fb:"Carnívoros caçam outros animais para obter energia e nutrientes."},
-    {a:"🍄 Decompositor",b:"Ser que recicla restos de seres mortos",fb:"Fungos e bactérias decompõem restos e devolvem nutrientes ao solo."},
-    {a:"🔗 Cadeia alimentar",b:"Sequência de quem come quem",fb:"A cadeia mostra o caminho da energia: planta → herbívoro → carnívoro."},
-    {a:"🐆 Predador",b:"Animal que caça a presa",fb:"O predador, como a onça-pintada, captura e come outros animais."},
-    {a:"🦌 Presa",b:"Animal que serve de alimento",fb:"A presa, como o veado, é caçada e alimenta os predadores."}
+    {t:"Sol", d:"Fonte de energia para quase toda a vida", e:"O Sol é a origem da energia que entra nas cadeias alimentares pela fotossíntese."},
+    {t:"Produtor", d:"Planta que faz o próprio alimento", e:"Produtores, como as plantas, usam a luz do Sol para produzir açúcar (fotossíntese)."},
+    {t:"Herbívoro", d:"Animal que só come plantas", e:"Herbívoros, como a capivara, comem produtores e são consumidores primários."},
+    {t:"Carnívoro", d:"Animal que come outros animais", e:"Carnívoros caçam outros animais para obter energia e nutrientes."},
+    {t:"Decompositor", d:"Ser que recicla restos de seres mortos", e:"Fungos e bactérias decompõem restos e devolvem nutrientes ao solo."},
+    {t:"Cadeia alimentar", d:"Sequência de quem come quem", e:"A cadeia mostra o caminho da energia: da planta ao herbívoro e dele ao carnívoro."},
+    {t:"Predador", d:"Animal que caça a presa", e:"O predador, como a onça-pintada, captura e come outros animais."},
+    {t:"Presa", d:"Animal que serve de alimento", e:"A presa, como o veado, é caçada e alimenta os predadores."}
   ],
   intermediario:[
-    {a:"🌱 Produtor (autótrofo)",b:"Organismo que produz matéria orgânica",fb:"Autótrofos convertem energia luminosa em biomassa; são a base da cadeia."},
-    {a:"🐄 Consumidor primário",b:"Herbívoro que come produtores",fb:"Ocupa o 2º nível trófico, alimentando-se diretamente das plantas."},
-    {a:"🐍 Consumidor secundário",b:"Carnívoro que come herbívoros",fb:"Está no 3º nível trófico, predando os consumidores primários."},
-    {a:"🦅 Consumidor terciário",b:"Predador que come outros carnívoros",fb:"Ocupa o 4º nível trófico, próximo ao topo da cadeia."},
-    {a:"🍂 Decompositor",b:"Recicla matéria de organismos mortos",fb:"Fungos e bactérias liberam nutrientes de volta ao ambiente."},
-    {a:"🕸️ Teia alimentar",b:"Conjunto de cadeias interligadas",fb:"Na natureza, várias cadeias se cruzam formando uma teia trófica complexa."},
-    {a:"📊 Nível trófico",b:"Posição do ser na cadeia",fb:"Indica a que distância da fonte de energia o organismo se alimenta."},
-    {a:"⚡ Regra dos 10%",b:"Fração de energia passada por nível",fb:"Cerca de 10% da energia passa de um nível ao seguinte; o resto vira calor."},
-    {a:"🐆 Predador de topo",b:"Consumidor sem predadores naturais",fb:"A onça-pintada é predador de topo no Pantanal e regula as presas."},
-    {a:"🔺 Pirâmide de energia",b:"Gráfico da energia por nível trófico",fb:"A energia diminui a cada nível, formando uma pirâmide de base larga."}
+    {t:"Produtor (autótrofo)", d:"Organismo que produz matéria orgânica", e:"Autótrofos convertem energia luminosa em biomassa; são a base da cadeia."},
+    {t:"Consumidor primário", d:"Herbívoro que come produtores", e:"Ocupa o 2º nível trófico, alimentando-se diretamente das plantas."},
+    {t:"Consumidor secundário", d:"Carnívoro que come herbívoros", e:"Está no 3º nível trófico, predando os consumidores primários."},
+    {t:"Consumidor terciário", d:"Predador que come outros carnívoros", e:"Ocupa o 4º nível trófico, próximo ao topo da cadeia."},
+    {t:"Decompositor", d:"Recicla matéria de organismos mortos", e:"Fungos e bactérias liberam nutrientes de volta ao ambiente."},
+    {t:"Teia alimentar", d:"Conjunto de cadeias interligadas", e:"Na natureza, várias cadeias se cruzam formando uma teia trófica complexa."},
+    {t:"Nível trófico", d:"Posição do ser na cadeia", e:"Indica a que distância da fonte de energia o organismo se alimenta."},
+    {t:"Regra dos 10%", d:"Fração de energia passada por nível", e:"Cerca de 10% da energia passa de um nível ao seguinte; o resto vira calor."},
+    {t:"Predador de topo", d:"Consumidor sem predadores naturais", e:"A onça-pintada é predador de topo no Pantanal e regula as presas."},
+    {t:"Pirâmide de energia", d:"Gráfico da energia por nível trófico", e:"A energia diminui a cada nível, formando uma pirâmide de base larga."}
   ],
   dificil:[
-    {a:"🌱 Autótrofo",b:"Fixa carbono inorgânico em matéria orgânica",fb:"Autótrofos fotossintetizantes ou quimiossintetizantes sustentam a produção primária."},
-    {a:"🍄 Heterótrofo",b:"Obtém carbono de matéria orgânica pronta",fb:"Heterótrofos dependem de consumir outros organismos para obter energia."},
-    {a:"☀️ Produção primária bruta",b:"Energia total fixada pelos produtores",fb:"A PPB é toda a energia captada; parte é gasta na respiração do produtor."},
-    {a:"🌿 Produção primária líquida",b:"PPB menos a respiração dos produtores",fb:"A PPL é a biomassa realmente disponível para os herbívoros."},
-    {a:"⚡ Eficiência ecológica",b:"Cerca de 10% de energia entre níveis",fb:"Lindeman (1942): a maior parte da energia se perde como calor (2ª lei da termodinâmica)."},
-    {a:"🔺 Pirâmide de energia",b:"Sempre estreita rumo ao topo",fb:"Diferente da de biomassa, a pirâmide de energia nunca se inverte."},
-    {a:"🐆 Espécie-chave",b:"Grande efeito apesar de pouca biomassa",fb:"Predadores de topo, como a onça, atuam como espécies-chave regulando presas."},
-    {a:"🌊 Cascata trófica",b:"Efeito de um nível propagado aos demais",fb:"A perda de predadores libera herbívoros e altera toda a teia trófica."},
-    {a:"🦠 Detritívoro",b:"Consome detritos e matéria em decomposição",fb:"Minhocas e besouros fragmentam a matéria antes dos decompositores."},
-    {a:"♻️ Cadeia de detritos",b:"Fluxo baseado em matéria morta",fb:"Muitas teias dependem mais do detrito do que do pastoreio direto."},
-    {a:"🧬 Bioacumulação",b:"Acúmulo de substâncias no organismo",fb:"Poluentes se concentram nos tecidos ao longo da vida do indivíduo."},
-    {a:"🐟 Biomagnificação",b:"Concentração cresce a cada nível trófico",fb:"Mercúrio e DDT ficam mais concentrados nos predadores de topo."},
-    {a:"🔄 Onívoro",b:"Alimenta-se de vários níveis tróficos",fb:"Onívoros ocupam posições tróficas mistas, tornando a teia mais complexa."},
-    {a:"📏 Comprimento da cadeia",b:"Número de elos até o topo",fb:"Limitado a ~4-5 níveis pela perda de energia em cada transferência."},
-    {a:"🌡️ Respiração",b:"Perda de energia como calor metabólico",fb:"A respiração celular dissipa a maior parte da energia assimilada."},
-    {a:"🏝️ Nicho trófico",b:"Papel alimentar do organismo",fb:"Define como a espécie obtém energia e interage dentro da teia."}
+    {t:"Autótrofo", d:"Fixa carbono inorgânico em matéria orgânica", e:"Autótrofos fotossintetizantes ou quimiossintetizantes sustentam a produção primária."},
+    {t:"Heterótrofo", d:"Obtém carbono de matéria orgânica pronta", e:"Heterótrofos dependem de consumir outros organismos para obter energia."},
+    {t:"Produção primária bruta", d:"Energia total fixada pelos produtores", e:"A PPB é toda a energia captada; parte é gasta na respiração do produtor."},
+    {t:"Produção primária líquida", d:"PPB menos a respiração dos produtores", e:"A PPL é a biomassa realmente disponível para os herbívoros."},
+    {t:"Eficiência ecológica", d:"Cerca de 10% de energia entre níveis", e:"Lindeman (1942): a maior parte da energia se perde como calor, conforme a 2ª lei da termodinâmica."},
+    {t:"Pirâmide de energia", d:"Sempre estreita rumo ao topo", e:"Diferente da de biomassa, a pirâmide de energia nunca se inverte."},
+    {t:"Espécie-chave", d:"Grande efeito apesar de pouca biomassa", e:"Predadores de topo, como a onça, atuam como espécies-chave regulando presas."},
+    {t:"Cascata trófica", d:"Efeito de um nível propagado aos demais", e:"A perda de predadores libera herbívoros e altera toda a teia trófica."},
+    {t:"Detritívoro", d:"Consome detritos e matéria em decomposição", e:"Minhocas e besouros fragmentam a matéria antes dos decompositores."},
+    {t:"Cadeia de detritos", d:"Fluxo baseado em matéria morta", e:"Muitas teias dependem mais do detrito do que do pastoreio direto."},
+    {t:"Bioacumulação", d:"Acúmulo de substâncias no organismo", e:"Poluentes se concentram nos tecidos ao longo da vida do indivíduo."},
+    {t:"Biomagnificação", d:"Concentração cresce a cada nível trófico", e:"Mercúrio e DDT ficam mais concentrados nos predadores de topo."},
+    {t:"Onívoro", d:"Alimenta-se de vários níveis tróficos", e:"Onívoros ocupam posições tróficas mistas, tornando a teia mais complexa."},
+    {t:"Comprimento da cadeia", d:"Número de elos até o topo", e:"Costuma ficar em quatro ou cinco níveis, por causa da perda de energia em cada transferência."},
+    {t:"Respiração", d:"Perda de energia como calor metabólico", e:"A respiração celular dissipa a maior parte da energia assimilada."},
+    {t:"Nicho trófico", d:"Papel alimentar do organismo", e:"Define como a espécie obtém energia e interage dentro da teia."}
   ],
   carbonauta:[
-    {a:"🔬 Posição trófica fracionária",b:"Nível trófico contínuo, não inteiro",fb:"Estimada por isótopos; onívoros assumem valores intermediários entre níveis."},
-    {a:"⚛️ δ¹⁵N",b:"Traçador isotópico de posição trófica",fb:"O nitrogênio-15 enriquece ~3,4‰ por nível trófico (Post, 2002)."},
-    {a:"🧪 δ¹³C",b:"Traçador da fonte basal de carbono",fb:"Diferencia bases C3/C4 e aquática/terrestre que sustentam a teia."},
-    {a:"📐 Eficiência de transferência",b:"Razão de produção entre níveis",fb:"Mediana ~10%, mas varia de <1% a ~40% conforme fisiologia e digestibilidade."},
-    {a:"🌐 Conectância",b:"Ligações reais sobre as possíveis",fb:"C = L/S² mede a densidade de interações tróficas de uma rede."},
-    {a:"🔗 Grau de ligação",b:"Elos médios por espécie na rede",fb:"L/S resume a complexidade estrutural da teia alimentar."},
-    {a:"🍂 Via detritívora",b:"Fluxo energético via matéria morta",fb:"Frequentemente supera a herbivoria no aporte total de energia da teia."},
-    {a:"🔀 Acoplamento trófico",b:"Predador integra cadeias distintas",fb:"Consumidores móveis unem cadeias rápidas e lentas, estabilizando a rede."},
-    {a:"🧫 Alça microbiana",b:"Reciclagem microbiana do carbono dissolvido",fb:"A microbial loop (Azam, 1983) recupera matéria orgânica dissolvida para a teia."},
-    {a:"⬇️ Controle top-down",b:"Predadores regulam níveis inferiores",fb:"A pressão de predação limita herbívoros e libera os produtores."},
-    {a:"⬆️ Controle bottom-up",b:"Recursos basais limitam os de cima",fb:"A produtividade primária determina a biomassa dos consumidores."},
-    {a:"🧬 Biomagnificação",b:"Contaminante lipofílico cresce por nível",fb:"O metilmercúrio pode amplificar cerca de 10× a cada elo trófico."},
-    {a:"🦎 Espécie-chave (Paine)",b:"Efeito desproporcional à sua biomassa",fb:"Conceito de Paine (1966), a partir de Pisaster em costões rochosos."},
-    {a:"🌊 Magnitude da cascata",b:"Intensidade do efeito trófico indireto",fb:"Meta-análises (Shurin, 2002) apontam cascatas mais fortes em ambientes aquáticos."},
-    {a:"🔋 Estequiometria ecológica",b:"Balanço de C:N:P entre os níveis",fb:"A razão de nutrientes limita a eficiência de transferência de energia."},
-    {a:"🌡️ Teoria metabólica",b:"Taxas escalam com massa e temperatura",fb:"Fluxos ecológicos escalam com M^¾ e a cinética de Arrhenius (Brown, 2004)."},
-    {a:"🕸️ Categorias estruturais",b:"Espécie basal, intermediária e de topo",fb:"Classificam a posição na teia: sem presa, com ambos, ou sem predador."},
-    {a:"🦦 Cascata clássica",b:"Predador → herbívoro → produtor",fb:"Documentada com lontras-marinhas, ouriços e florestas de kelp (Estes, 1974)."}
+    {t:"Posição trófica fracionária", d:"Nível trófico contínuo, não inteiro", e:"Estimada por isótopos; onívoros assumem valores intermediários entre níveis."},
+    {t:"δ¹⁵N", d:"Traçador isotópico de posição trófica", e:"O nitrogênio-15 enriquece cerca de 3,4‰ por nível trófico (Post, 2002)."},
+    {t:"δ¹³C", d:"Traçador da fonte basal de carbono", e:"Diferencia bases C3 e C4, e fontes aquáticas e terrestres que sustentam a teia."},
+    {t:"Eficiência de transferência", d:"Razão de produção entre níveis", e:"A média fica perto de 10%, mas varia bastante conforme o ecossistema e os organismos."},
+    {t:"Conectância", d:"Ligações reais sobre as possíveis", e:"C = L/S² mede a densidade de interações tróficas de uma rede."},
+    {t:"Grau de ligação", d:"Elos médios por espécie na rede", e:"L/S resume a complexidade estrutural da teia alimentar."},
+    {t:"Via detritívora", d:"Fluxo energético via matéria morta", e:"Frequentemente supera a herbivoria no aporte total de energia da teia."},
+    {t:"Acoplamento trófico", d:"Predador integra cadeias distintas", e:"Consumidores móveis unem cadeias rápidas e lentas, estabilizando a rede."},
+    {t:"Alça microbiana", d:"Reciclagem microbiana do carbono dissolvido", e:"A alça microbiana (Azam et al., 1983) devolve à teia o carbono orgânico dissolvido."},
+    {t:"Controle top-down", d:"Predadores regulam níveis inferiores", e:"A pressão de predação limita herbívoros e libera os produtores."},
+    {t:"Controle bottom-up", d:"Recursos basais limitam os de cima", e:"A produtividade primária determina a biomassa dos consumidores."},
+    {t:"Biomagnificação", d:"Contaminante lipofílico cresce por nível", e:"O metilmercúrio se concentra a cada elo e atinge os maiores níveis nos peixes predadores."},
+    {t:"Espécie-chave (Paine)", d:"Efeito desproporcional à sua biomassa", e:"A ideia nasceu do experimento de Paine (1966) com a estrela-do-mar Pisaster em costões rochosos."},
+    {t:"Magnitude da cascata", d:"Intensidade do efeito trófico indireto", e:"A meta-análise de Shurin e colegas (2002) apontou cascatas mais fortes em ambientes aquáticos."},
+    {t:"Estequiometria ecológica", d:"Balanço de C:N:P entre os níveis", e:"A razão de nutrientes limita a eficiência de transferência de energia."},
+    {t:"Teoria metabólica", d:"Taxas escalam com massa e temperatura", e:"O metabolismo escala com a massa elevada a 3/4 e com a temperatura (Brown et al., 2004)."},
+    {t:"Categorias estruturais", d:"Espécie basal, intermediária e de topo", e:"Classificam a posição na teia: sem presa, com presa e predador, ou sem predador."},
+    {t:"Cascata clássica", d:"Predador, herbívoro e produtor em sequência", e:"Documentada com lontras-marinhas, ouriços e florestas de kelp (Estes e Palmisano, 1974)."}
   ]
 };
-const LVL_NAMES={basico:"Básico",intermediario:"Intermediário",dificil:"Difícil",carbonauta:"🛰️ Carbonauta"};
 
-/* ============ ESTADO ============ */
-let level="basico", first=null, lock=false, matched=0, errors=0,
-    seconds=0, timer=null, started=false;
+const LEVEL_NAMES={basico:'Básico',intermediario:'Intermediário',dificil:'Difícil',carbonauta:'Carbonauta'};
+const HINT_START='Vire duas cartas para começar. O cronômetro dispara na primeira carta.';
+let level='basico', deck=[], firstCard=null, lock=false, matched=0, errors=0;
+let startTime=null, timerInt=null, elapsed=0, scoreSaved=false;
+let pendingClose=null, pendingTimer=null;
+let db=null, fsFns=null, fbState='loading';
+
 const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+function setLevel(l){
+  level=l;
+  document.querySelectorAll('.levels button').forEach(b=>b.classList.toggle('active',b.dataset.lvl===l));
+  $('rankLevel').textContent=LEVEL_NAMES[l];
+  restart(); loadRanking();
+}
 
-function build(){
-  clearInterval(timer); timer=null; started=false;
-  seconds=0; errors=0; matched=0; first=null; lock=false;
-  $("time").textContent="0"; $("errors").textContent="0"; $("score").textContent="0";
-  const pairs=DATA[level];
-  $("pairs").textContent="0/"+pairs.length;
-  const deck=[];
-  pairs.forEach((p,i)=>{
-    deck.push({pid:i,txt:p.a,type:"a"});
-    deck.push({pid:i,txt:p.b,type:"b"});
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function buildDeck(){
+  const cards=[];
+  DATA[level].forEach((p,i)=>{
+    cards.push({id:i,kind:'term',label:p.t});
+    cards.push({id:i,kind:'def',label:p.d});
   });
-  shuffle(deck);
-  const board=$("board");
-  board.innerHTML="";
-  board.classList.toggle("big", pairs.length>=16);
-  deck.forEach(c=>{
-    const el=document.createElement("div");
-    el.className="card";
-    let front;
-    if(c.type==="a"){
-      const parts=c.txt.split(" ");
-      front=`<span class="em">${escapeHtml(parts[0])}</span><span>${escapeHtml(parts.slice(1).join(' '))}</span>`;
-    }else{
-      front=`<span>${escapeHtml(c.txt)}</span>`;
+  return shuffle(cards);
+}
+
+/* mesa livre: escolhe linhas x colunas que dividem o baralho sem sobra,
+   define o tamanho da carta e sorteia posicao e giro de cada uma */
+let zTop=100, TABLE={tw:0,th:0,w:0,h:0};
+const rnd=()=>Math.random()*2-1;
+
+function layout(deal){
+  const n=deck.length, board=$('board'), mesa=board.parentElement;
+  const small=window.innerWidth<=560;
+  const mesaPad=small?12:22, bodyPad=small?8:14;
+  const Wt=Math.min(window.innerWidth-2*bodyPad,1054)-2*mesaPad;
+  const top=mesa.getBoundingClientRect().top+window.scrollY;
+  const Hav=Math.max(300,window.innerHeight-top-2*mesaPad-(small?132:118));
+  const R=1.32, MAXW=150, MINW=small?54:84, m=small?7:14;
+  const ov=small?0.45:0.28;            /* sobreposicao vertical maxima entre fileiras */
+  let best=null;
+  for(let c=10;c>=2;c--){            /* em empate, prefere mais colunas */
+    if(n%c)continue;
+    const r=n/c;
+    const wByW=(Wt-2*m)/c-(small?5:10);
+    const hMax=(Hav-2*m)/(1+(1-ov)*(r-1));
+    const w=Math.min(MAXW,wByW,hMax/R);
+    if(!best||w>best.w) best={c,r,w,wByW};
+  }
+  const c=best.c, r=best.r;
+  const w=Math.floor(Math.max(Math.min(MINW,best.wByW),best.w)), h=w*R;
+  const tw=Math.min(Wt,c*(w+(small?8:24))+2*m);
+  const natural=r*(h+(small?10:20))+2*m;
+  const tight=2*m+h*(1+(1-ov)*(r-1));
+  const th=Math.round(Math.max(tight,Math.min(Hav,natural)));
+  const stepX=c>1?(tw-2*m-w)/(c-1):0, stepY=r>1?(th-2*m-h)/(r-1):0;
+  const jx=Math.max(2,Math.min(small?5:11,(stepX-w)/2+4)), jy=small?5:9;
+  const rot=small?8:(n>16?9:11);
+  TABLE={tw,th,w,h};
+  const st=document.documentElement.style;
+  st.setProperty('--tw',tw+'px'); st.setProperty('--th',th+'px');
+  st.setProperty('--cw',w+'px');
+  st.setProperty('--fs',Math.max(8.5,Math.min(14.5,w*0.108)).toFixed(1)+'px');
+  [...board.children].forEach((el,i)=>{
+    const col=i%c,row=Math.floor(i/c);
+    setPos(el,m+col*stepX+rnd()*jx,m+row*stepY+rnd()*jy);
+    el.style.setProperty('--r',(rnd()*rot).toFixed(1)+'deg');
+    el.style.setProperty('--z',i+1);
+    el.style.setProperty('--sx',(tw/2-w/2).toFixed(0)+'px');
+    el.style.setProperty('--sy',(th-h*0.35).toFixed(0)+'px');
+    el.style.setProperty('--d',(i*(n>16?34:55))+'ms');
+    el.classList.toggle('deal',!!deal);
+  });
+  zTop=100;
+}
+function setPos(el,x,y){
+  const T=TABLE;
+  el._x=Math.max(-T.w*0.25,Math.min(T.tw-T.w*0.75,x));
+  el._y=Math.max(-T.h*0.25,Math.min(T.th-T.h*0.75,y));
+  el.style.setProperty('--x',el._x.toFixed(1)+'px');
+  el.style.setProperty('--y',el._y.toFixed(1)+'px');
+}
+
+/* arrastar: puxa a carta de cima da outra; toque curto continua virando a carta */
+function makeDraggable(el){
+  let g=null;
+  el.addEventListener('pointerdown',e=>{
+    if(e.button!==undefined&&e.button!==0)return;
+    g={px:e.clientX,py:e.clientY,ox:el._x,oy:el._y,moved:false,id:e.pointerId};
+    try{el.setPointerCapture(e.pointerId);}catch(_){}
+  });
+  el.addEventListener('pointermove',e=>{
+    if(!g||e.pointerId!==g.id)return;
+    const dx=e.clientX-g.px, dy=e.clientY-g.py;
+    if(!g.moved){
+      if(Math.hypot(dx,dy)<8)return;
+      g.moved=true; el.classList.remove('deal'); el.classList.add('drag');
     }
-    el.innerHTML=`<div class="inner"><div class="face back">❓</div><div class="face front">${front}</div></div>`;
-    el.addEventListener("click",()=>flip(el,c));
+    setPos(el,g.ox+dx,g.oy+dy);
+  });
+  const end=e=>{
+    if(!g||e.pointerId!==g.id)return;
+    if(g.moved){
+      el.classList.remove('drag');
+      el.style.setProperty('--z',++zTop);
+      el._dragged=true; setTimeout(()=>{el._dragged=false;},60);
+    }
+    g=null;
+  };
+  el.addEventListener('pointerup',end);
+  el.addEventListener('pointercancel',end);
+}
+
+function render(deal){
+  const board=$('board');
+  board.innerHTML='';
+  deck.forEach((c,idx)=>{
+    const el=document.createElement('button');
+    el.type='button';
+    el.className='card';
+    el.setAttribute('aria-label','Carta '+(idx+1)+', virada para baixo');
+    const back=c.kind==='term'
+      ? `<div class="face back term"><div class="art">${ART[c.label]||''}</div><div class="lbl">${esc(c.label)}</div></div>`
+      : `<div class="face back def">${esc(c.label)}</div>`;
+    el.innerHTML=`<div class="inner"><div class="face front">${BACK_ART}</div>${back}</div>`;
+    el.addEventListener('click',()=>{ if(el._dragged){el._dragged=false;return;} flip(idx,el); });
+    makeDraggable(el);
     board.appendChild(el);
+  });
+  $('total').textContent=DATA[level].length;
+  layout(deal);
+  fitText();
+}
+
+/* reduz a fonte so das cartas cujo texto nao cabe */
+function fitText(){
+  document.querySelectorAll('#board .back.def, #board .lbl').forEach(el=>{
+    el.style.fontSize='';
+    const box=el.classList.contains('lbl')?el.parentElement:el;
+    let fs=parseFloat(getComputedStyle(el).fontSize), n=0;
+    const over=()=>box.scrollHeight>box.clientHeight+1||el.scrollWidth>el.clientWidth+1;
+    while(over()&&fs>6.5&&n++<24){fs-=0.5;el.style.fontSize=fs+'px';}
   });
 }
 
 function startTimer(){
-  if(started)return; started=true;
-  timer=setInterval(()=>{seconds++;$("time").textContent=seconds;updateScore();},1000);
+  if(startTime)return;
+  startTime=Date.now();
+  timerInt=setInterval(()=>{
+    elapsed=Math.floor((Date.now()-startTime)/1000);
+    $('timer').textContent=elapsed+'s';
+  },500);
 }
-function updateScore(){ $("score").textContent = seconds + errors*5; }
 
-function flip(el,c){
-  if(lock||el.classList.contains("flip")||el.classList.contains("matched"))return;
+function rowHtml(c){
+  return `<div class="row"><span class="tag ${c.kind==='def'?'d':''}">${c.kind==='def'?'Definição':'Conceito'}</span><span>${esc(c.label)}</span></div>`;
+}
+function setReader(html){ $('reader').innerHTML=html; }
+
+function closePending(){
+  if(!pendingClose)return;
+  clearTimeout(pendingTimer);
+  const f=pendingClose; pendingClose=null; pendingTimer=null; f();
+}
+
+function flip(idx,el){
+  if(pendingClose) closePending();
+  if(lock||el.classList.contains('flip')||el.classList.contains('matched'))return;
   startTimer();
-  el.classList.add("flip");
-  if(!first){ first={el,c}; return; }
-  if(first.el===el)return;
-  lock=true;
-  const second={el,c};
-  if(first.c.pid===second.c.pid){
+  el.classList.add('flip');
+  el.setAttribute('aria-label',deck[idx].label);
+  if(!firstCard){
+    firstCard={idx,el};
+    setReader(rowHtml(deck[idx])+`<div class="hint" style="margin-top:6px">Agora vire a carta que combina com esta.</div>`);
+    return;
+  }
+  const a=deck[firstCard.idx], b=deck[idx], first=firstCard;
+  if(a.id===b.id){
+    lock=true;
+    const p=DATA[level][a.id];
+    setReader(`<div class="msg ok" style="margin-top:0">Par certo: ${esc(p.t)}</div><div>${esc(p.d)}</div><div class="exp">${esc(p.e)}</div>`);
     setTimeout(()=>{
-      first.el.classList.add("matched"); second.el.classList.add("matched");
-      first.el.classList.remove("flip"); second.el.classList.remove("flip");
-      matched++;
-      $("pairs").textContent=matched+"/"+DATA[level].length;
-      showFb(DATA[level][c.pid]);
-      first=null;lock=false;
-      if(matched===DATA[level].length) finish();
-    },380);
+      first.el.classList.add('matched');el.classList.add('matched');
+      matched++;$('pairs').textContent=matched;
+      firstCard=null;lock=false;
+      if(matched===DATA[level].length)win();
+    },450);
   }else{
-    errors++; $("errors").textContent=errors; updateScore();
-    first.el.classList.add("wrong"); second.el.classList.add("wrong");
-    setTimeout(()=>{
-      first.el.classList.remove("flip","wrong"); second.el.classList.remove("flip","wrong");
-      first=null;lock=false;
-    },850);
+    errors++;$('errors').textContent=errors;
+    first.el.classList.add('wrong');el.classList.add('wrong');
+    setReader(rowHtml(a)+rowHtml(b)+`<div class="msg no">Não formam par. <span class="hint">Toque em outra carta para continuar.</span></div>`);
+    firstCard=null;
+    /* tempo de leitura proporcional ao tamanho do texto; tocar em outra carta fecha antes */
+    const ms=Math.min(6000,1800+(a.label.length+b.label.length)*38);
+    pendingClose=()=>{
+      [first.el,el].forEach(x=>{x.classList.remove('flip','wrong');x.setAttribute('aria-label','Carta virada para baixo');});
+    };
+    pendingTimer=setTimeout(closePending,ms);
   }
 }
 
-function showFb(p){
-  $("feedback").innerHTML=`<span class="term">${escapeHtml(p.a)}</span> — ${escapeHtml(p.b)}.<br>${escapeHtml(p.fb)}`;
+function win(){
+  clearInterval(timerInt);
+  $('winMsg').textContent=`Nível ${LEVEL_NAMES[level]}: ${scoreOf(errors,elapsed)} pontos (tempo mais 5 por erro), com ${errors} erro(s) em ${elapsed}s. Quanto menor, melhor. Coloque seu nome e entre para o Ranking Global.`;
+  $('saveStatus').textContent='';
+  $('saveBtn').disabled=false;
+  scoreSaved=false;
+  const w=$('win');
+  w.classList.add('show');
+  w.scrollIntoView({behavior:'smooth',block:'center'});
 }
 
-function finish(){
-  clearInterval(timer);
-  const score=seconds+errors*5;
-  $("mLvl").textContent=LVL_NAMES[level];
-  $("mTime").textContent=seconds; $("mErr").textContent=errors; $("mScore").textContent=score;
-  $("saveMsg").textContent=""; $("saveBtn").disabled=false;
-  $("overlay").classList.add("show");
+function restart(){
+  clearInterval(timerInt);clearTimeout(pendingTimer);pendingClose=null;pendingTimer=null;
+  startTime=null;elapsed=0;
+  deck=buildDeck();firstCard=null;lock=false;matched=0;errors=0;
+  $('pairs').textContent=0;
+  $('errors').textContent=0;
+  $('timer').textContent='0s';
+  setReader(`<div class="hint" style="font-size:1rem">${HINT_START}</div>`);
+  $('win').classList.remove('show');
+  render(true);
 }
 
-/* ============ RANKING ============ */
-async function loadRanking(){
-  $("rankLvlName").textContent=LVL_NAMES[level];
-  if(!db){rankOffline();return;}
+let resizeT=null;
+window.addEventListener('resize',()=>{clearTimeout(resizeT);resizeT=setTimeout(()=>{layout(false);fitText();},150);});
+
+/* ---------- ranking (Firestore) ---------- */
+async function initFirebase(){
   try{
-    const {collection,query,orderBy,limit,getDocs}=fs;
-    const q=query(collection(db,"games",GAME_ID,"scores"),orderBy("score"),limit(100));
-    const snap=await getDocs(q);
-    const rows=[];
-    snap.forEach(d=>{const v=d.data(); if(v.level===level) rows.push(v);});
-    rows.sort((a,b)=>(a.score-b.score)||((a.seconds||0)-(b.seconds||0)));
-    const top=rows.slice(0,10);
-    const list=$("rankList");
-    if(!top.length){list.innerHTML="<li><span>Seja o primeiro a pontuar!</span></li>";$("rankNote").textContent="";return;}
-    list.innerHTML=top.map((r,i)=>`<li><span>${i+1}. ${escapeHtml(r.name||"—")}</span><b>${r.score} pts</b></li>`).join("");
-    $("rankNote").textContent="Menor pontuação = tempo + 5 por erro.";
-  }catch(e){ rankOffline(); }
+    const appM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const fsM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const app=appM.initializeApp(firebaseConfig);
+    db=fsM.getFirestore(app);
+    fsFns=fsM;
+    fbState='ok';
+    loadRanking();
+  }catch(e){
+    fbState='off';
+    $('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';
+    $('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';
+  }
 }
-function rankOffline(){
-  $("rankList").innerHTML="<li><span>⚠️ Ranking indisponível (offline). O jogo funciona normalmente!</span></li>";
-  $("rankNote").textContent="";
-}
+
+/* mesma formula da versao anterior: tempo mais 5 por erro, menor e melhor */
+function scoreOf(err,sec){return sec+err*5;}
 
 async function saveScore(){
-  const name=($("nameInput").value||"").trim().slice(0,20)||"Anônimo";
-  const score=seconds+errors*5;
-  if(!db){$("saveMsg").textContent="Offline: não foi possível salvar, mas seu resultado vale!";return;}
+  if(scoreSaved)return;
+  const name=$('playerName').value.trim();
+  const st=$('saveStatus');
+  if(!name){st.textContent='Digite seu nome primeiro.';return;}
+  if(!db){st.textContent='Sem conexão com o ranking. Seu resultado não foi enviado.';return;}
   try{
-    $("saveBtn").disabled=true; $("saveMsg").textContent="Salvando…";
-    const {collection,addDoc,serverTimestamp}=fs;
-    await addDoc(collection(db,"games",GAME_ID,"scores"),{
-      name, level, score, seconds, errors, ts:serverTimestamp()
-    });
-    $("saveMsg").textContent="✅ Salvo no ranking!";
+    $('saveBtn').disabled=true;
+    await fsFns.addDoc(
+      fsFns.collection(db,'games',GAME_ID,'scores'),
+      {name:name.slice(0,20),score:scoreOf(errors,elapsed),errors:errors,seconds:elapsed,
+       level:level,ts:fsFns.serverTimestamp()}
+    );
+    scoreSaved=true;
+    st.textContent='Salvo no Ranking Global!';
     loadRanking();
-  }catch(e){ $("saveMsg").textContent="Não foi possível salvar agora. Tente novamente."; $("saveBtn").disabled=false; }
+  }catch(e){
+    $('saveBtn').disabled=false;
+    st.textContent='Erro ao salvar. Verifique a internet e tente de novo.';
+  }
 }
 
-function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+async function loadRanking(){
+  if(!db)return;
+  const list=$('rankList'), asked=level;
+  try{
+    /* filtra por nível no servidor e ordena aqui: cada nível tem o seu ranking completo,
+       sem depender de índice composto no Firestore */
+    const q=fsFns.query(
+      fsFns.collection(db,'games',GAME_ID,'scores'),
+      fsFns.where('level','==',asked), fsFns.limit(1000)
+    );
+    const snap=await fsFns.getDocs(q);
+    if(asked!==level)return;
+    const rows=[];
+    snap.forEach(d=>rows.push(d.data()));
+    rows.sort((a,b)=>((Number(a.score)||0)-(Number(b.score)||0))||((Number(a.seconds)||0)-(Number(b.seconds)||0)));
+    if(!rows.length){list.innerHTML='<li><span>Seja o primeiro do ranking!</span></li>';return;}
+    list.innerHTML=rows.slice(0,10).map((r,i)=>
+      `<li><span><span class="pos">${i+1}º</span>${esc(r.name)}</span><span>${Number(r.score)||0} pts · ${Number(r.errors)||0} erro(s)</span></li>`
+    ).join('');
+  }catch(e){
+    list.innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';
+  }
+}
 
-/* ============ EVENTOS ============ */
-document.querySelectorAll(".pill").forEach(b=>{
-  b.addEventListener("click",()=>{
-    document.querySelectorAll(".pill").forEach(x=>x.classList.remove("active"));
-    b.classList.add("active");
-    level=b.dataset.lvl;
-    $("feedback").innerHTML="Vire as cartas para começar. Cada par certo traz uma explicação científica.";
-    build(); loadRanking();
-  });
-});
-$("saveBtn").addEventListener("click",saveScore);
-$("againBtn").addEventListener("click",()=>{$("overlay").classList.remove("show");build();});
-
-build();
+restart();
+initFirebase();
 </script>
 </body>
 </html>
