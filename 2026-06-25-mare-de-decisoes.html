@@ -511,7 +511,7 @@ function setLevel(l){
   restart(); loadRanking();
 }
 function restart(){
-  clearInterval(timerInt); timerInt=null; startTime=null; elapsed=0; done=false; scoreSaved=false; score=0; bads=0; path=[]; idx=0;
+  clearInterval(timerInt); timerInt=null; startTime=null; elapsed=0; done=false; scoreSaved=false; score=(typeof SCORE0!=='undefined'?SCORE0:0); bads=0; path=[]; idx=0;
   $('timer').textContent='0s';
   const L = LEVELS[level];
   v = Object.assign({}, START, L.start||{});
@@ -554,7 +554,7 @@ function choose(i){
   const sc = scenes[idx], c = sc.choices[i], q = quality(c), n = net(c);
   const deltas = {};
   Object.entries(c.eff||{}).forEach(([k,d])=>{ const before = v[k]; v[k] = clamp(v[k]+d); deltas[k] = Math.round(v[k]-before); });
-  const gain = typeof GAIN==='function' ? GAIN(c, q) : 10*n; score += gain;
+  let gain = typeof GAIN==='function' ? GAIN(c, q) : 10*n; if(typeof SCORE_MAX!=='undefined' && score+gain > SCORE_MAX) gain = SCORE_MAX - score; score += gain;
   if(q==='bad') bads++;
   path.push({scene:sc, c, q});
   const best = sc.choices.reduce((a,b)=>net(b)>net(a)?b:a);
