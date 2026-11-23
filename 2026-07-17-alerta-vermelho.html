@@ -2,174 +2,303 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🦋 Alerta Vermelho — Classifique as Espécies Ameaçadas</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alerta Vermelho</title>
 <style>
-:root{
-  --bg1:#0b3d2e; --bg2:#7a1420; --card:#0f4436; --card2:#12513f;
-  --ink:#eafaf1; --muted:#a9d6c4; --line:rgba(255,255,255,.14);
-  --accent:#ff5a3c; --accent2:#ffb020; --ok:#3ddc84; --bad:#ff5470;
-  --lc:#3ddc84; --nt:#4aa8ff; --vu:#ffcf3f; --en:#ff8a2b; --cr:#ff4d5e; --am:#ff5470;
-  --shadow:0 10px 30px rgba(0,0,0,.35);
-}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{
-  margin:0;font-family:system-ui,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
-  color:var(--ink);min-height:100vh;
-  background:linear-gradient(160deg,var(--bg1) 0%, #0a2b3a 55%, var(--bg2) 100%);
-  background-attachment:fixed;padding:14px 12px 40px;
-}
-.wrap{width:min(960px,96vw);margin:0 auto}
-header.top{text-align:center;margin-bottom:10px}
-h1{font-size:clamp(1.5rem,5vw,2.4rem);margin:.2em 0 .1em;letter-spacing:.5px;
-  text-shadow:0 2px 12px rgba(0,0,0,.4)}
-.sub{color:var(--muted);font-size:clamp(.8rem,2.4vw,.98rem);margin:0 auto;max-width:620px}
-.levels{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0}
-.pill{
-  border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink);
-  padding:9px 16px;border-radius:999px;font-size:clamp(.82rem,2.4vw,.95rem);font-weight:600;
-  cursor:pointer;transition:all .25s;white-space:nowrap}
-.pill:hover{transform:translateY(-2px);background:rgba(255,255,255,.12)}
-.pill.active{background:var(--accent);border-color:var(--accent);box-shadow:0 6px 18px rgba(255,90,60,.4);color:#fff}
-.hud{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:6px 0 12px}
-.chip{background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:12px;
-  padding:7px 13px;font-size:clamp(.78rem,2.3vw,.92rem);font-weight:600}
-.chip b{color:var(--accent2)}
-.howto{background:rgba(255,255,255,.06);border:1px dashed var(--line);border-radius:12px;
-  padding:9px 14px;font-size:clamp(.8rem,2.3vw,.92rem);text-align:center;margin-bottom:12px;color:var(--muted)}
-.pool{
-  background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;
-  box-shadow:var(--shadow);margin-bottom:14px;min-height:64px;
-  display:flex;flex-wrap:wrap;gap:9px;justify-content:center;align-items:flex-start}
-.pool .lbl{width:100%;text-align:center;color:var(--muted);font-size:.8rem;margin-bottom:2px;font-weight:600}
-.tok{
-  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;
-  width:clamp(128px,19vw,158px);min-height:138px;
-  background:linear-gradient(180deg,#15604a,#0e4a39);
-  border:1px solid var(--line);border-radius:15px;padding:8px 9px 10px;cursor:grab;user-select:none;
-  font-size:clamp(.78rem,2.2vw,.92rem);font-weight:700;text-align:center;
-  transition:transform .18s,box-shadow .18s,background .2s;
-  box-shadow:0 3px 10px rgba(0,0,0,.25)}
-.tok .em{font-size:2rem;min-height:88px;display:grid;place-items:center}
-.animal-img{width:100%;height:92px;object-fit:contain;display:block;filter:drop-shadow(0 5px 7px rgba(0,0,0,.35));pointer-events:none}
-.animal-name{line-height:1.12;min-height:2.15em;display:flex;align-items:center;justify-content:center}
-.animal-credit{display:none}
-.tok:hover{transform:translateY(-4px) scale(1.02)}
-.placed .animal-img{width:46px;height:38px;flex:0 0 46px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.3))}
-.placed .em{font-size:1.2rem}
-.tok:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,.35)}
-.tok.sel{outline:3px solid var(--accent2);outline-offset:2px;background:linear-gradient(180deg,#1c7a5e,#12634c)}
-.tok.dragging{opacity:.5}
-@keyframes pop{0%{transform:scale(.6)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
-@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
-.pop{animation:pop .35s ease}
-.shake{animation:shake .4s}
-.zones{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
-.zone{
-  background:var(--card2);border:2px dashed var(--line);border-radius:16px;padding:12px 10px;
-  min-height:120px;transition:all .25s;display:flex;flex-direction:column}
-.zone.over{border-color:var(--accent2);background:rgba(255,176,32,.12);transform:translateY(-2px)}
-.zone h3{margin:0 0 4px;font-size:clamp(.9rem,2.6vw,1.05rem);text-align:center}
-.zone .zdesc{color:var(--muted);font-size:.74rem;text-align:center;margin-bottom:8px;min-height:1.1em}
-.zbar{height:5px;border-radius:5px;margin-bottom:8px;opacity:.9}
-.zdrop{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;align-items:flex-start;flex:1}
-.placed{
-  display:inline-flex;align-items:center;gap:6px;background:rgba(61,220,132,.16);
-  border:1px solid rgba(61,220,132,.5);border-radius:10px;padding:6px 10px;
-  font-size:clamp(.76rem,2.2vw,.9rem);font-weight:600;animation:pop .35s ease}
-.feedback{
-  background:rgba(0,0,0,.28);border:1px solid var(--line);border-left:5px solid var(--accent2);
-  border-radius:12px;padding:11px 15px;margin:14px 0;font-size:clamp(.84rem,2.4vw,.98rem);min-height:2.4em;
-  transition:border-color .25s}
-.feedback.ok{border-left-color:var(--ok)}
-.feedback.bad{border-left-color:var(--bad)}
-.end{display:none;background:var(--card);border:1px solid var(--line);border-radius:18px;
-  padding:22px 18px;text-align:center;box-shadow:var(--shadow);margin-top:6px}
-.end.show{display:block;animation:pop .4s ease}
-.end h2{font-size:clamp(1.3rem,4.5vw,1.9rem);margin:.1em 0;color:var(--ok)}
-.end .big{font-size:clamp(1.8rem,7vw,2.6rem);font-weight:800;color:var(--accent2);margin:.2em 0}
-.end p{color:var(--muted);margin:.35em 0}
-.saverow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:16px 0 4px}
-.saverow input{padding:11px 14px;border-radius:12px;border:1px solid var(--line);
-  background:rgba(0,0,0,.3);color:var(--ink);font-size:.95rem;width:min(240px,70vw)}
-.btn{background:var(--accent);color:#fff;border:none;border-radius:12px;padding:11px 20px;
-  font-size:.95rem;font-weight:700;cursor:pointer;transition:transform .18s,box-shadow .2s}
-.btn:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(255,90,60,.4)}
-.btn.alt{background:rgba(255,255,255,.12)}
-.rank{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;
-  margin-top:16px;box-shadow:var(--shadow)}
-.rank h3{margin:.1em 0 .5em;font-size:1.05rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.rank .lvltag{font-size:.72rem;background:var(--accent);padding:3px 9px;border-radius:999px;font-weight:700}
-.rank ol{margin:6px 0 0;padding-left:2px;list-style:none;counter-reset:r}
-.rank li{counter-increment:r;display:flex;justify-content:space-between;gap:10px;padding:7px 10px;
-  border-radius:9px;font-size:.9rem}
-.rank li:nth-child(odd){background:rgba(255,255,255,.05)}
-.rank li::before{content:counter(r) "º";color:var(--accent2);font-weight:700;min-width:30px}
-.rank .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rank .sc{font-weight:700;color:var(--ok)}
-.rank .note{color:var(--muted);font-size:.82rem}
-footer{text-align:center;margin-top:26px;color:var(--muted);font-size:.85rem;line-height:1.7}
-footer .cred{color:var(--ink);font-weight:700;font-size:.98rem}
-.hidden{display:none!important}
+  :root{
+    --ink:#0f2f44; --soft:#4b6a7d; --line:#dbe7ee; --ok:#16a34a; --err:#dc2626;
+    --t50:#fef2f2; --t100:#fee2e2; --t300:#fca5a5; --t500:#ef4444; --main:#dc2626; --deep:#b91c1c; --dark:#991b1b; --glow:rgba(220,38,38,.26);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+    min-height:100vh;color:var(--ink);background:#ffffff;
+    display:flex;flex-direction:column;align-items:center;padding:12px 14px 40px;
+  }
+  .top{width:100%;max-width:1040px;display:flex;justify-content:flex-start}
+  .hub{display:inline-flex;align-items:center;gap:6px;color:var(--deep);text-decoration:none;
+    font-weight:600;font-size:.9rem;padding:7px 12px;border-radius:20px;border:1.5px solid var(--line)}
+  .hub:hover{background:var(--tint)}
+  .hub svg{width:14px;height:14px}
+  header{text-align:center;max-width:720px;margin-top:6px}
+  h1{font-size:clamp(1.45rem,5vw,2.2rem);display:flex;align-items:center;justify-content:center;gap:10px}
+  h1 svg{width:.95em;height:.95em}
+  h1 .spark{color:var(--main)}
+  .sub{color:var(--soft);font-size:.95rem;margin:4px 0 12px}
+  .levels{display:flex;gap:8px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+  .levels button{border:2px solid var(--line);background:#fff;color:var(--ink);padding:8px 16px;border-radius:30px;
+    font-size:.92rem;cursor:pointer;transition:.2s;font-weight:600;font-family:inherit}
+  .levels button{border-color:var(--main);color:var(--deep)}
+  .levels button:hover{background:var(--tint)}
+  .levels button.active{background:var(--main);border-color:var(--main);color:#fff;box-shadow:0 4px 12px var(--glow)}
+  .hud{display:flex;gap:8px;justify-content:center;align-items:center;margin:4px 0 12px;font-size:.9rem;flex-wrap:wrap}
+  .hud span{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:30px;color:#fff;font-weight:600}
+  .hud b{font-size:1.05rem;font-weight:800} .hud em{font-style:normal}
+  .hud .h1{background:#16a34a} .hud .h2{background:#f97316} .hud .h3{background:#7c3aed} .hud .h4{background:#0ea5e9}
+
+  .card{width:min(680px,100%);background:#fff;border:3px solid var(--main);border-radius:22px;
+    padding:0 0 20px;box-shadow:0 12px 30px var(--glow);overflow:hidden}
+  #stage{padding:0 20px}
+  .strip{display:flex;gap:5px;justify-content:center;align-items:flex-end;flex-wrap:wrap;min-height:54px;
+    padding:10px 10px 8px;background:linear-gradient(180deg,#e0f2fe 0%,#f0f9ff 62%,var(--pale) 62%,var(--pale) 100%)}
+  .slot{width:36px;height:36px;display:flex;align-items:center;justify-content:center}
+  .slot svg{width:100%;height:100%}
+  .slot.empty{align-items:flex-end;padding-bottom:3px}
+  .slot.empty::after{content:"";width:11px;height:11px;border-radius:50%;background:#fff;border:3px solid var(--main);opacity:.45}
+  .slot.now::after{opacity:1;background:var(--acc);border-color:#fff;box-shadow:0 0 0 3px var(--acc);animation:pulse 1.1s infinite}
+  @keyframes pulse{50%{transform:scale(1.25)}}
+  .slot.pop svg{animation:grow .45s cubic-bezier(.3,1.5,.5,1)}
+  @keyframes grow{from{transform:scale(.2) translateY(8px);opacity:0}to{transform:none;opacity:1}}
+  .qhead{margin:0 -20px 16px;padding:14px 20px 16px;background:linear-gradient(135deg,var(--main),var(--deep));color:#fff}
+  .qnum{display:inline-block;font-size:.74rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+    background:rgba(255,255,255,.22);padding:3px 10px;border-radius:20px}
+  .qtext{font-size:1.22rem;font-weight:700;line-height:1.35;margin-top:8px}
+  .opts{display:grid;gap:9px}
+  .opt{display:flex;gap:12px;align-items:center;text-align:left;width:100%;background:#fff;border:2px solid var(--line);
+    border-radius:14px;padding:11px 14px;font-size:1rem;line-height:1.35;color:var(--ink);cursor:pointer;
+    font-family:inherit;transition:border-color .15s,background .15s,transform .15s}
+  .opt{--c:#0ea5e9;--ct:#f0f9ff;border-color:var(--c);background:var(--ct);font-weight:500}
+  .opt:nth-child(2){--c:#f97316;--ct:#fff7ed} .opt:nth-child(3){--c:#8b5cf6;--ct:#f5f3ff} .opt:nth-child(4){--c:#ec4899;--ct:#fdf2f8}
+  .opt .k{flex:none;width:34px;height:34px;border-radius:50%;background:var(--c);color:#fff;
+    font-weight:800;display:flex;align-items:center;justify-content:center;font-size:1rem}
+  .opt:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(15,47,68,.14)}
+  .opt:disabled{cursor:default}
+  .opt.right{border-color:var(--ok);background:#dcfce7;font-weight:700}
+  .opt.right .k{background:var(--ok);color:#fff}
+  .opt.wrong{border-color:var(--err);background:#fee2e2;animation:shake .3s}
+  .opt.wrong .k{background:var(--err);color:#fff}
+  .opt.dim{opacity:.5;background:#fff;border-color:var(--line)} .opt.dim .k{background:#94a3b8}
+  @keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+  .fb{margin-top:14px;border-radius:14px;padding:12px 14px;font-size:.96rem;line-height:1.45;background:#fffbeb;
+    border:2px dashed #fcd34d;min-height:52px;color:#92400e}
+  .fb.ok{background:#dcfce7;border:2px solid var(--ok);color:var(--ink)}
+  .fb.no{background:#fee2e2;border:2px solid var(--err);color:var(--ink)}
+  .fb b{display:block;margin-bottom:2px}
+  .fb.ok>b{color:#166534;font-size:1.05rem} .fb.no>b{color:#b91c1c;font-size:1.05rem}
+  .fb .more{margin-top:8px;padding:8px 10px;border-radius:10px;background:#fff} .fb .more b{color:#166534}
+  .fb .more{margin-top:6px}
+  .btn{background:var(--main);color:#fff;border:0;padding:11px 20px;border-radius:12px;font-weight:700;cursor:pointer;
+    font-size:1rem;font-family:inherit}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--line)}
+  .next{display:none;margin:14px auto 0;background:var(--acc);font-size:1.05rem;padding:12px 26px;box-shadow:0 5px 14px rgba(15,47,68,.2)}
+  .next.show{display:block}
+
+  .end{text-align:center;padding-top:16px}
+  .end h2{font-size:1.5rem;margin:6px 0 4px;color:var(--deep)}
+  .end p{color:var(--soft)}
+  .stats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+  .stat{background:#16a34a;border-radius:14px;padding:9px 16px;font-weight:800;font-size:1.2rem;color:#fff;min-width:84px}
+  .stat:nth-child(2){background:#7c3aed} .stat:nth-child(3){background:#f97316} .stat:nth-child(4){background:#0ea5e9}
+  .stat span{display:block;font-size:.72rem;font-weight:600;color:#fff;opacity:.92}
+  .savebox{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+  .savebox input{padding:10px 12px;border-radius:10px;border:2px solid var(--line);font-size:1rem;width:220px;font-family:inherit}
+  .review{text-align:left;margin-top:16px;border-top:2px solid var(--line);padding-top:12px}
+  .review h3{font-size:1rem;margin-bottom:6px}
+  .review li{list-style:none;padding:8px 0;border-bottom:1px solid var(--line);font-size:.93rem;line-height:1.4}
+  .review li:last-child{border-bottom:0}
+  .review .a{color:#166534;font-weight:700}
+
+  .ranking{margin-top:16px;width:min(680px,100%);background:#fff;border:3px solid #fbbf24;border-radius:18px;padding:0 16px 12px;overflow:hidden}
+  .ranking h3{font-size:1.02rem;margin:0 -16px 8px;padding:10px 16px;background:#fbbf24;color:#451a03}
+  .ranking h3 span{color:#fff;background:#b45309;padding:2px 10px;border-radius:20px;font-size:.88rem}
+  .ranking li:nth-child(1) .pos{color:#b45309} .ranking li:nth-child(1){font-weight:700}
+  .ranking ol{list-style:none}
+  .ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.93rem}
+  .ranking li:last-child{border-bottom:0}
+  .ranking .pos{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+  .note{font-size:.8rem;color:var(--soft);margin-top:6px}
+  footer{margin-top:22px;font-size:.8rem;color:var(--soft);text-align:center;line-height:1.6}
+  footer .credit{font-weight:700;color:var(--ink)}
+
+
+  /* ---- cor unica por jogo: todos os destaques sao tons da mesma cor ---- */
+  :root{--tint:var(--t100);--pale:var(--t300);--acc:var(--dark)}
+  .hub:hover{background:var(--t50)}
+  .levels button{border-color:var(--t300)}
+  .hud .h1{background:var(--t500)} .hud .h2{background:var(--main)} .hud .h3{background:var(--deep)} .hud .h4{background:var(--dark)}
+  .strip{background:linear-gradient(180deg,var(--t50) 0%,var(--t100) 62%,var(--t300) 62%,var(--t300) 100%)}
+  .qhead{background:linear-gradient(135deg,var(--main),var(--dark))}
+  .opt,.opt:nth-child(2),.opt:nth-child(3),.opt:nth-child(4){--c:var(--main);--ct:var(--t50);border-color:var(--t300)}
+  .opt:not(:disabled):hover{border-color:var(--main);background:var(--t100)}
+  .fb{background:var(--t50);border:2px dashed var(--t300);color:var(--deep)}
+  .next{background:var(--deep)}
+  .stat{background:var(--t500)} .stat:nth-child(2){background:var(--main)} .stat:nth-child(3){background:var(--deep)} .stat:nth-child(4){background:var(--dark)}
+  .ranking{border-color:var(--main)}
+  .ranking h3{background:var(--main);color:#fff}
+  .ranking h3 span{background:var(--dark);color:#fff}
+  .ranking li:nth-child(1) .pos{color:var(--deep)}
+  @media(max-width:560px){
+    body{padding:8px 8px 32px}
+    .sub{display:none}
+    h1{margin-bottom:8px}
+    .hub{padding:4px 10px;font-size:.82rem}
+    .levels button{padding:7px 12px;font-size:.85rem}
+    .hud{gap:10px;font-size:.86rem;margin:2px 0 8px}
+    .card{padding:0 0 14px;border-radius:18px}
+    .qtext{font-size:1.05rem;margin-bottom:10px}
+    .opt{padding:9px 10px;font-size:.94rem;gap:9px}
+    .opt .k{width:28px;height:28px;font-size:.86rem}
+    .slot{width:27px;height:27px}
+    .strip{min-height:44px;padding:8px 6px 6px}
+    .qhead{margin:0 -12px 12px;padding:10px 12px 12px}
+    #stage{padding:0 12px}
+    .hud span{padding:4px 9px;font-size:.78rem} .hud b{font-size:.92rem} .hud{gap:5px}
+    .fb{font-size:.9rem}
+  }
+  @media(prefers-reduced-motion:reduce){.slot.pop svg,.opt.wrong{animation:none}}
+
+  /* ---------- classificar arrastando ---------- */
+  .card{width:min(860px,100%)} .ranking{width:min(860px,100%)}
+  .qtext{font-size:1.15rem}
+  .qdesc{font-size:.96rem;line-height:1.45;margin-top:6px;opacity:.96}
+  .goalbox{margin-top:12px;background:#fff;border-radius:16px;padding:10px 14px;box-shadow:0 6px 16px rgba(0,0,0,.18);color:var(--ink)}
+  .goalbox h4{display:flex;align-items:center;gap:8px;font-size:.8rem;letter-spacing:.8px;text-transform:uppercase;color:var(--deep);margin-bottom:6px}
+  .goalbox h4 svg{width:22px;height:22px}
+  .goalbox p{font-size:1.02rem;font-weight:700;line-height:1.35}
+  .prog{height:14px;border-radius:10px;background:var(--t100);border:1.5px solid var(--t300);overflow:hidden;margin:2px 0 6px}
+  .prog i{display:block;height:100%;background:linear-gradient(90deg,var(--t500),var(--main));transition:width .3s}
+  .progtxt{font-size:.85rem;font-weight:700;color:var(--deep);text-align:center;margin-bottom:12px}
+  .trayw{background:var(--t50);border:2px dashed var(--t300);border-radius:16px;padding:10px;margin-bottom:12px}
+  .trayw h5{font-size:.78rem;letter-spacing:.6px;text-transform:uppercase;color:var(--deep);margin:0 0 8px 4px}
+  .tray{min-height:48px}
+  .tray:empty::after{content:"Todos os cartões foram classificados.";color:var(--soft);font-size:.9rem;padding:10px;grid-column:1/-1}
+  .tray{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px}
+  .scard{position:relative;font-family:inherit;font-size:.9rem;font-weight:800;color:var(--ink);background:#fff;
+    border:2px solid var(--t300);border-radius:14px;padding:0 0 10px;cursor:grab;touch-action:none;user-select:none;line-height:1.2;
+    text-align:center;display:flex;flex-direction:column;align-items:center;min-height:132px;overflow:hidden;
+    box-shadow:0 4px 0 var(--t300),0 8px 16px rgba(15,47,68,.12);transition:transform .12s,box-shadow .12s,border-color .12s}
+  .scard::before{content:"";position:absolute;inset:4px;border:1.5px dashed var(--t300);border-radius:10px;pointer-events:none;opacity:.7}
+  .scard .cart{width:100%;height:66px;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 50% 120%,var(--t300) 0,var(--t100) 55%,var(--t50) 100%);border-bottom:2px solid var(--t300);margin-bottom:8px}
+  .scard .cart svg{width:50px;height:50px}
+  .scard .ctxt{padding:0 9px}
+  .scard:hover{transform:translateY(-3px) rotate(-1deg);box-shadow:0 6px 0 var(--t300),0 12px 20px rgba(15,47,68,.18)}
+  .scard.sel{border-color:var(--deep);background:var(--t100);box-shadow:0 0 0 3px var(--glow)}
+  .scard.dragging{cursor:grabbing;box-shadow:0 14px 28px rgba(15,47,68,.28);transform:rotate(-2deg) scale(1.04);opacity:.97}
+  .scard.shake{animation:shake .35s;border-color:var(--err);border-left-color:var(--err);background:#fee2e2}
+  .ghost{visibility:hidden}
+  .zones{display:grid;gap:10px;grid-template-columns:repeat(var(--nz,2),1fr)}
+  .zone{background:#fff;border:3px solid var(--t300);border-radius:18px;padding:0 0 10px;min-height:150px;display:flex;flex-direction:column;overflow:hidden;cursor:pointer;
+    transition:border-color .15s,box-shadow .15s,transform .15s}
+  .zone.over,.zone.target{border-color:var(--main);box-shadow:0 0 0 4px var(--glow)}
+  .zone.flashok{border-color:var(--ok);box-shadow:0 0 0 4px rgba(22,163,74,.25)}
+  .zone.flashno{border-color:var(--err);box-shadow:0 0 0 4px rgba(220,38,38,.2)}
+  .zhead{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--t100);border-bottom:2px solid var(--t300)}
+  .zico{flex:none;width:44px;height:44px;border-radius:12px;background:#fff;border:2px solid var(--t300);display:flex;align-items:center;justify-content:center}
+  .zico svg{width:32px;height:32px}
+  .zlab{font-weight:800;font-size:.98rem;line-height:1.2;color:var(--dark)}
+  .zcount{margin-left:auto;flex:none;background:var(--main);color:#fff;font-weight:800;font-size:.85rem;border-radius:20px;padding:2px 9px}
+  .zitems{display:flex;flex-wrap:wrap;gap:6px;padding:10px 10px 0}
+  .placed{display:inline-flex;align-items:center;gap:5px;font-size:.82rem;font-weight:700;background:#fff;border:2px solid #86efac;color:#14532d;border-radius:9px;padding:4px 8px 4px 4px;
+    box-shadow:0 2px 0 #86efac;animation:land .35s cubic-bezier(.3,1.5,.5,1)}
+  .placed svg{width:22px;height:22px;flex:none;background:#dcfce7;border-radius:6px;padding:2px}
+  @keyframes land{from{transform:scale(.5);opacity:0}to{transform:none;opacity:1}}
+  .fb{margin-top:12px}
+  .modelnote{font-size:.78rem;color:var(--soft);text-align:center;margin-top:12px;line-height:1.4}
+  .review .z{color:var(--deep);font-weight:700}
+  @media(max-width:700px){ .zones{grid-template-columns:repeat(min(var(--nz,2),2),1fr)} }
+  .scene{margin:0 0 12px;border-radius:16px;overflow:hidden;border:2px solid var(--t300)}
+  .scene svg{display:block;width:100%;height:auto}
+  .scenecap{display:flex;justify-content:space-between;gap:8px;font-size:.84rem;font-weight:700;color:var(--deep);margin:-6px 2px 12px;flex-wrap:wrap}
+  @media(max-width:560px){
+    .tray{grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+    .scard{font-size:.8rem;min-height:112px} .scard .cart{height:46px} .scard .cart svg{width:32px;height:32px}
+    .zones{grid-template-columns:1fr 1fr;gap:7px}
+    .zhead{padding:8px;gap:7px;flex-wrap:wrap} .zico{width:36px;height:36px} .zico svg{width:26px;height:26px}
+    .zlab{font-size:.86rem} .zone{min-height:120px}
+    .placed{font-size:.78rem;padding:4px 7px}
+  }
+  @media(prefers-reduced-motion:reduce){.placed,.scard.shake{animation:none}}
+  .goals{display:grid;gap:7px}
+  .gchip{display:flex;align-items:center;gap:10px;font-size:1.02rem;font-weight:800;color:var(--ink);background:var(--t50);border:2px solid var(--t300);border-radius:12px;padding:7px 12px;line-height:1.25}
+  .gchip i{flex:none;width:24px;height:24px;border-radius:50%;border:3px solid var(--t300);background:#fff;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:.9rem;color:#fff}
+  .gchip.ok{border-color:var(--ok);background:#dcfce7} .gchip.ok i{background:var(--ok);border-color:var(--ok)}
+  .gchip.no{border-color:#fca5a5;background:#fff7f7} .gchip.no i{background:#fff;border-color:#fca5a5}
+  .gchip.ok i::before{content:"\2713"}
+  .cityinfo{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}
+  .cpill{background:var(--t100);border:2px solid var(--t300);color:var(--dark);border-radius:20px;padding:5px 14px;font-weight:700;font-size:.92rem}
+  .cpill b{font-size:1.05rem}
+  .citydrop{min-height:0;padding:0;margin-bottom:10px}
+  .citydrop .scene{margin:0;border:0;border-radius:0}
+  .dropcap{text-align:center;font-size:.82rem;font-weight:700;color:var(--deep);padding:6px;background:var(--t50)}
+  .citydrop.over .dropcap,.citydrop.target .dropcap{background:var(--main);color:#fff}
+  .meters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px}
+  .meter{border:2px solid var(--t300);border-radius:12px;padding:8px 10px;background:#fff}
+  .meter.ok{border-color:#86efac;background:#f0fdf4} .meter.no{border-color:#fca5a5;background:#fef2f2}
+  .mtop{display:flex;justify-content:space-between;font-size:.84rem;font-weight:700;color:var(--ink);margin-bottom:5px}
+  .mtop b{font-size:1rem}
+  .mbar{position:relative;height:12px;border-radius:8px;background:#e5e7eb;overflow:visible}
+  .mbar i{display:block;height:100%;border-radius:8px;transition:width .4s}
+  .mbar u{position:absolute;top:-4px;bottom:-4px;width:3px;background:#111827;border-radius:2px}
+  .scard .cost{position:absolute;top:6px;right:6px;z-index:1;background:var(--dark);color:#fff;font-size:.75rem;font-weight:800;border-radius:12px;padding:2px 8px}
+  .scard .cost::before{content:"custo "}
+  .cplaced{display:flex;flex-wrap:wrap;gap:6px;min-height:34px}
+  .cplaced .empty{color:var(--soft);font-size:.88rem;padding:6px}
+  .placed.rem{cursor:pointer;font-family:inherit}
+  .placed.rem b{margin-left:6px;font-size:.72rem;color:#b91c1c;background:#fee2e2;border-radius:8px;padding:1px 6px}
+  .end .scene{max-width:620px;margin:12px auto}
+  .tsw{transform-box:fill-box;transform-origin:50% 100%;animation:sw 3s ease-in-out infinite alternate}
+  @keyframes sw{from{rotate:-2deg}to{rotate:2deg}}
+  .hop{animation:hop 2.6s ease-in-out infinite alternate}
+  @keyframes hop{from{transform:translateX(-12px)}50%{transform:translate(0,-4px)}to{transform:translateX(12px)}}
+  .fly{animation:fly 6s ease-in-out infinite alternate}
+  @keyframes fly{from{transform:translate(-30px,4px)}to{transform:translate(40px,-6px)}}
+  .flick{transform-box:fill-box;transform-origin:50% 100%;animation:fl .5s ease-in-out infinite alternate}
+  @keyframes fl{from{transform:scaleY(.85)}to{transform:scaleY(1.1)}}
+  .smoke{animation:puff 3s ease-out infinite}
+  @keyframes puff{from{transform:translateY(0) scale(.6);opacity:.6}to{transform:translateY(-40px) scale(1.5);opacity:0}}
+  @media(prefers-reduced-motion:reduce){.tsw,.hop,.fly,.flick,.smoke{animation:none}}
+  .tl{font:700 11px Segoe UI,system-ui,sans-serif;fill:#334155}
+  .scard .cart img.spimg{width:100%;height:100%;object-fit:cover;border-radius:10px 10px 0 0;display:block}
+  .placed .cart img.spimg,.zitems img.spimg{width:22px;height:22px;object-fit:cover;border-radius:6px}
+  .walk{animation:walk 5s ease-in-out infinite alternate}
+  @keyframes walk{from{transform:translateX(-14px)}to{transform:translateX(14px)}}
+  .flk{animation:flk .6s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:bottom}
+  @keyframes flk{from{transform:scaleY(.9)}to{transform:scaleY(1.08)}}
+  .fly{animation:fly 4s ease-in-out infinite alternate}
+  @keyframes fly{from{transform:translate(-10px,2px)}to{transform:translate(14px,-4px)}}
+  @media(prefers-reduced-motion:reduce){.flk,.fly,.walk{animation:none}}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="top">
-    <h1>🦋 Alerta Vermelho 🐆</h1>
-    <p class="sub">Arraste cada espécie brasileira para o seu grau de risco de extinção segundo a Lista Vermelha da IUCN. Toque na espécie e depois na caixa — ou arraste com o mouse.</p>
-  </header>
-
-  <div class="levels" id="levels">
-    <button class="pill active" data-lv="basico">Básico</button>
-    <button class="pill" data-lv="intermediario">Intermediário</button>
-    <button class="pill" data-lv="dificil">Difícil</button>
-    <button class="pill" data-lv="carbonauta">🛰️ Carbonauta</button>
-  </div>
-
-  <div class="hud" id="hud">
-    <div class="chip">Tempo: <b id="hTime">0s</b></div>
-    <div class="chip">Colocados: <b id="hDone">0/0</b></div>
-    <div class="chip">Erros: <b id="hErr">0</b></div>
-    <div class="chip">Pontos: <b id="hScore">—</b></div>
-  </div>
-
-  <div class="howto" id="howto">🎯 Classifique todas as espécies corretamente. Cada erro soma tempo à sua pontuação — <b>menor pontuação = melhor</b>!</div>
-
-  <div id="game">
-    <div class="pool" id="pool"><div class="lbl">Espécies para classificar</div></div>
-    <div class="zones" id="zones"></div>
-    <div class="feedback" id="fb">Comece arrastando uma espécie para a caixa do risco que você acha correto.</div>
-  </div>
-
-  <div class="end" id="end">
-    <h2>🎉 Concluído!</h2>
-    <div class="big" id="endScore">—</div>
-    <p id="endSummary"></p>
-    <div class="saverow">
-      <input id="nameIn" maxlength="20" placeholder="Seu nome (até 20)" />
-      <button class="btn" id="saveBtn">Salvar no ranking</button>
-    </div>
-    <div class="saverow">
-      <button class="btn alt" id="againBtn">Jogar de novo</button>
-    </div>
-    <p id="saveMsg" class="note"></p>
-  </div>
-
-  <div class="rank">
-    <h3>🏆 Ranking Global <span class="lvltag" id="rankLvl">Básico</span></h3>
-    <div id="rankBody"><p class="note">Carregando ranking…</p></div>
-  </div>
-
-  <footer>
-    <div class="cred">— Idealizado por Ernandes Sobreira —</div>
-    <div>Tema: Biodiversidade e espécies ameaçadas · Gênero: Arrastar e soltar (classificar) · app ambiental do dia (2026-07-17)</div>
-    <div>Imagens realistas de referência carregadas via iNaturalist; autoria/crédito disponível ao passar sobre cada foto.</div>
-  </footer>
+<div class="top">
+  <a class="hub" href="index.html">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Todos os jogos
+  </a>
 </div>
 
+<header>
+  <h1><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l10 18H2z" fill="#dc2626"/><path d="M12 9v5M12 17v1" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg> <span>Alerta <span class="spark">Vermelho</span></span></h1>
+  <p class="sub">Primeiro, descubra o grau de risco de extinção de animais do Brasil na Lista Vermelha. Depois, coloque ações para diminuir as ameaças que eles enfrentam.</p>
+</header>
+
+<div class="levels" id="levels"></div>
+
+<div class="hud">
+  <span class="h1"><em id="lHits">Acertos</em> <b id="hits">0/0</b></span>
+  <span class="h2"><em id="lErrs">Erros</em> <b id="errs">0</b></span>
+  <span class="h3">Pontos <b id="score">0</b></span>
+  <span class="h4">Tempo <b id="timer">0s</b></span>
+</div>
+
+<div class="card">
+  <div id="stage"></div>
+</div>
+
+<div class="ranking">
+  <h3>Ranking Global, nível <span id="rankLevel"></span></h3>
+  <ol id="rankList"><li><span>Carregando o ranking...</span></li></ol>
+  <p class="note" id="rankNote"></p>
+</div>
+
+<footer>
+  Biodiversidade e espécies ameaçadas · Arrastar, classificar e agir<br>
+  <span class="credit">Idealizado por Ernandes Sobreira</span>
+</footer>
+
 <script>
-/* ============ FIREBASE ============ */
 const firebaseConfig = {
   apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
   authDomain: "jogos-ranking.firebaseapp.com",
@@ -179,321 +308,702 @@ const firebaseConfig = {
   messagingSenderId: "958784915420",
   appId: "1:958784915420:web:4212d3ad278f02d600f119"
 };
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* ---------- dados deste jogo ---------- */
 const GAME_ID = "2026-07-17-alerta-vermelho";
-let db=null, fs=null;
-(async()=>{
-  try{
-    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
-    fs = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
-    const app = appMod.initializeApp(firebaseConfig);
-    db = fs.getFirestore(app);
-    loadRanking();
-  }catch(e){ db=null; renderRankOffline(); }
+/* nas fases de classificar, a pontuacao e a da versao anterior: segundos mais 10 por erro, e menos e melhor */
+function scoreNow(s){ if(s.city) return s.cityScore; return s.seconds + s.errors*10; }
+function saveDoc(name, s, lv, f){ return {name, score:scoreNow(s), seconds:s.seconds, errors:s.errors, level:lv, ts:f.serverTimestamp()}; }
+const RANK = {field:'level', val:k=>k, lowerBetter:k=>!LEVELS[k].mode};
+const SCORE_NOTE = 'Nas fases de classificar, a pontuação é o tempo em segundos mais 10 por erro. Quanto menor, melhor.';
+const END_MSG = [
+  [100, 'Especialista da Lista Vermelha!', 'Você acertou todos os cartões de primeira.'],
+  [70, 'Bom trabalho', 'Poucos erros. Confira abaixo os cartões para revisar.'],
+  [0, 'Missão cumprida, com tropeços', 'Leia a revisão abaixo e jogue de novo.']
+];
+const C = '#047857', G2 = '#16a34a', GR = '#94a3b8', BR = '#78350f';
+const ic = d => `<svg viewBox="0 0 32 32" aria-hidden="true">${d}</svg>`;
+const ci = d => `<svg viewBox="0 0 40 40" aria-hidden="true">${d}</svg>`;
+/* desenhos */
+const D = {
+  cactus: (c='#16a34a') => ci(`<rect x="17" y="6" width="7" height="30" rx="3.500" fill="${c}"/><path d="M17 20h-5a3 3 0 0 1-3-3v-6" stroke="${c}" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M24 24h4a3 3 0 0 0 3-3v-7" stroke="${c}" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M4 36h32" stroke="${BR}" stroke-width="2"/>`),
+  tree: (c='#16a34a') => ci(`<path d="M20 36c-1-6 1-10 0-16M20 26l-6-6M20 23l7-5" stroke="${BR}" stroke-width="2.600" fill="none"/><ellipse cx="20" cy="14" rx="14" ry="8" fill="${c}"/><ellipse cx="14" cy="11" rx="6" ry="4" fill="#4ade80"/>`),
+  bare: () => ci(`<path d="M20 36V18M20 26l-8-8M20 22l8-9M12 18l-3-5M28 13l3-4M20 18l-2-8" stroke="${BR}" stroke-width="2.400" fill="none" stroke-linecap="round"/>`),
+  belly: () => ci(`<path d="M14 36c-4-8-4-16 0-22h12c4 6 4 14 0 22z" fill="#a3a3a3"/><ellipse cx="20" cy="9" rx="12" ry="6" fill="#16a34a"/>`),
+  roots: () => ci(`<ellipse cx="20" cy="12" rx="13" ry="7" fill="#16a34a"/><path d="M20 18v6" stroke="${BR}" stroke-width="3"/><path d="M2 24h36" stroke="#a16207" stroke-width="2"/><ellipse cx="13" cy="31" rx="5" ry="4" fill="#d6a76c"/><ellipse cx="26" cy="32" rx="5" ry="4" fill="#d6a76c"/><path d="M20 24l-6 4M20 24l6 4" stroke="#a16207" stroke-width="1.800"/>`),
+  bird: (c='#64748b', w='#fff') => ci(`<ellipse cx="18" cy="22" rx="11" ry="7" fill="${c}"/><circle cx="29" cy="16" r="5" fill="${c}"/><path d="M33 16l5 1-5 2z" fill="#f59e0b"/><circle cx="30" cy="15" r="1.200" fill="#1f2937"/><path d="M10 20c4-6 10-6 12-2" fill="${w}"/><path d="M8 24l-6 2" stroke="${c}" stroke-width="3"/>`),
+  mammal: (c='#a16207') => ci(`<ellipse cx="19" cy="24" rx="12" ry="7" fill="${c}"/><circle cx="31" cy="20" r="5" fill="${c}"/><circle cx="33" cy="15" r="2" fill="${c}"/><circle cx="33" cy="20" r="1.200" fill="#1f2937"/><path d="M12 30v5M17 30v5M22 30v5M27 30v5" stroke="${c}" stroke-width="2.400"/>`),
+  armadillo: (c='#a8a29e') => ci(`<path d="M6 28a14 12 0 0 1 28 0z" fill="${c}"/><path d="M12 28c0-8 2-12 2-12M18 28V14M24 28c0-8-2-12-2-12M30 28c0-6-2-9-2-9" stroke="#78716c" stroke-width="1.600" fill="none"/><path d="M34 26l4-2-1 4z" fill="${c}"/>`),
+  ball: () => ci(`<circle cx="20" cy="22" r="12" fill="#a8a29e"/><path d="M10 16c6 4 14 4 20 0M9 24c6 4 16 4 22 0" stroke="#78716c" stroke-width="1.600" fill="none"/>`),
+  cat: () => ci(`<ellipse cx="18" cy="25" rx="12" ry="7" fill="#d6a76c"/><circle cx="30" cy="18" r="6" fill="#d6a76c"/><path d="M27 13l1-4 3 3M32 12l3-3v5" fill="#d6a76c"/><circle cx="31" cy="18" r="1.200" fill="#1f2937"/><path d="M6 24c-4 0-4-6 0-6" stroke="#d6a76c" stroke-width="3" fill="none"/>`),
+  monkey: () => ci(`<circle cx="20" cy="16" r="8" fill="#78716c"/><circle cx="20" cy="17" r="5" fill="#fde68a"/><circle cx="11" cy="12" r="4" fill="#fff"/><circle cx="29" cy="12" r="4" fill="#fff"/><path d="M20 24c-6 0-8 6-6 12M26 30c6 2 10-2 8-8" stroke="#78716c" stroke-width="3" fill="none"/>`),
+  snake: (c='#a16207') => ci(`<path d="M6 30c6 0 6-8 12-8s6 8 12 8 4-10 0-14" stroke="${c}" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="30" cy="15" r="4" fill="${c}"/><path d="M34 15l4-1M34 16l4 2" stroke="#dc2626" stroke-width="1.200"/>`),
+  lizard: (c='#65a30d') => ci(`<ellipse cx="18" cy="22" rx="10" ry="4" fill="${c}"/><circle cx="30" cy="20" r="4" fill="${c}"/><path d="M8 22c-4 0-6 4-6 8M12 18l-3-5M12 26l-3 5M22 18l3-5M22 26l3 5" stroke="${c}" stroke-width="2.400" fill="none"/>`),
+  frog: () => ci(`<path d="M2 28h36v10H2z" fill="#d6a76c"/><ellipse cx="20" cy="27" rx="10" ry="6" fill="#a3e635"/><circle cx="15" cy="21" r="3" fill="#a3e635"/><circle cx="25" cy="21" r="3" fill="#a3e635"/><circle cx="15" cy="21" r="1.200" fill="#1f2937"/><circle cx="25" cy="21" r="1.200" fill="#1f2937"/>`),
+  bat: () => ci(`<path d="M20 18c-6-8-14-6-18 0 4 0 6 2 6 4 2-2 6-2 6 2 2-4 4-6 6-6s4 2 6 6c0-4 4-4 6-2 0-2 2-4 6-4-4-6-12-8-18 0z" fill="#475569"/><circle cx="34" cy="8" r="4" fill="#fde68a"/>`),
+  goat: () => ci(`<ellipse cx="18" cy="24" rx="11" ry="6" fill="#f5f5f4" stroke="#78716c"/><circle cx="30" cy="18" r="5" fill="#f5f5f4" stroke="#78716c"/><path d="M29 13c-2-4-5-5-7-5M32 13c0-4 2-6 4-6" stroke="#78716c" stroke-width="1.600" fill="none"/><path d="M12 30v5M17 30v5M22 30v5M26 30v5" stroke="#78716c" stroke-width="2.200"/>`),
+  sparrow: () => ci(`<ellipse cx="18" cy="23" rx="10" ry="7" fill="#a16207"/><circle cx="27" cy="17" r="5" fill="#78716c"/><path d="M31 17l4 1-4 2z" fill="#334155"/><circle cx="28" cy="16" r="1.200" fill="#1f2937"/>`),
+  grass: () => ci(`<path d="M6 36c0-10 2-16 6-20M12 36c0-12 4-20 10-24M20 36c0-10 2-18 8-22M28 36c0-8 2-14 8-18" stroke="#ca8a04" stroke-width="2.400" fill="none"/>`),
+  pod: () => ci(`<path d="M20 36c-1-6 1-10 0-16" stroke="${BR}" stroke-width="2.600" fill="none"/><ellipse cx="20" cy="15" rx="14" ry="8" fill="#16a34a"/><path d="M10 20c2 6 6 8 8 8M26 20c2 6 4 8 6 8" stroke="#ca8a04" stroke-width="2.400" fill="none"/>`),
+  palm: () => ci(`<ellipse cx="20" cy="30" rx="6" ry="8" fill="#4d7c0f"/><ellipse cx="13" cy="18" rx="5" ry="7" fill="#65a30d" transform="rotate(-25 13 18)"/><ellipse cx="26" cy="16" rx="5" ry="7" fill="#65a30d" transform="rotate(25 26 16)"/>`)
+};
+Object.assign(D, {
+  stork: () => ci(`<ellipse cx="19" cy="20" rx="9" ry="6" fill="#fff" stroke="#94a3b8"/><path d="M26 17c2-6 2-10 2-12" stroke="#1f2937" stroke-width="3"/><path d="M26 10c1 0 2 0 2 0" stroke="#dc2626" stroke-width="4"/><path d="M28 5l9 6-9-1z" fill="#1f2937"/><path d="M17 26v10M21 26v10" stroke="#1f2937" stroke-width="1.800"/>`),
+  caiman: () => ci(`<path d="M2 26c6-6 20-8 30-4l6 2-6 3c-10 2-22 2-30-1z" fill="#4d7c0f"/><path d="M8 22l2-3 2 3 2-3 2 3 2-3 2 3" stroke="#365314" stroke-width="1.600" fill="none"/><circle cx="30" cy="22" r="1.400" fill="#fde047"/>`),
+  capy: () => ci(`<ellipse cx="18" cy="24" rx="13" ry="8" fill="#a16207"/><path d="M28 18c6-2 10 2 9 6-1 3-6 4-9 2z" fill="#a16207"/><circle cx="32" cy="20" r="1.200" fill="#1f2937"/><path d="M10 31v5M16 31v5M22 31v5M27 31v5" stroke="#a16207" stroke-width="2.600"/>`),
+  jaguar: () => ci(`<ellipse cx="18" cy="25" rx="12" ry="7" fill="#f59e0b"/><circle cx="30" cy="18" r="6" fill="#f59e0b"/><circle cx="12" cy="23" r="1.600" fill="#1f2937"/><circle cx="18" cy="26" r="1.600" fill="#1f2937"/><circle cx="23" cy="22" r="1.600" fill="#1f2937"/><circle cx="31" cy="18" r="1.200" fill="#1f2937"/><path d="M6 24c-4 0-4-6 0-6" stroke="#f59e0b" stroke-width="3" fill="none"/>`),
+  otter: () => ci(`<path d="M4 28c6-8 20-10 28-6 3 2 5 1 6-1" stroke="#78350f" stroke-width="8" fill="none" stroke-linecap="round"/><circle cx="34" cy="20" r="1.200" fill="#fff"/><path d="M2 32c4-2 8-2 12 0s8 2 12 0 8-2 12 0" stroke="#38bdf8" stroke-width="2" fill="none"/>`),
+  deer: () => ci(`<ellipse cx="18" cy="22" rx="11" ry="6" fill="#c2410c"/><path d="M27 18l4-8" stroke="#c2410c" stroke-width="4"/><circle cx="31" cy="10" r="3.400" fill="#c2410c"/><path d="M29 7l-3-5M33 7l3-5M28 4l-3 0M34 4l3 0" stroke="#78350f" stroke-width="1.600"/><path d="M11 27v9M16 27v9M21 27v9M25 27v9" stroke="#1f2937" stroke-width="1.800"/>`),
+  spoon: () => ci(`<ellipse cx="19" cy="20" rx="9" ry="6" fill="#f9a8d4"/><path d="M26 17c2-6 3-9 3-11" stroke="#f9a8d4" stroke-width="3"/><path d="M29 6l7 2-1 3z" fill="#94a3b8"/><path d="M17 26v10M21 26v10" stroke="#be185d" stroke-width="1.800"/>`),
+  toucan: () => ci(`<ellipse cx="16" cy="22" rx="8" ry="10" fill="#1f2937"/><circle cx="18" cy="13" r="5" fill="#fff"/><path d="M21 11c8-2 15 0 17 3-6 2-12 2-17 0z" fill="#f97316"/><circle cx="18" cy="12" r="1.200" fill="#1f2937"/>`),
+  anaconda: () => ci(`<path d="M4 30c6 0 6-8 12-8s6 8 12 8 6-10 2-16" stroke="#ca8a04" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="12" cy="26" r="1.400" fill="#1f2937"/><circle cx="22" cy="24" r="1.400" fill="#1f2937"/><circle cx="31" cy="13" r="4" fill="#ca8a04"/>`),
+  fish: (c='#64748b', m='#fbbf24') => ci(`<path d="M6 20c8-10 22-10 28 0-6 10-20 10-28 0z" fill="${c}"/><path d="M6 20l-5-6v12z" fill="${c}"/><circle cx="28" cy="18" r="1.600" fill="#1f2937"/><path d="M14 16c2 2 2 6 0 8" stroke="${m}" stroke-width="2" fill="none"/>`),
+  hyacinth: () => ci(`<path d="M2 30c4-2 8-2 12 0s8 2 12 0 8-2 12 0v8H2z" fill="#38bdf8"/><ellipse cx="12" cy="26" rx="8" ry="5" fill="#16a34a"/><ellipse cx="26" cy="26" rx="8" ry="5" fill="#22c55e"/><path d="M19 22V10" stroke="#16a34a" stroke-width="2"/><circle cx="19" cy="9" r="3" fill="#a78bfa"/><circle cx="16" cy="13" r="2.400" fill="#c4b5fd"/><circle cx="22" cy="13" r="2.400" fill="#c4b5fd"/>`),
+  salvinia: () => ci(`<path d="M2 24c4-2 8-2 12 0s8 2 12 0 8-2 12 0v14H2z" fill="#38bdf8"/><ellipse cx="10" cy="23" rx="4" ry="2.400" fill="#4ade80"/><ellipse cx="18" cy="23" rx="4" ry="2.400" fill="#22c55e"/><ellipse cx="26" cy="23" rx="4" ry="2.400" fill="#4ade80"/><ellipse cx="33" cy="23" rx="3" ry="2" fill="#22c55e"/>`),
+  carandá: () => ci(`<path d="M20 36V12" stroke="#78716c" stroke-width="3"/><path d="M20 12l-10-4M20 12l10-4M20 12l-8 6M20 12l8 6M20 12V2" stroke="#16a34a" stroke-width="3" stroke-linecap="round"/>`),
+  ipe: () => ci(`<path d="M20 36c-1-6 1-10 0-16" stroke="${BR}" stroke-width="2.600" fill="none"/><ellipse cx="20" cy="14" rx="14" ry="8" fill="#c084fc"/><ellipse cx="14" cy="11" rx="6" ry="4" fill="#e9d5ff"/>`),
+  flood: () => ci(`<path d="M20 36c-1-6 1-10 0-16" stroke="${BR}" stroke-width="2.600" fill="none"/><ellipse cx="20" cy="14" rx="14" ry="8" fill="#16a34a"/><path d="M2 30c4-2 8-2 12 0s8 2 12 0 8-2 12 0v8H2z" fill="#38bdf8" opacity=".85"/>`),
+  fire: () => ci(`<path d="M20 4c5 7 10 11 10 18a10 10 0 0 1-20 0c0-5 3-8 5-11 1 4 3 5 5 5-1-5 0-8 0-12z" fill="#f97316"/><path d="M20 22c3 3 4 5 4 7a4 4 0 0 1-8 0c0-2 1-4 4-7z" fill="#fde047"/>`),
+  drought: () => ci(`<circle cx="30" cy="10" r="6" fill="#f59e0b"/><path d="M2 30h36v8H2z" fill="#d6a76c"/><path d="M6 30l4 4 3-3 5 5M24 30l3 4 4-2 4 4" stroke="#a16207" stroke-width="1.400" fill="none"/><path d="M10 28c0-6 2-10 2-14M16 28c0-4 2-8 4-10" stroke="#ca8a04" stroke-width="2" fill="none"/>`),
+  peat: () => ci(`<path d="M2 18h36v20H2z" fill="#44403c"/><path d="M8 24c2-3 4-3 6 0M22 30c2-3 4-3 6 0" stroke="#f97316" stroke-width="2.400" fill="none"/><circle cx="12" cy="10" r="4" fill="#78716c" opacity=".7"/><circle cx="26" cy="8" r="3.400" fill="#a8a29e" opacity=".7"/>`),
+  barge: () => ci(`<path d="M2 26c4-2 8-2 12 0s8 2 12 0 8-2 12 0v12H2z" fill="#38bdf8"/><rect x="6" y="18" width="26" height="8" fill="#64748b"/><rect x="10" y="12" width="8" height="6" fill="#f97316"/><rect x="20" y="12" width="8" height="6" fill="#facc15"/>`),
+  dam: () => ci(`<path d="M2 16h22v20H2z" fill="#7dd3fc"/><path d="M24 10h6v26h-6z" fill="#64748b"/><path d="M30 30c3 0 5 2 8 2" stroke="#38bdf8" stroke-width="3"/>`),
+  sand: () => ci(`<path d="M2 20c6-3 10-3 16 0s10 3 20 0v18H2z" fill="#a16207"/><path d="M2 20c6-3 10-3 16 0s10 3 20 0" stroke="#38bdf8" stroke-width="3" fill="none"/><path d="M26 6l-6 8M30 10l-8 6" stroke="#78350f" stroke-width="2.400"/>`),
+  drain: () => ci(`<path d="M2 26h36v12H2z" fill="#d6a76c"/><path d="M14 26v12h12V26" fill="#38bdf8"/><path d="M6 20h4v6M30 20h4v6" stroke="#16a34a" stroke-width="2"/><path d="M20 6v14M15 15l5 5 5-5" stroke="#dc2626" stroke-width="2.400" fill="none"/>`),
+  mussel: () => ci(`<path d="M8 30c0-12 6-22 14-22 6 0 10 8 10 16 0 6-6 10-12 10s-12-1-12-4z" fill="#a16207"/><path d="M12 28c4-6 10-14 16-16" stroke="#facc15" stroke-width="1.600" fill="none"/>`),
+  pig: () => ci(`<ellipse cx="18" cy="24" rx="12" ry="8" fill="#57534e"/><path d="M29 22l7-2v6l-7 0z" fill="#57534e"/><circle cx="35" cy="23" r="1.400" fill="#1f2937"/><path d="M12 31v5M24 31v5" stroke="#57534e" stroke-width="3"/><path d="M10 16l2-4 2 4" fill="#57534e"/>`),
+  brachiaria: () => ci(`<path d="M6 36c0-12 2-18 6-24M13 36c0-14 4-22 10-26M21 36c0-12 2-20 8-24M29 36c0-10 2-16 8-20" stroke="#65a30d" stroke-width="2.600" fill="none"/>`),
+  cow: () => ci(`<ellipse cx="18" cy="23" rx="12" ry="7" fill="#fff" stroke="#334155" stroke-width="1.600"/><circle cx="13" cy="21" r="3" fill="#334155"/><ellipse cx="31" cy="18" rx="5" ry="4" fill="#fff" stroke="#334155" stroke-width="1.600"/><path d="M28 14l-2-4M34 14l2-4" stroke="#78716c" stroke-width="1.600"/><path d="M10 29v6M16 29v6M22 29v6M26 29v6" stroke="#334155" stroke-width="2"/>`)
+});
+Object.assign(D, {
+  wolf: () => ci(`<ellipse cx="18" cy="20" rx="11" ry="6" fill="#ea580c"/><path d="M27 17l5-6 3 1-1 6z" fill="#ea580c"/><path d="M30 10l1-5M33 11l3-5" stroke="#1f2937" stroke-width="2"/><path d="M10 25v11M15 25v11M22 25v11M26 25v11" stroke="#1f2937" stroke-width="2.600"/><path d="M8 18c-4 0-6 4-6 6" stroke="#ea580c" stroke-width="3" fill="none"/><path d="M24 15c2-2 4-2 4-2" stroke="#1f2937" stroke-width="3"/>`),
+  anteater: () => ci(`<ellipse cx="18" cy="22" rx="11" ry="7" fill="#78716c"/><path d="M27 20c5 0 9 2 11 4" stroke="#78716c" stroke-width="4" stroke-linecap="round"/><path d="M14 16l10 8" stroke="#1f2937" stroke-width="3"/><path d="M7 22c-6-6-6-12 0-14" stroke="#57534e" stroke-width="6" fill="none"/><path d="M13 28v7M22 28v7" stroke="#57534e" stroke-width="3"/>`),
+  rhea: () => ci(`<ellipse cx="18" cy="18" rx="10" ry="7" fill="#a8a29e"/><path d="M26 14c2-4 2-8 2-10" stroke="#a8a29e" stroke-width="3"/><circle cx="28" cy="4" r="2.400" fill="#a8a29e"/><path d="M30 4l4 1-4 1z" fill="#f59e0b"/><path d="M16 24l-2 12M20 24l2 12" stroke="#78716c" stroke-width="2.400"/>`),
+  seriema: () => ci(`<ellipse cx="17" cy="18" rx="8" ry="5" fill="#d6d3d1"/><path d="M23 15c2-3 3-6 3-8" stroke="#d6d3d1" stroke-width="3"/><circle cx="26" cy="6" r="3" fill="#d6d3d1"/><path d="M26 3l-3-3M27 3l0-3" stroke="#78716c" stroke-width="1.400"/><path d="M29 6l4 1-4 1z" fill="#dc2626"/><path d="M15 23l-1 13M19 23l1 13" stroke="#dc2626" stroke-width="2"/>`),
+  giantarm: () => D.armadillo('#78716c'),
+  deer2: () => D.deer(),
+  macaw2: () => D.bird('#2563eb','#facc15'),
+  jay: () => D.bird('#1e3a8a','#fff'),
+  tortoise: () => ci(`<path d="M6 26a14 12 0 0 1 28 0z" fill="#78350f"/><path d="M12 22l4-6 8 0 4 6M20 16v10" stroke="#fbbf24" stroke-width="1.600" fill="none"/><circle cx="35" cy="24" r="3.400" fill="#a16207"/><path d="M10 26v5M28 26v5" stroke="#a16207" stroke-width="3"/>`),
+  termite: () => ci(`<path d="M8 36c2-14 6-26 12-30 6 4 10 16 12 30z" fill="#b45309"/><path d="M15 20h3M21 14h3M22 26h3M14 30h3" stroke="#78350f" stroke-width="2"/>`),
+  bee: () => ci(`<ellipse cx="20" cy="22" rx="9" ry="6" fill="#facc15"/><path d="M16 17v10M21 16v12M26 18v8" stroke="#1f2937" stroke-width="2"/><ellipse cx="16" cy="13" rx="5" ry="4" fill="#e0f2fe" opacity=".9"/><ellipse cx="24" cy="13" rx="5" ry="4" fill="#e0f2fe" opacity=".9"/><circle cx="30" cy="22" r="3" fill="#1f2937"/>`),
+  pequi: () => ci(`<path d="M20 36c-2-8 2-12-1-18" stroke="${BR}" stroke-width="3.400" fill="none"/><path d="M19 22l-7-5M20 20l8-6" stroke="${BR}" stroke-width="2.400"/><ellipse cx="20" cy="12" rx="15" ry="7" fill="#16a34a"/><circle cx="12" cy="18" r="3.400" fill="#a3e635"/><circle cx="27" cy="17" r="3.400" fill="#a3e635"/>`),
+  buriti: () => ci(`<path d="M20 36V12" stroke="#78716c" stroke-width="3"/><path d="M20 12c-6-2-12 0-16 4M20 12c6-2 12 0 16 4M20 12c-4-4-10-6-14-4M20 12c4-4 10-6 14-4M20 12V2" stroke="#16a34a" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="17" cy="16" r="2" fill="#9a3412"/><circle cx="22" cy="16" r="2" fill="#9a3412"/>`),
+  ipeyellow: () => D.ipe().replace('#c084fc','#facc15').replace('#e9d5ff','#fef08a'),
+  twisted: () => ci(`<path d="M20 36c-4-6 4-10-2-16M18 24l-8-4M19 22l9-6" stroke="${BR}" stroke-width="3.400" fill="none" stroke-linecap="round"/><ellipse cx="11" cy="16" rx="7" ry="4.400" fill="#16a34a"/><ellipse cx="27" cy="13" rx="8" ry="5" fill="#22c55e"/>`),
+  cagaita: () => ci(`<path d="M20 36c-1-6 1-10 0-16" stroke="${BR}" stroke-width="2.600" fill="none"/><ellipse cx="20" cy="14" rx="13" ry="7" fill="#16a34a"/><circle cx="14" cy="18" r="3" fill="#facc15"/><circle cx="24" cy="19" r="3" fill="#facc15"/>`),
+  spring: () => ci(`<path d="M2 26c4-3 8-3 12 0s8 3 12 0 8-3 12 0v12H2z" fill="#38bdf8"/><path d="M20 26c0-6 0-10 0-14" stroke="#38bdf8" stroke-width="3"/><circle cx="20" cy="9" r="4" fill="#7dd3fc"/><path d="M6 26V16M34 26V16" stroke="#16a34a" stroke-width="2.400"/>`),
+  gallery: () => ci(`<path d="M2 28c4-2 8-2 12 0s8 2 12 0 8-2 12 0v10H2z" fill="#38bdf8"/><circle cx="8" cy="16" r="7" fill="#15803d"/><circle cx="20" cy="12" r="8" fill="#16a34a"/><circle cx="32" cy="16" r="7" fill="#15803d"/><path d="M8 23v5M20 20v8M32 23v5" stroke="${BR}" stroke-width="2"/>`),
+  paca: () => ci(`<ellipse cx="18" cy="24" rx="12" ry="8" fill="#a16207"/><circle cx="12" cy="22" r="1.600" fill="#fff"/><circle cx="17" cy="20" r="1.600" fill="#fff"/><circle cx="22" cy="24" r="1.600" fill="#fff"/><circle cx="30" cy="20" r="5" fill="#a16207"/><circle cx="32" cy="19" r="1.200" fill="#1f2937"/>`),
+  grassy: () => ci(`<path d="M2 34h36" stroke="#a16207" stroke-width="3"/><path d="M6 34c0-8 2-12 4-14M12 34c0-10 3-14 6-16M20 34c0-8 2-12 4-14M28 34c0-10 3-14 6-16" stroke="#ca8a04" stroke-width="2.200" fill="none"/>`),
+  soy: () => ci(`<path d="M2 34h36" stroke="#a16207" stroke-width="3"/><path d="M8 34V20M16 34V18M24 34V20M32 34V18" stroke="#65a30d" stroke-width="2"/><ellipse cx="8" cy="18" rx="3" ry="4" fill="#84cc16"/><ellipse cx="16" cy="16" rx="3" ry="4" fill="#84cc16"/><ellipse cx="24" cy="18" rx="3" ry="4" fill="#84cc16"/><ellipse cx="32" cy="16" rx="3" ry="4" fill="#84cc16"/>`),
+  pivot: () => ci(`<circle cx="20" cy="20" r="15" fill="#86efac" stroke="#16a34a" stroke-width="1.600"/><path d="M20 20L33 12" stroke="#64748b" stroke-width="2.400"/><circle cx="20" cy="20" r="2.400" fill="#64748b"/><path d="M26 16l1 3M30 14l1 3" stroke="#38bdf8" stroke-width="1.600"/>`),
+  pine: () => ci(`<path d="M20 4l10 14h-6l8 10H8l8-10h-6z" fill="#166534"/><rect x="18" y="28" width="4" height="8" fill="${BR}"/>`),
+  boar: () => D.pig(), molasses: () => D.brachiaria().replace(/#65a30d/g,'#b45309')
+});
+Object.assign(D, {
+  dolphin: () => ci(`<path d="M4 24c6-10 22-12 30-4l4-2-1 5c-6 6-22 8-33 1z" fill="#f9a8d4"/><path d="M34 22l5 1" stroke="#f9a8d4" stroke-width="3"/><path d="M18 16l3-6 3 6" fill="#f9a8d4"/><circle cx="30" cy="20" r="1.200" fill="#1f2937"/>`),
+  manatee: () => ci(`<ellipse cx="20" cy="22" rx="15" ry="8" fill="#94a3b8"/><path d="M4 22l-3-5v10z" fill="#94a3b8"/><circle cx="32" cy="20" r="1.200" fill="#1f2937"/><path d="M22 28l-2 5" stroke="#94a3b8" stroke-width="3"/>`),
+  sloth: () => ci(`<path d="M2 8h36" stroke="${BR}" stroke-width="3"/><ellipse cx="20" cy="20" rx="10" ry="8" fill="#a8a29e"/><path d="M12 14V8M28 14V8" stroke="#a8a29e" stroke-width="3"/><circle cx="20" cy="22" r="4" fill="#e7e5e4"/><path d="M17 21h2M21 21h2" stroke="#1f2937" stroke-width="1.400"/>`),
+  harpy: () => ci(`<ellipse cx="20" cy="24" rx="10" ry="11" fill="#475569"/><circle cx="20" cy="12" r="7" fill="#cbd5e1"/><path d="M14 6l-2-4M26 6l2-4" stroke="#334155" stroke-width="2"/><path d="M18 14l2 4 2-4z" fill="#1f2937"/><circle cx="17" cy="11" r="1.400" fill="#1f2937"/><circle cx="23" cy="11" r="1.400" fill="#1f2937"/>`),
+  hoatzin: () => ci(`<ellipse cx="18" cy="24" rx="10" ry="8" fill="#a16207"/><circle cx="28" cy="15" r="5" fill="#a16207"/><circle cx="29" cy="14" r="1.600" fill="#dc2626"/><path d="M28 10l-2-6M30 10l1-6M32 11l3-5" stroke="#78350f" stroke-width="1.600"/><path d="M10 22c4-4 8-4 10 0" fill="#f59e0b"/>`),
+  turtle: () => ci(`<ellipse cx="20" cy="22" rx="13" ry="9" fill="#65a30d"/><path d="M12 18l8 4 8-4M20 22v8" stroke="#365314" stroke-width="1.400" fill="none"/><circle cx="34" cy="21" r="3.400" fill="#84cc16"/><path d="M10 28l-4 4M28 29l4 4M10 15l-4-4M28 14l4-4" stroke="#84cc16" stroke-width="3" stroke-linecap="round"/>`),
+  gator: () => D.caiman(),
+  monkey2: () => ci(`<circle cx="20" cy="14" r="7" fill="#1f2937"/><circle cx="20" cy="15" r="4" fill="#a16207"/><path d="M20 21v8M20 24l-8 6M20 24l8 6M20 29l-4 7M20 29l4 7M26 30c6 0 10-6 8-14" stroke="#1f2937" stroke-width="2.600" fill="none"/>`),
+  tapir: () => ci(`<ellipse cx="18" cy="23" rx="13" ry="8" fill="#57534e"/><path d="M30 20c4 0 6 2 8 6" stroke="#57534e" stroke-width="5" stroke-linecap="round"/><circle cx="29" cy="19" r="1.200" fill="#fff"/><path d="M9 30v6M15 30v6M22 30v6M27 30v6" stroke="#57534e" stroke-width="3"/>`),
+  peccary: () => ci(`<ellipse cx="18" cy="24" rx="12" ry="7" fill="#44403c"/><path d="M28 21l8 2-1 4-7-1z" fill="#44403c"/><path d="M10 20c4-2 10-2 14 0" stroke="#e7e5e4" stroke-width="2" fill="none"/><path d="M11 30v5M24 30v5" stroke="#44403c" stroke-width="3"/>`),
+  ant: () => ci(`<ellipse cx="10" cy="26" rx="5" ry="4" fill="#9a3412"/><circle cx="18" cy="25" r="3" fill="#9a3412"/><circle cx="24" cy="23" r="3.400" fill="#9a3412"/><path d="M24 20l2-5h8l2 3" fill="#22c55e"/><path d="M12 30l-2 4M16 28l1 5M20 28l2 5" stroke="#9a3412" stroke-width="1.600"/>`),
+  arapaima: () => D.fish('#78716c','#dc2626'), tambaqui: () => D.fish('#334155','#a3a3a3'),
+  eel: () => ci(`<path d="M4 24c6-6 10 4 16-2s10 4 16-2" stroke="#57534e" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M16 12l-3 6h4l-3 6M28 10l-3 6h4l-3 6" stroke="#facc15" stroke-width="2" fill="none"/>`),
+  brazilnut: () => ci(`<circle cx="20" cy="22" r="12" fill="#78350f"/><path d="M14 18c2 4 4 8 6 10M26 18c-2 4-4 8-6 10M20 14v14" stroke="#d6a76c" stroke-width="2.400"/>`),
+  rubber: () => ci(`<rect x="15" y="4" width="10" height="32" fill="#78350f"/><path d="M15 12l10 4M15 18l10 4" stroke="#d6a76c" stroke-width="1.600"/><path d="M25 22c3 0 4 2 4 4" stroke="#fff" stroke-width="2"/><path d="M26 28h8v6h-8z" fill="#e2e8f0"/>`),
+  acai: () => ci(`<path d="M20 36V14" stroke="#78716c" stroke-width="2.400"/><path d="M20 14l-10-6M20 14l10-6M20 14l-12 2M20 14l12 2M20 14V2" stroke="#16a34a" stroke-width="2.600" stroke-linecap="round"/><circle cx="16" cy="20" r="2" fill="#4c1d95"/><circle cx="19" cy="22" r="2" fill="#4c1d95"/><circle cx="16" cy="24" r="2" fill="#4c1d95"/>`),
+  lily: () => ci(`<path d="M2 26c4-2 8-2 12 0s8 2 12 0 8-2 12 0v12H2z" fill="#38bdf8"/><ellipse cx="20" cy="25" rx="16" ry="5" fill="#16a34a"/><path d="M20 20v-6" stroke="#16a34a" stroke-width="2"/><path d="M16 14c0-4 4-6 4-8 0 2 4 4 4 8z" fill="#f9a8d4"/>`),
+  kapok: () => ci(`<path d="M20 36V14M12 36l8-6M28 36l-8-6" stroke="${BR}" stroke-width="3.400"/><ellipse cx="20" cy="10" rx="17" ry="7" fill="#16a34a"/>`),
+  cloud: () => ci(`<ellipse cx="22" cy="12" rx="12" ry="7" fill="#e0f2fe" stroke="#38bdf8"/><path d="M8 36c-1-6 1-10 0-14" stroke="${BR}" stroke-width="2.400"/><ellipse cx="8" cy="20" rx="7" ry="5" fill="#16a34a"/><path d="M12 16c2-4 4-4 6-4" stroke="#38bdf8" stroke-width="2" stroke-dasharray="2 2"/>`),
+  rain: () => ci(`<ellipse cx="20" cy="12" rx="14" ry="7" fill="#94a3b8"/><path d="M12 22l-2 6M20 22l-2 6M28 22l-2 6" stroke="#38bdf8" stroke-width="2.400" stroke-linecap="round"/>`),
+  wood: () => ci(`<rect x="6" y="14" width="28" height="12" rx="6" fill="#a16207"/><circle cx="34" cy="20" r="6" fill="#d6a76c" stroke="#a16207" stroke-width="2"/><circle cx="34" cy="20" r="2.400" fill="none" stroke="#a16207"/>`),
+  soil: () => ci(`<path d="M2 16h36v22H2z" fill="#78350f"/><path d="M2 16h36" stroke="#16a34a" stroke-width="4"/><path d="M10 20v8M20 20v12M30 20v6" stroke="#d6a76c" stroke-width="1.600"/>`),
+  oil: () => ci(`<path d="M20 6c6 9 9 14 9 19a9 9 0 0 1-18 0c0-5 3-10 9-19z" fill="#facc15" stroke="#ca8a04" stroke-width="1.600"/>`)
+});
+Object.assign(D, {
+  tamarin: () => ci(`<circle cx="20" cy="15" r="9" fill="#f59e0b"/><circle cx="20" cy="16" r="4.400" fill="#78350f"/><circle cx="18" cy="15" r="1" fill="#fff"/><circle cx="22" cy="15" r="1" fill="#fff"/><path d="M20 24c-4 4-4 8-2 12M24 26c6 2 10-2 10-8" stroke="#f59e0b" stroke-width="3" fill="none"/>`),
+  muriqui: () => ci(`<circle cx="20" cy="12" r="6" fill="#d6d3d1"/><circle cx="20" cy="13" r="3.400" fill="#1f2937"/><path d="M20 18v10M20 21l-10 6M20 21l10-8M20 28l-4 8M20 28l4 8M28 13c6-4 8-8 6-11" stroke="#d6d3d1" stroke-width="3" fill="none"/>`),
+  sloth2: () => D.sloth(),
+  tanager: () => ci(`<ellipse cx="18" cy="22" rx="10" ry="7" fill="#22c55e"/><circle cx="27" cy="16" r="5" fill="#14b8a6"/><path d="M10 20c4-4 10-4 12 0" fill="#1f2937"/><path d="M12 26c4 2 10 2 12-2" fill="#f97316"/><path d="M31 16l4 1-4 2z" fill="#1f2937"/><circle cx="28" cy="15" r="1.200" fill="#1f2937"/>`),
+  guan: () => ci(`<ellipse cx="18" cy="22" rx="11" ry="7" fill="#1f2937"/><circle cx="29" cy="15" r="5" fill="#1f2937"/><path d="M26 11c2-3 4-3 6-2" fill="#fff" stroke="#fff"/><path d="M30 20l1 6" stroke="#dc2626" stroke-width="3"/><path d="M33 15l4 1-4 2z" fill="#93c5fd"/>`),
+  hawk2: () => D.harpy(),
+  pitviper: () => D.snake('#a16207'),
+  goldfrog: () => ci(`<ellipse cx="20" cy="24" rx="9" ry="6" fill="#f97316"/><circle cx="16" cy="19" r="2.400" fill="#f97316"/><circle cx="24" cy="19" r="2.400" fill="#f97316"/><circle cx="16" cy="19" r="1" fill="#1f2937"/><circle cx="24" cy="19" r="1" fill="#1f2937"/><path d="M12 28l-4 4M28 28l4 4" stroke="#f97316" stroke-width="2.400"/><path d="M2 34h36" stroke="#16a34a" stroke-width="3"/>`),
+  treefrog: () => ci(`<ellipse cx="20" cy="22" rx="10" ry="6" fill="#4ade80"/><circle cx="15" cy="16" r="3.400" fill="#4ade80"/><circle cx="25" cy="16" r="3.400" fill="#4ade80"/><circle cx="15" cy="16" r="1.400" fill="#1f2937"/><circle cx="25" cy="16" r="1.400" fill="#1f2937"/><path d="M10 26l-4 2M30 26l4 2" stroke="#4ade80" stroke-width="2.400"/><circle cx="6" cy="28" r="1.600" fill="#f97316"/><circle cx="34" cy="28" r="1.600" fill="#f97316"/>`),
+  brazilwood: () => D.tree('#16a34a'),
+  palmito: () => D.acai(),
+  bromeliad: () => ci(`<path d="M20 34c-8 0-14-6-16-14 6 2 10 6 12 10-2-8 0-16 4-22 4 6 6 14 4 22 2-4 6-8 12-10-2 8-8 14-16 14z" fill="#22c55e"/><path d="M20 12v-6" stroke="#dc2626" stroke-width="3"/><ellipse cx="20" cy="26" rx="4" ry="2" fill="#38bdf8"/>`),
+  jequitiba: () => D.kapok(),
+  hummingbird: () => ci(`<ellipse cx="18" cy="22" rx="8" ry="5" fill="#14b8a6"/><path d="M24 20l14-4" stroke="#1f2937" stroke-width="1.600"/><circle cx="23" cy="19" r="3.400" fill="#0d9488"/><path d="M14 18c-2-6 2-10 6-10M16 22c-4 2-8 2-12 0" stroke="#14b8a6" stroke-width="2.400" fill="none"/><path d="M32 30c0-4 2-6 4-6" stroke="#dc2626" stroke-width="3"/>`),
+  orchidbee: () => ci(`<ellipse cx="20" cy="22" rx="9" ry="6" fill="#10b981"/><ellipse cx="16" cy="14" rx="5" ry="4" fill="#e0f2fe" opacity=".9"/><ellipse cx="24" cy="14" rx="5" ry="4" fill="#e0f2fe" opacity=".9"/><path d="M30 22l6 2" stroke="#1f2937" stroke-width="2"/>`),
+  nectarbat: () => ci(`<path d="M20 18c-6-8-14-6-18 0 4 0 6 2 6 4 2-2 6-2 6 2 2-4 4-6 6-6s4 2 6 6c0-4 4-4 6-2 0-2 2-4 6-4-4-6-12-8-18 0z" fill="#78716c"/><path d="M20 22v6" stroke="#fde047" stroke-width="2"/><circle cx="20" cy="32" r="4" fill="#f9a8d4"/>`),
+  moth: () => ci(`<path d="M20 12v18" stroke="#57534e" stroke-width="3"/><path d="M20 16c-10-8-18-2-14 6 4 4 10 2 14-2zM20 16c10-8 18-2 14 6-4 4-10 2-14-2z" fill="#a8a29e"/><path d="M20 12c4-6 8-8 12-8" stroke="#57534e" stroke-width="1.400" fill="none"/>`),
+  stinglessbee: () => D.bee(),
+  agouti: () => ci(`<ellipse cx="18" cy="24" rx="11" ry="7" fill="#c2410c"/><circle cx="28" cy="19" r="5" fill="#c2410c"/><circle cx="30" cy="18" r="1.200" fill="#1f2937"/><path d="M12 30v6M22 30v6" stroke="#c2410c" stroke-width="3"/><ellipse cx="8" cy="34" rx="3" ry="2.400" fill="#78350f"/>`),
+  ocelot: () => D.jaguar().replace(/#f59e0b/g,'#fbbf24'),
+  puma: () => D.cat(),
+  snail: () => ci(`<path d="M6 30h26c2 0 4-2 2-4" stroke="#a16207" stroke-width="4" fill="none"/><path d="M14 28c0-10 4-18 10-18s8 6 6 12-8 6-10 2 2-8 4-6" stroke="#78350f" stroke-width="2.400" fill="#fde68a"/><path d="M32 26l2-6M34 26l4-4" stroke="#a16207" stroke-width="1.600"/>`),
+  ginger: () => ci(`<path d="M20 36V14M14 36V18M26 36V16" stroke="#16a34a" stroke-width="2.400"/><ellipse cx="12" cy="20" rx="4" ry="9" fill="#22c55e" transform="rotate(-20 12 20)"/><path d="M18 10l2-4 2 4 4-2-2 4 2 4-4-1-2 4-2-4-4 1 2-4-2-4z" fill="#fff" stroke="#e2e8f0"/>`),
+  cedar: () => D.tree('#15803d'),
+  ipeyellow2: () => D.ipe().replace('#c084fc','#facc15').replace('#e9d5ff','#fef08a')
+});
+Object.assign(D, {
+  coati: () => ci(`<ellipse cx="18" cy="24" rx="11" ry="6" fill="#a16207"/><path d="M28 21l9 3-9 2z" fill="#a16207"/><circle cx="27" cy="21" r="1.200" fill="#1f2937"/><path d="M7 22c-4-4-4-10 0-14" stroke="#a16207" stroke-width="3.400" fill="none"/><path d="M5 18h4M5 13h4" stroke="#fde68a" stroke-width="1.600"/><path d="M12 29v6M24 29v6" stroke="#a16207" stroke-width="3"/>`),
+  whale: () => ci(`<path d="M2 22c6-10 24-12 32-4 2 2 4 2 6 0-1 4-2 6-6 6-8 6-26 6-32-2z" fill="#475569"/><path d="M4 22c8 4 22 4 30 0" stroke="#e2e8f0" stroke-width="1.600"/><path d="M16 26l-4 8" stroke="#475569" stroke-width="4"/>`),
+  tamarinbw: () => ci(`<circle cx="20" cy="15" r="8" fill="#f8fafc" stroke="#cbd5e1"/><circle cx="20" cy="16" r="4.400" fill="#1f2937"/><circle cx="18" cy="15" r="1" fill="#fff"/><circle cx="22" cy="15" r="1" fill="#fff"/><path d="M20 23c-4 4-4 8-2 12" stroke="#78350f" stroke-width="3" fill="none"/>`),
+  blacktamarin: () => ci(`<circle cx="20" cy="15" r="9" fill="#1f2937"/><circle cx="20" cy="16" r="4.400" fill="#57534e"/><circle cx="18" cy="15" r="1" fill="#fff"/><circle cx="22" cy="15" r="1" fill="#fff"/><path d="M20 24c-4 4-4 8-2 12M24 26c6 2 10-2 10-8" stroke="#1f2937" stroke-width="3" fill="none"/><path d="M14 28h10" stroke="#f59e0b" stroke-width="3"/>`),
+  guaruba: () => D.bird('#facc15','#16a34a'),
+  spix: () => D.bird('#60a5fa','#94a3b8'),
+  araripe: () => ci(`<ellipse cx="18" cy="23" rx="10" ry="7" fill="#f8fafc" stroke="#cbd5e1"/><circle cx="27" cy="17" r="5" fill="#f8fafc" stroke="#cbd5e1"/><path d="M23 12c2-6 6-8 10-6-2 2-4 4-6 7z" fill="#dc2626"/><path d="M8 22c-2 4-2 8-4 10M12 24c8 2 14 0 16-6" stroke="#1f2937" stroke-width="2.400" fill="none"/><path d="M31 17l4 1-4 2z" fill="#1f2937"/>`),
+  thrush: () => ci(`<ellipse cx="18" cy="23" rx="10" ry="7" fill="#a8a29e"/><ellipse cx="20" cy="26" rx="7" ry="4" fill="#f97316"/><circle cx="27" cy="17" r="5" fill="#a8a29e"/><path d="M31 17l5 1-5 2z" fill="#facc15"/><circle cx="28" cy="16" r="1.200" fill="#1f2937"/><path d="M8 22l-6 4" stroke="#78716c" stroke-width="3"/>`),
+  leatherback: () => ci(`<ellipse cx="20" cy="22" rx="14" ry="8" fill="#334155"/><path d="M8 22h24M12 17l16 10M12 27l16-10" stroke="#64748b" stroke-width="1.200"/><circle cx="35" cy="20" r="3.400" fill="#334155"/><path d="M10 16l-6-6M10 28l-6 6" stroke="#334155" stroke-width="4" stroke-linecap="round"/>`),
+  hawksbill: () => ci(`<ellipse cx="20" cy="22" rx="13" ry="9" fill="#a16207"/><path d="M14 16l6 4 6-4M14 28l6-4 6 4M20 20v6" stroke="#fde68a" stroke-width="1.600"/><circle cx="35" cy="20" r="3.400" fill="#78350f"/><path d="M10 16l-6-6M10 28l-6 6" stroke="#78350f" stroke-width="4" stroke-linecap="round"/>`),
+  puma2: () => D.mammal('#d6a76c')
+});
+const CAT_ICON = (code, bg, fg) => ci(`<circle cx="20" cy="20" r="16" fill="${bg}"/><text x="20" y="25" text-anchor="middle" font-size="12" font-weight="900" fill="${fg}">${code}</text>`);
+const ICO = {
+  lc: CAT_ICON('LC','#16a34a','#fff'), nt: CAT_ICON('NT','#65a30d','#fff'), vu: CAT_ICON('VU','#eab308','#1f2937'),
+  en: CAT_ICON('EN','#f97316','#fff'), cr: CAT_ICON('CR','#dc2626','#fff'), am: CAT_ICON('!','#dc2626','#fff')
+};
+/* nome cientifico de cada especie: usado para buscar a foto no iNaturalist; sem internet fica o desenho */
+const SP = {
+  capivara:['Hydrochoerus hydrochaeris','capy'], quati:['Nasua nasua','coati'], tucano:['Ramphastos toco','toucan'],
+  jacare:['Caiman yacare','caiman'], arara:['Anodorhynchus hyacinthinus','macaw2'], mico:['Leontopithecus rosalia','tamarin'],
+  tamandua:['Myrmecophaga tridactyla','anteater'], suçuarana:['Puma concolor','puma2'], jubarte:['Megaptera novaeangliae','whale'],
+  cervo:['Blastocerus dichotomus','deer'], tatubola:['Tolypeutes tricinctus','ball'], ariranha:['Pteronura brasiliensis','otter'],
+  sauim:['Saguinus bicolor','tamarinbw'], preguica:['Bradypus variegatus','sloth'], sabia:['Turdus rufiventris','thrush'],
+  onca:['Panthera onca','jaguar'], lobo:['Chrysocyon brachyurus','wolf'], ema:['Rhea americana','rhea'],
+  peixeboi:['Trichechus inunguis','manatee'], couro:['Dermochelys coriacea','leatherback'], ararajuba:['Guaruba guarouba','guaruba'],
+  micopreto:['Leontopithecus chrysopygus','blacktamarin'], muriqui:['Brachyteles hypoxanthus','muriqui'], ararinha:['Cyanopsitta spixii','spix'],
+  pente:['Eretmochelys imbricata','hawksbill'], soldadinho:['Antilophia bokermanni','araripe'], anta:['Tapirus terrestris','tapir']
+};
+const ITEM_ICONS = { _: D.mammal() };
+Object.keys(SP).forEach(k => { ITEM_ICONS[k] = D[SP[k][1]](); });
+const it = (k, t, z, fb) => ({t, ic:k, z, fb});
+const LEVELS = {
+  basico: { label:'Básico', title:'Fora de perigo ou ameaçada?',
+    desc:'A Lista Vermelha da IUCN diz o risco de extinção de cada espécie no mundo. Separe as que estão fora de perigo das que estão ameaçadas.',
+    zones:[{id:'lc', label:'Pouco preocupante (fora de perigo)', icon:ICO.lc}, {id:'am', label:'Ameaçada de extinção', icon:ICO.am}],
+    items:[
+      it('capivara','Capivara','lc','A capivara é comum em todo o Brasil e não está ameaçada.'),
+      it('quati','Quati','lc','O quati se adapta bem e vive até perto das cidades.'),
+      it('tucano','Tucano-toco','lc','O tucano-toco tem uma área de vida muito grande e população saudável.'),
+      it('jacare','Jacaré-do-pantanal','lc','O jacaré-do-pantanal se recuperou depois que a caça foi proibida.'),
+      it('arara','Arara-azul-grande','am','A arara-azul-grande é Vulnerável, por causa do tráfico e da falta de árvores com ocos para os ninhos.'),
+      it('mico','Mico-leão-dourado','am','O mico-leão-dourado está Em Perigo e vive só em matas do estado do Rio de Janeiro.'),
+      it('tamandua','Tamanduá-bandeira','am','O tamanduá-bandeira é Vulnerável, por causa do fogo, das estradas e da perda de habitat.'),
+      it('ariranha','Ariranha','am','A ariranha, a maior lontra do mundo, está Em Perigo.')
+    ]},
+  intermediario: { label:'Intermediário', title:'Qual o grau de risco?',
+    desc:'Entre as ameaçadas há graus. Vulnerável é risco alto. Em perigo é risco muito alto.',
+    zones:[{id:'lc', label:'Pouco preocupante', icon:ICO.lc}, {id:'vu', label:'Vulnerável', icon:ICO.vu}, {id:'en', label:'Em perigo', icon:ICO.en}],
+    items:[
+      it('capivara','Capivara','lc','A capivara é abundante e sua população está estável.'),
+      it('suçuarana','Onça-parda','lc','A onça-parda vive do Canadá à Argentina e, no mundo, é Pouco preocupante.'),
+      it('jubarte','Baleia-jubarte','lc','Depois do fim da caça comercial, a jubarte se recuperou e hoje é Pouco preocupante.'),
+      it('arara','Arara-azul-grande','vu','A arara-azul-grande já foi Em perigo e passou para Vulnerável quando a população parou de cair tão rápido.'),
+      it('tamandua','Tamanduá-bandeira','vu','O tamanduá-bandeira morre em queimadas e atropelamentos.'),
+      it('cervo','Cervo-do-pantanal','vu','O cervo-do-pantanal depende de áreas alagadas e sofre com a perda desses ambientes.'),
+      it('tatubola','Tatu-bola','vu','O tatu-bola vive na Caatinga e no Cerrado e foi o mascote da Copa de 2014.'),
+      it('mico','Mico-leão-dourado','en','O mico-leão-dourado está Em perigo, preso a fragmentos de Mata Atlântica.'),
+      it('ariranha','Ariranha','en','A ariranha sofreu muito com a caça pela pele e hoje está Em perigo.'),
+      it('micopreto','Mico-leão-preto','en','O mico-leão-preto vive em poucos fragmentos de mata no interior de São Paulo.')
+    ]},
+  dificil: { label:'Difícil', title:'Quase ameaçada também conta',
+    desc:'Quase ameaçada quer dizer que a espécie ainda não está ameaçada, mas pode ficar em breve.',
+    zones:[{id:'lc', label:'Pouco preocupante', icon:ICO.lc}, {id:'nt', label:'Quase ameaçada', icon:ICO.nt}, {id:'vu', label:'Vulnerável', icon:ICO.vu}, {id:'en', label:'Em perigo', icon:ICO.en}],
+    items:[
+      it('preguica','Preguiça-comum','lc','A preguiça-comum é encontrada na Amazônia e na Mata Atlântica e não está ameaçada.'),
+      it('jacare','Jacaré-do-pantanal','lc','O jacaré-do-pantanal tem populações grandes e monitoradas.'),
+      it('sabia','Sabiá-laranjeira','lc','O sabiá-laranjeira, ave-símbolo do Brasil, é comum até nas cidades.'),
+      it('onca','Onça-pintada','nt','No mundo, a onça-pintada é Quase ameaçada. Na lista do Brasil ela é Vulnerável.'),
+      it('lobo','Lobo-guará','nt','No mundo, o lobo-guará é Quase ameaçado. Na lista do Brasil ele é Vulnerável.'),
+      it('ema','Ema','nt','A ema perde espaço com a troca dos campos naturais por lavouras.'),
+      it('arara','Arara-azul-grande','vu','A arara-azul-grande é Vulnerável.'),
+      it('peixeboi','Peixe-boi-amazônico','vu','O peixe-boi-amazônico foi muito caçado e só vive em água doce.'),
+      it('couro','Tartaruga-de-couro','vu','A tartaruga-de-couro, a maior tartaruga do mundo, é Vulnerável.'),
+      it('ararajuba','Ararajuba','vu','A ararajuba é amarela e verde e vive só na Amazônia oriental.'),
+      it('ariranha','Ariranha','en','A ariranha está Em perigo.'),
+      it('mico','Mico-leão-dourado','en','O mico-leão-dourado está Em perigo.')
+    ]},
+  avancado: { label:'Avançado', title:'Até o risco extremo',
+    desc:'Criticamente em perigo é o último degrau antes da extinção na natureza. Algumas espécies brasileiras já estão nele.',
+    zones:[{id:'nt', label:'Quase ameaçada', icon:ICO.nt}, {id:'vu', label:'Vulnerável', icon:ICO.vu}, {id:'en', label:'Em perigo', icon:ICO.en}, {id:'cr', label:'Criticamente em perigo', icon:ICO.cr}],
+    items:[
+      it('onca','Onça-pintada','nt','A onça-pintada é Quase ameaçada no mundo, por causa da perda de habitat e da caça.'),
+      it('lobo','Lobo-guará','nt','O lobo-guará vive principalmente no Cerrado, que perde área para lavouras.'),
+      it('ema','Ema','nt','A ema é Quase ameaçada.'),
+      it('tamandua','Tamanduá-bandeira','vu','O tamanduá-bandeira é Vulnerável.'),
+      it('cervo','Cervo-do-pantanal','vu','O cervo-do-pantanal é o maior cervo da América do Sul.'),
+      it('peixeboi','Peixe-boi-amazônico','vu','O peixe-boi-amazônico é Vulnerável.'),
+      it('mico','Mico-leão-dourado','en','O censo de 2023 estimou cerca de 4.800 micos-leões-dourados na natureza, o maior número já registrado.'),
+      it('micopreto','Mico-leão-preto','en','O mico-leão-preto está Em perigo.'),
+      it('ariranha','Ariranha','en','A ariranha está Em perigo.'),
+      it('sauim','Sauim-de-coleira','cr','O sauim-de-coleira vive só na região de Manaus e está Criticamente em perigo.'),
+      it('muriqui','Muriqui-do-norte','cr','O muriqui-do-norte, o maior macaco das Américas, está Criticamente em perigo.'),
+      it('pente','Tartaruga-de-pente','cr','A tartaruga-de-pente foi muito caçada pelo casco e está Criticamente em perigo.'),
+      it('soldadinho','Soldadinho-do-araripe','cr','O soldadinho-do-araripe vive só perto das nascentes da Chapada do Araripe, no Ceará.')
+    ]},
+  reserva1: { label:'Pantanal: araras e fogo', mode:'city', title:'Proteger as araras do Pantanal',
+    desc:'O fogo e o tráfico ameaçam as araras e outros bichos da fazenda. Coloque ações para diminuir as ameaças.',
+    slots:4, budget:9, goals:[{id:'fogo', max:58}, {id:'trafico', max:55}, {id:'habitat', max:75}, {id:'estrada', max:80}],
+    cards:['brigada','ninhos','fiscal','manduvi','queimada','venda']},
+  reserva2: { label:'Cerrado: estrada e bichos', mode:'city', title:'Menos bichos mortos na estrada',
+    desc:'Uma rodovia corta o Cerrado e mata tamanduás, lobos e antas todos os anos. Diminua os atropelamentos sem deixar o habitat sumir.',
+    slots:5, budget:11, goals:[{id:'estrada', max:45}, {id:'habitat', max:60}, {id:'fogo', max:75}, {id:'trafico', max:80}],
+    cards:['passagem','placas','cerca','corredor','uc','brigada','duplicar','lavoura']},
+  carbonauta: { label:'Carbonauta', mode:'city', title:'Paisagem segura para a fauna',
+    desc:'As quatro ameaças precisam baixar juntas, com pouco orçamento. Ações que resolvem vários problemas valem mais.',
+    slots:6, budget:16, goals:[{id:'habitat', max:55}, {id:'estrada', max:55}, {id:'trafico', max:55}, {id:'fogo', max:55}],
+    cards:['uc','corredor','brigada','fiscal','passagem','placas','ninhos','manduvi','cerca','queimada','venda','duplicar','lavoura']}
+};
+
+const NOTE = 'As categorias seguem a Lista Vermelha global da IUCN. Nas missões, os números de cada ameaça são uma escala do jogo, de 0 a 100, e não medidas reais.';
+Object.assign(ITEM_ICONS, {
+  brigada: ci(`<path d="M4 34h32" stroke="#a16207" stroke-width="3"/><path d="M14 32c-6-4-4-12 2-16 0 6 4 6 4 2 4 4 6 10 0 14z" fill="#f97316"/><path d="M24 12l10 6M26 16c4 4 8 10 6 16" stroke="#0284c7" stroke-width="3" fill="none"/><circle cx="24" cy="10" r="3" fill="#dc2626"/>`),
+  ninhos: ci(`<path d="M10 36V8" stroke="${BR}" stroke-width="3"/><rect x="12" y="10" width="14" height="18" rx="2" fill="#d6a76c" stroke="${BR}" stroke-width="1.600"/><circle cx="19" cy="17" r="3.400" fill="#1f2937"/><circle cx="31" cy="12" r="4" fill="#2563eb"/><path d="M34 13l3 1-3 1z" fill="#facc15"/>`),
+  fiscal: ci(`<path d="M8 12a12 6 0 0 1 24 0v22H8z" fill="none" stroke="#64748b" stroke-width="2"/><path d="M14 10v24M20 7v27M26 10v24" stroke="#64748b" stroke-width="1.400"/><circle cx="20" cy="24" r="5" fill="#2563eb"/><circle cx="20" cy="20" r="15" fill="none" stroke="#dc2626" stroke-width="3"/><path d="M9 9l22 22" stroke="#dc2626" stroke-width="3"/>`),
+  manduvi: ci(`<path d="M2 34h36" stroke="#a16207" stroke-width="3"/><path d="M20 34V18" stroke="${BR}" stroke-width="4"/><circle cx="20" cy="12" r="10" fill="#16a34a"/><path d="M8 34v-4M30 34v-4" stroke="#22c55e" stroke-width="3"/><circle cx="8" cy="29" r="2.400" fill="#4ade80"/><circle cx="30" cy="29" r="2.400" fill="#4ade80"/>`),
+  queimada: ci(`<path d="M2 34h36" stroke="#78716c" stroke-width="3"/><path d="M12 32c-6-6-2-14 4-18 0 6 4 6 4 0 6 4 8 12 2 18z" fill="#f97316"/><path d="M24 32c-4-4-2-8 2-10 0 3 2 3 2 0 4 2 4 8 0 10z" fill="#facc15"/>`),
+  venda: ci(`<path d="M6 12a14 6 0 0 1 28 0v22H6z" fill="#fef3c7" stroke="#64748b" stroke-width="2"/><path d="M13 10v24M20 7v27M27 10v24" stroke="#64748b" stroke-width="1.400"/><circle cx="20" cy="22" r="5" fill="#2563eb"/><text x="33" y="10" font-size="10" font-weight="800" fill="#a16207">$</text>`),
+  passagem: ci(`<path d="M2 30h36v6H2z" fill="#4b5563"/><path d="M4 30V18h32v12" fill="none" stroke="#64748b" stroke-width="2"/><path d="M4 18h32" stroke="#22c55e" stroke-width="5"/><ellipse cx="20" cy="13" rx="6" ry="3" fill="#78716c"/>`),
+  placas: ci(`<path d="M20 36V18" stroke="#64748b" stroke-width="3"/><path d="M20 4l14 14H6z" fill="#facc15" stroke="#1f2937" stroke-width="1.600"/><ellipse cx="20" cy="14" rx="5" ry="2.400" fill="#1f2937"/><text x="34" y="34" font-size="8" font-weight="800" fill="#dc2626" text-anchor="end">40</text>`),
+  cerca: ci(`<path d="M2 32h36" stroke="#4b5563" stroke-width="5"/><path d="M4 26V14M12 26V14M20 26V14M28 26V14M36 26V14M2 17h36M2 23h36" stroke="#64748b" stroke-width="1.600"/>`),
+  corredor: ci(`<circle cx="9" cy="20" r="7" fill="#16a34a"/><circle cx="31" cy="20" r="7" fill="#16a34a"/><path d="M14 20h12" stroke="#22c55e" stroke-width="6"/><ellipse cx="20" cy="17" rx="3" ry="2" fill="#78716c"/>`),
+  uc: ci(`<path d="M20 4l14 6v9c0 8-6 13-14 16-8-3-14-8-14-16v-9z" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/><path d="M14 18l4 4 8-8" stroke="#16a34a" stroke-width="3" fill="none"/>`),
+  duplicar: ci(`<path d="M2 14h36M2 28h36" stroke="#4b5563" stroke-width="9"/><path d="M2 14h36M2 28h36" stroke="#fde047" stroke-width="1.400" stroke-dasharray="4 3"/><path d="M2 21h36" stroke="#a8a29e" stroke-width="2"/>`),
+  lavoura: ci(`<path d="M2 24h36v12H2z" fill="#a16207"/><path d="M6 24v-6M12 24v-6M18 24v-6M24 24v-6M30 24v-6" stroke="#84cc16" stroke-width="2.400"/><rect x="26" y="8" width="10" height="8" fill="#dc2626"/><circle cx="28" cy="18" r="2.400" fill="#1f2937"/><circle cx="35" cy="18" r="2.400" fill="#1f2937"/>`)
+});
+const CITY = {
+  pollutants: [
+    {id:'habitat', label:'Perda de habitat', short:'perda de habitat', color:'#15803d'},
+    {id:'estrada', label:'Atropelamentos', short:'atropelamentos', color:'#475569'},
+    {id:'trafico', label:'Caça e tráfico', short:'caça e tráfico', color:'#7c3aed'},
+    {id:'fogo', label:'Incêndios', short:'incêndios', color:'#ea580c'}
+  ],
+  base: {habitat:75, estrada:80, trafico:75, fogo:75},
+  cards: [
+    {id:'uc', t:'Criar uma unidade de conservação', ic:'uc', cost:3, eff:{habitat:-16, trafico:-4}, fb:'Parques e reservas protegem o habitat por lei e dificultam a caça.'},
+    {id:'corredor', t:'Corredor de vegetação nativa', ic:'corredor', cost:3, eff:{habitat:-12, estrada:-4}, fb:'Ligar fragmentos deixa os animais se moverem sem cruzar áreas abertas e estradas.'},
+    {id:'brigada', t:'Brigada contra incêndios', ic:'brigada', cost:2, eff:{fogo:-18}, fb:'Brigadistas treinados apagam os focos no começo, antes de o fogo se espalhar.'},
+    {id:'fiscal', t:'Fiscalização contra o tráfico', ic:'fiscal', cost:2, eff:{trafico:-18}, fb:'Araras, papagaios e macacos são capturados para venda ilegal. Fiscalizar estradas e feiras corta esse comércio.'},
+    {id:'passagem', t:'Passagens de fauna na rodovia', ic:'passagem', cost:3, eff:{estrada:-20}, fb:'Túneis e pontes verdes deixam os bichos cruzarem a estrada por baixo ou por cima.'},
+    {id:'placas', t:'Placas e redutores de velocidade', ic:'placas', cost:1, eff:{estrada:-8}, fb:'Motoristas mais devagar têm tempo de frear quando um animal aparece.'},
+    {id:'cerca', t:'Cercas que levam até as passagens', ic:'cerca', cost:1, eff:{estrada:-8}, fb:'As cercas guiam os animais até as passagens em vez de deixá-los subir na pista.'},
+    {id:'ninhos', t:'Ninhos artificiais para araras', ic:'ninhos', cost:2, eff:{trafico:-6, habitat:-6}, fb:'No Pantanal, o Projeto Arara Azul instala caixas-ninho porque faltam árvores com ocos.'},
+    {id:'manduvi', t:'Proteger e plantar manduvis', ic:'manduvi', cost:2, eff:{habitat:-10, fogo:-2}, fb:'A arara-azul faz a maioria dos ninhos em ocos de manduvi no Pantanal.'},
+    {id:'queimada', t:'Queimar o pasto na seca', ic:'queimada', cost:1, eff:{fogo:18, habitat:6}, fb:'Fogo usado na seca escapa do controle e vira incêndio.'},
+    {id:'venda', t:'Feira de aves silvestres', ic:'venda', cost:1, eff:{trafico:16}, fb:'Comprar ave silvestre sem origem legal alimenta o tráfico.'},
+    {id:'duplicar', t:'Duplicar a rodovia sem passagens', ic:'duplicar', cost:1, eff:{estrada:16, habitat:4}, fb:'Mais faixas e mais carros sem passagem de fauna aumentam os atropelamentos.'},
+    {id:'lavoura', t:'Desmatar para abrir lavoura', ic:'lavoura', cost:1, eff:{habitat:16, estrada:4}, fb:'O desmatamento é a maior causa de perda de habitat no Cerrado.'}
+  ],
+  render: alertaRender
+};
+const mix = (a,b,t) => { a=a.replace('#',''); b=b.replace('#',''); return '#'+[0,2,4].map(i=>Math.round(parseInt(a.substr(i,2),16)*(1-t)+parseInt(b.substr(i,2),16)*t).toString(16).padStart(2,'0')).join(''); };
+function alertaRender(v, P){
+  const has = id => P.includes(id);
+  const sky = mix('#e0f2fe', '#fed7aa', v.fogo/120);
+  let s = `<rect width="600" height="236" fill="${sky}"/><circle cx="540" cy="30" r="16" fill="#fbbf24"/>`;
+  s += `<path d="M0 120c120-20 240 10 360-6s180-10 240 0V236H0z" fill="#d9f99d"/>`;
+  /* vegetacao: quanto menos perda de habitat, mais arvores */
+  const nt = Math.round((100 - v.habitat)/5);
+  for(let i=0;i<nt;i++){ const x = 14 + (i*53)%580, y = 120 + (i*29)%34;
+    s += `<g class="tsw" style="animation-delay:-${(i%5)*0.4}s"><path d="M${x} ${y+16}v-12" stroke="${BR}" stroke-width="3"/><circle cx="${x}" cy="${y}" r="${9+(i%3)*2}" fill="${i%2?'#16a34a':'#22c55e'}"/></g>`; }
+  if(has('lavoura')) s += `<rect x="420" y="128" width="170" height="34" fill="#a16207"/>${[0,1,2,3,4,5,6,7].map(i=>`<path d="M${428+i*20} 160v-10" stroke="#84cc16" stroke-width="2"/>`).join('')}`;
+  if(has('uc')) s += `<path d="M20 112h200M20 112v54M220 112v54" stroke="#16a34a" stroke-width="2" stroke-dasharray="6 4" fill="none"/><text x="120" y="108" text-anchor="middle" class="tl">área protegida</text>`;
+  if(has('corredor')) s += `<path d="M220 150c40-6 80-6 120 0" stroke="#16a34a" stroke-width="12" fill="none" stroke-linecap="round" opacity=".85"/>`;
+  /* fogo */
+  const nf = Math.round(v.fogo/16);
+  for(let i=0;i<nf;i++){ const x = 60 + i*92; s += `<g class="flk" style="animation-delay:-${i*0.3}s"><path d="M${x} 168c-8-8-4-18 4-22 0 8 6 8 6 2 6 6 8 14 0 20z" fill="#f97316"/><path d="M${x+4} 168c-3-4-2-8 2-10 0 3 3 3 3 0 2 3 2 7-1 10z" fill="#facc15"/></g><circle cx="${x+4}" cy="${132-i*4}" r="${10+i*2}" fill="#94a3b8" opacity=".35"/>`; }
+  if(has('brigada')) s += `<rect x="250" y="164" width="30" height="14" rx="2" fill="#dc2626"/><circle cx="257" cy="180" r="3" fill="#1f2937"/><circle cx="274" cy="180" r="3" fill="#1f2937"/>`;
+  /* rodovia */
+  const dup = has('duplicar');
+  s += `<rect y="${dup?186:192}" width="600" height="${dup?32:20}" fill="#4b5563"/><path d="M0 ${dup?202:202}h600" stroke="#fde047" stroke-width="1.600" stroke-dasharray="12 10"/>`;
+  if(has('passagem')) s += `<path d="M300 186h60" stroke="#22c55e" stroke-width="8"/><path d="M300 190v26M360 190v26" stroke="#64748b" stroke-width="3"/>`;
+  if(has('cerca')) s += `<path d="M0 186h290M370 186h230" stroke="#64748b" stroke-width="1.600" stroke-dasharray="3 3"/>`;
+  if(has('placas')) [120,480].forEach(x=>{ s += `<path d="M${x} 186v-16" stroke="#64748b" stroke-width="2"/><path d="M${x} 158l8 10h-16z" fill="#facc15" stroke="#1f2937"/>`; });
+  /* atropelamentos: manchas na pista */
+  const nr = Math.round(v.estrada/22);
+  for(let i=0;i<nr;i++) s += `<ellipse cx="${80+i*130}" cy="207" rx="7" ry="3" fill="#78350f" opacity=".7"/>`;
+  /* animais: aparecem conforme as ameacas caem */
+  const ok = 100 - (v.habitat + v.estrada + v.trafico + v.fogo)/4;
+  const na = Math.max(0, Math.round(ok/10));
+  for(let i=0;i<na;i++){ const x = 40 + (i*87)%520, y = 150 + (i%2)*16;
+    s += i%3===0 ? `<g class="walk" style="animation-delay:-${i}s"><ellipse cx="${x}" cy="${y}" rx="11" ry="6" fill="#78716c"/><path d="M${x+10} ${y-2}c5 0 9 2 11 4" stroke="#78716c" stroke-width="3"/><path d="M${x-10} ${y}c-6-6-6-10-2-14" stroke="#57534e" stroke-width="4" fill="none"/></g>`
+      : i%3===1 ? `<g class="walk" style="animation-delay:-${i}s"><ellipse cx="${x}" cy="${y-6}" rx="10" ry="5" fill="#ea580c"/><path d="M${x-6} ${y-2}v12M${x+6} ${y-2}v12" stroke="#1f2937" stroke-width="2.400"/><circle cx="${x+11}" cy="${y-10}" r="4" fill="#ea580c"/></g>`
+      : '' ; }
+  const nb = Math.max(0, Math.round((100 - v.trafico)/14));
+  for(let i=0;i<nb;i++) s += `<g class="fly" style="animation-delay:-${i*0.7}s"><path d="M${60+i*70} ${40+(i%3)*14}c6-6 12-6 14 0 2-6 8-6 14 0" stroke="#2563eb" stroke-width="3" fill="none"/></g>`;
+  if(has('ninhos')) [160,380].forEach(x=>{ s += `<path d="M${x} 150v-34" stroke="${BR}" stroke-width="3"/><rect x="${x+2}" y="116" width="10" height="13" fill="#d6a76c" stroke="${BR}"/>`; });
+  if(has('venda')) s += `<rect x="520" y="96" width="40" height="22" fill="#fef3c7" stroke="#64748b"/><path d="M526 96v22M534 96v22M542 96v22M550 96v22" stroke="#64748b"/>`;
+  return `<svg viewBox="0 0 600 236" role="img" aria-label="Paisagem com vegetação, rodovia, fogo e animais">${s}</svg>`;
+}
+
+/* fotos reais das especies, do iNaturalist; trocam o desenho quando chegam */
+(function loadPhotos(){
+  if(typeof fetch!=='function' || typeof document==='undefined' || !document.querySelectorAll) return;
+  const byText = {};
+  Object.values(LEVELS).forEach(L => (L.items||[]).forEach(x => { byText[x.t] = x.ic; }));
+  const patch = () => document.querySelectorAll('.scard[aria-label], .zitems .placed').forEach(el => {
+    const t = el.getAttribute('aria-label') || el.textContent.trim(); const k = byText[t];
+    const box = el.querySelector('.cart'); if(k && box && ITEM_ICONS[k].startsWith('<img') && !box.querySelector('img')) box.innerHTML = ITEM_ICONS[k];
+  });
+  Object.keys(SP).forEach(async k => {
+    try{
+      const sci = SP[k][0];
+      const r = await fetch('https://api.inaturalist.org/v1/taxa?rank=species&per_page=5&q='+encodeURIComponent(sci), {cache:'force-cache'});
+      if(!r.ok) return; const d = await r.json();
+      const tx = (d.results||[]).find(x => String(x.name||'').toLowerCase()===sci.toLowerCase());
+      const p = tx && tx.default_photo; const url = p && (p.medium_url || p.square_url);
+      if(!url) return;
+      const at = String(p.attribution||'iNaturalist').replace(/[<>"&]/g,'');
+      ITEM_ICONS[k] = `<img class="spimg" src="${url}" alt="" loading="lazy" title="Foto: ${at}" onerror="this.remove()">`;
+      patch();
+    }catch(e){}
+  });
+  if(typeof MutationObserver==='function') new MutationObserver(()=>patch()).observe(document.documentElement, {childList:true, subtree:true});
 })();
 
-/* ============ DADOS DOS NÍVEIS ============ */
-const CATS = {
-  lc:{name:'🟢 Pouco preocupante', v:'--lc'},
-  nt:{name:'🔵 Quase ameaçada', v:'--nt'},
-  vu:{name:'🟡 Vulnerável', v:'--vu'},
-  en:{name:'🟠 Em perigo', v:'--en'},
-  cr:{name:'🔴 Criticamente em perigo', v:'--cr'},
-  am:{name:'🔴 Ameaçada de extinção', v:'--am'}
-};
-const DESC = {
-  lc:'Fora de perigo', nt:'Perto de ficar ameaçada', vu:'VU · risco alto',
-  en:'EN · risco muito alto', cr:'CR · risco extremo', am:'Corre risco real'
-};
 
-const LEVELS = {
-  basico:{
-    label:'Básico',
-    cats:['lc','am'],
-    items:[
-      {n:'Capivara', e:'🦫', cat:'lc', fb:'Capivara é o roedor mais abundante do Pantanal; população estável e sem risco (Pouco preocupante).'},
-      {n:'Quati', e:'🦝', cat:'lc', fb:'O quati é adaptável e vive até em cidades; não está ameaçado.'},
-      {n:'Tucano-toco', e:'🦜', cat:'lc', fb:'O tucano-toco ocupa amplo território no Cerrado e Pantanal; população saudável.'},
-      {n:'Jacaré-do-pantanal', e:'🐊', cat:'lc', fb:'Existem milhões de jacarés no Pantanal; espécie fora de perigo.'},
-      {n:'Onça-pintada', e:'🐆', cat:'am', fb:'A onça-pintada perde habitat e sofre caça; está Quase Ameaçada — corre risco real.'},
-      {n:'Arara-azul-grande', e:'🦜', cat:'am', fb:'O tráfico e a falta de ninhos deixaram a arara-azul Vulnerável à extinção.'},
-      {n:'Mico-leão-dourado', e:'🐒', cat:'am', fb:'Restrito a poucos fragmentos de Mata Atlântica, está Em Perigo de extinção.'},
-      {n:'Tamanduá-bandeira', e:'🐾', cat:'am', fb:'Atropelamentos e queimadas tornam o tamanduá-bandeira uma espécie Vulnerável.'}
-    ]
-  },
-  intermediario:{
-    label:'Intermediário',
-    cats:['lc','vu','en'],
-    items:[
-      {n:'Capivara', e:'🦫', cat:'lc', fb:'Hydrochoerus hydrochaeris: abundante e estável — Pouco preocupante (LC).'},
-      {n:'Onça-parda (suçuarana)', e:'🐈', cat:'lc', fb:'Puma concolor tem ampla distribuição nas Américas; classificada como LC globalmente.'},
-      {n:'Baleia-jubarte', e:'🐋', cat:'lc', fb:'Após o fim da caça comercial, a jubarte se recuperou e hoje é Pouco preocupante.'},
-      {n:'Arara-azul-grande', e:'🦜', cat:'vu', fb:'Anodorhynchus hyacinthinus: Vulnerável (VU) por tráfico e perda de ninhos.'},
-      {n:'Tamanduá-bandeira', e:'🐾', cat:'vu', fb:'Myrmecophaga tridactyla: VU por queimadas, atropelamentos e perda de Cerrado.'},
-      {n:'Cervo-do-pantanal', e:'🦌', cat:'vu', fb:'Blastocerus dichotomus depende de áreas alagadas; VU pela perda de habitat.'},
-      {n:'Tatu-bola', e:'🦔', cat:'vu', fb:'Tolypeutes tricinctus, endêmico da Caatinga; Vulnerável e símbolo da Copa 2014.'},
-      {n:'Mico-leão-dourado', e:'🐒', cat:'en', fb:'Leontopithecus rosalia: Em Perigo (EN), preso a fragmentos da Mata Atlântica fluminense.'},
-      {n:'Ariranha', e:'🦦', cat:'en', fb:'Pteronura brasiliensis, a maior lontra do mundo, está Em Perigo (EN).'},
-      {n:'Sauim-de-coleira', e:'🐒', cat:'en', fb:'Saguinus bicolor é endêmico de Manaus e está EN pela expansão urbana.'}
-    ]
-  },
-  dificil:{
-    label:'Difícil',
-    cats:['lc','nt','vu','en'],
-    items:[
-      {n:'Preguiça-de-garganta-marrom', e:'🦥', cat:'lc', fb:'Bradypus variegatus: ampla e comum na Mata Atlântica e Amazônia — LC.'},
-      {n:'Jacaré-do-pantanal', e:'🐊', cat:'lc', fb:'Caiman yacare: populações robustas e monitoradas — Pouco preocupante.'},
-      {n:'Sabiá-laranjeira', e:'🐦', cat:'lc', fb:'Turdus rufiventris, ave-símbolo do Brasil, é comum e abundante (LC).'},
-      {n:'Onça-pintada', e:'🐆', cat:'nt', fb:'Panthera onca: Quase Ameaçada (NT) globalmente por fragmentação e conflito.'},
-      {n:'Lobo-guará', e:'🐺', cat:'nt', fb:'Chrysocyon brachyurus: NT pela IUCN (2024); no Brasil já é Vulnerável.'},
-      {n:'Ema', e:'🦤', cat:'nt', fb:'Rhea americana: NT pela conversão de campos naturais em lavoura e caça.'},
-      {n:'Arara-azul-grande', e:'🦜', cat:'vu', fb:'Anodorhynchus hyacinthinus: Vulnerável (VU).'},
-      {n:'Tamanduá-bandeira', e:'🐾', cat:'vu', fb:'Myrmecophaga tridactyla: VU no Cerrado e no Pantanal.'},
-      {n:'Peixe-boi-amazônico', e:'🦭', cat:'vu', fb:'Trichechus inunguis: VU pela caça histórica e degradação de rios.'},
-      {n:'Tartaruga-de-couro', e:'🐢', cat:'vu', fb:'Dermochelys coriacea, a maior tartaruga marinha, é VU globalmente.'},
-      {n:'Ararajuba', e:'🦜', cat:'vu', fb:'Guaruba guarouba, endêmica da Amazônia oriental, é VU.'},
-      {n:'Mico-leão-dourado', e:'🐒', cat:'en', fb:'Leontopithecus rosalia: Em Perigo (EN).'},
-      {n:'Ariranha', e:'🦦', cat:'en', fb:'Pteronura brasiliensis: EN (critério A2cde+3ce).'},
-      {n:'Sauim-de-coleira', e:'🐒', cat:'en', fb:'Saguinus bicolor: EN, endêmico da região de Manaus.'}
-    ]
-  },
-  carbonauta:{
-    label:'🛰️ Carbonauta',
-    cats:['nt','vu','en','cr'],
-    items:[
-      {n:'Panthera onca', e:'🐆', cat:'nt', fb:'Onça-pintada: NT (A2c), declínio inferido por fragmentação e conflito humano-fauna.'},
-      {n:'Chrysocyon brachyurus', e:'🐺', cat:'nt', fb:'Lobo-guará: NT global (IUCN 2024); reavaliado como VU na lista nacional (2022).'},
-      {n:'Rhea americana', e:'🦤', cat:'nt', fb:'Ema: NT por declínio populacional ligado à expansão agropecuária no Cerrado e Pampa.'},
-      {n:'Anodorhynchus hyacinthinus', e:'🦜', cat:'vu', fb:'Arara-azul-grande: VU; recuperou-se do colapso dos anos 1980, mas depende de ocos de manduvi para ninhos.'},
-      {n:'Myrmecophaga tridactyla', e:'🐾', cat:'vu', fb:'Tamanduá-bandeira: VU (A2c); mortalidade por fogo e rodovias em áreas abertas.'},
-      {n:'Blastocerus dichotomus', e:'🦌', cat:'vu', fb:'Cervo-do-pantanal: VU; maior cervídeo sul-americano, sensível a hidrelétricas e drenagem.'},
-      {n:'Guaruba guarouba', e:'🦜', cat:'vu', fb:'Ararajuba: VU; endêmica do interflúvio Amazônico oriental, pressionada por desmatamento.'},
-      {n:'Trichechus inunguis', e:'🦭', cat:'vu', fb:'Peixe-boi-amazônico: VU; endêmico da bacia amazônica, único sirênio exclusivamente de água doce.'},
-      {n:'Leontopithecus rosalia', e:'🐒', cat:'en', fb:'Mico-leão-dourado: EN; ~2.500 indivíduos em fragmentos da baixada fluminense.'},
-      {n:'Leontopithecus chrysopygus', e:'🐒', cat:'en', fb:'Mico-leão-preto: EN; endêmico do oeste paulista, distribuição altamente fragmentada.'},
-      {n:'Pteronura brasiliensis', e:'🦦', cat:'en', fb:'Ariranha: EN; predador de topo de rios, sensível a mercúrio de garimpo e sobrepesca.'},
-      {n:'Saguinus bicolor', e:'🐒', cat:'en', fb:'Sauim-de-coleira: EN; distribuição restrita cercada pela expansão urbana de Manaus.'},
-      {n:'Brachyteles hypoxanthus', e:'🐵', cat:'cr', fb:'Muriqui-do-norte: CR; maior primata das Américas, menos de 1.000 indivíduos maduros.'},
-      {n:'Cyanopsitta spixii', e:'🐦', cat:'cr', fb:'Ararinha-azul: CR (Possivelmente Extinta na Natureza); em reintrodução na Caatinga da Bahia.'},
-      {n:'Eretmochelys imbricata', e:'🐢', cat:'cr', fb:'Tartaruga-de-pente: CR global; historicamente caçada pelo casco (tartaruga-de-escama).'},
-      {n:'Antilophia bokermanni', e:'🐦', cat:'cr', fb:'Soldadinho-do-araripe: CR; endêmico de nascentes da Chapada do Araripe (CE).'}
-    ]
-  }
-};
-
-/* ============ ESTADO ============ */
-let cur='basico', items=[], errors=0, placedCount=0, total=0, startT=0, timerId=null, running=false, selTok=null;
-
-function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function cvar(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
-
-/* ============ IMAGENS REALISTAS ============ */
-const SCI = {
-  'Capivara':'Hydrochoerus hydrochaeris',
-  'Quati':'Nasua nasua',
-  'Tucano-toco':'Ramphastos toco',
-  'Jacaré-do-pantanal':'Caiman yacare',
-  'Onça-pintada':'Panthera onca',
-  'Arara-azul-grande':'Anodorhynchus hyacinthinus',
-  'Mico-leão-dourado':'Leontopithecus rosalia',
-  'Tamanduá-bandeira':'Myrmecophaga tridactyla',
-  'Onça-parda (suçuarana)':'Puma concolor',
-  'Baleia-jubarte':'Megaptera novaeangliae',
-  'Cervo-do-pantanal':'Blastocerus dichotomus',
-  'Tatu-bola':'Tolypeutes tricinctus',
-  'Ariranha':'Pteronura brasiliensis',
-  'Sauim-de-coleira':'Saguinus bicolor',
-  'Preguiça-de-garganta-marrom':'Bradypus variegatus',
-  'Sabiá-laranjeira':'Turdus rufiventris',
-  'Lobo-guará':'Chrysocyon brachyurus',
-  'Ema':'Rhea americana',
-  'Peixe-boi-amazônico':'Trichechus inunguis',
-  'Tartaruga-de-couro':'Dermochelys coriacea',
-  'Ararajuba':'Guaruba guarouba',
-  'Mico-leão-preto':'Leontopithecus chrysopygus',
-  'Muriqui-do-norte':'Brachyteles hypoxanthus',
-  'Ararinha-azul':'Cyanopsitta spixii',
-  'Tartaruga-de-pente':'Eretmochelys imbricata',
-  'Soldadinho-do-araripe':'Antilophia bokermanni'
-};
-const animalAssets=new Map();
-function sciName(label){
-  if(SCI[label]) return SCI[label];
-  return /^[A-Z][a-z]+\s[a-z][a-z-]+$/.test(label)?label:null;
+/* ---------- motor comum dos jogos de classificar ---------- */
+const KEYS = Object.keys(LEVELS);
+let level = KEYS[0], items = [], placed = 0, hits = 0, errors = 0, missed = {}, wrongTry = {};
+let sel = null, startTime = null, timerInt = null, elapsed = 0, scoreSaved = false, done = false;
+let db = null, fsFns = null;
+const TARGET = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/></svg>`;
+const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const st = () => ({placed, hits, errors, seconds:elapsed, total:items.length, city:isCity(), cityScore:cityScore()});
+/* ---------- modo cidade: o jogador coloca acoes na cidade para baixar poluentes ---------- */
+let cityPlaced = [], citySwaps = 0;
+const isCity = () => LEVELS[level] && LEVELS[level].mode==='city';
+function cityVals(){
+  const v = Object.assign({}, CITY.base);
+  cityPlaced.forEach(id=>{ const c = CITY.cards.find(x=>x.id===id); Object.entries(c.eff).forEach(([k,d])=>v[k]=(v[k]||0)+d); });
+  Object.keys(v).forEach(k=>v[k]=Math.max(0,Math.min(100,v[k])));
+  return v;
 }
-function assetFor(label){const s=sciName(label);return s?animalAssets.get(s):null;}
-function mediaMarkup(it){
-  const a=assetFor(it.n);
-  if(a) return '<img class="animal-img" src="'+esc(a.url)+'" alt="'+esc(it.n)+'" loading="lazy" title="'+esc(a.attribution)+'">';
-  return '<span class="em" aria-hidden="true">'+it.e+'</span>';
-}
-async function loadAnimalAssets(){
-  const names=[...new Set(Object.values(SCI).concat(
-    LEVELS.carbonauta.items.map(x=>x.n).filter(n=>/^[A-Z][a-z]+\s[a-z][a-z-]+$/.test(n))
-  ))];
-  await Promise.all(names.map(async sci=>{
-    try{
-      const u='https://api.inaturalist.org/v1/taxa?rank=species&per_page=10&q='+encodeURIComponent(sci);
-      const r=await fetch(u,{cache:'force-cache'});
-      if(!r.ok)return;
-      const d=await r.json();
-      const tax=(d.results||[]).find(t=>String(t.name||'').toLowerCase()===sci.toLowerCase())||(d.results||[])[0];
-      const p=tax&&tax.default_photo;
-      const url=p&&(p.medium_url||p.square_url);
-      if(url) animalAssets.set(sci,{url,attribution:p.attribution||'Imagem via iNaturalist'});
-    }catch(e){}
-  }));
-  if(items.length) renderPool();
-}
+const citySpent = () => cityPlaced.reduce((a,id)=>a+CITY.cards.find(x=>x.id===id).cost,0);
+const isTrap = id => Object.values(CITY.cards.find(x=>x.id===id).eff).some(d=>d>0);
+const cityNoTrap = () => !cityPlaced.some(isTrap);
+const cityGoalsOk = () => LEVELS[level].goals.every(g=>cityVals()[g.id] <= g.max) && cityNoTrap();
+function cityScore(){ if(!isCity()) return 0; const L=LEVELS[level];
+  return Math.max(0, 1000 + 40*(L.budget-citySpent()) - 60*citySwaps - Math.floor(elapsed/2)); }
+const zoneOf = id => LEVELS[level].zones.find(z=>z.id===id);
 
-/* ============ RENDER ============ */
-function initLevel(lv){
-  cur=lv;
-  const L=LEVELS[lv];
-  items=shuffle(L.items.map((x,i)=>({...x,id:lv+'-'+i,done:false})));
-  errors=0;placedCount=0;total=items.length;running=false;startT=0;selTok=null;
-  if(timerId){clearInterval(timerId);timerId=null;}
-  document.getElementById('hTime').textContent='0s';
-  document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('active',p.dataset.lv===lv));
-  document.getElementById('rankLvl').textContent=L.label;
-  document.getElementById('end').classList.remove('show');
-  document.getElementById('game').classList.remove('hidden');
-  updHud();
-  const zc=document.getElementById('zones');zc.innerHTML='';
-  shuffle(L.cats.slice()).forEach(cid=>{
-    const c=CATS[cid];
-    const z=document.createElement('div');z.className='zone';z.dataset.cat=cid;
-    z.innerHTML='<h3>'+c.name+'</h3><div class="zdesc">'+DESC[cid]+'</div>'+
-      '<div class="zbar" style="background:'+cvar(c.v)+'"></div><div class="zdrop"></div>';
-    z.addEventListener('dragover',e=>{e.preventDefault();z.classList.add('over');});
-    z.addEventListener('dragleave',()=>z.classList.remove('over'));
-    z.addEventListener('drop',e=>{e.preventDefault();z.classList.remove('over');
-      const id=e.dataTransfer.getData('text/plain');tryPlace(id,cid,z);});
-    z.addEventListener('click',()=>{ if(selTok){tryPlace(selTok,cid,z);} });
-    zc.appendChild(z);
+function buildLevels(){
+  $('levels').innerHTML = KEYS.map(k=>`<button data-lvl="${k}" onclick="setLevel('${k}')">${LEVELS[k].label}</button>`).join('');
+}
+function setLevel(l){
+  level = l;
+  document.querySelectorAll('.levels button').forEach(b=>b.classList.toggle('active',b.dataset.lvl===l));
+  $('rankLevel').textContent = LEVELS[l].label;
+  restart(); loadRanking();
+}
+function restart(){
+  clearInterval(timerInt); timerInt=null; startTime=null; elapsed=0;
+  placed=0; hits=0; errors=0; missed={}; wrongTry={}; sel=null; scoreSaved=false; done=false;
+  cityPlaced=[]; citySwaps=0;
+  $('timer').textContent='0s';
+  const L = LEVELS[level];
+  if(isCity()){ renderCityLevel(); return; }
+  items = shuffle(L.items.map((it,i)=>Object.assign({i}, it)));
+  $('stage').innerHTML = `
+    <div class="qhead"><div class="qnum">${L.label} · ${items.length} cartões · ${L.zones.length} caixas</div>
+      <div class="qtext">${L.title}</div>
+      <div class="qdesc">${L.desc}</div>
+      <div class="goalbox"><h4>${TARGET} Sua missão</h4><p>Leve cada cartão para a caixa certa. Arraste, ou toque no cartão e depois na caixa.</p></div></div>
+    ${typeof renderScene==='function' ? '<div class="scene" id="scene"></div><div class="scenecap" id="scenecap"></div>' : ''}
+    <div class="prog"><i id="progbar" style="width:0%"></i></div>
+    <div class="progtxt" id="progtxt"></div>
+    <div class="trayw"><h5>Cartões para classificar</h5><div class="tray" id="tray"></div></div>
+    <div class="zones" id="zones" style="--nz:${L.zones.length}">${L.zones.map(z=>`
+      <div class="zone" data-z="${z.id}" role="button" tabindex="0" aria-label="${esc(z.label)}">
+        <div class="zhead"><div class="zico">${z.icon||''}</div><div class="zlab">${z.label}</div><span class="zcount" id="zc-${z.id}">0</span></div>
+        <div class="zitems" id="zi-${z.id}"></div></div>`).join('')}</div>
+    <div class="fb" id="fb" aria-live="polite">Comece pelo cartão que você tem mais certeza. O tempo começa no primeiro movimento.</div>
+    ${typeof NOTE!=='undefined' && NOTE ? `<p class="modelnote">${NOTE}</p>` : ''}`;
+  const icOf = it => (typeof ITEM_ICONS!=='undefined' && ITEM_ICONS[it.ic]) || (typeof ITEM_ICONS!=='undefined' && ITEM_ICONS._) || '';
+  $('tray').innerHTML = items.map(it=>`<button class="scard" data-i="${it.i}" aria-label="${esc(it.t)}"><span class="cart">${icOf(it)}</span><span class="ctxt">${it.t}</span></button>`).join('');
+  document.querySelectorAll('.scard').forEach(attach);
+  document.querySelectorAll('.zone').forEach(z=>{
+    z.addEventListener('click',()=>{ if(sel!==null) drop(sel, z.dataset.z); });
+    z.addEventListener('keydown',e=>{ if((e.key==='Enter'||e.key===' ') && sel!==null){ e.preventDefault(); drop(sel, z.dataset.z); } });
   });
-  renderPool();
-  setFb('Comece arrastando uma espécie para a caixa do risco que você acha correto.','');
+  hud();
 }
-
-function renderPool(){
-  const pool=document.getElementById('pool');
-  pool.innerHTML='<div class="lbl">Espécies para classificar</div>';
-  items.filter(it=>!it.done).forEach(it=>{
-    const t=document.createElement('div');t.className='tok';t.draggable=true;t.dataset.id=it.id;
-    t.innerHTML=mediaMarkup(it)+'<span class="animal-name">'+esc(it.n)+'</span>';
-    t.addEventListener('dragstart',e=>{t.classList.add('dragging');e.dataTransfer.setData('text/plain',it.id);});
-    t.addEventListener('dragend',()=>t.classList.remove('dragging'));
-    t.addEventListener('click',e=>{e.stopPropagation();selectTok(it.id,t);});
-    pool.appendChild(t);
-  });
+/* limpeza da cena: comeca poluida, cada acerto limpa, cada erro suja */
+const clean = () => Math.max(0, Math.min(1, 0.2 + 0.8*(items.length? placed/items.length : 0) - 0.07*errors));
+function scene(){
+  if(typeof renderScene!=='function' || !$('scene')) return;
+  const c = clean(); $('scene').innerHTML = renderScene(c);
+  if(typeof sceneCaption==='function') $('scenecap').innerHTML = sceneCaption(c);
 }
-function selectTok(id,el){
-  if(selTok===id){selTok=null;el.classList.remove('sel');return;}
-  selTok=id;
-  document.querySelectorAll('.tok').forEach(x=>x.classList.remove('sel'));
-  el.classList.add('sel');
-  setFb('Agora toque na caixa do risco correto para soltar '+esc(itemById(id).n)+'.','');
+function hud(){
+  $('lHits').textContent = isCity() ? 'Ações' : 'Acertos'; $('lErrs').textContent = isCity() ? 'Trocas' : 'Erros';
+  if(isCity()){ cityHud(); return; }
+  scene();
+  $('hits').textContent = placed+'/'+items.length; $('errs').textContent = errors;
+  $('score').textContent = scoreNow(st());
+  const pb = $('progbar'); if(pb){ pb.style.width = (items.length? placed/items.length*100 : 0)+'%';
+    $('progtxt').textContent = placed===items.length ? 'Tudo classificado!' : `Faltam ${items.length-placed} de ${items.length} cartões`; }
 }
-function itemById(id){return items.find(x=>x.id===id);}
-
-function tryPlace(id,cid,zoneEl){
-  const it=itemById(id); if(!it||it.done) return;
-  startTimer();
-  if(it.cat===cid){
-    it.done=true;placedCount++;
-    const drop=zoneEl.querySelector('.zdrop');
-    const p=document.createElement('span');p.className='placed';
-    p.innerHTML=mediaMarkup(it)+'<span>'+esc(it.n)+'</span>';drop.appendChild(p);
-    selTok=null;renderPool();updHud();
-    setFb('✅ '+it.fb,'ok');
-    if(placedCount===total) finish();
-  }else{
-    errors++;updHud();
-    zoneEl.classList.add('shake');setTimeout(()=>zoneEl.classList.remove('shake'),400);
-    const tk=document.querySelector('.tok[data-id="'+id+'"]');
-    if(tk){tk.classList.add('shake');setTimeout(()=>tk.classList.remove('shake'),400);}
-    setFb('❌ Não é aí. '+it.fb,'bad');
-  }
-}
-
-/* ============ TIMER / HUD ============ */
 function startTimer(){
-  if(running)return;running=true;startT=Date.now();
-  timerId=setInterval(()=>{document.getElementById('hTime').textContent=elapsed()+'s';updHud();},250);
+  if(timerInt) return;
+  startTime = Date.now();
+  timerInt = setInterval(()=>{elapsed=Math.floor((Date.now()-startTime)/1000);$('timer').textContent=elapsed+'s'; if(isCity()) $('score').textContent=cityScore(); else hud();},500);
 }
-function elapsed(){return startT?Math.floor((Date.now()-startT)/1000):0;}
-function scoreNow(){return elapsed()+errors*10;}
-function updHud(){
-  document.getElementById('hDone').textContent=placedCount+'/'+total;
-  document.getElementById('hErr').textContent=errors;
-  document.getElementById('hScore').textContent=(placedCount||errors)?scoreNow():'—';
+function select(i){
+  sel = (sel===i) ? null : i;
+  document.querySelectorAll('.scard').forEach(c=>c.classList.toggle('sel', +c.dataset.i===sel));
+  document.querySelectorAll('.zone').forEach(z=>z.classList.toggle('target', sel!==null));
 }
-function setFb(t,cls){const f=document.getElementById('fb');f.className='feedback'+(cls?' '+cls:'');f.innerHTML=t;}
+/* arrastar com ponteiro (mouse e toque); um toque sem arrastar seleciona o cartao */
+function attach(card){
+  card.addEventListener('pointerdown', e=>{
+    if(done) return;
+    const r = card.getBoundingClientRect(), sx = e.clientX, sy = e.clientY;
+    let moving = false, ghost = null, lx = sx, ly = sy, scrollRaf = null;
+    /* rolagem automatica quando o cartao chega perto da borda da tela */
+    const autoScroll = ()=>{
+      if(!moving) return;
+      const edge = 70, h = window.innerHeight;
+      const dy = ly > h-edge ? Math.min(18,(ly-(h-edge))/3) : ly < edge ? -Math.min(18,(edge-ly)/3) : 0;
+      if(dy){ window.scrollBy(0, dy); document.querySelectorAll('.zone.over').forEach(z=>z.classList.remove('over')); const z = zoneAt(lx, ly); if(z) z.classList.add('over'); }
+      scrollRaf = requestAnimationFrame(autoScroll);
+    };
+    const mv = ev=>{
+      lx = ev.clientX; ly = ev.clientY;
+      if(!moving && Math.hypot(ev.clientX-sx, ev.clientY-sy) > 6){
+        moving = true; startTimer();
+        ghost = document.createElement('span'); ghost.className='scard ghost'; ghost.style.width=r.width+'px'; ghost.style.height=r.height+'px';
+        card.after(ghost);
+        Object.assign(card.style,{position:'fixed',zIndex:999,width:r.width+'px',left:r.left+'px',top:r.top+'px',pointerEvents:'none'});
+        card.classList.add('dragging');
+        scrollRaf = requestAnimationFrame(autoScroll);
+      }
+      if(moving){
+        card.style.left=(ev.clientX-(sx-r.left))+'px'; card.style.top=(ev.clientY-(sy-r.top))+'px';
+        document.querySelectorAll('.zone.over').forEach(z=>z.classList.remove('over'));
+        const z = zoneAt(ev.clientX, ev.clientY); if(z) z.classList.add('over');
+      }
+    };
+    const up = ev=>{
+      window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
+      document.querySelectorAll('.zone.over').forEach(z=>z.classList.remove('over'));
+      if(scrollRaf) cancelAnimationFrame(scrollRaf);
+      if(!moving){ startTimer(); select(+card.dataset.i); return; }
+      moving = false;
+      card.classList.remove('dragging'); card.removeAttribute('style'); if(ghost) ghost.remove();
+      const z = zoneAt(ev.clientX, ev.clientY);
+      if(z) drop(+card.dataset.i, z.dataset.z);
+    };
+    window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+  });
+  card.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); startTimer(); select(+card.dataset.i); } });
+  card.addEventListener('click', e=>e.preventDefault());
+}
+function zoneAt(x,y){
+  for(const el of document.elementsFromPoint(x,y)){ const z = el.closest && el.closest('.zone'); if(z) return z; }
+  return null;
+}
+function flash(zid, cls){ const z=document.querySelector(`.zone[data-z="${zid}"]`); z.classList.add(cls); setTimeout(()=>z.classList.remove(cls),500); }
+function drop(i, zid){
+  if(done) return;
+  if(isCity()){ cityPlace(i); return; }
+  const it = items.find(x=>x.i===i), card = document.querySelector(`.scard[data-i="${i}"]`), fb = $('fb');
+  if(!it || !card) return;
+  select(null);
+  if(it.z === zid){
+    placed++; hits += missed[i] ? 0 : 1;
+    card.remove();
+    const ico = card.querySelector('.cart') ? card.querySelector('.cart').innerHTML : '';
+    $('zi-'+zid).insertAdjacentHTML('beforeend', `<span class="placed">${ico}${it.t}</span>`);
+    $('zc-'+zid).textContent = $('zi-'+zid).children.length;
+    flash(zid,'flashok');
+    fb.className='fb ok'; fb.innerHTML=`<b>Certo!</b>${it.fb}`;
+    hud();
+    if(placed===items.length) setTimeout(renderEnd, 900);
+  } else {
+    errors++; missed[i] = true; wrongTry[i] = (wrongTry[i]||0)+1;
+    card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),400);
+    flash(zid,'flashno');
+    fb.className='fb no';
+    fb.innerHTML = wrongTry[i]>=2
+      ? `<b>Ainda não é aí.</b>Uma pista: ${it.hint || it.fb}`
+      : `<b>Não é nessa caixa.</b>"${it.t}" volta para a mesa. Pense de novo e tente outra caixa.`;
+    hud();
+  }
+}
+function renderEnd(){
+  done = true; clearInterval(timerInt); timerInt=null;
+  if(isCity()){ renderCityEnd(); return; }
+  const s = st(), sc = scoreNow(s), n = items.length;
+  const pct = Math.round(hits/n*100), m = END_MSG.find(x=>pct>=x[0]);
+  const rev = items.filter(it=>missed[it.i]);
+  $('stage').innerHTML = `
+    <div class="end">
+      <h2>${m[1]}</h2><p>${m[2]}</p>
+      <div class="stats">
+        <div class="stat">${hits}/${n}<span>Certos de primeira</span></div>
+        <div class="stat">${sc}<span>Pontos</span></div>
+        <div class="stat">${errors}<span>Erros</span></div>
+        <div class="stat">${elapsed}s<span>Tempo</span></div>
+      </div>
+      ${typeof SCORE_NOTE!=='undefined' ? `<p style="font-size:.85rem">${SCORE_NOTE}</p>` : ''}
+      <div class="savebox">
+        <input id="playerName" maxlength="20" placeholder="Seu nome (até 20 letras)">
+        <button class="btn" id="saveBtn" onclick="saveScore()">Salvar no ranking</button>
+      </div>
+      <p id="saveStatus" style="margin-top:8px;font-size:.85rem"></p>
+      <button class="btn ghost" style="margin-top:10px" onclick="restart()">Jogar de novo</button>
+      ${rev.length ? `<div class="review"><h3>Para revisar</h3><ul>${rev.map(it=>`<li><b>${it.t}</b> vai em <span class="z">${zoneOf(it.z).label}</span>. ${it.fb}</li>`).join('')}</ul></div>` : ''}
+    </div>`;
+}
 
-/* ============ FIM ============ */
-function finish(){
-  running=false;if(timerId){clearInterval(timerId);timerId=null;}
-  const secs=elapsed(), sc=secs+errors*10;
-  document.getElementById('game').classList.add('hidden');
-  const end=document.getElementById('end');end.classList.add('show');
-  document.getElementById('endScore').textContent=sc+' pts';
-  document.getElementById('endSummary').innerHTML=
-    'Você classificou <b>'+total+'</b> espécies em <b>'+secs+'s</b> com <b>'+errors+'</b> erro(s).<br>'+
-    'Pontuação = tempo + 10×erros — <b>quanto menor, melhor!</b>';
-  document.getElementById('saveMsg').textContent='';
-  window.__lastScore={score:sc,seconds:secs,errors:errors,level:cur};
+function renderCityLevel(){
+  const L = LEVELS[level];
+  items = L.cards.map((id,i)=>Object.assign({i}, CITY.cards.find(c=>c.id===id)));
+  shuffle(items);
+  $('stage').innerHTML = `
+    <div class="qhead"><div class="qnum">${L.label} · missão</div>
+      <div class="qtext">${L.title}</div>
+      <div class="qdesc">${L.desc}</div>
+      <div class="goalbox"><h4>${TARGET} Sua meta</h4><div class="goals" id="goals"></div></div></div>
+    <div class="cityinfo"><span class="cpill" id="cBudget"></span><span class="cpill" id="cSlots"></span></div>
+    <div class="zone citydrop" data-z="city" role="button" tabindex="0" aria-label="Cenário: solte aqui as ações">
+      <div class="scene" id="scene"></div>
+      <div class="dropcap">Solte aqui a ação escolhida</div></div>
+    <div class="meters" id="meters"></div>
+    <div class="trayw"><h5>Ações disponíveis · arraste para o cenário, ou toque na ação e depois no cenário</h5><div class="tray" id="tray"></div></div>
+    <div class="trayw placedw"><h5>Ações colocadas · toque em uma para retirar</h5><div class="cplaced" id="cplaced"></div></div>
+    <div class="fb" id="fb" aria-live="polite">Cada ação custa pontos de orçamento e ocupa um espaço da cidade. Escolha bem: algumas ações parecem boas, mas pioram o ar.</div>
+    <button class="btn next" id="finish" onclick="renderEnd()">Concluir missão</button>
+    ${typeof NOTE!=='undefined' && NOTE ? `<p class="modelnote">${NOTE}</p>` : ''}`;
+  drawCityTray();
+  const cz = document.querySelector('.citydrop');
+  cz.addEventListener('click',()=>{ if(sel!==null) cityPlace(sel); });
+  cz.addEventListener('keydown',e=>{ if((e.key==='Enter'||e.key===' ') && sel!==null){ e.preventDefault(); cityPlace(sel); } });
+  cityHud();
+}
+function drawCityTray(){
+  $('tray').innerHTML = items.filter(it=>!cityPlaced.includes(it.id)).map(it=>
+    `<button class="scard" data-i="${it.i}" aria-label="${esc(it.t)}"><span class="cost">${it.cost}</span><span class="cart">${ITEM_ICONS[it.ic]||''}</span><span class="ctxt">${it.t}</span></button>`).join('');
+  document.querySelectorAll('#tray .scard').forEach(attach);
+  $('cplaced').innerHTML = cityPlaced.length ? cityPlaced.map(id=>{ const c = CITY.cards.find(x=>x.id===id);
+    return `<button class="placed rem" onclick="cityRemove('${id}')">${ITEM_ICONS[c.ic]||''}${c.t}<b>retirar</b></button>`; }).join('') : '<span class="empty">Nenhuma ação ainda.</span>';
+}
+function cityHud(){
+  const L = LEVELS[level], v = cityVals();
+  $('lHits').textContent='Ações'; $('lErrs').textContent='Trocas';
+  $('hits').textContent = cityPlaced.length+'/'+L.slots; $('errs').textContent = citySwaps; $('score').textContent = cityScore();
+  if(!$('goals')) return;
+  $('goals').innerHTML = L.goals.map(g=>{ const p = CITY.pollutants.find(x=>x.id===g.id); const ok = v[g.id] <= g.max;
+    return `<div class="gchip ${ok?'ok':'no'}"><i></i><span>${p.label} até ${g.max}</span></div>`; }).join('')
+    + `<div class="gchip ${cityNoTrap()?'ok':'no'}"><i></i><span>Nenhuma ação que piora algum indicador</span></div>`;
+  $('cBudget').innerHTML = `Orçamento: <b>${L.budget-citySpent()}</b> de ${L.budget}`;
+  $('cSlots').innerHTML = `Espaços: <b>${L.slots-cityPlaced.length}</b> de ${L.slots} livres`;
+  $('scene').innerHTML = CITY.render(v, cityPlaced);
+  const gl = {}; L.goals.forEach(g=>gl[g.id]=g.max);
+  $('meters').innerHTML = CITY.pollutants.map(p=>{ const val = Math.round(v[p.id]), lim = gl[p.id];
+    const cls = lim===undefined ? '' : val<=lim ? 'ok' : 'no';
+    return `<div class="meter ${cls}"><div class="mtop"><span>${p.label}</span><b>${val}</b></div>
+      <div class="mbar"><i style="width:${val}%;background:${p.color}"></i>${lim!==undefined?`<u style="left:${lim}%" title="meta"></u>`:''}</div></div>`; }).join('');
+  $('finish').classList.toggle('show', cityGoalsOk());
+}
+function cityPlace(i){
+  const it = items.find(x=>x.i===i), L = LEVELS[level], fb = $('fb');
+  select(null); if(!it || cityPlaced.includes(it.id)) return;
+  startTimer();
+  if(cityPlaced.length >= L.slots){ fb.className='fb no'; fb.innerHTML='<b>Sem espaço.</b>Todos os espaços da cidade estão ocupados. Retire uma ação para colocar outra.'; return; }
+  if(citySpent()+it.cost > L.budget){ fb.className='fb no'; fb.innerHTML=`<b>Orçamento insuficiente.</b>Essa ação custa ${it.cost} e sobram ${L.budget-citySpent()}. Retire uma ação ou escolha outra mais barata.`; return; }
+  const before = cityVals(); cityPlaced.push(it.id); const after = cityVals();
+  const ch = CITY.pollutants.map(p=>{ const d = Math.round(after[p.id]-before[p.id]); return d ? `${p.short} ${d>0?'sobe':'cai'} ${Math.abs(d)}` : ''; }).filter(Boolean).join(', ');
+  const bad = Object.values(it.eff).some(d=>d>0);
+  fb.className = 'fb '+(bad?'no':'ok');
+  fb.innerHTML = `<b>${it.t}: ${ch||'quase nada muda'}.</b>${it.fb}`;
+  drawCityTray(); cityHud();
+}
+function cityRemove(id){
+  if(done) return;
+  cityPlaced = cityPlaced.filter(x=>x!==id); citySwaps++;
+  const fb = $('fb'); fb.className='fb'; fb.innerHTML='<b>Ação retirada.</b>Cada troca custa alguns pontos. O orçamento volta para você.';
+  drawCityTray(); cityHud();
+}
+function renderCityEnd(){
+  const L = LEVELS[level], sc = cityScore(), v = cityVals();
+  $('stage').innerHTML = `
+    <div class="end">
+      <h2>Missão cumprida!</h2><p>A cidade atingiu todas as metas.</p>
+      <div class="scene">${CITY.render(v, cityPlaced)}</div>
+      <div class="stats">
+        <div class="stat">${sc}<span>Pontos</span></div>
+        <div class="stat">${L.budget-citySpent()}<span>Orçamento que sobrou</span></div>
+        <div class="stat">${citySwaps}<span>Trocas</span></div>
+        <div class="stat">${elapsed}s<span>Tempo</span></div>
+      </div>
+      <p style="font-size:.85rem">Começa com 1000 pontos. Cada ponto de orçamento que sobra vale 40, cada troca tira 60 e cada 2 segundos tiram 1.</p>
+      <div class="savebox">
+        <input id="playerName" maxlength="20" placeholder="Seu nome (até 20 letras)">
+        <button class="btn" id="saveBtn" onclick="saveScore()">Salvar no ranking</button>
+      </div>
+      <p id="saveStatus" style="margin-top:8px;font-size:.85rem"></p>
+      <button class="btn ghost" style="margin-top:10px" onclick="restart()">Jogar de novo</button>
+      <div class="review"><h3>O que você fez na cidade</h3><ul>${cityPlaced.map(id=>{const c=CITY.cards.find(x=>x.id===id);return `<li><b>${c.t}.</b> ${c.fb}</li>`;}).join('')}</ul></div>
+    </div>`;
 }
 
-/* ============ RANKING (Firestore) ============ */
-async function loadRanking(){
-  const body=document.getElementById('rankBody');
-  if(!db){renderRankOffline();return;}
+async function initFirebase(){
   try{
-    const {collection,query,orderBy,limit,getDocs}=fs;
-    const q=query(collection(db,'games',GAME_ID,'scores'),orderBy('score','asc'),limit(200));
-    const snap=await getDocs(q);
-    const rows=[];
-    snap.forEach(d=>{const v=d.data();if(v.level===cur)rows.push(v);});
-    rows.sort((a,b)=>(a.score-b.score)||((a.seconds||0)-(b.seconds||0)));
-    const top=rows.slice(0,10);
-    if(!top.length){body.innerHTML='<p class="note">Ainda não há pontuações neste nível. Seja o primeiro! 🏅</p>';return;}
-    body.innerHTML='<ol>'+top.map(r=>
-      '<li><span class="nm">'+esc(r.name||'Anônimo')+'</span>'+
-      '<span class="sc">'+r.score+' pts <span class="note">('+(r.seconds||0)+'s · '+(r.errors||0)+' erros)</span></span></li>'
-    ).join('')+'</ol>';
-  }catch(e){renderRankOffline();}
-}
-function renderRankOffline(){
-  document.getElementById('rankBody').innerHTML=
-    '<p class="note">🔌 Ranking indisponível no momento (offline). O jogo continua 100% jogável — jogue à vontade!</p>';
+    const appM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const fsM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    db=fsM.getFirestore(appM.initializeApp(firebaseConfig)); fsFns=fsM;
+    loadRanking();
+  }catch(e){
+    $('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';
+    $('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';
+  }
 }
 async function saveScore(){
-  const msg=document.getElementById('saveMsg');
-  const nm=(document.getElementById('nameIn').value||'').trim().slice(0,20);
-  if(!nm){msg.textContent='Digite um nome para salvar.';return;}
-  if(!window.__lastScore){return;}
-  if(!db){msg.textContent='Sem conexão: não foi possível salvar, mas seu resultado vale! 💚';return;}
+  if(scoreSaved) return;
+  const name=$('playerName').value.trim(), stt=$('saveStatus');
+  if(!name){stt.textContent='Digite seu nome primeiro.';return;}
+  if(!db){stt.textContent='Sem conexão com o ranking. Seu resultado não foi enviado.';return;}
   try{
-    const {collection,addDoc,serverTimestamp}=fs;
-    const s=window.__lastScore;
-    await addDoc(collection(db,'games',GAME_ID,'scores'),
-      {name:nm,score:s.score,seconds:s.seconds,errors:s.errors,level:s.level,ts:serverTimestamp()});
-    msg.textContent='✅ Salvo no ranking global!';
-    loadRanking();
-  }catch(e){msg.textContent='Não foi possível salvar agora, mas seu resultado vale! 💚';}
+    $('saveBtn').disabled=true;
+    /* grava no mesmo formato da versao anterior, para o ranking antigo continuar valendo */
+    await fsFns.addDoc(fsFns.collection(db,'games',GAME_ID,'scores'), saveDoc(name.slice(0,20), st(), level, fsFns));
+    scoreSaved=true; stt.textContent='Salvo no Ranking Global!'; loadRanking();
+  }catch(e){ $('saveBtn').disabled=false; stt.textContent='Erro ao salvar. Verifique a internet e tente de novo.'; }
+}
+async function loadRanking(){
+  if(!db) return;
+  const list=$('rankList'), asked=level;
+  try{
+    const q=fsFns.query(fsFns.collection(db,'games',GAME_ID,'scores'),fsFns.where(RANK.field,'==',RANK.val(asked)),fsFns.limit(1000));
+    const snap=await fsFns.getDocs(q);
+    if(asked!==level) return;
+    const rows=[]; snap.forEach(d=>rows.push(d.data()));
+    const sec = r => Number(r.seconds ?? r.tempo) || 0, scr = r => Number(r.score) || 0;
+    const low = typeof RANK.lowerBetter==='function' ? RANK.lowerBetter(asked) : !!RANK.lowerBetter;
+    rows.sort((a,b)=> (low ? scr(a)-scr(b) : scr(b)-scr(a)) || (sec(a)-sec(b)));
+    if(!rows.length){list.innerHTML='<li><span>Seja o primeiro do ranking!</span></li>';return;}
+    list.innerHTML=rows.slice(0,10).map((r,i)=>
+      `<li><span><span class="pos">${i+1}º</span>${esc(r.name||'?')}</span><span>${scr(r)} ${RANK.unit||'pts'} · ${sec(r)}s</span></li>`).join('');
+    $('rankNote').textContent = low ? 'Neste nível, menos pontos é melhor.' : '';
+  }catch(e){ list.innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>'; }
 }
 
-/* ============ EVENTOS ============ */
-document.getElementById('levels').addEventListener('click',e=>{
-  const b=e.target.closest('.pill');if(!b)return;initLevel(b.dataset.lv);loadRanking();
-});
-document.getElementById('saveBtn').addEventListener('click',saveScore);
-document.getElementById('againBtn').addEventListener('click',()=>initLevel(cur));
-document.addEventListener('click',e=>{ if(!e.target.closest('.tok')&&!e.target.closest('.zone')){ if(selTok){selTok=null;document.querySelectorAll('.tok').forEach(x=>x.classList.remove('sel'));} } });
-
-initLevel('basico');
-loadAnimalAssets();
+buildLevels();
+setLevel(KEYS[0]);
+initFirebase();
 </script>
 </body>
 </html>
