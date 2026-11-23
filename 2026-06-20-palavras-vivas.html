@@ -2,335 +2,570 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Palavras Vivas 📝 — Caça-Palavras Ambiental</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Palavras Vivas</title>
 <style>
-:root{--bg1:#1a0a2e;--bg2:#2d1654;--accent:#c084fc;--accent2:#7c3aed;--ok:#22c55e;--found:#7c3aed}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:"Segoe UI",system-ui,sans-serif;min-height:100vh;background:linear-gradient(160deg,var(--bg1),var(--bg2));color:#ede9fe;display:flex;flex-direction:column;align-items:center;padding:16px}
-h1{font-size:clamp(1.4rem,4vw,2.1rem);text-align:center;margin:10px 0 2px}
-h1 span{color:var(--accent)}
-.tagline{text-align:center;opacity:.75;font-size:.88rem;margin-bottom:12px}
-.levels{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
-.lvl{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:6px 18px;cursor:pointer;font-size:.85rem;color:#ede9fe;transition:.2s}
-.lvl:hover{background:rgba(255,255,255,.18)}
-.lvl.active{background:var(--accent);color:#1a0a2e;font-weight:700;border-color:transparent}
-.hud{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
-.hud-item{background:rgba(255,255,255,.08);border-radius:10px;padding:6px 14px;font-size:.85rem;text-align:center}
-.hud-item span{color:var(--accent);font-weight:700}
-.game-wrap{width:min(740px,98vw);display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:12px}
-@media(max-width:560px){.game-wrap{grid-template-columns:1fr}}
-.grid-panel{display:flex;flex-direction:column;align-items:center}
-.word-grid{display:grid;gap:2px;cursor:default;user-select:none}
-.cell{width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:700;border-radius:4px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);cursor:pointer;transition:.15s;text-transform:uppercase}
-.cell:hover{background:rgba(192,132,252,.15)}
-.cell.selected{background:rgba(192,132,252,.3);border-color:var(--accent)}
-.cell.found{background:rgba(124,58,237,.35);border-color:var(--found);color:#e9d5ff}
-.cell.current-found{animation:foundpop .4s ease;background:rgba(34,197,94,.35);border-color:#22c55e}
-@keyframes foundpop{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
-.word-list-panel{background:rgba(255,255,255,.05);border-radius:12px;padding:14px}
-.word-list-panel h3{font-size:.84rem;opacity:.7;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
-.word-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.07)}
-.word-item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
-.word-text{font-size:.84rem;font-weight:700;color:var(--accent);text-transform:uppercase;white-space:nowrap}
-.word-text.found-word{text-decoration:line-through;opacity:.45}
-.word-hint{font-size:.75rem;opacity:.7;line-height:1.3;margin-top:2px}
-.feedback{width:min(740px,98vw);background:rgba(255,255,255,.06);border-left:3px solid var(--accent);border-radius:8px;padding:10px 14px;font-size:.86rem;line-height:1.45;margin-bottom:12px;display:none}
-.ranking{width:min(740px,98vw);background:rgba(255,255,255,.05);border-radius:14px;padding:16px;margin-bottom:14px}
-.ranking h3{font-size:.88rem;opacity:.7;margin-bottom:10px}
-.rank-list{display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto}
-.rank-item{display:flex;justify-content:space-between;font-size:.8rem;padding:5px 8px;background:rgba(255,255,255,.05);border-radius:6px}
-.endscreen{display:none;width:min(740px,98vw);background:rgba(255,255,255,.06);border-radius:16px;padding:24px;text-align:center;margin-bottom:14px}
-.endscreen h2{font-size:1.5rem;margin-bottom:8px}
-.score-big{font-size:2.6rem;font-weight:800;color:var(--accent)}
-.save-form{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
-.save-form input{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:8px 14px;color:#ede9fe;font-size:.9rem;width:200px}
-.save-form button{background:var(--accent);color:#1a0a2e;border:none;border-radius:8px;padding:8px 20px;font-weight:700;cursor:pointer}
-.restart-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 22px;color:#ede9fe;cursor:pointer;font-size:.9rem;margin-top:8px}
-footer{margin-top:20px;opacity:.6;font-size:.78rem;text-align:center;line-height:1.6}
+  :root{
+    --ink:#0f2f44; --soft:#4b6a7d; --line:#dbe7ee; --ok:#16a34a; --err:#dc2626;
+    --t50:#f0fdf4; --t100:#dcfce7; --t300:#86efac; --t500:#22c55e; --main:#16a34a; --deep:#15803d; --dark:#166534; --glow:rgba(22,163,74,.25);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+    min-height:100vh;color:var(--ink);background:#ffffff;
+    display:flex;flex-direction:column;align-items:center;padding:12px 14px 40px;
+  }
+  .top{width:100%;max-width:1040px;display:flex;justify-content:flex-start}
+  .hub{display:inline-flex;align-items:center;gap:6px;color:var(--deep);text-decoration:none;
+    font-weight:600;font-size:.9rem;padding:7px 12px;border-radius:20px;border:1.5px solid var(--line)}
+  .hub:hover{background:var(--tint)}
+  .hub svg{width:14px;height:14px}
+  header{text-align:center;max-width:720px;margin-top:6px}
+  h1{font-size:clamp(1.45rem,5vw,2.2rem);display:flex;align-items:center;justify-content:center;gap:10px}
+  h1 svg{width:.95em;height:.95em}
+  h1 .spark{color:var(--main)}
+  .sub{color:var(--soft);font-size:.95rem;margin:4px 0 12px}
+  .levels{display:flex;gap:8px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+  .levels button{border:2px solid var(--line);background:#fff;color:var(--ink);padding:8px 16px;border-radius:30px;
+    font-size:.92rem;cursor:pointer;transition:.2s;font-weight:600;font-family:inherit}
+  .levels button{border-color:var(--main);color:var(--deep)}
+  .levels button:hover{background:var(--tint)}
+  .levels button.active{background:var(--main);border-color:var(--main);color:#fff;box-shadow:0 4px 12px var(--glow)}
+  .hud{display:flex;gap:8px;justify-content:center;align-items:center;margin:4px 0 12px;font-size:.9rem;flex-wrap:wrap}
+  .hud span{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:30px;color:#fff;font-weight:600}
+  .hud b{font-size:1.05rem;font-weight:800} .hud em{font-style:normal}
+  .hud .h1{background:#16a34a} .hud .h2{background:#f97316} .hud .h3{background:#7c3aed} .hud .h4{background:#0ea5e9}
+
+  .card{width:min(680px,100%);background:#fff;border:3px solid var(--main);border-radius:22px;
+    padding:0 0 20px;box-shadow:0 12px 30px var(--glow);overflow:hidden}
+  #stage{padding:0 20px}
+  .strip{display:flex;gap:5px;justify-content:center;align-items:flex-end;flex-wrap:wrap;min-height:54px;
+    padding:10px 10px 8px;background:linear-gradient(180deg,#e0f2fe 0%,#f0f9ff 62%,var(--pale) 62%,var(--pale) 100%)}
+  .slot{width:36px;height:36px;display:flex;align-items:center;justify-content:center}
+  .slot svg{width:100%;height:100%}
+  .slot.empty{align-items:flex-end;padding-bottom:3px}
+  .slot.empty::after{content:"";width:11px;height:11px;border-radius:50%;background:#fff;border:3px solid var(--main);opacity:.45}
+  .slot.now::after{opacity:1;background:var(--acc);border-color:#fff;box-shadow:0 0 0 3px var(--acc);animation:pulse 1.1s infinite}
+  @keyframes pulse{50%{transform:scale(1.25)}}
+  .slot.pop svg{animation:grow .45s cubic-bezier(.3,1.5,.5,1)}
+  @keyframes grow{from{transform:scale(.2) translateY(8px);opacity:0}to{transform:none;opacity:1}}
+  .qhead{margin:0 -20px 16px;padding:14px 20px 16px;background:linear-gradient(135deg,var(--main),var(--deep));color:#fff}
+  .qnum{display:inline-block;font-size:.74rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+    background:rgba(255,255,255,.22);padding:3px 10px;border-radius:20px}
+  .qtext{font-size:1.22rem;font-weight:700;line-height:1.35;margin-top:8px}
+  .opts{display:grid;gap:9px}
+  .opt{display:flex;gap:12px;align-items:center;text-align:left;width:100%;background:#fff;border:2px solid var(--line);
+    border-radius:14px;padding:11px 14px;font-size:1rem;line-height:1.35;color:var(--ink);cursor:pointer;
+    font-family:inherit;transition:border-color .15s,background .15s,transform .15s}
+  .opt{--c:#0ea5e9;--ct:#f0f9ff;border-color:var(--c);background:var(--ct);font-weight:500}
+  .opt:nth-child(2){--c:#f97316;--ct:#fff7ed} .opt:nth-child(3){--c:#8b5cf6;--ct:#f5f3ff} .opt:nth-child(4){--c:#ec4899;--ct:#fdf2f8}
+  .opt .k{flex:none;width:34px;height:34px;border-radius:50%;background:var(--c);color:#fff;
+    font-weight:800;display:flex;align-items:center;justify-content:center;font-size:1rem}
+  .opt:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(15,47,68,.14)}
+  .opt:disabled{cursor:default}
+  .opt.right{border-color:var(--ok);background:#dcfce7;font-weight:700}
+  .opt.right .k{background:var(--ok);color:#fff}
+  .opt.wrong{border-color:var(--err);background:#fee2e2;animation:shake .3s}
+  .opt.wrong .k{background:var(--err);color:#fff}
+  .opt.dim{opacity:.5;background:#fff;border-color:var(--line)} .opt.dim .k{background:#94a3b8}
+  @keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+  .fb{margin-top:14px;border-radius:14px;padding:12px 14px;font-size:.96rem;line-height:1.45;background:#fffbeb;
+    border:2px dashed #fcd34d;min-height:52px;color:#92400e}
+  .fb.ok{background:#dcfce7;border:2px solid var(--ok);color:var(--ink)}
+  .fb.no{background:#fee2e2;border:2px solid var(--err);color:var(--ink)}
+  .fb b{display:block;margin-bottom:2px}
+  .fb.ok>b{color:#166534;font-size:1.05rem} .fb.no>b{color:#b91c1c;font-size:1.05rem}
+  .fb .more{margin-top:8px;padding:8px 10px;border-radius:10px;background:#fff} .fb .more b{color:#166534}
+  .fb .more{margin-top:6px}
+  .btn{background:var(--main);color:#fff;border:0;padding:11px 20px;border-radius:12px;font-weight:700;cursor:pointer;
+    font-size:1rem;font-family:inherit}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--line)}
+  .next{display:none;margin:14px auto 0;background:var(--acc);font-size:1.05rem;padding:12px 26px;box-shadow:0 5px 14px rgba(15,47,68,.2)}
+  .next.show{display:block}
+
+  .end{text-align:center;padding-top:16px}
+  .end h2{font-size:1.5rem;margin:6px 0 4px;color:var(--deep)}
+  .end p{color:var(--soft)}
+  .stats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+  .stat{background:#16a34a;border-radius:14px;padding:9px 16px;font-weight:800;font-size:1.2rem;color:#fff;min-width:84px}
+  .stat:nth-child(2){background:#7c3aed} .stat:nth-child(3){background:#f97316} .stat:nth-child(4){background:#0ea5e9}
+  .stat span{display:block;font-size:.72rem;font-weight:600;color:#fff;opacity:.92}
+  .savebox{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+  .savebox input{padding:10px 12px;border-radius:10px;border:2px solid var(--line);font-size:1rem;width:220px;font-family:inherit}
+  .review{text-align:left;margin-top:16px;border-top:2px solid var(--line);padding-top:12px}
+  .review h3{font-size:1rem;margin-bottom:6px}
+  .review li{list-style:none;padding:8px 0;border-bottom:1px solid var(--line);font-size:.93rem;line-height:1.4}
+  .review li:last-child{border-bottom:0}
+  .review .a{color:#166534;font-weight:700}
+
+  .ranking{margin-top:16px;width:min(680px,100%);background:#fff;border:3px solid #fbbf24;border-radius:18px;padding:0 16px 12px;overflow:hidden}
+  .ranking h3{font-size:1.02rem;margin:0 -16px 8px;padding:10px 16px;background:#fbbf24;color:#451a03}
+  .ranking h3 span{color:#fff;background:#b45309;padding:2px 10px;border-radius:20px;font-size:.88rem}
+  .ranking li:nth-child(1) .pos{color:#b45309} .ranking li:nth-child(1){font-weight:700}
+  .ranking ol{list-style:none}
+  .ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.93rem}
+  .ranking li:last-child{border-bottom:0}
+  .ranking .pos{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+  .note{font-size:.8rem;color:var(--soft);margin-top:6px}
+  footer{margin-top:22px;font-size:.8rem;color:var(--soft);text-align:center;line-height:1.6}
+  footer .credit{font-weight:700;color:var(--ink)}
+
+
+  /* ---- cor unica por jogo: todos os destaques sao tons da mesma cor ---- */
+  :root{--tint:var(--t100);--pale:var(--t300);--acc:var(--dark)}
+  .hub:hover{background:var(--t50)}
+  .levels button{border-color:var(--t300)}
+  .hud .h1{background:var(--t500)} .hud .h2{background:var(--main)} .hud .h3{background:var(--deep)} .hud .h4{background:var(--dark)}
+  .strip{background:linear-gradient(180deg,var(--t50) 0%,var(--t100) 62%,var(--t300) 62%,var(--t300) 100%)}
+  .qhead{background:linear-gradient(135deg,var(--main),var(--dark))}
+  .opt,.opt:nth-child(2),.opt:nth-child(3),.opt:nth-child(4){--c:var(--main);--ct:var(--t50);border-color:var(--t300)}
+  .opt:not(:disabled):hover{border-color:var(--main);background:var(--t100)}
+  .fb{background:var(--t50);border:2px dashed var(--t300);color:var(--deep)}
+  .next{background:var(--deep)}
+  .stat{background:var(--t500)} .stat:nth-child(2){background:var(--main)} .stat:nth-child(3){background:var(--deep)} .stat:nth-child(4){background:var(--dark)}
+  .ranking{border-color:var(--main)}
+  .ranking h3{background:var(--main);color:#fff}
+  .ranking h3 span{background:var(--dark);color:#fff}
+  .ranking li:nth-child(1) .pos{color:var(--deep)}
+  @media(max-width:560px){
+    body{padding:8px 8px 32px}
+    .sub{display:none}
+    h1{margin-bottom:8px}
+    .hub{padding:4px 10px;font-size:.82rem}
+    .levels button{padding:7px 12px;font-size:.85rem}
+    .hud{gap:10px;font-size:.86rem;margin:2px 0 8px}
+    .card{padding:0 0 14px;border-radius:18px}
+    .qtext{font-size:1.05rem;margin-bottom:10px}
+    .opt{padding:9px 10px;font-size:.94rem;gap:9px}
+    .opt .k{width:28px;height:28px;font-size:.86rem}
+    .slot{width:27px;height:27px}
+    .strip{min-height:44px;padding:8px 6px 6px}
+    .qhead{margin:0 -12px 12px;padding:10px 12px 12px}
+    #stage{padding:0 12px}
+    .hud span{padding:4px 9px;font-size:.78rem} .hud b{font-size:.92rem} .hud{gap:5px}
+    .fb{font-size:.9rem}
+  }
+  @media(prefers-reduced-motion:reduce){.slot.pop svg,.opt.wrong{animation:none}}
+
+  /* ---------- caca-palavras ---------- */
+  .card{width:min(940px,100%)} .ranking{width:min(940px,100%)}
+  .qdesc{font-size:.96rem;line-height:1.45;margin-top:6px;opacity:.96}
+  .wsbox{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start}
+  .gridw{position:relative;margin:0 auto;width:min(100%,calc(var(--n)*40px));touch-action:none;user-select:none;-webkit-user-select:none}
+  .grid{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:2px;background:var(--t100);border:3px solid var(--t300);border-radius:14px;padding:6px}
+  .cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:6px;font-weight:800;
+    font-size:clamp(.62rem,calc(min(94vw,560px)/var(--n)*.52),1.15rem);color:var(--ink);cursor:pointer;transition:background .12s,transform .12s}
+  .cell.sel{background:var(--main);color:#fff;transform:scale(1.06)}
+  .cell.start{background:var(--t300)}
+  .cell.hint{animation:hintb 1s ease-in-out infinite alternate;background:#fde68a}
+  @keyframes hintb{to{background:#fbbf24}}
+  .cell.bad{background:#fecaca;color:#991b1b}
+  .lines{position:absolute;inset:0;pointer-events:none}
+  .lines line{stroke-linecap:round;opacity:.38}
+  .found-cell{color:var(--dark)}
+  .wlist{display:flex;flex-direction:column;gap:7px}
+  .wlist h4{font-size:.82rem;text-transform:uppercase;letter-spacing:.4px;color:var(--deep)}
+  .witem{text-align:left;width:100%;border:2px solid var(--t300);background:var(--t50);border-radius:12px;padding:7px 10px;font-family:inherit;
+    font-size:.9rem;color:var(--ink);cursor:default;line-height:1.3}
+  .witem .wn{font-weight:800;letter-spacing:.5px}
+  .witem .wc{font-size:.86rem;color:var(--soft)}
+  .witem .wl{display:inline-block;margin-left:6px;font-size:.74rem;font-weight:800;color:var(--deep);background:var(--t100);border-radius:8px;padding:1px 6px}
+  .witem.done{background:#dcfce7;border-color:#86efac;cursor:pointer}
+  .witem.done .wn{color:#166534}
+  .witem.done .wn::after{content:' ok';font-size:.72rem;color:#15803d}
+  .list .wlist{display:flex;flex-direction:row;flex-wrap:wrap}
+  .list .witem{width:auto}
+  .tools{display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+  .zonebox{position:relative}
+  .lost{position:absolute;right:8px;top:8px;background:#dc2626;color:#fff;font-weight:900;font-size:.95rem;border-radius:999px;padding:3px 10px;pointer-events:none;animation:lost 1.4s ease-out forwards;z-index:5}
+  @keyframes lost{0%{opacity:0;transform:translateY(6px)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-18px)}}
+  .modelnote{font-size:.78rem;color:var(--soft);text-align:center;margin-top:12px;line-height:1.4}
+  .review .w{color:var(--deep);font-weight:800}
+  .review .tag{font-size:.72rem;font-weight:800;border-radius:8px;padding:1px 6px;margin-left:6px;background:#fef3c7;color:#92400e}
+  @media(max-width:760px){ .wsbox{grid-template-columns:1fr} .list .wlistw{order:-1} }
+  @media(max-width:560px){ .grid{gap:1px;padding:4px;border-radius:10px} .cell{border-radius:4px} .witem{font-size:.85rem;padding:6px 8px} }
+  @media(prefers-reduced-motion:reduce){.cell.hint,.lost{animation:none}}
+
 </style>
 </head>
 <body>
-<h1>📝 <span>Palavras Vivas</span></h1>
-<p class="tagline">Caça-Palavras Ambiental · Português 📝 · Pantanal 🐊</p>
-
-<div class="levels">
-  <button class="lvl active" onclick="setLevel('basico',this)">🌱 Básico</button>
-  <button class="lvl" onclick="setLevel('intermediario',this)">📚 Intermediário</button>
-  <button class="lvl" onclick="setLevel('dificil',this)">🔥 Difícil</button>
-  <button class="lvl" onclick="setLevel('carbonauta',this)">🛰️ Carbonauta</button>
+<div class="top">
+  <a class="hub" href="index.html">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Todos os jogos
+  </a>
 </div>
+
+<header>
+  <h1><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22V11" stroke="#15803d" stroke-width="2"/><path d="M12 13C6 13 4 8 4 4c5 0 8 3 8 9zM12 11c0-5 3-8 8-8 0 5-3 8-8 8z" fill="#22c55e"/></svg> <span>Palavras <span class="spark">Vivas</span></span></h1>
+  <p class="sub">Encontre no quadro palavras do Pantanal, do Cerrado, do fogo e do clima. Cada palavra achada traz uma explicação. Nos níveis mais altos, só a pista aparece.</p>
+</header>
+
+<div class="levels" id="levels"></div>
 
 <div class="hud">
-  <div class="hud-item">Tempo: <span id="hTime">0s</span></div>
-  <div class="hud-item">Pontos: <span id="hScore">0</span></div>
-  <div class="hud-item">Encontradas: <span id="hFound">0</span></div>
+  <span class="h1">Palavras <b id="hits">0/0</b></span>
+  <span class="h2">Erros <b id="errs">0</b></span>
+  <span class="h3">Pontos <b id="score">0</b></span>
+  <span class="h4">Tempo <b id="timer">0s</b></span>
 </div>
 
-<div class="game-wrap">
-  <div class="grid-panel">
-    <div id="wordGrid" class="word-grid"></div>
-  </div>
-  <div class="word-list-panel">
-    <h3>Palavras</h3>
-    <div id="wordList"></div>
-  </div>
-</div>
-<div class="feedback" id="feedback"></div>
-
-<div class="endscreen" id="endScreen">
-  <h2>🎉 Todas as palavras encontradas!</h2>
-  <div class="score-big" id="finalScore"></div>
-  <p style="opacity:.75;margin:8px 0">pontos · nível <span id="finalLevel"></span></p>
-  <div class="save-form">
-    <input id="playerName" placeholder="Seu nome" maxlength="20">
-    <button onclick="saveScore()">Salvar ranking</button>
-  </div>
-  <button class="restart-btn" onclick="init()">Jogar novamente</button>
+<div class="card">
+  <div id="stage"></div>
 </div>
 
 <div class="ranking">
-  <h3>🏆 Ranking Global — <span id="rankLevel">Básico</span></h3>
-  <div class="rank-list" id="rankList"><p style="opacity:.5;font-size:.82rem">Carregando…</p></div>
+  <h3>Ranking Global, nível <span id="rankLevel"></span></h3>
+  <ol id="rankList"><li><span>Carregando o ranking...</span></li></ol>
+  <p class="note" id="rankNote"></p>
 </div>
 
-<footer>Português 📝 · Queimadas e fogo no Pantanal · Pantanal 🐊<br>
-app ambiental do dia (2026-06-20)<br>— Idealizado por Ernandes Sobreira —</footer>
+<footer>
+  Biomas, fogo e clima · Caça-palavras<br>
+  <span class="credit">Idealizado por Ernandes Sobreira</span>
+</footer>
 
-<script type="module">
-import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import{getFirestore,collection,addDoc,query,orderBy,limit,getDocs,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-const fbApp=initializeApp({apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"});
-const db=getFirestore(fbApp);
-const GAME_ID="2026-06-20-palavras-vivas";
-
-const WORDS_BY_LEVEL={
-basico:[
-  {word:'PANTANAL',hint:'Maior planície alagável do mundo, no Brasil'},
-  {word:'QUEIMADA',hint:'Incêndio intencional ou acidental na vegetação'},
-  {word:'ONCA',hint:'Maior felino das Américas'},
-  {word:'CERRADO',hint:'Bioma do Brasil Central, savana tropical'},
-  {word:'CAPIVARA',hint:'Maior roedor do mundo, semi-aquático'},
-  {word:'AGUAPE',hint:'Planta aquática flutuante muito comum no Pantanal'},
-  {word:'BOTO',hint:'Golfinho de água doce, cor-de-rosa'},
-  {word:'TUIUIU',hint:'Ave-símbolo do Pantanal, a jaburu'},
-  {word:'SECA',hint:'Período sem chuvas, crítico para os animais'},
-  {word:'CHEIA',hint:'Período de inundação sazonal do Pantanal'},
-],
-intermediario:[
-  {word:'BIOMA',hint:'Conjunto de ecossistemas com características similares'},
-  {word:'EMISSAO',hint:'Liberação de gases de efeito estufa na atmosfera'},
-  {word:'CARBONO',hint:'Elemento químico base da vida e do efeito estufa'},
-  {word:'DESMATAMENTO',hint:'Remoção intencional de cobertura florestal'},
-  {word:'VEREDAS',hint:'Ecossistemas de palmeiras buriti em solo úmido'},
-  {word:'ARIRANHAS',hint:'Lontras gigantes do Pantanal, em perigo de extinção'},
-  {word:'BIODIVERSIDADE',hint:'Variedade de espécies em um ecossistema'},
-  {word:'REGENERACAO',hint:'Recuperação natural de uma área degradada'},
-  {word:'SAVANA',hint:'Vegetação com árvores esparsas e gramíneas'},
-  {word:'INCENDIO',hint:'Fogo de grande intensidade em vegetação nativa'},
-  {word:'UMIDADE',hint:'Quantidade de água no ar ou no solo'},
-],
-dificil:[
-  {word:'FITOFISIONOMIA',hint:'Tipo de vegetação definida por sua estrutura e espécies'},
-  {word:'BIOGEOQUIMICA',hint:'Ciclos de elementos entre seres vivos e ambiente'},
-  {word:'ENDEMISMO',hint:'Ocorrência de espécie exclusiva em determinada área'},
-  {word:'XILOPODIO',hint:'Raízes tuberosas que armazenam água em plantas do cerrado'},
-  {word:'SEQUESTRO',hint:'Captura e armazenamento de carbono pela vegetação'},
-  {word:'METANO',hint:'Gás estufa emitido por solos alagados, fórmula CH₄'},
-  {word:'TRANSPIRACAO',hint:'Liberação de vapor d\'água pelas plantas'},
-  {word:'AEROSSOL',hint:'Partículas finas suspensas no ar, liberadas em queimadas'},
-  {word:'NICHO',hint:'Papel funcional de uma espécie no ecossistema'},
-  {word:'ECOSSISTEMA',hint:'Sistema de organismos e seu ambiente abiótico'},
-  {word:'CICLAGEM',hint:'Processos de reaproveitamento de nutrientes'},
-  {word:'SOTOBOSQUE',hint:'Camada inferior da floresta, abaixo do dossel'},
-],
-carbonauta:[
-  {word:'FITOREMEDIACAO',hint:'Uso de plantas para descontaminar solos e água'},
-  {word:'HIDROMORFISMO',hint:'Característica de solos constantemente alagados'},
-  {word:'METANOGENESE',hint:'Produção de metano por arqueas em condições anóxicas'},
-  {word:'FOTOSSINTESE',hint:'Processo de conversão de luz em energia química'},
-  {word:'NITRIFICACAO',hint:'Oxidação de amônia a nitrato por bactérias do solo'},
-  {word:'ECTOMICORRIZA',hint:'Simbiose entre fungo e raíz de árvore com manto externo'},
-  {word:'EDAPHOLOGIA',hint:'Ciência que estuda o solo e sua influência nos organismos'},
-  {word:'PALEOSSOLO',hint:'Solo antigo preservado que registra climas passados'},
-  {word:'TERMITEIRO',hint:'Ninho de cupins, importante na ciclagem de carbono'},
-  {word:'BIOMASSA',hint:'Massa total de matéria orgânica em um ecossistema'},
-  {word:'TURBEIRA',hint:'Solo turfoso com alto estoque de carbono orgânico'},
-  {word:'HALOFITA',hint:'Planta adaptada a solos salinos ou salobros'},
-]
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
 };
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-const SIZE={basico:10,intermediario:12,dificil:14,carbonauta:12};
+/* ---------- dados deste jogo ---------- */
+const GAME_ID = "2026-06-20-palavras-vivas";
+/* mesma conta de antes: 100 por palavra e bonus de ate 300 pela rapidez; agora erro tira 25 e dica tira 75 */
+function scoreNow(s){ return Math.max(0, 100*s.found + Math.max(0, 300 - 2*s.seconds) - 25*s.errors - 75*s.hints); }
+function saveDoc(name, s, lv, f){ return {name, score:scoreNow(s), level:lv, seconds:s.seconds, errors:s.errors, hints:s.hints, ts:f.serverTimestamp()}; }
+const RANK = {field:'level', val:k=>k, lowerBetter:false};
+const SCORE_NOTE = 'Cada palavra vale 100 pontos. Quem termina rápido ganha até 300 de bônus. Cada erro tira 25 e cada dica tira 75.';
+const LEVELS = {
+  basico: { label:'Básico', title:'Palavras do Pantanal', size:10, dirs:'hv', mode:'list',
+    desc:'O Pantanal vive no ritmo da cheia e da seca. Encontre as palavras na horizontal e na vertical.',
+    words:[
+      {w:'Pantanal', fb:'O Pantanal é uma das maiores áreas úmidas do planeta e fica em Mato Grosso, Mato Grosso do Sul, Bolívia e Paraguai.'},
+      {w:'Cheia', fb:'Na cheia, os rios transbordam e grande parte da planície fica coberta de água.'},
+      {w:'Seca', fb:'Na seca, a água baixa, os peixes se juntam nas lagoas e as aves se reúnem para comer.'},
+      {w:'Onça', fb:'A onça-pintada é o maior felino das Américas e nada muito bem.'},
+      {w:'Capivara', fb:'A capivara é o maior roedor do mundo e vive sempre perto da água.'},
+      {w:'Aguapé', fb:'O aguapé é uma planta que flutua e forma tapetes nas baías.'},
+      {w:'Tuiuiú', fb:'O tuiuiú, ou jaburu, é a ave símbolo do Pantanal.'},
+      {w:'Jacaré', fb:'O jacaré-do-pantanal se recuperou depois que a caça para tirar o couro foi proibida.'},
+      {w:'Peixe', fb:'Os peixes sobem os rios na piracema para se reproduzir.'}
+    ]},
+  intermediario: { label:'Intermediário', title:'Palavras do Cerrado', size:12, dirs:'hvd', mode:'list',
+    desc:'O Cerrado é a savana mais rica do mundo e a caixa-d\'água do Brasil. Agora as palavras também podem estar na diagonal.',
+    words:[
+      {w:'Cerrado', fb:'O Cerrado ocupa o centro do Brasil e dele nascem rios que correm para várias bacias do país.'},
+      {w:'Savana', fb:'Savana é uma paisagem com capim e árvores espalhadas. O Cerrado é uma savana tropical.'},
+      {w:'Vereda', fb:'Vereda é uma faixa úmida com buritis, onde a água do solo aflora.'},
+      {w:'Buriti', fb:'O buriti é uma palmeira das veredas. Os frutos alimentam araras, antas e gente.'},
+      {w:'Pequi', fb:'O pequi é um fruto típico do Cerrado, muito usado na cozinha de Goiás e Mato Grosso.'},
+      {w:'Bioma', fb:'Bioma é uma grande região com clima, vegetação e animais parecidos.'},
+      {w:'Nascente', fb:'Nascente é o lugar onde a água brota do chão e começa um rio.'},
+      {w:'Raiz', fb:'Muitas plantas do Cerrado têm raízes profundas que alcançam água mesmo na seca.'},
+      {w:'Desmatamento', fb:'Segundo o MapBiomas, quase metade do Cerrado já perdeu a vegetação nativa.'},
+      {w:'Lobo', fb:'O lobo-guará é o maior canídeo da América do Sul e come muitos frutos.'}
+    ]},
+  dificil: { label:'Difícil', title:'Fogo, água e clima', size:14, dirs:'all', mode:'list',
+    desc:'Agora as palavras podem estar em qualquer direção, até de trás para frente.',
+    words:[
+      {w:'Queimada', fb:'Queimada é o uso do fogo para limpar terreno. Quando escapa do controle, vira incêndio.'},
+      {w:'Incêndio', fb:'Os incêndios de 2020 queimaram cerca de 30 por cento do Pantanal brasileiro.'},
+      {w:'Fumaça', fb:'A fumaça das queimadas tem partículas finas que fazem mal aos pulmões.'},
+      {w:'Aerossol', fb:'Aerossóis são partículas no ar, como as da fumaça, que afetam a saúde e as chuvas.'},
+      {w:'Umidade', fb:'Na seca de Mato Grosso, a umidade do ar pode ficar abaixo de 20 por cento.'},
+      {w:'Metano', fb:'Áreas alagadas, como o Pantanal, emitem metano de forma natural.'},
+      {w:'Carbono', fb:'Florestas, savanas e solos guardam carbono. O fogo devolve parte dele ao ar.'},
+      {w:'Transpiração', fb:'As plantas soltam vapor d\'água pelas folhas, e isso ajuda a formar chuva.'},
+      {w:'Regeneração', fb:'Regeneração é a volta da vegetação depois de um distúrbio, como o fogo.'},
+      {w:'Biodiversidade', fb:'Biodiversidade é a variedade de seres vivos de um lugar.'}
+    ]},
+  avancado: { label:'Avançado', title:'Descubra pela pista', size:13, dirs:'hvd', mode:'clue',
+    desc:'Agora a palavra não aparece. Leia a pista, descubra qual é a palavra e procure no quadro.',
+    words:[
+      {w:'Piracema', clue:'Época em que os peixes sobem os rios para se reproduzir e a pesca é proibida.', fb:'Na piracema, a pesca fica proibida para proteger a reprodução dos peixes.'},
+      {w:'Corixo', clue:'Canal estreito que liga baías e rios no Pantanal.', fb:'Os corixos levam água de um lugar para outro durante a cheia.'},
+      {w:'Endemismo', clue:'Quando uma espécie só existe em um lugar do mundo.', fb:'Muitas plantas do Cerrado são endêmicas e não existem em nenhum outro lugar.'},
+      {w:'Xilopódio', clue:'Órgão subterrâneo de plantas do Cerrado que guarda reservas e permite rebrotar depois do fogo.', fb:'Graças ao xilopódio, muitas plantas do Cerrado rebrotam poucos dias depois de uma queimada.'},
+      {w:'Sequestro', clue:'Retirar CO2 do ar e guardar em plantas ou no solo.', fb:'Florestas em crescimento e solos bem cuidados fazem sequestro de carbono.'},
+      {w:'Nicho', clue:'O papel e o modo de vida de uma espécie no ambiente.', fb:'Duas espécies com o mesmo nicho competem pelos mesmos recursos.'},
+      {w:'Dossel', clue:'A camada de copas mais alta da floresta.', fb:'O dossel recebe a maior parte da luz e abriga muitas aves e insetos.'},
+      {w:'Cupinzeiro', clue:'Ninho de cupins que vira morro no campo.', fb:'Os cupins misturam o solo e decompõem matéria vegetal.'},
+      {w:'Ecossistema', clue:'Os seres vivos de um lugar junto com a água, o solo e o clima.', fb:'Um ecossistema inclui os seres vivos e o ambiente físico onde eles vivem.'}
+    ]},
+  carbonauta: { label:'Carbonauta', title:'Pistas de cientista', size:15, dirs:'all', mode:'clue',
+    desc:'Pistas mais difíceis e palavras em qualquer direção. Use a dica só quando travar.',
+    words:[
+      {w:'Fitorremediação', clue:'Uso de plantas para limpar solo ou água contaminados.', fb:'Algumas plantas aquáticas, como o aguapé, retiram poluentes da água.'},
+      {w:'Hidromórfico', clue:'Tipo de solo que fica encharcado boa parte do ano.', fb:'Solos hidromórficos são comuns no Pantanal e nas veredas.'},
+      {w:'Metanogênese', clue:'Produção de metano por micróbios onde falta oxigênio.', fb:'A metanogênese acontece no fundo de lagoas e em solos alagados.'},
+      {w:'Nitrificação', clue:'Bactérias do solo transformam amônia em nitrato.', fb:'O nitrato é uma forma de nitrogênio que as plantas absorvem com facilidade.'},
+      {w:'Micorriza', clue:'Parceria entre fungos e raízes que ajuda a planta a tirar nutrientes do solo.', fb:'Os fungos micorrízicos recebem açúcar da planta e entregam fósforo e água.'},
+      {w:'Edafologia', clue:'Ciência que estuda o solo como ambiente para as plantas.', fb:'A edafologia olha o solo do ponto de vista da vida que ele sustenta.'},
+      {w:'Paleossolo', clue:'Solo antigo enterrado que guarda pistas de climas do passado.', fb:'Paleossolos ajudam a reconstruir como era o clima há milhares de anos.'},
+      {w:'Turfeira', clue:'Área alagada onde plantas mortas se acumulam sem apodrecer.', fb:'As turfeiras guardam muito carbono no solo.'},
+      {w:'Halófita', clue:'Planta que aguenta solo salgado.', fb:'No Pantanal da Nhecolândia há lagoas salinas com plantas halófitas.'},
+      {w:'Fitofisionomia', clue:'Aparência da vegetação, como campo, cerrado ou mata.', fb:'O Cerrado tem várias fitofisionomias, do campo limpo ao cerradão.'}
+    ]}
+};
+const NOTE = '';
 
-let level='basico',grid=[],foundCells=new Set(),foundWords=[],selectStart=null,selecting=[],timer=0,timerInt=null,lastSave=null;
-let words=[];
 
-function init(){
-  foundCells=new Set();foundWords=[];selectStart=null;selecting=[];timer=0;
-  clearInterval(timerInt);
-  timerInt=setInterval(()=>{timer++;document.getElementById('hTime').textContent=timer+'s';},1000);
-  document.getElementById('hScore').textContent='0';
-  document.getElementById('hFound').textContent='0';
-  document.getElementById('feedback').style.display='none';
-  document.getElementById('endScreen').style.display='none';
-  document.getElementById('rankLevel').textContent=level.charAt(0).toUpperCase()+level.slice(1);
-  words=[...WORDS_BY_LEVEL[level]];
-  const sz=SIZE[level];
-  grid=buildGrid(words.map(w=>w.word.replace(/\s/g,'').toUpperCase()),sz);
-  renderGrid(sz);
-  renderWordList();
-  loadRanking();
-}
+/* ---------- motor comum dos caca-palavras ---------- */
+const KEYS = Object.keys(LEVELS);
+const DIRS = { hv:[[0,1],[1,0]], hvd:[[0,1],[1,0],[1,1],[-1,1]], all:[[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]] };
+const norm = w => w.normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/[^A-Z]/g,'');
+const lowOf = k => typeof RANK.lowerBetter==='function' ? RANK.lowerBetter(k) : !!RANK.lowerBetter;
+const shown = (sc, k=level) => (typeof SHOWPTS==='function' && lowOf(k)) ? SHOWPTS(sc) : sc;
+const HINT_COST = typeof HINT_COST_MSG!=='undefined' ? HINT_COST_MSG : '';
+let level = KEYS[0], words = [], grid = [], N = 10, found = {}, errors = 0, hints = 0;
+let startTime = null, timerInt = null, elapsed = 0, done = false, scoreSaved = false, db = null, fsFns = null;
+let selA = null, selB = null, dragging = false, moved = false;
+const st = () => ({found:Object.keys(found).length, total:words.length, errors, hints, seconds:elapsed});
+const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
 
-function buildGrid(wordList,sz){
-  const g=Array.from({length:sz},()=>Array(sz).fill(''));
-  const placements=[];
-  const dirs=[[0,1],[1,0],[1,1],[0,-1],[-1,0],[-1,-1],[1,-1],[-1,1]];
-  for(const word of wordList){
-    let placed=false;
-    for(let attempt=0;attempt<200&&!placed;attempt++){
-      const dir=dirs[Math.floor(Math.random()*dirs.length)];
-      const maxR=sz-1,maxC=sz-1;
-      let r=Math.floor(Math.random()*sz),c=Math.floor(Math.random()*sz);
-      const cells=[];let ok=true;
-      for(let i=0;i<word.length;i++){
-        const nr=r+dir[0]*i,nc=c+dir[1]*i;
-        if(nr<0||nr>maxR||nc<0||nc>maxC){ok=false;break;}
-        if(g[nr][nc]&&g[nr][nc]!==word[i]){ok=false;break;}
-        cells.push([nr,nc]);
+function makeGrid(L){
+  L.size = Math.max(L.size, ...L.words.map(w=>norm(w.w).length));
+  const dirs = DIRS[L.dirs||'hv'];
+  for(let attempt=0; attempt<400; attempt++){
+    const g = Array.from({length:L.size},()=>Array(L.size).fill(''));
+    const pl = []; let ok = true;
+    const ws = L.words.map((w,i)=>({i, g:norm(w.w)})).sort((a,b)=>b.g.length-a.g.length);
+    for(const w of ws){
+      let put = false;
+      for(let t=0;t<600 && !put;t++){
+        const [dr,dc] = dirs[Math.floor(Math.random()*dirs.length)], n = w.g.length;
+        const r0 = Math.floor(Math.random()*L.size), c0 = Math.floor(Math.random()*L.size);
+        const r1 = r0+dr*(n-1), c1 = c0+dc*(n-1);
+        if(r1<0||r1>=L.size||c1<0||c1>=L.size) continue;
+        let fits = true;
+        for(let k=0;k<n;k++){ const ch = g[r0+dr*k][c0+dc*k]; if(ch && ch!==w.g[k]){ fits=false; break; } }
+        if(!fits) continue;
+        for(let k=0;k<n;k++) g[r0+dr*k][c0+dc*k] = w.g[k];
+        pl[w.i] = {r0,c0,r1,c1,dr,dc,n}; put = true;
       }
-      if(ok){cells.forEach(([nr,nc],i)=>{g[nr][nc]=word[i];});placements.push({word,cells});placed=true;}
+      if(!put){ ok=false; break; }
     }
+    if(!ok) continue;
+    const pool = 'AAAEEEIIOOUURRSSTTNNMMCCLLDDPPBGFVHJQXZ';
+    for(let r=0;r<L.size;r++) for(let c=0;c<L.size;c++) if(!g[r][c]) g[r][c] = pool[Math.floor(Math.random()*pool.length)];
+    /* cada palavra precisa aparecer uma vez so, em qualquer direcao */
+    const count = w => { let k=0; for(let r=0;r<L.size;r++) for(let c=0;c<L.size;c++) for(const [dr,dc] of DIRS.all){ let s=''; for(let q=0;q<w.length;q++){ const rr=r+dr*q, cc=c+dc*q; if(rr<0||rr>=L.size||cc<0||cc>=L.size) break; s+=g[rr][cc]; } if(s===w) k++; } return k; };
+    if(ws.every(w=>count(w.g)===1 + (w.g===w.g.split('').reverse().join('')?1:0))) return {g, pl};
   }
-  window._placements=placements;
-  const alpha='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  for(let r=0;r<sz;r++)for(let c=0;c<sz;c++)if(!g[r][c])g[r][c]=alpha[Math.floor(Math.random()*alpha.length)];
-  return g;
+  throw new Error('nao coube');
 }
-
-function renderGrid(sz){
-  const el=document.getElementById('wordGrid');
-  el.style.gridTemplateColumns=`repeat(${sz},30px)`;
-  el.innerHTML='';
-  for(let r=0;r<sz;r++){
-    for(let c=0;c<sz;c++){
-      const cell=document.createElement('div');
-      cell.className='cell';cell.textContent=grid[r][c];cell.dataset.r=r;cell.dataset.c=c;
-      cell.addEventListener('mousedown',e=>{startSelect(r,c);e.preventDefault();});
-      cell.addEventListener('mouseover',()=>{if(selectStart)continueSelect(r,c);});
-      cell.addEventListener('touchstart',e=>{startSelect(r,c);e.preventDefault();},{passive:false});
-      cell.addEventListener('touchmove',e=>{
-        const t=e.touches[0];
-        const target=document.elementFromPoint(t.clientX,t.clientY);
-        if(target&&target.dataset.r) continueSelect(parseInt(target.dataset.r),parseInt(target.dataset.c));
-        e.preventDefault();
-      },{passive:false});
-      el.appendChild(cell);
-    }
-  }
-  document.addEventListener('mouseup',endSelect,{once:false});
-  document.addEventListener('touchend',endSelect,{passive:true});
+function buildLevels(){ $('levels').innerHTML = KEYS.map(k=>`<button data-lvl="${k}" onclick="setLevel('${k}')">${LEVELS[k].label}</button>`).join(''); }
+function setLevel(l){
+  level = l;
+  document.querySelectorAll('.levels button').forEach(b=>b.classList.toggle('active',b.dataset.lvl===l));
+  $('rankLevel').textContent = LEVELS[l].label;
+  restart(); loadRanking();
 }
-
-function cellId(r,c){return r+','+c;}
-function getCell(r,c){return document.querySelector(`[data-r="${r}"][data-c="${c}"]`);}
-
-function startSelect(r,c){selectStart={r,c};selecting=[[r,c]];highlightSelecting();}
-function continueSelect(r,c){
-  if(!selectStart)return;
-  const dr=Math.sign(c-selectStart.c),dc=Math.sign(r-selectStart.r);
-  const steps=Math.max(Math.abs(r-selectStart.r),Math.abs(c-selectStart.c));
-  const newSel=[[selectStart.r,selectStart.c]];
-  for(let i=1;i<=steps;i++)newSel.push([selectStart.r+dc*i,selectStart.c+dr*i]);
-  selecting=newSel;highlightSelecting();
-}
-function highlightSelecting(){
-  document.querySelectorAll('.cell.selected').forEach(el=>el.classList.remove('selected'));
-  selecting.forEach(([r,c])=>{const el=getCell(r,c);if(el&&!foundCells.has(cellId(r,c)))el.classList.add('selected');});
-}
-function endSelect(){
-  if(!selectStart){return;}
-  const selected=selecting;selectStart=null;selecting=[];
-  document.querySelectorAll('.cell.selected').forEach(el=>el.classList.remove('selected'));
-  const str=selected.map(([r,c])=>grid[r][c]).join('');
-  const strRev=str.split('').reverse().join('');
-  for(const pl of window._placements){
-    if(!foundWords.includes(pl.word)&&(pl.word===str||pl.word===strRev)){
-      const allMatch=pl.cells.every(([r,c],i)=>{
-        const idx=pl.word===strRev?pl.cells.length-1-i:i;
-        return selected[idx]&&selected[idx][0]===r&&selected[idx][1]===c;
-      })||pl.cells.every(([r,c])=>selected.some(s=>s[0]===r&&s[1]===c));
-      if(pl.cells.length===selected.length){
-        const plStr=pl.cells.map(([r,c])=>grid[r][c]).join('');
-        if(plStr===str||plStr===strRev){
-          foundWords.push(pl.word);
-          pl.cells.forEach(([r,c])=>{foundCells.add(cellId(r,c));const el=getCell(r,c);if(el){el.classList.add('current-found');setTimeout(()=>el.classList.replace('current-found','found'),500);}});
-          const wordData=words.find(w=>w.word.replace(/\s/g,'').toUpperCase()===pl.word);
-          if(wordData){const fb=document.getElementById('feedback');fb.textContent='✅ '+pl.word+': '+wordData.hint;fb.style.display='block';}
-          const score=Math.max(0,foundWords.length*100+Math.max(0,300-timer*2));
-          document.getElementById('hScore').textContent=score;
-          document.getElementById('hFound').textContent=foundWords.length+'/'+words.length;
-          document.getElementById('wt_'+pl.word)?.classList.add('found-word');
-          if(foundWords.length===words.length)setTimeout(()=>endGame(score),800);
-          return;
-        }
-      }
-    }
-  }
-}
-
-function renderWordList(){
-  const el=document.getElementById('wordList');
-  el.innerHTML=words.map(w=>`
-    <div class="word-item">
-      <div>
-        <div class="word-text" id="wt_${w.word.replace(/\s/g,'').toUpperCase()}">${w.word}</div>
-        <div class="word-hint">${w.hint}</div>
+function restart(){
+  clearInterval(timerInt); timerInt=null; startTime=null; elapsed=0; errors=0; hints=0; found={}; done=false; scoreSaved=false; selA=selB=null;
+  $('timer').textContent='0s';
+  const L = LEVELS[level]; N = L.size;
+  const mk = makeGrid(L); grid = mk.g;
+  words = L.words.map((w,i)=>Object.assign({i, g:norm(w.w)}, w, mk.pl[i]));
+  const clue = L.mode==='clue';
+  const order = clue ? words.slice() : words.slice().sort((a,b)=>a.g.localeCompare(b.g));
+  $('stage').innerHTML = `
+    <div class="qhead"><div class="qnum">${L.label} · ${words.length} palavras · ${L.size} por ${L.size}</div>
+      <div class="qtext">${L.title}</div><div class="qdesc">${L.desc}</div></div>
+    <div class="wsbox ${clue?'clue':'list'}">
+      <div class="zonebox" id="zbox">
+        <div class="gridw" id="gridw" style="--n:${N}">
+          <div class="grid" id="grid">${grid.map((row,r)=>row.map((ch,c)=>`<div class="cell" data-r="${r}" data-c="${c}">${ch}</div>`).join('')).join('')}</div>
+          <svg class="lines" id="lines"></svg>
+        </div>
+        <div class="tools"><button class="btn ghost" id="hintBtn" onclick="useHint()">Pedir uma dica</button></div>
       </div>
-    </div>`).join('');
+      <div class="wlistw"><div class="wlist" id="wlist">
+        <h4>${clue ? 'Descubra a palavra de cada pista' : 'Encontre estas palavras'}</h4>
+        ${order.map((w,k)=>`<div class="witem" id="wi-${w.i}" onclick="showWord(${w.i})">${clue
+          ? `<span class="wc">${k+1}. ${w.clue}</span><span class="wl">${w.g.length} letras</span><div class="wn" id="wn-${w.i}"></div>`
+          : `<span class="wn">${w.w.toUpperCase()}</span>`}</div>`).join('')}
+      </div></div>
+    </div>
+    <div class="fb" id="fb" aria-live="polite">${clue ? 'Leia a pista, descubra a palavra e marque no quadro.' : 'Arraste o dedo ou o mouse sobre as letras da palavra. Também dá para tocar na primeira e depois na última letra.'} Errar tira pontos.</div>
+    ${typeof NOTE!=='undefined' && NOTE ? `<p class="modelnote">${NOTE}</p>` : ''}`;
+  attachGrid(); hud();
 }
-
-function endGame(score){
-  clearInterval(timerInt);
-  document.getElementById('endScreen').style.display='block';
-  document.getElementById('finalScore').textContent=score;
-  document.getElementById('finalLevel').textContent=level;
-  lastSave=null;
+function hud(){
+  $('hits').textContent = Object.keys(found).length+'/'+words.length; $('errs').textContent = errors;
+  $('score').textContent = shown(scoreNow(st()));
 }
-
-async function saveScore(){
-  if(lastSave)return;
-  const name=document.getElementById('playerName').value.trim()||'Anônimo';
-  const score=parseInt(document.getElementById('finalScore').textContent)||0;
-  lastSave={name,score,level,seconds:timer};
+function startTimer(){
+  if(timerInt||done) return;
+  startTime = Date.now();
+  timerInt = setInterval(()=>{ elapsed = Math.floor((Date.now()-startTime)/1000); $('timer').textContent = elapsed+'s'; hud(); }, 500);
+}
+const cellAt = (x,y) => { const el = document.elementFromPoint(x,y); return el && el.classList && el.classList.contains('cell') ? el : null; };
+const cellEl = (r,c) => document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+function lineCells(a, b){
+  if(!a||!b) return [];
+  const dr = b.r-a.r, dc = b.c-a.c, n = Math.max(Math.abs(dr),Math.abs(dc));
+  if(n===0) return [a];
+  if(!(dr===0||dc===0||Math.abs(dr)===Math.abs(dc))) return [];
+  const sr = Math.sign(dr), sc = Math.sign(dc), out = [];
+  for(let k=0;k<=n;k++) out.push({r:a.r+sr*k, c:a.c+sc*k});
+  return out;
+}
+function paintSel(){
+  document.querySelectorAll('.cell.sel').forEach(e=>e.classList.remove('sel'));
+  lineCells(selA, selB||selA).forEach(p=>cellEl(p.r,p.c).classList.add('sel'));
+}
+function attachGrid(){
+  const g = $('gridw');
+  const rc = el => ({r:+el.dataset.r, c:+el.dataset.c});
+  g.addEventListener('pointerdown', e=>{
+    if(done) return; const el = cellAt(e.clientX,e.clientY); if(!el) return;
+    e.preventDefault(); startTimer();
+    const p = rc(el);
+    if(selA && !dragging && (selA.r!==p.r || selA.c!==p.c) && document.querySelector('.cell.start')){ selB = p; finishSel(); return; }
+    selA = p; selB = null; dragging = true; moved = false; paintSel();
+  });
+  window.addEventListener('pointermove', e=>{
+    if(!dragging) return; const el = cellAt(e.clientX,e.clientY); if(!el) return;
+    const p = rc(el); if(p.r===selA.r && p.c===selA.c) return;
+    if(lineCells(selA,p).length){ selB = p; moved = true; paintSel(); }
+  });
+  window.addEventListener('pointerup', ()=>{
+    if(!dragging) return; dragging = false;
+    if(moved && selB){ finishSel(); return; }
+    /* toque sem arrastar: marca a primeira letra e espera a ultima */
+    document.querySelectorAll('.cell.start').forEach(e=>e.classList.remove('start','sel'));
+    const el = cellEl(selA.r, selA.c); el.classList.add('start');
+    $('fb').className='fb'; $('fb').innerHTML='Primeira letra marcada. Agora toque na última letra da palavra.';
+  });
+}
+function finishSel(){
+  const cells = lineCells(selA, selB);
+  document.querySelectorAll('.cell.start').forEach(e=>e.classList.remove('start'));
+  const a = selA, b = selB; selA = selB = null; paintSel();
+  if(cells.length<2) return;
+  const hit = words.find(w => !found[w.i] && ((a.r===w.r0&&a.c===w.c0&&b.r===w.r1&&b.c===w.c1) || (a.r===w.r1&&a.c===w.c1&&b.r===w.r0&&b.c===w.c0)));
+  const fb = $('fb');
+  if(hit){
+    found[hit.i] = true; drawFound(hit);
+    const it = $('wi-'+hit.i); it.classList.add('done'); if($('wn-'+hit.i)) $('wn-'+hit.i).textContent = hit.w.toUpperCase();
+    document.querySelectorAll('.cell.hint').forEach(e=>{ if(+e.dataset.r===hit.r0 && +e.dataset.c===hit.c0) e.classList.remove('hint'); });
+    fb.className='fb ok'; fb.innerHTML=`<b>${hit.w.toUpperCase()}</b>${hit.fb}`;
+    hud();
+    if(Object.keys(found).length===words.length) finish();
+    return;
+  }
+  const str = cells.map(p=>grid[p.r][p.c]).join('');
+  if(words.some(w=>found[w.i] && (w.g===str || w.g===str.split('').reverse().join('')))){ fb.className='fb'; fb.innerHTML='Essa palavra você já encontrou.'; return; }
+  const before = shown(scoreNow(st()));
+  errors++;
+  const lost = Math.max(0, before - shown(scoreNow(st())));
+  cells.forEach(p=>{ const e = cellEl(p.r,p.c); e.classList.add('bad'); setTimeout(()=>e.classList.remove('bad'),500); });
+  lostTag(lost);
+  fb.className='fb no'; fb.innerHTML=`<b>Errou${lost ? ', perdeu '+lost+' pontos' : ''}.</b>"${str}" não é uma das palavras deste nível.`;
+  hud();
+}
+function lostTag(n){ if(!n) return; const t = document.createElement('span'); t.className='lost'; t.textContent='-'+n; $('zbox').appendChild(t); setTimeout(()=>t.remove(),1500); }
+function drawFound(w){
+  const gw = $('gridw'), sv = $('lines'), R = gw.getBoundingClientRect();
+  sv.setAttribute('viewBox', `0 0 ${R.width} ${R.height}`);
+  const a = cellEl(w.r0,w.c0).getBoundingClientRect(), b = cellEl(w.r1,w.c1).getBoundingClientRect();
+  const x1=a.left+a.width/2-R.left, y1=a.top+a.height/2-R.top, x2=b.left+b.width/2-R.left, y2=b.top+b.height/2-R.top;
+  sv.insertAdjacentHTML('beforeend', `<line data-w="${w.i}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--main)" stroke-width="${a.width*.78}"/>`);
+  for(let k=0;k<w.n;k++) cellEl(w.r0+w.dr*k, w.c0+w.dc*k).classList.add('found-cell');
+}
+function redrawLines(){ const sv = $('lines'); if(!sv) return; sv.innerHTML=''; words.filter(w=>found[w.i]).forEach(drawFound); }
+window.addEventListener('resize', ()=>{ clearTimeout(window._rz); window._rz = setTimeout(redrawLines, 150); });
+function useHint(){
+  if(done) return;
+  const left = words.filter(w=>!found[w.i] && !cellEl(w.r0,w.c0).classList.contains('hint'));
+  if(!left.length){ $('fb').className='fb'; $('fb').innerHTML='As primeiras letras de todas as palavras que faltam já estão marcadas.'; return; }
+  startTimer();
+  const w = left[0], before = shown(scoreNow(st()));
+  hints++;
+  const lost = Math.max(0, before - shown(scoreNow(st())));
+  cellEl(w.r0,w.c0).classList.add('hint'); lostTag(lost);
+  $('fb').className='fb'; $('fb').innerHTML=`<b>Dica${lost ? ', custou '+lost+' pontos' : ''}.</b>A letra piscando em amarelo é o começo de uma palavra que falta.`;
+  hud();
+}
+function showWord(i){ const w = words[i]; if(!found[i]) return; $('fb').className='fb ok'; $('fb').innerHTML=`<b>${w.w.toUpperCase()}</b>${w.fb}`; }
+function finish(){
+  done = true; clearInterval(timerInt); timerInt=null;
+  setTimeout(renderEnd, 1300);
+}
+function renderEnd(){
+  const s = st(), sc = scoreNow(s), L = LEVELS[level];
+  const pct = Math.max(0, 100 - errors*10 - hints*10), m = (typeof END_MSG!=='undefined' ? END_MSG : [[90,'Caçada perfeita!','Você achou tudo quase sem errar.'],[50,'Bom trabalho','Algumas tentativas erradas pelo caminho.'],[0,'Todas achadas, com tropeços','Leia a revisão abaixo e jogue de novo.']]).find(x=>pct>=x[0]);
+  $('stage').innerHTML = `
+    <div class="end">
+      <h2>${m[1]}</h2><p>${m[2]}</p>
+      <div class="stats">
+        <div class="stat">${words.length}<span>Palavras</span></div>
+        <div class="stat">${shown(sc)}<span>Pontos</span></div>
+        <div class="stat">${errors}<span>Erros</span></div>
+        <div class="stat">${elapsed}s<span>Tempo</span></div>
+      </div>
+      ${typeof SCORE_NOTE!=='undefined' ? `<p style="font-size:.85rem">${SCORE_NOTE}</p>` : ''}
+      <div class="savebox">
+        <input id="playerName" maxlength="20" placeholder="Seu nome (até 20 letras)">
+        <button class="btn" id="saveBtn" onclick="saveScore()">Salvar no ranking</button>
+      </div>
+      <p id="saveStatus" style="margin-top:8px;font-size:.85rem"></p>
+      <button class="btn ghost" style="margin-top:10px" onclick="restart()">Jogar de novo</button>
+      <div class="review"><h3>O que cada palavra quer dizer</h3><ul>${words.map(w=>`<li><span class="w">${w.w.toUpperCase()}</span>${L.mode==='clue' ? ' <span style="color:var(--soft)">('+w.clue+')</span>' : ''}. ${w.fb}</li>`).join('')}</ul></div>
+    </div>`;
+}
+async function initFirebase(){
   try{
-    await addDoc(collection(db,`games/${GAME_ID}/scores`),{name,score,level,seconds:timer,ts:serverTimestamp()});
+    const appM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const fsM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    db=fsM.getFirestore(appM.initializeApp(firebaseConfig)); fsFns=fsM;
     loadRanking();
-  }catch(e){console.warn('offline',e);}
+  }catch(e){
+    $('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';
+    $('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';
+  }
 }
-
-async function loadRanking(){
-  const el=document.getElementById('rankList');
+async function saveScore(){
+  if(scoreSaved) return;
+  const name=$('playerName').value.trim(), stt=$('saveStatus');
+  if(!name){stt.textContent='Digite seu nome primeiro.';return;}
+  if(!db){stt.textContent='Sem conexão com o ranking. Seu resultado não foi enviado.';return;}
   try{
-    const q=query(collection(db,`games/${GAME_ID}/scores`),orderBy('score','desc'),limit(80));
-    const snap=await getDocs(q);
-    const rows=snap.docs.map(d=>d.data()).filter(d=>d.level===level).slice(0,15);
-    if(!rows.length){el.innerHTML='<p style="opacity:.5;font-size:.82rem">Seja o primeiro!</p>';return;}
-    el.innerHTML=rows.map((r,i)=>`<div class="rank-item"><span>${i+1}. ${r.name}</span><span>${r.score} pts · ${r.seconds}s</span></div>`).join('');
-  }catch(e){el.innerHTML='<p style="opacity:.5;font-size:.82rem">Ranking offline.</p>';}
+    $('saveBtn').disabled=true;
+    await fsFns.addDoc(fsFns.collection(db,'games',GAME_ID,'scores'), saveDoc(name.slice(0,20), st(), level, fsFns));
+    scoreSaved=true; stt.textContent='Salvo no Ranking Global!'; loadRanking();
+  }catch(e){ $('saveBtn').disabled=false; stt.textContent='Erro ao salvar. Verifique a internet e tente de novo.'; }
 }
-
-function setLevel(l,btn){
-  level=l;
-  document.querySelectorAll('.lvl').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  init();
+async function loadRanking(){
+  if(!db) return;
+  const list=$('rankList'), asked=level;
+  try{
+    const q=fsFns.query(fsFns.collection(db,'games',GAME_ID,'scores'),fsFns.where(RANK.field,'==',RANK.val(asked)),fsFns.limit(1000));
+    const snap=await fsFns.getDocs(q);
+    if(asked!==level) return;
+    const rows=[]; snap.forEach(d=>rows.push(d.data()));
+    const sec = r => Number(r.seconds ?? r.time ?? r.tempo) || 0, scr = r => Number(r.score) || 0;
+    const low = lowOf(asked);
+    rows.sort((a,b)=> (low ? scr(a)-scr(b) : scr(b)-scr(a)) || (sec(a)-sec(b)));
+    if(!rows.length){list.innerHTML='<li><span>Seja o primeiro do ranking!</span></li>';return;}
+    list.innerHTML=rows.slice(0,10).map((r,i)=>
+      `<li><span><span class="pos">${i+1}º</span>${esc(r.name||'?')}</span><span>${shown(scr(r), asked)} pts · ${sec(r)}s</span></li>`).join('');
+    $('rankNote').textContent = (low && shown(0, asked)===0) ? 'Neste nível, menos pontos é melhor.' : '';
+  }catch(e){ list.innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>'; }
 }
-
-window.setLevel=setLevel;
-window.saveScore=saveScore;
-window.init=init;
-init();
+buildLevels();
+setLevel(KEYS[0]);
+initFirebase();
 </script>
 </body>
 </html>
