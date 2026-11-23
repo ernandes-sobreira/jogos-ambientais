@@ -29,6 +29,14 @@
   .bar{flex:1;height:12px;background:var(--t100);border-radius:20px;overflow:hidden;border:1.5px solid var(--t300)}
   .bar i{display:block;height:100%;width:0;background:var(--main);transition:width .25s}
   canvas{display:block;width:100%;height:auto;border-radius:14px;background:#f3faff;touch-action:none}
+  .cwrap{position:relative}
+  .ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;
+    padding:12px 16px;background:rgba(255,255,255,.95);border-radius:14px;overflow:auto;cursor:pointer}
+  .ov[hidden]{display:none}
+  .ov h2{font-size:clamp(1.15rem,4vw,1.6rem);color:var(--deep)}
+  .ov p{font-size:clamp(.86rem,2.6vw,1rem);line-height:1.4;max-width:600px;color:var(--ink)}
+  .ov .btn{margin-top:6px}
+  @media(max-width:600px){.ov{position:fixed;inset:auto 12px;top:50%;transform:translateY(-50%);max-height:80vh;border:3px solid var(--main);box-shadow:0 18px 40px rgba(0,0,0,.25);z-index:20;justify-content:flex-start;background:#fff}}
   .pad{display:none;justify-content:space-between;gap:10px;margin-top:10px;user-select:none;-webkit-user-select:none}
   .pad .g{display:flex;gap:10px}
   .pad button{width:72px;height:60px;border-radius:16px;border:3px solid var(--main);background:var(--t50);color:var(--deep);
@@ -78,7 +86,7 @@
 </div>
 <div class="card" id="card">
   <div class="goal"><span id="goalTxt">Formigas 0/0</span><span class="bar"><i id="goalBar"></i></span></div>
-  <canvas id="c" width="780" height="400" aria-label="Área do jogo"></canvas>
+  <div class="cwrap"><canvas id="c" width="780" height="400" aria-label="Área do jogo"></canvas><div class="ov" id="ov" hidden></div></div>
   <div class="pad" id="pad">
     <div class="g"><button data-k="L" aria-label="Esquerda">&#9664;</button><button data-k="R" aria-label="Direita">&#9654;</button></div>
     <button class="jump" data-k="J">Pular</button>
@@ -178,6 +186,7 @@ document.querySelectorAll('#pad button').forEach(b=>{
   b.addEventListener('pointerdown',on); b.addEventListener('pointerup',off); b.addEventListener('pointercancel',off); b.addEventListener('pointerleave',off);
 });
 c.addEventListener('pointerdown',()=>{ if(gState!=='play') advance(); });
+$('ov').addEventListener('click',()=>{ if(gState!=='play') advance(); });
 
 let gState='title', phase=0, score=0, lives=3, hits=0, ants=[], fires=[], embers=[], parts=[], player=null, coyote=0, jBuf=0, emberT=0;
 let startTime=null, elapsed=0, finished=false, scoreSaved=false;
@@ -289,18 +298,21 @@ function drawFire(f,t){
   ctx.fillStyle='#f97316'; ctx.beginPath(); ctx.moveTo(x-13,y); ctx.quadraticCurveTo(x-15,y-16*k,x,y-30*k); ctx.quadraticCurveTo(x+15,y-16*k,x+13,y); ctx.fill();
   ctx.fillStyle='#facc15'; ctx.beginPath(); ctx.moveTo(x-7,y); ctx.quadraticCurveTo(x-8,y-9*k,x,y-18*k); ctx.quadraticCurveTo(x+8,y-9*k,x+7,y); ctx.fill();
 }
+let ovKey='';
 function panel(title,lines,cta,col){
-  ctx.fillStyle='rgba(255,255,255,.93)'; ctx.fillRect(0,0,W,H);
-  ctx.textAlign='center';
-  ctx.fillStyle=col||'#7c4a22'; ctx.font='bold 30px Segoe UI, sans-serif'; ctx.fillText(title,W/2,90);
-  ctx.fillStyle='#2b2118'; ctx.font='17px Segoe UI, sans-serif';
-  let y=140; lines.forEach(l=>{ wrap(l,W/2,y,600,24).forEach((s,i)=>ctx.fillText(s,W/2,y+i*24)); y+=wrap(l,W/2,y,600,24).length*24+10; });
-  if(cta){ ctx.fillStyle='#9a6232'; ctx.font='bold 18px Segoe UI, sans-serif'; if(Math.sin(performance.now()/300)>-.3) ctx.fillText(cta,W/2,H-40); }
-  ctx.textAlign='left';
+  /* as telas entre as fases sao HTML por cima do canvas, para ler bem no celular */
+  ctx.fillStyle='rgba(255,255,255,.6)'; ctx.fillRect(0,0,W,H);
+  const key=title+lines.join('|')+cta;
+  if(key===ovKey) return; ovKey=key;
+  const ov=$('ov'); ov.hidden=false;
+  ov.innerHTML=`<h2 style="color:${col||'var(--deep)'}">${title}</h2>${lines.map(l=>`<p>${l}</p>`).join('')}${cta?`<button class="btn" type="button">${cta.replace('Toque ou aperte Espaço para','').trim().replace(/^./,m=>m.toUpperCase())}</button><p class="keys" style="margin:0">ou aperte Espaço</p>`:''}`;
 }
+function hidePanel(){ if(ovKey){ ovKey=''; $('ov').hidden=true; } }
+
 function wrap(text,x,y,maxW){ const out=[]; let line=''; for(const w of text.split(' ')){ const t=line?line+' '+w:w; if(ctx.measureText(t).width>maxW&&line){out.push(line);line=w;} else line=t; } if(line)out.push(line); return out; }
 
 function render(t){
+  if(gState==='play') hidePanel();
   const ph=PHASES[Math.min(phase,NP-1)];
   const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,ph.sky[0]); g.addColorStop(1,ph.sky[1]);
   ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
