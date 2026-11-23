@@ -442,12 +442,12 @@ const LEVELS = {
       {t:'Canudo plástico inteiro', ic:'straw', z:'macro', fb:'O canudo inteiro tem mais de 5 mm. É macroplástico.'}
     ]},
   praia1: { label:'Praia: areia limpa', mode:'city', title:'Areia limpa',
-    desc:'A praia da cidade está cheia de lixo. Coloque ações para limpar a areia e diminuir o plástico que vai para o mar.',
-    slots:4, budget:8, goals:[{id:'areia', max:40}, {id:'mar', max:55}],
+    desc:'A praia da cidade está cheia de lixo. Coloque ações para limpar a areia e diminuir o plástico que vai para o mar, sem aumentar o microplástico.',
+    slots:4, budget:8, goals:[{id:'areia', max:40}, {id:'mar', max:55}, {id:'micro', max:70}],
     cards:['lixeiras','mutirao','proibir','retornavel','cooperativa','varrer','quiosques','enterrar']},
   praia2: { label:'Praia: mar sem plástico', mode:'city', title:'Mar sem plástico',
     desc:'Agora o foco é a água. Diminua o plástico boiando e o microplástico que os peixes acabam engolindo.',
-    slots:5, budget:12, goals:[{id:'mar', max:45}, {id:'micro', max:45}],
+    slots:5, budget:12, goals:[{id:'mar', max:45}, {id:'micro', max:45}, {id:'areia', max:70}],
     cards:['ecobarreira','ete','filtromaq','redes','proibir','mutirao','lixeiras','esgoto','varrer','enterrar']},
   carbonauta: { label:'Carbonauta', mode:'city', title:'Do lixo de casa ao fundo do mar',
     desc:'Os quatro indicadores precisam baixar ao mesmo tempo, com pouco orçamento. Pense nas ações que resolvem mais de um problema.',
@@ -548,7 +548,9 @@ function cityVals(){
   return v;
 }
 const citySpent = () => cityPlaced.reduce((a,id)=>a+CITY.cards.find(x=>x.id===id).cost,0);
-const cityGoalsOk = () => LEVELS[level].goals.every(g=>cityVals()[g.id] <= g.max);
+const isTrap = id => Object.values(CITY.cards.find(x=>x.id===id).eff).some(d=>d>0);
+const cityNoTrap = () => !cityPlaced.some(isTrap);
+const cityGoalsOk = () => LEVELS[level].goals.every(g=>cityVals()[g.id] <= g.max) && cityNoTrap();
 function cityScore(){ if(!isCity()) return 0; const L=LEVELS[level];
   return Math.max(0, 1000 + 40*(L.budget-citySpent()) - 60*citySwaps - Math.floor(elapsed/2)); }
 const zoneOf = id => LEVELS[level].zones.find(z=>z.id===id);
@@ -728,7 +730,7 @@ function renderCityLevel(){
   items = L.cards.map((id,i)=>Object.assign({i}, CITY.cards.find(c=>c.id===id)));
   shuffle(items);
   $('stage').innerHTML = `
-    <div class="qhead"><div class="qnum">${L.label} · missão na cidade</div>
+    <div class="qhead"><div class="qnum">${L.label} · missão</div>
       <div class="qtext">${L.title}</div>
       <div class="qdesc">${L.desc}</div>
       <div class="goalbox"><h4>${TARGET} Sua meta</h4><div class="goals" id="goals"></div></div></div>
@@ -761,7 +763,8 @@ function cityHud(){
   $('hits').textContent = cityPlaced.length+'/'+L.slots; $('errs').textContent = citySwaps; $('score').textContent = cityScore();
   if(!$('goals')) return;
   $('goals').innerHTML = L.goals.map(g=>{ const p = CITY.pollutants.find(x=>x.id===g.id); const ok = v[g.id] <= g.max;
-    return `<div class="gchip ${ok?'ok':'no'}"><i></i><span>${p.label} até ${g.max}</span></div>`; }).join('');
+    return `<div class="gchip ${ok?'ok':'no'}"><i></i><span>${p.label} até ${g.max}</span></div>`; }).join('')
+    + `<div class="gchip ${cityNoTrap()?'ok':'no'}"><i></i><span>Nenhuma ação que piora algum indicador</span></div>`;
   $('cBudget').innerHTML = `Orçamento: <b>${L.budget-citySpent()}</b> de ${L.budget}`;
   $('cSlots').innerHTML = `Espaços: <b>${L.slots-cityPlaced.length}</b> de ${L.slots} livres`;
   $('scene').innerHTML = CITY.render(v, cityPlaced);
@@ -846,11 +849,12 @@ async function loadRanking(){
     if(asked!==level) return;
     const rows=[]; snap.forEach(d=>rows.push(d.data()));
     const sec = r => Number(r.seconds ?? r.tempo) || 0, scr = r => Number(r.score) || 0;
-    rows.sort((a,b)=> (RANK.lowerBetter ? scr(a)-scr(b) : scr(b)-scr(a)) || (sec(a)-sec(b)));
+    const low = typeof RANK.lowerBetter==='function' ? RANK.lowerBetter(asked) : !!RANK.lowerBetter;
+    rows.sort((a,b)=> (low ? scr(a)-scr(b) : scr(b)-scr(a)) || (sec(a)-sec(b)));
     if(!rows.length){list.innerHTML='<li><span>Seja o primeiro do ranking!</span></li>';return;}
     list.innerHTML=rows.slice(0,10).map((r,i)=>
       `<li><span><span class="pos">${i+1}º</span>${esc(r.name||'?')}</span><span>${scr(r)} ${RANK.unit||'pts'} · ${sec(r)}s</span></li>`).join('');
-    $('rankNote').textContent = RANK.lowerBetter ? 'Neste jogo, menos pontos é melhor.' : '';
+    $('rankNote').textContent = low ? 'Neste nível, menos pontos é melhor.' : '';
   }catch(e){ list.innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>'; }
 }
 
