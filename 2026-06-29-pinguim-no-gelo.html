@@ -3,356 +3,367 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pinguim no Gelo 🐧 | Plataforma · Física · Polar</title>
+<title>Pinguim no Gelo</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:#020a18;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:100vh;padding:10px;font-family:"Segoe UI",system-ui,sans-serif;color:#d0eeff}
-h1{font-size:1.4rem;margin:6px 0 2px;text-align:center}
-.tagline{font-size:.78rem;opacity:.65;margin-bottom:6px;text-align:center}
-.hud{display:flex;gap:10px;margin:4px 0 6px;font-size:.82rem;flex-wrap:wrap;justify-content:center}
-.hud span{background:rgba(255,255,255,.09);border-radius:8px;padding:3px 10px}
-.hud b{color:#93c5fd}
-canvas{border:2px solid rgba(100,180,255,.22);border-radius:8px;display:block;max-width:100%}
-.save-box{margin-top:10px;display:none;flex-direction:column;align-items:center;gap:8px}
-.save-box input{padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-size:.95rem;width:220px;outline:none}
-.save-box button{padding:8px 20px;border-radius:8px;border:none;background:#1d4ed8;color:#fff;font-size:.9rem;cursor:pointer;font-weight:600}
-.ranking{width:min(780px,98vw);background:rgba(255,255,255,.05);border-radius:10px;padding:10px;margin-top:8px}
-.ranking h3{font-size:.78rem;opacity:.6;margin-bottom:6px}
-.rank-list{display:flex;flex-direction:column;gap:3px;max-height:150px;overflow-y:auto}
-.rank-item{display:flex;justify-content:space-between;font-size:.76rem;padding:3px 8px;background:rgba(255,255,255,.04);border-radius:5px}
-footer{margin-top:12px;opacity:.45;font-size:.68rem;text-align:center}
+  :root{
+    --ink:#0f2f44; --soft:#4b6a7d; --line:#dbe7ee; --ok:#16a34a; --err:#dc2626;
+    --t50:#f0f9ff; --t100:#e0f2fe; --t300:#7dd3fc; --t500:#0ea5e9; --main:#0284c7; --deep:#0369a1; --dark:#075985; --glow:rgba(2,132,199,.25);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;min-height:100vh;color:var(--ink);background:#fff;
+    display:flex;flex-direction:column;align-items:center;padding:12px 14px 40px}
+  .top{width:100%;max-width:1040px}
+  .hub{display:inline-flex;align-items:center;gap:6px;color:var(--deep);text-decoration:none;font-weight:600;font-size:.9rem;
+    padding:7px 12px;border-radius:20px;border:1.5px solid var(--line)}
+  .hub:hover{background:var(--t50)} .hub svg{width:14px;height:14px}
+  header{text-align:center;max-width:720px;margin-top:6px}
+  h1{font-size:clamp(1.45rem,5vw,2.2rem);display:flex;align-items:center;justify-content:center;gap:10px}
+  h1 svg{width:1.3em;height:1em} h1 .spark{color:var(--main)}
+  .sub{color:var(--soft);font-size:.95rem;margin:4px 0 10px}
+  .hud{display:flex;gap:8px;justify-content:center;margin:4px 0 10px;font-size:.9rem;flex-wrap:wrap}
+  .hud span{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:30px;color:#fff;font-weight:600}
+  .hud b{font-size:1.05rem;font-weight:800}
+  .hud .h1{background:var(--t500)} .hud .h2{background:var(--main)} .hud .h3{background:var(--deep)} .hud .h4{background:var(--dark)}
+  .card{width:min(820px,100%);background:#fff;border:3px solid var(--main);border-radius:22px;padding:12px;box-shadow:0 12px 30px var(--glow);position:relative}
+  .goal{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:.92rem;font-weight:600;color:var(--deep)}
+  .bar{flex:1;height:12px;background:var(--t100);border-radius:20px;overflow:hidden;border:1.5px solid var(--t300)}
+  .bar i{display:block;height:100%;width:0;background:var(--main);transition:width .25s}
+  canvas{display:block;width:100%;height:auto;border-radius:14px;background:#f3faff;touch-action:none}
+  .pad{display:none;justify-content:space-between;gap:10px;margin-top:10px;user-select:none;-webkit-user-select:none}
+  .pad .g{display:flex;gap:10px}
+  .pad button{width:72px;height:60px;border-radius:16px;border:3px solid var(--main);background:var(--t50);color:var(--deep);
+    font-size:1.5rem;font-weight:800;touch-action:none;font-family:inherit}
+  .pad button.on{background:var(--main);color:#fff}
+  .pad .jump{width:110px;font-size:1rem}
+  @media (pointer:coarse){.pad{display:flex}}
+  .keys{font-size:.82rem;color:var(--soft);text-align:center;margin-top:8px}
+  @media (pointer:coarse){.keys{display:none}}
+  .lost{position:absolute;right:22px;top:58px;background:#dc2626;color:#fff;font-weight:900;border-radius:999px;padding:3px 10px;
+    animation:lost 1.4s ease-out forwards;pointer-events:none}
+  @keyframes lost{0%{opacity:0;transform:translateY(6px)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-18px)}}
+  .savebox{display:none;flex-direction:column;align-items:center;gap:8px;margin-top:12px;text-align:center}
+  .savebox .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .savebox input{padding:10px 12px;border-radius:10px;border:2px solid var(--line);font-size:1rem;width:220px;font-family:inherit}
+  .btn{background:var(--main);color:#fff;border:0;padding:11px 20px;border-radius:12px;font-weight:700;cursor:pointer;font-size:1rem;font-family:inherit}
+  .btn:disabled{opacity:.5} .btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--line)}
+  .ranking{margin-top:16px;width:min(820px,100%);background:#fff;border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden}
+  .ranking h3{font-size:1.02rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+  .ranking ol{list-style:none}
+  .ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.93rem}
+  .ranking li:last-child{border-bottom:0} .ranking li:nth-child(1){font-weight:700}
+  .ranking .pos{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+  .note{font-size:.8rem;color:var(--soft);margin-top:6px}
+  footer{margin-top:22px;font-size:.8rem;color:var(--soft);text-align:center;line-height:1.6}
+  footer .credit{font-weight:700;color:var(--ink)}
+  @media(max-width:560px){body{padding:8px 8px 32px}.sub{display:none}.hud span{padding:4px 9px;font-size:.78rem}.hud b{font-size:.92rem}.hud{gap:5px}.card{padding:8px}}
 </style>
 </head>
 <body>
-<h1>🐧 Pinguim no Gelo</h1>
-<p class="tagline">Plataforma · Física · Clima Global — ← → mover · ↑ ou Espaço pular</p>
-<div class="hud">
-  <span>Fase: <b id="hP">1/5</b></span>
-  <span>Pontos: <b id="hS">0</b></span>
-  <span>Vidas: <b id="hL">❤️❤️❤️</b></span>
-  <span>Peixes: <b id="hC">0/0</b></span>
+<div class="top">
+  <a class="hub" href="index.html">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Todos os jogos
+  </a>
 </div>
-<canvas id="c" width="780" height="420"></canvas>
-<div class="save-box" id="saveBox">
-  <p style="font-size:.85rem;opacity:.8">🏆 Colônia salva! Salve seu recorde:</p>
-  <input type="text" id="pName" maxlength="24" placeholder="Seu nome…">
-  <button onclick="window.saveScore()">Salvar Pontuação</button>
+<header>
+  <h1><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="14" rx="7" ry="9" fill="#1e293b"/><ellipse cx="13.5" cy="15.5" rx="4.5" ry="6.5" fill="#fff" stroke="#e2e8f0"/><circle cx="12.5" cy="6" r="4.5" fill="#1e293b"/><circle cx="14" cy="5.5" r="1.4" fill="#fff"/><path d="M16.5 6l3.5 1-3.5 1z" fill="#f59e0b"/><path d="M8 23h4M13 23h4" stroke="#f59e0b" stroke-width="2"/></svg>
+    <span>Pinguim no <span class="spark">Gelo</span></span></h1>
+  <p class="sub">Pegue os peixes sobre os blocos de gelo antes que eles derretam. Cair no mar ou ser pego pela foca tira pontos e uma vida.</p>
+</header>
+<div class="hud">
+  <span class="h1">Fase <b id="hP">1/6</b></span>
+  <span class="h2">Pontos <b id="hS">0</b></span>
+  <span class="h3">Vidas <b id="hL">3</b></span>
+  <span class="h4">Tempo <b id="hT">0s</b></span>
+</div>
+<div class="card" id="card">
+  <div class="goal"><span id="goalTxt">Peixes 0/0</span><span class="bar"><i id="goalBar"></i></span></div>
+  <canvas id="c" width="780" height="400" aria-label="Área do jogo"></canvas>
+  <div class="pad" id="pad">
+    <div class="g"><button data-k="L" aria-label="Esquerda">&#9664;</button><button data-k="R" aria-label="Direita">&#9654;</button></div>
+    <button class="jump" data-k="J">Pular</button>
+  </div>
+  <p class="keys">Setas ou A e D para andar. Seta para cima, W ou Espaço para pular.</p>
+  <div class="savebox" id="saveBox">
+    <p id="endMsg" style="font-weight:700;color:var(--deep)"></p>
+    <div class="row"><input id="pName" maxlength="20" placeholder="Seu nome (até 20 letras)"><button class="btn" id="saveBtn" onclick="saveScore()">Salvar no ranking</button></div>
+    <p id="saveStatus" style="font-size:.85rem"></p>
+    <button class="btn ghost" onclick="restartGame()">Jogar de novo</button>
+  </div>
 </div>
 <div class="ranking">
-  <h3>🏆 Ranking</h3>
-  <div class="rank-list" id="rankList"><p style="opacity:.45;font-size:.76rem;padding:4px">Carregando…</p></div>
+  <h3>Ranking Global</h3>
+  <ol id="rankList"><li><span>Carregando o ranking...</span></li></ol>
+  <p class="note" id="rankNote"></p>
 </div>
-<footer>Física · Clima Global · Polo Sul 🧊 | 2026-06-29 — Idealizado por Ernandes Sobreira</footer>
+<footer>
+  Pinguins da Antártica e gelo marinho · Plataforma<br>
+  <span class="credit">Idealizado por Ernandes Sobreira</span>
+</footer>
 
-<script type="module">
-import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import{getFirestore,collection,addDoc,query,orderBy,limit,getDocs,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-const fbApp=initializeApp({apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"});
-const db=getFirestore(fbApp);
-const GAME_ID="2026-06-29-pinguim-no-gelo";
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-06-29-pinguim-no-gelo";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-const W=780,H=420;
-const GRAV=1250,JSPD=-560,MSPD=185;
-const ICE_MELT_RATE=[.015,.025,.038,.055,.08]; // per phase
+const W=780, H=420, SEA=392;
+const GRAV=1250, JSPD=-560, MSPD=190;
+const FISH_PTS=25, HIT_PTS=25;
+const SHELF={x:0,y:360,w:130,h:60};
 
+/* cada fase: blocos de gelo (x,y,w), deriva (amp,vel), inicio do derretimento (s) e quantos peixes sao precisos.
+   os peixes ficam sobre os blocos; se o bloco derrete, o peixe vai junto. ha peixes de sobra. */
+const L1=[{x:170,y:340,w:110},{x:330,y:330,w:110},{x:490,y:340,w:110},{x:640,y:330,w:110},{x:250,y:250,w:90},{x:420,y:240,w:90},{x:580,y:250,w:90},{x:340,y:160,w:80},{x:520,y:160,w:80}];
 const PHASES=[
- {name:"Banquisa Ártica",melt:.015,fish:5,plats:6,
-  fact:"O Ártico perdeu 40% do seu gelo marítimo em setembro desde 1979. À medida que o gelo derrete, ursos polares e pinguins perdem habitat e caçam menos eficientemente."},
- {name:"Mar de Ross",melt:.025,fish:7,plats:6,
-  fact:"A Antártica tem a maior camada de gelo do mundo — 26,5 milhões de km³. Se derreter completamente, o nível do mar subiria 58 metros, inundando cidades costeiras globalmente."},
- {name:"Plataforma Larsen",melt:.038,fish:8,plats:7,
-  fact:"Em 2022, a plataforma de gelo Conger (do tamanho de Roma) desabou em 72 horas na Antártica — evento sem precedentes. Científicos atribuem ao aquecimento do oceano."},
- {name:"Corrente do Atlântico",melt:.055,fish:10,plats:7,
-  fact:"A AMOC (corrente do Atlântico) está enfraquecendo devido ao derretimento dos polos. Ela regula o clima da Europa e pode colapsar antes de 2095, alterando padrões globais de chuva."},
- {name:"Última Barreira de Gelo",melt:.08,fish:12,plats:8,
-  fact:"O Acordo de Paris visa limitar o aquecimento a 1,5°C. Cada décimo de grau adicional representa 10 cm a mais no nível do mar e impactos em bilhões de pessoas em zonas costeiras."}
+{name:"Baía tranquila", sky:["#e0f2fe","#f8fafc"], floes:L1.map(f=>({...f,amp:10,spd:.6})), fish:[0,1,2,3,4,5,6], need:5, melt:999, step:0, seals:0,
+ fact:"Pinguins vivem no Hemisfério Sul. Na Antártica há espécies como o pinguim-imperador e o pinguim-de-adélia. No Ártico não existem pinguins."},
+{name:"Mar de Weddell", sky:["#dbeafe","#f8fafc"], floes:L1.map(f=>({...f,amp:22,spd:.8})), fish:[0,1,2,3,4,5,6,7], need:6, melt:22, step:4, seals:0,
+ fact:"Pinguins não voam, mas são ótimos nadadores. As asas funcionam como nadadeiras debaixo da água."},
+{name:"Península Antártica", sky:["#e0f2fe","#fef9c3"], floes:L1.map((f,i)=>({...f,w:f.w-10,amp:28,spd:.9})), fish:[0,1,2,3,4,5,6,7,8], need:7, melt:16, step:3.5, seals:0,
+ fact:"A Península Antártica está entre as regiões do planeta que mais aqueceram nas últimas décadas."},
+{name:"Plataforma Larsen", sky:["#e0f2fe","#f1f5f9"], floes:L1.map((f,i)=>({...f,w:f.w-15,amp:30,spd:1})), fish:[0,1,2,3,4,5,6,7,8], need:7, melt:16, step:3, seals:1,
+ fact:"A foca-leopardo é um dos principais predadores de pinguins nas águas da Antártica."},
+{name:"Mar de Amundsen", sky:["#dbeafe","#fef3c7"], floes:L1.map((f,i)=>({...f,w:f.w-20,amp:34,spd:1.1})), fish:[0,1,2,3,4,5,6,7,8], need:7, melt:13, step:2.6, seals:2,
+ fact:"O pinguim-imperador cria os filhotes sobre o gelo marinho. Quando o gelo some cedo demais, os filhotes podem morrer antes de ter as penas impermeáveis."},
+{name:"Verão quente", sky:["#fee2e2","#fff7ed"], floes:L1.map((f,i)=>({...f,w:f.w-22,amp:40,spd:1.25})), fish:[0,1,2,3,4,5,6,7,8], need:7, melt:10, step:2.2, seals:2,
+ fact:"Em março de 2022, depois de uma onda de calor, a plataforma de gelo Conger, na Antártica Oriental, desabou."}
 ];
+const NP=PHASES.length;
+const MELT_DUR=9;
 
-const c=document.getElementById('c');
-const ctx=c.getContext('2d');
+const c=$('c'), ctx=c.getContext('2d');
 const keys={};
-let coyote=0,jBuf=0;
-document.addEventListener('keydown',e=>{keys[e.key]=true;if([' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key))e.preventDefault();});
+document.addEventListener('keydown',e=>{ if(e.target.tagName==='INPUT') return; keys[e.key]=true;
+  if([' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+  if((e.key===' '||e.key==='Enter') && gState!=='play') advance(); });
 document.addEventListener('keyup',e=>{keys[e.key]=false;});
+const pad={L:false,R:false,J:false};
+document.querySelectorAll('#pad button').forEach(b=>{
+  const k=b.dataset.k, on=e=>{e.preventDefault(); pad[k]=true; b.classList.add('on'); if(gState!=='play') advance();},
+        off=e=>{e.preventDefault(); pad[k]=false; b.classList.remove('on');};
+  b.addEventListener('pointerdown',on); b.addEventListener('pointerup',off); b.addEventListener('pointercancel',off); b.addEventListener('pointerleave',off);
+});
+c.addEventListener('pointerdown',()=>{ if(gState!=='play') advance(); });
 
-let gState='title',phase=0,score=0,lives=3;
-let peng,icePlats=[],fishItems=[],parts=[],fishFound=0,meltTimer=0;
-
-// Ice platform: x, y, w, h, meltPct (0-1, dies at 1), driftX
-function mkPlats(n,melt){
-  const pls=[];
-  // Bottom safe platform (big, melts slower)
-  pls.push({x:0,y:H-30,w:W,h:30,melt:0,maxMelt:melt*.5,drift:0,bob:0});
-  for(let i=0;i<n;i++){
-    pls.push({
-      x:30+Math.random()*(W-130),
-      y:100+Math.random()*(H-200),
-      w:80+Math.random()*100,
-      h:18,
-      melt:0,
-      maxMelt:melt*(0.8+Math.random()*.4),
-      drift:(Math.random()-.5)*25,
-      bob:Math.random()*Math.PI*2
-    });
-  }
-  return pls;
-}
-
-function mkFish(n,plats){
-  const items=[];
-  const avail=plats.slice(1); // skip ground
-  for(let i=0;i<n;i++){
-    const pl=avail[i%avail.length];
-    items.push({x:pl.x+pl.w/2+(i<avail.length?0:(Math.random()-.5)*20),y:pl.y-20,got:false,t:Math.random()*Math.PI*2,platRef:pl});
-  }
-  return items;
-}
+let gState='title', phase=0, score=0, lives=3, hits=0, floes=[], fish=[], seals=[], parts=[], peng=null, coyote=0, jBuf=0, pt=0, failMsg='';
+let startTime=null, elapsed=0, finished=false, scoreSaved=false;
 
 function initPhase(){
   const ph=PHASES[phase];
-  icePlats=mkPlats(ph.plats,ph.melt);
-  peng={x:80,y:H-80,vx:0,vy:0,w:32,h:38,face:1,grnd:false,inv:0};
-  fishItems=mkFish(ph.fish,icePlats);
-  parts=[];fishFound=0;meltTimer=0;
-  document.getElementById('hP').textContent=`${phase+1}/5`;
-  document.getElementById('hC').textContent=`0/${ph.fish}`;
-  gState='play';
+  /* ordem de derretimento fixa por fase: comeca pelos blocos mais distantes da margem */
+  const order=ph.floes.map((f,i)=>i).sort((a,b)=>(ph.floes[b].x-ph.floes[a].x)+((b*7)%3-(a*7)%3)*40);
+  floes=ph.floes.map((f,i)=>({x0:f.x,x:f.x,y:f.y,w0:f.w,w:f.w,amp:f.amp,spd:f.spd,ph:i*1.3,m:0,start:ph.melt+order.indexOf(i)*ph.step,gone:false}));
+  fish=ph.fish.map(i=>({f:floes[i],got:false,lost:false,t:i}));
+  seals=[]; for(let s=0;s<ph.seals;s++) seals.push({x:200+s*260,y:SEA+40,vy:0,wait:2+s*1.7,dir:s?-1:1});
+  peng={x:40,y:SHELF.y-40,vx:0,vy:0,w:30,h:40,face:1,grnd:false,inv:0,ride:null,step:0};
+  parts=[]; pt=0; failMsg='';
+  $('hP').textContent=`${phase+1}/${NP}`; goal(); gState='play';
+  if(!startTime) startTime=Date.now();
 }
-
+function goal(){
+  const ph=PHASES[phase]; const got=fish.filter(f=>f.got).length, left=fish.filter(f=>!f.got&&!f.lost).length;
+  $('goalTxt').textContent=`Peixes ${got}/${ph.need} · restam ${left} no gelo`;
+  $('goalBar').style.width=Math.min(100,got/ph.need*100)+'%';
+  return {got,left};
+}
+function hud(){ $('hS').textContent=score; $('hL').textContent=lives; }
+function advance(){
+  if(gState==='title') initPhase();
+  else if(gState==='phend'){ if(phase<NP-1){ phase++; initPhase(); } else { finished=true; endGame(); } }
+  else if(gState==='fail'){ initPhase(); }
+}
 function aabb(ax,ay,aw,ah,bx,by,bw,bh){return ax<bx+bw&&ax+aw>bx&&ay<by+bh&&ay+ah>by;}
-function spPart(x,y,col,n=6){for(let i=0;i<n;i++)parts.push({x,y,vx:(Math.random()-.5)*180,vy:-Math.random()*160-30,c:col,t:.8});}
+function burst(x,y,col,n=8){for(let i=0;i<n;i++)parts.push({x,y,vx:(Math.random()-.5)*200,vy:-Math.random()*200-60,c:col,t:.7});}
+function chip(txt){ const t=document.createElement('span'); t.className='lost'; t.textContent=txt; $('card').appendChild(t); setTimeout(()=>t.remove(),1500); }
+function solids(){ return [SHELF, ...floes.filter(f=>!f.gone)]; }
 
 function update(dt){
-  if(gState!=='play')return;
+  if(gState!=='play') return;
+  pt+=dt;
+  elapsed=Math.floor((Date.now()-startTime)/1000); $('hT').textContent=elapsed+'s';
   const ph=PHASES[phase];
-
-  const L=keys['ArrowLeft']||keys['a'];
-  const R=keys['ArrowRight']||keys['d'];
-  const J=keys['ArrowUp']||keys['w']||keys[' '];
-
-  if(L){peng.vx=-MSPD;peng.face=-1;}
-  else if(R){peng.vx=MSPD;peng.face=1;}
-  else peng.vx*=.82;
-
-  peng.vy+=GRAV*dt;
-  if(peng.vy>800)peng.vy=800;
-
-  if(J)jBuf=.12;else jBuf=Math.max(0,jBuf-dt);
-  if(!J)coyote=Math.max(0,coyote-dt);
-  if(jBuf>0&&coyote>0){peng.vy=JSPD;jBuf=0;coyote=0;spPart(peng.x+16,peng.y+peng.h,'#93c5fd');}
-
-  peng.x+=peng.vx*dt;
-  peng.y+=peng.vy*dt;
-  peng.x=Math.max(0,Math.min(W-peng.w,peng.x));
-  peng.grnd=false;
-
-  // Ice drift & melt
-  meltTimer+=dt;
-  icePlats.forEach(p=>{
-    if(p===icePlats[0])return; // bottom always stays
-    p.bob+=dt*.5;
-    p.x+=p.drift*dt*.3*Math.sin(p.bob);
-    p.x=Math.max(0,Math.min(W-p.w,p.x));
-    p.melt+=p.maxMelt*dt*(1+meltTimer*.08);
-    if(p.melt>1)p.melt=1;
+  /* gelo: deriva e derrete */
+  floes.forEach(f=>{
+    if(f.gone) return;
+    const ox=f.x; const cx=f.x0+f.w0/2+Math.sin(pt*f.spd+f.ph)*f.amp;
+    if(pt>f.start){ f.m=Math.min(1,(pt-f.start)/MELT_DUR); }
+    f.w=f.w0*(1-f.m*.75); f.x=cx-f.w/2; f.dx=f.x-ox;
+    if(f.m>=1){ f.gone=true; burst(cx,f.y,'#7dd3fc',10); }
   });
-
-  // Platform collision
-  for(const p of icePlats){
-    if(p.melt>=1)continue; // melted away
-    if(!aabb(peng.x,peng.y,peng.w,peng.h,p.x,p.y,p.w,p.h))continue;
+  fish.forEach(fi=>{ if(!fi.got&&!fi.lost&&fi.f.gone){ fi.lost=true; } });
+  /* pinguim */
+  const L=keys['ArrowLeft']||keys['a']||keys['A']||pad.L, R=keys['ArrowRight']||keys['d']||keys['D']||pad.R;
+  const J=keys['ArrowUp']||keys['w']||keys['W']||keys[' ']||pad.J;
+  if(L){peng.vx=-MSPD;peng.face=-1;} else if(R){peng.vx=MSPD;peng.face=1;} else peng.vx*=.8;
+  if(Math.abs(peng.vx)>20&&peng.grnd) peng.step+=dt*14;
+  if(peng.ride&&!peng.ride.gone) peng.x+=peng.ride.dx||0;
+  peng.vy=Math.min(800,peng.vy+GRAV*dt);
+  if(J) jBuf=.12; else jBuf=Math.max(0,jBuf-dt);
+  coyote=Math.max(0,coyote-dt);
+  if(jBuf>0&&coyote>0){peng.vy=JSPD;jBuf=0;coyote=0;}
+  peng.x+=peng.vx*dt; peng.y+=peng.vy*dt; peng.x=Math.max(0,Math.min(W-peng.w,peng.x));
+  peng.grnd=false; peng.ride=null;
+  for(const p of solids()){
+    const ph2=p===SHELF?p.h:16;
+    if(!aabb(peng.x,peng.y,peng.w,peng.h,p.x,p.y,p.w,ph2)) continue;
     const prevBottom=peng.y+peng.h-peng.vy*dt;
-    const prevTop=peng.y-peng.vy*dt;
-    const prevRight=peng.x+peng.w-peng.vx*dt;
-    const prevLeft=peng.x-peng.vx*dt;
-    if(prevBottom<=p.y+4&&peng.vy>=0){peng.y=p.y-peng.h;peng.vy=0;peng.grnd=true;coyote=.1;}
-    else if(prevTop>=p.y+p.h-4&&peng.vy<0){peng.y=p.y+p.h;peng.vy=0;}
-    else if(prevRight<=p.x+4&&peng.vx>0){peng.x=p.x-peng.w;peng.vx=0;}
-    else if(prevLeft>=p.x+p.w-4&&peng.vx<0){peng.x=p.x+p.w;peng.vx=0;}
+    if(prevBottom<=p.y+6&&peng.vy>=0){ peng.y=p.y-peng.h; peng.vy=0; peng.grnd=true; coyote=.1; if(p!==SHELF) peng.ride=p; }
   }
-
-  // Fall into sea
-  if(peng.y>H+30){
-    lives--;document.getElementById('hL').textContent='❤️'.repeat(Math.max(0,lives));
-    if(lives<=0){gState='over';return;}
-    spPart(peng.x,H,'#93c5fd',10);
-    peng.x=80;peng.y=H-90;peng.vx=0;peng.vy=0;peng.inv=1.5;
-  }
-
-  // Fish (follow their platform position)
-  fishItems.forEach(ch=>{
-    if(!ch.got) ch.x = ch.platRef.x + ch.platRef.w/2; // stay centred on platform
-    if(ch.got)return;
-    ch.t+=dt*2;
-    if(ch.platRef&&ch.platRef.melt<1){
-      ch.y=ch.platRef.y-18;
-      ch.x=Math.max(ch.platRef.x+5,Math.min(ch.platRef.x+ch.platRef.w-5,ch.x));
-    }
-    if(aabb(peng.x,peng.y,peng.w,peng.h,ch.x-10,ch.y-10,20,20)){
-      ch.got=true;fishFound++;score+=25;
-      spPart(ch.x,ch.y,'#fbbf24',8);
-      document.getElementById('hC').textContent=`${fishFound}/${ph.fish}`;
-      document.getElementById('hS').textContent=score;
-      if(fishFound>=ph.fish){score+=200+phase*100;document.getElementById('hS').textContent=score;gState='phend';}
-    }
+  if(peng.y+peng.h>SEA+8){ hurt('Caiu no mar gelado!'); return; }
+  fish.forEach(fi=>{ if(fi.got||fi.lost) return; fi.t+=dt*3;
+    const fx=fi.f.x+fi.f.w/2, fy=fi.f.y-14;
+    if(aabb(peng.x,peng.y,peng.w,peng.h,fx-11,fy-8,22,16)){ fi.got=true; score+=FISH_PTS; burst(fx,fy,'#0284c7',6); } });
+  hud();
+  const g=goal();
+  if(g.got>=ph.need){ score+=200+phase*100; hud(); gState='phend'; return; }
+  if(g.got+g.left<ph.need){ lives--; hud(); chip('Sem peixes'); failMsg='O gelo derreteu com os peixes. Faltaram peixes para a meta.';
+    if(lives<=0){ gState='over'; endGame(); } else gState='fail'; return; }
+  /* focas-leopardo saltam do mar */
+  seals.forEach(s=>{
+    if(s.vy===0 && s.y>=SEA+40){ s.wait-=dt; if(s.wait<=0){ s.x=Math.max(30,Math.min(W-60,peng.x+(Math.random()-.5)*160)); s.vy=-480; s.y=SEA+40; } }
+    else { s.vy+=GRAV*.9*dt; s.y+=s.vy*dt; if(s.y>=SEA+40&&s.vy>0){ s.y=SEA+40; s.vy=0; s.wait=2.2+Math.random()*1.8; burst(s.x+20,SEA,'#7dd3fc',6);} }
+    if(s.y<SEA+30&&peng.inv<=0&&aabb(peng.x+4,peng.y+4,peng.w-8,peng.h-6,s.x+4,s.y,40,22)) hurt('A foca-leopardo pegou!');
   });
-
-  parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=300*dt;p.t-=dt;});
-  parts=parts.filter(p=>p.t>0);
-  if(peng.inv>0)peng.inv-=dt;
+  parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=400*dt;p.t-=dt;}); parts=parts.filter(p=>p.t>0);
+  if(peng.inv>0) peng.inv-=dt;
+}
+function hurt(msg){
+  const lost=Math.min(HIT_PTS,score); score-=lost; hits++; lives--;
+  chip(lost?'-'+lost:'Ai!'); burst(peng.x+15,Math.min(peng.y+20,SEA),'#dc2626',10); hud();
+  if(lives<=0){ gState='over'; endGame(); return; }
+  peng.x=40; peng.y=SHELF.y-40; peng.vx=0; peng.vy=0; peng.inv=2;
 }
 
-function render(ts){
-  // Ocean gradient
-  const bg=ctx.createLinearGradient(0,0,0,H);
-  bg.addColorStop(0,'#020a18');bg.addColorStop(1,'#03214d');
-  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-
-  // Aurora borealis effect
-  ctx.globalAlpha=.12;
-  for(let i=0;i<4;i++){
-    const gx=ctx.createLinearGradient(0,0,W,0);
-    gx.addColorStop(0,'transparent');
-    gx.addColorStop(.3+i*.12,'rgba(100,240,180,.8)');
-    gx.addColorStop(.5+i*.1,'rgba(60,160,255,.6)');
-    gx.addColorStop(1,'transparent');
-    ctx.fillStyle=gx;
-    ctx.fillRect(0,(i*35+Math.sin(ts/2000+i)*.5)*1,W,25);
-  }
-  ctx.globalAlpha=1;
-
-  // Stars
-  for(let i=0;i<40;i++){
-    const sx=((i*157)%W);const sy=((i*97)%130);
-    ctx.fillStyle=`rgba(255,255,255,${.3+.4*(i%2)})`;
-    ctx.fillRect(sx,sy,i%5===0?2:1,i%5===0?2:1);
-  }
-
-  // Ice platforms
-  icePlats.forEach(p=>{
-    if(p.melt>=1)return;
-    const alpha=1-p.melt*.8;
-    const wFrac=1-p.melt*.5;
-    const pw=p.w*wFrac;
-    const ph2=Math.max(4,p.h*(1-p.melt*.6));
-    const px=p.x+(p.w-pw)/2;
-    ctx.globalAlpha=alpha;
-    // Ice body
-    ctx.fillStyle=`rgb(${100+Math.floor(155*p.melt)},${200-Math.floor(50*p.melt)},${240-Math.floor(80*p.melt)})`;
-    ctx.fillRect(px,p.y,pw,ph2);
-    // Glare
-    ctx.fillStyle='rgba(255,255,255,.4)';
-    ctx.fillRect(px+4,p.y+2,pw*.5,3);
-    // Cracks when melting
-    if(p.melt>.4){
-      ctx.strokeStyle='rgba(0,100,200,.5)';ctx.lineWidth=1;
-      ctx.beginPath();ctx.moveTo(px+pw*.3,p.y);ctx.lineTo(px+pw*.5,p.y+ph2);ctx.stroke();
-    }
-    ctx.globalAlpha=1;
-  });
-
-  // Fish collectibles
-  fishItems.forEach(ch=>{
-    if(ch.got)return;
-    const bob=Math.sin(ch.t)*.5;
-    ctx.font='16px serif';ctx.textAlign='center';
-    ctx.fillText('🐟',ch.x,ch.y+bob);
-  });
-
-  // Particles
-  parts.forEach(p=>{
-    ctx.globalAlpha=Math.max(0,p.t/.8);
-    ctx.fillStyle=p.c;ctx.fillRect(p.x-3,p.y-3,6,6);
-    ctx.globalAlpha=1;
-  });
-
-  // Penguin
-  if(gState==='play'||gState==='phend'){
-    if(!(peng.inv>0&&Math.floor(peng.inv*8)%2===0)){
-      ctx.save();
-      ctx.font='34px serif';ctx.textAlign='center';
-      if(peng.face===-1){ctx.scale(-1,1);ctx.fillText('🐧',-peng.x-16,peng.y+peng.h);}
-      else ctx.fillText('🐧',peng.x+16,peng.y+peng.h);
-      ctx.restore();
-    }
-  }
-
-  // Water ripples at bottom
-  ctx.globalAlpha=.4;
-  for(let i=0;i<6;i++){
-    const wx=((i*130+ts*.04)%W+W)%W;
-    ctx.fillStyle='rgba(100,200,255,.3)';
-    ctx.fillRect(wx,H-30+Math.sin(ts*.003+i)*3,80,4);
-  }
-  ctx.globalAlpha=1;
-
+/* ---------- desenho ---------- */
+function drawPenguin(p,t){
+  if(p.inv>0&&Math.floor(p.inv*8)%2===0) return;
+  ctx.save(); ctx.translate(p.x+p.w/2,p.y+p.h); ctx.scale(p.face,1);
+  const wob=p.grnd?Math.sin(p.step)*.08:0; ctx.rotate(wob);
+  ctx.fillStyle='#f59e0b'; ctx.fillRect(-9,-3,7,3); ctx.fillRect(2,-3,7,3);
+  ctx.fillStyle='#1e293b'; ctx.beginPath(); ctx.ellipse(0,-20,14,19,0,0,6.29); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.ellipse(3,-17,9,14,0,0,6.29); ctx.fill();
+  ctx.fillStyle='#1e293b'; ctx.beginPath(); ctx.ellipse(-11,-19,4,11,.3,0,6.29); ctx.fill();
+  ctx.fillStyle='#1e293b'; ctx.beginPath(); ctx.arc(2,-34,9,0,6.29); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(5,-35,3,0,6.29); ctx.fill();
+  ctx.fillStyle='#0f172a'; ctx.beginPath(); ctx.arc(6,-35,1.4,0,6.29); ctx.fill();
+  ctx.fillStyle='#f59e0b'; ctx.beginPath(); ctx.moveTo(10,-34); ctx.lineTo(17,-32); ctx.lineTo(10,-30); ctx.fill();
+  ctx.restore();
+}
+function drawFish(x,y){
+  ctx.fillStyle='#0284c7'; ctx.beginPath(); ctx.ellipse(x,y,10,5,0,0,6.29); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(x-8,y); ctx.lineTo(x-15,y-5); ctx.lineTo(x-15,y+5); ctx.fill();
+  ctx.fillStyle='#bae6fd'; ctx.beginPath(); ctx.ellipse(x+1,y+1.5,6,2,0,0,6.29); ctx.fill();
+  ctx.fillStyle='#0f172a'; ctx.beginPath(); ctx.arc(x+6,y-1,1.2,0,6.29); ctx.fill();
+}
+function drawSeal(s){
+  if(s.y>=SEA+30) return;
+  ctx.fillStyle='#64748b'; ctx.beginPath(); ctx.ellipse(s.x+20,s.y+14,22,12,-.4,0,6.29); ctx.fill();
+  ctx.fillStyle='#94a3b8'; ctx.beginPath(); ctx.arc(s.x+38,s.y+2,9,0,6.29); ctx.fill();
+  ctx.fillStyle='#334155'; [[10,12],[18,18],[26,10]].forEach(([a,b])=>{ctx.beginPath();ctx.arc(s.x+a,s.y+b,2,0,6.29);ctx.fill();});
+  ctx.fillStyle='#0f172a'; ctx.beginPath(); ctx.arc(s.x+41,s.y,1.5,0,6.29); ctx.fill();
+  ctx.strokeStyle='#0f172a'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(s.x+40,s.y+6); ctx.lineTo(s.x+47,s.y+5); ctx.stroke();
+}
+function panel(title,lines,cta,col){
+  ctx.fillStyle='rgba(255,255,255,.93)'; ctx.fillRect(0,0,W,H);
   ctx.textAlign='center';
-
-  if(gState==='title'){
-    ctx.fillStyle='rgba(0,0,0,.78)';ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#93c5fd';ctx.font='bold 36px sans-serif';ctx.fillText('🐧 Pinguim no Gelo',W/2,H/2-68);
-    ctx.fillStyle='#d0eeff';ctx.font='16px sans-serif';ctx.fillText('Salve os filhotes antes que o gelo derreta!',W/2,H/2-26);
-    ctx.fillStyle='#a0c8f0';ctx.font='14px sans-serif';ctx.fillText('← → mover  ·  ↑ ou Espaço pular',W/2,H/2+14);
-    ctx.fillStyle='#fbbf24';ctx.font='bold 19px sans-serif';
-    if(Math.sin(ts/300)>.2)ctx.fillText('▶  ESPAÇO para começar  ◀',W/2,H/2+57);
-    if(keys[' ']||keys['ArrowUp']){keys[' ']=false;keys['ArrowUp']=false;initPhase();}
-    return;
-  }
-  if(gState==='phend'){
-    ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#93c5fd';ctx.font='bold 27px sans-serif';ctx.fillText(`🧊 Fase ${phase+1} — ${PHASES[phase].name}`,W/2,65);
-    ctx.fillStyle='#d0eeff';ctx.font='13.5px sans-serif';
-    const words=PHASES[phase].fact.split(' ');let line='',py=108;
-    for(const w of words){const tt=line+w+' ';if(ctx.measureText(tt).width>680&&line){ctx.fillText(line.trim(),W/2,py);py+=21;line=w+' ';}else line=tt;}
-    if(line)ctx.fillText(line.trim(),W/2,py);
-    ctx.fillStyle='#fbbf24';ctx.font='bold 17px sans-serif';
-    if(Math.sin(ts/300)>.2)ctx.fillText(phase<4?'ESPAÇO → próxima fase':'🎉 ESPAÇO → salvar recorde',W/2,H-38);
-    if(keys[' ']){keys[' ']=false;if(phase<4){phase++;initPhase();}else{gState='win';document.getElementById('saveBox').style.display='flex';}}
-    return;
-  }
-  if(gState==='over'){
-    ctx.fillStyle='rgba(0,0,0,.85)';ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#ef4444';ctx.font='bold 34px sans-serif';ctx.fillText('🌊 Afogado!',W/2,H/2-40);
-    ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação: ${score}`,W/2,H/2+8);
-    ctx.fillStyle='#fbbf24';ctx.font='17px sans-serif';ctx.fillText('ESPAÇO → recomeçar',W/2,H/2+50);
-    if(keys[' ']){phase=0;score=0;lives=3;document.getElementById('hL').textContent='❤️❤️❤️';document.getElementById('hS').textContent=0;gState='title';}
-    return;
-  }
-  if(gState==='win'){
-    ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#4ade80';ctx.font='bold 30px sans-serif';ctx.fillText('🐧 Colônia Salva!',W/2,90);
-    ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação: ${score}`,W/2,145);
-    ctx.fillStyle='#93c5fd';ctx.font='14px sans-serif';ctx.fillText('Mas o clima real precisa de ação humana urgente. 🌍',W/2,183);
-    ctx.fillStyle='#fbbf24';ctx.font='15px sans-serif';ctx.fillText('Use o campo abaixo para salvar.',W/2,230);
-    return;
-  }
+  ctx.fillStyle=col||'#0369a1'; ctx.font='bold 30px Segoe UI, sans-serif'; ctx.fillText(title,W/2,90);
+  ctx.fillStyle='#0f2f44'; ctx.font='17px Segoe UI, sans-serif';
+  let y=140; lines.forEach(l=>{ const w=wrap(l,600); w.forEach((s,i)=>ctx.fillText(s,W/2,y+i*24)); y+=w.length*24+10; });
+  if(cta){ ctx.fillStyle='#0284c7'; ctx.font='bold 18px Segoe UI, sans-serif'; if(Math.sin(performance.now()/300)>-.3) ctx.fillText(cta,W/2,H-40); }
   ctx.textAlign='left';
 }
+function wrap(text,maxW){ const out=[]; let line=''; for(const w of text.split(' ')){ const t=line?line+' '+w:w; if(ctx.measureText(t).width>maxW&&line){out.push(line);line=w;} else line=t; } if(line)out.push(line); return out; }
 
+function render(t){
+  const ph=PHASES[Math.min(phase,NP-1)];
+  const g=ctx.createLinearGradient(0,0,0,SEA); g.addColorStop(0,ph.sky[0]); g.addColorStop(1,ph.sky[1]);
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(203,213,225,.55)'; ctx.beginPath(); ctx.moveTo(380,SEA); ctx.lineTo(470,250); ctx.lineTo(520,290); ctx.lineTo(600,210); ctx.lineTo(700,SEA); ctx.fill();
+  const sg=ctx.createLinearGradient(0,SEA,0,H); sg.addColorStop(0,'#7dd3fc'); sg.addColorStop(1,'#0284c7');
+  seals.forEach(drawSeal);
+  ctx.fillStyle=sg; ctx.fillRect(0,SEA,W,H-SEA);
+  ctx.strokeStyle='rgba(255,255,255,.6)'; ctx.lineWidth=2;
+  for(let i=0;i<7;i++){ const x=((i*130+t*.03)%W); ctx.beginPath(); ctx.moveTo(x,SEA+6+Math.sin(t/400+i)*2); ctx.lineTo(x+40,SEA+6+Math.sin(t/400+i)*2); ctx.stroke(); }
+  /* margem de gelo fixa */
+  ctx.fillStyle='#f8fafc'; ctx.fillRect(SHELF.x,SHELF.y,SHELF.w,SEA-SHELF.y+4); ctx.fillStyle='#bae6fd'; ctx.fillRect(SHELF.x,SHELF.y+8,SHELF.w,3);
+  ctx.strokeStyle='#94a3b8'; ctx.lineWidth=1.5; ctx.strokeRect(SHELF.x+.5,SHELF.y+.5,SHELF.w-1,SEA-SHELF.y);
+  floes.forEach(f=>{ if(f.gone) return;
+    const warm=f.m; ctx.fillStyle=`rgb(${248-warm*60|0},${250-warm*20|0},${252})`;
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(f.x,f.y,f.w,16,5) : ctx.rect(f.x,f.y,f.w,16); ctx.fill();
+    ctx.strokeStyle=warm>0?'#38bdf8':'#94a3b8'; ctx.lineWidth=1.5; ctx.stroke();
+    if(warm>.3){ ctx.strokeStyle='#0ea5e9'; ctx.beginPath(); ctx.moveTo(f.x+f.w*.35,f.y); ctx.lineTo(f.x+f.w*.5,f.y+16); ctx.stroke(); }
+    if(warm>0){ ctx.fillStyle='#38bdf8'; for(let k=0;k<3;k++){ const dx=f.x+(k+1)*f.w/4, dy=f.y+18+((t/8+k*9)%14); ctx.fillRect(dx,dy,2,4);} } });
+  fish.forEach(fi=>{ if(fi.got||fi.lost) return; drawFish(fi.f.x+fi.f.w/2,fi.f.y-12+Math.sin(fi.t)*2); });
+  if(peng && (gState==='play'||gState==='phend')) drawPenguin(peng,t);
+  parts.forEach(p=>{ ctx.globalAlpha=Math.max(0,p.t/.7); ctx.fillStyle=p.c; ctx.fillRect(p.x-3,p.y-3,6,6); ctx.globalAlpha=1; });
+  ctx.fillStyle='rgba(15,47,68,.75)'; ctx.font='bold 15px Segoe UI, sans-serif'; ctx.fillText(`Fase ${Math.min(phase+1,NP)}: ${ph.name}`,12,22);
+
+  if(gState==='title') panel('Pinguim no Gelo',['Pegue os peixes sobre os blocos de gelo antes que eles derretam. São 6 fases na Antártica.','Cada peixe vale 25 pontos. Cair no mar ou ser pego pela foca-leopardo tira 25 pontos e uma vida.','Se o gelo derreter com peixes demais, a fase recomeça e você perde uma vida.'],'Toque ou aperte Espaço para começar');
+  else if(gState==='phend') panel(`Fase ${phase+1} completa!`,[`Bônus de fase: ${200+phase*100} pontos.`,'Você sabia? '+ph.fact],phase<NP-1?'Toque ou aperte Espaço para a próxima fase':'Toque ou aperte Espaço para ver o resultado','#16a34a');
+  else if(gState==='fail') panel('O gelo derreteu',[failMsg,'Tente ir primeiro aos blocos que já estão derretendo.'],'Toque ou aperte Espaço para tentar de novo','#dc2626');
+  else if(gState==='over') panel('Fim de jogo',[`Você chegou à fase ${phase+1}.`,`Pontuação: ${score}`],'','#dc2626');
+  else if(gState==='win') panel('Colônia alimentada!',['Você completou as 6 fases.',`Pontuação final: ${score}`],'');
+}
 let lastT=0;
-function loop(t){requestAnimationFrame(loop);const dt=Math.min((t-(lastT||t))/1000,.05);lastT=t;update(dt);render(t);}
+function loop(t){ requestAnimationFrame(loop); const dt=Math.min((t-(lastT||t))/1000,.05); lastT=t; update(dt); render(t); }
 
-async function saveScore(){
-  const name=(document.getElementById('pName').value||'Anônimo').trim().slice(0,24);
-  await addDoc(collection(db,'games',GAME_ID,'scores'),{name,score,level:'Completo',seconds:0,ts:serverTimestamp()});
-  document.getElementById('saveBox').style.display='none';
-  loadRanking();
+function endGame(){
+  if(finished) gState='win';
+  $('endMsg').textContent = finished ? `Você completou as 6 fases com ${score} pontos, ${hits} quedas ou ataques e ${elapsed}s.` : `Fim de jogo na fase ${phase+1}, com ${score} pontos.`;
+  $('saveBox').style.display='flex'; $('saveStatus').textContent=''; $('saveBtn').disabled=false; scoreSaved=false;
+}
+function restartGame(){
+  phase=0; score=0; lives=3; hits=0; startTime=null; elapsed=0; finished=false; peng=null; floes=[]; fish=[]; seals=[];
+  $('saveBox').style.display='none'; $('hT').textContent='0s'; hud(); $('hP').textContent=`1/${NP}`; $('goalTxt').textContent='Peixes 0/0'; $('goalBar').style.width='0';
+  gState='title';
 }
 
-async function loadRanking(){
-  const rl=document.getElementById('rankList');
+let db=null, fsFns=null;
+async function initFirebase(){
   try{
-    const q=query(collection(db,'games',GAME_ID,'scores'),orderBy('score','desc'),limit(80));
-    const snap=await getDocs(q);
-    const docs=snap.docs.map(d=>d.data()).slice(0,10);
-    if(!docs.length){rl.innerHTML='<p style="opacity:.45;font-size:.76rem;padding:4px">Nenhum recorde ainda.</p>';return;}
-    rl.innerHTML=docs.map((d,i)=>`<div class="rank-item"><span>${['🥇','🥈','🥉'][i]||`${i+1}.`} ${d.name}</span><span>${d.score} pts</span></div>`).join('');
-  }catch(e){rl.innerHTML='<p style="opacity:.35;font-size:.76rem">Não foi possível carregar.</p>';}
+    const appM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const fsM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    db=fsM.getFirestore(appM.initializeApp(firebaseConfig)); fsFns=fsM; loadRanking();
+  }catch(e){
+    $('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';
+    $('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';
+  }
 }
-
-window.saveScore=saveScore;
+async function saveScore(){
+  if(scoreSaved) return;
+  const name=$('pName').value.trim(), st=$('saveStatus');
+  if(!name){st.textContent='Digite seu nome primeiro.';return;}
+  if(!db){st.textContent='Sem conexão com o ranking. Seu resultado não foi enviado.';return;}
+  try{
+    $('saveBtn').disabled=true;
+    /* como na versao anterior: um ranking unico por pontos; quem termina tudo grava Completo */
+    await fsFns.addDoc(fsFns.collection(db,'games',GAME_ID,'scores'),
+      {name:name.slice(0,20),score,level:finished?'Completo':'Fase '+(phase+1),seconds:elapsed,hits,ts:fsFns.serverTimestamp()});
+    scoreSaved=true; st.textContent='Salvo no Ranking Global!'; loadRanking();
+  }catch(e){ $('saveBtn').disabled=false; st.textContent='Erro ao salvar. Verifique a internet e tente de novo.'; }
+}
+async function loadRanking(){
+  if(!db) return;
+  const list=$('rankList');
+  try{
+    const q=fsFns.query(fsFns.collection(db,'games',GAME_ID,'scores'),fsFns.orderBy('score','desc'),fsFns.limit(10));
+    const snap=await fsFns.getDocs(q); const rows=[]; snap.forEach(d=>rows.push(d.data()));
+    $('rankNote').textContent='Maior pontuação primeiro. Ao lado do nome aparece até onde a pessoa chegou.';
+    if(!rows.length){list.innerHTML='<li><span>Seja o primeiro do ranking!</span></li>';return;}
+    list.innerHTML=rows.map((r,i)=>`<li><span><span class="pos">${i+1}º</span>${esc(r.name||'?')}</span><span>${Number(r.score)||0} pts · ${esc(r.level||'')}</span></li>`).join('');
+  }catch(e){ list.innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>'; }
+}
 requestAnimationFrame(loop);
-loadRanking();
+initFirebase();
 </script>
 </body>
 </html>
