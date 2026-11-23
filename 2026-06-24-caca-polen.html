@@ -1,200 +1,232 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>🐝 Caça-Pólen — Polinizadores e Abelhas</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Caça-Pólen</title>
 <style>
   :root{
-    --c1:#ffe27a;        /* mel claro */
-    --c2:#7cb342;        /* verde folha */
-    --accent:#ff8f00;    /* âmbar vibrante */
-    --accent2:#fb8c00;
-    --ink:#3a2c00;
-    --card:#fffdf5;
-    --card2:#fff8e6;
-    --ok:#2e7d32;
-    --okbg:#d7f5d4;
-    --err:#c62828;
-    --shadow:0 8px 22px rgba(80,60,0,.18);
-    --radius:16px;
+    --ink:#0f2f44; --soft:#4b6a7d; --line:#dbe7ee; --ok:#16a34a; --err:#dc2626;
+    --t50:#fffbeb; --t100:#fef3c7; --t300:#fcd34d; --t500:#f59e0b; --main:#d97706; --deep:#b45309; --dark:#92400e; --glow:rgba(217,119,6,.25);
   }
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  html,body{margin:0;padding:0;}
+  *{box-sizing:border-box;margin:0;padding:0}
   body{
-    font-family:system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    color:var(--ink);
-    background:linear-gradient(160deg,var(--c1),var(--c2));
-    background-attachment:fixed;
-    min-height:100vh;
-    padding:14px 10px 40px;
-    line-height:1.45;
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+    min-height:100vh;color:var(--ink);background:#ffffff;
+    display:flex;flex-direction:column;align-items:center;padding:12px 14px 40px;
   }
-  .wrap{max-width:1050px;margin:0 auto;}
-  header.top{text-align:center;margin-bottom:10px;}
-  h1{
-    font-size:clamp(1.7rem,5vw,2.9rem);
-    margin:.1em 0 .05em;
-    letter-spacing:.5px;
-    text-shadow:0 2px 0 rgba(255,255,255,.35);
+  .top{width:100%;max-width:1040px;display:flex;justify-content:flex-start}
+  .hub{display:inline-flex;align-items:center;gap:6px;color:var(--deep);text-decoration:none;
+    font-weight:600;font-size:.9rem;padding:7px 12px;border-radius:20px;border:1.5px solid var(--line)}
+  .hub:hover{background:var(--tint)}
+  .hub svg{width:14px;height:14px}
+  header{text-align:center;max-width:720px;margin-top:6px}
+  h1{font-size:clamp(1.45rem,5vw,2.2rem);display:flex;align-items:center;justify-content:center;gap:10px}
+  h1 svg{width:.95em;height:.95em}
+  h1 .spark{color:var(--main)}
+  .sub{color:var(--soft);font-size:.95rem;margin:4px 0 12px}
+  .levels{display:flex;gap:8px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+  .levels button{border:2px solid var(--line);background:#fff;color:var(--ink);padding:8px 16px;border-radius:30px;
+    font-size:.92rem;cursor:pointer;transition:.2s;font-weight:600;font-family:inherit}
+  .levels button{border-color:var(--main);color:var(--deep)}
+  .levels button:hover{background:var(--tint)}
+  .levels button.active{background:var(--main);border-color:var(--main);color:#fff;box-shadow:0 4px 12px var(--glow)}
+  .hud{display:flex;gap:8px;justify-content:center;align-items:center;margin:4px 0 12px;font-size:.9rem;flex-wrap:wrap}
+  .hud span{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:30px;color:#fff;font-weight:600}
+  .hud b{font-size:1.05rem;font-weight:800} .hud em{font-style:normal}
+  .hud .h1{background:#16a34a} .hud .h2{background:#f97316} .hud .h3{background:#7c3aed} .hud .h4{background:#0ea5e9}
+
+  .card{width:min(680px,100%);background:#fff;border:3px solid var(--main);border-radius:22px;
+    padding:0 0 20px;box-shadow:0 12px 30px var(--glow);overflow:hidden}
+  #stage{padding:0 20px}
+  .strip{display:flex;gap:5px;justify-content:center;align-items:flex-end;flex-wrap:wrap;min-height:54px;
+    padding:10px 10px 8px;background:linear-gradient(180deg,#e0f2fe 0%,#f0f9ff 62%,var(--pale) 62%,var(--pale) 100%)}
+  .slot{width:36px;height:36px;display:flex;align-items:center;justify-content:center}
+  .slot svg{width:100%;height:100%}
+  .slot.empty{align-items:flex-end;padding-bottom:3px}
+  .slot.empty::after{content:"";width:11px;height:11px;border-radius:50%;background:#fff;border:3px solid var(--main);opacity:.45}
+  .slot.now::after{opacity:1;background:var(--acc);border-color:#fff;box-shadow:0 0 0 3px var(--acc);animation:pulse 1.1s infinite}
+  @keyframes pulse{50%{transform:scale(1.25)}}
+  .slot.pop svg{animation:grow .45s cubic-bezier(.3,1.5,.5,1)}
+  @keyframes grow{from{transform:scale(.2) translateY(8px);opacity:0}to{transform:none;opacity:1}}
+  .qhead{margin:0 -20px 16px;padding:14px 20px 16px;background:linear-gradient(135deg,var(--main),var(--deep));color:#fff}
+  .qnum{display:inline-block;font-size:.74rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+    background:rgba(255,255,255,.22);padding:3px 10px;border-radius:20px}
+  .qtext{font-size:1.22rem;font-weight:700;line-height:1.35;margin-top:8px}
+  .opts{display:grid;gap:9px}
+  .opt{display:flex;gap:12px;align-items:center;text-align:left;width:100%;background:#fff;border:2px solid var(--line);
+    border-radius:14px;padding:11px 14px;font-size:1rem;line-height:1.35;color:var(--ink);cursor:pointer;
+    font-family:inherit;transition:border-color .15s,background .15s,transform .15s}
+  .opt{--c:#0ea5e9;--ct:#f0f9ff;border-color:var(--c);background:var(--ct);font-weight:500}
+  .opt:nth-child(2){--c:#f97316;--ct:#fff7ed} .opt:nth-child(3){--c:#8b5cf6;--ct:#f5f3ff} .opt:nth-child(4){--c:#ec4899;--ct:#fdf2f8}
+  .opt .k{flex:none;width:34px;height:34px;border-radius:50%;background:var(--c);color:#fff;
+    font-weight:800;display:flex;align-items:center;justify-content:center;font-size:1rem}
+  .opt:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(15,47,68,.14)}
+  .opt:disabled{cursor:default}
+  .opt.right{border-color:var(--ok);background:#dcfce7;font-weight:700}
+  .opt.right .k{background:var(--ok);color:#fff}
+  .opt.wrong{border-color:var(--err);background:#fee2e2;animation:shake .3s}
+  .opt.wrong .k{background:var(--err);color:#fff}
+  .opt.dim{opacity:.5;background:#fff;border-color:var(--line)} .opt.dim .k{background:#94a3b8}
+  @keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+  .fb{margin-top:14px;border-radius:14px;padding:12px 14px;font-size:.96rem;line-height:1.45;background:#fffbeb;
+    border:2px dashed #fcd34d;min-height:52px;color:#92400e}
+  .fb.ok{background:#dcfce7;border:2px solid var(--ok);color:var(--ink)}
+  .fb.no{background:#fee2e2;border:2px solid var(--err);color:var(--ink)}
+  .fb b{display:block;margin-bottom:2px}
+  .fb.ok>b{color:#166534;font-size:1.05rem} .fb.no>b{color:#b91c1c;font-size:1.05rem}
+  .fb .more{margin-top:8px;padding:8px 10px;border-radius:10px;background:#fff} .fb .more b{color:#166534}
+  .fb .more{margin-top:6px}
+  .btn{background:var(--main);color:#fff;border:0;padding:11px 20px;border-radius:12px;font-weight:700;cursor:pointer;
+    font-size:1rem;font-family:inherit}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--line)}
+  .next{display:none;margin:14px auto 0;background:var(--acc);font-size:1.05rem;padding:12px 26px;box-shadow:0 5px 14px rgba(15,47,68,.2)}
+  .next.show{display:block}
+
+  .end{text-align:center;padding-top:16px}
+  .end h2{font-size:1.5rem;margin:6px 0 4px;color:var(--deep)}
+  .end p{color:var(--soft)}
+  .stats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+  .stat{background:#16a34a;border-radius:14px;padding:9px 16px;font-weight:800;font-size:1.2rem;color:#fff;min-width:84px}
+  .stat:nth-child(2){background:#7c3aed} .stat:nth-child(3){background:#f97316} .stat:nth-child(4){background:#0ea5e9}
+  .stat span{display:block;font-size:.72rem;font-weight:600;color:#fff;opacity:.92}
+  .savebox{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+  .savebox input{padding:10px 12px;border-radius:10px;border:2px solid var(--line);font-size:1rem;width:220px;font-family:inherit}
+  .review{text-align:left;margin-top:16px;border-top:2px solid var(--line);padding-top:12px}
+  .review h3{font-size:1rem;margin-bottom:6px}
+  .review li{list-style:none;padding:8px 0;border-bottom:1px solid var(--line);font-size:.93rem;line-height:1.4}
+  .review li:last-child{border-bottom:0}
+  .review .a{color:#166534;font-weight:700}
+
+  .ranking{margin-top:16px;width:min(680px,100%);background:#fff;border:3px solid #fbbf24;border-radius:18px;padding:0 16px 12px;overflow:hidden}
+  .ranking h3{font-size:1.02rem;margin:0 -16px 8px;padding:10px 16px;background:#fbbf24;color:#451a03}
+  .ranking h3 span{color:#fff;background:#b45309;padding:2px 10px;border-radius:20px;font-size:.88rem}
+  .ranking li:nth-child(1) .pos{color:#b45309} .ranking li:nth-child(1){font-weight:700}
+  .ranking ol{list-style:none}
+  .ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.93rem}
+  .ranking li:last-child{border-bottom:0}
+  .ranking .pos{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+  .note{font-size:.8rem;color:var(--soft);margin-top:6px}
+  footer{margin-top:22px;font-size:.8rem;color:var(--soft);text-align:center;line-height:1.6}
+  footer .credit{font-weight:700;color:var(--ink)}
+
+
+  /* ---- cor unica por jogo: todos os destaques sao tons da mesma cor ---- */
+  :root{--tint:var(--t100);--pale:var(--t300);--acc:var(--dark)}
+  .hub:hover{background:var(--t50)}
+  .levels button{border-color:var(--t300)}
+  .hud .h1{background:var(--t500)} .hud .h2{background:var(--main)} .hud .h3{background:var(--deep)} .hud .h4{background:var(--dark)}
+  .strip{background:linear-gradient(180deg,var(--t50) 0%,var(--t100) 62%,var(--t300) 62%,var(--t300) 100%)}
+  .qhead{background:linear-gradient(135deg,var(--main),var(--dark))}
+  .opt,.opt:nth-child(2),.opt:nth-child(3),.opt:nth-child(4){--c:var(--main);--ct:var(--t50);border-color:var(--t300)}
+  .opt:not(:disabled):hover{border-color:var(--main);background:var(--t100)}
+  .fb{background:var(--t50);border:2px dashed var(--t300);color:var(--deep)}
+  .next{background:var(--deep)}
+  .stat{background:var(--t500)} .stat:nth-child(2){background:var(--main)} .stat:nth-child(3){background:var(--deep)} .stat:nth-child(4){background:var(--dark)}
+  .ranking{border-color:var(--main)}
+  .ranking h3{background:var(--main);color:#fff}
+  .ranking h3 span{background:var(--dark);color:#fff}
+  .ranking li:nth-child(1) .pos{color:var(--deep)}
+  @media(max-width:560px){
+    body{padding:8px 8px 32px}
+    .sub{display:none}
+    h1{margin-bottom:8px}
+    .hub{padding:4px 10px;font-size:.82rem}
+    .levels button{padding:7px 12px;font-size:.85rem}
+    .hud{gap:10px;font-size:.86rem;margin:2px 0 8px}
+    .card{padding:0 0 14px;border-radius:18px}
+    .qtext{font-size:1.05rem;margin-bottom:10px}
+    .opt{padding:9px 10px;font-size:.94rem;gap:9px}
+    .opt .k{width:28px;height:28px;font-size:.86rem}
+    .slot{width:27px;height:27px}
+    .strip{min-height:44px;padding:8px 6px 6px}
+    .qhead{margin:0 -12px 12px;padding:10px 12px 12px}
+    #stage{padding:0 12px}
+    .hud span{padding:4px 9px;font-size:.78rem} .hud b{font-size:.92rem} .hud{gap:5px}
+    .fb{font-size:.9rem}
   }
-  .sub{font-size:clamp(.85rem,2.4vw,1.05rem);font-weight:600;opacity:.85;margin:0;}
-  .levels{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0 6px;}
-  .pill{
-    border:none;cursor:pointer;font-weight:700;
-    font-size:clamp(.82rem,2.3vw,1rem);
-    padding:9px 16px;border-radius:999px;
-    background:var(--card);color:var(--ink);
-    box-shadow:var(--shadow);transition:all .25s ease;
-  }
-  .pill:hover{transform:translateY(-2px);}
-  .pill.active{background:var(--accent);color:#fff;box-shadow:0 8px 18px rgba(255,143,0,.5);}
-  .howto{
-    text-align:center;background:rgba(255,255,255,.55);
-    border-radius:12px;padding:8px 12px;margin:8px auto;max-width:760px;
-    font-size:clamp(.82rem,2.3vw,.98rem);font-weight:600;
-  }
-  .hud{
-    display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:10px 0;
-  }
-  .stat{
-    background:var(--card);border-radius:12px;padding:7px 14px;
-    font-weight:700;box-shadow:var(--shadow);font-size:clamp(.8rem,2.2vw,1rem);
-    min-width:96px;text-align:center;
-  }
-  .stat b{color:var(--accent2);}
-  .layout{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;align-items:flex-start;margin-top:6px;}
-  .gamebox{flex:1 1 340px;display:flex;flex-direction:column;align-items:center;min-width:0;}
-  .side{flex:1 1 280px;max-width:380px;min-width:240px;}
-  /* GRID */
-  #grid{
-    display:grid;gap:3px;background:var(--card);
-    padding:10px;border-radius:var(--radius);box-shadow:var(--shadow);
-    touch-action:none;user-select:none;-webkit-user-select:none;
-    width:min(96vw,560px);
-  }
-  .cell{
-    aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;
-    background:var(--card2);border-radius:7px;font-weight:800;
-    font-size:clamp(.62rem,2.6vw,1.15rem);color:var(--ink);
-    cursor:pointer;transition:background .12s,transform .12s;
-    border:1px solid rgba(0,0,0,.04);
-  }
-  .cell.sel{background:var(--accent);color:#fff;transform:scale(1.04);}
-  .cell.found{color:#fff;cursor:default;animation:pop .35s ease;}
-  @keyframes pop{0%{transform:scale(.5);}60%{transform:scale(1.18);}100%{transform:scale(1);}}
-  @keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-6px);}40%{transform:translateX(6px);}60%{transform:translateX(-4px);}80%{transform:translateX(4px);}}
-  #grid.shake{animation:shake .4s ease;}
-  /* WORD LIST */
-  .panel{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:14px;}
-  .panel h3{margin:0 0 10px;font-size:1.05rem;}
-  .words{display:flex;flex-wrap:wrap;gap:7px;}
-  .word{
-    background:var(--card2);border-radius:10px;padding:6px 10px;
-    font-size:clamp(.74rem,2vw,.9rem);font-weight:700;transition:all .25s;
-    border:1px dashed rgba(0,0,0,.12);
-  }
-  .word small{display:block;font-weight:500;opacity:.7;font-size:.82em;}
-  .word.done{text-decoration:line-through;color:#fff;border-style:solid;opacity:.95;}
-  #feedback{
-    background:var(--card2);border-left:6px solid var(--accent);
-    border-radius:10px;padding:11px 13px;font-size:clamp(.82rem,2.2vw,.96rem);
-    min-height:54px;font-weight:600;transition:all .3s;
-  }
-  #feedback.good{border-color:var(--ok);background:var(--okbg);}
-  #feedback.bad{border-color:var(--err);background:#fde3e3;}
-  /* RANKING */
-  #rankList{list-style:none;margin:0;padding:0;font-size:.9rem;}
-  #rankList li{display:flex;justify-content:space-between;gap:8px;padding:6px 8px;border-radius:8px;}
-  #rankList li:nth-child(odd){background:var(--card2);}
-  #rankList .pos{font-weight:800;color:var(--accent2);}
-  .ranknote{font-size:.78rem;opacity:.7;margin-top:8px;}
-  /* FINAL */
-  #final{display:none;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;text-align:center;margin:10px auto;max-width:560px;}
-  #final.show{display:block;animation:pop .5s ease;}
-  #final h2{color:var(--ok);font-size:1.8rem;margin:.1em 0;}
-  #final .score{font-size:1.15rem;font-weight:700;margin:10px 0;}
-  #nameIn{padding:11px 14px;border-radius:10px;border:2px solid var(--accent);font-size:1rem;width:min(90%,300px);font-weight:700;}
-  .btn{
-    background:var(--accent);color:#fff;border:none;border-radius:10px;
-    padding:11px 20px;font-weight:800;font-size:1rem;cursor:pointer;
-    box-shadow:var(--shadow);transition:all .2s;margin:10px 4px;
-  }
-  .btn:hover{transform:translateY(-2px);}
-  .btn.sec{background:#fff;color:var(--accent2);border:2px solid var(--accent);}
-  footer{
-    text-align:center;margin-top:30px;padding:16px;
-    background:rgba(255,255,255,.6);border-radius:14px;max-width:720px;
-    margin-left:auto;margin-right:auto;
-  }
-  footer .author{font-size:clamp(1rem,3vw,1.25rem);font-weight:800;color:var(--ink);}
-  footer .meta{font-size:.82rem;opacity:.75;margin-top:4px;}
-  @media(max-width:600px){.side{max-width:96vw;}}
+  @media(prefers-reduced-motion:reduce){.slot.pop svg,.opt.wrong{animation:none}}
+
+  /* ---------- caca-palavras ---------- */
+  .card{width:min(940px,100%)} .ranking{width:min(940px,100%)}
+  .qdesc{font-size:.96rem;line-height:1.45;margin-top:6px;opacity:.96}
+  .wsbox{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start}
+  .gridw{position:relative;margin:0 auto;width:min(100%,calc(var(--n)*40px));touch-action:none;user-select:none;-webkit-user-select:none}
+  .grid{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:2px;background:var(--t100);border:3px solid var(--t300);border-radius:14px;padding:6px}
+  .cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:6px;font-weight:800;
+    font-size:clamp(.62rem,calc(min(94vw,560px)/var(--n)*.52),1.15rem);color:var(--ink);cursor:pointer;transition:background .12s,transform .12s}
+  .cell.sel{background:var(--main);color:#fff;transform:scale(1.06)}
+  .cell.start{background:var(--t300)}
+  .cell.hint{animation:hintb 1s ease-in-out infinite alternate;background:#fde68a}
+  @keyframes hintb{to{background:#fbbf24}}
+  .cell.bad{background:#fecaca;color:#991b1b}
+  .lines{position:absolute;inset:0;pointer-events:none}
+  .lines line{stroke-linecap:round;opacity:.38}
+  .found-cell{color:var(--dark)}
+  .wlist{display:flex;flex-direction:column;gap:7px}
+  .wlist h4{font-size:.82rem;text-transform:uppercase;letter-spacing:.4px;color:var(--deep)}
+  .witem{text-align:left;width:100%;border:2px solid var(--t300);background:var(--t50);border-radius:12px;padding:7px 10px;font-family:inherit;
+    font-size:.9rem;color:var(--ink);cursor:default;line-height:1.3}
+  .witem .wn{font-weight:800;letter-spacing:.5px}
+  .witem .wc{font-size:.86rem;color:var(--soft)}
+  .witem .wl{display:inline-block;margin-left:6px;font-size:.74rem;font-weight:800;color:var(--deep);background:var(--t100);border-radius:8px;padding:1px 6px}
+  .witem.done{background:#dcfce7;border-color:#86efac;cursor:pointer}
+  .witem.done .wn{color:#166534}
+  .witem.done .wn::after{content:' ok';font-size:.72rem;color:#15803d}
+  .list .wlist{display:flex;flex-direction:row;flex-wrap:wrap}
+  .list .witem{width:auto}
+  .tools{display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+  .zonebox{position:relative}
+  .lost{position:absolute;right:8px;top:8px;background:#dc2626;color:#fff;font-weight:900;font-size:.95rem;border-radius:999px;padding:3px 10px;pointer-events:none;animation:lost 1.4s ease-out forwards;z-index:5}
+  @keyframes lost{0%{opacity:0;transform:translateY(6px)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-18px)}}
+  .modelnote{font-size:.78rem;color:var(--soft);text-align:center;margin-top:12px;line-height:1.4}
+  .review .w{color:var(--deep);font-weight:800}
+  .review .tag{font-size:.72rem;font-weight:800;border-radius:8px;padding:1px 6px;margin-left:6px;background:#fef3c7;color:#92400e}
+  @media(max-width:760px){ .wsbox{grid-template-columns:1fr} .list .wlistw{order:-1} }
+  @media(max-width:560px){ .grid{gap:1px;padding:4px;border-radius:10px} .cell{border-radius:4px} .witem{font-size:.85rem;padding:6px 8px} }
+  @media(prefers-reduced-motion:reduce){.cell.hint,.lost{animation:none}}
+
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="top">
-    <h1>🐝 Caça-Pólen 🌻</h1>
-    <p class="sub">Encontre os termos da polinização escondidos na colmeia de letras</p>
-  </header>
-
-  <div class="levels" id="levels">
-    <button class="pill" data-lv="basico">Básico</button>
-    <button class="pill" data-lv="intermediario">Intermediário</button>
-    <button class="pill" data-lv="dificil">Difícil</button>
-    <button class="pill" data-lv="carbonauta">🛰️ Carbonauta</button>
-  </div>
-
-  <div class="howto">Como jogar: arraste (ou clique e segure) sobre as letras formando a palavra em linha reta — horizontal, vertical ou diagonal. Use a lista de dicas ao lado.</div>
-
-  <div class="hud">
-    <div class="stat">Tempo: <b id="hTime">0s</b></div>
-    <div class="stat">Acertos: <b id="hHits">0/0</b></div>
-    <div class="stat">Erros: <b id="hErr">0</b></div>
-    <div class="stat">Pontos: <b id="hScore">0</b></div>
-  </div>
-
-  <div class="layout">
-    <div class="gamebox">
-      <div id="grid"></div>
-    </div>
-    <div class="side">
-      <div class="panel">
-        <h3>🔎 Palavras a encontrar</h3>
-        <div class="words" id="wordList"></div>
-      </div>
-      <div class="panel">
-        <h3>💡 Aprenda jogando</h3>
-        <div id="feedback">Selecione um nível e comece a caçar palavras!</div>
-      </div>
-      <div class="panel">
-        <h3>🏆 Ranking Global <span id="rankLv" style="font-size:.8rem;font-weight:600;opacity:.7"></span></h3>
-        <ol id="rankList"><li>Carregando…</li></ol>
-        <div class="ranknote" id="rankNote">Menor pontuação vence (tempo + penalidade por erro).</div>
-      </div>
-    </div>
-  </div>
-
-  <div id="final">
-    <h2>🎉 Colmeia completa!</h2>
-    <div class="score" id="finalMsg"></div>
-    <input id="nameIn" maxlength="20" placeholder="Seu nome (até 20 letras)" />
-    <div>
-      <button class="btn" id="saveBtn">Salvar no ranking</button>
-      <button class="btn sec" id="againBtn">Jogar de novo</button>
-    </div>
-    <div id="saveStatus" style="margin-top:10px;font-weight:700;"></div>
-  </div>
-
-  <footer>
-    <div class="author">— Idealizado por Ernandes Sobreira —</div>
-    <div class="meta">Tema: Polinizadores e abelhas · Gênero: Caça-palavras · app ambiental do dia (2026-06-24)</div>
-  </footer>
+<div class="top">
+  <a class="hub" href="index.html">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Todos os jogos
+  </a>
 </div>
 
+<header>
+  <h1><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.4" fill="#d97706"/><g fill="#fcd34d"><circle cx="12" cy="5" r="3.2"/><circle cx="12" cy="19" r="3.2"/><circle cx="5" cy="12" r="3.2"/><circle cx="19" cy="12" r="3.2"/></g><circle cx="12" cy="12" r="3.2" fill="#b45309"/></svg> <span>Caça-<span class="spark">Pólen</span></span></h1>
+  <p class="sub">Encontre no quadro as palavras da polinização. Cada palavra achada traz uma explicação. Nos níveis mais altos, só a pista aparece.</p>
+</header>
+
+<div class="levels" id="levels"></div>
+
+<div class="hud">
+  <span class="h1">Palavras <b id="hits">0/0</b></span>
+  <span class="h2">Erros <b id="errs">0</b></span>
+  <span class="h3">Pontos <b id="score">0</b></span>
+  <span class="h4">Tempo <b id="timer">0s</b></span>
+</div>
+
+<div class="card">
+  <div id="stage"></div>
+</div>
+
+<div class="ranking">
+  <h3>Ranking Global, nível <span id="rankLevel"></span></h3>
+  <ol id="rankList"><li><span>Carregando o ranking...</span></li></ol>
+  <p class="note" id="rankNote"></p>
+</div>
+
+<footer>
+  Polinização e polinizadores · Caça-palavras<br>
+  <span class="credit">Idealizado por Ernandes Sobreira</span>
+</footer>
+
 <script>
-/* ============ FIREBASE ============ */
 const firebaseConfig = {
   apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
   authDomain: "jogos-ranking.firebaseapp.com",
@@ -204,299 +236,338 @@ const firebaseConfig = {
   messagingSenderId: "958784915420",
   appId: "1:958784915420:web:4212d3ad278f02d600f119"
 };
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* ---------- dados deste jogo ---------- */
 const GAME_ID = "2026-06-24-caca-polen";
-
-let db=null, fb=null;
-async function initFirebase(){
-  try{
-    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
-    const fsMod  = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
-    const app = appMod.initializeApp(firebaseConfig);
-    db = fsMod.getFirestore(app);
-    fb = fsMod;
-    return true;
-  }catch(e){ console.warn("Firebase indisponível", e); return false; }
-}
-
-/* ============ DADOS DOS NÍVEIS ============ */
+/* o banco guarda o mesmo de antes: tempo mais 5 por erro, menos e melhor; a dica conta como 3 erros */
+function scoreNow(s){ return s.seconds + 5*s.errors + 15*s.hints; }
+function saveDoc(name, s, lv, f){ return {name, score:scoreNow(s), seconds:s.seconds, errors:s.errors, hints:s.hints, level:lv, ts:f.serverTimestamp()}; }
+const RANK = {field:'level', val:k=>k, lowerBetter:true};
+const SHOWPTS = sc => Math.max(0, 3000 - 5*sc);
+const SCORE_NOTE = 'Você começa com 3000 pontos. Cada segundo tira 5, cada erro tira 25 e cada dica tira 75.';
 const LEVELS = {
-  basico:{ size:9, dirs:[[0,1],[1,0]], words:[
-    {w:"ABELHA", d:"Inseto que faz mel e poliniza", fb:"As abelhas são os polinizadores mais importantes do mundo: visitam flores em busca de néctar e pólen."},
-    {w:"FLOR", d:"Parte da planta que atrai polinizadores", fb:"As flores usam cores, odores e néctar para atrair quem as poliniza."},
-    {w:"POLEN", d:"Pózinho amarelo das flores", fb:"O pólen é levado de uma flor a outra, permitindo a formação de sementes e frutos."},
-    {w:"NECTAR", d:"Líquido doce que as abelhas coletam", fb:"O néctar é o 'combustível' das abelhas e a recompensa que a flor oferece."},
-    {w:"MEL", d:"Alimento doce feito pelas abelhas", fb:"O mel é produzido a partir do néctar processado e armazenado na colmeia."},
-    {w:"JARDIM", d:"Lugar com flores que ajuda as abelhas", fb:"Jardins com flores variadas alimentam polinizadores também nas cidades."},
-    {w:"FRUTA", d:"Resultado da flor polinizada", fb:"Sem polinização, muitas frutas como maçã e melancia não se formariam."},
-    {w:"ZUMBIDO", d:"Som das asas da abelha em voo", fb:"O zumbido vem do bater rápido das asas; em certas flores a vibração ajuda a soltar o pólen."}
-  ]},
-  intermediario:{ size:11, dirs:[[0,1],[1,0],[1,1],[1,-1]], words:[
-    {w:"POLINIZACAO", d:"Transporte de pólen entre flores", fb:"A polinização é a transferência de pólen das anteras ao estigma, essencial para a reprodução das plantas."},
-    {w:"BORBOLETA", d:"Polinizador colorido diurno", fb:"Borboletas polinizam flores tubulares e coloridas enquanto buscam néctar."},
-    {w:"COLMEIA", d:"Casa das abelhas melíferas", fb:"Na colmeia vivem a rainha, as operárias e os zangões em uma sociedade organizada."},
-    {w:"ESTIGMA", d:"Parte feminina que recebe o pólen", fb:"O estigma é a porção receptiva do pistilo onde o grão de pólen germina."},
-    {w:"ANTERA", d:"Parte da flor que produz pólen", fb:"As anteras ficam no topo dos estames e liberam os grãos de pólen."},
-    {w:"MAMANGAVA", d:"Abelha grande e peluda (Bombus)", fb:"Mamangavas fazem polinização por vibração, soltando o pólen de flores como o tomateiro."},
-    {w:"BESOURO", d:"Inseto polinizador muito antigo", fb:"Besouros são polinizadores ancestrais, anteriores às abelhas na história evolutiva."},
-    {w:"MORCEGO", d:"Polinizador noturno que voa", fb:"Morcegos polinizam flores noturnas, como as do baobá e de vários cactos."},
-    {w:"BEIJAFLOR", d:"Ave que poliniza em voo parado", fb:"O beija-flor poliniza flores tubulares e vermelhas enquanto suga néctar em pleno voo."},
-    {w:"RAINHA", d:"Única abelha que põe ovos na colônia", fb:"A rainha é a mãe de toda a colônia e pode pôr milhares de ovos por dia."}
-  ]},
-  dificil:{ size:12, dirs:[[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]], words:[
-    {w:"MELITOFILIA", d:"Polinização realizada por abelhas", fb:"Melitofilia é a síndrome de polinização por abelhas, a mais comum na Mata Atlântica."},
-    {w:"ANEMOFILIA", d:"Polinização pelo vento", fb:"Na anemofilia o pólen é levado pelo ar; é comum em gramíneas e em muitas árvores."},
-    {w:"ORNITOFILIA", d:"Polinização realizada por aves", fb:"A ornitofilia envolve flores vermelhas e tubulares adaptadas a beija-flores."},
-    {w:"COROLA", d:"Conjunto de pétalas da flor", fb:"A corola, formada pelas pétalas, atrai polinizadores pela cor e pelo formato."},
-    {w:"NECTARIO", d:"Glândula que produz néctar", fb:"Os nectários secretam o néctar que recompensa os visitantes florais."},
-    {w:"COEVOLUCAO", d:"Evolução conjunta flor–polinizador", fb:"Flores e polinizadores moldaram-se mutuamente ao longo de milhões de anos."},
-    {w:"POLINIZADOR", d:"Agente que transporta o pólen", fb:"Polinizadores incluem abelhas, aves, morcegos, besouros e também o vento."},
-    {w:"SINDROME", d:"Conjunto de traços florais por vetor", fb:"Cada síndrome de polinização reúne cor, forma e recompensa ligadas a um vetor."},
-    {w:"OPERARIA", d:"Abelha fêmea que coleta recursos", fb:"As operárias forrageiam, cuidam das crias e defendem a colmeia."},
-    {w:"ESTAME", d:"Parte masculina da flor", fb:"O estame é formado por filete e antera, onde o pólen é produzido."},
-    {w:"ZANGAO", d:"Abelha macho da colônia", fb:"Os zangões têm a função de fecundar a rainha durante o voo nupcial."},
-    {w:"PISTILO", d:"Estrutura feminina da flor", fb:"O pistilo reúne estigma, estilete e ovário, onde se formam as sementes."},
-    {w:"VETOR", d:"Agente que carrega o pólen", fb:"O vetor de polinização pode ser biótico (animais) ou abiótico (vento, água)."}
-  ]},
-  carbonauta:{ size:14, dirs:[[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]], words:[
-    {w:"PORICIDA", d:"Antera que libera pólen por poros", fb:"Anteras poricidas só liberam pólen sob vibração na frequência adequada (buzz pollination)."},
-    {w:"VIBRATORIA", d:"Polinização por zumbido (buzz)", fb:"Na polinização vibratória a abelha contrai os músculos torácicos para extrair pólen de anteras poricidas."},
-    {w:"CORBICULA", d:"Cesto de pólen na pata da abelha", fb:"A corbícula é a estrutura côncava da tíbia posterior onde abelhas corbiculadas transportam pólen e resina."},
-    {w:"MELIPONINEO", d:"Abelha nativa sem ferrão", fb:"Meliponíneos, como a jataí e a mandaçaia, são abelhas sociais nativas e excelentes polinizadores neotropicais."},
-    {w:"GEITONOGAMIA", d:"Autopolinização entre flores da mesma planta", fb:"Na geitonogamia o pólen passa entre flores distintas do mesmo indivíduo, reduzindo a variabilidade genética."},
-    {w:"XENOGAMIA", d:"Polinização cruzada entre indivíduos", fb:"A xenogamia transfere pólen entre plantas diferentes, maximizando a diversidade genética da prole."},
-    {w:"QUIROPTERO", d:"Morcego: vetor de flores noturnas", fb:"Quirópteros polinizam flores quiropterófilas — claras, noturnas, robustas e de odor forte."},
-    {w:"NECTARIVORO", d:"Animal que se alimenta de néctar", fb:"Nectarívoros, como beija-flores e morcegos, atuam como vetores florais de longa distância."},
-    {w:"PROTANDRIA", d:"Anteras maduras antes do estigma", fb:"A protandria, um tipo de dicogamia, evita a autofecundação separando no tempo as fases masculina e feminina."},
-    {w:"DICOGAMIA", d:"Maturação sexual em tempos distintos", fb:"A dicogamia (protandria ou protoginia) favorece a polinização cruzada."},
-    {w:"HERCOGAMIA", d:"Separação espacial entre anteras e estigma", fb:"A hercogamia usa a posição das estruturas florais para reduzir a autopolinização."},
-    {w:"POLINARIO", d:"Unidade de pólen das orquídeas", fb:"O polinário agrega os políneos (massas de pólen) transportados em bloco por orquídeas e asclepiadáceas."},
-    {w:"ESTAMINODIO", d:"Estame estéril modificado", fb:"Estaminódios podem se tornar guias de néctar ou estruturas de atração ao polinizador."},
-    {w:"MELITOFILIA", d:"Síndrome de polinização por abelhas", fb:"A melitofilia associa flores zigomorfas, guias de néctar em ultravioleta e odores adocicados às abelhas."},
-    {w:"SINDROME", d:"Conjunto de traços florais por vetor", fb:"As síndromes florais permitem prever o polinizador a partir de cor, forma, odor e recompensa."}
-  ]}
+  basico: { label:'Básico', title:'Flores e abelhas', size:9, dirs:'hv', mode:'list',
+    desc:'Sem quem leve o pólen de uma flor para outra, muitas plantas não formam frutos. As palavras estão na horizontal e na vertical.',
+    words:[
+      {w:'Abelha', fb:'As abelhas são os polinizadores mais importantes. Visitam flores atrás de néctar e pólen.'},
+      {w:'Flor', fb:'As flores atraem os polinizadores com cores, cheiros e néctar.'},
+      {w:'Pólen', fb:'O pólen é o pó das flores. Levado de uma flor para outra, permite que se formem sementes e frutos.'},
+      {w:'Néctar', fb:'O néctar é o líquido doce que a flor oferece em troca da visita.'},
+      {w:'Mel', fb:'As abelhas fazem o mel a partir do néctar e guardam na colmeia.'},
+      {w:'Jardim', fb:'Jardins com flores variadas alimentam os polinizadores também nas cidades.'},
+      {w:'Fruta', fb:'Muitas frutas, como o maracujá e a melancia, dependem da polinização para se formar.'},
+      {w:'Semente', fb:'Depois da polinização, a flor forma sementes que darão novas plantas.'}
+    ]},
+  intermediario: { label:'Intermediário', title:'Quem poliniza e as partes da flor', size:11, dirs:'hvd', mode:'list',
+    desc:'Não são só as abelhas que polinizam. Agora as palavras também podem estar na diagonal.',
+    words:[
+      {w:'Polinização', fb:'Polinização é levar o pólen da parte masculina para a parte feminina de uma flor.'},
+      {w:'Borboleta', fb:'As borboletas visitam flores coloridas durante o dia para tomar néctar.'},
+      {w:'Colmeia', fb:'Na colmeia da abelha-europeia vivem a rainha, as operárias e os zangões.'},
+      {w:'Estigma', fb:'O estigma é a parte feminina da flor que recebe o pólen.'},
+      {w:'Antera', fb:'A antera fica na ponta do estame e é onde o pólen é produzido.'},
+      {w:'Mamangava', fb:'As mamangavas são abelhas grandes que polinizam flores como as do maracujá.'},
+      {w:'Besouro', fb:'Os besouros estão entre os polinizadores mais antigos da história da Terra.'},
+      {w:'Morcego', fb:'Alguns morcegos tomam néctar e polinizam flores que abrem à noite.'},
+      {w:'Beija-flor', fb:'O beija-flor poliniza flores em forma de tubo enquanto toma néctar parado no ar.'},
+      {w:'Rainha', fb:'A rainha é a única fêmea que põe ovos na colmeia.'}
+    ]},
+  dificil: { label:'Difícil', title:'Palavras de botânico', size:12, dirs:'all', mode:'list',
+    desc:'Agora as palavras podem estar em qualquer direção, até de trás para frente.',
+    words:[
+      {w:'Melitofilia', fb:'Melitofilia é a polinização feita por abelhas.'},
+      {w:'Anemofilia', fb:'Anemofilia é a polinização pelo vento, comum no milho e em outros capins.'},
+      {w:'Ornitofilia', fb:'Ornitofilia é a polinização por aves, como os beija-flores.'},
+      {w:'Corola', fb:'A corola é o conjunto das pétalas da flor.'},
+      {w:'Nectário', fb:'O nectário é a parte da flor que produz o néctar.'},
+      {w:'Coevolução', fb:'Flores e polinizadores mudaram juntos ao longo de milhões de anos, um se ajustando ao outro.'},
+      {w:'Polinizador', fb:'Polinizador é o animal que leva o pólen de uma flor para outra.'},
+      {w:'Operária', fb:'As operárias buscam néctar e pólen, cuidam das crias e defendem a colmeia.'},
+      {w:'Estame', fb:'O estame é a parte masculina da flor, formada pelo filete e pela antera.'},
+      {w:'Zangão', fb:'O zangão é o macho da abelha. Ele não coleta néctar.'},
+      {w:'Pistilo', fb:'O pistilo é a parte feminina da flor, com estigma, estilete e ovário.'}
+    ]},
+  avancado: { label:'Avançado', title:'Polinizadores do Brasil', size:12, dirs:'hvd', mode:'clue',
+    desc:'Agora a palavra não aparece. Leia a pista sobre abelhas nativas e plantas do Brasil e procure no quadro.',
+    words:[
+      {w:'Jataí', clue:'Pequena abelha nativa sem ferrão, amarelinha, muito criada no quintal.', fb:'A jataí faz um mel muito apreciado e entra na colmeia por um tubinho de cera.'},
+      {w:'Mandaçaia', clue:'Abelha nativa sem ferrão que faz a entrada do ninho com barro.', fb:'A mandaçaia é uma das abelhas sem ferrão mais criadas no Brasil.'},
+      {w:'Maracujá', clue:'Fruta cuja flor grande depende de mamangavas para virar fruto.', fb:'Sem mamangavas, muitos produtores de maracujá precisam polinizar as flores à mão.'},
+      {w:'Castanha', clue:'Semente de uma árvore gigante da Amazônia polinizada por abelhas grandes.', fb:'A castanheira precisa de abelhas fortes, capazes de abrir sua flor fechada.'},
+      {w:'Cacau', clue:'Fruto do chocolate, polinizado por mosquinhas minúsculas.', fb:'As flores do cacau são polinizadas por pequenas mosquinhas que vivem no chão úmido da mata.'},
+      {w:'Agrotóxico', clue:'Produto usado na lavoura que pode matar abelhas.', fb:'Alguns inseticidas matam ou desorientam as abelhas que visitam as lavouras.'},
+      {w:'Meliponário', clue:'Lugar onde se criam abelhas nativas sem ferrão.', fb:'Um meliponário produz mel e ajuda a polinizar plantas nativas e cultivadas.'},
+      {w:'Orquídea', clue:'Flor cujo pólen sai grudado em blocos no corpo da abelha.', fb:'Muitas orquídeas são polinizadas por abelhas que buscam perfumes nas flores.'},
+      {w:'Vento', clue:'Polinizador que não é animal e leva o pólen do milho.', fb:'Plantas polinizadas pelo vento produzem muito pólen leve.'}
+    ]},
+  carbonauta: { label:'Carbonauta', title:'Pistas de cientista', size:14, dirs:'all', mode:'clue',
+    desc:'Pistas mais difíceis e palavras em qualquer direção. Use a dica só quando travar.',
+    words:[
+      {w:'Poricida', clue:'Antera que só solta o pólen por pequenos poros na ponta.', fb:'Flores de tomate e de muitas plantas do Cerrado têm anteras poricidas.'},
+      {w:'Vibratória', clue:'Polinização em que a abelha treme o corpo para soltar o pólen.', fb:'Na polinização vibratória, a abelha vibra os músculos do voo agarrada à flor.'},
+      {w:'Corbícula', clue:'Cestinho na pata traseira onde a abelha carrega o pólen.', fb:'A corbícula é uma área côncava da pata cercada de pelos.'},
+      {w:'Meliponíneo', clue:'Nome do grupo das abelhas sociais sem ferrão.', fb:'O Brasil tem centenas de espécies de meliponíneos.'},
+      {w:'Geitonogamia', clue:'Pólen passa entre flores diferentes da mesma planta.', fb:'Na geitonogamia, as flores são diferentes mas a planta é a mesma, então os genes são os mesmos.'},
+      {w:'Xenogamia', clue:'Polinização cruzada entre plantas diferentes.', fb:'A xenogamia mistura genes de plantas diferentes.'},
+      {w:'Quiróptero', clue:'Nome científico do grupo dos morcegos.', fb:'Flores polinizadas por morcegos costumam ser claras, abrir à noite e ter cheiro forte.'},
+      {w:'Protandria', clue:'Quando a parte masculina da flor amadurece antes da feminina.', fb:'A protandria dificulta que a flor se polinize sozinha.'},
+      {w:'Hercogamia', clue:'Separação no espaço entre antera e estigma na mesma flor.', fb:'Com a hercogamia, o pólen da própria flor tem mais dificuldade de chegar ao estigma.'},
+      {w:'Polinário', clue:'Bloco de pólen das orquídeas levado de uma vez pelo inseto.', fb:'O polinário gruda no corpo do polinizador e é levado inteiro para outra flor.'},
+      {w:'Síndrome', clue:'Conjunto de cor, forma e cheiro da flor ligado a um tipo de polinizador.', fb:'Pela síndrome floral dá para prever, em parte, quem poliniza a flor.'}
+    ]}
 };
-const LV_LABEL = {basico:"Básico", intermediario:"Intermediário", dificil:"Difícil", carbonauta:"🛰️ Carbonauta"};
-const FOUND_COLORS = ["#43a047","#1e88e5","#e53935","#8e24aa","#fb8c00","#00897b","#5e35b1","#d81b60","#3949ab","#00acc1","#7cb342","#f4511e","#6d4c41","#546e7a","#c0ca33","#ad1457"];
+const NOTE = '';
 
-/* ============ ESTADO ============ */
-let curLevel="basico", gridData=[], placements=[], remaining=0, errors=0, hits=0;
-let startTime=0, timer=null, finished=false, elapsed=0;
 
-function norm(s){return s.normalize("NFD").replace(/[̀-ͯ]/g,"").toUpperCase().replace(/[^A-Z]/g,"");}
-const ALPHA="ABCDEFGHIJLMNOPQRSTUVZ";
-function rnd(n){return Math.floor(Math.random()*n);}
+/* ---------- motor comum dos caca-palavras ---------- */
+const KEYS = Object.keys(LEVELS);
+const DIRS = { hv:[[0,1],[1,0]], hvd:[[0,1],[1,0],[1,1],[-1,1]], all:[[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]] };
+const norm = w => w.normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/[^A-Z]/g,'');
+const lowOf = k => typeof RANK.lowerBetter==='function' ? RANK.lowerBetter(k) : !!RANK.lowerBetter;
+const shown = (sc, k=level) => (typeof SHOWPTS==='function' && lowOf(k)) ? SHOWPTS(sc) : sc;
+const HINT_COST = typeof HINT_COST_MSG!=='undefined' ? HINT_COST_MSG : '';
+let level = KEYS[0], words = [], grid = [], N = 10, found = {}, errors = 0, hints = 0;
+let startTime = null, timerInt = null, elapsed = 0, done = false, scoreSaved = false, db = null, fsFns = null;
+let selA = null, selB = null, dragging = false, moved = false;
+const st = () => ({found:Object.keys(found).length, total:words.length, errors, hints, seconds:elapsed});
+const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
 
-/* ====== Gerar grade com colocação das palavras ====== */
-function buildGrid(level){
-  const cfg=LEVELS[level], n=cfg.size, words=cfg.words.map(o=>norm(o.w));
-  for(let attempt=0; attempt<120; attempt++){
-    const g=Array.from({length:n},()=>Array(n).fill(null));
-    const place=[];
-    let ok=true;
-    const sorted=[...words].sort((a,b)=>b.length-a.length);
-    for(const word of sorted){
-      let done=false;
-      for(let t=0;t<900 && !done;t++){
-        const [dr,dc]=cfg.dirs[rnd(cfg.dirs.length)];
-        const len=word.length;
-        const r0= dr>0 ? rnd(n-(len-1)*dr) : dr<0 ? (len-1)+rnd(n-(len-1)) : rnd(n);
-        const c0= dc>0 ? rnd(n-(len-1)*dc) : dc<0 ? (len-1)+rnd(n-(len-1)) : rnd(n);
-        let fits=true; const cells=[];
-        for(let i=0;i<len;i++){
-          const rr=r0+dr*i, cc=c0+dc*i;
-          if(rr<0||rr>=n||cc<0||cc>=n){fits=false;break;}
-          const ex=g[rr][cc];
-          if(ex!==null && ex!==word[i]){fits=false;break;}
-          cells.push([rr,cc]);
-        }
+function makeGrid(L){
+  L.size = Math.max(L.size, ...L.words.map(w=>norm(w.w).length));
+  const dirs = DIRS[L.dirs||'hv'];
+  for(let attempt=0; attempt<400; attempt++){
+    const g = Array.from({length:L.size},()=>Array(L.size).fill(''));
+    const pl = []; let ok = true;
+    const ws = L.words.map((w,i)=>({i, g:norm(w.w)})).sort((a,b)=>b.g.length-a.g.length);
+    for(const w of ws){
+      let put = false;
+      for(let t=0;t<600 && !put;t++){
+        const [dr,dc] = dirs[Math.floor(Math.random()*dirs.length)], n = w.g.length;
+        const r0 = Math.floor(Math.random()*L.size), c0 = Math.floor(Math.random()*L.size);
+        const r1 = r0+dr*(n-1), c1 = c0+dc*(n-1);
+        if(r1<0||r1>=L.size||c1<0||c1>=L.size) continue;
+        let fits = true;
+        for(let k=0;k<n;k++){ const ch = g[r0+dr*k][c0+dc*k]; if(ch && ch!==w.g[k]){ fits=false; break; } }
         if(!fits) continue;
-        for(let i=0;i<len;i++){g[cells[i][0]][cells[i][1]]=word[i];}
-        place.push({word, cells});
-        done=true;
+        for(let k=0;k<n;k++) g[r0+dr*k][c0+dc*k] = w.g[k];
+        pl[w.i] = {r0,c0,r1,c1,dr,dc,n}; put = true;
       }
-      if(!done){ok=false;break;}
+      if(!put){ ok=false; break; }
     }
     if(!ok) continue;
-    for(let r=0;r<n;r++)for(let c=0;c<n;c++) if(g[r][c]===null) g[r][c]=ALPHA[rnd(ALPHA.length)];
-    return {grid:g, placements:place, n};
+    const pool = 'AAAEEEIIOOUURRSSTTNNMMCCLLDDPPBGFVHJQXZ';
+    for(let r=0;r<L.size;r++) for(let c=0;c<L.size;c++) if(!g[r][c]) g[r][c] = pool[Math.floor(Math.random()*pool.length)];
+    /* cada palavra precisa aparecer uma vez so, em qualquer direcao */
+    const count = w => { let k=0; for(let r=0;r<L.size;r++) for(let c=0;c<L.size;c++) for(const [dr,dc] of DIRS.all){ let s=''; for(let q=0;q<w.length;q++){ const rr=r+dr*q, cc=c+dc*q; if(rr<0||rr>=L.size||cc<0||cc>=L.size) break; s+=g[rr][cc]; } if(s===w) k++; } return k; };
+    if(ws.every(w=>count(w.g)===1 + (w.g===w.g.split('').reverse().join('')?1:0))) return {g, pl};
   }
-  return null;
+  throw new Error('nao coube');
 }
-
-/* ============ RENDER ============ */
-const gridEl=document.getElementById("grid");
-function renderGrid(n){
-  gridEl.style.gridTemplateColumns=`repeat(${n},1fr)`;
-  gridEl.style.width=`min(96vw, ${Math.min(560, n*44)}px)`;
-  gridEl.innerHTML="";
-  for(let r=0;r<n;r++)for(let c=0;c<n;c++){
-    const d=document.createElement("div");
-    d.className="cell"; d.textContent=gridData[r][c];
-    d.dataset.r=r; d.dataset.c=c;
-    gridEl.appendChild(d);
-  }
+function buildLevels(){ $('levels').innerHTML = KEYS.map(k=>`<button data-lvl="${k}" onclick="setLevel('${k}')">${LEVELS[k].label}</button>`).join(''); }
+function setLevel(l){
+  level = l;
+  document.querySelectorAll('.levels button').forEach(b=>b.classList.toggle('active',b.dataset.lvl===l));
+  $('rankLevel').textContent = LEVELS[l].label;
+  restart(); loadRanking();
 }
-function renderWords(){
-  const cfg=LEVELS[curLevel];
-  const wl=document.getElementById("wordList"); wl.innerHTML="";
-  cfg.words.forEach((o,i)=>{
-    const el=document.createElement("div");
-    el.className="word"; el.id="wd"+i;
-    el.innerHTML=`${o.w}<small>${o.d}</small>`;
-    wl.appendChild(el);
+function restart(){
+  clearInterval(timerInt); timerInt=null; startTime=null; elapsed=0; errors=0; hints=0; found={}; done=false; scoreSaved=false; selA=selB=null;
+  $('timer').textContent='0s';
+  const L = LEVELS[level];
+  const mk = makeGrid(L); grid = mk.g; N = L.size;
+  words = L.words.map((w,i)=>Object.assign({i, g:norm(w.w)}, w, mk.pl[i]));
+  const clue = L.mode==='clue';
+  const order = clue ? words.slice() : words.slice().sort((a,b)=>a.g.localeCompare(b.g));
+  $('stage').innerHTML = `
+    <div class="qhead"><div class="qnum">${L.label} · ${words.length} palavras · ${L.size} por ${L.size}</div>
+      <div class="qtext">${L.title}</div><div class="qdesc">${L.desc}</div></div>
+    <div class="wsbox ${clue?'clue':'list'}">
+      <div class="zonebox" id="zbox">
+        <div class="gridw" id="gridw" style="--n:${N}">
+          <div class="grid" id="grid">${grid.map((row,r)=>row.map((ch,c)=>`<div class="cell" data-r="${r}" data-c="${c}">${ch}</div>`).join('')).join('')}</div>
+          <svg class="lines" id="lines"></svg>
+        </div>
+        <div class="tools"><button class="btn ghost" id="hintBtn" onclick="useHint()">Pedir uma dica</button></div>
+      </div>
+      <div class="wlistw"><div class="wlist" id="wlist">
+        <h4>${clue ? 'Descubra a palavra de cada pista' : 'Encontre estas palavras'}</h4>
+        ${order.map((w,k)=>`<div class="witem" id="wi-${w.i}" onclick="showWord(${w.i})">${clue
+          ? `<span class="wc">${k+1}. ${w.clue}</span><span class="wl">${w.g.length} letras</span><div class="wn" id="wn-${w.i}"></div>`
+          : `<span class="wn">${w.w.toUpperCase()}</span>`}</div>`).join('')}
+      </div></div>
+    </div>
+    <div class="fb" id="fb" aria-live="polite">${clue ? 'Leia a pista, descubra a palavra e marque no quadro.' : 'Arraste o dedo ou o mouse sobre as letras da palavra. Também dá para tocar na primeira e depois na última letra.'} Errar tira pontos.</div>
+    ${typeof NOTE!=='undefined' && NOTE ? `<p class="modelnote">${NOTE}</p>` : ''}`;
+  attachGrid(); hud();
+}
+function hud(){
+  $('hits').textContent = Object.keys(found).length+'/'+words.length; $('errs').textContent = errors;
+  $('score').textContent = shown(scoreNow(st()));
+}
+function startTimer(){
+  if(timerInt||done) return;
+  startTime = Date.now();
+  timerInt = setInterval(()=>{ elapsed = Math.floor((Date.now()-startTime)/1000); $('timer').textContent = elapsed+'s'; hud(); }, 500);
+}
+const cellAt = (x,y) => { const el = document.elementFromPoint(x,y); return el && el.classList && el.classList.contains('cell') ? el : null; };
+const cellEl = (r,c) => document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+function lineCells(a, b){
+  if(!a||!b) return [];
+  const dr = b.r-a.r, dc = b.c-a.c, n = Math.max(Math.abs(dr),Math.abs(dc));
+  if(n===0) return [a];
+  if(!(dr===0||dc===0||Math.abs(dr)===Math.abs(dc))) return [];
+  const sr = Math.sign(dr), sc = Math.sign(dc), out = [];
+  for(let k=0;k<=n;k++) out.push({r:a.r+sr*k, c:a.c+sc*k});
+  return out;
+}
+function paintSel(){
+  document.querySelectorAll('.cell.sel').forEach(e=>e.classList.remove('sel'));
+  lineCells(selA, selB||selA).forEach(p=>cellEl(p.r,p.c).classList.add('sel'));
+}
+function attachGrid(){
+  const g = $('gridw');
+  const rc = el => ({r:+el.dataset.r, c:+el.dataset.c});
+  g.addEventListener('pointerdown', e=>{
+    if(done) return; const el = cellAt(e.clientX,e.clientY); if(!el) return;
+    e.preventDefault(); startTimer();
+    const p = rc(el);
+    if(selA && !dragging && (selA.r!==p.r || selA.c!==p.c) && document.querySelector('.cell.start')){ selB = p; finishSel(); return; }
+    selA = p; selB = null; dragging = true; moved = false; paintSel();
+  });
+  window.addEventListener('pointermove', e=>{
+    if(!dragging) return; const el = cellAt(e.clientX,e.clientY); if(!el) return;
+    const p = rc(el); if(p.r===selA.r && p.c===selA.c) return;
+    if(lineCells(selA,p).length){ selB = p; moved = true; paintSel(); }
+  });
+  window.addEventListener('pointerup', ()=>{
+    if(!dragging) return; dragging = false;
+    if(moved && selB){ finishSel(); return; }
+    /* toque sem arrastar: marca a primeira letra e espera a ultima */
+    document.querySelectorAll('.cell.start').forEach(e=>e.classList.remove('start','sel'));
+    const el = cellEl(selA.r, selA.c); el.classList.add('start');
+    $('fb').className='fb'; $('fb').innerHTML='Primeira letra marcada. Agora toque na última letra da palavra.';
   });
 }
-function cellEl(r,c){return gridEl.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);}
-
-/* ============ SELEÇÃO ============ */
-let selecting=false, startRC=null, pathCells=[];
-function clearSel(){pathCells.forEach(([r,c])=>{const e=cellEl(r,c); if(e && !e.classList.contains("found")) e.classList.remove("sel");}); pathCells=[];}
-function buildPath(r0,c0,r1,c1){
-  let dr=r1-r0, dc=c1-c0;
-  if(!(dr===0||dc===0||Math.abs(dr)===Math.abs(dc))) return null;
-  const len=Math.max(Math.abs(dr),Math.abs(dc));
-  const sr=Math.sign(dr), sc=Math.sign(dc);
-  const cells=[];
-  for(let i=0;i<=len;i++) cells.push([r0+sr*i, c0+sc*i]);
-  return cells;
-}
-function paintSel(cells){clearSel(); pathCells=cells; cells.forEach(([r,c])=>{const e=cellEl(r,c); if(e && !e.classList.contains("found")) e.classList.add("sel");});}
-function cellFromPoint(x,y){const el=document.elementFromPoint(x,y); return el && el.classList.contains("cell") ? el : null;}
-
-gridEl.addEventListener("pointerdown",e=>{
-  if(finished) return;
-  const c=e.target.closest(".cell"); if(!c) return;
-  e.preventDefault();
-  selecting=true; startRC=[+c.dataset.r,+c.dataset.c];
-  paintSel([startRC.slice()]);
-});
-window.addEventListener("pointermove",e=>{
-  if(!selecting) return;
-  const c=cellFromPoint(e.clientX,e.clientY); if(!c) return;
-  const path=buildPath(startRC[0],startRC[1],+c.dataset.r,+c.dataset.c);
-  if(path) paintSel(path);
-});
-window.addEventListener("pointerup",()=>{
-  if(!selecting) return;
-  selecting=false;
-  finalizeSelection();
-});
-
-function finalizeSelection(){
-  if(pathCells.length<2){clearSel();return;}
-  let str=pathCells.map(([r,c])=>gridData[r][c]).join("");
-  const rev=str.split("").reverse().join("");
-  const cfg=LEVELS[curLevel];
-  let idx=-1;
-  for(let i=0;i<cfg.words.length;i++){
-    const w=norm(cfg.words[i].w);
-    const already=document.getElementById("wd"+i).classList.contains("done");
-    if(!already && (w===str||w===rev)){idx=i;break;}
+function finishSel(){
+  const cells = lineCells(selA, selB);
+  document.querySelectorAll('.cell.start').forEach(e=>e.classList.remove('start'));
+  const a = selA, b = selB; selA = selB = null; paintSel();
+  if(cells.length<2) return;
+  const hit = words.find(w => !found[w.i] && ((a.r===w.r0&&a.c===w.c0&&b.r===w.r1&&b.c===w.c1) || (a.r===w.r1&&a.c===w.c1&&b.r===w.r0&&b.c===w.c0)));
+  const fb = $('fb');
+  if(hit){
+    found[hit.i] = true; drawFound(hit);
+    const it = $('wi-'+hit.i); it.classList.add('done'); if($('wn-'+hit.i)) $('wn-'+hit.i).textContent = hit.w.toUpperCase();
+    document.querySelectorAll('.cell.hint').forEach(e=>{ if(+e.dataset.r===hit.r0 && +e.dataset.c===hit.c0) e.classList.remove('hint'); });
+    fb.className='fb ok'; fb.innerHTML=`<b>${hit.w.toUpperCase()}</b>${hit.fb}`;
+    hud();
+    if(Object.keys(found).length===words.length) finish();
+    return;
   }
-  if(idx>=0){
-    const color=FOUND_COLORS[idx%FOUND_COLORS.length];
-    pathCells.forEach(([r,c])=>{const e=cellEl(r,c); e.classList.remove("sel"); e.classList.add("found"); e.style.background=color;});
-    pathCells=[];
-    const wd=document.getElementById("wd"+idx);
-    wd.classList.add("done"); wd.style.background=color;
-    hits++; remaining--;
-    setFeedback("good","✅ "+cfg.words[idx].w+": "+cfg.words[idx].fb);
-    updateHUD();
-    if(remaining<=0) endGame();
-  }else{
-    errors++;
-    clearSel();
-    gridEl.classList.add("shake");
-    setTimeout(()=>gridEl.classList.remove("shake"),400);
-    setFeedback("bad","❌ Essa seleção não forma uma palavra da lista. Observe as dicas e tente outra direção.");
-    updateHUD();
-  }
+  const str = cells.map(p=>grid[p.r][p.c]).join('');
+  if(words.some(w=>found[w.i] && (w.g===str || w.g===str.split('').reverse().join('')))){ fb.className='fb'; fb.innerHTML='Essa palavra você já encontrou.'; return; }
+  const before = shown(scoreNow(st()));
+  errors++;
+  const lost = Math.max(0, before - shown(scoreNow(st())));
+  cells.forEach(p=>{ const e = cellEl(p.r,p.c); e.classList.add('bad'); setTimeout(()=>e.classList.remove('bad'),500); });
+  lostTag(lost);
+  fb.className='fb no'; fb.innerHTML=`<b>Errou${lost ? ', perdeu '+lost+' pontos' : ''}.</b>"${str}" não é uma das palavras deste nível.`;
+  hud();
 }
-
-function setFeedback(kind,txt){const f=document.getElementById("feedback"); f.className=kind; f.textContent=txt;}
-
-/* ============ HUD / TEMPO / PONTOS ============ */
-function score(){return Math.round(elapsed + errors*5);}
-function updateHUD(){
-  document.getElementById("hHits").textContent=hits+"/"+LEVELS[curLevel].words.length;
-  document.getElementById("hErr").textContent=errors;
-  document.getElementById("hScore").textContent=score();
+function lostTag(n){ if(!n) return; const t = document.createElement('span'); t.className='lost'; t.textContent='-'+n; $('zbox').appendChild(t); setTimeout(()=>t.remove(),1500); }
+function drawFound(w){
+  const gw = $('gridw'), sv = $('lines'), R = gw.getBoundingClientRect();
+  sv.setAttribute('viewBox', `0 0 ${R.width} ${R.height}`);
+  const a = cellEl(w.r0,w.c0).getBoundingClientRect(), b = cellEl(w.r1,w.c1).getBoundingClientRect();
+  const x1=a.left+a.width/2-R.left, y1=a.top+a.height/2-R.top, x2=b.left+b.width/2-R.left, y2=b.top+b.height/2-R.top;
+  sv.insertAdjacentHTML('beforeend', `<line data-w="${w.i}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--main)" stroke-width="${a.width*.78}"/>`);
+  for(let k=0;k<w.n;k++) cellEl(w.r0+w.dr*k, w.c0+w.dc*k).classList.add('found-cell');
 }
-function tick(){elapsed=(Date.now()-startTime)/1000; document.getElementById("hTime").textContent=Math.floor(elapsed)+"s"; document.getElementById("hScore").textContent=score();}
-
-/* ============ FLUXO DE JOGO ============ */
-function newGame(level){
-  curLevel=level; finished=false;
-  document.querySelectorAll(".pill").forEach(p=>p.classList.toggle("active",p.dataset.lv===level));
-  document.getElementById("final").classList.remove("show");
-  document.getElementById("saveStatus").textContent="";
-  const built=buildGrid(level);
-  if(!built){setFeedback("bad","Erro ao montar a grade. Tente outro nível.");return;}
-  gridData=built.grid; placements=built.placements;
-  remaining=LEVELS[level].words.length; errors=0; hits=0; elapsed=0;
-  renderGrid(built.n); renderWords();
-  updateHUD();
-  document.getElementById("hTime").textContent="0s";
-  setFeedback("","Nível "+LV_LABEL[level]+": encontre as "+remaining+" palavras. Boa caçada! 🐝");
-  startTime=Date.now();
-  if(timer) clearInterval(timer);
-  timer=setInterval(tick,250);
-  document.getElementById("rankLv").textContent="· "+LV_LABEL[level];
-  loadRanking();
+function redrawLines(){ const sv = $('lines'); if(!sv) return; sv.innerHTML=''; words.filter(w=>found[w.i]).forEach(drawFound); }
+window.addEventListener('resize', ()=>{ clearTimeout(window._rz); window._rz = setTimeout(redrawLines, 150); });
+function useHint(){
+  if(done) return;
+  const left = words.filter(w=>!found[w.i] && !cellEl(w.r0,w.c0).classList.contains('hint'));
+  if(!left.length){ $('fb').className='fb'; $('fb').innerHTML='As primeiras letras de todas as palavras que faltam já estão marcadas.'; return; }
+  startTimer();
+  const w = left[0], before = shown(scoreNow(st()));
+  hints++;
+  const lost = Math.max(0, before - shown(scoreNow(st())));
+  cellEl(w.r0,w.c0).classList.add('hint'); lostTag(lost);
+  $('fb').className='fb'; $('fb').innerHTML=`<b>Dica${lost ? ', custou '+lost+' pontos' : ''}.</b>A letra piscando em amarelo é o começo de uma palavra que falta.`;
+  hud();
 }
-
-function endGame(){
-  finished=true;
-  if(timer) clearInterval(timer);
-  elapsed=(Date.now()-startTime)/1000;
-  const f=document.getElementById("final"); f.classList.add("show");
-  document.getElementById("finalMsg").innerHTML=
-    `Nível <b>${LV_LABEL[curLevel]}</b><br>Tempo: <b>${Math.floor(elapsed)}s</b> · Erros: <b>${errors}</b><br>Pontuação final: <b>${score()}</b> <small>(menor é melhor)</small>`;
-  setFeedback("good","🎉 Você encontrou todas as palavras! Salve sua pontuação no ranking global.");
-  f.scrollIntoView({behavior:"smooth",block:"center"});
+function showWord(i){ const w = words[i]; if(!found[i]) return; $('fb').className='fb ok'; $('fb').innerHTML=`<b>${w.w.toUpperCase()}</b>${w.fb}`; }
+function finish(){
+  done = true; clearInterval(timerInt); timerInt=null;
+  setTimeout(renderEnd, 1300);
 }
-
-/* ============ RANKING (Firestore) ============ */
-async function loadRanking(){
-  const list=document.getElementById("rankList");
-  if(!db){const ok=await initFirebase(); if(!ok){list.innerHTML="<li>⚠️ Ranking offline. O jogo funciona normalmente.</li>";return;}}
+function renderEnd(){
+  const s = st(), sc = scoreNow(s), L = LEVELS[level];
+  const pct = Math.max(0, 100 - errors*10 - hints*10), m = (typeof END_MSG!=='undefined' ? END_MSG : [[90,'Caçada perfeita!','Você achou tudo quase sem errar.'],[50,'Bom trabalho','Algumas tentativas erradas pelo caminho.'],[0,'Todas achadas, com tropeços','Leia a revisão abaixo e jogue de novo.']]).find(x=>pct>=x[0]);
+  $('stage').innerHTML = `
+    <div class="end">
+      <h2>${m[1]}</h2><p>${m[2]}</p>
+      <div class="stats">
+        <div class="stat">${words.length}<span>Palavras</span></div>
+        <div class="stat">${shown(sc)}<span>Pontos</span></div>
+        <div class="stat">${errors}<span>Erros</span></div>
+        <div class="stat">${elapsed}s<span>Tempo</span></div>
+      </div>
+      ${typeof SCORE_NOTE!=='undefined' ? `<p style="font-size:.85rem">${SCORE_NOTE}</p>` : ''}
+      <div class="savebox">
+        <input id="playerName" maxlength="20" placeholder="Seu nome (até 20 letras)">
+        <button class="btn" id="saveBtn" onclick="saveScore()">Salvar no ranking</button>
+      </div>
+      <p id="saveStatus" style="margin-top:8px;font-size:.85rem"></p>
+      <button class="btn ghost" style="margin-top:10px" onclick="restart()">Jogar de novo</button>
+      <div class="review"><h3>O que cada palavra quer dizer</h3><ul>${words.map(w=>`<li><span class="w">${w.w.toUpperCase()}</span>${L.mode==='clue' ? ' <span style="color:var(--soft)">('+w.clue+')</span>' : ''}. ${w.fb}</li>`).join('')}</ul></div>
+    </div>`;
+}
+async function initFirebase(){
   try{
-    const {collection,query,orderBy,limit,getDocs}=fb;
-    const q=query(collection(db,"games",GAME_ID,"scores"), orderBy("score","asc"), limit(80));
-    const snap=await getDocs(q);
-    const rows=[];
-    snap.forEach(d=>{const v=d.data(); if(v.level===curLevel) rows.push(v);});
-    rows.sort((a,b)=>(a.score-b.score)||((a.seconds||0)-(b.seconds||0)));
-    const top=rows.slice(0,10);
-    if(!top.length){list.innerHTML="<li>Seja o primeiro a pontuar neste nível!</li>";return;}
-    list.innerHTML=top.map((r,i)=>`<li><span><span class="pos">${i+1}.</span> ${esc(r.name)}</span><span>${r.score} pts · ${Math.floor(r.seconds||0)}s</span></li>`).join("");
-  }catch(e){console.warn(e); list.innerHTML="<li>⚠️ Não foi possível carregar o ranking agora.</li>";}
-}
-function esc(s){return String(s||"Anônimo").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])).slice(0,20);}
-
-async function saveScore(){
-  const st=document.getElementById("saveStatus");
-  const name=esc(document.getElementById("nameIn").value.trim()||"Anônimo");
-  if(!db){const ok=await initFirebase(); if(!ok){st.textContent="⚠️ Sem conexão: não foi possível salvar, mas seu jogo valeu!";return;}}
-  st.textContent="Salvando…";
-  try{
-    const {collection,addDoc,serverTimestamp}=fb;
-    await addDoc(collection(db,"games",GAME_ID,"scores"),{
-      name, score:score(), seconds:Math.floor(elapsed), level:curLevel, ts:serverTimestamp()
-    });
-    st.textContent="✅ Pontuação salva no ranking global!";
+    const appM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const fsM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    db=fsM.getFirestore(appM.initializeApp(firebaseConfig)); fsFns=fsM;
     loadRanking();
-  }catch(e){console.warn(e); st.textContent="⚠️ Não foi possível salvar agora. Tente novamente.";}
+  }catch(e){
+    $('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';
+    $('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';
+  }
 }
-
-/* ============ EVENTOS ============ */
-document.querySelectorAll(".pill").forEach(p=>p.addEventListener("click",()=>newGame(p.dataset.lv)));
-document.getElementById("saveBtn").addEventListener("click",saveScore);
-document.getElementById("againBtn").addEventListener("click",()=>newGame(curLevel));
-
-/* ============ INÍCIO ============ */
+async function saveScore(){
+  if(scoreSaved) return;
+  const name=$('playerName').value.trim(), stt=$('saveStatus');
+  if(!name){stt.textContent='Digite seu nome primeiro.';return;}
+  if(!db){stt.textContent='Sem conexão com o ranking. Seu resultado não foi enviado.';return;}
+  try{
+    $('saveBtn').disabled=true;
+    await fsFns.addDoc(fsFns.collection(db,'games',GAME_ID,'scores'), saveDoc(name.slice(0,20), st(), level, fsFns));
+    scoreSaved=true; stt.textContent='Salvo no Ranking Global!'; loadRanking();
+  }catch(e){ $('saveBtn').disabled=false; stt.textContent='Erro ao salvar. Verifique a internet e tente de novo.'; }
+}
+async function loadRanking(){
+  if(!db) return;
+  const list=$('rankList'), asked=level;
+  try{
+    const q=fsFns.query(fsFns.collection(db,'games',GAME_ID,'scores'),fsFns.where(RANK.field,'==',RANK.val(asked)),fsFns.limit(1000));
+    const snap=await fsFns.getDocs(q);
+    if(asked!==level) return;
+    const rows=[]; snap.forEach(d=>rows.push(d.data()));
+    const sec = r => Number(r.seconds ?? r.time ?? r.tempo) || 0, scr = r => Number(r.score) || 0;
+    const low = lowOf(asked);
+    rows.sort((a,b)=> (low ? scr(a)-scr(b) : scr(b)-scr(a)) || (sec(a)-sec(b)));
+    if(!rows.length){list.innerHTML='<li><span>Seja o primeiro do ranking!</span></li>';return;}
+    list.innerHTML=rows.slice(0,10).map((r,i)=>
+      `<li><span><span class="pos">${i+1}º</span>${esc(r.name||'?')}</span><span>${shown(scr(r), asked)} pts · ${sec(r)}s</span></li>`).join('');
+    $('rankNote').textContent = (low && shown(0, asked)===0) ? 'Neste nível, menos pontos é melhor.' : '';
+  }catch(e){ list.innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>'; }
+}
+buildLevels();
+setLevel(KEYS[0]);
 initFirebase();
-newGame("basico");
 </script>
 </body>
 </html>
