@@ -209,7 +209,17 @@
     .zlab{font-size:.86rem} .zone{min-height:120px}
     .placed{font-size:.78rem;padding:4px 7px}
   }
-  @media(prefers-reduced-motion:reduce){.placed,.scard.shake{animation:none}}
+  .placed.wrong{border-color:#fca5a5;background:#fef2f2;color:#991b1b}
+  .placed.wrong svg{background:#fee2e2}
+  .placed.wrong::after{content:'x';margin-left:4px;font-weight:900;color:#dc2626}
+  .placed.moving{position:relative;z-index:50;transition:transform .8s cubic-bezier(.3,.7,.3,1);box-shadow:0 10px 24px rgba(15,23,42,.22)}
+  .placed.fixed{border-color:#22c55e;background:#dcfce7;color:#14532d;animation:pop .5s}
+  .placed.fixed::after{content:'corrigido';margin-left:6px;font-size:.68rem;font-weight:800;color:#15803d;background:#bbf7d0;border-radius:8px;padding:1px 6px}
+  @keyframes pop{40%{transform:scale(1.12)}}
+  .zone{position:relative}
+  .lost{position:absolute;right:10px;top:8px;background:#dc2626;color:#fff;font-weight:900;font-size:.9rem;border-radius:999px;padding:3px 10px;pointer-events:none;animation:lost 1.4s ease-out forwards;z-index:5}
+  @keyframes lost{0%{opacity:0;transform:translateY(6px)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-18px)}}
+  @media(prefers-reduced-motion:reduce){.placed,.scard.shake,.lost{animation:none}.placed.moving{transition:none}}
   .goals{display:grid;gap:7px}
   .gchip{display:flex;align-items:center;gap:10px;font-size:1.02rem;font-weight:800;color:var(--ink);background:var(--t50);border:2px solid var(--t300);border-radius:12px;padding:7px 12px;line-height:1.25}
   .gchip i{flex:none;width:24px;height:24px;border-radius:50%;border:3px solid var(--t300);background:#fff;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:.9rem;color:#fff}
@@ -304,10 +314,10 @@ const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 /* ---------- dados deste jogo ---------- */
 const GAME_ID = "2026-06-17-mosaico-caatinga";
 /* pontuacao das fases de classificar igual a da versao anterior: acertos de primeira valem ate 1000, e cada segundo depois de 30 tira 2 */
-function scoreNow(s){ if(s.city) return s.cityScore; return Math.max(0, Math.round(s.hits/s.total*1000 - Math.max(0, s.seconds-30)*2)); }
+function scoreNow(s){ if(s.city) return s.cityScore; return Math.max(0, Math.round(s.hits/s.total*1000 - 50*s.errors - Math.max(0, s.seconds-30)*2)); }
 function saveDoc(name, s, lv, f){ return {name, score:scoreNow(s), level:lv, seconds:s.seconds, ts:f.serverTimestamp()}; }
 const RANK = {field:'level', val:k=>k};
-const SCORE_NOTE = 'Os cartões certos de primeira valem até 1000 pontos. Depois de 30 segundos, cada segundo tira 2.';
+const SCORE_NOTE = 'Os cartões certos valem até 1000 pontos. Cada erro tira 50. Depois de 30 segundos, cada segundo tira 2.';
 const END_MSG = [
   [100, 'Caatinga em festa!', 'Você acertou todos os cartões de primeira.'],
   [70, 'Bom trabalho', 'Poucos erros. Confira abaixo os cartões para revisar.'],
@@ -527,7 +537,10 @@ let sel = null, startTime = null, timerInt = null, elapsed = 0, scoreSaved = fal
 let db = null, fsFns = null;
 const TARGET = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/></svg>`;
 const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
-const st = () => ({placed, hits, errors, seconds:elapsed, total:items.length, city:isCity(), cityScore:cityScore()});
+const st = () => ({placed:hits, filled:placed, hits, errors, seconds:elapsed, total:items.length, city:isCity(), cityScore:cityScore()});
+/* niveis em que menos e melhor podem mostrar pontos que caem: SHOWPTS converte, sem mudar o que vai para o ranking */
+const lowOf = k => typeof RANK.lowerBetter==='function' ? RANK.lowerBetter(k) : !!RANK.lowerBetter;
+const shown = (sc, k=level) => (typeof SHOWPTS==='function' && lowOf(k) && !(LEVELS[k] && LEVELS[k].mode)) ? SHOWPTS(sc) : sc;
 /* ---------- modo cidade: o jogador coloca acoes na cidade para baixar poluentes ---------- */
 let cityPlaced = [], citySwaps = 0;
 const isCity = () => LEVELS[level] && LEVELS[level].mode==='city';
@@ -587,7 +600,7 @@ function restart(){
   hud();
 }
 /* limpeza da cena: comeca poluida, cada acerto limpa, cada erro suja */
-const clean = () => Math.max(0, Math.min(1, 0.2 + 0.8*(items.length? placed/items.length : 0) - 0.07*errors));
+const clean = () => Math.max(0, Math.min(1, 0.2 + 0.8*(items.length? hits/items.length : 0) - 0.07*errors));
 function scene(){
   if(typeof renderScene!=='function' || !$('scene')) return;
   const c = clean(); $('scene').innerHTML = renderScene(c);
@@ -597,8 +610,8 @@ function hud(){
   $('lHits').textContent = isCity() ? 'Ações' : 'Acertos'; $('lErrs').textContent = isCity() ? 'Trocas' : 'Erros';
   if(isCity()){ cityHud(); return; }
   scene();
-  $('hits').textContent = placed+'/'+items.length; $('errs').textContent = errors;
-  $('score').textContent = scoreNow(st());
+  $('hits').textContent = hits+'/'+items.length; $('errs').textContent = errors;
+  $('score').textContent = shown(scoreNow(st()));
   const pb = $('progbar'); if(pb){ pb.style.width = (items.length? placed/items.length*100 : 0)+'%';
     $('progtxt').textContent = placed===items.length ? 'Tudo classificado!' : `Faltam ${items.length-placed} de ${items.length} cartões`; }
 }
@@ -668,26 +681,57 @@ function drop(i, zid){
   const it = items.find(x=>x.i===i), card = document.querySelector(`.scard[data-i="${i}"]`), fb = $('fb');
   if(!it || !card) return;
   select(null);
+  const before = shown(scoreNow(st()));
+  placed++;
+  card.remove();
+  const ico = card.querySelector('.cart') ? card.querySelector('.cart').innerHTML : '';
   if(it.z === zid){
-    placed++; hits += missed[i] ? 0 : 1;
-    card.remove();
-    const ico = card.querySelector('.cart') ? card.querySelector('.cart').innerHTML : '';
+    hits++;
     $('zi-'+zid).insertAdjacentHTML('beforeend', `<span class="placed">${ico}${it.t}</span>`);
-    $('zc-'+zid).textContent = $('zi-'+zid).children.length;
     flash(zid,'flashok');
     fb.className='fb ok'; fb.innerHTML=`<b>Certo!</b>${it.fb}`;
-    hud();
-    if(placed===items.length) setTimeout(renderEnd, 900);
   } else {
-    errors++; missed[i] = true; wrongTry[i] = (wrongTry[i]||0)+1;
-    card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),400);
+    errors++; missed[i] = true;
+    $('zi-'+zid).insertAdjacentHTML('beforeend', `<span class="placed wrong" data-i="${i}">${ico}${it.t}</span>`);
     flash(zid,'flashno');
+    const lost = Math.max(0, before - shown(scoreNow(st())));
+    const z = document.querySelector(`.zone[data-z="${zid}"]`);
+    if(lost){ const tag = document.createElement('span'); tag.className='lost'; tag.textContent='-'+lost; z.appendChild(tag); setTimeout(()=>tag.remove(),1500); }
     fb.className='fb no';
-    fb.innerHTML = wrongTry[i]>=2
-      ? `<b>Ainda não é aí.</b>Uma pista: ${it.hint || it.fb}`
-      : `<b>Não é nessa caixa.</b>"${it.t}" volta para a mesa. Pense de novo e tente outra caixa.`;
-    hud();
+    fb.innerHTML = `<b>Errou${lost ? ', perdeu '+lost+' pontos' : ''}.</b>"${it.t}" não vai nessa caixa. No fim do nível ele vai sozinho para a caixa certa.`;
   }
+  document.querySelectorAll('.zone').forEach(z=>{ const c=$('zc-'+z.dataset.z); if(c) c.textContent = $('zi-'+z.dataset.z).children.length; });
+  hud();
+  if(placed===items.length) finishClassify();
+}
+/* no fim, cada cartao errado anda sozinho ate a caixa certa e a explicacao aparece */
+function finishClassify(){
+  done = true; clearInterval(timerInt); timerInt=null;
+  const wrong = [...document.querySelectorAll('.placed.wrong')];
+  const fb = $('fb');
+  if(!wrong.length){ setTimeout(renderEnd, 900); return; }
+  const lv = level;
+  fb.className='fb'; fb.innerHTML='<b>Agora veja onde ficam os cartões que foram para a caixa errada.</b>';
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let k = 0;
+  const step = ()=>{
+    if(level!==lv) return;
+    if(k>=wrong.length){ setTimeout(()=>{ if(level===lv) renderEnd(); }, 1600); return; }
+    const el = wrong[k++], it = items.find(x=>x.i===+el.dataset.i), dest = $('zi-'+it.z);
+    const zEl = document.querySelector(`.zone[data-z="${it.z}"]`);
+    zEl.scrollIntoView({behavior: still?'auto':'smooth', block:'nearest'});
+    const r0 = el.getBoundingClientRect();
+    dest.appendChild(el);
+    const r1 = el.getBoundingClientRect();
+    el.classList.remove('wrong'); el.classList.add('moving');
+    el.style.transition='none'; el.style.transform=`translate(${r0.left-r1.left}px,${r0.top-r1.top}px)`;
+    el.offsetWidth; el.style.transition=''; el.style.transform='';
+    document.querySelectorAll('.zone').forEach(z=>{ const c=$('zc-'+z.dataset.z); if(c) c.textContent = $('zi-'+z.dataset.z).children.length; });
+    fb.className='fb ok'; fb.innerHTML=`<b>${it.t} vai em ${zoneOf(it.z).label}.</b>${it.fb}`;
+    setTimeout(()=>{ el.classList.remove('moving'); el.classList.add('fixed'); flash(it.z,'flashok'); }, still?0:820);
+    setTimeout(step, still?1800:2600);
+  };
+  setTimeout(step, 900);
 }
 function renderEnd(){
   done = true; clearInterval(timerInt); timerInt=null;
@@ -699,8 +743,8 @@ function renderEnd(){
     <div class="end">
       <h2>${m[1]}</h2><p>${m[2]}</p>
       <div class="stats">
-        <div class="stat">${hits}/${n}<span>Certos de primeira</span></div>
-        <div class="stat">${sc}<span>Pontos</span></div>
+        <div class="stat">${hits}/${n}<span>Acertos</span></div>
+        <div class="stat">${shown(sc)}<span>Pontos</span></div>
         <div class="stat">${errors}<span>Erros</span></div>
         <div class="stat">${elapsed}s<span>Tempo</span></div>
       </div>
@@ -839,12 +883,12 @@ async function loadRanking(){
     if(asked!==level) return;
     const rows=[]; snap.forEach(d=>rows.push(d.data()));
     const sec = r => Number(r.seconds ?? r.tempo) || 0, scr = r => Number(r.score) || 0;
-    const low = typeof RANK.lowerBetter==='function' ? RANK.lowerBetter(asked) : !!RANK.lowerBetter;
+    const low = lowOf(asked);
     rows.sort((a,b)=> (low ? scr(a)-scr(b) : scr(b)-scr(a)) || (sec(a)-sec(b)));
     if(!rows.length){list.innerHTML='<li><span>Seja o primeiro do ranking!</span></li>';return;}
     list.innerHTML=rows.slice(0,10).map((r,i)=>
-      `<li><span><span class="pos">${i+1}º</span>${esc(r.name||'?')}</span><span>${scr(r)} ${RANK.unit||'pts'} · ${sec(r)}s</span></li>`).join('');
-    $('rankNote').textContent = low ? 'Neste nível, menos pontos é melhor.' : '';
+      `<li><span><span class="pos">${i+1}º</span>${esc(r.name||'?')}</span><span>${shown(scr(r), asked)} ${RANK.unit||'pts'} · ${sec(r)}s</span></li>`).join('');
+    $('rankNote').textContent = (low && shown(0, asked)===0) ? 'Neste nível, menos pontos é melhor.' : '';
   }catch(e){ list.innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>'; }
 }
 
