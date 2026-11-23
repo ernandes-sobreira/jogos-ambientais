@@ -2,205 +2,242 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🌡️ Arrasta-Estufa: Missão Atmosfera</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arrasta Estufa</title>
 <style>
   :root{
-    --bg1:#13212e;
-    --bg2:#6e3417;
-    --card:#ffffff;
-    --card2:#f4f7fa;
-    --ink:#1c2733;
-    --muted:#5d6b78;
-    --accent:#ff9e3d;
-    --accent-d:#e07d18;
-    --success:#2bb673;
-    --success-bg:#e4f8ee;
-    --danger:#e2503f;
-    --danger-bg:#fdeae7;
-    --line:#dde4ea;
-    --shadow:0 8px 26px rgba(8,18,28,.18);
-    --radius:16px;
+    --ink:#0f2f44; --soft:#4b6a7d; --line:#dbe7ee; --ok:#16a34a; --err:#dc2626;
+    --t50:#f0f9ff; --t100:#e0f2fe; --t300:#7dd3fc; --t500:#0ea5e9; --main:#0284c7; --deep:#0369a1; --dark:#075985; --glow:rgba(2,132,199,.28);
   }
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  *{box-sizing:border-box;margin:0;padding:0}
   body{
-    margin:0;padding:18px 12px 40px;
-    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-    color:var(--ink);
-    background:linear-gradient(160deg,var(--bg1),var(--bg2));
-    background-attachment:fixed;
-    min-height:100vh;
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+    min-height:100vh;color:var(--ink);background:#ffffff;
+    display:flex;flex-direction:column;align-items:center;padding:12px 14px 40px;
   }
-  .wrap{width:min(960px,96vw);margin:0 auto;}
-  header{text-align:center;color:#fff;margin-bottom:14px;}
-  h1{font-size:clamp(1.5rem,5vw,2.5rem);margin:0 0 4px;line-height:1.1;text-shadow:0 2px 12px rgba(0,0,0,.35);}
-  .sub{color:#ffe7cf;font-size:clamp(.85rem,2.6vw,1rem);opacity:.95;margin:0;}
+  .top{width:100%;max-width:1040px;display:flex;justify-content:flex-start}
+  .hub{display:inline-flex;align-items:center;gap:6px;color:var(--deep);text-decoration:none;
+    font-weight:600;font-size:.9rem;padding:7px 12px;border-radius:20px;border:1.5px solid var(--line)}
+  .hub:hover{background:var(--tint)}
+  .hub svg{width:14px;height:14px}
+  header{text-align:center;max-width:720px;margin-top:6px}
+  h1{font-size:clamp(1.45rem,5vw,2.2rem);display:flex;align-items:center;justify-content:center;gap:10px}
+  h1 svg{width:.95em;height:.95em}
+  h1 .spark{color:var(--main)}
+  .sub{color:var(--soft);font-size:.95rem;margin:4px 0 12px}
+  .levels{display:flex;gap:8px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+  .levels button{border:2px solid var(--line);background:#fff;color:var(--ink);padding:8px 16px;border-radius:30px;
+    font-size:.92rem;cursor:pointer;transition:.2s;font-weight:600;font-family:inherit}
+  .levels button{border-color:var(--main);color:var(--deep)}
+  .levels button:hover{background:var(--tint)}
+  .levels button.active{background:var(--main);border-color:var(--main);color:#fff;box-shadow:0 4px 12px var(--glow)}
+  .hud{display:flex;gap:8px;justify-content:center;align-items:center;margin:4px 0 12px;font-size:.9rem;flex-wrap:wrap}
+  .hud span{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:30px;color:#fff;font-weight:600}
+  .hud b{font-size:1.05rem;font-weight:800}
+  .hud .h1{background:#16a34a} .hud .h2{background:#f97316} .hud .h3{background:#7c3aed} .hud .h4{background:#0ea5e9}
 
-  /* níveis */
-  .levels{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:16px 0 10px;}
-  .pill{
-    border:none;cursor:pointer;font-weight:700;font-size:clamp(.8rem,2.5vw,1rem);
-    padding:10px 20px;border-radius:999px;color:#fff;
-    background:rgba(255,255,255,.16);backdrop-filter:blur(4px);
-    transition:transform .2s ease,background .2s ease,box-shadow .2s ease;
+  .card{width:min(680px,100%);background:#fff;border:3px solid var(--main);border-radius:22px;
+    padding:0 0 20px;box-shadow:0 12px 30px var(--glow);overflow:hidden}
+  #stage{padding:0 20px}
+  .strip{display:flex;gap:5px;justify-content:center;align-items:flex-end;flex-wrap:wrap;min-height:54px;
+    padding:10px 10px 8px;background:linear-gradient(180deg,#e0f2fe 0%,#f0f9ff 62%,var(--pale) 62%,var(--pale) 100%)}
+  .slot{width:36px;height:36px;display:flex;align-items:center;justify-content:center}
+  .slot svg{width:100%;height:100%}
+  .slot.empty{align-items:flex-end;padding-bottom:3px}
+  .slot.empty::after{content:"";width:11px;height:11px;border-radius:50%;background:#fff;border:3px solid var(--main);opacity:.45}
+  .slot.now::after{opacity:1;background:var(--acc);border-color:#fff;box-shadow:0 0 0 3px var(--acc);animation:pulse 1.1s infinite}
+  @keyframes pulse{50%{transform:scale(1.25)}}
+  .slot.pop svg{animation:grow .45s cubic-bezier(.3,1.5,.5,1)}
+  @keyframes grow{from{transform:scale(.2) translateY(8px);opacity:0}to{transform:none;opacity:1}}
+  .qhead{margin:0 -20px 16px;padding:14px 20px 16px;background:linear-gradient(135deg,var(--main),var(--deep));color:#fff}
+  .qnum{display:inline-block;font-size:.74rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+    background:rgba(255,255,255,.22);padding:3px 10px;border-radius:20px}
+  .qtext{font-size:1.22rem;font-weight:700;line-height:1.35;margin-top:8px}
+  .opts{display:grid;gap:9px}
+  .opt{display:flex;gap:12px;align-items:center;text-align:left;width:100%;background:#fff;border:2px solid var(--line);
+    border-radius:14px;padding:11px 14px;font-size:1rem;line-height:1.35;color:var(--ink);cursor:pointer;
+    font-family:inherit;transition:border-color .15s,background .15s,transform .15s}
+  .opt{--c:#0ea5e9;--ct:#f0f9ff;border-color:var(--c);background:var(--ct);font-weight:500}
+  .opt:nth-child(2){--c:#f97316;--ct:#fff7ed} .opt:nth-child(3){--c:#8b5cf6;--ct:#f5f3ff} .opt:nth-child(4){--c:#ec4899;--ct:#fdf2f8}
+  .opt .k{flex:none;width:34px;height:34px;border-radius:50%;background:var(--c);color:#fff;
+    font-weight:800;display:flex;align-items:center;justify-content:center;font-size:1rem}
+  .opt:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(15,47,68,.14)}
+  .opt:disabled{cursor:default}
+  .opt.right{border-color:var(--ok);background:#dcfce7;font-weight:700}
+  .opt.right .k{background:var(--ok);color:#fff}
+  .opt.wrong{border-color:var(--err);background:#fee2e2;animation:shake .3s}
+  .opt.wrong .k{background:var(--err);color:#fff}
+  .opt.dim{opacity:.5;background:#fff;border-color:var(--line)} .opt.dim .k{background:#94a3b8}
+  @keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+  .fb{margin-top:14px;border-radius:14px;padding:12px 14px;font-size:.96rem;line-height:1.45;background:#fffbeb;
+    border:2px dashed #fcd34d;min-height:52px;color:#92400e}
+  .fb.ok{background:#dcfce7;border:2px solid var(--ok);color:var(--ink)}
+  .fb.no{background:#fee2e2;border:2px solid var(--err);color:var(--ink)}
+  .fb b{display:block;margin-bottom:2px}
+  .fb.ok>b{color:#166534;font-size:1.05rem} .fb.no>b{color:#b91c1c;font-size:1.05rem}
+  .fb .more{margin-top:8px;padding:8px 10px;border-radius:10px;background:#fff} .fb .more b{color:#166534}
+  .fb .more{margin-top:6px}
+  .btn{background:var(--main);color:#fff;border:0;padding:11px 20px;border-radius:12px;font-weight:700;cursor:pointer;
+    font-size:1rem;font-family:inherit}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--line)}
+  .next{display:none;margin:14px auto 0;background:var(--acc);font-size:1.05rem;padding:12px 26px;box-shadow:0 5px 14px rgba(15,47,68,.2)}
+  .next.show{display:block}
+
+  .end{text-align:center;padding-top:16px}
+  .end h2{font-size:1.5rem;margin:6px 0 4px;color:var(--deep)}
+  .end p{color:var(--soft)}
+  .stats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+  .stat{background:#16a34a;border-radius:14px;padding:9px 16px;font-weight:800;font-size:1.2rem;color:#fff;min-width:84px}
+  .stat:nth-child(2){background:#7c3aed} .stat:nth-child(3){background:#f97316} .stat:nth-child(4){background:#0ea5e9}
+  .stat span{display:block;font-size:.72rem;font-weight:600;color:#fff;opacity:.92}
+  .savebox{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+  .savebox input{padding:10px 12px;border-radius:10px;border:2px solid var(--line);font-size:1rem;width:220px;font-family:inherit}
+  .review{text-align:left;margin-top:16px;border-top:2px solid var(--line);padding-top:12px}
+  .review h3{font-size:1rem;margin-bottom:6px}
+  .review li{list-style:none;padding:8px 0;border-bottom:1px solid var(--line);font-size:.93rem;line-height:1.4}
+  .review li:last-child{border-bottom:0}
+  .review .a{color:#166534;font-weight:700}
+
+  .ranking{margin-top:16px;width:min(680px,100%);background:#fff;border:3px solid #fbbf24;border-radius:18px;padding:0 16px 12px;overflow:hidden}
+  .ranking h3{font-size:1.02rem;margin:0 -16px 8px;padding:10px 16px;background:#fbbf24;color:#451a03}
+  .ranking h3 span{color:#fff;background:#b45309;padding:2px 10px;border-radius:20px;font-size:.88rem}
+  .ranking li:nth-child(1) .pos{color:#b45309} .ranking li:nth-child(1){font-weight:700}
+  .ranking ol{list-style:none}
+  .ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.93rem}
+  .ranking li:last-child{border-bottom:0}
+  .ranking .pos{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+  .note{font-size:.8rem;color:var(--soft);margin-top:6px}
+  footer{margin-top:22px;font-size:.8rem;color:var(--soft);text-align:center;line-height:1.6}
+  footer .credit{font-weight:700;color:var(--ink)}
+
+
+  /* ---- cor unica por jogo: todos os destaques sao tons da mesma cor ---- */
+  :root{--tint:var(--t100);--pale:var(--t300);--acc:var(--dark)}
+  .hub:hover{background:var(--t50)}
+  .levels button{border-color:var(--t300)}
+  .hud .h1{background:var(--t500)} .hud .h2{background:var(--main)} .hud .h3{background:var(--deep)} .hud .h4{background:var(--dark)}
+  .strip{background:linear-gradient(180deg,var(--t50) 0%,var(--t100) 62%,var(--t300) 62%,var(--t300) 100%)}
+  .qhead{background:linear-gradient(135deg,var(--main),var(--dark))}
+  .opt,.opt:nth-child(2),.opt:nth-child(3),.opt:nth-child(4){--c:var(--main);--ct:var(--t50);border-color:var(--t300)}
+  .opt:not(:disabled):hover{border-color:var(--main);background:var(--t100)}
+  .fb{background:var(--t50);border:2px dashed var(--t300);color:var(--deep)}
+  .next{background:var(--deep)}
+  .stat{background:var(--t500)} .stat:nth-child(2){background:var(--main)} .stat:nth-child(3){background:var(--deep)} .stat:nth-child(4){background:var(--dark)}
+  .ranking{border-color:var(--main)}
+  .ranking h3{background:var(--main);color:#fff}
+  .ranking h3 span{background:var(--dark);color:#fff}
+  .ranking li:nth-child(1) .pos{color:var(--deep)}
+  @media(max-width:560px){
+    body{padding:8px 8px 32px}
+    .sub{display:none}
+    h1{margin-bottom:8px}
+    .hub{padding:4px 10px;font-size:.82rem}
+    .levels button{padding:7px 12px;font-size:.85rem}
+    .hud{gap:10px;font-size:.86rem;margin:2px 0 8px}
+    .card{padding:0 0 14px;border-radius:18px}
+    .qtext{font-size:1.05rem;margin-bottom:10px}
+    .opt{padding:9px 10px;font-size:.94rem;gap:9px}
+    .opt .k{width:28px;height:28px;font-size:.86rem}
+    .slot{width:27px;height:27px}
+    .strip{min-height:44px;padding:8px 6px 6px}
+    .qhead{margin:0 -12px 12px;padding:10px 12px 12px}
+    #stage{padding:0 12px}
+    .hud span{padding:4px 9px;font-size:.78rem} .hud b{font-size:.92rem} .hud{gap:5px}
+    .fb{font-size:.9rem}
   }
-  .pill:hover{transform:translateY(-2px);}
-  .pill.active{background:var(--accent);color:#22150a;box-shadow:0 6px 18px rgba(255,158,61,.5);}
+  @media(prefers-reduced-motion:reduce){.slot.pop svg,.opt.wrong{animation:none}}
 
-  .panel{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:14px;}
-
-  .instr{font-size:.95rem;color:var(--muted);margin:0;line-height:1.45;}
-  .instr b{color:var(--ink);}
-
-  /* HUD */
-  .hud{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;}
-  .stat{
-    background:var(--card2);border:1px solid var(--line);border-radius:12px;
-    padding:8px 14px;font-weight:700;font-size:.9rem;color:var(--ink);min-width:92px;text-align:center;
+  /* ---------- classificar arrastando ---------- */
+  .card{width:min(860px,100%)} .ranking{width:min(860px,100%)}
+  .qtext{font-size:1.15rem}
+  .qdesc{font-size:.96rem;line-height:1.45;margin-top:6px;opacity:.96}
+  .goalbox{margin-top:12px;background:#fff;border-radius:16px;padding:10px 14px;box-shadow:0 6px 16px rgba(0,0,0,.18);color:var(--ink)}
+  .goalbox h4{display:flex;align-items:center;gap:8px;font-size:.8rem;letter-spacing:.8px;text-transform:uppercase;color:var(--deep);margin-bottom:6px}
+  .goalbox h4 svg{width:22px;height:22px}
+  .goalbox p{font-size:1.02rem;font-weight:700;line-height:1.35}
+  .prog{height:14px;border-radius:10px;background:var(--t100);border:1.5px solid var(--t300);overflow:hidden;margin:2px 0 6px}
+  .prog i{display:block;height:100%;background:linear-gradient(90deg,var(--t500),var(--main));transition:width .3s}
+  .progtxt{font-size:.85rem;font-weight:700;color:var(--deep);text-align:center;margin-bottom:12px}
+  .trayw{background:var(--t50);border:2px dashed var(--t300);border-radius:16px;padding:10px;margin-bottom:12px}
+  .trayw h5{font-size:.78rem;letter-spacing:.6px;text-transform:uppercase;color:var(--deep);margin:0 0 8px 4px}
+  .tray{display:flex;flex-wrap:wrap;gap:8px;min-height:48px}
+  .tray:empty::after{content:"Todos os cartões foram classificados.";color:var(--soft);font-size:.9rem;padding:10px}
+  .scard{font-family:inherit;font-size:.98rem;font-weight:700;color:var(--ink);background:#fff;border:2px solid var(--t300);border-left:7px solid var(--main);
+    border-radius:12px;padding:10px 13px;cursor:grab;touch-action:none;user-select:none;line-height:1.25;text-align:left;
+    box-shadow:0 3px 8px rgba(15,47,68,.10);transition:transform .12s,box-shadow .12s,border-color .12s}
+  .scard:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(15,47,68,.16)}
+  .scard.sel{border-color:var(--deep);background:var(--t100);box-shadow:0 0 0 3px var(--glow)}
+  .scard.dragging{cursor:grabbing;box-shadow:0 14px 28px rgba(15,47,68,.28);transform:rotate(-2deg) scale(1.04);opacity:.97}
+  .scard.shake{animation:shake .35s;border-color:var(--err);border-left-color:var(--err);background:#fee2e2}
+  .ghost{visibility:hidden}
+  .zones{display:grid;gap:10px;grid-template-columns:repeat(var(--nz,2),1fr)}
+  .zone{background:#fff;border:3px solid var(--t300);border-radius:18px;padding:0 0 10px;min-height:150px;display:flex;flex-direction:column;overflow:hidden;cursor:pointer;
+    transition:border-color .15s,box-shadow .15s,transform .15s}
+  .zone.over,.zone.target{border-color:var(--main);box-shadow:0 0 0 4px var(--glow)}
+  .zone.flashok{border-color:var(--ok);box-shadow:0 0 0 4px rgba(22,163,74,.25)}
+  .zone.flashno{border-color:var(--err);box-shadow:0 0 0 4px rgba(220,38,38,.2)}
+  .zhead{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--t100);border-bottom:2px solid var(--t300)}
+  .zico{flex:none;width:44px;height:44px;border-radius:12px;background:#fff;border:2px solid var(--t300);display:flex;align-items:center;justify-content:center}
+  .zico svg{width:32px;height:32px}
+  .zlab{font-weight:800;font-size:.98rem;line-height:1.2;color:var(--dark)}
+  .zcount{margin-left:auto;flex:none;background:var(--main);color:#fff;font-weight:800;font-size:.85rem;border-radius:20px;padding:2px 9px}
+  .zitems{display:flex;flex-wrap:wrap;gap:6px;padding:10px 10px 0}
+  .placed{font-size:.86rem;font-weight:700;background:#dcfce7;border:2px solid #86efac;color:#14532d;border-radius:10px;padding:5px 9px;animation:land .35s cubic-bezier(.3,1.5,.5,1)}
+  @keyframes land{from{transform:scale(.5);opacity:0}to{transform:none;opacity:1}}
+  .fb{margin-top:12px}
+  .modelnote{font-size:.78rem;color:var(--soft);text-align:center;margin-top:12px;line-height:1.4}
+  .review .z{color:var(--deep);font-weight:700}
+  @media(max-width:700px){ .zones{grid-template-columns:repeat(min(var(--nz,2),2),1fr)} }
+  @media(max-width:560px){
+    .scard{font-size:.9rem;padding:8px 10px}
+    .zones{grid-template-columns:1fr 1fr;gap:7px}
+    .zhead{padding:8px;gap:7px;flex-wrap:wrap} .zico{width:36px;height:36px} .zico svg{width:26px;height:26px}
+    .zlab{font-size:.86rem} .zone{min-height:120px}
+    .placed{font-size:.78rem;padding:4px 7px}
   }
-  .stat span{display:block;font-size:.68rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+  @media(prefers-reduced-motion:reduce){.placed,.scard.shake{animation:none}}
 
-  /* tray de itens */
-  .tray{
-    display:flex;flex-wrap:wrap;gap:10px;justify-content:center;min-height:64px;
-    padding:14px;border-radius:14px;background:var(--card2);border:1px solid var(--line);
-  }
-  .chip{
-    display:flex;align-items:center;gap:7px;
-    background:#fff;border:2px solid var(--line);border-radius:12px;
-    padding:9px 13px;font-weight:600;font-size:.92rem;cursor:grab;
-    box-shadow:0 3px 10px rgba(10,20,30,.08);
-    transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
-    touch-action:none;user-select:none;
-  }
-  .chip .emo{font-size:1.25rem;}
-  .chip:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(10,20,30,.16);border-color:var(--accent);}
-  .chip.dragging{opacity:.92;cursor:grabbing;box-shadow:0 14px 30px rgba(0,0,0,.3);border-color:var(--accent);transform:scale(1.05);}
-  .chip.placed{cursor:default;border-color:var(--success);background:var(--success-bg);}
-  .chip.pop{animation:pop .4s ease;}
-  .chip.shake{animation:shake .4s ease;}
-
-  @keyframes pop{0%{transform:scale(.6);}60%{transform:scale(1.15);}100%{transform:scale(1);}}
-  @keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-7px);}40%{transform:translateX(7px);}60%{transform:translateX(-5px);}80%{transform:translateX(5px);}}
-
-  /* zonas */
-  .zones{display:grid;gap:12px;margin-top:14px;}
-  .zone{
-    border:3px dashed var(--line);border-radius:14px;padding:12px;min-height:120px;
-    background:var(--card2);transition:background .25s ease,border-color .25s ease,transform .15s ease;
-  }
-  .zone-head{font-weight:800;font-size:1rem;text-align:center;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:6px;}
-  .zone-items{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
-  .zone.over{border-color:var(--accent);background:#fff6ec;transform:scale(1.01);}
-  .zone.flash-ok{border-color:var(--success);background:var(--success-bg);}
-  .zone.flash-bad{border-color:var(--danger);background:var(--danger-bg);}
-
-  /* feedback */
-  .feedback{
-    margin-top:12px;border-radius:12px;padding:12px 14px;font-size:.93rem;line-height:1.45;
-    background:var(--card2);border-left:5px solid var(--accent);color:var(--ink);min-height:24px;
-    transition:all .25s ease;
-  }
-  .feedback.ok{background:var(--success-bg);border-left-color:var(--success);}
-  .feedback.bad{background:var(--danger-bg);border-left-color:var(--danger);}
-
-  /* final */
-  .final{text-align:center;display:none;}
-  .final.show{display:block;animation:pop .5s ease;}
-  .final h2{font-size:1.6rem;margin:.2rem 0;}
-  .final .big{font-size:2.6rem;font-weight:800;color:var(--success);margin:6px 0;}
-  .namebox{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px;}
-  input[type=text]{
-    padding:11px 14px;border-radius:12px;border:2px solid var(--line);font-size:1rem;width:min(240px,70vw);
-  }
-  input[type=text]:focus{outline:none;border-color:var(--accent);}
-  .btn{
-    border:none;cursor:pointer;font-weight:700;font-size:.95rem;padding:11px 22px;border-radius:12px;
-    background:var(--accent);color:#22150a;transition:transform .2s ease,box-shadow .2s ease;
-  }
-  .btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(255,158,61,.5);}
-  .btn.alt{background:var(--success);color:#fff;}
-  .btn:disabled{opacity:.5;cursor:default;transform:none;box-shadow:none;}
-
-  /* ranking */
-  .rank h3{margin:0 0 4px;font-size:1.05rem;}
-  .rank .lvltag{font-size:.78rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
-  .rank ol{margin:10px 0 0;padding-left:0;list-style:none;counter-reset:r;}
-  .rank li{
-    counter-increment:r;display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:10px;
-    background:var(--card2);margin-bottom:6px;font-size:.9rem;
-  }
-  .rank li::before{content:counter(r);font-weight:800;color:var(--accent-d);width:22px;text-align:center;}
-  .rank li .nm{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .rank li .sc{font-weight:800;color:var(--ink);}
-  .rank li:nth-child(1){background:#fff6e0;}
-  .rank .note{font-size:.82rem;color:var(--muted);margin-top:8px;}
-
-  footer{text-align:center;color:#fff;margin-top:22px;font-size:.9rem;line-height:1.6;}
-  footer .ide{font-weight:800;font-size:1.05rem;text-shadow:0 2px 10px rgba(0,0,0,.3);}
-  footer .meta{color:#ffe7cf;opacity:.9;font-size:.8rem;}
-
-  @media(min-width:640px){
-    .zones.z2{grid-template-columns:1fr 1fr;}
-    .zones.z3{grid-template-columns:1fr 1fr 1fr;}
-  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>🌡️ Arrasta-Estufa</h1>
-    <p class="sub">Missão Atmosfera — classifique os gases e processos do efeito estufa</p>
-  </header>
-
-  <div class="levels">
-    <button class="pill active" data-lvl="basico">Básico</button>
-    <button class="pill" data-lvl="intermediario">Intermediário</button>
-    <button class="pill" data-lvl="dificil">Difícil</button>
-  </div>
-
-  <div class="panel" id="gamePanel">
-    <p class="instr" id="instr"></p>
-    <div class="hud">
-      <div class="stat">Acertos<span id="hAcertos">0/0</span></div>
-      <div class="stat">Erros<span id="hErros">0</span></div>
-      <div class="stat">Tempo<span id="hTempo">0s</span></div>
-      <div class="stat">Pontos<span id="hPontos">0</span></div>
-    </div>
-
-    <div class="tray" id="tray"></div>
-    <div class="zones" id="zones"></div>
-    <div class="feedback" id="feedback">Arraste cada peça para a categoria correta. 👆</div>
-  </div>
-
-  <div class="panel final" id="final">
-    <div style="font-size:2.8rem">🎉</div>
-    <h2>Missão concluída!</h2>
-    <div class="big" id="finalScore">0 pontos</div>
-    <p id="finalDetail" style="color:var(--muted);margin:0"></p>
-    <div class="namebox">
-      <input type="text" id="playerName" maxlength="20" placeholder="Seu nome (até 20)">
-      <button class="btn alt" id="saveBtn">Salvar no ranking</button>
-    </div>
-    <p id="saveMsg" style="font-size:.85rem;color:var(--muted);min-height:18px;margin-top:8px"></p>
-    <button class="btn" id="againBtn" style="margin-top:6px">Jogar de novo 🔁</button>
-  </div>
-
-  <div class="panel rank">
-    <h3>🏆 Ranking Global</h3>
-    <div class="lvltag" id="rankLvl">Nível: Básico</div>
-    <ol id="rankList"></ol>
-    <p class="note" id="rankNote">Carregando ranking…</p>
-  </div>
-
-  <footer>
-    <div class="ide">— Idealizado por Ernandes Sobreira —</div>
-    <div class="meta">Tema: Efeito estufa e gases de efeito estufa · Gênero: Arrastar e soltar (classificar) · app ambiental do dia (2026-06-07)</div>
-  </footer>
+<div class="top">
+  <a class="hub" href="index.html">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Todos os jogos
+  </a>
 </div>
 
-<script type="module">
-/* ===== Firebase (apenas ranking) ===== */
+<header>
+  <h1><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9.5" y="2" width="5" height="13" rx="2.5" fill="#fff" stroke="#0369a1" stroke-width="1.8"/><circle cx="12" cy="18" r="4" fill="#0284c7"/><rect x="11" y="7" width="2" height="10" fill="#0284c7"/></svg> <span>Arrasta <span class="spark">Estufa</span></span></h1>
+  <p class="sub">Classifique gases e processos do efeito estufa. Arraste cada cartão para a caixa certa.</p>
+</header>
+
+<div class="levels" id="levels"></div>
+
+<div class="hud">
+  <span class="h1">Acertos <b id="hits">0/0</b></span>
+  <span class="h2">Erros <b id="errs">0</b></span>
+  <span class="h3">Pontos <b id="score">0</b></span>
+  <span class="h4">Tempo <b id="timer">0s</b></span>
+</div>
+
+<div class="card">
+  <div id="stage"></div>
+</div>
+
+<div class="ranking">
+  <h3>Ranking Global, nível <span id="rankLevel"></span></h3>
+  <ol id="rankList"><li><span>Carregando o ranking...</span></li></ol>
+  <p class="note" id="rankNote"></p>
+</div>
+
+<footer>
+  Efeito estufa e gases de efeito estufa · Arrastar e classificar<br>
+  <span class="credit">Idealizado por Ernandes Sobreira</span>
+</footer>
+
+<script>
 const firebaseConfig = {
   apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
   authDomain: "jogos-ranking.firebaseapp.com",
@@ -210,287 +247,288 @@ const firebaseConfig = {
   messagingSenderId: "958784915420",
   appId: "1:958784915420:web:4212d3ad278f02d600f119"
 };
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* ---------- dados deste jogo ---------- */
 const GAME_ID = "2026-06-07-arrasta-estufa";
-
-let db=null, fs=null, fbReady=false;
-(async()=>{
-  try{
-    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
-    fs = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
-    const app = appMod.initializeApp(firebaseConfig);
-    db = fs.getFirestore(app);
-    fbReady = true;
-    loadRanking();
-  }catch(e){
-    fbReady=false;
-    document.getElementById('rankNote').textContent="Ranking offline — o jogo funciona normalmente. 🌐";
-  }
-})();
-
-/* ===== Conteúdo dos níveis ===== */
+/* pontuacao e ranking iguais aos da versao anterior: campo nivel com a chave do nivel */
+function scoreNow(s){ return Math.max(0, s.placed*100 - s.errors*15 - Math.floor(s.seconds*0.5)); }
+function saveDoc(name, s, lv){ return {name, score:scoreNow(s), acertos:s.placed, erros:s.errors, tempo:s.seconds, nivel:lv, ts:Date.now()}; }
+const RANK = {field:'nivel', val:k=>k};
+const SCORE_NOTE = 'Cada cartão vale 100 pontos. Cada erro tira 15, e cada 2 segundos tira 1.';
+const END_MSG = [
+  [100, 'Atmosfera em ordem!', 'Você acertou todos os cartões de primeira.'],
+  [70, 'Missão cumprida', 'Poucos erros. Confira abaixo os cartões para revisar.'],
+  [0, 'Missão cumprida, com tropeços', 'Leia a revisão abaixo e jogue de novo.']
+];
+const C = '#0369a1';
+const ic = d => `<svg viewBox="0 0 32 32" aria-hidden="true">${d}</svg>`;
+const ICO = {
+  gee: ic(`<circle cx="16" cy="16" r="6" fill="#f59e0b"/><path d="M4 26c4-3 8-3 12 0s8 3 12 0" fill="none" stroke="${C}" stroke-width="2.6" stroke-linecap="round"/><path d="M8 8l-2-2M24 8l2-2M16 5V2" stroke="#f59e0b" stroke-width="2.4" stroke-linecap="round"/>`),
+  nao: ic(`<path d="M4 16h20" stroke="${C}" stroke-width="3" stroke-linecap="round"/><path d="M20 10l7 6-7 6" fill="none" stroke="${C}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="8" r="3" fill="#bae6fd"/><circle cx="12" cy="24" r="3" fill="#bae6fd"/>`),
+  co2: ic(`<rect x="6" y="12" width="7" height="16" fill="${C}"/><rect x="16" y="18" width="12" height="10" fill="#7dd3fc"/><circle cx="10" cy="7" r="3.400" fill="#94a3b8"/><circle cx="16" cy="5" r="2.600" fill="#cbd5e1"/>`),
+  ch4: ic(`<path d="M16 3c4 6 8 9 8 15a8 8 0 0 1-16 0c0-4 2-6 4-9 1 3 2 4 4 4-1-4 0-7 0-10z" fill="#f59e0b"/><path d="M16 19c2 2 3 3 3 5a3 3 0 0 1-6 0c0-2 1-3 3-5z" fill="#fde68a"/>`),
+  n2o: ic(`<path d="M12 4h8M14 4v8L7 25a2 2 0 0 0 2 3h14a2 2 0 0 0 2-3l-7-13V4" fill="none" stroke="${C}" stroke-width="2.4" stroke-linejoin="round"/><path d="M10 21h12l2 4H8z" fill="#7dd3fc"/>`),
+  mais: ic(`<path d="M16 28V6M7 14l9-9 9 9" fill="none" stroke="#dc2626" stroke-width="3.400" stroke-linecap="round" stroke-linejoin="round"/>`),
+  menos: ic(`<path d="M16 4v22M7 18l9 9 9-9" fill="none" stroke="#16a34a" stroke-width="3.400" stroke-linecap="round" stroke-linejoin="round"/>`),
+  neutro: ic(`<path d="M6 12h20M6 20h20" stroke="${C}" stroke-width="3.400" stroke-linecap="round"/>`)
+};
 const LEVELS = {
-  basico:{
-    instr:'<b>Básico:</b> arraste cada gás para a caixa certa. Alguns gases <b>retêm calor</b> (efeito estufa); outros <b>não</b>.',
-    zones:[
-      {id:'gee', label:'É gás de efeito estufa', emoji:'🌡️'},
-      {id:'nao', label:'NÃO é gás de efeito estufa', emoji:'❄️'}
-    ],
+  basico: { label:'Básico', title:'Quem segura o calor?',
+    desc:'Alguns gases do ar retêm calor e causam o efeito estufa. Outros deixam o calor passar.',
+    zones:[{id:'gee', label:'Gás de efeito estufa', icon:ICO.gee}, {id:'nao', label:'Não é gás de efeito estufa', icon:ICO.nao}],
     items:[
-      {t:'Gás carbônico (CO₂)', e:'🏭', z:'gee', fb:'O CO₂ é o principal gás de efeito estufa de origem humana, vindo da queima de combustíveis fósseis.'},
-      {t:'Metano (CH₄)', e:'🐄', z:'gee', fb:'O metano vem do gado, lixões e arrozais, e aquece muito mais que o CO₂.'},
-      {t:'Vapor d\'água', e:'💧', z:'gee', fb:'O vapor d\'água é o gás de efeito estufa mais abundante da atmosfera.'},
-      {t:'Óxido nitroso (N₂O)', e:'🌱', z:'gee', fb:'Liberado por fertilizantes agrícolas, é um potente gás de efeito estufa.'},
-      {t:'Nitrogênio (N₂)', e:'💨', z:'nao', fb:'O nitrogênio é 78% do ar, mas não retém calor: não é gás de efeito estufa.'},
-      {t:'Oxigênio (O₂)', e:'🫁', z:'nao', fb:'O oxigênio que respiramos não contribui para o efeito estufa.'},
-      {t:'Argônio (Ar)', e:'🎈', z:'nao', fb:'O argônio é um gás nobre inerte e não causa efeito estufa.'},
-      {t:'CFC (clorofluorcarbono)', e:'🧴', z:'gee', fb:'Os CFCs, de sprays antigos, são gases de efeito estufa e ainda destroem a camada de ozônio.'}
-    ]
-  },
-  intermediario:{
-    instr:'<b>Intermediário:</b> cada fonte emite principalmente um gás. Classifique pela <b>emissão dominante</b>: CO₂, metano (CH₄) ou óxido nitroso (N₂O).',
-    zones:[
-      {id:'co2', label:'Emite principalmente CO₂', emoji:'🏭'},
-      {id:'ch4', label:'Emite principalmente CH₄', emoji:'🐄'},
-      {id:'n2o', label:'Emite principalmente N₂O', emoji:'🧪'}
-    ],
+      {t:'Gás carbônico (CO2)', z:'gee', fb:'O CO2 é o principal gás de efeito estufa emitido pelas atividades humanas, sobretudo pela queima de combustíveis fósseis.'},
+      {t:'Metano (CH4)', z:'gee', fb:'O metano vem do gado, de lixões e de áreas alagadas. Cada tonelada aquece muito mais que uma tonelada de CO2.'},
+      {t:'Vapor de água', z:'gee', fb:'O vapor de água é o gás de efeito estufa mais abundante na atmosfera.'},
+      {t:'Óxido nitroso (N2O)', z:'gee', fb:'O óxido nitroso é liberado principalmente por solos adubados com nitrogênio. É um gás de efeito estufa potente.'},
+      {t:'Nitrogênio (N2)', z:'nao', fb:'O nitrogênio forma cerca de 78% do ar, mas não retém calor.'},
+      {t:'Oxigênio (O2)', z:'nao', fb:'O oxigênio que respiramos não contribui para o efeito estufa.'},
+      {t:'Argônio (Ar)', z:'nao', fb:'O argônio é um gás nobre, que não reage e não retém calor.'},
+      {t:'CFC dos sprays antigos', z:'gee', fb:'Os CFCs retêm calor e também destroem a camada de ozônio. Por isso foram proibidos pelo Protocolo de Montreal.'}
+    ]},
+  intermediario: { label:'Intermediário', title:'De onde vem cada gás?',
+    desc:'Cada fonte libera principalmente um gás. Classifique pela emissão principal.',
+    zones:[{id:'co2', label:'Principalmente CO2', icon:ICO.co2}, {id:'ch4', label:'Principalmente metano', icon:ICO.ch4}, {id:'n2o', label:'Principalmente óxido nitroso', icon:ICO.n2o}],
     items:[
-      {t:'Queima de combustíveis fósseis', e:'🚗', z:'co2', fb:'A queima de petróleo, carvão e gás libera CO₂, a maior fonte de emissões.'},
-      {t:'Desmatamento e queimadas', e:'🔥', z:'co2', fb:'Ao queimar a vegetação, o carbono estocado volta à atmosfera como CO₂.'},
-      {t:'Produção de cimento', e:'🧱', z:'co2', fb:'A calcinação do calcário na fabricação de cimento libera grande quantidade de CO₂.'},
-      {t:'Fermentação entérica do gado', e:'🐄', z:'ch4', fb:'A digestão dos bovinos (arrotos) é uma das maiores fontes de metano.'},
-      {t:'Aterros e lixões', e:'🗑️', z:'ch4', fb:'A decomposição do lixo orgânico sem oxigênio gera metano.'},
-      {t:'Cultivo de arroz alagado', e:'🌾', z:'ch4', fb:'Os solos inundados das lavouras de arroz produzem metano por microrganismos.'},
-      {t:'Extração de petróleo e gás', e:'🛢️', z:'ch4', fb:'Vazamentos e ventilação na produção de gás natural liberam metano.'},
-      {t:'Fertilizantes nitrogenados', e:'🧪', z:'n2o', fb:'O excesso de nitrogênio no solo é convertido em óxido nitroso por bactérias.'},
-      {t:'Dejetos e esterco animal', e:'💩', z:'n2o', fb:'O manejo de dejetos pecuários emite N₂O durante a decomposição.'},
-      {t:'Solos agrícolas adubados', e:'🌱', z:'n2o', fb:'A adubação intensiva favorece a emissão de óxido nitroso pelos solos.'}
-    ]
-  },
-  dificil:{
-    instr:'<b>Difícil:</b> classifique cada processo pelo efeito no clima: <b>intensifica</b> o aquecimento, <b>mitiga</b> (reduz/sequestra) ou tem <b>efeito desprezível</b>.',
-    zones:[
-      {id:'mais', label:'Intensifica o aquecimento', emoji:'⬆️'},
-      {id:'menos', label:'Mitiga o aquecimento', emoji:'⬇️'},
-      {id:'neutro', label:'Efeito desprezível', emoji:'➖'}
-    ],
+      {t:'Queima de gasolina e diesel', z:'co2', fb:'A queima de petróleo, carvão e gás natural libera CO2, a maior fonte de emissões do mundo.'},
+      {t:'Desmatamento com queimada', z:'co2', fb:'Ao queimar a vegetação, o carbono guardado nas plantas volta ao ar como CO2.'},
+      {t:'Fabricação de cimento', z:'co2', fb:'Aquecer o calcário para fazer cimento libera CO2 pela própria reação química.'},
+      {t:'Digestão do gado', z:'ch4', fb:'Bois e vacas produzem metano no estômago e o liberam ao arrotar.'},
+      {t:'Lixões e aterros', z:'ch4', fb:'O lixo orgânico enterrado se decompõe sem oxigênio e gera metano.'},
+      {t:'Arroz em campo alagado', z:'ch4', fb:'No solo inundado, micróbios sem oxigênio produzem metano.'},
+      {t:'Vazamentos de gás natural', z:'ch4', fb:'O gás natural é quase todo metano. Vazamentos em poços e dutos o liberam direto no ar.'},
+      {t:'Adubo nitrogenado na lavoura', z:'n2o', fb:'Bactérias do solo transformam parte do nitrogênio do adubo em óxido nitroso.'},
+      {t:'Urina e esterco no pasto', z:'n2o', fb:'O nitrogênio da urina e do esterco deixados no pasto vira óxido nitroso no solo.'},
+      {t:'Solo encharcado e adubado', z:'n2o', fb:'Solo úmido e rico em nitrogênio favorece as bactérias que liberam óxido nitroso.'}
+    ]},
+  dificil: { label:'Difícil', title:'Esquenta, esfria ou nada muda?',
+    desc:'Classifique cada processo pelo efeito no clima: aumenta o aquecimento, reduz o aquecimento ou tem efeito desprezível.',
+    zones:[{id:'mais', label:'Aumenta o aquecimento', icon:ICO.mais}, {id:'menos', label:'Reduz o aquecimento', icon:ICO.menos}, {id:'neutro', label:'Efeito desprezível', icon:ICO.neutro}],
     items:[
-      {t:'Aumento de CH₄ por fontes antrópicas', e:'🐄', z:'mais', fb:'Mais metano de origem humana eleva o forçamento radiativo e intensifica o aquecimento.'},
-      {t:'Emissão de SF₆ de equipamentos elétricos', e:'⚡', z:'mais', fb:'O hexafluoreto de enxofre é ~23.500× mais potente que o CO₂ e dura milhares de anos.'},
-      {t:'Degelo do permafrost liberando metano', e:'🧊', z:'mais', fb:'É uma retroalimentação positiva: o aquecimento libera metano que aquece ainda mais.'},
-      {t:'Perfluorcarbonos (PFCs) na produção de alumínio', e:'🏭', z:'mais', fb:'Os PFCs são gases fluorados de altíssimo GWP e longa permanência atmosférica.'},
-      {t:'Retroalimentação do vapor d\'água', e:'💧', z:'mais', fb:'Ar mais quente retém mais vapor d\'água, que amplifica o aquecimento inicial.'},
-      {t:'Emissão de N₂O por fertilizantes sintéticos', e:'🧪', z:'mais', fb:'O óxido nitroso tem GWP cerca de 270× o do CO₂ e destrói o ozônio estratosférico.'},
-      {t:'Reflorestamento e sequestro pela biomassa', e:'🌳', z:'menos', fb:'Árvores em crescimento removem CO₂ do ar e o estocam na madeira e no solo.'},
-      {t:'Captura e armazenamento geológico (CCS)', e:'🛢️', z:'menos', fb:'O CCS injeta CO₂ em formações geológicas profundas, removendo-o da atmosfera.'},
-      {t:'Substituir termelétricas por energia eólica', e:'🌬️', z:'menos', fb:'Gerar eletricidade sem combustão evita emissões de CO₂.'},
-      {t:'Plantio direto que retém carbono no solo', e:'🌾', z:'menos', fb:'O manejo conservacionista aumenta o carbono orgânico estocado no solo.'},
-      {t:'Concentração de argônio na atmosfera', e:'🎈', z:'neutro', fb:'O argônio é um gás nobre inerte e não interage com a radiação infravermelha.'},
-      {t:'Aumento de O₂ pela fotossíntese', e:'🫁', z:'neutro', fb:'O oxigênio molecular não absorve radiação infravermelha de forma relevante.'}
-    ]
-  }
+      {t:'Mais metano vindo de atividades humanas', z:'mais', fb:'Mais metano no ar aumenta a retenção de calor e intensifica o aquecimento.'},
+      {t:'SF6 vazando de equipamentos elétricos', z:'mais', fb:'O hexafluoreto de enxofre é um dos gases de efeito estufa mais potentes que se conhece e dura milhares de anos no ar.'},
+      {t:'Degelo do permafrost', z:'mais', fb:'O solo congelado que derrete libera carbono antigo. O aquecimento causa mais emissões, que causam mais aquecimento.'},
+      {t:'PFCs da produção de alumínio', z:'mais', fb:'Os perfluorcarbonos são gases fluorados muito potentes e de longa duração.'},
+      {t:'Mais vapor de água em ar mais quente', z:'mais', fb:'Ar mais quente guarda mais vapor de água, que retém mais calor. Isso amplifica o aquecimento inicial.'},
+      {t:'Óxido nitroso de fertilizantes', z:'mais', fb:'Cada tonelada de óxido nitroso aquece cerca de 270 vezes mais que uma tonelada de CO2 em 100 anos.'},
+      {t:'Reflorestamento', z:'menos', fb:'Árvores em crescimento retiram CO2 do ar e guardam o carbono na madeira e no solo.'},
+      {t:'Captura de CO2 em chaminés e estoque no subsolo', z:'menos', fb:'A captura e armazenamento de carbono impede que o CO2 de fábricas e usinas chegue à atmosfera.'},
+      {t:'Trocar termelétrica a carvão por eólica', z:'menos', fb:'Gerar eletricidade sem queimar combustível evita emissões de CO2.'},
+      {t:'Plantio direto na palha', z:'menos', fb:'O manejo que não revolve o solo ajuda a acumular carbono orgânico.'},
+      {t:'Argônio no ar', z:'neutro', fb:'O argônio é um gás nobre e não absorve a radiação de calor.'},
+      {t:'Oxigênio (O2) no ar', z:'neutro', fb:'O oxigênio do ar não absorve a radiação de calor de forma relevante.'}
+    ]}
 };
 
-const NIVEL_NOME = {basico:'Básico', intermediario:'Intermediário', dificil:'Difícil'};
 
-/* ===== Estado ===== */
-let nivel='basico', acertos=0, erros=0, total=0, timer=null, seg=0, finalizado=false;
+/* ---------- motor comum dos jogos de classificar ---------- */
+const KEYS = Object.keys(LEVELS);
+let level = KEYS[0], items = [], placed = 0, hits = 0, errors = 0, missed = {}, wrongTry = {};
+let sel = null, startTime = null, timerInt = null, elapsed = 0, scoreSaved = false, done = false;
+let db = null, fsFns = null;
+const TARGET = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/></svg>`;
+const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const st = () => ({placed, hits, errors, seconds:elapsed, total:items.length});
+const zoneOf = id => LEVELS[level].zones.find(z=>z.id===id);
 
-const tray=document.getElementById('tray');
-const zonesEl=document.getElementById('zones');
-const feedback=document.getElementById('feedback');
-const finalEl=document.getElementById('final');
-const gamePanel=document.getElementById('gamePanel');
-
-function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-
-function updateHUD(){
-  document.getElementById('hAcertos').textContent=acertos+'/'+total;
-  document.getElementById('hErros').textContent=erros;
-  document.getElementById('hTempo').textContent=seg+'s';
-  document.getElementById('hPontos').textContent=pontos();
+function buildLevels(){
+  $('levels').innerHTML = KEYS.map(k=>`<button data-lvl="${k}" onclick="setLevel('${k}')">${LEVELS[k].label}</button>`).join('');
 }
-function pontos(){return Math.max(0, acertos*100 - erros*15 - Math.floor(seg*0.5));}
-
-function startTimer(){clearInterval(timer);seg=0;timer=setInterval(()=>{seg++;updateHUD();},1000);}
-
-function build(){
-  finalizado=false;
-  finalEl.classList.remove('show');
-  gamePanel.style.display='block';
-  const L=LEVELS[nivel];
-  document.getElementById('instr').innerHTML=L.instr;
-  acertos=0;erros=0;total=L.items.length;
-  feedback.className='feedback';
-  feedback.textContent='Arraste cada peça para a categoria correta. 👆';
-
-  // zonas
-  zonesEl.className='zones '+(L.zones.length===2?'z2':'z3');
-  zonesEl.innerHTML=L.zones.map(z=>`
-    <div class="zone" data-zone="${z.id}">
-      <div class="zone-head">${z.emoji} ${esc(z.label)}</div>
-      <div class="zone-items"></div>
-    </div>`).join('');
-
-  // peças
-  tray.innerHTML='';
-  shuffle([...L.items]).forEach((it,idx)=>{
-    const c=document.createElement('div');
-    c.className='chip';
-    c.dataset.zone=it.z;
-    c.dataset.fb=it.fb;
-    c.dataset.name=it.t;
-    c.innerHTML=`<span class="emo">${it.e}</span><span>${esc(it.t)}</span>`;
-    attachDrag(c);
-    tray.appendChild(c);
+function setLevel(l){
+  level = l;
+  document.querySelectorAll('.levels button').forEach(b=>b.classList.toggle('active',b.dataset.lvl===l));
+  $('rankLevel').textContent = LEVELS[l].label;
+  restart(); loadRanking();
+}
+function restart(){
+  clearInterval(timerInt); timerInt=null; startTime=null; elapsed=0;
+  placed=0; hits=0; errors=0; missed={}; wrongTry={}; sel=null; scoreSaved=false; done=false;
+  $('timer').textContent='0s';
+  const L = LEVELS[level];
+  items = shuffle(L.items.map((it,i)=>Object.assign({i}, it)));
+  $('stage').innerHTML = `
+    <div class="qhead"><div class="qnum">${L.label} · ${items.length} cartões · ${L.zones.length} caixas</div>
+      <div class="qtext">${L.title}</div>
+      <div class="qdesc">${L.desc}</div>
+      <div class="goalbox"><h4>${TARGET} Sua missão</h4><p>Leve cada cartão para a caixa certa. Arraste, ou toque no cartão e depois na caixa.</p></div></div>
+    <div class="prog"><i id="progbar" style="width:0%"></i></div>
+    <div class="progtxt" id="progtxt"></div>
+    <div class="trayw"><h5>Cartões para classificar</h5><div class="tray" id="tray"></div></div>
+    <div class="zones" id="zones" style="--nz:${L.zones.length}">${L.zones.map(z=>`
+      <div class="zone" data-z="${z.id}" role="button" tabindex="0" aria-label="${esc(z.label)}">
+        <div class="zhead"><div class="zico">${z.icon||''}</div><div class="zlab">${z.label}</div><span class="zcount" id="zc-${z.id}">0</span></div>
+        <div class="zitems" id="zi-${z.id}"></div></div>`).join('')}</div>
+    <div class="fb" id="fb" aria-live="polite">Comece pelo cartão que você tem mais certeza. O tempo começa no primeiro movimento.</div>
+    ${typeof NOTE!=='undefined' && NOTE ? `<p class="modelnote">${NOTE}</p>` : ''}`;
+  $('tray').innerHTML = items.map(it=>`<button class="scard" data-i="${it.i}">${it.t}</button>`).join('');
+  document.querySelectorAll('.scard').forEach(attach);
+  document.querySelectorAll('.zone').forEach(z=>{
+    z.addEventListener('click',()=>{ if(sel!==null) drop(sel, z.dataset.z); });
+    z.addEventListener('keydown',e=>{ if((e.key==='Enter'||e.key===' ') && sel!==null){ e.preventDefault(); drop(sel, z.dataset.z); } });
   });
-  updateHUD();
-  startTimer();
+  hud();
 }
-
-/* ===== Drag por ponteiro (mouse + toque) ===== */
-let drag=null;
-function attachDrag(chip){
-  chip.addEventListener('pointerdown',e=>{
-    if(chip.classList.contains('placed')||finalizado)return;
-    e.preventDefault();
-    const r=chip.getBoundingClientRect();
-    drag={el:chip, dx:e.clientX-r.left, dy:e.clientY-r.top, w:r.width, h:r.height};
-    chip.classList.add('dragging');
-    chip.style.position='fixed';
-    chip.style.zIndex=9999;
-    chip.style.width=r.width+'px';
-    chip.style.pointerEvents='none';
-    moveAt(e.clientX,e.clientY);
-    window.addEventListener('pointermove',onMove);
-    window.addEventListener('pointerup',onUp);
+function hud(){
+  $('hits').textContent = placed+'/'+items.length; $('errs').textContent = errors;
+  $('score').textContent = scoreNow(st());
+  const pb = $('progbar'); if(pb){ pb.style.width = (items.length? placed/items.length*100 : 0)+'%';
+    $('progtxt').textContent = placed===items.length ? 'Tudo classificado!' : `Faltam ${items.length-placed} de ${items.length} cartões`; }
+}
+function startTimer(){
+  if(timerInt) return;
+  startTime = Date.now();
+  timerInt = setInterval(()=>{elapsed=Math.floor((Date.now()-startTime)/1000);$('timer').textContent=elapsed+'s';hud();},500);
+}
+function select(i){
+  sel = (sel===i) ? null : i;
+  document.querySelectorAll('.scard').forEach(c=>c.classList.toggle('sel', +c.dataset.i===sel));
+  document.querySelectorAll('.zone').forEach(z=>z.classList.toggle('target', sel!==null));
+}
+/* arrastar com ponteiro (mouse e toque); um toque sem arrastar seleciona o cartao */
+function attach(card){
+  card.addEventListener('pointerdown', e=>{
+    if(done) return;
+    const r = card.getBoundingClientRect(), sx = e.clientX, sy = e.clientY;
+    let moving = false, ghost = null, lx = sx, ly = sy, scrollRaf = null;
+    /* rolagem automatica quando o cartao chega perto da borda da tela */
+    const autoScroll = ()=>{
+      if(!moving) return;
+      const edge = 70, h = window.innerHeight;
+      const dy = ly > h-edge ? Math.min(18,(ly-(h-edge))/3) : ly < edge ? -Math.min(18,(edge-ly)/3) : 0;
+      if(dy){ window.scrollBy(0, dy); document.querySelectorAll('.zone.over').forEach(z=>z.classList.remove('over')); const z = zoneAt(lx, ly); if(z) z.classList.add('over'); }
+      scrollRaf = requestAnimationFrame(autoScroll);
+    };
+    const mv = ev=>{
+      lx = ev.clientX; ly = ev.clientY;
+      if(!moving && Math.hypot(ev.clientX-sx, ev.clientY-sy) > 6){
+        moving = true; startTimer();
+        ghost = document.createElement('span'); ghost.className='scard ghost'; ghost.style.width=r.width+'px'; ghost.textContent=card.textContent;
+        card.after(ghost);
+        Object.assign(card.style,{position:'fixed',zIndex:999,width:r.width+'px',left:r.left+'px',top:r.top+'px',pointerEvents:'none'});
+        card.classList.add('dragging');
+        scrollRaf = requestAnimationFrame(autoScroll);
+      }
+      if(moving){
+        card.style.left=(ev.clientX-(sx-r.left))+'px'; card.style.top=(ev.clientY-(sy-r.top))+'px';
+        document.querySelectorAll('.zone.over').forEach(z=>z.classList.remove('over'));
+        const z = zoneAt(ev.clientX, ev.clientY); if(z) z.classList.add('over');
+      }
+    };
+    const up = ev=>{
+      window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
+      document.querySelectorAll('.zone.over').forEach(z=>z.classList.remove('over'));
+      if(scrollRaf) cancelAnimationFrame(scrollRaf);
+      if(!moving){ startTimer(); select(+card.dataset.i); return; }
+      moving = false;
+      card.classList.remove('dragging'); card.removeAttribute('style'); if(ghost) ghost.remove();
+      const z = zoneAt(ev.clientX, ev.clientY);
+      if(z) drop(+card.dataset.i, z.dataset.z);
+    };
+    window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
   });
+  card.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); startTimer(); select(+card.dataset.i); } });
+  card.addEventListener('click', e=>e.preventDefault());
 }
-function moveAt(x,y){
-  if(!drag)return;
-  drag.el.style.left=(x-drag.dx)+'px';
-  drag.el.style.top=(y-drag.dy)+'px';
-}
-function zoneUnder(x,y){
-  const els=document.elementsFromPoint(x,y);
-  for(const el of els){const z=el.closest&&el.closest('.zone');if(z)return z;}
+function zoneAt(x,y){
+  for(const el of document.elementsFromPoint(x,y)){ const z = el.closest && el.closest('.zone'); if(z) return z; }
   return null;
 }
-function onMove(e){
-  if(!drag)return;
-  moveAt(e.clientX,e.clientY);
-  document.querySelectorAll('.zone.over').forEach(z=>z.classList.remove('over'));
-  const z=zoneUnder(e.clientX,e.clientY);
-  if(z)z.classList.add('over');
-}
-function onUp(e){
-  if(!drag)return;
-  window.removeEventListener('pointermove',onMove);
-  window.removeEventListener('pointerup',onUp);
-  const chip=drag.el;
-  const z=zoneUnder(e.clientX,e.clientY);
-  document.querySelectorAll('.zone.over').forEach(zz=>zz.classList.remove('over'));
-  // reset estilo flutuante
-  chip.classList.remove('dragging');
-  chip.style.position='';chip.style.left='';chip.style.top='';
-  chip.style.zIndex='';chip.style.width='';chip.style.pointerEvents='';
-  if(z){
-    if(z.dataset.zone===chip.dataset.zone){
-      // acerto
-      z.querySelector('.zone-items').appendChild(chip);
-      chip.classList.add('placed','pop');
-      setTimeout(()=>chip.classList.remove('pop'),400);
-      acertos++;
-      z.classList.add('flash-ok');setTimeout(()=>z.classList.remove('flash-ok'),450);
-      showFB('ok','✅ <b>Certo!</b> '+chip.dataset.fb);
-    }else{
-      // erro
-      erros++;
-      chip.classList.add('shake');setTimeout(()=>chip.classList.remove('shake'),400);
-      z.classList.add('flash-bad');setTimeout(()=>z.classList.remove('flash-bad'),450);
-      showFB('bad','❌ <b>Quase!</b> "'+esc(chip.dataset.name)+'" não vai aí. '+chip.dataset.fb);
-    }
-    updateHUD();
-    checkEnd();
-  }
-  drag=null;
-}
-function showFB(kind,html){feedback.className='feedback '+kind;feedback.innerHTML=html;}
-
-function checkEnd(){
-  if(acertos>=total){
-    clearInterval(timer);
-    finalizado=true;
-    setTimeout(showFinal,500);
+function flash(zid, cls){ const z=document.querySelector(`.zone[data-z="${zid}"]`); z.classList.add(cls); setTimeout(()=>z.classList.remove(cls),500); }
+function drop(i, zid){
+  if(done) return;
+  const it = items.find(x=>x.i===i), card = document.querySelector(`.scard[data-i="${i}"]`), fb = $('fb');
+  if(!it || !card) return;
+  select(null);
+  if(it.z === zid){
+    placed++; hits += missed[i] ? 0 : 1;
+    card.remove();
+    $('zi-'+zid).insertAdjacentHTML('beforeend', `<span class="placed">${it.t}</span>`);
+    $('zc-'+zid).textContent = $('zi-'+zid).children.length;
+    flash(zid,'flashok');
+    fb.className='fb ok'; fb.innerHTML=`<b>Certo!</b>${it.fb}`;
+    hud();
+    if(placed===items.length) setTimeout(renderEnd, 900);
+  } else {
+    errors++; missed[i] = true; wrongTry[i] = (wrongTry[i]||0)+1;
+    card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),400);
+    flash(zid,'flashno');
+    fb.className='fb no';
+    fb.innerHTML = wrongTry[i]>=2
+      ? `<b>Ainda não é aí.</b>Uma pista: ${it.hint || it.fb}`
+      : `<b>Não é nessa caixa.</b>"${it.t}" volta para a mesa. Pense de novo e tente outra caixa.`;
+    hud();
   }
 }
-
-function showFinal(){
-  gamePanel.style.display='none';
-  finalEl.classList.add('show');
-  const p=pontos();
-  document.getElementById('finalScore').textContent=p+' pontos';
-  document.getElementById('finalDetail').textContent=
-    `Nível ${NIVEL_NOME[nivel]} · ${acertos} acertos · ${erros} erros · ${seg}s`;
-  document.getElementById('saveMsg').textContent='';
-  document.getElementById('saveBtn').disabled=false;
-  document.getElementById('playerName').value='';
+function renderEnd(){
+  done = true; clearInterval(timerInt); timerInt=null;
+  const s = st(), sc = scoreNow(s), n = items.length;
+  const pct = Math.round(hits/n*100), m = END_MSG.find(x=>pct>=x[0]);
+  const rev = items.filter(it=>missed[it.i]);
+  $('stage').innerHTML = `
+    <div class="end">
+      <h2>${m[1]}</h2><p>${m[2]}</p>
+      <div class="stats">
+        <div class="stat">${hits}/${n}<span>Certos de primeira</span></div>
+        <div class="stat">${sc}<span>Pontos</span></div>
+        <div class="stat">${errors}<span>Erros</span></div>
+        <div class="stat">${elapsed}s<span>Tempo</span></div>
+      </div>
+      ${typeof SCORE_NOTE!=='undefined' ? `<p style="font-size:.85rem">${SCORE_NOTE}</p>` : ''}
+      <div class="savebox">
+        <input id="playerName" maxlength="20" placeholder="Seu nome (até 20 letras)">
+        <button class="btn" id="saveBtn" onclick="saveScore()">Salvar no ranking</button>
+      </div>
+      <p id="saveStatus" style="margin-top:8px;font-size:.85rem"></p>
+      <button class="btn ghost" style="margin-top:10px" onclick="restart()">Jogar de novo</button>
+      ${rev.length ? `<div class="review"><h3>Para revisar</h3><ul>${rev.map(it=>`<li><b>${it.t}</b> vai em <span class="z">${zoneOf(it.z).label}</span>. ${it.fb}</li>`).join('')}</ul></div>` : ''}
+    </div>`;
 }
 
-/* ===== Ranking ===== */
+async function initFirebase(){
+  try{
+    const appM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const fsM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    db=fsM.getFirestore(appM.initializeApp(firebaseConfig)); fsFns=fsM;
+    loadRanking();
+  }catch(e){
+    $('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';
+    $('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';
+  }
+}
+async function saveScore(){
+  if(scoreSaved) return;
+  const name=$('playerName').value.trim(), stt=$('saveStatus');
+  if(!name){stt.textContent='Digite seu nome primeiro.';return;}
+  if(!db){stt.textContent='Sem conexão com o ranking. Seu resultado não foi enviado.';return;}
+  try{
+    $('saveBtn').disabled=true;
+    /* grava no mesmo formato da versao anterior, para o ranking antigo continuar valendo */
+    await fsFns.addDoc(fsFns.collection(db,'games',GAME_ID,'scores'), saveDoc(name.slice(0,20), st(), level, fsFns));
+    scoreSaved=true; stt.textContent='Salvo no Ranking Global!'; loadRanking();
+  }catch(e){ $('saveBtn').disabled=false; stt.textContent='Erro ao salvar. Verifique a internet e tente de novo.'; }
+}
 async function loadRanking(){
-  document.getElementById('rankLvl').textContent='Nível: '+NIVEL_NOME[nivel];
-  const list=document.getElementById('rankList');
-  const note=document.getElementById('rankNote');
-  if(!fbReady){note.textContent='Ranking offline — o jogo funciona normalmente. 🌐';return;}
-  note.textContent='Carregando ranking…';
+  if(!db) return;
+  const list=$('rankList'), asked=level;
   try{
-    const col=fs.collection(db,'games',GAME_ID,'scores');
-    const snap=await fs.getDocs(fs.query(col,fs.limit(300)));
-    let rows=[];
-    snap.forEach(d=>{const v=d.data();if(v.nivel===nivel)rows.push(v);});
-    rows.sort((a,b)=>(b.score||0)-(a.score||0));
-    rows=rows.slice(0,10);
-    if(rows.length===0){list.innerHTML='';note.textContent='Seja o primeiro a entrar no ranking deste nível! 🌟';return;}
-    list.innerHTML=rows.map(r=>`<li><span class="nm">${esc(r.name||'Anônimo')}</span><span class="sc">${r.score||0} pts</span></li>`).join('');
-    note.textContent='Top 10 — nível '+NIVEL_NOME[nivel]+'.';
-  }catch(e){
-    note.textContent='Não foi possível carregar o ranking agora. 🌐';
-  }
+    const q=fsFns.query(fsFns.collection(db,'games',GAME_ID,'scores'),fsFns.where(RANK.field,'==',RANK.val(asked)),fsFns.limit(1000));
+    const snap=await fsFns.getDocs(q);
+    if(asked!==level) return;
+    const rows=[]; snap.forEach(d=>rows.push(d.data()));
+    const sec = r => Number(r.seconds ?? r.tempo) || 0, scr = r => Number(r.score) || 0;
+    rows.sort((a,b)=> (RANK.lowerBetter ? scr(a)-scr(b) : scr(b)-scr(a)) || (sec(a)-sec(b)));
+    if(!rows.length){list.innerHTML='<li><span>Seja o primeiro do ranking!</span></li>';return;}
+    list.innerHTML=rows.slice(0,10).map((r,i)=>
+      `<li><span><span class="pos">${i+1}º</span>${esc(r.name||'?')}</span><span>${scr(r)} ${RANK.unit||'pts'} · ${sec(r)}s</span></li>`).join('');
+    $('rankNote').textContent = RANK.lowerBetter ? 'Neste jogo, menos pontos é melhor.' : '';
+  }catch(e){ list.innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>'; }
 }
 
-document.getElementById('saveBtn').addEventListener('click',async()=>{
-  const name=document.getElementById('playerName').value.trim().slice(0,20)||'Anônimo';
-  const msg=document.getElementById('saveMsg');
-  if(!fbReady){msg.textContent='Ranking offline — não foi possível salvar, mas seu resultado vale! 🌐';return;}
-  document.getElementById('saveBtn').disabled=true;
-  msg.textContent='Salvando…';
-  try{
-    await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{
-      name, score:pontos(), acertos, erros, tempo:seg, nivel, ts:Date.now()
-    });
-    msg.textContent='✅ Salvo no ranking!';
-    loadRanking();
-  }catch(e){
-    msg.textContent='Não foi possível salvar agora. Tente novamente. 🌐';
-    document.getElementById('saveBtn').disabled=false;
-  }
-});
-
-document.getElementById('againBtn').addEventListener('click',build);
-
-document.querySelectorAll('.pill').forEach(b=>{
-  b.addEventListener('click',()=>{
-    document.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));
-    b.classList.add('active');
-    nivel=b.dataset.lvl;
-    build();
-    loadRanking();
-  });
-});
-
-/* início */
-build();
+buildLevels();
+setLevel(KEYS[0]);
+initFirebase();
 </script>
 </body>
 </html>
