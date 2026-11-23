@@ -1,509 +1,862 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Maré Limpa: Resgate dos Oceanos 🌊♻️</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maré Limpa</title>
 <style>
   :root{
-    --bg1:#062b45;
-    --bg2:#0b6c8c;
-    --accent:#2dd4bf;
-    --accent2:#37c0ff;
-    --coral:#ff6b6b;
-    --gold:#ffd166;
-    --ink:#06222f;
-    --card:rgba(255,255,255,0.96);
-    --soft:rgba(255,255,255,0.14);
-    --soft2:rgba(255,255,255,0.08);
-    --txt:#eaf7ff;
-    --shadow:0 10px 30px rgba(0,0,0,0.28);
+    --ink:#0f2f44; --soft:#4b6a7d; --line:#dbe7ee; --ok:#16a34a; --err:#dc2626;
+    --t50:#ecfeff; --t100:#cffafe; --t300:#67e8f9; --t500:#06b6d4; --main:#0891b2; --deep:#0e7490; --dark:#155e75; --glow:rgba(8,145,178,.28);
   }
-  *{box-sizing:border-box;}
+  *{box-sizing:border-box;margin:0;padding:0}
   body{
-    margin:0;
-    font-family:system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    color:var(--txt);
-    background:linear-gradient(160deg,var(--bg1),var(--bg2));
-    background-attachment:fixed;
-    min-height:100vh;
-    padding:18px 14px 40px;
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+    min-height:100vh;color:var(--ink);background:#ffffff;
+    display:flex;flex-direction:column;align-items:center;padding:12px 14px 40px;
   }
-  .wrap{max-width:960px;margin:0 auto;}
-  header.top{text-align:center;margin-bottom:14px;}
-  h1{
-    font-size:clamp(1.6rem,4.5vw,2.7rem);
-    margin:0 0 4px;
-    line-height:1.1;
-    text-shadow:0 2px 10px rgba(0,0,0,0.35);
+  .top{width:100%;max-width:1040px;display:flex;justify-content:flex-start}
+  .hub{display:inline-flex;align-items:center;gap:6px;color:var(--deep);text-decoration:none;
+    font-weight:600;font-size:.9rem;padding:7px 12px;border-radius:20px;border:1.5px solid var(--line)}
+  .hub:hover{background:var(--tint)}
+  .hub svg{width:14px;height:14px}
+  header{text-align:center;max-width:720px;margin-top:6px}
+  h1{font-size:clamp(1.45rem,5vw,2.2rem);display:flex;align-items:center;justify-content:center;gap:10px}
+  h1 svg{width:.95em;height:.95em}
+  h1 .spark{color:var(--main)}
+  .sub{color:var(--soft);font-size:.95rem;margin:4px 0 12px}
+  .levels{display:flex;gap:8px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+  .levels button{border:2px solid var(--line);background:#fff;color:var(--ink);padding:8px 16px;border-radius:30px;
+    font-size:.92rem;cursor:pointer;transition:.2s;font-weight:600;font-family:inherit}
+  .levels button{border-color:var(--main);color:var(--deep)}
+  .levels button:hover{background:var(--tint)}
+  .levels button.active{background:var(--main);border-color:var(--main);color:#fff;box-shadow:0 4px 12px var(--glow)}
+  .hud{display:flex;gap:8px;justify-content:center;align-items:center;margin:4px 0 12px;font-size:.9rem;flex-wrap:wrap}
+  .hud span{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:30px;color:#fff;font-weight:600}
+  .hud b{font-size:1.05rem;font-weight:800} .hud em{font-style:normal}
+  .hud .h1{background:#16a34a} .hud .h2{background:#f97316} .hud .h3{background:#7c3aed} .hud .h4{background:#0ea5e9}
+
+  .card{width:min(680px,100%);background:#fff;border:3px solid var(--main);border-radius:22px;
+    padding:0 0 20px;box-shadow:0 12px 30px var(--glow);overflow:hidden}
+  #stage{padding:0 20px}
+  .strip{display:flex;gap:5px;justify-content:center;align-items:flex-end;flex-wrap:wrap;min-height:54px;
+    padding:10px 10px 8px;background:linear-gradient(180deg,#e0f2fe 0%,#f0f9ff 62%,var(--pale) 62%,var(--pale) 100%)}
+  .slot{width:36px;height:36px;display:flex;align-items:center;justify-content:center}
+  .slot svg{width:100%;height:100%}
+  .slot.empty{align-items:flex-end;padding-bottom:3px}
+  .slot.empty::after{content:"";width:11px;height:11px;border-radius:50%;background:#fff;border:3px solid var(--main);opacity:.45}
+  .slot.now::after{opacity:1;background:var(--acc);border-color:#fff;box-shadow:0 0 0 3px var(--acc);animation:pulse 1.1s infinite}
+  @keyframes pulse{50%{transform:scale(1.25)}}
+  .slot.pop svg{animation:grow .45s cubic-bezier(.3,1.5,.5,1)}
+  @keyframes grow{from{transform:scale(.2) translateY(8px);opacity:0}to{transform:none;opacity:1}}
+  .qhead{margin:0 -20px 16px;padding:14px 20px 16px;background:linear-gradient(135deg,var(--main),var(--deep));color:#fff}
+  .qnum{display:inline-block;font-size:.74rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+    background:rgba(255,255,255,.22);padding:3px 10px;border-radius:20px}
+  .qtext{font-size:1.22rem;font-weight:700;line-height:1.35;margin-top:8px}
+  .opts{display:grid;gap:9px}
+  .opt{display:flex;gap:12px;align-items:center;text-align:left;width:100%;background:#fff;border:2px solid var(--line);
+    border-radius:14px;padding:11px 14px;font-size:1rem;line-height:1.35;color:var(--ink);cursor:pointer;
+    font-family:inherit;transition:border-color .15s,background .15s,transform .15s}
+  .opt{--c:#0ea5e9;--ct:#f0f9ff;border-color:var(--c);background:var(--ct);font-weight:500}
+  .opt:nth-child(2){--c:#f97316;--ct:#fff7ed} .opt:nth-child(3){--c:#8b5cf6;--ct:#f5f3ff} .opt:nth-child(4){--c:#ec4899;--ct:#fdf2f8}
+  .opt .k{flex:none;width:34px;height:34px;border-radius:50%;background:var(--c);color:#fff;
+    font-weight:800;display:flex;align-items:center;justify-content:center;font-size:1rem}
+  .opt:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(15,47,68,.14)}
+  .opt:disabled{cursor:default}
+  .opt.right{border-color:var(--ok);background:#dcfce7;font-weight:700}
+  .opt.right .k{background:var(--ok);color:#fff}
+  .opt.wrong{border-color:var(--err);background:#fee2e2;animation:shake .3s}
+  .opt.wrong .k{background:var(--err);color:#fff}
+  .opt.dim{opacity:.5;background:#fff;border-color:var(--line)} .opt.dim .k{background:#94a3b8}
+  @keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+  .fb{margin-top:14px;border-radius:14px;padding:12px 14px;font-size:.96rem;line-height:1.45;background:#fffbeb;
+    border:2px dashed #fcd34d;min-height:52px;color:#92400e}
+  .fb.ok{background:#dcfce7;border:2px solid var(--ok);color:var(--ink)}
+  .fb.no{background:#fee2e2;border:2px solid var(--err);color:var(--ink)}
+  .fb b{display:block;margin-bottom:2px}
+  .fb.ok>b{color:#166534;font-size:1.05rem} .fb.no>b{color:#b91c1c;font-size:1.05rem}
+  .fb .more{margin-top:8px;padding:8px 10px;border-radius:10px;background:#fff} .fb .more b{color:#166534}
+  .fb .more{margin-top:6px}
+  .btn{background:var(--main);color:#fff;border:0;padding:11px 20px;border-radius:12px;font-weight:700;cursor:pointer;
+    font-size:1rem;font-family:inherit}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--line)}
+  .next{display:none;margin:14px auto 0;background:var(--acc);font-size:1.05rem;padding:12px 26px;box-shadow:0 5px 14px rgba(15,47,68,.2)}
+  .next.show{display:block}
+
+  .end{text-align:center;padding-top:16px}
+  .end h2{font-size:1.5rem;margin:6px 0 4px;color:var(--deep)}
+  .end p{color:var(--soft)}
+  .stats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+  .stat{background:#16a34a;border-radius:14px;padding:9px 16px;font-weight:800;font-size:1.2rem;color:#fff;min-width:84px}
+  .stat:nth-child(2){background:#7c3aed} .stat:nth-child(3){background:#f97316} .stat:nth-child(4){background:#0ea5e9}
+  .stat span{display:block;font-size:.72rem;font-weight:600;color:#fff;opacity:.92}
+  .savebox{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+  .savebox input{padding:10px 12px;border-radius:10px;border:2px solid var(--line);font-size:1rem;width:220px;font-family:inherit}
+  .review{text-align:left;margin-top:16px;border-top:2px solid var(--line);padding-top:12px}
+  .review h3{font-size:1rem;margin-bottom:6px}
+  .review li{list-style:none;padding:8px 0;border-bottom:1px solid var(--line);font-size:.93rem;line-height:1.4}
+  .review li:last-child{border-bottom:0}
+  .review .a{color:#166534;font-weight:700}
+
+  .ranking{margin-top:16px;width:min(680px,100%);background:#fff;border:3px solid #fbbf24;border-radius:18px;padding:0 16px 12px;overflow:hidden}
+  .ranking h3{font-size:1.02rem;margin:0 -16px 8px;padding:10px 16px;background:#fbbf24;color:#451a03}
+  .ranking h3 span{color:#fff;background:#b45309;padding:2px 10px;border-radius:20px;font-size:.88rem}
+  .ranking li:nth-child(1) .pos{color:#b45309} .ranking li:nth-child(1){font-weight:700}
+  .ranking ol{list-style:none}
+  .ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.93rem}
+  .ranking li:last-child{border-bottom:0}
+  .ranking .pos{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+  .note{font-size:.8rem;color:var(--soft);margin-top:6px}
+  footer{margin-top:22px;font-size:.8rem;color:var(--soft);text-align:center;line-height:1.6}
+  footer .credit{font-weight:700;color:var(--ink)}
+
+
+  /* ---- cor unica por jogo: todos os destaques sao tons da mesma cor ---- */
+  :root{--tint:var(--t100);--pale:var(--t300);--acc:var(--dark)}
+  .hub:hover{background:var(--t50)}
+  .levels button{border-color:var(--t300)}
+  .hud .h1{background:var(--t500)} .hud .h2{background:var(--main)} .hud .h3{background:var(--deep)} .hud .h4{background:var(--dark)}
+  .strip{background:linear-gradient(180deg,var(--t50) 0%,var(--t100) 62%,var(--t300) 62%,var(--t300) 100%)}
+  .qhead{background:linear-gradient(135deg,var(--main),var(--dark))}
+  .opt,.opt:nth-child(2),.opt:nth-child(3),.opt:nth-child(4){--c:var(--main);--ct:var(--t50);border-color:var(--t300)}
+  .opt:not(:disabled):hover{border-color:var(--main);background:var(--t100)}
+  .fb{background:var(--t50);border:2px dashed var(--t300);color:var(--deep)}
+  .next{background:var(--deep)}
+  .stat{background:var(--t500)} .stat:nth-child(2){background:var(--main)} .stat:nth-child(3){background:var(--deep)} .stat:nth-child(4){background:var(--dark)}
+  .ranking{border-color:var(--main)}
+  .ranking h3{background:var(--main);color:#fff}
+  .ranking h3 span{background:var(--dark);color:#fff}
+  .ranking li:nth-child(1) .pos{color:var(--deep)}
+  @media(max-width:560px){
+    body{padding:8px 8px 32px}
+    .sub{display:none}
+    h1{margin-bottom:8px}
+    .hub{padding:4px 10px;font-size:.82rem}
+    .levels button{padding:7px 12px;font-size:.85rem}
+    .hud{gap:10px;font-size:.86rem;margin:2px 0 8px}
+    .card{padding:0 0 14px;border-radius:18px}
+    .qtext{font-size:1.05rem;margin-bottom:10px}
+    .opt{padding:9px 10px;font-size:.94rem;gap:9px}
+    .opt .k{width:28px;height:28px;font-size:.86rem}
+    .slot{width:27px;height:27px}
+    .strip{min-height:44px;padding:8px 6px 6px}
+    .qhead{margin:0 -12px 12px;padding:10px 12px 12px}
+    #stage{padding:0 12px}
+    .hud span{padding:4px 9px;font-size:.78rem} .hud b{font-size:.92rem} .hud{gap:5px}
+    .fb{font-size:.9rem}
   }
-  .subtitle{font-size:clamp(.85rem,2.4vw,1.05rem);opacity:.92;margin:0;}
-  .levels{
-    display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0 10px;
+  @media(prefers-reduced-motion:reduce){.slot.pop svg,.opt.wrong{animation:none}}
+
+  /* ---------- classificar arrastando ---------- */
+  .card{width:min(860px,100%)} .ranking{width:min(860px,100%)}
+  .qtext{font-size:1.15rem}
+  .qdesc{font-size:.96rem;line-height:1.45;margin-top:6px;opacity:.96}
+  .goalbox{margin-top:12px;background:#fff;border-radius:16px;padding:10px 14px;box-shadow:0 6px 16px rgba(0,0,0,.18);color:var(--ink)}
+  .goalbox h4{display:flex;align-items:center;gap:8px;font-size:.8rem;letter-spacing:.8px;text-transform:uppercase;color:var(--deep);margin-bottom:6px}
+  .goalbox h4 svg{width:22px;height:22px}
+  .goalbox p{font-size:1.02rem;font-weight:700;line-height:1.35}
+  .prog{height:14px;border-radius:10px;background:var(--t100);border:1.5px solid var(--t300);overflow:hidden;margin:2px 0 6px}
+  .prog i{display:block;height:100%;background:linear-gradient(90deg,var(--t500),var(--main));transition:width .3s}
+  .progtxt{font-size:.85rem;font-weight:700;color:var(--deep);text-align:center;margin-bottom:12px}
+  .trayw{background:var(--t50);border:2px dashed var(--t300);border-radius:16px;padding:10px;margin-bottom:12px}
+  .trayw h5{font-size:.78rem;letter-spacing:.6px;text-transform:uppercase;color:var(--deep);margin:0 0 8px 4px}
+  .tray{min-height:48px}
+  .tray:empty::after{content:"Todos os cartões foram classificados.";color:var(--soft);font-size:.9rem;padding:10px;grid-column:1/-1}
+  .tray{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px}
+  .scard{position:relative;font-family:inherit;font-size:.9rem;font-weight:800;color:var(--ink);background:#fff;
+    border:2px solid var(--t300);border-radius:14px;padding:0 0 10px;cursor:grab;touch-action:none;user-select:none;line-height:1.2;
+    text-align:center;display:flex;flex-direction:column;align-items:center;min-height:132px;overflow:hidden;
+    box-shadow:0 4px 0 var(--t300),0 8px 16px rgba(15,47,68,.12);transition:transform .12s,box-shadow .12s,border-color .12s}
+  .scard::before{content:"";position:absolute;inset:4px;border:1.5px dashed var(--t300);border-radius:10px;pointer-events:none;opacity:.7}
+  .scard .cart{width:100%;height:66px;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 50% 120%,var(--t300) 0,var(--t100) 55%,var(--t50) 100%);border-bottom:2px solid var(--t300);margin-bottom:8px}
+  .scard .cart svg{width:50px;height:50px}
+  .scard .ctxt{padding:0 9px}
+  .scard:hover{transform:translateY(-3px) rotate(-1deg);box-shadow:0 6px 0 var(--t300),0 12px 20px rgba(15,47,68,.18)}
+  .scard.sel{border-color:var(--deep);background:var(--t100);box-shadow:0 0 0 3px var(--glow)}
+  .scard.dragging{cursor:grabbing;box-shadow:0 14px 28px rgba(15,47,68,.28);transform:rotate(-2deg) scale(1.04);opacity:.97}
+  .scard.shake{animation:shake .35s;border-color:var(--err);border-left-color:var(--err);background:#fee2e2}
+  .ghost{visibility:hidden}
+  .zones{display:grid;gap:10px;grid-template-columns:repeat(var(--nz,2),1fr)}
+  .zone{background:#fff;border:3px solid var(--t300);border-radius:18px;padding:0 0 10px;min-height:150px;display:flex;flex-direction:column;overflow:hidden;cursor:pointer;
+    transition:border-color .15s,box-shadow .15s,transform .15s}
+  .zone.over,.zone.target{border-color:var(--main);box-shadow:0 0 0 4px var(--glow)}
+  .zone.flashok{border-color:var(--ok);box-shadow:0 0 0 4px rgba(22,163,74,.25)}
+  .zone.flashno{border-color:var(--err);box-shadow:0 0 0 4px rgba(220,38,38,.2)}
+  .zhead{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--t100);border-bottom:2px solid var(--t300)}
+  .zico{flex:none;width:44px;height:44px;border-radius:12px;background:#fff;border:2px solid var(--t300);display:flex;align-items:center;justify-content:center}
+  .zico svg{width:32px;height:32px}
+  .zlab{font-weight:800;font-size:.98rem;line-height:1.2;color:var(--dark)}
+  .zcount{margin-left:auto;flex:none;background:var(--main);color:#fff;font-weight:800;font-size:.85rem;border-radius:20px;padding:2px 9px}
+  .zitems{display:flex;flex-wrap:wrap;gap:6px;padding:10px 10px 0}
+  .placed{display:inline-flex;align-items:center;gap:5px;font-size:.82rem;font-weight:700;background:#fff;border:2px solid #86efac;color:#14532d;border-radius:9px;padding:4px 8px 4px 4px;
+    box-shadow:0 2px 0 #86efac;animation:land .35s cubic-bezier(.3,1.5,.5,1)}
+  .placed svg{width:22px;height:22px;flex:none;background:#dcfce7;border-radius:6px;padding:2px}
+  @keyframes land{from{transform:scale(.5);opacity:0}to{transform:none;opacity:1}}
+  .fb{margin-top:12px}
+  .modelnote{font-size:.78rem;color:var(--soft);text-align:center;margin-top:12px;line-height:1.4}
+  .review .z{color:var(--deep);font-weight:700}
+  @media(max-width:700px){ .zones{grid-template-columns:repeat(min(var(--nz,2),2),1fr)} }
+  .scene{margin:0 0 12px;border-radius:16px;overflow:hidden;border:2px solid var(--t300)}
+  .scene svg{display:block;width:100%;height:auto}
+  .scenecap{display:flex;justify-content:space-between;gap:8px;font-size:.84rem;font-weight:700;color:var(--deep);margin:-6px 2px 12px;flex-wrap:wrap}
+  @media(max-width:560px){
+    .tray{grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+    .scard{font-size:.8rem;min-height:112px} .scard .cart{height:46px} .scard .cart svg{width:32px;height:32px}
+    .zones{grid-template-columns:1fr 1fr;gap:7px}
+    .zhead{padding:8px;gap:7px;flex-wrap:wrap} .zico{width:36px;height:36px} .zico svg{width:26px;height:26px}
+    .zlab{font-size:.86rem} .zone{min-height:120px}
+    .placed{font-size:.78rem;padding:4px 7px}
   }
-  .levels button{
-    border:none;cursor:pointer;border-radius:14px;
-    padding:10px 16px;font-size:.95rem;font-weight:700;
-    background:var(--soft);color:var(--txt);
-    transition:transform .25s ease,background .25s ease,box-shadow .25s ease;
-    backdrop-filter:blur(4px);
-  }
-  .levels button:hover{transform:translateY(-2px);background:var(--soft2);}
-  .levels button.active{
-    background:linear-gradient(135deg,var(--accent),var(--accent2));
-    color:var(--ink);box-shadow:var(--shadow);transform:translateY(-2px);
-  }
-  .instruction{
-    text-align:center;font-size:.95rem;opacity:.95;margin:6px auto 14px;max-width:680px;
-    background:var(--soft2);padding:8px 14px;border-radius:12px;
-  }
-  .hud{
-    display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:14px;
-  }
-  .hud .chip{
-    background:var(--card);color:var(--ink);
-    border-radius:12px;padding:8px 14px;font-weight:700;font-size:.92rem;
-    box-shadow:var(--shadow);min-width:96px;text-align:center;
-  }
-  .hud .chip small{display:block;font-weight:600;opacity:.6;font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;}
-  .board{display:grid;grid-template-columns:1fr;gap:16px;}
-  @media(min-width:760px){.board{grid-template-columns:1.05fr .95fr;}}
-  .panel{
-    background:var(--card);color:var(--ink);
-    border-radius:16px;padding:16px;box-shadow:var(--shadow);
-  }
-  .panel h2{margin:0 0 12px;font-size:1.05rem;}
-  .tray{display:flex;flex-wrap:wrap;gap:10px;min-height:90px;align-content:flex-start;}
-  .item{
-    border:none;cursor:grab;border-radius:12px;
-    padding:10px 12px;font-size:.92rem;font-weight:600;
-    background:linear-gradient(135deg,#eaf6ff,#d4ecff);
-    color:var(--ink);box-shadow:0 4px 12px rgba(0,0,0,0.14);
-    transition:transform .2s ease,box-shadow .2s ease,opacity .2s ease;
-    display:flex;align-items:center;gap:7px;user-select:none;touch-action:manipulation;
-  }
-  .item .emo{font-size:1.2rem;}
-  .item:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,0.2);}
-  .item.selected{outline:3px solid var(--accent);transform:translateY(-2px) scale(1.03);}
-  .item.dragging{opacity:.45;}
-  .zones{display:grid;gap:12px;}
-  .zone{
-    border-radius:14px;border:2px dashed rgba(6,34,47,0.25);
-    padding:12px;min-height:84px;
-    background:linear-gradient(135deg,#f5fbff,#eef7ff);
-    transition:background .25s ease,border-color .25s ease,transform .2s ease;
-  }
-  .zone.over{border-color:var(--accent);background:linear-gradient(135deg,#e2fff8,#d6f4ff);transform:scale(1.01);}
-  .zone .zone-title{font-weight:800;font-size:.95rem;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
-  .zone .placed{display:flex;flex-wrap:wrap;gap:7px;}
-  .placed .item{cursor:default;background:linear-gradient(135deg,#c7f6e9,#bdeede);}
-  @keyframes pop{0%{transform:scale(.6);}60%{transform:scale(1.18);}100%{transform:scale(1);}}
-  @keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-7px);}40%{transform:translateX(7px);}60%{transform:translateX(-5px);}80%{transform:translateX(5px);}}
-  .pop{animation:pop .42s ease;}
-  .shake{animation:shake .42s ease;border:2px solid var(--coral)!important;}
-  .feedback{
-    margin-top:14px;border-radius:14px;padding:12px 14px;font-size:.92rem;line-height:1.4;
-    background:linear-gradient(135deg,#eef7ff,#e3f0ff);color:var(--ink);
-    box-shadow:var(--shadow);min-height:54px;transition:background .3s ease;
-  }
-  .feedback.ok{background:linear-gradient(135deg,#d6fbef,#c4f3e2);}
-  .feedback.bad{background:linear-gradient(135deg,#ffe3e3,#ffd2d2);}
-  .feedback b{display:block;margin-bottom:3px;}
-  .ranking{margin-top:16px;}
-  .ranking ol{margin:6px 0 0;padding-left:20px;}
-  .ranking li{padding:3px 0;font-size:.9rem;}
-  .ranking .rk-status{font-size:.82rem;opacity:.7;}
-  .final{
-    text-align:center;padding:24px 16px;
-  }
-  .final h2{font-size:1.6rem;margin:0 0 8px;}
-  .final .stats{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:14px 0;}
-  .final .stats .chip{background:linear-gradient(135deg,var(--accent),var(--accent2));color:var(--ink);}
-  .final input{
-    padding:10px 12px;border-radius:10px;border:1px solid rgba(6,34,47,.2);
-    font-size:.95rem;width:min(260px,80%);margin:6px 6px;
-  }
-  .btn{
-    border:none;cursor:pointer;border-radius:12px;padding:11px 20px;
-    font-weight:800;font-size:.95rem;color:var(--ink);
-    background:linear-gradient(135deg,var(--gold),#ffb347);
-    box-shadow:var(--shadow);transition:transform .2s ease;margin:6px;
-  }
-  .btn:hover{transform:translateY(-2px);}
-  .btn.secondary{background:linear-gradient(135deg,var(--accent),var(--accent2));}
-  .confetti{font-size:2.6rem;letter-spacing:6px;animation:pop .6s ease;}
-  footer{
-    text-align:center;margin-top:30px;font-size:.82rem;opacity:.85;line-height:1.6;
-  }
-  footer .by{font-weight:700;}
-  .hidden{display:none!important;}
+  @media(prefers-reduced-motion:reduce){.placed,.scard.shake{animation:none}}
+  .goals{display:grid;gap:7px}
+  .gchip{display:flex;align-items:center;gap:10px;font-size:1.02rem;font-weight:800;color:var(--ink);background:var(--t50);border:2px solid var(--t300);border-radius:12px;padding:7px 12px;line-height:1.25}
+  .gchip i{flex:none;width:24px;height:24px;border-radius:50%;border:3px solid var(--t300);background:#fff;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:.9rem;color:#fff}
+  .gchip.ok{border-color:var(--ok);background:#dcfce7} .gchip.ok i{background:var(--ok);border-color:var(--ok)}
+  .gchip.no{border-color:#fca5a5;background:#fff7f7} .gchip.no i{background:#fff;border-color:#fca5a5}
+  .gchip.ok i::before{content:"\2713"}
+  .cityinfo{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}
+  .cpill{background:var(--t100);border:2px solid var(--t300);color:var(--dark);border-radius:20px;padding:5px 14px;font-weight:700;font-size:.92rem}
+  .cpill b{font-size:1.05rem}
+  .citydrop{min-height:0;padding:0;margin-bottom:10px}
+  .citydrop .scene{margin:0;border:0;border-radius:0}
+  .dropcap{text-align:center;font-size:.82rem;font-weight:700;color:var(--deep);padding:6px;background:var(--t50)}
+  .citydrop.over .dropcap,.citydrop.target .dropcap{background:var(--main);color:#fff}
+  .meters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px}
+  .meter{border:2px solid var(--t300);border-radius:12px;padding:8px 10px;background:#fff}
+  .meter.ok{border-color:#86efac;background:#f0fdf4} .meter.no{border-color:#fca5a5;background:#fef2f2}
+  .mtop{display:flex;justify-content:space-between;font-size:.84rem;font-weight:700;color:var(--ink);margin-bottom:5px}
+  .mtop b{font-size:1rem}
+  .mbar{position:relative;height:12px;border-radius:8px;background:#e5e7eb;overflow:visible}
+  .mbar i{display:block;height:100%;border-radius:8px;transition:width .4s}
+  .mbar u{position:absolute;top:-4px;bottom:-4px;width:3px;background:#111827;border-radius:2px}
+  .scard .cost{position:absolute;top:6px;right:6px;z-index:1;background:var(--dark);color:#fff;font-size:.75rem;font-weight:800;border-radius:12px;padding:2px 8px}
+  .scard .cost::before{content:"custo "}
+  .cplaced{display:flex;flex-wrap:wrap;gap:6px;min-height:34px}
+  .cplaced .empty{color:var(--soft);font-size:.88rem;padding:6px}
+  .placed.rem{cursor:pointer;font-family:inherit}
+  .placed.rem b{margin-left:6px;font-size:.72rem;color:#b91c1c;background:#fee2e2;border-radius:8px;padding:1px 6px}
+  .end .scene{max-width:620px;margin:12px auto}
+  .wave{animation:wave 3s linear infinite}
+  @keyframes wave{to{transform:translateX(-50px)}}
+  .bob{animation:bob 2.4s ease-in-out infinite alternate}
+  @keyframes bob{from{transform:translateY(-2px)}to{transform:translate(6px,3px)}}
+  .fish{animation:swim 6s ease-in-out infinite alternate}
+  @keyframes swim{from{transform:translateX(-18px)}to{transform:translateX(26px)}}
+  .walk{animation:walk 5s ease-in-out infinite alternate}
+  @keyframes walk{from{transform:translateX(-14px)}to{transform:translateX(14px)}}
+  .tl{font:700 11px Segoe UI,system-ui,sans-serif;fill:#334155}
+  .bt{font:800 9px Segoe UI,system-ui,sans-serif}
+  @media(prefers-reduced-motion:reduce){.wave,.bob,.fish,.walk{animation:none}}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="top">
-    <h1>🌊 Maré Limpa: Resgate dos Oceanos ♻️</h1>
-    <p class="subtitle">Classifique os resíduos, salve o mar e vire um(a) guardião(ã) dos oceanos!</p>
-  </header>
-
-  <div class="levels" id="levels">
-    <button data-lvl="basico" onclick="setLevel('basico')">🐚 Básico</button>
-    <button data-lvl="inter" onclick="setLevel('inter')">🐟 Intermediário</button>
-    <button data-lvl="dificil" onclick="setLevel('dificil')">🐬 Difícil</button>
-    <button data-lvl="carbonauta" onclick="setLevel('carbonauta')">🛰️ Carbonauta</button>
-  </div>
-
-  <p class="instruction" id="instruction">Arraste cada item para a categoria certa — ou toque no item e depois na categoria.</p>
-
-  <div class="hud">
-    <div class="chip"><small>Tempo</small><span id="hudTime">0s</span></div>
-    <div class="chip"><small>Pontos</small><span id="hudScore">0</span></div>
-    <div class="chip"><small>Acertos</small><span id="hudHits">0</span></div>
-    <div class="chip"><small>Erros</small><span id="hudErr">0</span></div>
-  </div>
-
-  <div id="gameArea">
-    <div class="board">
-      <div class="panel">
-        <h2>🧺 Itens para classificar</h2>
-        <div class="tray" id="tray"></div>
-        <div class="feedback" id="feedback"><b>Vamos lá! 🌱</b>Selecione um nível e comece a classificar os resíduos.</div>
-      </div>
-      <div class="panel">
-        <h2>🗂️ Categorias</h2>
-        <div class="zones" id="zones"></div>
-      </div>
-    </div>
-
-    <div class="panel ranking">
-      <h2>🏆 Ranking Global — <span id="rkLevelName">Básico</span></h2>
-      <div class="rk-status" id="rkStatus">Carregando ranking…</div>
-      <ol id="rkList"></ol>
-    </div>
-  </div>
-
-  <div id="finalArea" class="panel final hidden"></div>
-
-  <footer>
-    <div class="by">— Idealizado por Ernandes Sobreira —</div>
-    <div>Tema: Poluição plástica e oceanos · Gênero: Arrastar e soltar (classificar) · app ambiental do dia (2026-06-15)</div>
-  </footer>
+<div class="top">
+  <a class="hub" href="index.html">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Todos os jogos
+  </a>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+<header>
+  <h1><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 14c2.5-2 5-2 7.5 0s5 2 7.5 0 4.5-2 5 0v8H2z" fill="#0891b2"/><path d="M12 3l3 5h-2v3h-2V8H9z" fill="#16a34a"/></svg> <span>Maré <span class="spark">Limpa</span></span></h1>
+  <p class="sub">Primeiro, aprenda a separar e reconhecer o lixo. Depois, coloque ações na praia para limpar a areia e o mar.</p>
+</header>
 
-const firebaseConfig = { apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ", authDomain: "jogos-ranking.firebaseapp.com", databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com", projectId: "jogos-ranking", storageBucket: "jogos-ranking.firebasestorage.app", messagingSenderId: "958784915420", appId: "1:958784915420:web:4212d3ad278f02d600f119" };
+<div class="levels" id="levels"></div>
+
+<div class="hud">
+  <span class="h1"><em id="lHits">Acertos</em> <b id="hits">0/0</b></span>
+  <span class="h2"><em id="lErrs">Erros</em> <b id="errs">0</b></span>
+  <span class="h3">Pontos <b id="score">0</b></span>
+  <span class="h4">Tempo <b id="timer">0s</b></span>
+</div>
+
+<div class="card">
+  <div id="stage"></div>
+</div>
+
+<div class="ranking">
+  <h3>Ranking Global, nível <span id="rankLevel"></span></h3>
+  <ol id="rankList"><li><span>Carregando o ranking...</span></li></ol>
+  <p class="note" id="rankNote"></p>
+</div>
+
+<footer>
+  Resíduos, plástico e oceanos · Arrastar, classificar e agir<br>
+  <span class="credit">Idealizado por Ernandes Sobreira</span>
+</footer>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* ---------- dados deste jogo ---------- */
 const GAME_ID = "2026-06-15-mare-limpa";
-
-let db = null;
-try { db = getFirestore(initializeApp(firebaseConfig)); } catch(e){ db = null; }
-
-/* ----------------------- CONTEÚDO DOS NÍVEIS ----------------------- */
+/* pontuacao e ranking iguais aos da versao anterior: campo level com a chave do nivel */
+function scoreNow(s){ if(s.city) return s.cityScore; return Math.max(0, s.placed*100 - s.errors*25 + Math.max(0, 200 - 2*s.seconds)); }
+function saveDoc(name, s, lv, f){ return {name, score:scoreNow(s), level:lv, seconds:s.seconds, ts:f.serverTimestamp()}; }
+const RANK = {field:'level', val:k=>k};
+const SCORE_NOTE = 'Cada cartão certo vale 100 pontos e cada erro tira 25. Terminar rápido dá até 200 pontos de bônus.';
+const END_MSG = [
+  [100, 'Praia limpa!', 'Você acertou todos os cartões de primeira.'],
+  [70, 'Bom trabalho', 'Poucos erros. Confira abaixo os cartões para revisar.'],
+  [0, 'Missão cumprida, com tropeços', 'Leia a revisão abaixo e jogue de novo.']
+];
+const C = '#0e7490', G2 = '#16a34a', GR = '#94a3b8';
+const ic = d => `<svg viewBox="0 0 32 32" aria-hidden="true">${d}</svg>`;
+const ci = d => `<svg viewBox="0 0 40 40" aria-hidden="true">${d}</svg>`;
+const ICO = {
+  rec: ic(`<path d="M16 4l5 8h-4v5h-2v-5h-4zM6 26l4-9 3 5-3 1h8v2H8zM26 26H18v-2h5l-2-4 3-1 4 7z" fill="${G2}"/>`),
+  nao: ic(`<path d="M8 9h16l-2 19H10z" fill="#64748b"/><rect x="6" y="6" width="20" height="3" rx="1.500" fill="#475569"/>`),
+  org: ic(`<path d="M6 26C6 14 14 6 26 6c0 12-8 20-20 20z" fill="${G2}"/><path d="M6 26 20 12" stroke="#fff" stroke-width="2"/>`),
+  rej: ic(`<path d="M8 9h16l-2 19H10z" fill="#78716c"/><rect x="6" y="6" width="20" height="3" rx="1.500" fill="#57534e"/><path d="M12 14l8 8M20 14l-8 8" stroke="#fff" stroke-width="2.400"/>`),
+  rap: ic(`<circle cx="16" cy="16" r="12" fill="#fff" stroke="${G2}" stroke-width="2.600"/><path d="M16 9v7l5 3" stroke="${G2}" stroke-width="2.600" fill="none" stroke-linecap="round"/>`),
+  lento: ic(`<path d="M9 4h14M9 28h14M10 4c0 8 12 8 12 12s-12 4-12 12M22 4c0 8-12 8-12 12s12 4 12 12" stroke="#dc2626" stroke-width="2.200" fill="none"/>`),
+  prim: ic(`<circle cx="10" cy="12" r="4" fill="${C}"/><circle cx="20" cy="9" r="4" fill="${C}"/><circle cx="16" cy="19" r="4" fill="${C}"/><circle cx="24" cy="20" r="4" fill="${C}"/>`),
+  sec: ic(`<path d="M5 22l7-12 6 8z" fill="#38bdf8"/><path d="M20 20l4-6 4 7z" fill="#38bdf8"/><path d="M13 26l3-4 3 4z" fill="#38bdf8"/>`),
+  macro: ic(`<rect x="11" y="5" width="10" height="23" rx="4" fill="#38bdf8"/><rect x="13" y="2" width="6" height="4" fill="${C}"/>`)
+};
+const ITEM_ICONS = {
+  _: ci(`<circle cx="20" cy="20" r="10" fill="${C}"/>`),
+  bottle: ci(`<rect x="14" y="10" width="12" height="26" rx="5" fill="#7dd3fc" stroke="#0284c7" stroke-width="1.800"/><rect x="16" y="4" width="8" height="6" fill="#0284c7"/><rect x="14" y="19" width="12" height="7" fill="#fff"/>`),
+  can: ci(`<rect x="12" y="7" width="16" height="27" rx="3" fill="#dc2626"/><ellipse cx="20" cy="7" rx="8" ry="2.500" fill="#cbd5e1"/><path d="M14 16h12" stroke="#fff" stroke-width="3"/>`),
+  paper: ci(`<rect x="7" y="8" width="26" height="24" rx="2" fill="#f8fafc" stroke="#64748b" stroke-width="1.800"/><path d="M11 13h18M11 18h8M11 22h8M11 26h8" stroke="#64748b" stroke-width="1.800"/><rect x="21" y="17" width="8" height="10" fill="#cbd5e1"/>`),
+  jar: ci(`<rect x="11" y="12" width="18" height="22" rx="4" fill="#bbf7d0" stroke="${G2}" stroke-width="1.800"/><rect x="12" y="7" width="16" height="5" rx="1" fill="#f59e0b"/>`),
+  butt: ci(`<rect x="6" y="18" width="20" height="6" fill="#fff" stroke="#94a3b8"/><rect x="26" y="18" width="8" height="6" fill="#f59e0b"/><path d="M8 15c2-3 4-3 6-6" stroke="${GR}" stroke-width="1.600" fill="none"/>`),
+  banana: ci(`<path d="M8 12c2 14 14 20 24 14-10 0-18-6-20-16z" fill="#facc15" stroke="#ca8a04" stroke-width="1.500"/><path d="M8 12l-2-3" stroke="#78350f" stroke-width="2.400"/>`),
+  pizza: ci(`<rect x="6" y="10" width="28" height="22" rx="2" fill="#d6a76c"/><path d="M12 15l16 4-12 8z" fill="#facc15"/><circle cx="18" cy="20" r="2" fill="#dc2626"/><circle cx="12" cy="26" r="3" fill="#a16207" opacity=".5"/>`),
+  diaper: ci(`<path d="M6 10h28l-4 12c-2 6-6 10-10 10S12 28 10 22z" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.800"/><path d="M6 10h28" stroke="#0284c7" stroke-width="4"/>`),
+  box: ci(`<path d="M6 14l14-6 14 6v16l-14 6-14-6z" fill="#d6a76c" stroke="#a16207" stroke-width="1.500"/><path d="M6 14l14 6 14-6M20 20v16" stroke="#a16207" stroke-width="1.500" fill="none"/>`),
+  steel: ci(`<rect x="11" y="8" width="18" height="26" rx="2" fill="#94a3b8"/><rect x="11" y="14" width="18" height="12" fill="#f97316"/><ellipse cx="20" cy="8" rx="9" ry="2.400" fill="#cbd5e1"/>`),
+  orange: ci(`<circle cx="20" cy="22" r="11" fill="#fb923c"/><path d="M20 11c1-4 4-6 7-6" stroke="${G2}" stroke-width="2.400" fill="none"/><path d="M14 20a6 6 0 0 1 4-4" stroke="#fed7aa" stroke-width="2" fill="none"/>`),
+  coffee: ci(`<path d="M8 14h20v10a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8z" fill="#fff" stroke="#78350f" stroke-width="2"/><path d="M28 17h3a3 3 0 0 1 0 6h-3" stroke="#78350f" stroke-width="2" fill="none"/><ellipse cx="18" cy="15" rx="9" ry="2" fill="#78350f"/>`),
+  leaves: ci(`<path d="M6 28C6 18 12 12 22 12c0 10-6 16-16 16z" fill="#f59e0b"/><path d="M16 26c0-8 6-14 16-14 0 8-6 14-16 14z" fill="${G2}"/>`),
+  sponge: ci(`<rect x="6" y="14" width="28" height="9" rx="2" fill="#facc15"/><rect x="6" y="23" width="28" height="6" rx="2" fill="${G2}"/><circle cx="12" cy="18" r="1.400" fill="#ca8a04"/><circle cx="20" cy="17" r="1.400" fill="#ca8a04"/><circle cx="27" cy="19" r="1.400" fill="#ca8a04"/>`),
+  mirror: ci(`<rect x="9" y="5" width="22" height="30" rx="3" fill="#e0f2fe" stroke="#64748b" stroke-width="2"/><path d="M14 9l12 20M24 8l-6 9 5 4-4 9" stroke="#64748b" stroke-width="1.500" fill="none"/>`),
+  towel: ci(`<rect x="8" y="6" width="24" height="10" rx="5" fill="#fff" stroke="#94a3b8" stroke-width="1.800"/><path d="M10 16v18h20V16" fill="#fff" stroke="#94a3b8" stroke-width="1.800"/><path d="M14 22h12M14 27h12" stroke="#e2e8f0" stroke-width="1.600"/>`),
+  apple: ci(`<path d="M14 10c-4 4-4 18 0 22M26 10c4 4 4 18 0 22" stroke="#dc2626" stroke-width="3" fill="none"/><rect x="15" y="12" width="10" height="18" rx="4" fill="#fef3c7"/><path d="M20 10V5" stroke="#78350f" stroke-width="2"/>`),
+  bag: ci(`<path d="M9 14h22l-2 20H11z" fill="#e2e8f0" stroke="#64748b" stroke-width="1.800"/><path d="M14 14c0-6 4-8 6-8s6 2 6 8" stroke="#64748b" stroke-width="1.800" fill="none"/>`),
+  foam: ci(`<path d="M9 9h22l-3 25H12z" fill="#fff" stroke="#94a3b8" stroke-width="1.800"/><ellipse cx="20" cy="9" rx="11" ry="2.400" fill="#f1f5f9" stroke="#94a3b8"/>`),
+  straw: ci(`<path d="M14 6l4 28h6l2-22" stroke="#ec4899" stroke-width="3" fill="none"/><path d="M12 4l4 2" stroke="#ec4899" stroke-width="3"/>`),
+  rings: ci(`<circle cx="12" cy="15" r="5" fill="none" stroke="#94a3b8" stroke-width="2.400"/><circle cx="23" cy="15" r="5" fill="none" stroke="#94a3b8" stroke-width="2.400"/><circle cx="12" cy="26" r="5" fill="none" stroke="#94a3b8" stroke-width="2.400"/><circle cx="23" cy="26" r="5" fill="none" stroke="#94a3b8" stroke-width="2.400"/>`),
+  line: ci(`<circle cx="14" cy="22" r="8" fill="none" stroke="${C}" stroke-width="2.400"/><path d="M14 22c8 0 14-6 18-16" stroke="#94a3b8" stroke-width="1.500" fill="none"/><path d="M32 6v8a3 3 0 0 1-6 0" stroke="#64748b" stroke-width="2" fill="none"/>`),
+  beads: ci(`<rect x="10" y="12" width="20" height="22" rx="5" fill="#f9a8d4"/><rect x="14" y="6" width="12" height="6" fill="#db2777"/><circle cx="15" cy="20" r="1.600" fill="#fff"/><circle cx="21" cy="24" r="1.600" fill="#fff"/><circle cx="25" cy="18" r="1.600" fill="#fff"/><circle cx="16" cy="28" r="1.600" fill="#fff"/>`),
+  pellet: ci(`<circle cx="12" cy="14" r="5" fill="#f1f5f9" stroke="#94a3b8"/><circle cx="24" cy="12" r="5" fill="#f1f5f9" stroke="#94a3b8"/><circle cx="18" cy="24" r="5" fill="#f1f5f9" stroke="#94a3b8"/><circle cx="29" cy="25" r="5" fill="#f1f5f9" stroke="#94a3b8"/>`),
+  fiber: ci(`<rect x="7" y="8" width="26" height="26" rx="4" fill="#e2e8f0" stroke="#64748b" stroke-width="1.800"/><circle cx="20" cy="22" r="8" fill="#bae6fd" stroke="#64748b" stroke-width="1.800"/><path d="M15 21c3-2 6 2 10 0M15 24c3-2 6 2 10 0" stroke="#a855f7" stroke-width="1.400" fill="none"/>`),
+  tire: ci(`<circle cx="20" cy="20" r="14" fill="#1f2937"/><circle cx="20" cy="20" r="6" fill="#94a3b8"/><circle cx="34" cy="30" r="1.600" fill="#1f2937"/><circle cx="36" cy="25" r="1.200" fill="#1f2937"/>`),
+  glitter: ci(`<path d="M20 5l3 9 9 3-9 3-3 9-3-9-9-3 9-3z" fill="#f472b6"/><path d="M31 26l1.500 4 4 1.500-4 1.500-1.500 4-1.500-4-4-1.500 4-1.500z" fill="#a78bfa"/>`),
+  frag: ci(`<path d="M6 26l7-12 6 9z" fill="#38bdf8"/><path d="M22 22l5-8 5 9z" fill="#7dd3fc"/><path d="M14 34l3-5 3 5z" fill="#0ea5e9"/><circle cx="30" cy="8" r="4" fill="#facc15"/>`),
+  rope: ci(`<path d="M6 30c6-6 6-14 14-14s8 8 14 2" stroke="#a16207" stroke-width="4" fill="none"/><path d="M8 34l3-3M12 34l1-4M30 12l3-2M33 16l3-1" stroke="#a16207" stroke-width="1.400"/>`),
+  net: ci(`<path d="M4 8h32M4 16h32M4 24h32M4 32h32M8 4v32M16 4v32M24 4v32M32 4v32" stroke="#16a34a" stroke-width="1.500"/><path d="M18 18c4-2 8 0 10 3-3 2-7 2-10-1z" fill="#f97316"/>`),
+  cap: ci(`<rect x="10" y="14" width="20" height="14" rx="3" fill="#2563eb"/><path d="M12 14v14M16 14v14M20 14v14M24 14v14M28 14v14" stroke="#1d4ed8" stroke-width="1.400"/>`),
+  wrap: ci(`<path d="M8 8l24 0-2 4 2 4-2 4 2 4-2 4 2 4H8l2-4-2-4 2-4-2-4 2-4z" fill="#f59e0b"/><rect x="13" y="15" width="14" height="10" rx="2" fill="#dc2626"/>`),
+  bins: ci(`<rect x="3" y="14" width="8" height="20" rx="1.500" fill="#2563eb"/><rect x="12" y="14" width="8" height="20" rx="1.500" fill="#dc2626"/><rect x="21" y="14" width="8" height="20" rx="1.500" fill="#16a34a"/><rect x="30" y="14" width="8" height="20" rx="1.500" fill="#facc15"/>`),
+  cleanup: ci(`<circle cx="13" cy="9" r="4" fill="#fcd34d"/><path d="M13 13v12M13 17l-6 5M13 17l7 3M13 25l-4 9M13 25l4 9" stroke="${C}" stroke-width="2.600" fill="none"/><path d="M27 14l-6 22" stroke="#78350f" stroke-width="2"/><path d="M24 30l-6 6h8z" fill="#16a34a"/>`),
+  noplastic: ci(`<path d="M14 6l3 26h6l2-20" stroke="#ec4899" stroke-width="3" fill="none"/><circle cx="20" cy="20" r="15" fill="none" stroke="#dc2626" stroke-width="3"/><path d="M9 9l22 22" stroke="#dc2626" stroke-width="3"/>`),
+  barrier: ci(`<path d="M2 24c4-3 8-3 12 0s8 3 12 0 8-3 12 0v14H2z" fill="#38bdf8"/><path d="M4 22h32" stroke="#f97316" stroke-width="4" stroke-dasharray="5 2"/><rect x="10" y="12" width="7" height="10" rx="2" fill="#e2e8f0" stroke="#64748b"/>`),
+  wwtp: ci(`<circle cx="12" cy="24" r="9" fill="#bae6fd" stroke="#0369a1" stroke-width="2"/><circle cx="29" cy="24" r="8" fill="#bbf7d0" stroke="#16a34a" stroke-width="2"/><path d="M6 24h12M12 18v12" stroke="#0369a1" stroke-width="1.500"/>`),
+  washer: ci(`<rect x="8" y="5" width="24" height="30" rx="3" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/><circle cx="20" cy="22" r="8" fill="#bae6fd" stroke="#64748b" stroke-width="2"/><rect x="28" y="28" width="9" height="7" rx="1.500" fill="#16a34a"/>`),
+  coop: ci(`<path d="M4 18l16-12 16 12v16H4z" fill="#fde68a" stroke="#b45309" stroke-width="1.800"/><path d="M20 14l4 6h-3v4h-2v-4h-3zM12 30l3-6 2 3M28 30l-3-6-2 3" stroke="${G2}" stroke-width="2.200" fill="none"/>`),
+  compost: ci(`<rect x="8" y="14" width="24" height="22" rx="3" fill="#78350f"/><path d="M8 20h24M8 26h24" stroke="#a16207" stroke-width="2"/><path d="M14 14c0-4 3-7 6-8M24 14c0-3 2-5 5-6" stroke="${G2}" stroke-width="2.400" fill="none"/>`),
+  refill: ci(`<rect x="12" y="10" width="14" height="25" rx="5" fill="#bbf7d0" stroke="${G2}" stroke-width="2"/><rect x="14" y="5" width="10" height="5" fill="${G2}"/><path d="M30 12a8 8 0 0 1 0 14M28 26l2 2 2-3" stroke="${G2}" stroke-width="2" fill="none"/>`),
+  boat: ci(`<path d="M4 24h32l-5 8H9z" fill="#dc2626"/><path d="M20 24V6l10 14H20" fill="#fff" stroke="#64748b"/><path d="M8 34c4-2 8-2 12 0s8 2 12 0" stroke="#38bdf8" stroke-width="2" fill="none"/><path d="M28 28l6 6M31 28l3 3" stroke="#16a34a" stroke-width="1.500"/>`),
+  broom: ci(`<path d="M30 4L16 20" stroke="#78350f" stroke-width="2.600"/><path d="M16 20l-10 6 4 6 10-6z" fill="#facc15"/><path d="M2 34c4-2 8-2 12 0s8 2 12 0 8-2 12 0" stroke="#0284c7" stroke-width="2.400" fill="none"/>`),
+  kiosk: ci(`<path d="M4 14l16-8 16 8z" fill="#f97316"/><rect x="8" y="14" width="24" height="18" fill="#fde68a"/><rect x="13" y="20" width="5" height="8" fill="#7dd3fc"/><rect x="22" y="20" width="5" height="8" fill="#e2e8f0"/>`),
+  sewer: ci(`<rect x="2" y="10" width="20" height="8" fill="#64748b"/><path d="M22 14c6 0 8 6 8 14" stroke="#a16207" stroke-width="5" fill="none"/><path d="M20 34c4-2 8-2 12 0" stroke="#38bdf8" stroke-width="2"/>`),
+  bury: ci(`<rect x="2" y="22" width="36" height="14" fill="#fde68a"/><path d="M26 4l-6 18" stroke="#78350f" stroke-width="2.400"/><path d="M17 20l6 4 2-6z" fill="#64748b"/><rect x="8" y="26" width="8" height="5" fill="#7dd3fc"/><rect x="20" y="28" width="6" height="4" fill="#dc2626"/>`)
+};
 const LEVELS = {
-  basico: {
-    name: "Básico",
-    instruction: "Arraste (ou toque) cada resíduo para a lixeira certa: pode reciclar ou não?",
-    zones: [
-      { id:"rec", title:"♻️ Reciclável" },
-      { id:"nao", title:"🗑️ Não reciclável" }
-    ],
-    items: [
-      { label:"Garrafa de plástico", emo:"🧴", zone:"rec", fb:"Garrafas PET são 100% recicláveis e podem virar novas embalagens e até roupas." },
-      { label:"Lata de refrigerante", emo:"🥫", zone:"rec", fb:"O alumínio pode ser reciclado infinitas vezes sem perder qualidade." },
-      { label:"Jornal", emo:"📰", zone:"rec", fb:"Papel limpo é reciclável e poupa árvores, água e energia." },
-      { label:"Pote de vidro", emo:"🫙", zone:"rec", fb:"O vidro é reciclável e pode ser refundido sem perder qualidade." },
-      { label:"Bituca de cigarro", emo:"🚬", zone:"nao", fb:"O filtro contém microplásticos e químicos tóxicos: vai para o rejeito, nunca no chão ou no mar." },
-      { label:"Casca de banana", emo:"🍌", zone:"nao", fb:"Restos de comida não vão na reciclagem comum — o ideal é compostar." },
-      { label:"Papel sujo de gordura", emo:"🍕", zone:"nao", fb:"Papel engordurado contamina a reciclagem e por isso vira rejeito." },
-      { label:"Fralda descartável", emo:"🧷", zone:"nao", fb:"Fraldas misturam vários materiais e não são recicláveis." }
-    ]
-  },
-  inter: {
-    name: "Intermediário",
-    instruction: "Separe em três frações: reciclável, orgânico (compostável) ou rejeito.",
-    zones: [
-      { id:"rec", title:"♻️ Reciclável" },
-      { id:"org", title:"🌱 Orgânico" },
-      { id:"rej", title:"🚯 Rejeito" }
-    ],
-    items: [
-      { label:"Garrafa PET", emo:"🧴", zone:"rec", fb:"O PET (politereftalato de etileno) é o plástico mais reciclado no Brasil." },
-      { label:"Caixa de papelão", emo:"📦", zone:"rec", fb:"Papelão limpo e seco é reciclável; molhado ou engordurado perde valor." },
-      { label:"Lata de aço", emo:"🥫", zone:"rec", fb:"Aço é separado por ímãs nas usinas e reciclado com alta eficiência." },
-      { label:"Casca de laranja", emo:"🍊", zone:"org", fb:"Resíduos orgânicos viram adubo na compostagem e reduzem o metano dos aterros." },
-      { label:"Borra de café", emo:"☕", zone:"org", fb:"A borra de café é rica em nutrientes e ótima para a compostagem doméstica." },
-      { label:"Folhas e podas", emo:"🍂", zone:"org", fb:"Resíduos verdes são compostáveis e devolvem carbono e nutrientes ao solo." },
-      { label:"Bituca de cigarro", emo:"🚬", zone:"rej", fb:"O filtro é feito de acetato de celulose, um plástico que libera microfibras." },
-      { label:"Fralda usada", emo:"🧷", zone:"rej", fb:"Fraldas combinam celulose, plásticos e gel, sendo destinadas ao rejeito." },
-      { label:"Esponja de cozinha", emo:"🧽", zone:"rej", fb:"Esponjas sintéticas soltam microplásticos e não são recicláveis." },
-      { label:"Espelho quebrado", emo:"🪞", zone:"rej", fb:"O espelho tem uma camada metálica e não entra no vidro reciclável comum." }
-    ]
-  },
-  dificil: {
-    name: "Difícil",
-    instruction: "Estime o tempo de decomposição no oceano (dados NOAA): semanas/anos, décadas ou séculos.",
-    zones: [
-      { id:"curto", title:"⏱️ Até ~5 anos" },
-      { id:"dec", title:"📆 Décadas (10–100 anos)" },
-      { id:"sec", title:"🏛️ Séculos (+100 anos)" }
-    ],
-    items: [
-      { label:"Toalha de papel", emo:"🧻", zone:"curto", fb:"Papel-toalha se decompõe em cerca de 2 a 4 semanas." },
-      { label:"Jornal molhado", emo:"📰", zone:"curto", fb:"O jornal degrada em cerca de 6 semanas na água." },
-      { label:"Sabugo de maçã", emo:"🍎", zone:"curto", fb:"Restos de fruta se decompõem em cerca de 2 meses." },
-      { label:"Bituca de cigarro", emo:"🚬", zone:"dec", fb:"O filtro leva cerca de 10 anos para se fragmentar (NOAA)." },
-      { label:"Sacola plástica", emo:"🛍️", zone:"dec", fb:"Uma sacola leva por volta de 20 anos para se desintegrar no mar." },
-      { label:"Copo de isopor", emo:"🧊", zone:"dec", fb:"O poliestireno expandido (EPS) persiste cerca de 50 anos." },
-      { label:"Lata de alumínio", emo:"🥫", zone:"sec", fb:"O alumínio leva cerca de 200 anos para se decompor no oceano." },
-      { label:"Canudo plástico", emo:"🍹", zone:"sec", fb:"Canudos persistem cerca de 200 anos — recuse-os sempre que puder." },
-      { label:"Garrafa PET", emo:"🧴", zone:"sec", fb:"Garrafas plásticas levam cerca de 450 anos para se degradar (NOAA)." },
-      { label:"Fralda descartável", emo:"🧷", zone:"sec", fb:"As fraldas demoram cerca de 450 anos para se decompor." },
-      { label:"Anéis plásticos de latas", emo:"⭕", zone:"sec", fb:"As argolas de embalagens duram cerca de 400 anos e prendem animais marinhos." },
-      { label:"Linha de pesca de náilon", emo:"🎣", zone:"sec", fb:"A linha de náilon leva até 600 anos — o item mais persistente da lista." }
-    ]
-  },
-  carbonauta: {
-    name: "🛰️ Carbonauta",
-    instruction: "Nível pesquisador: classifique a origem do plástico — microplástico primário, secundário ou macroplástico (>5 mm).",
-    zones: [
-      { id:"prim", title:"🔬 Microplástico primário" },
-      { id:"sec", title:"🌀 Microplástico secundário" },
-      { id:"macro", title:"🌊 Macroplástico (>5 mm)" }
-    ],
-    items: [
-      { label:"Microesferas de cosmético", emo:"💧", zone:"prim", fb:"Microbeads são fabricadas já em escala micrométrica: microplástico primário, banido em vários países." },
-      { label:"Pellets industriais (nurdles)", emo:"⚪", zone:"prim", fb:"Os nurdles são a matéria-prima do plástico e vazam direto na forma micro: primário." },
-      { label:"Microfibras de poliéster", emo:"🧵", zone:"prim", fb:"A lavagem de roupas sintéticas libera microfibras pré-formadas — primário difuso." },
-      { label:"Partículas de desgaste de pneu", emo:"🚗", zone:"prim", fb:"O atrito dos pneus gera partículas micrométricas: uma das maiores fontes primárias." },
-      { label:"Glitter de PET metalizado", emo:"✨", zone:"prim", fb:"O glitter já é produzido em tamanho micro, sendo microplástico primário." },
-      { label:"Fragmentos de garrafa por UV", emo:"🔹", zone:"sec", fb:"A radiação UV fotodegrada o PET e o quebra em fragmentos: microplástico secundário." },
-      { label:"Pedaços de sacola fotodegradada", emo:"🛍️", zone:"sec", fb:"A sacola se fragmenta por luz e ondas, gerando microplástico secundário." },
-      { label:"Esferas de isopor fragmentado", emo:"🧊", zone:"sec", fb:"O EPS se esfarela mecanicamente no mar, originando microplástico secundário." },
-      { label:"Fibras de corda de náilon gasta", emo:"🪢", zone:"sec", fb:"Cordas e redes se desfiam com o uso, liberando microfibras secundárias." },
-      { label:"Rede de pesca fantasma", emo:"🥅", zone:"macro", fb:"Redes abandonadas são macroplástico e causam emalhamento de fauna marinha." },
-      { label:"Garrafa PET inteira", emo:"🧴", zone:"macro", fb:"Acima de 5 mm é macroplástico — fonte futura de fragmentos secundários." },
-      { label:"Tampinha de garrafa", emo:"🔵", zone:"macro", fb:"Tampas estão entre os itens mais coletados em praias: macroplástico." },
-      { label:"Embalagem de salgadinho", emo:"🍟", zone:"macro", fb:"Filmes laminados multicamadas são macroplástico de difícil reciclagem." },
-      { label:"Canudo plástico", emo:"🥤", zone:"macro", fb:"O canudo é macroplástico e fonte recorrente de fragmentação secundária." }
-    ]
-  }
+  basico: { label:'Básico', title:'Pode reciclar?',
+    desc:'Antes de ir para a praia, o lixo passa pela nossa casa. Separe o que vai para a reciclagem comum e o que não vai.',
+    zones:[{id:'rec', label:'Reciclável', icon:ICO.rec}, {id:'nao', label:'Não vai para a reciclagem', icon:ICO.nao}],
+    items:[
+      {t:'Garrafa de plástico', ic:'bottle', z:'rec', fb:'Garrafas PET são recicláveis e podem virar novas embalagens e até fibras de tecido.'},
+      {t:'Lata de refrigerante', ic:'can', z:'rec', fb:'O alumínio pode ser reciclado muitas vezes e a lata volta a ser lata.'},
+      {t:'Jornal', ic:'paper', z:'rec', fb:'Papel limpo e seco é reciclável.'},
+      {t:'Pote de vidro', ic:'jar', z:'rec', fb:'O vidro pode ser derretido e virar um novo pote.'},
+      {t:'Bituca de cigarro', ic:'butt', z:'nao', fb:'O filtro tem plástico e restos tóxicos. Vai para o lixo comum, nunca para o chão.'},
+      {t:'Casca de banana', ic:'banana', z:'nao', fb:'Resto de comida não vai na reciclagem. O melhor destino é a compostagem.'},
+      {t:'Caixa de pizza engordurada', ic:'pizza', z:'nao', fb:'Papel sujo de gordura estraga a reciclagem do papel.'},
+      {t:'Fralda descartável', ic:'diaper', z:'nao', fb:'A fralda mistura vários materiais e não é reciclada na coleta comum.'}
+    ]},
+  inter: { label:'Intermediário', title:'Três destinos',
+    desc:'Separe em três partes: reciclável, orgânico (vira adubo) e rejeito (vai para o aterro).',
+    zones:[{id:'rec', label:'Reciclável', icon:ICO.rec}, {id:'org', label:'Orgânico', icon:ICO.org}, {id:'rej', label:'Rejeito', icon:ICO.rej}],
+    items:[
+      {t:'Garrafa PET', ic:'bottle', z:'rec', fb:'O PET limpo segue para a reciclagem.'},
+      {t:'Caixa de papelão', ic:'box', z:'rec', fb:'Papelão limpo e seco é reciclável. Molhado ou engordurado perde valor.'},
+      {t:'Lata de aço', ic:'steel', z:'rec', fb:'O aço é separado com ímãs nas usinas de reciclagem.'},
+      {t:'Casca de laranja', ic:'orange', z:'org', fb:'Orgânico compostado vira adubo e deixa de gerar metano no aterro.'},
+      {t:'Borra de café', ic:'coffee', z:'org', fb:'A borra de café vai muito bem na composteira.'},
+      {t:'Folhas e podas', ic:'leaves', z:'org', fb:'Folhas e galhos são compostáveis e devolvem nutrientes ao solo.'},
+      {t:'Bituca de cigarro', ic:'butt', z:'rej', fb:'O filtro é de acetato de celulose, um plástico. Vai para o rejeito.'},
+      {t:'Fralda usada', ic:'diaper', z:'rej', fb:'Fraldas juntam celulose, plástico e gel. Vão para o rejeito.'},
+      {t:'Esponja de cozinha', ic:'sponge', z:'rej', fb:'A esponja sintética não é reciclada e solta microplástico com o uso.'},
+      {t:'Espelho quebrado', ic:'mirror', z:'rej', fb:'O espelho tem uma camada metálica e não entra na reciclagem comum de vidro.'}
+    ]},
+  dificil: { label:'Difícil', title:'Some rápido ou fica no mar?',
+    desc:'No mar, alguns resíduos se desfazem em semanas ou meses. Outros ficam ali por muitos anos e se partem em pedacinhos.',
+    zones:[{id:'rap', label:'Some em semanas ou meses', icon:ICO.rap}, {id:'lento', label:'Fica por muitos anos', icon:ICO.lento}],
+    items:[
+      {t:'Papel-toalha', ic:'towel', z:'rap', fb:'O papel é feito de fibras de planta, que micróbios decompõem depressa na água.'},
+      {t:'Jornal molhado', ic:'paper', z:'rap', fb:'Molhado, o jornal se desmancha em poucas semanas.'},
+      {t:'Miolo de maçã', ic:'apple', z:'rap', fb:'Restos de fruta são comida para micróbios e somem rápido.'},
+      {t:'Caixa de papelão', ic:'box', z:'rap', fb:'O papelão encharca, amolece e se decompõe em pouco tempo.'},
+      {t:'Casca de banana', ic:'banana', z:'rap', fb:'A casca é orgânica e se decompõe em semanas ou meses.'},
+      {t:'Bituca de cigarro', ic:'butt', z:'lento', fb:'O filtro é de plástico e dura anos, soltando substâncias tóxicas na água.'},
+      {t:'Sacola plástica', ic:'bag', z:'lento', fb:'A sacola se parte em pedaços cada vez menores, mas o plástico continua lá.'},
+      {t:'Copo de isopor', ic:'foam', z:'lento', fb:'O isopor se esfarela em bolinhas que ficam muito tempo no mar.'},
+      {t:'Lata de alumínio', ic:'can', z:'lento', fb:'O metal resiste por muitos anos antes de se desfazer.'},
+      {t:'Canudo plástico', ic:'straw', z:'lento', fb:'O canudo é leve, viaja longe e dura muitos anos.'},
+      {t:'Argolas plásticas de latas', ic:'rings', z:'lento', fb:'As argolas duram anos e podem prender o pescoço de aves e tartarugas.'},
+      {t:'Linha de pesca de náilon', ic:'line', z:'lento', fb:'A linha de náilon dura muito e enrosca peixes, aves e tartarugas.'}
+    ]},
+  avancado: { label:'Avançado', title:'Micro ou macro?',
+    desc:'Microplástico tem menos de 5 mm. O primário já nasce pequeno. O secundário vem de um plástico maior que se quebrou.',
+    zones:[{id:'prim', label:'Microplástico primário', icon:ICO.prim}, {id:'sec', label:'Microplástico secundário', icon:ICO.sec}, {id:'macro', label:'Macroplástico (mais de 5 mm)', icon:ICO.macro}],
+    items:[
+      {t:'Microesferas de cosmético', ic:'beads', z:'prim', fb:'As microesferas são fabricadas já minúsculas. Vários países proibiram o uso delas em cosméticos.'},
+      {t:'Pellets da indústria do plástico', ic:'pellet', z:'prim', fb:'Os pellets são a matéria-prima do plástico e vazam já no tamanho micro.'},
+      {t:'Fibras soltas ao lavar roupa sintética', ic:'fiber', z:'prim', fb:'Roupas de poliéster soltam microfibras na lavagem. Elas são contadas como fonte primária.'},
+      {t:'Pó do desgaste de pneus', ic:'tire', z:'prim', fb:'O atrito do pneu com o asfalto solta partículas minúsculas de borracha e plástico.'},
+      {t:'Glitter', ic:'glitter', z:'prim', fb:'O glitter já é produzido em tamanho micro.'},
+      {t:'Pedaços de garrafa quebrada pelo sol', ic:'frag', z:'sec', fb:'O sol e as ondas quebram o plástico em fragmentos cada vez menores.'},
+      {t:'Pedacinhos de sacola rasgada', ic:'bag', z:'sec', fb:'A sacola se fragmenta com a luz e as ondas e vira microplástico secundário.'},
+      {t:'Bolinhas de isopor esfarelado', ic:'foam', z:'sec', fb:'O isopor se desfaz em bolinhas no mar.'},
+      {t:'Fiapos de corda de náilon gasta', ic:'rope', z:'sec', fb:'Cordas e redes se desfiam com o uso e soltam fibras.'},
+      {t:'Rede de pesca abandonada', ic:'net', z:'macro', fb:'Redes perdidas no mar continuam prendendo peixes, tartarugas e golfinhos.'},
+      {t:'Garrafa PET inteira', ic:'bottle', z:'macro', fb:'Inteira, a garrafa é macroplástico. Com o tempo, vira fonte de fragmentos.'},
+      {t:'Tampinha de garrafa', ic:'cap', z:'macro', fb:'Tampinhas estão entre os itens mais recolhidos em limpezas de praia.'},
+      {t:'Embalagem de salgadinho', ic:'wrap', z:'macro', fb:'Embalagens de várias camadas são macroplástico e quase nunca são recicladas.'},
+      {t:'Canudo plástico inteiro', ic:'straw', z:'macro', fb:'O canudo inteiro tem mais de 5 mm. É macroplástico.'}
+    ]},
+  praia1: { label:'Praia: areia limpa', mode:'city', title:'Areia limpa',
+    desc:'A praia da cidade está cheia de lixo. Coloque ações para limpar a areia e diminuir o plástico que vai para o mar.',
+    slots:4, budget:8, goals:[{id:'areia', max:40}, {id:'mar', max:55}],
+    cards:['lixeiras','mutirao','proibir','retornavel','cooperativa','varrer','quiosques','enterrar']},
+  praia2: { label:'Praia: mar sem plástico', mode:'city', title:'Mar sem plástico',
+    desc:'Agora o foco é a água. Diminua o plástico boiando e o microplástico que os peixes acabam engolindo.',
+    slots:5, budget:12, goals:[{id:'mar', max:45}, {id:'micro', max:45}],
+    cards:['ecobarreira','ete','filtromaq','redes','proibir','mutirao','lixeiras','esgoto','varrer','enterrar']},
+  carbonauta: { label:'Carbonauta', mode:'city', title:'Do lixo de casa ao fundo do mar',
+    desc:'Os quatro indicadores precisam baixar ao mesmo tempo, com pouco orçamento. Pense nas ações que resolvem mais de um problema.',
+    slots:6, budget:16, goals:[{id:'areia', max:48}, {id:'mar', max:45}, {id:'micro', max:45}, {id:'aterro', max:50}],
+    cards:['lixeiras','mutirao','proibir','ecobarreira','ete','filtromaq','cooperativa','compost','retornavel','redes','varrer','quiosques','esgoto','enterrar']}
 };
 
-/* ----------------------- ESTADO ----------------------- */
-let level = "basico";
-let items = [];
-let placedCount = 0;
-let score = 0, hits = 0, errors = 0;
-let startTs = 0, timerId = null;
-let selectedId = null;
-let finished = false;
-
-const $ = (id)=>document.getElementById(id);
-
-function shuffle(a){ // Fisher–Yates
-  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
-  return a;
+/* ---------- a praia: os indicadores sobem ou descem conforme as acoes ---------- */
+const NOTE = 'Nas missões na praia, os números de cada indicador são uma escala do jogo, de 0 a 100. Eles mostram se cada ação melhora ou piora a situação, não medidas reais.';
+const CITY = {
+  pollutants: [
+    {id:'areia', label:'Lixo na areia', short:'lixo na areia', color:'#a16207'},
+    {id:'mar', label:'Plástico boiando no mar', short:'plástico no mar', color:'#0284c7'},
+    {id:'micro', label:'Microplástico na água', short:'microplástico', color:'#a855f7'},
+    {id:'aterro', label:'Lixo enviado ao aterro', short:'aterro', color:'#57534e'}
+  ],
+  base: {areia:80, mar:75, micro:70, aterro:80},
+  cards: [
+    {id:'lixeiras', t:'Lixeiras de coleta seletiva na orla', ic:'bins', cost:2, eff:{areia:-16, mar:-6, aterro:-4}, fb:'Com lixeira por perto, menos gente deixa lixo na areia. A separação ainda manda parte do lixo para a reciclagem.'},
+    {id:'mutirao', t:'Mutirão de limpeza da praia', ic:'cleanup', cost:1, eff:{areia:-18, mar:-4}, fb:'Recolher o lixo antes que a maré o leve evita que ele vire plástico no mar.'},
+    {id:'proibir', t:'Fim de canudos e sacolas descartáveis', ic:'noplastic', cost:2, eff:{areia:-8, mar:-12, micro:-6, aterro:-4}, fb:'Sem esses itens de uso único, menos plástico chega à praia e menos fragmentos se formam no mar.'},
+    {id:'ecobarreira', t:'Ecobarreira na foz do rio', ic:'barrier', cost:3, eff:{mar:-18, micro:-4}, fb:'Boias no rio seguram o lixo flutuante antes que ele chegue ao mar.'},
+    {id:'ete', t:'Estação de tratamento de esgoto', ic:'wwtp', cost:4, eff:{micro:-18, mar:-4}, fb:'O tratamento do esgoto retém boa parte das microfibras e outros microplásticos que viriam das casas.'},
+    {id:'filtromaq', t:'Filtro de microfibras nas máquinas de lavar', ic:'washer', cost:2, eff:{micro:-12}, fb:'O filtro segura as fibras que as roupas sintéticas soltam na lavagem.'},
+    {id:'cooperativa', t:'Cooperativa de catadores e reciclagem', ic:'coop', cost:3, eff:{aterro:-20, areia:-6, mar:-4}, fb:'Os catadores levam o material reciclável de volta para a indústria. Menos lixo vai para o aterro e para a rua.'},
+    {id:'compost', t:'Compostagem do lixo orgânico', ic:'compost', cost:2, eff:{aterro:-16}, fb:'Restos de comida viram adubo em vez de ocupar espaço no aterro.'},
+    {id:'retornavel', t:'Garrafas retornáveis e refil', ic:'refill', cost:2, eff:{areia:-6, mar:-8, aterro:-8}, fb:'Uma garrafa que volta para ser lavada e enchida substitui muitas garrafas descartáveis.'},
+    {id:'redes', t:'Recolher redes de pesca abandonadas', ic:'boat', cost:3, eff:{mar:-10, micro:-4}, fb:'Redes perdidas continuam matando animais e se desfiam em microplástico. Recolher evita os dois problemas.'},
+    {id:'varrer', t:'Varrer o lixo da areia para o mar', ic:'broom', cost:1, eff:{areia:-12, mar:16, micro:6}, fb:'A areia parece limpa, mas o lixo só mudou de lugar e ficou ainda mais difícil de recolher.'},
+    {id:'quiosques', t:'Mais quiosques com copos descartáveis', ic:'kiosk', cost:1, eff:{areia:10, mar:8, aterro:6}, fb:'Mais descartáveis significa mais lixo na areia, no mar e no aterro.'},
+    {id:'esgoto', t:'Ligar o esgoto direto no rio', ic:'sewer', cost:1, eff:{micro:10, mar:6}, fb:'Esgoto sem tratamento leva microfibras e lixo para o rio e depois para o mar.'},
+    {id:'enterrar', t:'Enterrar o lixo na areia', ic:'bury', cost:1, eff:{areia:-10, micro:10}, fb:'O lixo some da vista, mas se quebra embaixo da areia e vira microplástico.'}
+  ],
+  render: beachRender
+};
+const mix = (a,b,t) => '#'+[0,2,4].map(i=>Math.round(parseInt(a.substr(i,2),16)*(1-t)+parseInt(b.substr(i,2),16)*t).toString(16).padStart(2,'0')).join('');
+function beachRender(v, P){
+  const has = id => P.includes(id);
+  const water = mix('38bdf8','7c8f6b', Math.max(0,(v.micro-30)/100));
+  /* cidade e aterro ao fundo */
+  let back = '';
+  [[330,40],[360,62],[392,48],[424,70],[458,52]].forEach(([x,h],i)=>{ back += `<rect x="${x}" y="${92-h}" width="28" height="${h}" fill="${['#cbd5e1','#94a3b8','#a8a29e'][i%3]}"/>`; });
+  const ah = 10 + v.aterro*0.32;
+  back += `<path d="M500 92c10-${ah} 70-${ah} 90 0z" fill="#a8a29e"/><text x="545" y="104" text-anchor="middle" class="tl">aterro</text>`;
+  if(has('cooperativa')) back += `<g><path d="M470 92v-16l14-10 14 10v16z" fill="#fde68a" stroke="#b45309"/><text x="484" y="88" text-anchor="middle" class="bt" fill="#16a34a">R</text></g>`;
+  if(has('compost')) back += `<rect x="572" y="80" width="16" height="12" rx="2" fill="#78350f"/><path d="M576 80c0-3 3-5 5-6" stroke="#16a34a" stroke-width="2" fill="none"/>`;
+  /* rio que desagua no mar, a esquerda */
+  let river = `<path d="M0 70c40 10 60 30 70 60" stroke="${has('esgoto')?'#a16207':'#38bdf8'}" stroke-width="16" fill="none"/>`;
+  if(has('ecobarreira')) river += `<path d="M42 92l26 -6" stroke="#f97316" stroke-width="5" stroke-dasharray="6 2"/>`;
+  if(has('ete')) river += `<g><circle cx="22" cy="54" r="10" fill="#bae6fd" stroke="#0369a1" stroke-width="2"/><circle cx="46" cy="52" r="8" fill="#bbf7d0" stroke="#16a34a" stroke-width="2"/></g>`;
+  if(has('esgoto')) river += `<rect x="0" y="58" width="20" height="7" fill="#64748b"/>`;
+  /* mar com plastico boiando e microplastico */
+  let sea = `<rect y="92" width="600" height="70" fill="${water}"/><path class="wave" d="M0 92q25-6 50 0t50 0 50 0 50 0 50 0 50 0 50 0 50 0 50 0 50 0 50 0 50 0 50 0 50 0" fill="none" stroke="#e0f2fe" stroke-width="3"/>`;
+  const nf = Math.round(v.mar/9);
+  for(let i=0;i<nf;i++){ const x = 90 + (i*53)%490, y = 104 + (i*17)%42;
+    sea += `<g class="bob" style="animation-delay:-${(i*0.4).toFixed(1)}s">${i%3===0 ? `<rect x="${x}" y="${y}" width="16" height="7" rx="3" fill="#e0f2fe" stroke="#0284c7"/>` : i%3===1 ? `<path d="M${x} ${y+6}c3-8 12-8 15 0z" fill="#f8fafc" stroke="#64748b"/>` : `<circle cx="${x+5}" cy="${y+4}" r="4" fill="#2563eb"/>`}</g>`; }
+  const nm = Math.round(v.micro/3);
+  for(let i=0;i<nm;i++) sea += `<circle cx="${80 + (i*37)%510}" cy="${110 + (i*13)%48}" r="1.600" fill="${['#f472b6','#a855f7','#facc15','#f97316'][i%4]}"/>`;
+  if(has('redes')) sea += `<g class="bob"><path d="M420 104h40l-6 8h-28z" fill="#dc2626"/><path d="M440 104V88l10 12h-10" fill="#fff" stroke="#64748b"/></g>`;
+  else sea += `<path d="M300 140h50M305 135v14M315 135v14M325 135v14M335 135v14M345 135v14M300 146h50" stroke="#16a34a" stroke-width="1.200" opacity=".8"/>`;
+  /* peixes: mais peixes quando a agua esta limpa */
+  const nfi = Math.max(0, Math.round((100 - (v.mar+v.micro)/2)/18));
+  for(let i=0;i<nfi;i++) sea += `<g class="fish" style="animation-delay:-${i*1.5}s"><path d="M${120+i*90} ${130+(i%2)*14}c6-6 16-6 20 0-4 6-14 6-20 0z" fill="#f97316"/><path d="M${120+i*90} ${130+(i%2)*14}l-6-5v10z" fill="#f97316"/></g>`;
+  /* areia com lixo */
+  let sand = `<path d="M0 162c120-14 300-10 600-6V230H0z" fill="#fde68a"/>`;
+  const nl = Math.round(v.areia/7);
+  for(let i=0;i<nl;i++){ const x = 30 + (i*47)%550, y = 178 + (i*11)%40;
+    sand += i%4===0 ? `<rect x="${x}" y="${y}" width="12" height="5" rx="2" fill="#7dd3fc" stroke="#0284c7"/>` : i%4===1 ? `<rect x="${x}" y="${y}" width="7" height="9" rx="1" fill="#dc2626"/>` : i%4===2 ? `<path d="M${x} ${y+6}c2-6 9-6 11 0z" fill="#f8fafc" stroke="#94a3b8"/>` : `<rect x="${x}" y="${y}" width="8" height="3" fill="#fff" stroke="#f59e0b"/>`; }
+  if(has('lixeiras')) [120,300,480].forEach(x=>{ sand += `<rect x="${x}" y="168" width="7" height="14" fill="#2563eb"/><rect x="${x+8}" y="168" width="7" height="14" fill="#dc2626"/><rect x="${x+16}" y="168" width="7" height="14" fill="#16a34a"/><rect x="${x+24}" y="168" width="7" height="14" fill="#facc15"/>`; });
+  if(has('mutirao')) [200,380].forEach((x,j)=>{ sand += `<g class="walk" style="animation-delay:-${j}s"><circle cx="${x}" cy="178" r="4" fill="#fcd34d"/><path d="M${x} 182v10M${x} 185l-5 4M${x} 185l5 3M${x} 192l-3 7M${x} 192l3 7" stroke="#0e7490" stroke-width="2" fill="none"/><path d="M${x+8} 188l6 6h-8z" fill="#16a34a"/></g>`; });
+  if(has('quiosques')) [240,420].forEach(x=>{ sand += `<path d="M${x-14} 176l14-10 14 10z" fill="#f97316"/><rect x="${x-10}" y="176" width="20" height="14" fill="#fde68a"/>`; });
+  if(has('retornavel')) sand += `<g><rect x="540" y="170" width="20" height="16" fill="#16a34a"/><rect x="544" y="164" width="5" height="8" rx="2" fill="#bbf7d0"/><rect x="551" y="164" width="5" height="8" rx="2" fill="#bbf7d0"/></g>`;
+  if(has('enterrar')) sand += `<ellipse cx="160" cy="214" rx="26" ry="5" fill="#d6a76c"/>`;
+  if(has('filtromaq')) back += `<g><rect x="300" y="70" width="18" height="22" rx="2" fill="#f1f5f9" stroke="#64748b"/><circle cx="309" cy="82" r="6" fill="#bae6fd" stroke="#64748b"/></g>`;
+  if(has('proibir')) back += `<g><circle cx="270" cy="72" r="12" fill="#fff" stroke="#dc2626" stroke-width="3"/><path d="M262 64l16 16" stroke="#dc2626" stroke-width="3"/><path d="M268 64l3 16" stroke="#ec4899" stroke-width="2.400"/></g>`;
+  return `<svg viewBox="0 0 600 230" role="img" aria-label="Praia, mar, rio e cidade com indicadores de lixo">
+    <rect width="600" height="92" fill="#e0f2fe"/><circle cx="160" cy="30" r="16" fill="#facc15"/>
+    ${back}${sea}${river}${sand}
+  </svg>`;
 }
 
-function setLevel(lvl){
-  level = lvl;
-  finished = false;
-  $("finalArea").classList.add("hidden");
-  $("gameArea").classList.remove("hidden");
-  document.querySelectorAll("#levels button").forEach(b=>{
-    b.classList.toggle("active", b.dataset.lvl===lvl);
+
+/* ---------- motor comum dos jogos de classificar ---------- */
+const KEYS = Object.keys(LEVELS);
+let level = KEYS[0], items = [], placed = 0, hits = 0, errors = 0, missed = {}, wrongTry = {};
+let sel = null, startTime = null, timerInt = null, elapsed = 0, scoreSaved = false, done = false;
+let db = null, fsFns = null;
+const TARGET = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/></svg>`;
+const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const st = () => ({placed, hits, errors, seconds:elapsed, total:items.length, city:isCity(), cityScore:cityScore()});
+/* ---------- modo cidade: o jogador coloca acoes na cidade para baixar poluentes ---------- */
+let cityPlaced = [], citySwaps = 0;
+const isCity = () => LEVELS[level] && LEVELS[level].mode==='city';
+function cityVals(){
+  const v = Object.assign({}, CITY.base);
+  cityPlaced.forEach(id=>{ const c = CITY.cards.find(x=>x.id===id); Object.entries(c.eff).forEach(([k,d])=>v[k]=(v[k]||0)+d); });
+  Object.keys(v).forEach(k=>v[k]=Math.max(0,Math.min(100,v[k])));
+  return v;
+}
+const citySpent = () => cityPlaced.reduce((a,id)=>a+CITY.cards.find(x=>x.id===id).cost,0);
+const cityGoalsOk = () => LEVELS[level].goals.every(g=>cityVals()[g.id] <= g.max);
+function cityScore(){ if(!isCity()) return 0; const L=LEVELS[level];
+  return Math.max(0, 1000 + 40*(L.budget-citySpent()) - 60*citySwaps - Math.floor(elapsed/2)); }
+const zoneOf = id => LEVELS[level].zones.find(z=>z.id===id);
+
+function buildLevels(){
+  $('levels').innerHTML = KEYS.map(k=>`<button data-lvl="${k}" onclick="setLevel('${k}')">${LEVELS[k].label}</button>`).join('');
+}
+function setLevel(l){
+  level = l;
+  document.querySelectorAll('.levels button').forEach(b=>b.classList.toggle('active',b.dataset.lvl===l));
+  $('rankLevel').textContent = LEVELS[l].label;
+  restart(); loadRanking();
+}
+function restart(){
+  clearInterval(timerInt); timerInt=null; startTime=null; elapsed=0;
+  placed=0; hits=0; errors=0; missed={}; wrongTry={}; sel=null; scoreSaved=false; done=false;
+  cityPlaced=[]; citySwaps=0;
+  $('timer').textContent='0s';
+  const L = LEVELS[level];
+  if(isCity()){ renderCityLevel(); return; }
+  items = shuffle(L.items.map((it,i)=>Object.assign({i}, it)));
+  $('stage').innerHTML = `
+    <div class="qhead"><div class="qnum">${L.label} · ${items.length} cartões · ${L.zones.length} caixas</div>
+      <div class="qtext">${L.title}</div>
+      <div class="qdesc">${L.desc}</div>
+      <div class="goalbox"><h4>${TARGET} Sua missão</h4><p>Leve cada cartão para a caixa certa. Arraste, ou toque no cartão e depois na caixa.</p></div></div>
+    ${typeof renderScene==='function' ? '<div class="scene" id="scene"></div><div class="scenecap" id="scenecap"></div>' : ''}
+    <div class="prog"><i id="progbar" style="width:0%"></i></div>
+    <div class="progtxt" id="progtxt"></div>
+    <div class="trayw"><h5>Cartões para classificar</h5><div class="tray" id="tray"></div></div>
+    <div class="zones" id="zones" style="--nz:${L.zones.length}">${L.zones.map(z=>`
+      <div class="zone" data-z="${z.id}" role="button" tabindex="0" aria-label="${esc(z.label)}">
+        <div class="zhead"><div class="zico">${z.icon||''}</div><div class="zlab">${z.label}</div><span class="zcount" id="zc-${z.id}">0</span></div>
+        <div class="zitems" id="zi-${z.id}"></div></div>`).join('')}</div>
+    <div class="fb" id="fb" aria-live="polite">Comece pelo cartão que você tem mais certeza. O tempo começa no primeiro movimento.</div>
+    ${typeof NOTE!=='undefined' && NOTE ? `<p class="modelnote">${NOTE}</p>` : ''}`;
+  const icOf = it => (typeof ITEM_ICONS!=='undefined' && ITEM_ICONS[it.ic]) || (typeof ITEM_ICONS!=='undefined' && ITEM_ICONS._) || '';
+  $('tray').innerHTML = items.map(it=>`<button class="scard" data-i="${it.i}" aria-label="${esc(it.t)}"><span class="cart">${icOf(it)}</span><span class="ctxt">${it.t}</span></button>`).join('');
+  document.querySelectorAll('.scard').forEach(attach);
+  document.querySelectorAll('.zone').forEach(z=>{
+    z.addEventListener('click',()=>{ if(sel!==null) drop(sel, z.dataset.z); });
+    z.addEventListener('keydown',e=>{ if((e.key==='Enter'||e.key===' ') && sel!==null){ e.preventDefault(); drop(sel, z.dataset.z); } });
   });
-  const cfg = LEVELS[lvl];
-  $("instruction").textContent = cfg.instruction;
-  $("rkLevelName").textContent = cfg.name.replace("🛰️ ","");
-  // reset state
-  score=0; hits=0; errors=0; placedCount=0; selectedId=null;
-  items = cfg.items.map((it,i)=>({...it, id:"it"+i, done:false}));
-  shuffle(items);
-  renderHUD();
-  renderZones();
-  renderTray();
-  setFeedback("Bora começar! 🌊","Arraste ou toque um item e leve-o até a categoria certa.","");
-  startTimer();
-  loadRanking();
+  hud();
 }
-window.setLevel = setLevel;
-
+/* limpeza da cena: comeca poluida, cada acerto limpa, cada erro suja */
+const clean = () => Math.max(0, Math.min(1, 0.2 + 0.8*(items.length? placed/items.length : 0) - 0.07*errors));
+function scene(){
+  if(typeof renderScene!=='function' || !$('scene')) return;
+  const c = clean(); $('scene').innerHTML = renderScene(c);
+  if(typeof sceneCaption==='function') $('scenecap').innerHTML = sceneCaption(c);
+}
+function hud(){
+  $('lHits').textContent = isCity() ? 'Ações' : 'Acertos'; $('lErrs').textContent = isCity() ? 'Trocas' : 'Erros';
+  if(isCity()){ cityHud(); return; }
+  scene();
+  $('hits').textContent = placed+'/'+items.length; $('errs').textContent = errors;
+  $('score').textContent = scoreNow(st());
+  const pb = $('progbar'); if(pb){ pb.style.width = (items.length? placed/items.length*100 : 0)+'%';
+    $('progtxt').textContent = placed===items.length ? 'Tudo classificado!' : `Faltam ${items.length-placed} de ${items.length} cartões`; }
+}
 function startTimer(){
-  startTs = Date.now();
-  if(timerId) clearInterval(timerId);
-  timerId = setInterval(()=>{
-    if(finished) return;
-    $("hudTime").textContent = Math.floor((Date.now()-startTs)/1000)+"s";
-  },250);
+  if(timerInt) return;
+  startTime = Date.now();
+  timerInt = setInterval(()=>{elapsed=Math.floor((Date.now()-startTime)/1000);$('timer').textContent=elapsed+'s'; if(isCity()) $('score').textContent=cityScore(); else hud();},500);
 }
-
-function renderHUD(){
-  $("hudScore").textContent = score;
-  $("hudHits").textContent = hits;
-  $("hudErr").textContent = errors;
+function select(i){
+  sel = (sel===i) ? null : i;
+  document.querySelectorAll('.scard').forEach(c=>c.classList.toggle('sel', +c.dataset.i===sel));
+  document.querySelectorAll('.zone').forEach(z=>z.classList.toggle('target', sel!==null));
 }
-
-function setFeedback(title, body, cls){
-  const f = $("feedback");
-  f.className = "feedback "+(cls||"");
-  f.innerHTML = "<b>"+title+"</b>"+body;
-}
-
-function renderZones(){
-  const cfg = LEVELS[level];
-  const z = $("zones");
-  z.innerHTML = "";
-  cfg.zones.forEach(zone=>{
-    const div = document.createElement("div");
-    div.className = "zone";
-    div.dataset.zone = zone.id;
-    div.innerHTML = '<div class="zone-title">'+zone.title+'</div><div class="placed" id="placed-'+zone.id+'"></div>';
-    div.addEventListener("dragover",(e)=>{e.preventDefault();div.classList.add("over");});
-    div.addEventListener("dragleave",()=>div.classList.remove("over"));
-    div.addEventListener("drop",(e)=>{e.preventDefault();div.classList.remove("over");
-      const id = e.dataTransfer.getData("text/plain"); tryPlace(id, zone.id, div);});
-    div.addEventListener("click",()=>{ if(selectedId){ tryPlace(selectedId, zone.id, div); }});
-    z.appendChild(div);
+/* arrastar com ponteiro (mouse e toque); um toque sem arrastar seleciona o cartao */
+function attach(card){
+  card.addEventListener('pointerdown', e=>{
+    if(done) return;
+    const r = card.getBoundingClientRect(), sx = e.clientX, sy = e.clientY;
+    let moving = false, ghost = null, lx = sx, ly = sy, scrollRaf = null;
+    /* rolagem automatica quando o cartao chega perto da borda da tela */
+    const autoScroll = ()=>{
+      if(!moving) return;
+      const edge = 70, h = window.innerHeight;
+      const dy = ly > h-edge ? Math.min(18,(ly-(h-edge))/3) : ly < edge ? -Math.min(18,(edge-ly)/3) : 0;
+      if(dy){ window.scrollBy(0, dy); document.querySelectorAll('.zone.over').forEach(z=>z.classList.remove('over')); const z = zoneAt(lx, ly); if(z) z.classList.add('over'); }
+      scrollRaf = requestAnimationFrame(autoScroll);
+    };
+    const mv = ev=>{
+      lx = ev.clientX; ly = ev.clientY;
+      if(!moving && Math.hypot(ev.clientX-sx, ev.clientY-sy) > 6){
+        moving = true; startTimer();
+        ghost = document.createElement('span'); ghost.className='scard ghost'; ghost.style.width=r.width+'px'; ghost.style.height=r.height+'px';
+        card.after(ghost);
+        Object.assign(card.style,{position:'fixed',zIndex:999,width:r.width+'px',left:r.left+'px',top:r.top+'px',pointerEvents:'none'});
+        card.classList.add('dragging');
+        scrollRaf = requestAnimationFrame(autoScroll);
+      }
+      if(moving){
+        card.style.left=(ev.clientX-(sx-r.left))+'px'; card.style.top=(ev.clientY-(sy-r.top))+'px';
+        document.querySelectorAll('.zone.over').forEach(z=>z.classList.remove('over'));
+        const z = zoneAt(ev.clientX, ev.clientY); if(z) z.classList.add('over');
+      }
+    };
+    const up = ev=>{
+      window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
+      document.querySelectorAll('.zone.over').forEach(z=>z.classList.remove('over'));
+      if(scrollRaf) cancelAnimationFrame(scrollRaf);
+      if(!moving){ startTimer(); select(+card.dataset.i); return; }
+      moving = false;
+      card.classList.remove('dragging'); card.removeAttribute('style'); if(ghost) ghost.remove();
+      const z = zoneAt(ev.clientX, ev.clientY);
+      if(z) drop(+card.dataset.i, z.dataset.z);
+    };
+    window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
   });
+  card.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); startTimer(); select(+card.dataset.i); } });
+  card.addEventListener('click', e=>e.preventDefault());
 }
-
-function renderTray(){
-  const tray = $("tray");
-  tray.innerHTML = "";
-  items.filter(it=>!it.done).forEach(it=>{
-    const b = document.createElement("div");
-    b.className = "item"+(selectedId===it.id?" selected":"");
-    b.draggable = true;
-    b.dataset.id = it.id;
-    b.innerHTML = '<span class="emo">'+it.emo+'</span>'+it.label;
-    b.addEventListener("dragstart",(e)=>{e.dataTransfer.setData("text/plain",it.id);b.classList.add("dragging");});
-    b.addEventListener("dragend",()=>b.classList.remove("dragging"));
-    b.addEventListener("click",()=>{
-      selectedId = (selectedId===it.id)? null : it.id;
-      renderTray();
-    });
-    tray.appendChild(b);
-  });
-  if(items.every(it=>it.done) && !finished){ finishGame(); }
+function zoneAt(x,y){
+  for(const el of document.elementsFromPoint(x,y)){ const z = el.closest && el.closest('.zone'); if(z) return z; }
+  return null;
 }
-
-function tryPlace(id, zoneId, zoneDiv){
-  const it = items.find(x=>x.id===id);
-  if(!it || it.done) return;
-  selectedId = null;
-  if(it.zone === zoneId){
-    it.done = true;
-    placedCount++;
-    hits++;
-    score += 100;
-    renderHUD();
-    // adiciona visualmente na zona
-    const placed = document.getElementById("placed-"+zoneId);
-    const tag = document.createElement("div");
-    tag.className = "item pop";
-    tag.innerHTML = '<span class="emo">'+it.emo+'</span>'+it.label;
-    placed.appendChild(tag);
-    setFeedback("✅ Certo! +100","<span>"+it.label+":</span> "+it.fb,"ok");
-    renderTray();
+function flash(zid, cls){ const z=document.querySelector(`.zone[data-z="${zid}"]`); z.classList.add(cls); setTimeout(()=>z.classList.remove(cls),500); }
+function drop(i, zid){
+  if(done) return;
+  if(isCity()){ cityPlace(i); return; }
+  const it = items.find(x=>x.i===i), card = document.querySelector(`.scard[data-i="${i}"]`), fb = $('fb');
+  if(!it || !card) return;
+  select(null);
+  if(it.z === zid){
+    placed++; hits += missed[i] ? 0 : 1;
+    card.remove();
+    const ico = card.querySelector('.cart') ? card.querySelector('.cart').innerHTML : '';
+    $('zi-'+zid).insertAdjacentHTML('beforeend', `<span class="placed">${ico}${it.t}</span>`);
+    $('zc-'+zid).textContent = $('zi-'+zid).children.length;
+    flash(zid,'flashok');
+    fb.className='fb ok'; fb.innerHTML=`<b>Certo!</b>${it.fb}`;
+    hud();
+    if(placed===items.length) setTimeout(renderEnd, 900);
   } else {
-    errors++;
-    score = Math.max(0, score-25);
-    renderHUD();
-    zoneDiv.classList.remove("shake"); void zoneDiv.offsetWidth; zoneDiv.classList.add("shake");
-    setTimeout(()=>zoneDiv.classList.remove("shake"),450);
-    const correctZone = LEVELS[level].zones.find(z=>z.id===it.zone).title;
-    setFeedback("❌ Quase! −25","<span>"+it.label+"</span> não é dessa categoria. O lugar certo é <b style='display:inline'>"+correctZone+"</b>. "+it.fb,"bad");
+    errors++; missed[i] = true; wrongTry[i] = (wrongTry[i]||0)+1;
+    card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),400);
+    flash(zid,'flashno');
+    fb.className='fb no';
+    fb.innerHTML = wrongTry[i]>=2
+      ? `<b>Ainda não é aí.</b>Uma pista: ${it.hint || it.fb}`
+      : `<b>Não é nessa caixa.</b>"${it.t}" volta para a mesa. Pense de novo e tente outra caixa.`;
+    hud();
   }
 }
-window.tryPlace = tryPlace;
-
-function finishGame(){
-  finished = true;
-  if(timerId) clearInterval(timerId);
-  const secs = Math.floor((Date.now()-startTs)/1000);
-  const cfg = LEVELS[level];
-  // bônus de tempo (acerto = maior melhor)
-  const timeBonus = Math.max(0, 200 - secs*2);
-  score += timeBonus;
-  renderHUD();
-  $("gameArea").classList.add("hidden");
-  const fa = $("finalArea");
-  fa.classList.remove("hidden");
-  fa.innerHTML =
-    '<div class="confetti">🌊🎉🐢♻️🐬</div>'+
-    '<h2>Oceano mais limpo!</h2>'+
-    '<p>Você concluiu o nível <b>'+cfg.name+'</b> e classificou tudo corretamente.</p>'+
-    '<div class="stats">'+
-      '<div class="chip"><small>Pontos</small>'+score+'</div>'+
-      '<div class="chip"><small>Acertos</small>'+hits+'</div>'+
-      '<div class="chip"><small>Erros</small>'+errors+'</div>'+
-      '<div class="chip"><small>Tempo</small>'+secs+'s</div>'+
-      '<div class="chip"><small>Bônus tempo</small>+'+timeBonus+'</div>'+
-    '</div>'+
-    '<p>Registre seu nome no <b>Ranking Global</b> ('+cfg.name+'):</p>'+
-    '<input id="playerName" maxlength="18" placeholder="Seu nome ou apelido" />'+
-    '<div><button class="btn" onclick="submitScore()">🏆 Enviar pontuação</button>'+
-    '<button class="btn secondary" onclick="setLevel(\''+level+'\')">🔁 Jogar de novo</button></div>'+
-    '<div class="rk-status" id="submitStatus" style="margin-top:10px;"></div>';
+function renderEnd(){
+  done = true; clearInterval(timerInt); timerInt=null;
+  if(isCity()){ renderCityEnd(); return; }
+  const s = st(), sc = scoreNow(s), n = items.length;
+  const pct = Math.round(hits/n*100), m = END_MSG.find(x=>pct>=x[0]);
+  const rev = items.filter(it=>missed[it.i]);
+  $('stage').innerHTML = `
+    <div class="end">
+      <h2>${m[1]}</h2><p>${m[2]}</p>
+      <div class="stats">
+        <div class="stat">${hits}/${n}<span>Certos de primeira</span></div>
+        <div class="stat">${sc}<span>Pontos</span></div>
+        <div class="stat">${errors}<span>Erros</span></div>
+        <div class="stat">${elapsed}s<span>Tempo</span></div>
+      </div>
+      ${typeof SCORE_NOTE!=='undefined' ? `<p style="font-size:.85rem">${SCORE_NOTE}</p>` : ''}
+      <div class="savebox">
+        <input id="playerName" maxlength="20" placeholder="Seu nome (até 20 letras)">
+        <button class="btn" id="saveBtn" onclick="saveScore()">Salvar no ranking</button>
+      </div>
+      <p id="saveStatus" style="margin-top:8px;font-size:.85rem"></p>
+      <button class="btn ghost" style="margin-top:10px" onclick="restart()">Jogar de novo</button>
+      ${rev.length ? `<div class="review"><h3>Para revisar</h3><ul>${rev.map(it=>`<li><b>${it.t}</b> vai em <span class="z">${zoneOf(it.z).label}</span>. ${it.fb}</li>`).join('')}</ul></div>` : ''}
+    </div>`;
 }
-window.finishGame = finishGame;
 
-async function submitScore(){
-  const name = ($("playerName").value || "Anônimo").trim().slice(0,18) || "Anônimo";
-  const secs = Math.floor((Date.now()-startTs)/1000);
-  const st = $("submitStatus");
-  if(!db){ st.textContent = "Ranking offline — sua pontuação foi registrada só nesta sessão."; return; }
-  st.textContent = "Enviando…";
+function renderCityLevel(){
+  const L = LEVELS[level];
+  items = L.cards.map((id,i)=>Object.assign({i}, CITY.cards.find(c=>c.id===id)));
+  shuffle(items);
+  $('stage').innerHTML = `
+    <div class="qhead"><div class="qnum">${L.label} · missão na cidade</div>
+      <div class="qtext">${L.title}</div>
+      <div class="qdesc">${L.desc}</div>
+      <div class="goalbox"><h4>${TARGET} Sua meta</h4><div class="goals" id="goals"></div></div></div>
+    <div class="cityinfo"><span class="cpill" id="cBudget"></span><span class="cpill" id="cSlots"></span></div>
+    <div class="zone citydrop" data-z="city" role="button" tabindex="0" aria-label="Cidade: solte aqui as ações">
+      <div class="scene" id="scene"></div>
+      <div class="dropcap">Solte aqui a ação escolhida</div></div>
+    <div class="meters" id="meters"></div>
+    <div class="trayw"><h5>Ações disponíveis · arraste para a cidade ou toque e depois toque na cidade</h5><div class="tray" id="tray"></div></div>
+    <div class="trayw placedw"><h5>Ações na cidade · toque em uma para retirar</h5><div class="cplaced" id="cplaced"></div></div>
+    <div class="fb" id="fb" aria-live="polite">Cada ação custa pontos de orçamento e ocupa um espaço da cidade. Escolha bem: algumas ações parecem boas, mas pioram o ar.</div>
+    <button class="btn next" id="finish" onclick="renderEnd()">Concluir missão</button>
+    ${typeof NOTE!=='undefined' && NOTE ? `<p class="modelnote">${NOTE}</p>` : ''}`;
+  drawCityTray();
+  const cz = document.querySelector('.citydrop');
+  cz.addEventListener('click',()=>{ if(sel!==null) cityPlace(sel); });
+  cz.addEventListener('keydown',e=>{ if((e.key==='Enter'||e.key===' ') && sel!==null){ e.preventDefault(); cityPlace(sel); } });
+  cityHud();
+}
+function drawCityTray(){
+  $('tray').innerHTML = items.filter(it=>!cityPlaced.includes(it.id)).map(it=>
+    `<button class="scard" data-i="${it.i}" aria-label="${esc(it.t)}"><span class="cost">${it.cost}</span><span class="cart">${ITEM_ICONS[it.ic]||''}</span><span class="ctxt">${it.t}</span></button>`).join('');
+  document.querySelectorAll('#tray .scard').forEach(attach);
+  $('cplaced').innerHTML = cityPlaced.length ? cityPlaced.map(id=>{ const c = CITY.cards.find(x=>x.id===id);
+    return `<button class="placed rem" onclick="cityRemove('${id}')">${ITEM_ICONS[c.ic]||''}${c.t}<b>retirar</b></button>`; }).join('') : '<span class="empty">Nenhuma ação ainda.</span>';
+}
+function cityHud(){
+  const L = LEVELS[level], v = cityVals();
+  $('lHits').textContent='Ações'; $('lErrs').textContent='Trocas';
+  $('hits').textContent = cityPlaced.length+'/'+L.slots; $('errs').textContent = citySwaps; $('score').textContent = cityScore();
+  if(!$('goals')) return;
+  $('goals').innerHTML = L.goals.map(g=>{ const p = CITY.pollutants.find(x=>x.id===g.id); const ok = v[g.id] <= g.max;
+    return `<div class="gchip ${ok?'ok':'no'}"><i></i><span>${p.label} até ${g.max}</span></div>`; }).join('');
+  $('cBudget').innerHTML = `Orçamento: <b>${L.budget-citySpent()}</b> de ${L.budget}`;
+  $('cSlots').innerHTML = `Espaços: <b>${L.slots-cityPlaced.length}</b> de ${L.slots} livres`;
+  $('scene').innerHTML = CITY.render(v, cityPlaced);
+  const gl = {}; L.goals.forEach(g=>gl[g.id]=g.max);
+  $('meters').innerHTML = CITY.pollutants.map(p=>{ const val = Math.round(v[p.id]), lim = gl[p.id];
+    const cls = lim===undefined ? '' : val<=lim ? 'ok' : 'no';
+    return `<div class="meter ${cls}"><div class="mtop"><span>${p.label}</span><b>${val}</b></div>
+      <div class="mbar"><i style="width:${val}%;background:${p.color}"></i>${lim!==undefined?`<u style="left:${lim}%" title="meta"></u>`:''}</div></div>`; }).join('');
+  $('finish').classList.toggle('show', cityGoalsOk());
+}
+function cityPlace(i){
+  const it = items.find(x=>x.i===i), L = LEVELS[level], fb = $('fb');
+  select(null); if(!it || cityPlaced.includes(it.id)) return;
+  startTimer();
+  if(cityPlaced.length >= L.slots){ fb.className='fb no'; fb.innerHTML='<b>Sem espaço.</b>Todos os espaços da cidade estão ocupados. Retire uma ação para colocar outra.'; return; }
+  if(citySpent()+it.cost > L.budget){ fb.className='fb no'; fb.innerHTML=`<b>Orçamento insuficiente.</b>Essa ação custa ${it.cost} e sobram ${L.budget-citySpent()}. Retire uma ação ou escolha outra mais barata.`; return; }
+  const before = cityVals(); cityPlaced.push(it.id); const after = cityVals();
+  const ch = CITY.pollutants.map(p=>{ const d = Math.round(after[p.id]-before[p.id]); return d ? `${p.short} ${d>0?'sobe':'cai'} ${Math.abs(d)}` : ''; }).filter(Boolean).join(', ');
+  const bad = Object.values(it.eff).some(d=>d>0);
+  fb.className = 'fb '+(bad?'no':'ok');
+  fb.innerHTML = `<b>${it.t}: ${ch||'quase nada muda'}.</b>${it.fb}`;
+  drawCityTray(); cityHud();
+}
+function cityRemove(id){
+  if(done) return;
+  cityPlaced = cityPlaced.filter(x=>x!==id); citySwaps++;
+  const fb = $('fb'); fb.className='fb'; fb.innerHTML='<b>Ação retirada.</b>Cada troca custa alguns pontos. O orçamento volta para você.';
+  drawCityTray(); cityHud();
+}
+function renderCityEnd(){
+  const L = LEVELS[level], sc = cityScore(), v = cityVals();
+  $('stage').innerHTML = `
+    <div class="end">
+      <h2>Missão cumprida!</h2><p>A cidade atingiu todas as metas.</p>
+      <div class="scene">${CITY.render(v, cityPlaced)}</div>
+      <div class="stats">
+        <div class="stat">${sc}<span>Pontos</span></div>
+        <div class="stat">${L.budget-citySpent()}<span>Orçamento que sobrou</span></div>
+        <div class="stat">${citySwaps}<span>Trocas</span></div>
+        <div class="stat">${elapsed}s<span>Tempo</span></div>
+      </div>
+      <p style="font-size:.85rem">Começa com 1000 pontos. Cada ponto de orçamento que sobra vale 40, cada troca tira 60 e cada 2 segundos tiram 1.</p>
+      <div class="savebox">
+        <input id="playerName" maxlength="20" placeholder="Seu nome (até 20 letras)">
+        <button class="btn" id="saveBtn" onclick="saveScore()">Salvar no ranking</button>
+      </div>
+      <p id="saveStatus" style="margin-top:8px;font-size:.85rem"></p>
+      <button class="btn ghost" style="margin-top:10px" onclick="restart()">Jogar de novo</button>
+      <div class="review"><h3>O que você fez na cidade</h3><ul>${cityPlaced.map(id=>{const c=CITY.cards.find(x=>x.id===id);return `<li><b>${c.t}.</b> ${c.fb}</li>`;}).join('')}</ul></div>
+    </div>`;
+}
+
+async function initFirebase(){
   try{
-    await addDoc(collection(db,"games",GAME_ID,"scores"),
-      { name, score, level, seconds: secs, ts: serverTimestamp() });
-    st.textContent = "✅ Pontuação enviada! Veja o ranking abaixo.";
-    $("finalArea").appendChild(buildRankingClone());
+    const appM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const fsM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    db=fsM.getFirestore(appM.initializeApp(firebaseConfig)); fsFns=fsM;
     loadRanking();
   }catch(e){
-    st.textContent = "Não foi possível enviar agora, mas o jogo segue funcionando.";
+    $('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';
+    $('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';
   }
 }
-window.submitScore = submitScore;
-
-function buildRankingClone(){
-  const d = document.createElement("div"); d.style.marginTop="14px"; return d;
-}
-
-async function loadRanking(){
-  const status = $("rkStatus");
-  const listEl = $("rkList");
-  listEl.innerHTML = "";
-  if(!db){ status.textContent = "Ranking indisponível offline — o jogo continua 100% jogável."; return; }
-  status.textContent = "Carregando ranking…";
+async function saveScore(){
+  if(scoreSaved) return;
+  const name=$('playerName').value.trim(), stt=$('saveStatus');
+  if(!name){stt.textContent='Digite seu nome primeiro.';return;}
+  if(!db){stt.textContent='Sem conexão com o ranking. Seu resultado não foi enviado.';return;}
   try{
-    const q = query(collection(db,"games",GAME_ID,"scores"), orderBy("score","desc"), limit(80));
-    const snap = await getDocs(q);
-    const rows = [];
-    snap.forEach(doc=>{ const d=doc.data(); if(d.level===level) rows.push(d); });
-    rows.sort((a,b)=> (b.score||0)-(a.score||0));
-    const top = rows.slice(0,10);
-    if(top.length===0){ status.textContent = "Seja o primeiro a pontuar neste nível! 🌊"; return; }
-    status.textContent = "Top "+top.length+" — nível "+LEVELS[level].name.replace("🛰️ ","");
-    top.forEach(r=>{
-      const li = document.createElement("li");
-      li.textContent = (r.name||"Anônimo")+" — "+(r.score||0)+" pts ("+(r.seconds||0)+"s)";
-      listEl.appendChild(li);
-    });
-  }catch(e){
-    status.textContent = "Não foi possível carregar o ranking agora.";
-  }
+    $('saveBtn').disabled=true;
+    /* grava no mesmo formato da versao anterior, para o ranking antigo continuar valendo */
+    await fsFns.addDoc(fsFns.collection(db,'games',GAME_ID,'scores'), saveDoc(name.slice(0,20), st(), level, fsFns));
+    scoreSaved=true; stt.textContent='Salvo no Ranking Global!'; loadRanking();
+  }catch(e){ $('saveBtn').disabled=false; stt.textContent='Erro ao salvar. Verifique a internet e tente de novo.'; }
 }
-window.loadRanking = loadRanking;
+async function loadRanking(){
+  if(!db) return;
+  const list=$('rankList'), asked=level;
+  try{
+    const q=fsFns.query(fsFns.collection(db,'games',GAME_ID,'scores'),fsFns.where(RANK.field,'==',RANK.val(asked)),fsFns.limit(1000));
+    const snap=await fsFns.getDocs(q);
+    if(asked!==level) return;
+    const rows=[]; snap.forEach(d=>rows.push(d.data()));
+    const sec = r => Number(r.seconds ?? r.tempo) || 0, scr = r => Number(r.score) || 0;
+    rows.sort((a,b)=> (RANK.lowerBetter ? scr(a)-scr(b) : scr(b)-scr(a)) || (sec(a)-sec(b)));
+    if(!rows.length){list.innerHTML='<li><span>Seja o primeiro do ranking!</span></li>';return;}
+    list.innerHTML=rows.slice(0,10).map((r,i)=>
+      `<li><span><span class="pos">${i+1}º</span>${esc(r.name||'?')}</span><span>${scr(r)} ${RANK.unit||'pts'} · ${sec(r)}s</span></li>`).join('');
+    $('rankNote').textContent = RANK.lowerBetter ? 'Neste jogo, menos pontos é melhor.' : '';
+  }catch(e){ list.innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>'; }
+}
 
-/* ----------------------- INICIALIZAÇÃO ----------------------- */
-function init(){ setLevel("basico"); }
-window.init = init;
-init();
+buildLevels();
+setLevel(KEYS[0]);
+initFirebase();
 </script>
 </body>
 </html>
