@@ -2,183 +2,267 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Brigada Pantanal 🔥🐆 — Simulador de Fogo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brigada Pantanal</title>
 <style>
-:root{
-  --bg1:#4a1505; --bg2:#a8430f; --card:#fff7f2; --ink:#2a160d; --muted:#7a5a4c;
-  --accent:#ff7a18; --accent2:#ffd166; --line:#f0d8c8;
-  --ok:#16a34a; --okbg:#dcfce7; --err:#dc2626; --errbg:#fee2e2;
-  --c-green:#3fae5a; --c-yellow:#f5c518; --c-orange:#ff7a18; --c-red:#d11f1f;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{
-  font-family:system-ui,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);
-  background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;padding:18px 12px 40px;
-}
-.wrap{width:min(880px,95vw);margin:0 auto}
-header{text-align:center;color:#fff;margin-bottom:14px}
-h1{font-size:clamp(1.7rem,5vw,2.7rem);line-height:1.1;text-shadow:0 2px 12px rgba(0,0,0,.4)}
-.sub{opacity:.95;margin-top:6px;font-size:clamp(.85rem,2.6vw,1rem)}
-.levels{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0}
-.pill{border:none;cursor:pointer;font-weight:700;font-size:.95rem;padding:10px 18px;border-radius:999px;
-  background:rgba(255,255,255,.16);color:#fff;transition:all .25s;backdrop-filter:blur(4px)}
-.pill:hover{transform:translateY(-2px);background:rgba(255,255,255,.30)}
-.pill.active{background:var(--accent);color:#2a160d;box-shadow:0 6px 18px rgba(255,122,24,.5)}
-.panel{background:var(--card);border-radius:18px;padding:20px;box-shadow:0 14px 40px rgba(0,0,0,.3);margin-bottom:16px}
-.hud{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:12px}
-.chip{background:#ffeede;border:1px solid var(--line);border-radius:10px;padding:7px 12px;font-weight:700;font-size:.9rem;color:#5a2d18}
-.howto{font-size:.92rem;color:var(--muted);text-align:center;margin-bottom:14px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-@media(max-width:640px){.grid2{grid-template-columns:1fr}}
-.controls label{display:block;font-weight:700;font-size:.9rem;margin:12px 0 4px}
-.controls .val{color:var(--accent);font-weight:800}
-input[type=range]{width:100%;accent-color:var(--accent);height:26px}
-.readouts{margin-top:8px;display:grid;gap:8px}
-.ro{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid var(--line);
-  border-radius:10px;padding:9px 12px;font-weight:700;font-size:.92rem}
-.ro b{font-size:1.05rem}
-/* gauge */
-.gauge{height:18px;border-radius:99px;margin:6px 0 2px;
-  background:linear-gradient(90deg,var(--c-green),var(--c-yellow),var(--c-orange),var(--c-red));position:relative}
-.gauge>.mk{position:absolute;top:-5px;width:6px;height:28px;background:#1a0e08;border-radius:3px;transform:translateX(-3px);transition:left .25s}
-.cat{font-weight:900;font-size:1.05rem}
-/* fire grid */
-.field{display:grid;gap:2px;margin:6px auto 0;width:100%;max-width:340px}
-.cell{aspect-ratio:1;border-radius:3px;background:#bfe3a0;transition:background .12s}
-.cell.veg{background:#9fd17f}
-.cell.burn{background:radial-gradient(circle,#ffe08a,#ff5a1f);animation:flick .4s infinite alternate}
-.cell.ash{background:#4d4036}
-@keyframes flick{from{filter:brightness(1)}to{filter:brightness(1.4)}}
-.btn{border:none;border-radius:12px;cursor:pointer;font-weight:800;font-size:1rem;padding:13px 18px;
-  background:var(--accent);color:#2a160d;transition:all .25s}
-.btn:hover{transform:translateY(-2px);filter:brightness(1.05)}
-.btn.ghost{background:#ffe6d3;color:#5a2d18}
-.btn.full{width:100%}
-.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-.row .btn{flex:1;min-width:130px}
-/* mission */
-.mission{margin-top:6px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}
-.mtag{font-size:.78rem;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.05em}
-.mtxt{font-weight:800;font-size:1.05rem;margin:5px 0;line-height:1.35}
-.mhint{font-size:.88rem;color:var(--muted)}
-.bar{height:9px;background:#f0e0d4;border-radius:99px;overflow:hidden;margin:10px 0}
-.bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .35s}
-.fb{margin-top:12px;padding:12px 14px;border-radius:12px;font-size:.95rem;line-height:1.45;display:none}
-.fb.show{display:block;animation:pop .35s}
-.fb.good{background:var(--okbg);border-left:5px solid var(--ok)}
-.fb.bad{background:var(--errbg);border-left:5px solid var(--err)}
-@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.04)}100%{transform:scale(1)}}
-/* final */
-.final{text-align:center;display:none}
-.final.show{display:block;animation:pop .5s}
-.final h2{font-size:clamp(1.5rem,5vw,2.2rem);color:var(--ok)}
-.score-big{font-size:clamp(2.4rem,9vw,3.4rem);font-weight:900;color:var(--accent);margin:6px 0}
-.namebox{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:16px 0}
-.namebox input{flex:1;min-width:180px;border:2px solid var(--line);border-radius:12px;padding:13px 14px;font-size:1rem}
-.rank h3{font-size:1.1rem;margin-bottom:4px}
-.rank .lvl{font-size:.82rem;color:var(--muted);margin-bottom:10px}
-.rk{list-style:none;display:grid;gap:6px}
-.rk li{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:.92rem}
-.rk li .pos{font-weight:900;color:var(--accent);width:26px}
-.rk li .nm{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rk li .sc{font-weight:800;color:#5a2d18}
-.note{font-size:.85rem;color:var(--muted);margin-top:8px;text-align:center}
-footer{text-align:center;color:#ffeede;margin-top:22px;font-size:.9rem;line-height:1.6}
-footer .by{font-weight:800;font-size:1.02rem;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.35)}
+  :root{
+    --ink:#0f2f44; --soft:#4b6a7d; --line:#dbe7ee; --ok:#16a34a; --err:#dc2626;
+    --t50:#fff7ed; --t100:#ffedd5; --t300:#fdba74; --t500:#ea580c; --main:#c2410c; --deep:#9a3412; --dark:#7c2d12; --glow:rgba(194,65,12,.26);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+    min-height:100vh;color:var(--ink);background:#ffffff;
+    display:flex;flex-direction:column;align-items:center;padding:12px 14px 40px;
+  }
+  .top{width:100%;max-width:1040px;display:flex;justify-content:flex-start}
+  .hub{display:inline-flex;align-items:center;gap:6px;color:var(--deep);text-decoration:none;
+    font-weight:600;font-size:.9rem;padding:7px 12px;border-radius:20px;border:1.5px solid var(--line)}
+  .hub:hover{background:var(--tint)}
+  .hub svg{width:14px;height:14px}
+  header{text-align:center;max-width:720px;margin-top:6px}
+  h1{font-size:clamp(1.45rem,5vw,2.2rem);display:flex;align-items:center;justify-content:center;gap:10px}
+  h1 svg{width:.95em;height:.95em}
+  h1 .spark{color:var(--main)}
+  .sub{color:var(--soft);font-size:.95rem;margin:4px 0 12px}
+  .levels{display:flex;gap:8px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+  .levels button{border:2px solid var(--line);background:#fff;color:var(--ink);padding:8px 16px;border-radius:30px;
+    font-size:.92rem;cursor:pointer;transition:.2s;font-weight:600;font-family:inherit}
+  .levels button{border-color:var(--main);color:var(--deep)}
+  .levels button:hover{background:var(--tint)}
+  .levels button.active{background:var(--main);border-color:var(--main);color:#fff;box-shadow:0 4px 12px var(--glow)}
+  .hud{display:flex;gap:8px;justify-content:center;align-items:center;margin:4px 0 12px;font-size:.9rem;flex-wrap:wrap}
+  .hud span{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:30px;color:#fff;font-weight:600}
+  .hud b{font-size:1.05rem;font-weight:800}
+  .hud .h1{background:#16a34a} .hud .h2{background:#f97316} .hud .h3{background:#7c3aed} .hud .h4{background:#0ea5e9}
+
+  .card{width:min(680px,100%);background:#fff;border:3px solid var(--main);border-radius:22px;
+    padding:0 0 20px;box-shadow:0 12px 30px var(--glow);overflow:hidden}
+  #stage{padding:0 20px}
+  .strip{display:flex;gap:5px;justify-content:center;align-items:flex-end;flex-wrap:wrap;min-height:54px;
+    padding:10px 10px 8px;background:linear-gradient(180deg,#e0f2fe 0%,#f0f9ff 62%,var(--pale) 62%,var(--pale) 100%)}
+  .slot{width:36px;height:36px;display:flex;align-items:center;justify-content:center}
+  .slot svg{width:100%;height:100%}
+  .slot.empty{align-items:flex-end;padding-bottom:3px}
+  .slot.empty::after{content:"";width:11px;height:11px;border-radius:50%;background:#fff;border:3px solid var(--main);opacity:.45}
+  .slot.now::after{opacity:1;background:var(--acc);border-color:#fff;box-shadow:0 0 0 3px var(--acc);animation:pulse 1.1s infinite}
+  @keyframes pulse{50%{transform:scale(1.25)}}
+  .slot.pop svg{animation:grow .45s cubic-bezier(.3,1.5,.5,1)}
+  @keyframes grow{from{transform:scale(.2) translateY(8px);opacity:0}to{transform:none;opacity:1}}
+  .qhead{margin:0 -20px 16px;padding:14px 20px 16px;background:linear-gradient(135deg,var(--main),var(--deep));color:#fff}
+  .qnum{display:inline-block;font-size:.74rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+    background:rgba(255,255,255,.22);padding:3px 10px;border-radius:20px}
+  .qtext{font-size:1.22rem;font-weight:700;line-height:1.35;margin-top:8px}
+  .opts{display:grid;gap:9px}
+  .opt{display:flex;gap:12px;align-items:center;text-align:left;width:100%;background:#fff;border:2px solid var(--line);
+    border-radius:14px;padding:11px 14px;font-size:1rem;line-height:1.35;color:var(--ink);cursor:pointer;
+    font-family:inherit;transition:border-color .15s,background .15s,transform .15s}
+  .opt{--c:#0ea5e9;--ct:#f0f9ff;border-color:var(--c);background:var(--ct);font-weight:500}
+  .opt:nth-child(2){--c:#f97316;--ct:#fff7ed} .opt:nth-child(3){--c:#8b5cf6;--ct:#f5f3ff} .opt:nth-child(4){--c:#ec4899;--ct:#fdf2f8}
+  .opt .k{flex:none;width:34px;height:34px;border-radius:50%;background:var(--c);color:#fff;
+    font-weight:800;display:flex;align-items:center;justify-content:center;font-size:1rem}
+  .opt:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(15,47,68,.14)}
+  .opt:disabled{cursor:default}
+  .opt.right{border-color:var(--ok);background:#dcfce7;font-weight:700}
+  .opt.right .k{background:var(--ok);color:#fff}
+  .opt.wrong{border-color:var(--err);background:#fee2e2;animation:shake .3s}
+  .opt.wrong .k{background:var(--err);color:#fff}
+  .opt.dim{opacity:.5;background:#fff;border-color:var(--line)} .opt.dim .k{background:#94a3b8}
+  @keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+  .fb{margin-top:14px;border-radius:14px;padding:12px 14px;font-size:.96rem;line-height:1.45;background:#fffbeb;
+    border:2px dashed #fcd34d;min-height:52px;color:#92400e}
+  .fb.ok{background:#dcfce7;border:2px solid var(--ok);color:var(--ink)}
+  .fb.no{background:#fee2e2;border:2px solid var(--err);color:var(--ink)}
+  .fb b{display:block;margin-bottom:2px}
+  .fb.ok>b{color:#166534;font-size:1.05rem} .fb.no>b{color:#b91c1c;font-size:1.05rem}
+  .fb .more{margin-top:8px;padding:8px 10px;border-radius:10px;background:#fff} .fb .more b{color:#166534}
+  .fb .more{margin-top:6px}
+  .btn{background:var(--main);color:#fff;border:0;padding:11px 20px;border-radius:12px;font-weight:700;cursor:pointer;
+    font-size:1rem;font-family:inherit}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--line)}
+  .next{display:none;margin:14px auto 0;background:var(--acc);font-size:1.05rem;padding:12px 26px;box-shadow:0 5px 14px rgba(15,47,68,.2)}
+  .next.show{display:block}
+
+  .end{text-align:center;padding-top:16px}
+  .end h2{font-size:1.5rem;margin:6px 0 4px;color:var(--deep)}
+  .end p{color:var(--soft)}
+  .stats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+  .stat{background:#16a34a;border-radius:14px;padding:9px 16px;font-weight:800;font-size:1.2rem;color:#fff;min-width:84px}
+  .stat:nth-child(2){background:#7c3aed} .stat:nth-child(3){background:#f97316} .stat:nth-child(4){background:#0ea5e9}
+  .stat span{display:block;font-size:.72rem;font-weight:600;color:#fff;opacity:.92}
+  .savebox{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+  .savebox input{padding:10px 12px;border-radius:10px;border:2px solid var(--line);font-size:1rem;width:220px;font-family:inherit}
+  .review{text-align:left;margin-top:16px;border-top:2px solid var(--line);padding-top:12px}
+  .review h3{font-size:1rem;margin-bottom:6px}
+  .review li{list-style:none;padding:8px 0;border-bottom:1px solid var(--line);font-size:.93rem;line-height:1.4}
+  .review li:last-child{border-bottom:0}
+  .review .a{color:#166534;font-weight:700}
+
+  .ranking{margin-top:16px;width:min(680px,100%);background:#fff;border:3px solid #fbbf24;border-radius:18px;padding:0 16px 12px;overflow:hidden}
+  .ranking h3{font-size:1.02rem;margin:0 -16px 8px;padding:10px 16px;background:#fbbf24;color:#451a03}
+  .ranking h3 span{color:#fff;background:#b45309;padding:2px 10px;border-radius:20px;font-size:.88rem}
+  .ranking li:nth-child(1) .pos{color:#b45309} .ranking li:nth-child(1){font-weight:700}
+  .ranking ol{list-style:none}
+  .ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.93rem}
+  .ranking li:last-child{border-bottom:0}
+  .ranking .pos{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+  .note{font-size:.8rem;color:var(--soft);margin-top:6px}
+  footer{margin-top:22px;font-size:.8rem;color:var(--soft);text-align:center;line-height:1.6}
+  footer .credit{font-weight:700;color:var(--ink)}
+
+
+  /* ---- cor unica por jogo: todos os destaques sao tons da mesma cor ---- */
+  :root{--tint:var(--t100);--pale:var(--t300);--acc:var(--dark)}
+  .hub:hover{background:var(--t50)}
+  .levels button{border-color:var(--t300)}
+  .hud .h1{background:var(--t500)} .hud .h2{background:var(--main)} .hud .h3{background:var(--deep)} .hud .h4{background:var(--dark)}
+  .strip{background:linear-gradient(180deg,var(--t50) 0%,var(--t100) 62%,var(--t300) 62%,var(--t300) 100%)}
+  .qhead{background:linear-gradient(135deg,var(--main),var(--dark))}
+  .opt,.opt:nth-child(2),.opt:nth-child(3),.opt:nth-child(4){--c:var(--main);--ct:var(--t50);border-color:var(--t300)}
+  .opt:not(:disabled):hover{border-color:var(--main);background:var(--t100)}
+  .fb{background:var(--t50);border:2px dashed var(--t300);color:var(--deep)}
+  .next{background:var(--deep)}
+  .stat{background:var(--t500)} .stat:nth-child(2){background:var(--main)} .stat:nth-child(3){background:var(--deep)} .stat:nth-child(4){background:var(--dark)}
+  .ranking{border-color:var(--main)}
+  .ranking h3{background:var(--main);color:#fff}
+  .ranking h3 span{background:var(--dark);color:#fff}
+  .ranking li:nth-child(1) .pos{color:var(--deep)}
+  @media(max-width:560px){
+    body{padding:8px 8px 32px}
+    .sub{display:none}
+    h1{margin-bottom:8px}
+    .hub{padding:4px 10px;font-size:.82rem}
+    .levels button{padding:7px 12px;font-size:.85rem}
+    .hud{gap:10px;font-size:.86rem;margin:2px 0 8px}
+    .card{padding:0 0 14px;border-radius:18px}
+    .qtext{font-size:1.05rem;margin-bottom:10px}
+    .opt{padding:9px 10px;font-size:.94rem;gap:9px}
+    .opt .k{width:28px;height:28px;font-size:.86rem}
+    .slot{width:27px;height:27px}
+    .strip{min-height:44px;padding:8px 6px 6px}
+    .qhead{margin:0 -12px 12px;padding:10px 12px 12px}
+    #stage{padding:0 12px}
+    .hud span{padding:4px 9px;font-size:.78rem} .hud b{font-size:.92rem} .hud{gap:5px}
+    .fb{font-size:.9rem}
+  }
+  @media(prefers-reduced-motion:reduce){.slot.pop svg,.opt.wrong{animation:none}}
+
+  /* ---------- simulacao com controles ---------- */
+  .card{width:min(720px,100%)} .ranking{width:min(720px,100%)}
+  .qtext{font-size:1.18rem}
+  .qdesc{font-size:.96rem;line-height:1.45;margin-top:6px;opacity:.96}
+  .goalbox{margin-top:12px;background:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+  .goalbox h4{display:flex;align-items:center;gap:8px;font-size:.8rem;letter-spacing:.8px;text-transform:uppercase;color:var(--deep);margin-bottom:8px}
+  .goalbox h4 svg{width:22px;height:22px}
+  .goals{display:grid;gap:7px}
+  .gchip{display:flex;align-items:center;gap:10px;font-size:1.08rem;font-weight:800;color:var(--ink);background:var(--t50);border:2px solid var(--t300);border-radius:12px;padding:8px 12px;line-height:1.25}
+  .gchip i{flex:none;width:26px;height:26px;border-radius:50%;border:3px solid var(--t300);background:#fff;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:.95rem;color:#fff}
+  .gchip.ok{border-color:var(--ok);background:#dcfce7} .gchip.ok i{background:var(--ok);border-color:var(--ok)}
+  .gchip.no{border-color:var(--err);background:#fee2e2} .gchip.no i{background:var(--err);border-color:var(--err)}
+  .gchip.ok i::before{content:"\2713"} .gchip.no i::before{content:"\00d7"}
+  .tip{margin:0 0 14px;padding:10px 12px;border-radius:12px;background:var(--t50);border:2px dashed var(--t300);color:var(--deep);font-size:.92rem;line-height:1.4}
+  .tip b{color:var(--dark)}
+  .sliders{display:grid;gap:10px;margin-bottom:14px}
+  .srow{display:grid;grid-template-columns:58px 1fr;gap:12px;align-items:center;background:#fff;border:2px solid var(--t300);border-radius:16px;padding:10px 12px}
+  .sico{position:relative;width:58px;height:58px;border-radius:14px;background:var(--t50);border:2px solid var(--t300);overflow:hidden;display:flex;align-items:center;justify-content:center}
+  .sico::before{content:"";position:absolute;left:0;right:0;bottom:0;height:calc(var(--v,.5)*100%);background:var(--t300);transition:height .15s}
+  .sico svg{position:relative;width:38px;height:38px}
+  .shead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+  .shead label{font-weight:800;font-size:1rem;color:var(--ink)}
+  .shead output{font-weight:800;color:#fff;background:var(--main);border-radius:20px;padding:3px 12px;font-size:.9rem;white-space:nowrap}
+  .sends{display:flex;justify-content:space-between;font-size:.76rem;font-weight:700;color:var(--deep);margin-top:4px}
+  .shelp{font-size:.84rem;color:var(--soft);margin-top:3px;line-height:1.35}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:12px;border-radius:10px;background:var(--t100);border:1.5px solid var(--t300);outline-offset:4px;display:block}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:var(--main);border:3px solid #fff;box-shadow:0 2px 6px rgba(15,47,68,.35);cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:var(--main);border:3px solid #fff;box-shadow:0 2px 6px rgba(15,47,68,.35);cursor:pointer}
+  input[type=range]:disabled{opacity:.6}
+  .srow.locked{background:var(--t50);border-style:dashed}
+  .lock{font-size:.84rem;font-weight:800;color:var(--deep);background:#fff;border:2px dashed var(--t300);border-radius:10px;padding:5px 10px;display:inline-block}
+  .tries{display:flex;align-items:center;justify-content:center;gap:8px;font-size:.9rem;font-weight:700;color:var(--deep);margin:2px 0 10px}
+  .tries i{width:16px;height:16px;border-radius:50%;background:var(--main);display:inline-block}
+  .tries i.used{background:#fff;border:3px solid var(--t300)}
+  .viz{margin-bottom:12px}
+  .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:14px}
+  .metric{border-radius:14px;padding:10px 12px;background:var(--t50);border:2px solid var(--t300);border-left-width:8px}
+  .metric b{display:block;font-size:1.45rem;color:var(--dark);line-height:1.1}
+  .metric span{font-size:.8rem;color:var(--soft);font-weight:600}
+  .metric.q b{color:var(--t300)}
+  .metric.ok{border-left-color:var(--ok)} .metric.warn{border-left-color:#f59e0b} .metric.danger{border-left-color:var(--err)}
+  .verify{display:block;margin:0 auto;background:var(--deep);font-size:1.05rem;padding:12px 26px;box-shadow:0 5px 14px rgba(15,47,68,.2)}
+  .modelnote{font-size:.78rem;color:var(--soft);text-align:center;margin-top:12px;line-height:1.4}
+  @media(max-width:560px){
+    .srow{grid-template-columns:44px 1fr;gap:8px;padding:8px}
+    .sico{width:44px;height:44px} .sico svg{width:28px;height:28px}
+    .shead label{font-size:.92rem} .shead output{font-size:.8rem;padding:3px 8px}
+    .gchip{font-size:.96rem;padding:7px 9px}
+    .metrics{grid-template-columns:1fr 1fr}
+    .metric b{font-size:1.2rem}
+  }
+  .land{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:1px;padding:8px;border-radius:14px;
+    background:linear-gradient(180deg,#fff 0%,var(--t50) 68%,var(--t100) 68%,var(--t100) 100%);border:2px solid var(--t300)}
+  .cell{position:relative;aspect-ratio:1;display:flex;align-items:flex-end;justify-content:center}
+  .cell svg{width:100%;height:100%}
+  .cell .tree{transform-origin:50% 95%;animation:sway var(--sp,2s) ease-in-out infinite alternate}
+  .cell:nth-child(odd) .tree{animation-delay:-.6s}
+  .cell.burn .tree{opacity:.18;filter:grayscale(1) brightness(.4)}
+  .cell .flame{position:absolute;left:0;bottom:0;transform-origin:50% 100%;animation:flick .5s ease-in-out infinite alternate}
+  .cell:nth-child(3n) .flame{animation-duration:.38s} .cell:nth-child(3n+1) .flame{animation-duration:.62s}
+  .cell .flame .f2{transform-origin:50% 100%;animation:flick2 .33s ease-in-out infinite alternate}
+  .cell.burn.go .flame{opacity:0;animation:flick .5s ease-in-out infinite alternate, catch .35s ease-out var(--d) forwards}
+  .cell.burn.go .tree{opacity:1;filter:none;animation:sway var(--sp,2s) ease-in-out infinite alternate, char .35s ease-out var(--d) forwards}
+  @keyframes sway{from{transform:rotate(calc(var(--sway,4deg)*-.35))}to{transform:rotate(var(--sway,4deg))}}
+  @keyframes flick{from{transform:skewX(var(--lean,0deg)) scale(.92,.86)}to{transform:skewX(calc(var(--lean,0deg)*1.5)) scale(1.06,1.16)}}
+  @keyframes flick2{from{transform:scale(.8,.75)}to{transform:scale(1.1,1.15)}}
+  @keyframes catch{to{opacity:1}}
+  @keyframes char{to{opacity:.18;filter:grayscale(1) brightness(.4)}}
+  .landcap{display:flex;justify-content:space-between;gap:10px;font-size:.88rem;color:var(--soft);margin-top:6px}
+  .landcap b{color:var(--dark)}
+  @media(max-width:560px){.land{padding:8px 6px 6px}}
+  @media(prefers-reduced-motion:reduce){.cell .tree,.cell .flame,.cell .flame .f2{animation:none}.cell.burn.go .flame{opacity:1}.cell.burn.go .tree{opacity:.18}}
+  .cell .spark{position:absolute;width:70%;height:70%;left:15%;top:15%;animation:pulse 1s ease-in-out infinite}
+  .windbar{display:flex;align-items:center;gap:8px;font-size:.85rem;font-weight:800;color:var(--deep);margin-bottom:6px}
+  .windbar svg{height:16px;min-width:30px}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>🔥 Brigada Pantanal 🐆</h1>
-    <div class="sub">Simulador de risco de fogo: mexa no clima e na vegetação, veja o índice mudar ao vivo e cumpra as missões da brigada.</div>
-  </header>
-
-  <div class="levels" id="levels">
-    <button class="pill" data-lv="basico">Básico</button>
-    <button class="pill" data-lv="intermediario">Intermediário</button>
-    <button class="pill" data-lv="dificil">Difícil</button>
-    <button class="pill" data-lv="carbonauta">🛰️ Carbonauta</button>
-  </div>
-
-  <div class="panel" id="gamePanel">
-    <div class="hud">
-      <span class="chip" id="hTime">Tempo: 0s</span>
-      <span class="chip" id="hMissao">Missão: 1/3</span>
-      <span class="chip" id="hConcl">Concluídas: 0</span>
-      <span class="chip" id="hPontos">Pontos: 0</span>
-    </div>
-    <p class="howto">🎚️ Ajuste os controles. O <b>Índice de Perigo de Fogo</b> muda em tempo real. Quando bater a meta, toque em <b>Verificar missão</b>. Algumas missões pedem para <b>rodar a simulação</b> de propagação. 🔥</p>
-
-    <div id="playArea">
-      <div class="grid2">
-        <div class="controls">
-          <label>🌡️ Temperatura do ar: <span class="val" id="vT">34 °C</span></label>
-          <input type="range" id="sT" min="20" max="48" value="34">
-          <label>💧 Umidade relativa: <span class="val" id="vH">45 %</span></label>
-          <input type="range" id="sH" min="5" max="95" value="45">
-          <label>🌬️ Vento: <span class="val" id="vW">15 km/h</span></label>
-          <input type="range" id="sW" min="0" max="60" value="15">
-          <label>🌾 Vegetação seca (carga de combustível): <span class="val" id="vF">50</span></label>
-          <input type="range" id="sF" min="0" max="100" value="50">
-        </div>
-        <div>
-          <div class="ro" style="display:block">
-            <div style="display:flex;justify-content:space-between"><span>Índice de Perigo de Fogo</span><b id="ipfVal">0</b></div>
-            <div class="gauge"><div class="mk" id="mk" style="left:0%"></div></div>
-            <div class="cat" id="catVal" style="text-align:center">—</div>
-          </div>
-          <div class="readouts">
-            <div class="ro"><span>🚀 Veloc. de propagação (ROS)</span><b id="rosVal">0 m/min</b></div>
-            <div class="ro"><span>🔥 Área queimada (última simulação)</span><b id="areaVal">—</b></div>
-          </div>
-          <div class="field" id="field"></div>
-        </div>
-      </div>
-
-      <div class="row">
-        <button class="btn" id="simBtn">🔥 Rodar simulação</button>
-        <button class="btn ghost" id="checkBtn">✅ Verificar missão</button>
-      </div>
-
-      <div class="mission">
-        <div class="mtag" id="mTag">Missão</div>
-        <div class="mtxt" id="mTxt">…</div>
-        <div class="mhint" id="mHint"></div>
-        <div class="bar"><i id="prog"></i></div>
-        <div class="fb" id="fb"></div>
-      </div>
-    </div>
-
-    <div class="final" id="final">
-      <h2>🎉 Operação concluída!</h2>
-      <div class="score-big" id="finalScore">0</div>
-      <div id="finalMsg" style="color:var(--muted);font-weight:600"></div>
-      <div class="namebox">
-        <input id="nameInput" maxlength="20" placeholder="Seu nome (até 20 caracteres)">
-        <button class="btn" id="saveBtn">Salvar no ranking</button>
-      </div>
-      <button class="btn ghost" id="againBtn">Jogar de novo 🔁</button>
-      <div class="note" id="saveNote"></div>
-    </div>
-  </div>
-
-  <div class="panel rank">
-    <h3>🏆 Ranking Global</h3>
-    <div class="lvl" id="rankLvl">Nível: Básico</div>
-    <ol class="rk" id="rankList"><li><span class="nm">Carregando ranking…</span></li></ol>
-    <div class="note" id="rankNote"></div>
-  </div>
-
-  <footer>
-    <div class="by">— Idealizado por Ernandes Sobreira —</div>
-    <div>Tema: Queimadas e fogo no Pantanal · Gênero: Simulação interativa · app ambiental do dia (2026-06-13)</div>
-  </footer>
+<div class="top">
+  <a class="hub" href="index.html">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Todos os jogos
+  </a>
 </div>
 
+<header>
+  <h1><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14a8 8 0 0 1 16 0z" fill="#c2410c"/><rect x="2" y="14" width="20" height="3.2" rx="1.6" fill="#7c2d12"/><rect x="10.5" y="4" width="3" height="10" rx="1" fill="#fed7aa"/></svg> <span>Brigada <span class="spark">Pantanal</span></span></h1>
+  <p class="sub">Simulador de propagação do fogo. Ajuste o clima e o capim seco, simule e veja até onde as chamas chegam.</p>
+</header>
+
+<div class="levels" id="levels"></div>
+
+<div class="hud">
+  <span class="h1">Desafio <b id="hCh">1/1</b></span>
+  <span class="h2">Acertos <b id="hits">0</b></span>
+  <span class="h3">Pontos <b id="score">0</b></span>
+  <span class="h4">Tempo <b id="timer">0s</b></span>
+</div>
+
+<div class="card">
+  <div id="stage"></div>
+</div>
+
+<div class="ranking">
+  <h3>Ranking Global, nível <span id="rankLevel"></span></h3>
+  <ol id="rankList"><li><span>Carregando o ranking...</span></li></ol>
+  <p class="note" id="rankNote"></p>
+</div>
+
+<footer>
+  Queimadas e fogo no Pantanal · Simulação interativa<br>
+  <span class="credit">Idealizado por Ernandes Sobreira</span>
+</footer>
+
 <script>
-/* ===== Firebase ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
   authDomain: "jogos-ranking.firebaseapp.com",
@@ -188,282 +272,485 @@ const firebaseConfig = {
   messagingSenderId: "958784915420",
   appId: "1:958784915420:web:4212d3ad278f02d600f119"
 };
-const GAME_ID = "2026-06-13-pantanal-fogo";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-/* ===== Missões por nível =====
-   tipos de verificação:
-   - ipf  {min,max}     -> Índice de Perigo de Fogo na faixa
-   - ros  {min,max}     -> ROS estimada na faixa (m/min)
-   - area {min,max,sim} -> % área queimada após rodar a simulação
-*/
-const LABELS={basico:"Básico",intermediario:"Intermediário",dificil:"Difícil",carbonauta:"🛰️ Carbonauta"};
-const MISS={
-  basico:[
-    {t:"Dia úmido e seguro: deixe o Índice de Perigo de Fogo BAIXO (menor que 25).",hint:"Dica: mais umidade e menos vegetação seca derrubam o índice.",chk:{type:"ipf",min:0,max:24},
-     fb:"Com ar úmido e pouca biomassa seca, a vegetação não pega fogo facilmente: o risco fica baixo."},
-    {t:"Seca severa: faça o índice chegar a EXTREMO (maior que 80).",hint:"Dica: muito calor, ar seco e bastante capim seco.",chk:{type:"ipf",min:80,max:100},
-     fb:"Calor, baixa umidade e capim seco formam a combinação que tornou 2020 e 2024 anos catastróficos no Pantanal."},
-    {t:"Risco controlado: ajuste o índice para a faixa MODERADA (30 a 45).",hint:"Dica: equilibre os controles aos poucos.",chk:{type:"ipf",min:30,max:45},
-     fb:"O risco moderado é a janela em que a brigada ainda consegue agir preventivamente."}
-  ],
-  intermediario:[
-    {t:"Estação chuvosa: mantenha o Índice de Perigo BAIXO (menor que 22).",hint:"Umidade alta é sua maior aliada.",chk:{type:"ipf",min:0,max:21},
-     fb:"Na cheia pantaneira, a alta umidade do ar e do solo mantém o fogo sob controle natural."},
-    {t:"Foco contido: rode a simulação e queime MENOS de 25% da savana.",hint:"Reduza o índice ANTES de rodar a simulação.",chk:{type:"area",min:0,max:25,sim:true},
-     fb:"Quanto menor o índice de perigo, menor a probabilidade de a chama saltar entre touceiras: o fogo morre cedo."},
-    {t:"Incêndio amplo: rode a simulação e queime MAIS de 70% da savana.",hint:"Eleve o índice ao máximo antes de rodar.",chk:{type:"area",min:70,max:100,sim:true},
-     fb:"Com risco extremo, cada célula incendiada acende as vizinhas e o fogo varre quase toda a área."},
-    {t:"Janela de manejo: deixe o índice na faixa MODERADA (35 a 50).",hint:"Ajuste fino dos sliders.",chk:{type:"ipf",min:35,max:50},
-     fb:"O fogo prescrito (manejo) só é seguro em janelas de risco moderado e baixa velocidade do vento."}
-  ],
-  dificil:[
-    {t:"Combustível fino úmido: leve o índice abaixo de 18.",hint:"Maximize a umidade relativa e reduza a carga seca.",chk:{type:"ipf",min:0,max:18},
-     fb:"O teor de umidade do combustível fino morto controla a ignição; acima de ~20% o capim quase não queima."},
-    {t:"Propagação lenta: deixe a ROS estimada abaixo de 6 m/min.",hint:"Vento baixo e ar úmido reduzem a velocidade de propagação.",chk:{type:"ros",min:0,max:6},
-     fb:"A velocidade de propagação (Rate of Spread) cresce de forma quase exponencial com o vento e a secura do combustível."},
-    {t:"Frente rápida: faça a ROS estimada passar de 16 m/min.",hint:"Vento forte + capim muito seco + calor.",chk:{type:"ros",min:16,max:999},
-     fb:"Frentes acima de ~15 m/min superam a capacidade de combate direto e exigem aceiros e contrafogo."},
-    {t:"Mosaico de queima: rode a simulação e atinja entre 40% e 60% de área queimada.",hint:"Busque um índice intermediário antes de rodar.",chk:{type:"area",min:40,max:60,sim:true},
-     fb:"Queimas em mosaico deixam manchas não queimadas que servem de refúgio para a fauna."},
-    {t:"Vento como gatilho: deixe o índice ALTO (acima de 72) mantendo a umidade ≥ 35%.",hint:"Compense a umidade com calor, vento e carga seca.",chk:{type:"ipf",min:72,max:100,minH:35},
-     fb:"Mesmo com umidade não tão baixa, vento forte e muita biomassa seca elevam o perigo — o vento é multiplicador."}
-  ],
-  carbonauta:[
-    {t:"Cenário de cheia plena: índice abaixo de 15 (risco quase nulo).",hint:"Umidade máxima, carga de combustível mínima.",chk:{type:"ipf",min:0,max:15},
-     fb:"No pulso de inundação pantaneiro, a saturação hídrica do solo e da serapilheira inibe a combustão sustentada."},
-    {t:"Reproduza a seca de 2020: índice acima de 88 (ano de ~24% do bioma queimado).",hint:"Empurre calor, secura e carga seca aos limites.",chk:{type:"ipf",min:88,max:100},
-     fb:"Em 2020 o fogo consumiu ~3,6 milhões de ha (~24% do Pantanal), sob seca extrema ligada a uma La Niña e ao Atlântico Norte aquecido."},
-    {t:"Combate inviável: ROS estimada acima de 22 m/min.",hint:"Maximize vento, temperatura e combustível seco.",chk:{type:"ros",min:22,max:999},
-     fb:"Acima de ~22 m/min e com fogo de copa/turfa, o combate direto cessa; sobra conter por aceiros e suprimir focos secundários."},
-    {t:"Linha de intensidade crítica: ROS entre 12 e 16 m/min.",hint:"Ajuste vento e secura para a janela estreita.",chk:{type:"ros",min:12,max:16},
-     fb:"A intensidade da frente (kW/m, Byram) escala com a ROS e a carga; ~12–16 m/min já marca o limite do ataque com retardante."},
-    {t:"Supressão eficaz: rode a simulação e contenha a área queimada abaixo de 12%.",hint:"Derrube índice e ROS antes de simular.",chk:{type:"area",min:0,max:12,sim:true},
-     fb:"Detecção precoce (ex.: BDQueimadas/INPE) somada a baixa conectividade do combustível mantém o incêndio em manchas pequenas."},
-    {t:"Megaincêndio: rode a simulação e ultrapasse 85% de área queimada.",hint:"Condições de perigo extremo em todos os controles.",chk:{type:"area",min:85,max:100,sim:true},
-     fb:"Sob perigo extremo, a alta conectividade da paisagem seca gera propagação em coroa: o fogo percola quase toda a malha."}
-  ]
+/* ---------- dados e modelo deste jogo ---------- */
+const GAME_ID = "2026-06-13-pantanal-fogo";
+const MODEL_NOTE = "Modelo simplificado para fins didáticos. O fogo começa no centro da área e se espalha de árvore em árvore, mais rápido na direção do vento. Os números não são previsões nem medidas reais.";
+const TRIES = 3;
+const GRIDS = {basico:10, intermediario:12, dificil:12, carbonauta:14};
+
+/* indice de perigo e velocidade da frente: mesmas formulas da versao anterior */
+function calcIPF(p){
+  const tN=(p.temp-20)/28, dN=(100-p.umidade)/95, wN=p.vento/60, fN=p.capim/100;
+  return Math.max(0, Math.min(100, Math.round(100*(0.30*tN+0.30*dN+0.20*wN+0.20*fN))));
+}
+function calcROS(p, ipf){ return Math.round((Math.pow(ipf/100,1.15)*24 + p.vento/60*7)*10)/10; }
+/* sorteio com semente: os mesmos controles sempre produzem o mesmo incendio */
+function rng(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function compute(p){
+  p = Object.assign({temp:34, umidade:45, vento:15, capim:50}, p);
+  const ipf = calcIPF(p), ros = calcROS(p, ipf), G = GRIDS[level] || 10, N = G*G;
+  const base = Math.max(0, Math.min(0.96, Math.pow(ipf/100,1.25)*0.96));
+  const wN = p.vento/60, bias = {r:1+wN*1.2, l:1-wN*0.4, d:1, u:1};
+  const R = rng(p.temp*1000003 + p.umidade*10007 + p.vento*101 + p.capim*7 + G);
+  const order = new Array(N).fill(-1);
+  const c0 = Math.floor(G/2)*G + Math.floor(G/2);
+  order[c0] = 0; let front = [c0], step = 0;
+  while(front.length){
+    const nx = [];
+    for(const i of front){
+      const r = Math.floor(i/G), c = i%G;
+      for(const [rr,cc,d] of [[r,c+1,'r'],[r,c-1,'l'],[r+1,c,'d'],[r-1,c,'u']]){
+        if(rr<0||cc<0||rr>=G||cc>=G) continue;
+        const j = rr*G+cc;
+        if(order[j]===-1 && R() < base*bias[d]){ order[j] = step+1; nx.push(j); }
+      }
+    }
+    front = nx; step++;
+  }
+  const burned = order.filter(x=>x>=0).length;
+  const area = Math.round(burned/N*100);
+  const cat = ipf<25?'baixo':ipf<50?'moderado':ipf<75?'alto':'extremo';
+  return {ipf, ros, cat, area, order, G, steps:step};
+}
+
+const IPE = `<svg class="tree" viewBox="0 0 24 24"><path d="M12 22v-9M12 16l-3-3M12 15l3-2.500" fill="none" stroke="#78350f" stroke-width="2" stroke-linecap="round"/><circle cx="7.500" cy="9.500" r="4.200" fill="#22c55e"/><circle cx="16.500" cy="9.500" r="4.200" fill="#22c55e"/><circle cx="12" cy="6.500" r="4.800" fill="#16a34a"/><circle cx="12" cy="11" r="3.600" fill="#4ade80"/></svg>`;
+const PALM = `<svg class="tree" viewBox="0 0 24 24"><path d="M12 22c.400-4 .200-8-.300-11" fill="none" stroke="#78350f" stroke-width="2.200" stroke-linecap="round"/><path d="M11.700 11C9 7 5 6.500 2.500 8.500M11.700 11C10 6.500 7.500 3.500 4.500 3M11.700 11c0-4.500 1-7.500 2.300-9M11.700 11c2-4 5-6.500 8.300-6.500M11.700 11c3.300-2.500 7-2.500 9.800-.500M11.700 11c-3 .500-5.500 2.500-6.700 5M11.700 11c3 1 5 3 6 5.500" fill="none" stroke="#15803d" stroke-width="1.900" stroke-linecap="round"/><circle cx="11.700" cy="11" r="1.600" fill="#166534"/></svg>`;
+const BUSH = `<svg class="tree" viewBox="0 0 24 24"><path d="M12 22v-7" stroke="#78350f" stroke-width="2" stroke-linecap="round"/><ellipse cx="12" cy="10.500" rx="9.500" ry="5.500" fill="#22c55e"/><ellipse cx="12" cy="8.500" rx="6.500" ry="4" fill="#4ade80"/></svg>`;
+const FLAME = `<svg class="flame" viewBox="0 0 24 24"><path class="f1" d="M12 2c5 5 7 8 7 12a7 7 0 0 1-14 0c0-3 1-4.600 2.600-6.400.600 2.600 2.800 2.600 2.800 0C10.400 5 11 3.500 12 2z" fill="#fb923c"/><path class="f2" d="M12 9.500c3 3 4.200 4.600 4.200 6.700a4.200 4.200 0 0 1-8.400 0c0-2.100 1.400-4 4.200-6.700z" fill="#fde047"/><path class="f3" d="M12 14.500c1.400 1.400 2 2.200 2 3.200a2 2 0 0 1-4 0c0-1 .800-2 2-3.200z" fill="#fff"/></svg>`;
+const fixn = t => t.replace(/(\d?\.\d)00\b/g,'$1');
+const KINDS = [IPE, PALM, IPE, BUSH, PALM, IPE, BUSH, IPE, PALM, IPE, BUSH].map(fixn);
+const FL = fixn(FLAME);
+const SPARK = `<svg class="spark" viewBox="0 0 24 24"><path d="M12 2l2.200 6.300L20.500 9l-5 4 1.800 6.500L12 16l-5.300 3.500L8.500 13l-5-4 6.300-.700z" fill="#f97316" stroke="#7c2d12" stroke-width="1"/></svg>`.replace(/(\d?\.\d)00\b/g,'$1');
+function renderViz(m, p, animate){
+  const G = GRIDS[level] || 10, N = G*G, wind = p.vento ?? 15;
+  const sway = (2 + wind/60*10).toFixed(1)+'deg', sp = Math.max(.5, 2.6 - wind/35).toFixed(2)+'s', lean = (-wind/60*22).toFixed(1)+'deg';
+  const c0 = Math.floor(G/2)*G + Math.floor(G/2);
+  let cells = '';
+  for(let i=0;i<N;i++){
+    const tree = KINDS[(i*7 + Math.floor(i/G)*3) % KINDS.length];
+    const o = m ? m.order[i] : -1;
+    if(o>=0) cells += `<span class="cell burn${animate?' go':''}" style="--d:${o*140}ms">${tree}${FL}</span>`;
+    else cells += `<span class="cell">${tree}${(!m && i===c0)?SPARK:''}</span>`;
+  }
+  const arrowW = 20 + wind/60*60;
+  const cap = m
+    ? `<span>Área queimada: <b>${m.area}%</b></span><span>Árvores salvas: <b>${N - m.order.filter(x=>x>=0).length} de ${N}</b></span>`
+    : `<span>A estrela marca onde o fogo vai começar. Clique em <b>Simular</b> para ver até onde ele chega.</span>`;
+  return `<div class="windbar"><span>Vento</span><svg viewBox="0 0 100 20" style="width:${arrowW}%"><path d="M2 10h90" stroke="var(--main)" stroke-width="4" stroke-linecap="round"/><path d="M82 3l12 7-12 7" fill="none" stroke="var(--main)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg><b>${wind} km/h</b></div>
+    <div class="land" style="--cols:${G};--sway:${sway};--sp:${sp};--lean:${lean}">${cells}</div><div class="landcap">${cap}</div>`;
+}
+function metricCards(m){
+  return [
+    {v:m.ipf+' · '+m.cat, l:'Índice de perigo do fogo', s:m.ipf<25?'ok':m.ipf<50?'warn':'danger'},
+    {v:String(m.ros).replace('.',',')+' m/min', l:'Velocidade da frente de fogo', s:m.ros<8?'ok':m.ros<16?'warn':'danger'},
+    {v:m.area+'%', l:'Área queimada', s:m.area<25?'ok':m.area<60?'warn':'danger'}
+  ];
+}
+/* pontos como na versao anterior: 120 mais um bonus que cai a cada simulacao usada */
+function pointsFor(){ const used = TRIES - triesLeft; return Math.max(80, 120 + Math.max(0, 60 - used*5)); }
+const END_MSG = [
+  [100, 'Brigada nota 10!', 'Você cumpriu todas as missões deste nível.'],
+  [60, 'Brigada experiente', 'Resultado forte. Refaça o nível para fechar as missões que faltaram.'],
+  [40, 'Brigada em formação', 'Releia as explicações e tente de novo.'],
+  [0, 'Hora de treinar mais', 'Mexa em um controle por vez e observe o que muda.']
+];
+
+const ic = d => fixn(`<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`);
+const S = {
+  temp: {id:'temp', label:'Temperatura do ar', min:20, max:48, unit:' °C',
+    icon:ic('<rect x="9.500" y="2" width="5" height="13" rx="2.500" fill="#fff" stroke="#7c2d12" stroke-width="1.800"/><circle cx="12" cy="18" r="4" fill="#7c2d12"/><rect x="11" y="7" width="2" height="10" fill="#7c2d12"/>'),
+    lo:'dia ameno', hi:'calor extremo', help:'O calor seca o capim e deixa o combustível pronto para queimar.',
+    word:v=>v<26?'ameno':v<32?'quente':v<40?'muito quente':'calor extremo'},
+  umidade: {id:'umidade', label:'Umidade do ar', min:5, max:95, unit:'%',
+    icon:ic('<path d="M12 2.500c4.500 5 7 8.500 7 12a7 7 0 0 1-14 0c0-3.500 2.500-7 7-12z" fill="#7c2d12"/><path d="M9 15a3.200 3.200 0 0 0 3 3.200" fill="none" stroke="#fff" stroke-width="1.600" stroke-linecap="round"/>'),
+    lo:'ar muito seco', hi:'ar muito úmido', help:'Ar úmido molha o capim seco e dificulta o fogo.',
+    word:v=>v<30?'ar muito seco':v<50?'ar seco':v<70?'ar ameno':'ar úmido'},
+  vento: {id:'vento', label:'Velocidade do vento', min:0, max:60, unit:' km/h',
+    icon:ic('<path d="M2 8h11a3 3 0 1 0-3-3M2 12h16a3 3 0 1 1-3 3M2 16h8a2.500 2.500 0 1 1-2.500 2.500" fill="none" stroke="#7c2d12" stroke-width="2.200" stroke-linecap="round"/>'),
+    lo:'calmaria', hi:'ventania', help:'O vento empurra o fogo na direção da seta e espalha fagulhas.',
+    word:v=>v<10?'calmaria':v<25?'brisa':v<45?'vento forte':'ventania'},
+  capim: {id:'capim', label:'Capim e folhas secas', min:0, max:100, unit:'%',
+    icon:ic('<path d="M12 22c0-7-1-12-4-17M12 22c0-8 .500-13 1.500-19M12 22c.500-6 2.500-10 6-13M12 22c-1-4-3.500-7-7-8.500M12 22c1-4 3.500-6.500 7.500-7.500" fill="none" stroke="#7c2d12" stroke-width="2" stroke-linecap="round"/>'),
+    lo:'pouco combustível', hi:'muito combustível', help:'É o combustível do fogo. Quanto mais material seco no chão, mais ele queima e mais longe vai.',
+    word:v=>v<35?'pouco':v<70?'médio':'muito'}
+};
+const SL = [S.temp, S.umidade, S.vento, S.capim];
+const sl = defs => SL.map((s,i)=>Object.assign({}, s, {def:defs[i]}));
+const n = x => String(x).replace('.',',');
+const G = {
+  ipfMax: x=>({t:`Índice de perigo abaixo de ${x}`, f:m=>m.ipf<x}),
+  ipfMin: x=>({t:`Índice de perigo acima de ${x}`, f:m=>m.ipf>x}),
+  ipfIn: (a,b)=>({t:`Índice de perigo entre ${a} e ${b}`, f:m=>m.ipf>=a && m.ipf<=b}),
+  rosMax: x=>({t:`Frente de fogo mais lenta que ${n(x)} m/min`, f:m=>m.ros<x}),
+  rosMin: x=>({t:`Frente de fogo mais rápida que ${n(x)} m/min`, f:m=>m.ros>x}),
+  rosIn: (a,b)=>({t:`Frente de fogo entre ${a} e ${b} m/min`, f:m=>m.ros>=a && m.ros<=b}),
+  areaMax: x=>({t:`Área queimada abaixo de ${x}%`, f:m=>m.area<x}),
+  areaMin: x=>({t:`Área queimada acima de ${x}%`, f:m=>m.area>x}),
+  areaIn: (a,b)=>({t:`Área queimada entre ${a}% e ${b}%`, f:m=>m.area>=a && m.area<=b}),
+  umiMin: x=>({t:`Umidade do ar em ${x}% ou mais`, f:(m,p)=>p.umidade>=x, live:true}),
+  ventoMax: x=>({t:`Vento de no máximo ${x} km/h`, f:(m,p)=>p.vento<=x, live:true})
 };
 
-/* ===== Estado e DOM ===== */
-const $=id=>document.getElementById(id);
-let level="basico", mi=0, done=0, points=0, attempts=0;
-let startT=0, timer=null, finished=false, lastScore=0, lastSeconds=0;
-let areaBurned=-1, simRunning=false, simAnim=null;
-let GRID=10, cells=[], state=[];
+const LEVELS = {
+  basico: { label:'Básico', saved:'basico', sliders:sl([34,45,15,50]), challenges:[
+    { title:'Manhã depois da chuva',
+      desc:'Choveu ontem, mas o dia já esquenta. A umidade do ar fica entre <b>30% e 80%</b> e a temperatura entre <b>24 e 40 °C</b>.',
+      range:{umidade:[30,80], temp:[24,40]},
+      goals:[G.ipfMax(30), G.areaMax(15)],
+      tip:'Aproveite a umidade que sobrou da chuva e mantenha o capim seco baixo.',
+      ok:'Com ar úmido e pouco material seco, o fogo não encontra combustível para avançar. É a situação mais segura para a brigada.',
+      fail:'Suba a umidade, baixe a temperatura e reduza o capim seco e o vento.' },
+    { title:'Entender um dia crítico',
+      desc:'Para treinar a equipe, recrie as condições de um dia de seca. A umidade fica entre <b>5% e 50%</b> e o vento não passa de <b>40 km/h</b>.',
+      range:{umidade:[5,50], vento:[0,40]},
+      goals:[G.ipfMin(75), G.areaMin(60)],
+      tip:'Pense no pior dia de setembro: calor, ar seco, vento e muito capim seco.',
+      ok:'Calor, ar seco, vento e capim acumulado formam a combinação dos grandes incêndios. Em 2020, o fogo atingiu pouco mais de 30% do Pantanal brasileiro.',
+      fail:'Leve a temperatura, o vento e o capim seco para cima, e a umidade para baixo.' },
+    { title:'Janela de queima prescrita',
+      desc:'A equipe autorizada quer fazer uma queima controlada. O perigo precisa ficar moderado e a frente de fogo, lenta.',
+      goals:[G.ipfIn(30,45), G.rosMax(10)],
+      tip:'Nem perigo baixo demais, porque o fogo não anda, nem alto demais, porque ele foge do controle.',
+      ok:'A queima prescrita é feita por equipes treinadas, com autorização, em dias de perigo moderado e vento fraco. Ela reduz o capim acumulado antes da seca forte.',
+      fail:'Procure o meio do caminho em cada controle e mantenha o vento fraco.' },
+    { title:'Vento forte, ar úmido',
+      desc:'O vento sopra entre <b>35 e 60 km/h</b>, mas a umidade do ar pode chegar a 90%. Segure o incêndio.',
+      range:{vento:[35,60], umidade:[20,90]},
+      goals:[G.areaMax(20), G.ipfMax(45)],
+      tip:'Com o vento travado no alto, compense com umidade, temperatura baixa e pouco capim seco.',
+      ok:'O vento é um multiplicador: ele leva oxigênio às chamas e empurra a frente. Quando ele não cede, o resto precisa estar a favor da brigada.',
+      fail:'Use o menor vento permitido, a maior umidade e pouco capim seco.' },
+    { title:'Capim acumulado',
+      desc:'Faz anos que esta área não queima, e o capim seco está entre <b>60% e 100%</b>. A temperatura fica entre <b>30 e 48 °C</b>.',
+      range:{capim:[60,100], temp:[30,48]},
+      goals:[G.areaMax(25), G.rosMax(12)],
+      tip:'O combustível está alto. Ganhe no ar úmido, no vento fraco e na temperatura mais baixa possível.',
+      ok:'Áreas que acumulam capim seco por muitos anos queimam com mais força quando o fogo chega. Por isso o manejo do combustível faz parte da prevenção.',
+      fail:'Use o mínimo de capim e de temperatura permitidos, umidade alta e vento fraco.' }
+  ]},
+  intermediario: { label:'Intermediário', saved:'intermediario', sliders:sl([34,45,15,50]), challenges:[
+    { title:'Estação chuvosa',
+      desc:'É época de cheia. A temperatura fica entre <b>22 e 36 °C</b>.',
+      range:{temp:[22,36]},
+      goals:[G.ipfMax(22), G.areaMax(8)],
+      tip:'Umidade alta é sua maior aliada.',
+      ok:'Na cheia pantaneira, o ar e o solo úmidos seguram o fogo de forma natural.',
+      fail:'Leve a umidade ao máximo e reduza o capim seco e o vento.' },
+    { title:'Foco contido',
+      desc:'Um foco começou numa tarde quente. A umidade fica entre <b>15% e 60%</b> e a temperatura entre <b>28 e 44 °C</b>.',
+      range:{umidade:[15,60], temp:[28,44]},
+      goals:[G.areaMax(25), G.rosMax(9)],
+      tip:'Reduza o perigo antes que o fogo pegue: menos vento e menos capim seco.',
+      ok:'Quanto menor o perigo, menor a chance de a chama saltar de uma moita para a outra, e o fogo morre cedo.',
+      fail:'Use a maior umidade e a menor temperatura do dia, vento fraco e pouco capim seco.' },
+    { title:'Entender um incêndio amplo',
+      desc:'Recrie um incêndio que tome a maior parte da área. A umidade fica entre <b>20% e 70%</b>.',
+      range:{umidade:[20,70]},
+      goals:[G.areaMin(70), G.ipfMin(65)],
+      tip:'Quando o perigo é alto, cada árvore em chamas acende as vizinhas.',
+      ok:'Com perigo alto, o fogo encontra caminho contínuo de combustível e varre quase toda a área. É por isso que paisagens secas e homogêneas são tão vulneráveis.',
+      fail:'Aumente a temperatura, o vento e o capim seco, e use a menor umidade permitida.' },
+    { title:'Janela de manejo',
+      desc:'A queima de manejo precisa de perigo moderado e de vento fraco, sem queimar mais que 40% da área.',
+      set:{vento:30, capim:85},
+      goals:[G.ipfIn(35,50), G.ventoMax(15), G.areaMax(40)],
+      tip:'Com o vento fraco, use o calor e o capim seco para chegar ao perigo moderado.',
+      ok:'O fogo de manejo só é seguro em dias de perigo moderado e vento fraco, quando a frente avança devagar e pode ser conduzida.',
+      fail:'Mantenha o vento em 15 km/h ou menos e ajuste temperatura, umidade e capim para o meio da escala.' },
+    { title:'Tarde muito quente',
+      desc:'A temperatura está entre <b>38 e 48 °C</b> e a umidade do ar entre <b>10% e 45%</b>.',
+      range:{temp:[38,48], umidade:[10,45]}, set:{vento:35, capim:85},
+      goals:[G.areaMax(35), G.ipfMax(60)],
+      tip:'Calor e ar seco jogam contra. Ganhe no vento e no capim seco.',
+      ok:'Nas horas mais quentes da tarde, a umidade cai e o perigo sobe. Por isso o combate costuma render mais no começo da manhã e à noite.',
+      fail:'Use a menor temperatura e a maior umidade permitidas, vento fraco e pouco capim seco.' }
+  ]},
+  dificil: { label:'Difícil', saved:'dificil', sliders:sl([34,45,15,50]), challenges:[
+    { title:'Combustível fino úmido',
+      desc:'O capim seco não fica abaixo de <b>30%</b>. Leve o perigo para quase zero.',
+      range:{capim:[30,100]},
+      goals:[G.ipfMax(22)],
+      tip:'Com combustível no chão, só o tempo muito favorável derruba o índice.',
+      ok:'O capim fino responde rápido à umidade do ar. Quando ele absorve água, a ignição fica difícil mesmo com bastante material no chão.',
+      fail:'Use umidade máxima, temperatura mínima, vento zero e o menor capim permitido.' },
+    { title:'Propagação lenta',
+      desc:'O vento não baixa de <b>10 km/h</b> e a temperatura fica entre <b>30 e 48 °C</b>. Deixe a frente lenta e a área pequena.',
+      range:{vento:[10,60], temp:[30,48]},
+      goals:[G.rosMax(8), G.areaMax(20)],
+      tip:'Vento baixo e ar úmido reduzem a velocidade da frente.',
+      ok:'A velocidade da frente cresce depressa com o vento e com a secura do combustível. Frentes lentas dão tempo para a brigada abrir aceiros.',
+      fail:'Use o menor vento e a menor temperatura permitidos, ar úmido e pouco capim seco.' },
+    { title:'Entender uma frente rápida',
+      desc:'Mesmo com umidade entre <b>25% e 95%</b>, crie uma frente rápida que tome a maior parte da área.',
+      range:{umidade:[25,95]},
+      goals:[G.rosMin(16), G.areaMin(60)],
+      tip:'Vento forte, capim muito seco e calor compensam o ar mais úmido.',
+      ok:'Frentes muito rápidas superam a capacidade de combate direto. Nesses casos as equipes recuam e trabalham com aceiros e com o contrafogo.',
+      fail:'Leve vento, temperatura e capim seco ao máximo, com a menor umidade permitida.' },
+    { title:'Queima em mosaico',
+      desc:'Simule uma queima que deixe ilhas sem fogo: nem pouca área, nem área demais.',
+      goals:[G.areaIn(40,60), G.ipfIn(45,70)],
+      tip:'Procure um perigo intermediário. Pequenas mudanças mudam muito o resultado.',
+      ok:'Queimas em mosaico deixam manchas não queimadas que servem de refúgio para a fauna e de fonte de sementes para a regeneração.',
+      fail:'O resultado é muito sensível. Mexa um pouco em um controle por vez perto do perigo moderado a alto.' },
+    { title:'O vento como gatilho',
+      desc:'A umidade do ar está em pelo menos <b>35%</b>. Mesmo assim, crie perigo alto e frente rápida.',
+      goals:[G.umiMin(35), G.ipfMin(72), G.rosMin(14)],
+      tip:'Com a umidade presa, compense com calor, vento e capim seco.',
+      ok:'Mesmo sem o ar tão seco, vento forte e muito material acumulado elevam o perigo. O vento funciona como multiplicador.',
+      fail:'Mantenha a umidade em 35% e leve temperatura, vento e capim seco perto do máximo.' }
+  ]},
+  carbonauta: { label:'Carbonauta', saved:'carbonauta', sliders:sl([34,45,15,50]), challenges:[
+    { title:'Cheia plena',
+      desc:'O Pantanal está alagado. A temperatura fica entre <b>24 e 40 °C</b>. Leve o perigo e a área queimada para quase nada.',
+      range:{temp:[24,40]},
+      goals:[G.ipfMax(18), G.areaMax(5)],
+      tip:'Umidade máxima, combustível mínimo e vento fraco.',
+      ok:'No pulso de inundação, o solo e a serapilheira encharcados impedem que o fogo se sustente.',
+      fail:'Use umidade máxima, a menor temperatura, vento zero e capim seco mínimo.' },
+    { title:'Entender a seca de 2020',
+      desc:'Recrie o cenário de seca extrema. A umidade do ar fica entre <b>8% e 40%</b>.',
+      range:{umidade:[8,40]},
+      goals:[G.ipfMin(85), G.areaMin(80)],
+      tip:'Leve calor, secura e capim seco aos limites.',
+      ok:'Em 2020, os incêndios atingiram pouco mais de 30% do Pantanal brasileiro. A seca prolongada deixou a paisagem contínua de combustível seco.',
+      fail:'Use a menor umidade e leve temperatura, vento e capim seco ao máximo.' },
+    { title:'Combate inviável',
+      desc:'A umidade do ar fica entre <b>10% e 50%</b>. Crie uma frente rápida o bastante para impedir o combate direto.',
+      range:{umidade:[10,50]},
+      goals:[G.rosMin(22), G.areaMin(70)],
+      tip:'Vento é o que mais acelera a frente.',
+      ok:'Quando a frente é rápida demais, o combate direto deixa de ser seguro. A estratégia passa a ser conter os flancos e proteger o que está à frente com aceiros.',
+      fail:'Leve vento, temperatura e capim seco ao máximo.' },
+    { title:'No limite do ataque',
+      desc:'Encontre uma frente de velocidade intermediária, em que a brigada ainda consegue trabalhar com apoio.',
+      goals:[G.rosIn(12,16), G.areaIn(30,70)],
+      tip:'Ajuste o vento por último. Ele muda a velocidade mais do que os outros controles.',
+      ok:'Entre a frente lenta e a frente rápida existe uma faixa em que o combate é possível, mas exige apoio. Saber onde ela está ajuda a decidir onde colocar as equipes.',
+      fail:'Mexa um pouco no vento e no capim seco até a velocidade cair na faixa.' },
+    { title:'Supressão eficaz',
+      desc:'É um dia difícil: temperatura entre <b>34 e 48 °C</b>, umidade entre <b>10% e 40%</b> e vento de pelo menos <b>10 km/h</b>. Contenha o fogo.',
+      range:{temp:[34,48], umidade:[10,40], vento:[10,60]}, set:{capim:90, vento:30},
+      goals:[G.areaMax(12)],
+      tip:'O tempo está contra. Sobra o combustível: reduza o capim seco ao mínimo.',
+      ok:'Quando o tempo não ajuda, quebrar a continuidade do combustível é o que segura o fogo. Detectar o foco cedo, com satélites como os do BDQueimadas, do INPE, também faz diferença.',
+      fail:'Leve o capim seco a zero e use o menor vento e a menor temperatura permitidos.' }
+  ]}
+};
 
-function clamp(x,a,b){return Math.max(a,Math.min(b,x));}
 
-/* ===== Física simplificada ===== */
-function params(){
-  return {T:+$('sT').value, H:+$('sH').value, W:+$('sW').value, F:+$('sF').value};
-}
-function calcIPF(p){
-  const tN=(p.T-20)/28, dN=(100-p.H)/95, wN=p.W/60, fN=p.F/100;
-  const ipf=100*(0.30*tN+0.30*dN+0.20*wN+0.20*fN);
-  return clamp(Math.round(ipf),0,100);
-}
-function calcROS(p,ipf){
-  const wN=p.W/60;
-  const ros=Math.pow(ipf/100,1.15)*24 + wN*7;
-  return Math.round(ros*10)/10;
-}
-function category(ipf){
-  if(ipf<25)return["Baixo","#3fae5a"];
-  if(ipf<50)return["Moderado","#f5c518"];
-  if(ipf<75)return["Alto","#ff7a18"];
-  return["Extremo","#d11f1f"];
-}
-function refresh(){
-  const p=params();
-  $('vT').textContent=p.T+" °C"; $('vH').textContent=p.H+" %";
-  $('vW').textContent=p.W+" km/h"; $('vF').textContent=p.F;
-  const ipf=calcIPF(p), ros=calcROS(p,ipf), c=category(ipf);
-  $('ipfVal').textContent=ipf;
-  $('mk').style.left=ipf+"%";
-  $('catVal').textContent="Risco "+c[0]; $('catVal').style.color=c[1];
-  $('rosVal').textContent=ros+" m/min";
-  return {p,ipf,ros};
-}
+/* ---------- motor comum das simulacoes ---------- */
+const KEYS = Object.keys(LEVELS);
+let level = KEYS[0], ci = 0, hits = 0, score = 0, params = {}, verified = false;
+let startTime = null, timerInt = null, elapsed = 0, scoreSaved = false;
+let db = null, fsFns = null;
+/* o nivel e gravado do mesmo jeito da versao anterior, para o ranking antigo continuar valendo */
+const levelVal = k => LEVELS[k].saved || LEVELS[k].label;
 
-/* ===== Grade de fogo ===== */
-function buildField(){
-  GRID={basico:10,intermediario:12,dificil:14,carbonauta:16}[level];
-  const f=$('field'); f.style.gridTemplateColumns=`repeat(${GRID},1fr)`; f.innerHTML="";
-  cells=[]; state=[];
-  for(let i=0;i<GRID*GRID;i++){
-    const d=document.createElement('div'); d.className="cell veg"; f.appendChild(d);
-    cells.push(d); state.push(0); // 0 veg,1 burning,2 ash
+function buildLevels(){
+  $('levels').innerHTML = KEYS.map(k=>`<button data-lvl="${k}" onclick="setLevel('${k}')">${LEVELS[k].label}</button>`).join('');
+}
+function setLevel(l){
+  level = l;
+  document.querySelectorAll('.levels button').forEach(b=>b.classList.toggle('active',b.dataset.lvl===l));
+  $('rankLevel').textContent = LEVELS[l].label;
+  restart(); loadRanking();
+}
+function restart(){
+  clearInterval(timerInt); timerInt=null; startTime=null; elapsed=0;
+  ci=0; hits=0; score=0; scoreSaved=false;
+  $('timer').textContent='0s';
+  renderChallenge();
+}
+function hud(){
+  const n = LEVELS[level].challenges.length;
+  $('hCh').textContent = Math.min(ci+1,n)+'/'+n; $('hits').textContent=hits; $('score').textContent=score;
+}
+function startTimer(){
+  if(timerInt) return;
+  startTime = Date.now();
+  timerInt = setInterval(()=>{elapsed=Math.floor((Date.now()-startTime)/1000);$('timer').textContent=elapsed+'s';},500);
+}
+function fmtBase(s,v){ return s.fmt ? s.fmt(v) : v+(s.unit||''); }
+function fmt(s,v){ const base = fmtBase(s,v); return s.word ? base+' · '+s.word(v) : base; }
+const TARGET = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/></svg>`;
+let triesLeft = 0, lastSim = null;
+/* cada desafio tem uma lista de metas; ele so e vencido quando todas sao cumpridas na mesma simulacao */
+Object.values(LEVELS).forEach(L=>L.challenges.forEach(ch=>{ ch.check=(m,p)=>ch.goals.every(g=>g.f(m,p)); }));
+
+/* cada desafio pode limitar a faixa de um controle (range) ou mudar o valor inicial (set) */
+function effSliders(){
+  const L = LEVELS[level], ch = L.challenges[ci];
+  return L.sliders.map(s=>{
+    const r = ch.range && ch.range[s.id], o = Object.assign({}, s, {gmin:s.min, gmax:s.max});
+    if(r){ o.min=r[0]; o.max=r[1]; o.limited=true; o.lo=fmtBase(s,r[0]); o.hi=fmtBase(s,r[1]); }
+    let d = (ch.set && ch.set[s.id]!==undefined) ? ch.set[s.id] : s.def;
+    o.def = Math.min(o.max, Math.max(o.min, d));
+    return o;
+  });
+}
+function goalChips(ch){
+  /* metas sobre os controles (live) sao marcadas na hora; metas sobre o resultado so depois de simular */
+  return ch.goals.map(g=>{
+    let cls = '';
+    if(g.live) cls = g.f(null,params) ? 'ok' : 'no';
+    else if(lastSim) cls = g.f(lastSim,params) ? 'ok' : 'no';
+    return `<div class="gchip ${cls}"><i></i><span>${g.t}</span></div>`;
+  }).join('');
+}
+function triesHtml(){
+  let d=''; for(let i=0;i<TRIES;i++) d+=`<i class="${i<triesLeft?'':'used'}"></i>`;
+  return `${d}<span>${triesLeft===1?'Resta 1 simulação':'Restam '+triesLeft+' simulações'}</span>`;
+}
+function renderChallenge(){
+  const L = LEVELS[level], ch = L.challenges[ci];
+  const SL = effSliders();
+  params = {}; SL.forEach(s=>params[s.id]=s.def);
+  verified = false; triesLeft = TRIES; lastSim = null; hud();
+  $('stage').innerHTML = `
+    <div class="qhead"><div class="qnum">Desafio ${ci+1} de ${L.challenges.length}</div>
+      <div class="qtext">${ch.title}</div>
+      <div class="qdesc">${ch.desc}</div>
+      <div class="goalbox"><h4>${TARGET} Sua meta</h4><div class="goals" id="goals"></div></div></div>
+    <div class="tip"><b>Dica.</b> ${ch.tip}</div>
+    <div class="sliders">${SL.map(s=>`
+      <div class="srow${s.min===s.max?' locked':''}" id="row-${s.id}"><div class="sico">${s.icon||''}</div>
+        <div><div class="shead"><label for="sl-${s.id}">${s.label}</label><output id="sv-${s.id}"></output></div>
+        ${s.min===s.max ? `<div class="lock">Fixo neste desafio</div>`
+          : `<input type="range" id="sl-${s.id}" min="${s.min}" max="${s.max}" value="${s.def}" oninput="setParam('${s.id}',this.value)">
+        <div class="sends"><span>${s.limited?'mínimo hoje: ':''}${s.lo||''}</span><span>${s.limited?'máximo hoje: ':''}${s.hi||''}</span></div>`}
+        <div class="shelp">${s.help||''}</div></div></div>`).join('')}</div>
+    <div class="viz" id="viz"></div>
+    <div class="metrics" id="metrics"></div>
+    <div class="tries" id="tries"></div>
+    <button class="btn verify" id="verify" onclick="verify()">Simular</button>
+    <div class="fb" id="fb" aria-live="polite">Ajuste os controles e clique em Simular para ver o que acontece. O resultado só aparece depois da simulação, e o tempo começa no primeiro ajuste.</div>
+    <button class="btn next" id="next" onclick="nextChallenge()"></button>
+    <p class="modelnote">${MODEL_NOTE}</p>`;
+  SL.forEach(s=>paintSlider(s));
+  draw();
+}
+function paintSlider(s){
+  $('sv-'+s.id).textContent = fmt(s,params[s.id]);
+  $('row-'+s.id).querySelector('.sico').style.setProperty('--v', ((params[s.id]-s.gmin)/(s.gmax-s.gmin)).toFixed(3));
+}
+function setParam(id,val){
+  if(verified) return;
+  startTimer();
+  params[id] = parseInt(val,10);
+  paintSlider(effSliders().find(x=>x.id===id));
+  if(lastSim){ lastSim = null; }   /* mexeu depois de simular: o resultado antigo deixa de valer */
+  draw();
+}
+function draw(animate){
+  const L = LEVELS[level], ch = L.challenges[ci];
+  $('goals').innerHTML = goalChips(ch);
+  $('viz').innerHTML = renderViz(lastSim, params, !!animate);
+  const cards = metricCards(lastSim || compute(params), L);
+  $('metrics').innerHTML = cards.map(c=> lastSim
+    ? `<div class="metric ${c.s||''}"><b>${c.v}</b><span>${c.l}</span></div>`
+    : `<div class="metric q"><b>?</b><span>${c.l}</span></div>`).join('');
+  $('tries').innerHTML = triesHtml();
+}
+function verify(){
+  if(verified || triesLeft<=0) return;
+  startTimer();
+  const L = LEVELS[level], ch = L.challenges[ci];
+  lastSim = compute(params); triesLeft--;
+  const ok = !!ch.check(lastSim, params);
+  draw(true);
+  const fb = $('fb');
+  if(!ok && triesLeft>0){
+    const miss = ch.goals.filter(g=>!g.f(lastSim,params)).map(g=>g.t).join('; ');
+    fb.className = 'fb no';
+    fb.innerHTML = `<b>Ainda não.</b>Faltou cumprir: ${miss}. Ajuste os controles e simule de novo.`;
+    return;
   }
-  areaBurned=-1; $('areaVal').textContent="—";
+  verified = true;
+  $('verify').disabled = true;
+  document.querySelectorAll('.sliders input').forEach(i=>i.disabled=true);
+  if(ok){ hits++; score += pointsFor(elapsed); }
+  hud();
+  fb.className = 'fb '+(ok?'ok':'no');
+  fb.innerHTML = ok ? `<b>Meta atingida.</b>${ch.ok}` : `<b>As simulações acabaram.</b>${ch.fail}<div class="more"><b>Para entender</b>${ch.ok}</div>`;
+  const nb = $('next');
+  nb.textContent = ci+1>=L.challenges.length ? 'Ver resultado' : 'Próximo desafio';
+  nb.classList.add('show');
 }
-function resetField(){for(let i=0;i<state.length;i++){state[i]=0;cells[i].className="cell veg";}}
-
-function runSim(){
-  if(simRunning)return;
-  resetField();
-  const {ipf,ros}=refresh();
-  const p=params();
-  const wN=p.W/60;
-  const base=clamp(Math.pow(ipf/100,1.25)*0.96,0,0.96); // prob de propagação por vizinho
-  // foco inicial no centro
-  const c0=Math.floor(GRID/2)*GRID+Math.floor(GRID/2);
-  state[c0]=1; cells[c0].className="cell burn";
-  simRunning=true;
-  const dirBias={r:1+wN*1.2,l:1-wN*0.4,d:1,u:1}; // vento sopra para a direita
-  simAnim=setInterval(()=>{
-    let next=state.slice(), active=false;
-    for(let i=0;i<state.length;i++){
-      if(state[i]===1){
-        next[i]=2; // vira cinza
-        const r=Math.floor(i/GRID), col=i%GRID;
-        const nb=[[r,col+1,'r'],[r,col-1,'l'],[r+1,col,'d'],[r-1,col,'u']];
-        nb.forEach(([rr,cc,dir])=>{
-          if(rr<0||cc<0||rr>=GRID||cc>=GRID)return;
-          const j=rr*GRID+cc;
-          if(state[j]===0&&next[j]===0){
-            if(Math.random()<base*dirBias[dir]){next[j]=1;active=true;}
-          }
-        });
-      }else if(state[i]===1){active=true;}
-    }
-    // detecta se ainda há fogo
-    let burning=false;
-    for(let i=0;i<next.length;i++){if(next[i]===1){burning=true;break;}}
-    state=next;
-    for(let i=0;i<state.length;i++){
-      cells[i].className="cell "+(state[i]===0?"veg":state[i]===1?"burn":"ash");
-    }
-    if(!burning){
-      clearInterval(simAnim); simRunning=false;
-      const ash=state.filter(s=>s===2).length;
-      areaBurned=Math.round(ash/state.length*100);
-      $('areaVal').textContent=areaBurned+"% queimado";
-    }
-  },170);
+function nextChallenge(){
+  ci++;
+  if(ci>=LEVELS[level].challenges.length) renderEnd(); else renderChallenge();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function renderEnd(){
+  clearInterval(timerInt); timerInt=null;
+  const total = LEVELS[level].challenges.length, pct = Math.round(hits/total*100);
+  const m = END_MSG.find(x=>pct>=x[0]);
+  $('hCh').textContent = total+'/'+total;
+  $('stage').innerHTML = `
+    <div class="end">
+      <h2>${m[1]}</h2>
+      <p>${m[2]}</p>
+      <div class="stats">
+        <div class="stat">${hits}/${total}<span>Acertos</span></div>
+        <div class="stat">${score}<span>Pontos</span></div>
+        <div class="stat">${pct}%<span>Aproveitamento</span></div>
+        <div class="stat">${elapsed}s<span>Tempo</span></div>
+      </div>
+      <div class="savebox">
+        <input id="playerName" maxlength="20" placeholder="Seu nome (até 20 letras)">
+        <button class="btn" id="saveBtn" onclick="saveScore()">Salvar no ranking</button>
+      </div>
+      <p id="saveStatus" style="margin-top:8px;font-size:.85rem"></p>
+      <button class="btn ghost" style="margin-top:10px" onclick="restart()">Jogar de novo</button>
+    </div>`;
 }
 
-/* ===== Missões ===== */
-function loadMission(){
-  finished=false; $('final').classList.remove('show'); $('playArea').style.display="block";
-  const list=MISS[level];
-  $('mTag').textContent="Missão "+(mi+1)+" de "+list.length;
-  $('mTxt').textContent=list[mi].t;
-  $('mHint').textContent=list[mi].hint;
-  $('prog').style.width=Math.round(mi/list.length*100)+"%";
-  $('fb').className="fb"; $('fb').textContent="";
-  $('hMissao').textContent="Missão: "+(mi+1)+"/"+list.length;
-}
-function startGame(){
-  mi=0;done=0;points=0;attempts=0;finished=false;areaBurned=-1;
-  startT=Date.now(); clearInterval(timer); timer=setInterval(updTime,250);
-  buildField(); refresh(); updHud(); loadMission();
-}
-function updTime(){if(finished)return;$('hTime').textContent="Tempo: "+Math.floor((Date.now()-startT)/1000)+"s";}
-function updHud(){$('hConcl').textContent="Concluídas: "+done;$('hPontos').textContent="Pontos: "+points;}
-
-function checkMission(){
-  if(finished)return;
-  const m=MISS[level][mi], chk=m.chk;
-  const {ipf,ros}=refresh(); const p=params();
-  let pass=false, why="";
-  if(chk.type==="ipf"){
-    pass = ipf>=chk.min && ipf<=chk.max && (!chk.minH || p.H>=chk.minH);
-    why = `Índice atual: ${ipf}. Meta: ${chk.min}–${chk.max}.`+(chk.minH?` Umidade ≥ ${chk.minH}% (atual ${p.H}%).`:"");
-  }else if(chk.type==="ros"){
-    pass = ros>=chk.min && ros<=chk.max;
-    why = `ROS atual: ${ros} m/min. Meta: ${chk.min}${chk.max>900?"+":"–"+chk.max} m/min.`;
-  }else if(chk.type==="area"){
-    if(areaBurned<0){ feedback(false,"⚠️ Rode a simulação primeiro (botão 🔥) e depois verifique."); return; }
-    pass = areaBurned>=chk.min && areaBurned<=chk.max;
-    why = `Área queimada: ${areaBurned}%. Meta: ${chk.min}–${chk.max}%.`;
-  }
-  attempts++;
-  if(pass){
-    const gain=120 + Math.max(0,60-attempts*5); // menos tentativas, mais bônus
-    points+=Math.max(80,gain); done++;
-    feedback(true,"✅ <b>Missão cumprida!</b> "+m.fb);
-    $('prog').style.width=Math.round((mi+1)/MISS[level].length*100)+"%";
-    updHud();
-    setTimeout(()=>{
-      if(mi+1>=MISS[level].length){ finish(); }
-      else{ mi++; attempts=0; areaBurned=-1; $('areaVal').textContent="—"; loadMission(); }
-    },1400);
-  }else{
-    feedback(false,"❌ Ainda não. "+why+" "+m.hint);
-  }
-}
-function feedback(good,html){
-  const el=$('fb'); el.className="fb show "+(good?"good":"bad"); el.innerHTML=html;
-}
-
-function finish(){
-  finished=true; clearInterval(timer);
-  lastSeconds=Math.floor((Date.now()-startT)/1000); lastScore=points;
-  $('playArea').style.display="none"; $('final').classList.add('show');
-  $('finalScore').textContent=points+" pts";
-  let msg=`Você cumpriu ${done} missões no nível ${LABELS[level]} em ${lastSeconds}s.`;
-  if(done===MISS[level].length)msg="🐆 Brigada nota 10! "+msg+" O Pantanal agradece.";
-  $('finalMsg').textContent=msg; $('saveNote').textContent="";
-}
-
-/* ===== Firebase ranking ===== */
-let db=null,fs=null;
 async function initFirebase(){
   try{
-    const appMod=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
-    fs=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
-    db=fs.getFirestore(appMod.initializeApp(firebaseConfig));
-    return true;
-  }catch(e){console.warn("Firebase off",e);return false;}
+    const appM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const fsM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    db=fsM.getFirestore(appM.initializeApp(firebaseConfig)); fsFns=fsM;
+    loadRanking();
+  }catch(e){
+    $('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';
+    $('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';
+  }
 }
-const fbReady=initFirebase();
-function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-
+async function saveScore(){
+  if(scoreSaved) return;
+  const name=$('playerName').value.trim(), st=$('saveStatus');
+  if(!name){st.textContent='Digite seu nome primeiro.';return;}
+  if(!db){st.textContent='Sem conexão com o ranking. Seu resultado não foi enviado.';return;}
+  try{
+    $('saveBtn').disabled=true;
+    await fsFns.addDoc(fsFns.collection(db,'games',GAME_ID,'scores'),
+      {name:name.slice(0,20),score:score,level:levelVal(level),seconds:elapsed,hits:hits,total:LEVELS[level].challenges.length,ts:fsFns.serverTimestamp()});
+    scoreSaved=true; st.textContent='Salvo no Ranking Global!'; loadRanking();
+  }catch(e){ $('saveBtn').disabled=false; st.textContent='Erro ao salvar. Verifique a internet e tente de novo.'; }
+}
 async function loadRanking(){
-  const listEl=$('rankList'); $('rankNote').textContent="";
-  const ok=await fbReady;
-  if(!ok||!db){listEl.innerHTML='<li><span class="nm">Ranking offline — o jogo funciona normalmente. 🐆</span></li>';return;}
+  if(!db) return;
+  const list=$('rankList'), asked=level;
   try{
-    const {collection,query,orderBy,limit,getDocs}=fs;
-    const q=query(collection(db,"games",GAME_ID,"scores"),orderBy("score","desc"),limit(200));
-    const snap=await getDocs(q);
-    let rows=[]; snap.forEach(d=>{const v=d.data(); if(v.level===level)rows.push(v);});
-    rows.sort((a,b)=>(b.score-a.score)||((a.seconds||0)-(b.seconds||0))); rows=rows.slice(0,10);
-    if(!rows.length){listEl.innerHTML='<li><span class="nm">Seja a primeira brigada a pontuar! 🔥</span></li>';return;}
-    listEl.innerHTML="";
-    rows.forEach((r,i)=>{
-      const li=document.createElement('li');
-      li.innerHTML=`<span class="pos">${i+1}º</span><span class="nm">${esc(r.name||'Anônimo')}</span><span class="sc">${r.score} pts · ${r.seconds||0}s</span>`;
-      listEl.appendChild(li);
-    });
-  }catch(e){console.warn(e);listEl.innerHTML='<li><span class="nm">Não foi possível carregar o ranking agora.</span></li>';}
-}
-$('saveBtn').onclick=async()=>{
-  const name=($('nameInput').value||"").trim().slice(0,20)||"Anônimo";
-  const ok=await fbReady;
-  if(!ok||!db){$('saveNote').textContent="Sem conexão: não deu para salvar, mas seu jogo valeu! 🐆";return;}
-  try{
-    const {collection,addDoc,serverTimestamp}=fs;
-    await addDoc(collection(db,"games",GAME_ID,"scores"),{name,level,score:lastScore,seconds:lastSeconds,ts:serverTimestamp()});
-    $('saveNote').textContent="Pontuação salva no ranking! 🏆"; $('saveBtn').disabled=true; loadRanking();
-  }catch(e){console.warn(e);$('saveNote').textContent="Não foi possível salvar agora. Tente novamente.";}
-};
-
-/* ===== Nível ===== */
-function setLevel(lv){
-  level=lv;
-  document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('active',p.dataset.lv===lv));
-  $('rankLvl').textContent="Nível: "+LABELS[lv];
-  startGame(); loadRanking();
+    /* filtra por nivel no servidor e ordena aqui: cada nivel tem o seu ranking completo */
+    const q=fsFns.query(fsFns.collection(db,'games',GAME_ID,'scores'),fsFns.where('level','==',levelVal(asked)),fsFns.limit(1000));
+    const snap=await fsFns.getDocs(q);
+    if(asked!==level) return;
+    const rows=[]; snap.forEach(d=>rows.push(d.data()));
+    rows.sort((a,b)=>((Number(b.score)||0)-(Number(a.score)||0))||((Number(a.seconds)||0)-(Number(b.seconds)||0)));
+    if(!rows.length){list.innerHTML='<li><span>Seja o primeiro do ranking!</span></li>';return;}
+    list.innerHTML=rows.slice(0,10).map((r,i)=>
+      `<li><span><span class="pos">${i+1}º</span>${esc(r.name||'?')}</span><span>${Number(r.score)||0} pts · ${Number(r.seconds)||0}s</span></li>`).join('');
+  }catch(e){ list.innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>'; }
 }
 
-/* ===== Eventos ===== */
-['sT','sH','sW','sF'].forEach(id=>$(id).addEventListener('input',refresh));
-$('simBtn').onclick=runSim;
-$('checkBtn').onclick=checkMission;
-$('againBtn').onclick=startGame;
-document.querySelectorAll('.pill').forEach(p=>p.onclick=()=>setLevel(p.dataset.lv));
-setLevel('basico');
+buildLevels();
+setLevel(KEYS[0]);
+initFirebase();
 </script>
 </body>
 </html>
