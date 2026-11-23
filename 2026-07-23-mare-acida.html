@@ -2,321 +2,261 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🌊 Maré Ácida — Simulador de Acidificação dos Oceanos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maré Ácida</title>
 <style>
   :root{
-    --bg1:#062b45;
-    --bg2:#0d5a63;
-    --accent:#2ee6c7;
-    --accent2:#48b0ff;
-    --warn:#ff5a5f;
-    --success:#4ade80;
-    --gold:#ffd54a;
-    --card:rgba(255,255,255,0.07);
-    --card2:rgba(255,255,255,0.12);
-    --text:#eafcfb;
-    --muted:#a7c7cf;
-    --line:rgba(255,255,255,0.16);
+    --ink:#0f2f44; --soft:#4b6a7d; --line:#dbe7ee; --ok:#16a34a; --err:#dc2626;
+    --t50:#fdf4ff; --t100:#fae8ff; --t300:#f0abfc; --t500:#d946ef; --main:#c026d3; --deep:#a21caf; --dark:#86198f; --glow:rgba(192,38,211,.28);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{
-    font-family:system-ui,'Segoe UI',Roboto,sans-serif;
-    background:linear-gradient(160deg,var(--bg1),var(--bg2));
-    background-attachment:fixed;
-    color:var(--text);
-    min-height:100vh;
-    padding:16px;
-    line-height:1.5;
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+    min-height:100vh;color:var(--ink);background:#ffffff;
+    display:flex;flex-direction:column;align-items:center;padding:12px 14px 40px;
   }
-  .wrap{max-width:1120px;margin:0 auto}
-  header{text-align:center;margin-bottom:14px}
-  h1{
-    font-size:clamp(1.7rem,5vw,2.8rem);
-    font-weight:800;
-    letter-spacing:-.5px;
-    text-shadow:0 2px 14px rgba(0,0,0,.35);
+  .top{width:100%;max-width:1040px;display:flex;justify-content:flex-start}
+  .hub{display:inline-flex;align-items:center;gap:6px;color:var(--deep);text-decoration:none;
+    font-weight:600;font-size:.9rem;padding:7px 12px;border-radius:20px;border:1.5px solid var(--line)}
+  .hub:hover{background:var(--tint)}
+  .hub svg{width:14px;height:14px}
+  header{text-align:center;max-width:720px;margin-top:6px}
+  h1{font-size:clamp(1.45rem,5vw,2.2rem);display:flex;align-items:center;justify-content:center;gap:10px}
+  h1 svg{width:.95em;height:.95em}
+  h1 .spark{color:var(--main)}
+  .sub{color:var(--soft);font-size:.95rem;margin:4px 0 12px}
+  .levels{display:flex;gap:8px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+  .levels button{border:2px solid var(--line);background:#fff;color:var(--ink);padding:8px 16px;border-radius:30px;
+    font-size:.92rem;cursor:pointer;transition:.2s;font-weight:600;font-family:inherit}
+  .levels button{border-color:var(--main);color:var(--deep)}
+  .levels button:hover{background:var(--tint)}
+  .levels button.active{background:var(--main);border-color:var(--main);color:#fff;box-shadow:0 4px 12px var(--glow)}
+  .hud{display:flex;gap:8px;justify-content:center;align-items:center;margin:4px 0 12px;font-size:.9rem;flex-wrap:wrap}
+  .hud span{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:30px;color:#fff;font-weight:600}
+  .hud b{font-size:1.05rem;font-weight:800}
+  .hud .h1{background:#16a34a} .hud .h2{background:#f97316} .hud .h3{background:#7c3aed} .hud .h4{background:#0ea5e9}
+
+  .card{width:min(680px,100%);background:#fff;border:3px solid var(--main);border-radius:22px;
+    padding:0 0 20px;box-shadow:0 12px 30px var(--glow);overflow:hidden}
+  #stage{padding:0 20px}
+  .strip{display:flex;gap:5px;justify-content:center;align-items:flex-end;flex-wrap:wrap;min-height:54px;
+    padding:10px 10px 8px;background:linear-gradient(180deg,#e0f2fe 0%,#f0f9ff 62%,var(--pale) 62%,var(--pale) 100%)}
+  .slot{width:36px;height:36px;display:flex;align-items:center;justify-content:center}
+  .slot svg{width:100%;height:100%}
+  .slot.empty{align-items:flex-end;padding-bottom:3px}
+  .slot.empty::after{content:"";width:11px;height:11px;border-radius:50%;background:#fff;border:3px solid var(--main);opacity:.45}
+  .slot.now::after{opacity:1;background:var(--acc);border-color:#fff;box-shadow:0 0 0 3px var(--acc);animation:pulse 1.1s infinite}
+  @keyframes pulse{50%{transform:scale(1.25)}}
+  .slot.pop svg{animation:grow .45s cubic-bezier(.3,1.5,.5,1)}
+  @keyframes grow{from{transform:scale(.2) translateY(8px);opacity:0}to{transform:none;opacity:1}}
+  .qhead{margin:0 -20px 16px;padding:14px 20px 16px;background:linear-gradient(135deg,var(--main),var(--deep));color:#fff}
+  .qnum{display:inline-block;font-size:.74rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+    background:rgba(255,255,255,.22);padding:3px 10px;border-radius:20px}
+  .qtext{font-size:1.22rem;font-weight:700;line-height:1.35;margin-top:8px}
+  .opts{display:grid;gap:9px}
+  .opt{display:flex;gap:12px;align-items:center;text-align:left;width:100%;background:#fff;border:2px solid var(--line);
+    border-radius:14px;padding:11px 14px;font-size:1rem;line-height:1.35;color:var(--ink);cursor:pointer;
+    font-family:inherit;transition:border-color .15s,background .15s,transform .15s}
+  .opt{--c:#0ea5e9;--ct:#f0f9ff;border-color:var(--c);background:var(--ct);font-weight:500}
+  .opt:nth-child(2){--c:#f97316;--ct:#fff7ed} .opt:nth-child(3){--c:#8b5cf6;--ct:#f5f3ff} .opt:nth-child(4){--c:#ec4899;--ct:#fdf2f8}
+  .opt .k{flex:none;width:34px;height:34px;border-radius:50%;background:var(--c);color:#fff;
+    font-weight:800;display:flex;align-items:center;justify-content:center;font-size:1rem}
+  .opt:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(15,47,68,.14)}
+  .opt:disabled{cursor:default}
+  .opt.right{border-color:var(--ok);background:#dcfce7;font-weight:700}
+  .opt.right .k{background:var(--ok);color:#fff}
+  .opt.wrong{border-color:var(--err);background:#fee2e2;animation:shake .3s}
+  .opt.wrong .k{background:var(--err);color:#fff}
+  .opt.dim{opacity:.5;background:#fff;border-color:var(--line)} .opt.dim .k{background:#94a3b8}
+  @keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+  .fb{margin-top:14px;border-radius:14px;padding:12px 14px;font-size:.96rem;line-height:1.45;background:#fffbeb;
+    border:2px dashed #fcd34d;min-height:52px;color:#92400e}
+  .fb.ok{background:#dcfce7;border:2px solid var(--ok);color:var(--ink)}
+  .fb.no{background:#fee2e2;border:2px solid var(--err);color:var(--ink)}
+  .fb b{display:block;margin-bottom:2px}
+  .fb.ok>b{color:#166534;font-size:1.05rem} .fb.no>b{color:#b91c1c;font-size:1.05rem}
+  .fb .more{margin-top:8px;padding:8px 10px;border-radius:10px;background:#fff} .fb .more b{color:#166534}
+  .fb .more{margin-top:6px}
+  .btn{background:var(--main);color:#fff;border:0;padding:11px 20px;border-radius:12px;font-weight:700;cursor:pointer;
+    font-size:1rem;font-family:inherit}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--line)}
+  .next{display:none;margin:14px auto 0;background:var(--acc);font-size:1.05rem;padding:12px 26px;box-shadow:0 5px 14px rgba(15,47,68,.2)}
+  .next.show{display:block}
+
+  .end{text-align:center;padding-top:16px}
+  .end h2{font-size:1.5rem;margin:6px 0 4px;color:var(--deep)}
+  .end p{color:var(--soft)}
+  .stats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+  .stat{background:#16a34a;border-radius:14px;padding:9px 16px;font-weight:800;font-size:1.2rem;color:#fff;min-width:84px}
+  .stat:nth-child(2){background:#7c3aed} .stat:nth-child(3){background:#f97316} .stat:nth-child(4){background:#0ea5e9}
+  .stat span{display:block;font-size:.72rem;font-weight:600;color:#fff;opacity:.92}
+  .savebox{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+  .savebox input{padding:10px 12px;border-radius:10px;border:2px solid var(--line);font-size:1rem;width:220px;font-family:inherit}
+  .review{text-align:left;margin-top:16px;border-top:2px solid var(--line);padding-top:12px}
+  .review h3{font-size:1rem;margin-bottom:6px}
+  .review li{list-style:none;padding:8px 0;border-bottom:1px solid var(--line);font-size:.93rem;line-height:1.4}
+  .review li:last-child{border-bottom:0}
+  .review .a{color:#166534;font-weight:700}
+
+  .ranking{margin-top:16px;width:min(680px,100%);background:#fff;border:3px solid #fbbf24;border-radius:18px;padding:0 16px 12px;overflow:hidden}
+  .ranking h3{font-size:1.02rem;margin:0 -16px 8px;padding:10px 16px;background:#fbbf24;color:#451a03}
+  .ranking h3 span{color:#fff;background:#b45309;padding:2px 10px;border-radius:20px;font-size:.88rem}
+  .ranking li:nth-child(1) .pos{color:#b45309} .ranking li:nth-child(1){font-weight:700}
+  .ranking ol{list-style:none}
+  .ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.93rem}
+  .ranking li:last-child{border-bottom:0}
+  .ranking .pos{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+  .note{font-size:.8rem;color:var(--soft);margin-top:6px}
+  footer{margin-top:22px;font-size:.8rem;color:var(--soft);text-align:center;line-height:1.6}
+  footer .credit{font-weight:700;color:var(--ink)}
+
+
+  /* ---- cor unica por jogo: todos os destaques sao tons da mesma cor ---- */
+  :root{--tint:var(--t100);--pale:var(--t300);--acc:var(--dark)}
+  .hub:hover{background:var(--t50)}
+  .levels button{border-color:var(--t300)}
+  .hud .h1{background:var(--t500)} .hud .h2{background:var(--main)} .hud .h3{background:var(--deep)} .hud .h4{background:var(--dark)}
+  .strip{background:linear-gradient(180deg,var(--t50) 0%,var(--t100) 62%,var(--t300) 62%,var(--t300) 100%)}
+  .qhead{background:linear-gradient(135deg,var(--main),var(--dark))}
+  .opt,.opt:nth-child(2),.opt:nth-child(3),.opt:nth-child(4){--c:var(--main);--ct:var(--t50);border-color:var(--t300)}
+  .opt:not(:disabled):hover{border-color:var(--main);background:var(--t100)}
+  .fb{background:var(--t50);border:2px dashed var(--t300);color:var(--deep)}
+  .next{background:var(--deep)}
+  .stat{background:var(--t500)} .stat:nth-child(2){background:var(--main)} .stat:nth-child(3){background:var(--deep)} .stat:nth-child(4){background:var(--dark)}
+  .ranking{border-color:var(--main)}
+  .ranking h3{background:var(--main);color:#fff}
+  .ranking h3 span{background:var(--dark);color:#fff}
+  .ranking li:nth-child(1) .pos{color:var(--deep)}
+  @media(max-width:560px){
+    body{padding:8px 8px 32px}
+    .sub{display:none}
+    h1{margin-bottom:8px}
+    .hub{padding:4px 10px;font-size:.82rem}
+    .levels button{padding:7px 12px;font-size:.85rem}
+    .hud{gap:10px;font-size:.86rem;margin:2px 0 8px}
+    .card{padding:0 0 14px;border-radius:18px}
+    .qtext{font-size:1.05rem;margin-bottom:10px}
+    .opt{padding:9px 10px;font-size:.94rem;gap:9px}
+    .opt .k{width:28px;height:28px;font-size:.86rem}
+    .slot{width:27px;height:27px}
+    .strip{min-height:44px;padding:8px 6px 6px}
+    .qhead{margin:0 -12px 12px;padding:10px 12px 12px}
+    #stage{padding:0 12px}
+    .hud span{padding:4px 9px;font-size:.78rem} .hud b{font-size:.92rem} .hud{gap:5px}
+    .fb{font-size:.9rem}
   }
-  .sub{color:var(--muted);font-size:clamp(.85rem,2.4vw,1rem);margin-top:4px}
+  @media(prefers-reduced-motion:reduce){.slot.pop svg,.opt.wrong{animation:none}}
 
-  /* níveis */
-  .levels{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0}
-  .lvl{
-    border:1px solid var(--line);
-    background:var(--card);
-    color:var(--text);
-    padding:9px 16px;
-    border-radius:999px;
-    font-size:.92rem;
-    font-weight:700;
-    cursor:pointer;
-    transition:all .25s ease;
+  /* ---------- simulacao com controles ---------- */
+  .card{width:min(720px,100%)} .ranking{width:min(720px,100%)}
+  .qtext{font-size:1.18rem}
+  .qdesc{font-size:.96rem;line-height:1.45;margin-top:6px;opacity:.96}
+  .goalbox{margin-top:12px;background:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+  .goalbox h4{display:flex;align-items:center;gap:8px;font-size:.8rem;letter-spacing:.8px;text-transform:uppercase;color:var(--deep);margin-bottom:8px}
+  .goalbox h4 svg{width:22px;height:22px}
+  .goals{display:grid;gap:7px}
+  .gchip{display:flex;align-items:center;gap:10px;font-size:1.08rem;font-weight:800;color:var(--ink);background:var(--t50);border:2px solid var(--t300);border-radius:12px;padding:8px 12px;line-height:1.25}
+  .gchip i{flex:none;width:26px;height:26px;border-radius:50%;border:3px solid var(--t300);background:#fff;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:.95rem;color:#fff}
+  .gchip.ok{border-color:var(--ok);background:#dcfce7} .gchip.ok i{background:var(--ok);border-color:var(--ok)}
+  .gchip.no{border-color:var(--err);background:#fee2e2} .gchip.no i{background:var(--err);border-color:var(--err)}
+  .gchip.ok i::before{content:"\2713"} .gchip.no i::before{content:"\00d7"}
+  .tip{margin:0 0 14px;padding:10px 12px;border-radius:12px;background:var(--t50);border:2px dashed var(--t300);color:var(--deep);font-size:.92rem;line-height:1.4}
+  .tip b{color:var(--dark)}
+  .sliders{display:grid;gap:10px;margin-bottom:14px}
+  .srow{display:grid;grid-template-columns:58px 1fr;gap:12px;align-items:center;background:#fff;border:2px solid var(--t300);border-radius:16px;padding:10px 12px}
+  .sico{position:relative;width:58px;height:58px;border-radius:14px;background:var(--t50);border:2px solid var(--t300);overflow:hidden;display:flex;align-items:center;justify-content:center}
+  .sico::before{content:"";position:absolute;left:0;right:0;bottom:0;height:calc(var(--v,.5)*100%);background:var(--t300);transition:height .15s}
+  .sico svg{position:relative;width:38px;height:38px}
+  .shead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+  .shead label{font-weight:800;font-size:1rem;color:var(--ink)}
+  .shead output{font-weight:800;color:#fff;background:var(--main);border-radius:20px;padding:3px 12px;font-size:.9rem;white-space:nowrap}
+  .sends{display:flex;justify-content:space-between;font-size:.76rem;font-weight:700;color:var(--deep);margin-top:4px}
+  .shelp{font-size:.84rem;color:var(--soft);margin-top:3px;line-height:1.35}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:12px;border-radius:10px;background:var(--t100);border:1.5px solid var(--t300);outline-offset:4px;display:block}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:var(--main);border:3px solid #fff;box-shadow:0 2px 6px rgba(15,47,68,.35);cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:var(--main);border:3px solid #fff;box-shadow:0 2px 6px rgba(15,47,68,.35);cursor:pointer}
+  input[type=range]:disabled{opacity:.6}
+  .srow.locked{background:var(--t50);border-style:dashed}
+  .lock{font-size:.84rem;font-weight:800;color:var(--deep);background:#fff;border:2px dashed var(--t300);border-radius:10px;padding:5px 10px;display:inline-block}
+  .tries{display:flex;align-items:center;justify-content:center;gap:8px;font-size:.9rem;font-weight:700;color:var(--deep);margin:2px 0 10px}
+  .tries i{width:16px;height:16px;border-radius:50%;background:var(--main);display:inline-block}
+  .tries i.used{background:#fff;border:3px solid var(--t300)}
+  .viz{margin-bottom:12px}
+  .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:14px}
+  .metric{border-radius:14px;padding:10px 12px;background:var(--t50);border:2px solid var(--t300);border-left-width:8px}
+  .metric b{display:block;font-size:1.45rem;color:var(--dark);line-height:1.1}
+  .metric span{font-size:.8rem;color:var(--soft);font-weight:600}
+  .metric.q b{color:var(--t300)}
+  .metric.ok{border-left-color:var(--ok)} .metric.warn{border-left-color:#f59e0b} .metric.danger{border-left-color:var(--err)}
+  .verify{display:block;margin:0 auto;background:var(--deep);font-size:1.05rem;padding:12px 26px;box-shadow:0 5px 14px rgba(15,47,68,.2)}
+  .modelnote{font-size:.78rem;color:var(--soft);text-align:center;margin-top:12px;line-height:1.4}
+  @media(max-width:560px){
+    .srow{grid-template-columns:44px 1fr;gap:8px;padding:8px}
+    .sico{width:44px;height:44px} .sico svg{width:28px;height:28px}
+    .shead label{font-size:.92rem} .shead output{font-size:.8rem;padding:3px 8px}
+    .gchip{font-size:.96rem;padding:7px 9px}
+    .metrics{grid-template-columns:1fr 1fr}
+    .metric b{font-size:1.2rem}
   }
-  .lvl:hover{transform:translateY(-2px);border-color:var(--accent)}
-  .lvl.active{background:var(--accent);color:#04303a;border-color:var(--accent);box-shadow:0 6px 18px rgba(46,230,199,.35)}
-
-  .howto{
-    text-align:center;color:var(--muted);font-size:.9rem;
-    background:var(--card);border:1px solid var(--line);
-    border-radius:12px;padding:9px 14px;margin-bottom:14px;
-  }
-
-  /* HUD */
-  .hud{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:14px}
-  .stat{
-    background:var(--card);border:1px solid var(--line);
-    border-radius:12px;padding:8px 14px;min-width:104px;text-align:center;
-  }
-  .stat .k{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
-  .stat .v{font-size:1.25rem;font-weight:800}
-
-  /* layout principal */
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  @media(max-width:820px){.grid{grid-template-columns:1fr}}
-
-  .panel{
-    background:var(--card);border:1px solid var(--line);
-    border-radius:16px;padding:16px;box-shadow:0 8px 26px rgba(0,0,0,.22);
-  }
-  .panel h2{font-size:1.05rem;margin-bottom:10px;display:flex;align-items:center;gap:8px}
-
-  /* controles */
-  .ctrl{margin-bottom:16px}
-  .ctrl .row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
-  .ctrl label{font-weight:700;font-size:.95rem}
-  .ctrl .val{font-weight:800;color:var(--accent);font-size:1.05rem;font-variant-numeric:tabular-nums}
-  input[type=range]{
-    -webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:8px;
-    background:linear-gradient(90deg,var(--accent2),var(--warn));outline:none;
-  }
-  input[type=range]::-webkit-slider-thumb{
-    -webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;
-    background:#fff;border:3px solid var(--accent);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4);transition:transform .15s}
-  input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.12)}
-  input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--accent);cursor:pointer}
-  .hint{font-size:.78rem;color:var(--muted);margin-top:4px}
-
-  /* leituras */
-  .readouts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
-  .ro{background:var(--card2);border-radius:12px;padding:10px 12px}
-  .ro .k{font-size:.74rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-  .ro .v{font-size:1.5rem;font-weight:800;font-variant-numeric:tabular-nums}
-  .ro .u{font-size:.72rem;color:var(--muted)}
-  .bar{height:7px;border-radius:6px;background:rgba(255,255,255,.14);margin-top:7px;overflow:hidden}
-  .bar > i{display:block;height:100%;border-radius:6px;transition:width .3s ease,background .3s}
-
-  /* cena */
-  .scene-wrap{margin-bottom:12px}
-  svg.scene{width:100%;height:auto;border-radius:14px;display:block;background:#03243a}
-  .coral{transition:fill .4s ease}
-  .fishg{transition:opacity .5s ease}
-
-  /* missão */
-  .mission{
-    background:linear-gradient(135deg,rgba(46,230,199,.14),rgba(72,176,255,.10));
-    border:1px solid var(--accent);border-radius:14px;padding:14px;margin-bottom:12px;
-  }
-  .mission .tag{font-size:.74rem;color:var(--accent);font-weight:800;text-transform:uppercase;letter-spacing:.6px}
-  .mission .txt{font-size:1.05rem;font-weight:700;margin-top:4px}
-  .btn{
-    border:none;border-radius:12px;padding:12px 18px;font-size:1rem;font-weight:800;cursor:pointer;
-    transition:transform .15s,box-shadow .2s;width:100%;margin-top:10px;
-  }
-  .btn-go{background:var(--accent);color:#04303a;box-shadow:0 6px 18px rgba(46,230,199,.35)}
-  .btn-go:hover{transform:translateY(-2px)}
-  .btn-ghost{background:var(--card2);color:var(--text);border:1px solid var(--line)}
-
-  /* feedback */
-  #feedback{
-    border-radius:14px;padding:14px;margin-bottom:12px;min-height:64px;
-    background:var(--card);border:1px solid var(--line);transition:all .3s;font-size:.98rem;
-  }
-  #feedback.ok{background:rgba(74,222,128,.16);border-color:var(--success)}
-  #feedback.no{background:rgba(255,90,95,.16);border-color:var(--warn)}
-  #feedback b{color:var(--accent)}
-
-  @keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.06)}100%{transform:scale(1)}}
-  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
-  .pop{animation:pop .4s ease}
-  .shake{animation:shake .4s ease}
-
-  /* ranking */
-  .rank h2 small{font-weight:600;color:var(--accent);font-size:.8rem}
-  ol.rk{list-style:none;counter-reset:r}
-  ol.rk li{
-    counter-increment:r;display:flex;align-items:center;gap:10px;
-    padding:8px 10px;border-radius:10px;background:var(--card2);margin-bottom:6px;font-size:.92rem;
-  }
-  ol.rk li::before{content:counter(r);font-weight:800;color:var(--accent);min-width:22px;text-align:center}
-  ol.rk li .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  ol.rk li .sc{font-weight:800;font-variant-numeric:tabular-nums}
-  ol.rk li .tm{color:var(--muted);font-size:.78rem}
-  .rkmsg{color:var(--muted);font-size:.86rem;padding:6px 2px}
-
-  /* modal final */
-  .overlay{position:fixed;inset:0;background:rgba(2,20,32,.82);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
-  .overlay.on{display:flex}
-  .modal{
-    background:linear-gradient(160deg,#0a3a4a,#0d5a63);border:1px solid var(--accent);
-    border-radius:20px;padding:24px;max-width:440px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)
-  }
-  .modal h2{font-size:1.7rem;margin-bottom:6px}
-  .modal .big{font-size:2.6rem;font-weight:800;color:var(--gold);margin:6px 0}
-  .modal p{color:var(--muted);margin-bottom:12px;font-size:.94rem}
-  .modal input{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.1);color:var(--text);font-size:1rem;margin-bottom:10px}
-  .modal input::placeholder{color:#8fb2ba}
-
-  footer{text-align:center;margin-top:22px;padding:16px;color:var(--muted);font-size:.86rem;border-top:1px solid var(--line)}
-  footer .id{font-weight:800;color:var(--text);font-size:1rem}
+  .scene{width:100%;height:auto;display:block;border-radius:14px;border:2px solid var(--t300);background:#fff}
+  .cor{animation:sway 3s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 100%}
+  @keyframes sway{from{rotate:-3deg}to{rotate:3deg}}
+  .fish{animation:swim 7s ease-in-out infinite alternate}
+  @keyframes swim{from{transform:translateX(-20px)}to{transform:translateX(30px)}}
+  .co2b{animation:sink 3.5s linear infinite}
+  @keyframes sink{from{transform:translateY(-12px);opacity:0}25%{opacity:1}to{transform:translateY(60px);opacity:0}}
+  .wave{animation:wave 3s linear infinite}
+  @keyframes wave{to{transform:translateX(-50px)}}
+  .sunp{animation:pulse 1.6s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 50%}
+  @keyframes pulse{to{transform:scale(1.15)}}
+  .pop{animation:popin .5s ease-out both;transform-box:fill-box;transform-origin:50% 50%}
+  @keyframes popin{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+  .ct{font:800 8px Segoe UI,system-ui,sans-serif;fill:#475569}
+  .blab{font:800 14px Segoe UI,system-ui,sans-serif;fill:#fff}
+  .qlab{font:700 14px Segoe UI,system-ui,sans-serif;fill:var(--deep)}
+  .landcap{display:flex;justify-content:space-between;gap:10px;font-size:.86rem;color:var(--soft);margin-top:6px;flex-wrap:wrap}
+  @media(prefers-reduced-motion:reduce){.cor,.fish,.co2b,.wave,.sunp,.pop{animation:none}}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>🌊 Maré Ácida 🧪</h1>
-    <div class="sub">Simulador de Acidificação dos Oceanos — mexa no CO₂ e na temperatura e veja o mar reagir</div>
-  </header>
-
-  <div class="levels" id="levels">
-    <button class="lvl" data-l="basico">Básico</button>
-    <button class="lvl" data-l="inter">Intermediário</button>
-    <button class="lvl" data-l="dificil">Difícil</button>
-    <button class="lvl" data-l="carbonauta">🛰️ Carbonauta</button>
-  </div>
-
-  <div class="howto">
-    🎯 <b>Como jogar:</b> arraste os controles de <b>CO₂</b> e <b>temperatura</b> para mudar a química do mar em tempo real e cumprir cada missão. Clique em <b>Verificar</b> para conferir. Menos erros e menos tempo desempatam no ranking.
-  </div>
-
-  <div class="hud" id="hud">
-    <div class="stat"><div class="k">Nível</div><div class="v" id="hudLevel">Básico</div></div>
-    <div class="stat"><div class="k">Missão</div><div class="v" id="hudMission">1/8</div></div>
-    <div class="stat"><div class="k">Pontos</div><div class="v" id="hudPts">0</div></div>
-    <div class="stat"><div class="k">Erros</div><div class="v" id="hudErr">0</div></div>
-    <div class="stat"><div class="k">Tempo</div><div class="v" id="hudTime">0s</div></div>
-  </div>
-
-  <div class="grid">
-    <!-- COLUNA CONTROLES -->
-    <div class="panel">
-      <h2>🎛️ Controles</h2>
-
-      <div class="ctrl">
-        <div class="row"><label for="co2">CO₂ na atmosfera</label><span class="val"><span id="co2v">420</span> ppm</span></div>
-        <input type="range" id="co2" min="250" max="2000" step="5" value="420">
-        <div class="hint">Pré-industrial ≈ 280 ppm · Hoje ≈ 424 ppm · 2×CO₂ ≈ 560 · 4×CO₂ ≈ 1120</div>
-      </div>
-
-      <div class="ctrl">
-        <div class="row"><label for="temp">Temperatura da água</label><span class="val"><span id="tempv">20.0</span> °C</span></div>
-        <input type="range" id="temp" min="2" max="32" step="0.5" value="20">
-        <div class="hint">Águas frias (polares) absorvem mais CO₂ e acidificam mais rápido</div>
-      </div>
-
-      <h2 style="margin-top:6px">📊 Leituras ao vivo</h2>
-      <div class="readouts">
-        <div class="ro">
-          <div class="k">pH da superfície</div>
-          <div class="v" id="phv">8.00</div><span class="u">pré-ind. ≈ 8,17</span>
-          <div class="bar"><i id="phbar"></i></div>
-        </div>
-        <div class="ro">
-          <div class="k">Aragonita (Ω)</div>
-          <div class="v" id="omv">2.6</div><span class="u">estresse &lt; 3 · dissolve &lt; 1</span>
-          <div class="bar"><i id="ombar"></i></div>
-        </div>
-        <div class="ro">
-          <div class="k">Íons H⁺ (vs. 1750)</div>
-          <div class="v" id="hv">+29%</div><span class="u">mais ácido = mais H⁺</span>
-          <div class="bar"><i id="hbar"></i></div>
-        </div>
-        <div class="ro">
-          <div class="k">Saúde do recife</div>
-          <div class="v" id="hlv">62%</div><span class="u">corais + calcificadores</span>
-          <div class="bar"><i id="hlbar"></i></div>
-        </div>
-      </div>
-      <div class="hint" style="margin-top:10px">Modelo simplificado e ilustrativo, calibrado com valores reais de referência.</div>
-    </div>
-
-    <!-- COLUNA CENA + MISSÃO -->
-    <div class="panel">
-      <div class="scene-wrap">
-        <svg class="scene" id="scene" viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cena do recife">
-          <defs>
-            <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
-              <stop id="wtop" offset="0" stop-color="#0e6b8f"/>
-              <stop id="wbot" offset="1" stop-color="#062b45"/>
-            </linearGradient>
-          </defs>
-          <rect width="400" height="220" fill="url(#water)"/>
-          <!-- sol/luz -->
-          <ellipse cx="60" cy="0" rx="120" ry="60" fill="#ffffff" opacity="0.06"/>
-          <!-- bolhas -->
-          <g id="bubbles" fill="#ffffff" opacity="0.35">
-            <circle cx="300" cy="180" r="3"><animate attributeName="cy" from="200" to="20" dur="5s" repeatCount="indefinite"/></circle>
-            <circle cx="330" cy="160" r="2"><animate attributeName="cy" from="210" to="10" dur="6.5s" repeatCount="indefinite"/></circle>
-            <circle cx="280" cy="150" r="2.4"><animate attributeName="cy" from="205" to="15" dur="7.5s" repeatCount="indefinite"/></circle>
-          </g>
-          <!-- peixes -->
-          <g id="fish" class="fishg">
-            <text x="90" y="70" font-size="22">🐠<animate attributeName="x" values="90;300;90" dur="18s" repeatCount="indefinite"/></text>
-            <text x="250" y="110" font-size="20">🐟<animate attributeName="x" values="250;60;250" dur="22s" repeatCount="indefinite"/></text>
-            <text x="160" y="55" font-size="18">🐡<animate attributeName="x" values="160;340;160" dur="26s" repeatCount="indefinite"/></text>
-          </g>
-          <!-- fundo -->
-          <rect y="185" width="400" height="35" fill="#0a2233" opacity="0.7"/>
-          <!-- corais -->
-          <g id="corals">
-            <path class="coral" d="M70 190 q-6 -34 6 -46 q6 12 4 24 q10 -18 20 -14 q-2 16 -12 24 q10 -6 18 0 q-14 12 -26 12 z" fill="#ff7ab6"/>
-            <path class="coral" d="M300 190 q-8 -28 4 -42 q8 10 6 22 q12 -14 20 -8 q-4 14 -16 20 q10 0 16 8 z" fill="#ff9a5c"/>
-            <path class="coral" d="M180 192 q-4 -22 2 -34 q6 8 6 18 q6 -12 14 -8 q-2 12 -10 18 q8 0 12 6 z" fill="#ffd54a"/>
-          </g>
-          <!-- shell -->
-          <text x="205" y="208" font-size="20" id="shell">🐚</text>
-          <text x="130" y="208" font-size="18" id="shell2">🦑</text>
-          <!-- status -->
-          <text x="12" y="26" font-size="13" fill="#eafcfb" font-weight="700" id="sceneStatus">Recife saudável</text>
-        </svg>
-      </div>
-
-      <div class="mission">
-        <div class="tag">Missão <span id="mNum">1</span></div>
-        <div class="txt" id="mText">Carregando…</div>
-      </div>
-      <button class="btn btn-go" id="verify">✅ Verificar</button>
-      <button class="btn btn-ghost" id="skip" style="margin-top:8px">Pular missão →</button>
-    </div>
-  </div>
-
-  <div id="feedback" style="margin-top:16px">Escolha um nível e comece a mexer nos controles. Cada missão traz uma explicação sobre o oceano. 🌊</div>
-
-  <div class="panel rank">
-    <h2>🏆 Ranking Global <small id="rankLevel">— Básico</small></h2>
-    <ol class="rk" id="rankList"></ol>
-    <div class="rkmsg" id="rankMsg">Carregando ranking…</div>
-  </div>
-
-  <footer>
-    <div class="id">— Idealizado por Ernandes Sobreira —</div>
-    <div>Tema: Acidificação dos oceanos · Gênero: Simulação interativa · app ambiental do dia (2026-07-23)</div>
-  </footer>
+<div class="top">
+  <a class="hub" href="index.html">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Todos os jogos
+  </a>
 </div>
 
-<!-- MODAL FINAL -->
-<div class="overlay" id="overlay">
-  <div class="modal" id="modal">
-    <h2>🎉 Simulação concluída!</h2>
-    <div class="big" id="finalPts">0 pts</div>
-    <p id="finalTxt"></p>
-    <input type="text" id="playerName" maxlength="20" placeholder="Seu nome (até 20 letras)">
-    <button class="btn btn-go" id="saveScore">💾 Salvar no ranking</button>
-    <button class="btn btn-ghost" id="playAgain" style="margin-top:8px">🔁 Jogar de novo</button>
-  </div>
+<header>
+  <h1><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8c2.5-2 5-2 7.5 0s5 2 7.5 0 4.5-2 5 0" fill="none" stroke="#c026d3" stroke-width="2.2" stroke-linecap="round"/><path d="M12 22v-7M12 17l-4-4v-3M12 16l4-5v-2" stroke="#c026d3" stroke-width="2.4" stroke-linecap="round" fill="none"/></svg> <span>Maré <span class="spark">Ácida</span></span></h1>
+  <p class="sub">Simulação da acidificação do oceano. Ajuste o CO2 do ar, a temperatura da água e o calor, simule e veja o que acontece com o recife.</p>
+</header>
+
+<div class="levels" id="levels"></div>
+
+<div class="hud">
+  <span class="h1">Desafio <b id="hCh">1/1</b></span>
+  <span class="h2">Acertos <b id="hits">0</b></span>
+  <span class="h3">Pontos <b id="score">0</b></span>
+  <span class="h4">Tempo <b id="timer">0s</b></span>
 </div>
+
+<div class="card">
+  <div id="stage"></div>
+</div>
+
+<div class="ranking">
+  <h3>Ranking Global, nível <span id="rankLevel"></span></h3>
+  <ol id="rankList"><li><span>Carregando o ranking...</span></li></ol>
+  <p class="note" id="rankNote"></p>
+</div>
+
+<footer>
+  Acidificação dos oceanos · Simulação interativa<br>
+  <span class="credit">Idealizado por Ernandes Sobreira</span>
+</footer>
 
 <script>
-/* ===================== FIREBASE ===================== */
 const firebaseConfig = {
   apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
   authDomain: "jogos-ranking.firebaseapp.com",
@@ -326,296 +266,456 @@ const firebaseConfig = {
   messagingSenderId: "958784915420",
   appId: "1:958784915420:web:4212d3ad278f02d600f119"
 };
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* ---------- dados e modelo deste jogo ---------- */
 const GAME_ID = "2026-07-23-mare-acida";
+const MODEL_NOTE = "Modelo simplificado para fins didáticos. As fórmulas de pH, saturação de aragonita e saúde do recife são aproximações do jogo, não cálculos de química marinha completos. O efeito da onda de calor também é uma regra do jogo.";
+const TRIES = 3;
+const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
 
-let db=null, fbReady=false, fx=null;
-(async()=>{
-  try{
-    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
-    const fsMod  = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
-    const app = appMod.initializeApp(firebaseConfig);
-    db = fsMod.getFirestore(app);
-    fx = fsMod;
-    fbReady=true;
-    loadRanking();
-  }catch(e){
-    fbReady=false;
-    document.getElementById('rankMsg').textContent="Ranking offline — o jogo continua 100% jogável. 🌊";
+/* modelo da versao anterior, com a onda de calor como novo fator */
+function compute(p){
+  const co2 = p.co2 ?? 420, T = p.temp ?? 20, calor = p.calor ?? 0;
+  const ph = 8.17 - 0.92*Math.log10(co2/280) - (T-18)*0.004;
+  const om = Math.max(0.05, Math.sqrt(280/co2)*(1.6 + 0.088*(T-2)));
+  const h = Math.pow(10, 8.17-ph);
+  const hO = clamp((om-1)/2.8, 0, 1), hP = clamp((ph-7.6)/0.6, 0, 1);
+  const base = (0.62*hO + 0.38*hP)*100;
+  const health = Math.round(clamp(base*(1 - 0.2*calor), 0, 100));
+  return {ph:Math.round(ph*100)/100, om:Math.round(om*100)/100, hx:Math.round((h-1)*100), health};
+}
+const d2 = x => x.toFixed(2).replace('.',',');
+
+/* ---------- cena ---------- */
+const CORALS = [[70,'#f472b6'],[150,'#fb923c'],[235,'#facc15'],[330,'#f472b6'],[420,'#a78bfa'],[510,'#fb7185']];
+function coral(x, col, k){
+  const b = k%2;
+  const d = b ? `M${x} 210v-26M${x} 196l-12-12v-12M${x} 192l12-14v-10M${x-12} 184l-6-6M${x+12} 178l7-5`
+              : `M${x} 210v-20M${x} 196c-10-4-14-12-14-24M${x} 192c8-6 10-14 10-26M${x} 190v-22`;
+  return `<path class="cor" d="${d}" stroke="${col}" stroke-width="7" stroke-linecap="round" fill="none" style="animation-delay:-${(k*0.4).toFixed(1)}s"/>`;
+}
+function fish(x, y, col, k){
+  return `<g class="fish" style="animation-delay:-${k*1.7}s"><g transform="translate(${x} ${y})"><path d="M0 0c8-8 22-8 28 0-6 8-20 8-28 0z" fill="${col}"/><path d="M0 0l-9-7v14z" fill="${col}"/><circle cx="20" cy="-1.500" r="1.800" fill="#0f172a"/></g></g>`;
+}
+function renderViz(m, p, animate){
+  const co2 = p.co2 ?? 420, T = p.temp ?? 20, calor = p.calor ?? 0;
+  let bub = ''; const nB = Math.round(clamp(co2/2000*16, 2, 16));
+  for(let i=0;i<nB;i++){ const x = 40 + (i*67)%520; bub += `<g class="co2b" style="animation-delay:-${(i*0.37).toFixed(2)}s"><circle cx="${x}" cy="44" r="7" fill="#fff" stroke="#94a3b8" stroke-width="1.500"/><text x="${x}" y="47" text-anchor="middle" class="ct">C</text></g>`; }
+  const warm = clamp((T-2)/30, 0, 1);
+  const water = `hsl(${200 - warm*25} 85% ${88 - warm*6}%)`;
+  let corals = '', fishes = '', badge = '', shells = '';
+  if(m){
+    const hf = m.health/100;
+    CORALS.forEach((c,i)=>{ corals += coral(c[0], hf>0.6 ? c[1] : hf>0.3 ? '#fda4af' : '#d6d3d1', i); });
+    const nF = Math.round(hf*6);
+    const FC = ['#f97316','#0ea5e9','#eab308','#ec4899','#22c55e','#8b5cf6'];
+    for(let i=0;i<nF;i++) fishes += fish(60 + i*85, 100 + (i%3)*22, FC[i], i);
+    const diss = m.om < 1;
+    for(let i=0;i<4;i++){ const x = 110 + i*120; shells += `<path d="M${x} 222c0-10 8-16 16-16s16 6 16 16z" fill="${diss?'none':'#fde68a'}" stroke="#b45309" stroke-width="2" ${diss?'stroke-dasharray="3 4"':''}/>`; }
+    const st = m.health>=70 ? ['Recife saudável','#16a34a'] : m.health>=35 ? ['Recife sob estresse','#d97706'] : diss ? ['Água corrosiva','#dc2626'] : ['Recife em colapso','#dc2626'];
+    badge = `<g class="${animate?'pop':''}"><rect x="190" y="70" width="220" height="34" rx="17" fill="${st[1]}"/><text x="300" y="93" text-anchor="middle" class="blab">${st[0]} · ${m.health}%</text></g>`;
+  } else {
+    CORALS.forEach((c,i)=>{ corals += coral(c[0], '#e2e8f0', i); });
+    badge = `<rect x="180" y="70" width="240" height="34" rx="17" fill="#fff" stroke="var(--t300)" stroke-width="2"/><text x="300" y="93" text-anchor="middle" class="qlab">Simule para ver o recife</text>`;
   }
-})();
+  const sun = calor>0 ? `<g class="sunp"><circle cx="560" cy="20" r="${10+calor*3}" fill="#fbbf24"/></g>` : `<circle cx="560" cy="20" r="9" fill="#fde68a"/>`;
+  return `<svg class="scene" viewBox="0 0 600 230" role="img" aria-label="Recife de coral sob a água">
+    <rect width="600" height="60" fill="#f8fafc"/>${sun}
+    <rect y="58" width="600" height="172" fill="${water}"/>
+    <path class="wave" d="M0 60q25-8 50 0t50 0 50 0 50 0 50 0 50 0 50 0 50 0 50 0 50 0 50 0 50 0 50 0" fill="none" stroke="#7dd3fc" stroke-width="4"/>
+    ${bub}
+    <rect y="210" width="600" height="20" fill="#fde7c3"/>
+    ${shells}${corals}${fishes}${badge}
+  </svg>
+  <div class="landcap"><span>${co2} ppm de CO2 no ar entrando no mar</span><span>${m?'Corais coloridos e peixes indicam recife saudável':'Os corais ganham cor depois da simulação'}</span></div>`;
+}
+function metricCards(m){
+  return [
+    {v:d2(m.ph), l:'pH da água do mar', s:m.ph>=8.05?'ok':m.ph>=7.85?'warn':'danger'},
+    {v:d2(m.om), l:'Saturação de aragonita (carbonato para conchas)', s:m.om>=3?'ok':m.om>=1?'warn':'danger'},
+    {v:(m.hx>=0?'+':'')+m.hx+'%', l:'Íons de acidez a mais que antes das fábricas', s:m.hx<30?'ok':m.hx<100?'warn':'danger'},
+    {v:m.health+'%', l:'Saúde do recife', s:m.health>=70?'ok':m.health>=35?'warn':'danger'}
+  ];
+}
+const PTS = {basico:100, inter:120, dificil:150, carbonauta:200};
+function pointsFor(){ return PTS[level] || 100; }
+const END_MSG = [
+  [100, 'Oceano em equilíbrio!', 'Você cumpriu todas as missões deste nível.'],
+  [60, 'Bom mergulho', 'Refaça o nível para fechar as missões que faltaram.'],
+  [40, 'Recife em recuperação', 'Releia as explicações e tente de novo.'],
+  [0, 'Hora de voltar ao laboratório', 'Mexa em um controle por vez e observe o que muda.']
+];
 
-/* ===================== MODELO CIENTÍFICO (ilustrativo) ===================== */
-function computePH(co2,temp){
-  let ph = 8.17 - 0.92*Math.log10(co2/280);
-  ph -= (temp-18)*0.004;
-  return ph;
-}
-function computeOmega(co2,temp){
-  const factor = 1.6 + 0.088*(temp-2);
-  let om = Math.sqrt(280/co2)*factor;
-  return Math.max(0.05, om);
-}
-function hRel(ph){ return Math.pow(10, 8.17-ph); }      // relativo ao pré-industrial (=1)
-function reefHealth(ph,om){
-  const hO = Math.max(0,Math.min(1,(om-1)/(3.8-1)));
-  const hP = Math.max(0,Math.min(1,(ph-7.6)/(8.2-7.6)));
-  return Math.round((0.62*hO+0.38*hP)*100);
-}
+const fixn = t => t.replace(/(\d?\.\d)00\b/g,'$1');
+const ic = d => fixn(`<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`);
+const COL = '#86198f';
+const S = {
+  co2: {id:'co2', label:'CO2 no ar', min:250, max:2000, step:5, unit:' ppm',
+    icon:ic(`<circle cx="7" cy="12" r="4" fill="none" stroke="${COL}" stroke-width="2"/><circle cx="17" cy="12" r="4" fill="none" stroke="${COL}" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="${COL}"/>`),
+    lo:'pouco', hi:'muito', help:'O mar absorve parte do CO2 do ar. Na água, ele forma ácido e deixa o mar mais ácido.',
+    word:v=>v<320?'antes das fábricas':v<450?'perto de hoje':v<700?'alto':'muito alto'},
+  temp: {id:'temp', label:'Temperatura da água', min:2, max:32, step:0.5, fmt:v=>String(v).replace('.',',')+' °C',
+    icon:ic(`<rect x="9.500" y="2" width="5" height="13" rx="2.500" fill="#fff" stroke="${COL}" stroke-width="1.800"/><circle cx="12" cy="18" r="4" fill="${COL}"/><rect x="11" y="7" width="2" height="10" fill="${COL}"/>`),
+    lo:'mar polar', hi:'mar tropical', help:'Água fria dissolve mais CO2 e tem menos carbonato livre. Por isso os mares frios ficam corrosivos antes.',
+    word:v=>v<8?'polar':v<16?'frio':v<24?'temperado':'tropical'},
+  calor: {id:'calor', label:'Onda de calor no mar', min:0, max:3, step:0.5, fmt:v=>'+'+String(v).replace('.',',')+' °C',
+    icon:ic(`<circle cx="12" cy="9" r="5" fill="${COL}"/><path d="M2 19c2.500-2 5-2 7.500 0s5 2 7.500 0 4.500-2 5 0" fill="none" stroke="${COL}" stroke-width="2" stroke-linecap="round"/>`),
+    lo:'sem onda', hi:'onda forte', help:'Quando a água fica mais quente que o normal por semanas, os corais perdem as algas que os alimentam e branqueiam.',
+    word:v=>v===0?'nenhuma':v<1.5?'fraca':v<2.5?'forte':'extrema'}
+};
+const sl = (k, def) => Object.assign({}, S[k], {def});
+const G = {
+  phIn: (a,b)=>({t:`pH entre ${d2(a)} e ${d2(b)}`, f:m=>m.ph>=a && m.ph<=b}),
+  phMin: a=>({t:`pH de pelo menos ${d2(a)}`, f:m=>m.ph>=a}),
+  phMax: a=>({t:`pH abaixo de ${d2(a)}`, f:m=>m.ph<a}),
+  omIn: (a,b)=>({t:`Saturação de aragonita entre ${d2(a)} e ${d2(b)}`, f:m=>m.om>=a && m.om<=b}),
+  omMin: a=>({t:`Saturação de aragonita de pelo menos ${d2(a)}`, f:m=>m.om>=a}),
+  omMax: a=>({t:`Saturação de aragonita abaixo de ${d2(a)}`, f:m=>m.om<a}),
+  hxIn: (a,b)=>({t:`Entre ${a}% e ${b}% a mais de íons de acidez`, f:m=>m.hx>=a && m.hx<=b}),
+  hxMin: a=>({t:`Pelo menos ${a}% a mais de íons de acidez`, f:m=>m.hx>=a}),
+  hMin: a=>({t:`Saúde do recife de pelo menos ${a}%`, f:m=>m.health>=a}),
+  hIn: (a,b)=>({t:`Saúde do recife entre ${a}% e ${b}%`, f:m=>m.health>=a && m.health<=b})
+};
+const SL3 = () => [sl('co2',420), sl('temp',20), sl('calor',0)];
 
-/* ===================== MISSÕES POR NÍVEL ===================== */
-// cond: {v:'co2'|'ph'|'om'|'h'|'temp'|'health', op:'gt'|'lt'|'between', a, b}
 const LEVELS = {
-  basico:{ name:"Básico", pts:100, missions:[
-    {t:"Empurre o CO₂ do ar para mais de 500 ppm.", c:{v:'co2',op:'gt',a:500}, fb:"Quanto mais CO₂ no ar, mais gás o mar absorve — e a água vai ficando ácida."},
-    {t:"Deixe o pH da água ficar abaixo de 8,0.", c:{v:'ph',op:'lt',a:8.0}, fb:"O pH mede a acidez. O mar antigo tinha pH ~8,2; abaixo de 8,0 já está mais ácido."},
-    {t:"Volte o CO₂ para perto de 280 ppm, como antes das fábricas.", c:{v:'co2',op:'between',a:260,b:300}, fb:"Há 200 anos o ar tinha ~280 ppm de CO₂ e o oceano era mais saudável."},
-    {t:"Deixe a saúde do recife acima de 85%.", c:{v:'health',op:'gt',a:85}, fb:"Com pouco CO₂, os corais têm carbonato de sobra para construir seus esqueletos."},
-    {t:"Aqueça a água acima de 26 °C.", c:{v:'temp',op:'gt',a:26}, fb:"O mar também está esquentando — outro perigo, além da acidez, para os corais."},
-    {t:"Ajuste para um pH entre 8,0 e 8,1, parecido com o de hoje.", c:{v:'ph',op:'between',a:8.0,b:8.12}, fb:"Hoje a superfície do mar tem pH ~8,0–8,1, já mais ácido que no passado."},
-    {t:"Coloque tanto CO₂ que a saúde do recife caia abaixo de 40%.", c:{v:'health',op:'lt',a:40}, fb:"Muito CO₂ deixa a água tão ácida que os corais adoecem e podem morrer."},
-    {t:"Encontre um ajuste que deixe o recife bem saudável (acima de 92%).", c:{v:'health',op:'gt',a:92}, fb:"Cortar as emissões de CO₂ é o melhor caminho para manter os oceanos saudáveis."}
+  basico: { label:'Básico', saved:'basico', sliders:SL3(), challenges:[
+    { title:'O recife de hoje', desc:'O CO2 do ar fica entre <b>400 e 450 ppm</b>, perto do valor atual. A água é tropical, entre <b>24 e 30 °C</b>, e há uma onda de calor.',
+      range:{co2:[400,450], temp:[24,30]}, set:{calor:2},
+      goals:[G.phIn(7.97,8.03), G.hMin(65)],
+      tip:'A onda de calor derruba a saúde do recife. A água mais quente ajuda o carbonato.',
+      ok:'Em 2024, a média global de CO2 no ar foi de cerca de 423 ppm, segundo a NOAA. Antes das fábricas, era perto de 280 ppm.',
+      fail:'Reduza a onda de calor e ajuste o CO2 e a temperatura até o pH ficar na faixa.' },
+    { title:'O mar de antes das fábricas', desc:'Volte ao CO2 de antes da Revolução Industrial, entre <b>250 e 350 ppm</b>. A onda de calor começa forte.',
+      range:{co2:[250,350]}, set:{calor:2.5},
+      goals:[G.phMin(8.1), G.hMin(85)],
+      tip:'Pouco CO2 deixa o pH alto. Sem calor extremo, o recife se recupera.',
+      ok:'Com menos CO2, sobra carbonato na água e os corais constroem seus esqueletos com mais facilidade.',
+      fail:'CO2 baixo, água morna e nenhuma onda de calor.' },
+    { title:'Sobreviver à onda de calor', desc:'A onda de calor fica entre <b>+1,5 e +3 °C</b>. Mantenha o recife de pé.',
+      range:{calor:[1.5,3]},
+      goals:[G.hMin(45)],
+      tip:'Com calor, o recife só aguenta se a química da água estiver muito boa.',
+      ok:'Quanto menos ácida estiver a água, mais o recife resiste a outros estresses, como o calor.',
+      fail:'Use a menor onda de calor permitida, CO2 baixo e água tropical.' },
+    { title:'Conchas em perigo', desc:'Mar frio, entre <b>2 e 10 °C</b>. Mostre a água ficando corrosiva para conchas, mas com pH ainda acima de 7,75.',
+      range:{temp:[2,10]},
+      goals:[G.omMax(1), {t:'pH acima de 7,75', f:m=>m.ph>7.75}],
+      tip:'No frio, a saturação cai rápido. O CO2 não pode subir demais, senão o pH despenca.',
+      ok:'Quando a saturação de aragonita fica abaixo de 1, conchas e esqueletos de aragonita tendem a se dissolver. Isso acontece primeiro em mares frios.',
+      fail:'Use a água mais fria e suba o CO2 aos poucos, entre 720 e 940 ppm.' },
+    { title:'O dobro do CO2', desc:'O CO2 fica entre <b>540 e 580 ppm</b>, o dobro de antes das fábricas.',
+      range:{co2:[540,580]},
+      goals:[G.omMin(2.5), G.hMin(40)],
+      tip:'Água quente compensa parte da perda de carbonato.',
+      ok:'Dobrar o CO2 é um cenário clássico nos estudos de clima. Mesmo nele, o recife ainda tem chance se não houver ondas de calor fortes.',
+      fail:'Água tropical, sem onda de calor.' }
   ]},
-  inter:{ name:"Intermediário", pts:120, missions:[
-    {t:"Coloque o CO₂ no valor atual da atmosfera (~420 ppm).", c:{v:'co2',op:'between',a:405,b:435}, fb:"Em 2025 a atmosfera passou de 420 ppm de CO₂, contra ~280 ppm na era pré-industrial."},
-    {t:"Leve o pH da superfície para ~8,05, a média atual.", c:{v:'ph',op:'between',a:8.0,b:8.09}, fb:"O pH médio de superfície caiu de ~8,11 (1985) para ~8,04 (2024)."},
-    {t:"Reduza a saturação de aragonita (Ω) para abaixo de 3.", c:{v:'om',op:'lt',a:3}, fb:"Quando Ω fica abaixo de 3, os corais já sentem estresse para calcificar."},
-    {t:"Faça a concentração de H⁺ ficar ~30% maior que a pré-industrial.", c:{v:'h',op:'gt',a:1.30}, fb:"A queda de ~0,1 no pH equivale a ~30% mais íons H⁺ na água."},
-    {t:"Simule a duplicação do CO₂ pré-industrial (~560 ppm).", c:{v:'co2',op:'between',a:545,b:575}, fb:"Dobrar o CO₂ para ~560 ppm é um cenário central de aquecimento de médio prazo."},
-    {t:"Ajuste Ω para a faixa 2,5–3,2, típica de recifes hoje.", c:{v:'om',op:'between',a:2.5,b:3.2}, fb:"Muitos recifes tropicais já vivem com Ω entre 2,5 e 3,5, abaixo do ideal."},
-    {t:"Leve o pH abaixo de 7,9.", c:{v:'ph',op:'lt',a:7.9}, fb:"A escala de pH é logarítmica: cada 0,3 a menos significa dobrar a acidez."},
-    {t:"Esfrie a água abaixo de 10 °C (águas polares).", c:{v:'temp',op:'lt',a:10}, fb:"Águas frias dissolvem mais CO₂, então os mares polares acidificam mais rápido."},
-    {t:"Combine CO₂ alto e água fria para levar Ω abaixo de 2.", c:{v:'om',op:'lt',a:2}, fb:"Ω<2 deixa a água agressiva para larvas e organismos de conchas calcárias."},
-    {t:"Volte a um cenário de recife saudável (>90%).", c:{v:'health',op:'gt',a:90}, fb:"Reduzir emissões e proteger os corais do calor mantém Ω alto e o recife vivo."}
+  inter: { label:'Intermediário', saved:'inter', sliders:SL3(), challenges:[
+    { title:'Acidez a mais', desc:'Deixe a água com 25% a 35% a mais de íons de acidez que antes das fábricas.',
+      set:{calor:1.5},
+      goals:[G.hxIn(25,35), G.hMin(50)],
+      tip:'O pH é logarítmico: cair 0,1 já significa cerca de 26% a mais de íons de acidez.',
+      ok:'A escala de pH é logarítmica. Uma queda de 0,1 no pH representa cerca de 26% a mais de íons de hidrogênio na água.',
+      fail:'Baixe a onda de calor e procure o CO2 entre 310 e 380 ppm, conforme a temperatura.' },
+    { title:'Carbonato no limite', desc:'Água morna, entre <b>20 e 30 °C</b>, com onda de calor de pelo menos <b>+1 °C</b>.',
+      range:{temp:[20,30], calor:[1,3]}, set:{co2:600},
+      goals:[G.omIn(2.5,3.2), G.hMin(45)],
+      tip:'A saturação depende do CO2 e da temperatura.',
+      ok:'Valores de saturação mais baixos deixam a calcificação mais lenta. Os corais gastam mais energia para crescer.',
+      fail:'Use a menor onda de calor e ajuste o CO2 até a saturação ficar na faixa.' },
+    { title:'Mares frios', desc:'Água fria, entre <b>2 e 10 °C</b>.',
+      range:{temp:[2,10]},
+      goals:[G.phIn(7.9,8.0), G.omIn(1.2,1.6)],
+      tip:'No frio, pH e saturação mudam juntos. Ache o CO2 e a temperatura certos.',
+      ok:'Águas frias dissolvem mais CO2. Por isso os mares polares estão entre os primeiros a sentir a acidificação.',
+      fail:'Suba o CO2 até o pH chegar perto de 7,95 e ajuste a temperatura para a saturação.' },
+    { title:'Acidez alta, recife vivo', desc:'Deixe o pH abaixo de 7,90 sem o recife colapsar.',
+      goals:[G.phMax(7.9), G.hMin(30)],
+      tip:'Água bem quente mantém mais carbonato, mesmo com pH baixo.',
+      ok:'A acidez não age sozinha. Temperatura e outros estresses mudam o quanto o recife aguenta.',
+      fail:'CO2 alto o bastante para o pH cair, água bem quente e sem onda de calor.' },
+    { title:'Recife saudável', desc:'A onda de calor fica entre <b>+0,5 e +3 °C</b>. Deixe o recife com pelo menos 75%.',
+      range:{calor:[0.5,3]},
+      goals:[G.hMin(75)],
+      tip:'Menos CO2, água tropical e a menor onda de calor possível.',
+      ok:'Cortar emissões de CO2 e reduzir o aquecimento ajudam o recife ao mesmo tempo.',
+      fail:'CO2 bem baixo, água tropical e onda de calor de +0,5 °C.' }
   ]},
-  dificil:{ name:"Difícil", pts:150, missions:[
-    {t:"Reconstitua a linha de base pré-industrial (~280 ppm).", c:{v:'co2',op:'between',a:275,b:288}, fb:"A referência pré-industrial (~280 ppm, pH~8,17) é o ponto de partida das anomalias."},
-    {t:"Reproduza o pH superficial global de 2024 (~8,04).", c:{v:'ph',op:'between',a:8.02,b:8.07}, fb:"Séries como HOT/ESTOC apontam pH ~8,04 na superfície em 2024."},
-    {t:"Ajuste para +30–40% de H⁺ em relação ao pré-industrial.", c:{v:'h',op:'between',a:1.28,b:1.45}, fb:"A queda de ~0,11 no pH desde 1750 representa ~30–40% mais íons H⁺."},
-    {t:"Cruze o limiar de estresse de calcificação (Ω_arag < 3).", c:{v:'om',op:'lt',a:3}, fb:"Abaixo de Ω_arag≈3 a taxa de calcificação de corais hermatípicos cai nitidamente."},
-    {t:"Leve Ω exatamente ao limiar de saturação (Ω≈1).", c:{v:'om',op:'between',a:0.95,b:1.08}, fb:"Ω=1 é o equilíbrio químico: abaixo disso a aragonita tende a se dissolver."},
-    {t:"Provoque subsaturação de aragonita (Ω_arag < 1).", c:{v:'om',op:'lt',a:1}, fb:"Com Ω<1 a água fica corrosiva e conchas/esqueletos de aragonita dissolvem."},
-    {t:"Simule ~4× o CO₂ pré-industrial (~1120 ppm).", c:{v:'co2',op:'between',a:1095,b:1145}, fb:"Cenários de altas emissões projetam pCO₂ acima de 1000 ppm em 2100."},
-    {t:"Leve o pH abaixo de 7,7 (cenário de fim de século).", c:{v:'ph',op:'lt',a:7.7}, fb:"Sob altas emissões o pH de superfície pode cair ~0,4, chegando a ~7,7 em 2100."},
-    {t:"Ajuste para águas subpolares frias (3–6 °C).", c:{v:'temp',op:'between',a:3,b:6}, fb:"A solubilidade do CO₂ aumenta no frio, reduzindo o estado de saturação."},
-    {t:"Dobre a concentração de H⁺ frente ao pré-industrial (+100%).", c:{v:'h',op:'gt',a:2.0}, fb:"Um aumento de 100% em H⁺ corresponde a uma queda de ~0,3 no pH."},
-    {t:"Reproduza águas antárticas de superfície (Ω~1,5).", c:{v:'om',op:'between',a:1.35,b:1.7}, fb:"Partes do Oceano Austral já se aproximam de Ω_arag~1,5 no verão."},
-    {t:"Configure um colapso de recife (saúde <20%).", c:{v:'health',op:'lt',a:20}, fb:"Acidez alta somada a calor causa branqueamento e perda de estrutura do recife."},
-    {t:"Reproduza os níveis de CO₂ dos anos 1980 (~350 ppm).", c:{v:'co2',op:'between',a:340,b:360}, fb:"Em 1988 o CO₂ ultrapassou 350 ppm, um marco histórico do clima."},
-    {t:"Restaure condições ideais de calcificação (Ω>3,5).", c:{v:'om',op:'gt',a:3.5}, fb:"Recifes prósperos costumam ter Ω_arag>3,5, com carbonato abundante."}
+  dificil: { label:'Difícil', saved:'dificil', sliders:SL3(), challenges:[
+    { title:'No limite da dissolução', desc:'Leve a saturação de aragonita para perto de 1, o ponto de equilíbrio.',
+      goals:[G.omIn(0.95,1.08)],
+      tip:'Saturação 1 é o equilíbrio químico entre formar e dissolver o carbonato.',
+      ok:'Com saturação igual a 1, a aragonita está em equilíbrio. Abaixo disso, a água passa a dissolver conchas.',
+      fail:'Combine CO2 alto e água fria até a saturação chegar perto de 1.' },
+    { title:'O dobro de acidez', desc:'Há uma onda de calor entre <b>+1 e +3 °C</b>. Dobre os íons de acidez sem matar o recife.',
+      range:{calor:[1,3]},
+      goals:[G.hxMin(100), G.omMin(2), G.hMin(20)],
+      tip:'Dobrar os íons de acidez exige uma queda de cerca de 0,3 no pH.',
+      ok:'Como o pH é logarítmico, cair 0,3 significa cerca do dobro de íons de hidrogênio.',
+      fail:'CO2 alto e água bem quente para segurar a saturação.' },
+    { title:'Oceano Austral', desc:'Água muito fria, entre <b>2 e 5 °C</b>.',
+      range:{temp:[2,5]}, set:{co2:500},
+      goals:[G.omIn(1.35,1.7), G.phIn(8.05,8.15)],
+      tip:'No frio extremo, um pouco de CO2 já derruba a saturação.',
+      ok:'O Oceano Austral é frio e tem pouco carbonato livre. Por isso é observado como uma sentinela da acidificação.',
+      fail:'CO2 perto do valor de antes das fábricas e ajuste fino da temperatura.' },
+    { title:'Química boa, calor forte', desc:'A onda de calor fica entre <b>+1 e +3 °C</b>.',
+      range:{calor:[1,3]},
+      goals:[G.phIn(8.02,8.07), G.omMin(3.2), G.hMin(55)],
+      tip:'O pH estreito define o CO2. A temperatura define a saturação.',
+      ok:'Mesmo com boa química, ondas de calor estressam os corais. As duas ameaças somam.',
+      fail:'Onda de +1 °C, água tropical e CO2 ajustado ao pH.' },
+    { title:'Fim de século', desc:'Cenário de muitas emissões: CO2 entre <b>800 e 1.200 ppm</b>.',
+      range:{co2:[800,1200]}, set:{temp:10},
+      goals:[G.hMin(25)],
+      tip:'Com tanto CO2, só a água mais quente e sem onda de calor salva algo.',
+      ok:'Com CO2 muito alto, o recife depende de tudo dar certo. Cortar emissões é o caminho mais seguro.',
+      fail:'O menor CO2 permitido, água bem quente e nenhuma onda de calor.' }
   ]},
-  carbonauta:{ name:"🛰️ Carbonauta", pts:200, missions:[
-    {t:"Fixe a xCO₂ atmosférica em ~424 ppm (média de 2025).", c:{v:'co2',op:'between',a:419,b:429}, fb:"A xCO₂ global de 2025 ronda 424 ppm; o oceano absorve ~26–30% do CO₂ antrópico emitido (~2,6–3,0 PgC/ano)."},
-    {t:"Reproduza o pH_T superficial de 2024 (~8,04).", c:{v:'ph',op:'between',a:8.02,b:8.06}, fb:"Na escala total (pH_T), a superfície global média está ~8,04, ante ~8,17 pré-industrial."},
-    {t:"Estabeleça +30–40% de [H⁺] sobre a base de 1750.", c:{v:'h',op:'between',a:1.30,b:1.42}, fb:"ΔpH≈−0,11 desde 1750 implica ~+30–40% em [H⁺]; o fator de Revelle (~10) deve subir ~34% até 2100."},
-    {t:"Ajuste Ω_arag ao limiar biológico de ~3.", c:{v:'om',op:'between',a:2.88,b:3.12}, fb:"Ω_arag≈3 marca a inflexão da calcificação líquida em muitos corais escleractíneos."},
-    {t:"Posicione o horizonte de saturação da aragonita (Ω_arag=1).", c:{v:'om',op:'between',a:0.96,b:1.05}, fb:"O horizonte de saturação (Ω=1) tem migrado para águas mais rasas, aflorando à superfície em altas latitudes."},
-    {t:"Force subsaturação severa (Ω_arag < 0,9).", c:{v:'om',op:'lt',a:0.9}, fb:"Em Prydz Bay (Antártica), a subsaturação superficial emergiu ~duas décadas antes do previsto pelos modelos."},
-    {t:"Simule 2×CO₂ pré-industrial (~560 ppm).", c:{v:'co2',op:'between',a:550,b:572}, fb:"Sob 2×CO₂, projeta-se ΔpH≈−0,2 e queda de ~0,7–1,0 no Ω_arag médio de superfície."},
-    {t:"Reproduza o pH projetado para 2100 sob SSP5-8.5 (~7,7).", c:{v:'ph',op:'between',a:7.66,b:7.75}, fb:"O cenário SSP5-8.5 projeta pH de superfície ~7,7 e Ω_arag<2 em vastas áreas até 2100."},
-    {t:"Configure água polar fria (2–4 °C).", c:{v:'temp',op:'between',a:2,b:4}, fb:"As constantes K₀, K₁ e K₂ do sistema carbonato dependem de T; o frio eleva [CO₂aq] e derruba Ω."},
-    {t:"Dobre [H⁺] frente ao pré-industrial (ΔpH≈−0,3).", c:{v:'h',op:'gt',a:2.0}, fb:"−0,3 em pH ≈ dobrar [H⁺], pois pH=−log₁₀[H⁺] (escala logarítmica)."},
-    {t:"Reproduza Ω_arag~1,5 de superfície do Oceano Austral.", c:{v:'om',op:'between',a:1.42,b:1.6}, fb:"O Oceano Austral é sentinela: baixa alcalinidade e frio o levam a Ω_arag~1,5 sazonalmente."},
-    {t:"Simule subsaturação extrema (Ω_arag < 0,7).", c:{v:'om',op:'lt',a:0.7}, fb:"Em cenários corrosivos, a dissolução de CaCO₃ dos sedimentos passa a neutralizar parte do CO₂ (compensação de carbonato)."},
-    {t:"Ajuste pCO₂~1120 ppm (≈4× pré-industrial).", c:{v:'co2',op:'between',a:1095,b:1140}, fb:"~1120 ppm implica fator de Revelle elevado e forte perda de tamponamento (dpH/dpCO₂ amplificada)."},
-    {t:"Leve o pH_T abaixo de 7,6.", c:{v:'ph',op:'lt',a:7.6}, fb:"pH<7,6 aproxima-se do limite em que o fator de Revelle clássico perde validade (pH<7,5)."},
-    {t:"Restaure Ω_arag~4 (tropical pré-industrial).", c:{v:'om',op:'between',a:3.6,b:4.3}, fb:"Recifes tropicais pré-industriais operavam com Ω_arag~3,5–4,2, favorecendo alta calcificação."},
-    {t:"Configure colapso total do recife (saúde <10%).", c:{v:'health',op:'lt',a:10}, fb:"Acidificação + aquecimento + subsaturação de aragonita levam à erosão líquida (dissolução>calcificação)."}
+  carbonauta: { label:'Carbonauta', saved:'carbonauta', sliders:SL3(), challenges:[
+    { title:'Limiar de calcificação', desc:'Saturação perto de 3 com o pH numa faixa estreita.',
+      goals:[G.omIn(2.88,3.12), G.phIn(7.95,8.0)],
+      tip:'Fixe o pH com o CO2 e ajuste a saturação com a temperatura.',
+      ok:'Abaixo de certos valores de saturação, a calcificação dos corais fica mais lenta. Medir essa saturação é rotina em estudos de recifes.',
+      fail:'CO2 entre 400 e 450 ppm e temperatura ajustada aos poucos.' },
+    { title:'Água corrosiva', desc:'Deixe a água corrosiva, com o pH ainda acima de 7,70.',
+      goals:[G.omMax(0.9), {t:'pH acima de 7,70', f:m=>m.ph>7.7}],
+      tip:'Só água muito fria deixa a saturação tão baixa sem derrubar o pH.',
+      ok:'Em águas frias, a água pode ficar corrosiva para conchas antes de o pH cair muito.',
+      fail:'Água a 2 °C e CO2 entre 890 e 1.060 ppm.' },
+    { title:'Quatro vezes o CO2', desc:'CO2 entre <b>1.095 e 1.140 ppm</b>, quatro vezes o de antes das fábricas.',
+      range:{co2:[1095,1140]},
+      goals:[G.hMin(20), G.omMin(1.8)],
+      tip:'Só água muito quente e sem onda de calor.',
+      ok:'Quatro vezes o CO2 pré-industrial é um cenário extremo. Nele, quase toda a margem de segurança do recife se perde.',
+      fail:'Temperatura máxima e nenhuma onda de calor.' },
+    { title:'Hoje, com carbonato de sobra', desc:'Entre 30% e 42% a mais de íons de acidez, com carbonato abundante.',
+      goals:[G.hxIn(30,42), G.omIn(3.3,3.6)],
+      tip:'A faixa de íons fixa o pH. A temperatura acerta a saturação.',
+      ok:'Recifes em águas quentes têm mais carbonato disponível. Isso não elimina o efeito da acidez, só adia.',
+      fail:'Ajuste o CO2 para o pH perto de 8,03 e a temperatura até a saturação.' },
+    { title:'Recife na faixa', desc:'A onda de calor está em <b>+2 °C</b>. Deixe a saúde do recife entre 55% e 65%.',
+      range:{calor:[2,2]},
+      goals:[G.hIn(55,65)],
+      tip:'Com +2 °C, o recife perde 40% da saúde que teria. Calcule o que a química precisa dar.',
+      ok:'Fechar uma faixa estreita exige entender como cada fator pesa. É o raciocínio usado para planejar a proteção de recifes.',
+      fail:'A química precisa dar cerca de 92% a 100% de saúde antes do calor.' }
   ]}
 };
 
-/* ===================== ESTADO ===================== */
-let level='basico', mi=0, pts=0, errs=0, startTime=null, timerInt=null, finished=false;
 
-const $=id=>document.getElementById(id);
-const co2El=$('co2'), tempEl=$('temp');
+/* ---------- motor comum das simulacoes ---------- */
+const KEYS = Object.keys(LEVELS);
+let level = KEYS[0], ci = 0, hits = 0, score = 0, params = {}, verified = false;
+let startTime = null, timerInt = null, elapsed = 0, scoreSaved = false;
+let db = null, fsFns = null;
+/* o nivel e gravado do mesmo jeito da versao anterior, para o ranking antigo continuar valendo */
+const levelVal = k => LEVELS[k].saved || LEVELS[k].label;
 
-function curState(){
-  const co2=+co2El.value, temp=+tempEl.value;
-  const ph=computePH(co2,temp);
-  const om=computeOmega(co2,temp);
-  const h=hRel(ph);
-  const health=reefHealth(ph,om);
-  return {co2,temp,ph,om,h,health};
+function buildLevels(){
+  $('levels').innerHTML = KEYS.map(k=>`<button data-lvl="${k}" onclick="setLevel('${k}')">${LEVELS[k].label}</button>`).join('');
 }
+function setLevel(l){
+  level = l;
+  document.querySelectorAll('.levels button').forEach(b=>b.classList.toggle('active',b.dataset.lvl===l));
+  $('rankLevel').textContent = LEVELS[l].label;
+  restart(); loadRanking();
+}
+function restart(){
+  clearInterval(timerInt); timerInt=null; startTime=null; elapsed=0;
+  ci=0; hits=0; score=0; scoreSaved=false;
+  $('timer').textContent='0s';
+  renderChallenge();
+}
+function hud(){
+  const n = LEVELS[level].challenges.length;
+  $('hCh').textContent = Math.min(ci+1,n)+'/'+n; $('hits').textContent=hits; $('score').textContent=score;
+}
+function startTimer(){
+  if(timerInt) return;
+  startTime = Date.now();
+  timerInt = setInterval(()=>{elapsed=Math.floor((Date.now()-startTime)/1000);$('timer').textContent=elapsed+'s';},500);
+}
+function fmtBase(s,v){ return s.fmt ? s.fmt(v) : v+(s.unit||''); }
+function fmt(s,v){ const base = fmtBase(s,v); return s.word ? base+' · '+s.word(v) : base; }
+const TARGET = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/></svg>`;
+let triesLeft = 0, lastSim = null;
+/* cada desafio tem uma lista de metas; ele so e vencido quando todas sao cumpridas na mesma simulacao */
+Object.values(LEVELS).forEach(L=>L.challenges.forEach(ch=>{ ch.check=(m,p)=>ch.goals.every(g=>g.f(m,p)); }));
 
-/* ===================== VISUALIZAÇÃO ===================== */
-function lerpColor(a,b,t){
-  const pa=a.match(/\w\w/g).map(x=>parseInt(x,16));
-  const pb=b.match(/\w\w/g).map(x=>parseInt(x,16));
-  const r=pa.map((v,i)=>Math.round(v+(pb[i]-v)*t));
-  return '#'+r.map(v=>v.toString(16).padStart(2,'0')).join('');
+/* cada desafio pode limitar a faixa de um controle (range) ou mudar o valor inicial (set) */
+function effSliders(){
+  const L = LEVELS[level], ch = L.challenges[ci];
+  return L.sliders.map(s=>{
+    const r = ch.range && ch.range[s.id], o = Object.assign({}, s, {gmin:s.min, gmax:s.max});
+    if(r){ o.min=r[0]; o.max=r[1]; o.limited=true; o.lo=fmtBase(s,r[0]); o.hi=fmtBase(s,r[1]); }
+    let d = (ch.set && ch.set[s.id]!==undefined) ? ch.set[s.id] : s.def;
+    o.def = Math.min(o.max, Math.max(o.min, d));
+    return o;
+  });
 }
-function render(){
-  const s=curState();
-  // leituras
-  $('co2v').textContent=s.co2;
-  $('tempv').textContent=s.temp.toFixed(1);
-  $('phv').textContent=s.ph.toFixed(2).replace('.',',');
-  $('omv').textContent=s.om.toFixed(2).replace('.',',');
-  $('hv').textContent=(s.h>=1?'+':'')+Math.round((s.h-1)*100)+'%';
-  $('hlv').textContent=s.health+'%';
-  // barras
-  setBar('phbar',(s.ph-7.5)/(8.25-7.5), s.ph>8.05?'var(--success)':s.ph>7.85?'var(--gold)':'var(--warn)');
-  setBar('ombar',s.om/4.3, s.om>=3?'var(--success)':s.om>=1?'var(--gold)':'var(--warn)');
-  setBar('hbar',Math.min(1,(s.h-1)/2), s.h<1.3?'var(--success)':s.h<2?'var(--gold)':'var(--warn)');
-  setBar('hlbar',s.health/100, s.health>=70?'var(--success)':s.health>=35?'var(--gold)':'var(--warn)');
-  // cena
-  const hf=s.health/100;
-  const coralHealthy='ff7ab6', coralHealthy2='ff9a5c', coralHealthy3='ffd54a', coralDead='8a9a9a';
-  const cs=document.querySelectorAll('.coral');
-  cs[0].setAttribute('fill',lerpColor(coralDead,coralHealthy,hf));
-  cs[1].setAttribute('fill',lerpColor(coralDead,coralHealthy2,hf));
-  cs[2].setAttribute('fill',lerpColor(coralDead,coralHealthy3,hf));
-  $('fish').setAttribute('opacity',(0.2+0.8*hf).toFixed(2));
-  $('shell').setAttribute('opacity', s.om<1?0.25:1);
-  $('shell2').setAttribute('opacity',(0.2+0.8*hf).toFixed(2));
-  // água muda de tom conforme acidez
-  const wt=lerpColor('0e6b8f','3a6b5a',1-hf);
-  $('wtop').setAttribute('stop-color',wt);
-  let st, col;
-  if(s.health>=70){st='Recife saudável 🐠';col='#4ade80';}
-  else if(s.health>=35){st='Recife sob estresse ⚠️';col='#ffd54a';}
-  else if(s.om<1){st='Água corrosiva — conchas dissolvem 🐚';col='#ff5a5f';}
-  else {st='Recife em colapso 💀';col='#ff5a5f';}
-  $('sceneStatus').textContent=st; $('sceneStatus').setAttribute('fill',col);
+function goalChips(ch){
+  /* metas sobre os controles (live) sao marcadas na hora; metas sobre o resultado so depois de simular */
+  return ch.goals.map(g=>{
+    let cls = '';
+    if(g.live) cls = g.f(null,params) ? 'ok' : 'no';
+    else if(lastSim) cls = g.f(lastSim,params) ? 'ok' : 'no';
+    return `<div class="gchip ${cls}"><i></i><span>${g.t}</span></div>`;
+  }).join('');
 }
-function setBar(id,frac,color){
-  const el=$(id);
-  el.style.width=Math.max(0,Math.min(100,frac*100))+'%';
-  el.style.background=color;
+function triesHtml(){
+  let d=''; for(let i=0;i<TRIES;i++) d+=`<i class="${i<triesLeft?'':'used'}"></i>`;
+  return `${d}<span>${triesLeft===1?'Resta 1 simulação':'Restam '+triesLeft+' simulações'}</span>`;
 }
-
-/* ===================== MISSÕES ===================== */
-function loadMission(){
-  const m=LEVELS[level].missions[mi];
-  $('mNum').textContent=mi+1;
-  $('mText').textContent=m.t;
-  $('hudMission').textContent=(mi+1)+'/'+LEVELS[level].missions.length;
+function renderChallenge(){
+  const L = LEVELS[level], ch = L.challenges[ci];
+  const SL = effSliders();
+  params = {}; SL.forEach(s=>params[s.id]=s.def);
+  verified = false; triesLeft = TRIES; lastSim = null; hud();
+  $('stage').innerHTML = `
+    <div class="qhead"><div class="qnum">Desafio ${ci+1} de ${L.challenges.length}</div>
+      <div class="qtext">${ch.title}</div>
+      <div class="qdesc">${ch.desc}</div>
+      <div class="goalbox"><h4>${TARGET} Sua meta</h4><div class="goals" id="goals"></div></div></div>
+    <div class="tip"><b>Dica.</b> ${ch.tip}</div>
+    <div class="sliders">${SL.map(s=>`
+      <div class="srow${s.min===s.max?' locked':''}" id="row-${s.id}"><div class="sico">${s.icon||''}</div>
+        <div><div class="shead"><label for="sl-${s.id}">${s.label}</label><output id="sv-${s.id}"></output></div>
+        ${s.min===s.max ? `<div class="lock">Fixo neste desafio</div>`
+          : `<input type="range" id="sl-${s.id}" min="${s.min}" max="${s.max}" step="${s.step||1}" value="${s.def}" oninput="setParam('${s.id}',this.value)">
+        <div class="sends"><span>${s.limited?'mínimo hoje: ':''}${s.lo||''}</span><span>${s.limited?'máximo hoje: ':''}${s.hi||''}</span></div>`}
+        <div class="shelp">${s.help||''}</div></div></div>`).join('')}</div>
+    <div class="viz" id="viz"></div>
+    <div class="metrics" id="metrics"></div>
+    <div class="tries" id="tries"></div>
+    <button class="btn verify" id="verify" onclick="verify()">Simular</button>
+    <div class="fb" id="fb" aria-live="polite">Ajuste os controles e clique em Simular para ver o que acontece. O resultado só aparece depois da simulação, e o tempo começa no primeiro ajuste.</div>
+    <button class="btn next" id="next" onclick="nextChallenge()"></button>
+    <p class="modelnote">${MODEL_NOTE}</p>`;
+  SL.forEach(s=>paintSlider(s));
+  draw();
 }
-function evalCond(c,s){
-  let val;
-  switch(c.v){
-    case 'co2':val=s.co2;break;
-    case 'ph':val=s.ph;break;
-    case 'om':val=s.om;break;
-    case 'h':val=s.h;break;
-    case 'temp':val=s.temp;break;
-    case 'health':val=s.health;break;
-  }
-  if(c.op==='gt')return val>c.a;
-  if(c.op==='lt')return val<c.a;
-  if(c.op==='between')return val>=c.a && val<=c.b;
-  return false;
+function paintSlider(s){
+  $('sv-'+s.id).textContent = fmt(s,params[s.id]);
+  $('row-'+s.id).querySelector('.sico').style.setProperty('--v', ((params[s.id]-s.gmin)/(s.gmax-s.gmin)).toFixed(3));
+}
+function setParam(id,val){
+  if(verified) return;
+  startTimer();
+  params[id] = parseInt(val,10);
+  paintSlider(effSliders().find(x=>x.id===id));
+  if(lastSim){ lastSim = null; }   /* mexeu depois de simular: o resultado antigo deixa de valer */
+  draw();
+}
+function draw(animate){
+  const L = LEVELS[level], ch = L.challenges[ci];
+  $('goals').innerHTML = goalChips(ch);
+  $('viz').innerHTML = renderViz(lastSim, params, !!animate);
+  const cards = metricCards(lastSim || compute(params), L);
+  $('metrics').innerHTML = cards.map(c=> lastSim
+    ? `<div class="metric ${c.s||''}"><b>${c.v}</b><span>${c.l}</span></div>`
+    : `<div class="metric q"><b>?</b><span>${c.l}</span></div>`).join('');
+  $('tries').innerHTML = triesHtml();
 }
 function verify(){
-  if(finished)return;
-  const m=LEVELS[level].missions[mi];
-  const s=curState();
-  const fb=$('feedback');
-  if(evalCond(m.c,s)){
-    pts+=LEVELS[level].pts;
-    $('hudPts').textContent=pts;
-    fb.className='ok'; fb.innerHTML='✅ <b>Missão cumprida!</b> '+m.fb;
-    fb.classList.remove('pop'); void fb.offsetWidth; fb.classList.add('pop');
-    mi++;
-    if(mi>=LEVELS[level].missions.length){ endGame(); return; }
-    setTimeout(loadMission,350);
-  }else{
-    errs++; $('hudErr').textContent=errs;
-    fb.className='no'; fb.innerHTML='❌ <b>Ainda não.</b> Ajuste os controles e tente de novo. <span style="color:var(--muted)">Dica: '+m.fb+'</span>';
-    fb.classList.remove('shake'); void fb.offsetWidth; fb.classList.add('shake');
+  if(verified || triesLeft<=0) return;
+  startTimer();
+  const L = LEVELS[level], ch = L.challenges[ci];
+  lastSim = compute(params); triesLeft--;
+  const ok = !!ch.check(lastSim, params);
+  draw(true);
+  const fb = $('fb');
+  if(!ok && triesLeft>0){
+    const miss = ch.goals.filter(g=>!g.f(lastSim,params)).map(g=>g.t).join('; ');
+    fb.className = 'fb no';
+    fb.innerHTML = `<b>Ainda não.</b>Faltou cumprir: ${miss}. Ajuste os controles e simule de novo.`;
+    return;
+  }
+  verified = true;
+  $('verify').disabled = true;
+  document.querySelectorAll('.sliders input').forEach(i=>i.disabled=true);
+  if(ok){ hits++; score += pointsFor(elapsed); }
+  hud();
+  fb.className = 'fb '+(ok?'ok':'no');
+  fb.innerHTML = ok ? `<b>Meta atingida.</b>${ch.ok}` : `<b>As simulações acabaram.</b>${ch.fail}<div class="more"><b>Para entender</b>${ch.ok}</div>`;
+  const nb = $('next');
+  nb.textContent = ci+1>=L.challenges.length ? 'Ver resultado' : 'Próximo desafio';
+  nb.classList.add('show');
+}
+function nextChallenge(){
+  ci++;
+  if(ci>=LEVELS[level].challenges.length) renderEnd(); else renderChallenge();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function renderEnd(){
+  clearInterval(timerInt); timerInt=null;
+  const total = LEVELS[level].challenges.length, pct = Math.round(hits/total*100);
+  const m = END_MSG.find(x=>pct>=x[0]);
+  $('hCh').textContent = total+'/'+total;
+  $('stage').innerHTML = `
+    <div class="end">
+      <h2>${m[1]}</h2>
+      <p>${m[2]}</p>
+      <div class="stats">
+        <div class="stat">${hits}/${total}<span>Acertos</span></div>
+        <div class="stat">${score}<span>Pontos</span></div>
+        <div class="stat">${pct}%<span>Aproveitamento</span></div>
+        <div class="stat">${elapsed}s<span>Tempo</span></div>
+      </div>
+      <div class="savebox">
+        <input id="playerName" maxlength="20" placeholder="Seu nome (até 20 letras)">
+        <button class="btn" id="saveBtn" onclick="saveScore()">Salvar no ranking</button>
+      </div>
+      <p id="saveStatus" style="margin-top:8px;font-size:.85rem"></p>
+      <button class="btn ghost" style="margin-top:10px" onclick="restart()">Jogar de novo</button>
+    </div>`;
+}
+
+async function initFirebase(){
+  try{
+    const appM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const fsM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    db=fsM.getFirestore(appM.initializeApp(firebaseConfig)); fsFns=fsM;
+    loadRanking();
+  }catch(e){
+    $('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';
+    $('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';
   }
 }
-function skip(){
-  if(finished)return;
-  errs++; $('hudErr').textContent=errs;
-  mi++;
-  const fb=$('feedback');
-  fb.className=''; fb.innerHTML='⏭️ Missão pulada (conta como erro). Próximo desafio!';
-  if(mi>=LEVELS[level].missions.length){ endGame(); return; }
-  loadMission();
-}
-
-/* ===================== TIMER ===================== */
-function startTimer(){
-  startTime=Date.now();
-  clearInterval(timerInt);
-  timerInt=setInterval(()=>{ if(!finished) $('hudTime').textContent=elapsed()+'s'; },1000);
-}
-function elapsed(){ return startTime? Math.floor((Date.now()-startTime)/1000):0; }
-
-/* ===================== FIM ===================== */
-function endGame(){
-  finished=true; clearInterval(timerInt);
-  const secs=elapsed();
-  const total=LEVELS[level].missions.length;
-  $('finalPts').textContent=pts+' pts';
-  $('finalTxt').innerHTML='Nível <b>'+LEVELS[level].name+'</b> · '+total+' missões · '+errs+' erro(s) · tempo '+secs+'s.<br>Quanto mais pontos, melhor — menos erros e menos tempo desempatam.';
-  $('overlay').classList.add('on');
-}
-
-/* ===================== NÍVEIS ===================== */
-function setLevel(l){
-  level=l; mi=0; pts=0; errs=0; finished=false;
-  document.querySelectorAll('.lvl').forEach(b=>b.classList.toggle('active',b.dataset.l===l));
-  $('hudLevel').textContent=LEVELS[l].name;
-  $('hudPts').textContent='0'; $('hudErr').textContent='0'; $('hudTime').textContent='0s';
-  $('rankLevel').textContent='— '+LEVELS[l].name;
-  co2El.value=420; tempEl.value=20;
-  $('overlay').classList.remove('on');
-  const fb=$('feedback'); fb.className=''; fb.innerHTML='Nível <b>'+LEVELS[l].name+'</b> selecionado. Mexa nos controles para cumprir a missão. 🌊';
-  loadMission(); render(); startTimer(); loadRanking();
-}
-
-/* ===================== RANKING ===================== */
-async function loadRanking(){
-  const list=$('rankList'), msg=$('rankMsg');
-  list.innerHTML='';
-  if(!fbReady){ msg.textContent='Ranking offline — jogo 100% jogável. 🌊'; return; }
-  msg.textContent='Carregando…';
-  try{
-    const {collection,query,orderBy,limit,getDocs}=fx;
-    const q=query(collection(db,'games',GAME_ID,'scores'),orderBy('score','desc'),limit(80));
-    const snap=await getDocs(q);
-    const rows=[];
-    snap.forEach(d=>{ const x=d.data(); if(x.level===level) rows.push(x); });
-    rows.sort((a,b)=> (b.score-a.score) || (a.seconds-b.seconds));
-    const top=rows.slice(0,10);
-    if(!top.length){ msg.textContent='Seja o primeiro a pontuar neste nível! 🏆'; return; }
-    msg.textContent='';
-    top.forEach(r=>{
-      const li=document.createElement('li');
-      li.innerHTML='<span class="nm">'+esc(r.name)+'</span><span class="sc">'+r.score+' pts</span> <span class="tm">'+(r.seconds||0)+'s</span>';
-      list.appendChild(li);
-    });
-  }catch(e){ msg.textContent='Não foi possível carregar o ranking agora.'; }
-}
 async function saveScore(){
-  const name=($('playerName').value||'Anônimo').trim().slice(0,20);
-  const secs=elapsed();
-  if(!fbReady){ $('overlay').classList.remove('on'); alert('Sem conexão com o ranking — pontuação não salva, mas seu jogo valeu! 🌊'); return; }
+  if(scoreSaved) return;
+  const name=$('playerName').value.trim(), st=$('saveStatus');
+  if(!name){st.textContent='Digite seu nome primeiro.';return;}
+  if(!db){st.textContent='Sem conexão com o ranking. Seu resultado não foi enviado.';return;}
   try{
-    const {collection,addDoc,serverTimestamp}=fx;
-    await addDoc(collection(db,'games',GAME_ID,'scores'),{
-      name:name||'Anônimo', score:pts, seconds:secs, level:level, ts:serverTimestamp()
-    });
-    $('overlay').classList.remove('on');
-    loadRanking();
-  }catch(e){ alert('Falha ao salvar no ranking. Tente novamente.'); }
+    $('saveBtn').disabled=true;
+    await fsFns.addDoc(fsFns.collection(db,'games',GAME_ID,'scores'),
+      {name:name.slice(0,20),score:score,level:levelVal(level),seconds:elapsed,hits:hits,total:LEVELS[level].challenges.length,ts:fsFns.serverTimestamp()});
+    scoreSaved=true; st.textContent='Salvo no Ranking Global!'; loadRanking();
+  }catch(e){ $('saveBtn').disabled=false; st.textContent='Erro ao salvar. Verifique a internet e tente de novo.'; }
 }
-function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+async function loadRanking(){
+  if(!db) return;
+  const list=$('rankList'), asked=level;
+  try{
+    /* filtra por nivel no servidor e ordena aqui: cada nivel tem o seu ranking completo */
+    const q=fsFns.query(fsFns.collection(db,'games',GAME_ID,'scores'),fsFns.where('level','==',levelVal(asked)),fsFns.limit(1000));
+    const snap=await fsFns.getDocs(q);
+    if(asked!==level) return;
+    const rows=[]; snap.forEach(d=>rows.push(d.data()));
+    rows.sort((a,b)=>((Number(b.score)||0)-(Number(a.score)||0))||((Number(a.seconds)||0)-(Number(b.seconds)||0)));
+    if(!rows.length){list.innerHTML='<li><span>Seja o primeiro do ranking!</span></li>';return;}
+    list.innerHTML=rows.slice(0,10).map((r,i)=>
+      `<li><span><span class="pos">${i+1}º</span>${esc(r.name||'?')}</span><span>${Number(r.score)||0} pts · ${Number(r.seconds)||0}s</span></li>`).join('');
+  }catch(e){ list.innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>'; }
+}
 
-/* ===================== EVENTOS ===================== */
-co2El.addEventListener('input',render);
-tempEl.addEventListener('input',render);
-$('verify').addEventListener('click',verify);
-$('skip').addEventListener('click',skip);
-$('saveScore').addEventListener('click',saveScore);
-$('playAgain').addEventListener('click',()=>setLevel(level));
-document.querySelectorAll('.lvl').forEach(b=>b.addEventListener('click',()=>setLevel(b.dataset.l)));
-
-/* start */
-setLevel('basico');
+buildLevels();
+setLevel(KEYS[0]);
+initFirebase();
 </script>
 </body>
 </html>
