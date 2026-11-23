@@ -1,576 +1,644 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Missão Extinção Zero 🐆 — Decisões pela Biodiversidade</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Missão Extinção Zero</title>
 <style>
   :root{
-    --bg1:#0b3d2e;
-    --bg2:#1d6b4a;
-    --card:#ffffff;
-    --card2:#f3faf6;
-    --ink:#14342a;
-    --muted:#557064;
-    --accent:#ffb627;
-    --accent2:#ff7a18;
-    --good:#28a05a;
-    --bad:#e0413c;
-    --line:#d9e8e0;
-    --shadow:0 8px 26px rgba(6,40,28,.18);
-    --radius:16px;
+    --ink:#0f2f44; --soft:#4b6a7d; --line:#dbe7ee; --ok:#16a34a; --err:#dc2626;
+    --t50:#f5f3ff; --t100:#ede9fe; --t300:#c4b5fd; --t500:#8b5cf6; --main:#7c3aed; --deep:#6d28d9; --dark:#5b21b6; --glow:rgba(124,58,237,.25);
   }
-  *{box-sizing:border-box}
+  *{box-sizing:border-box;margin:0;padding:0}
   body{
-    margin:0;
-    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
-    color:var(--ink);
-    background:linear-gradient(160deg,var(--bg1),var(--bg2));
-    min-height:100vh;
-    padding:18px;
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+    min-height:100vh;color:var(--ink);background:#ffffff;
+    display:flex;flex-direction:column;align-items:center;padding:12px 14px 40px;
   }
-  .wrap{max-width:880px;margin:0 auto}
-  header.top{text-align:center;color:#fff;margin-bottom:14px}
-  header.top h1{
-    font-size:clamp(1.6rem,5vw,2.5rem);
-    margin:.1em 0 .15em;
-    letter-spacing:-.5px;
-    text-shadow:0 2px 10px rgba(0,0,0,.25);
+  .top{width:100%;max-width:1040px;display:flex;justify-content:flex-start}
+  .hub{display:inline-flex;align-items:center;gap:6px;color:var(--deep);text-decoration:none;
+    font-weight:600;font-size:.9rem;padding:7px 12px;border-radius:20px;border:1.5px solid var(--line)}
+  .hub:hover{background:var(--tint)}
+  .hub svg{width:14px;height:14px}
+  header{text-align:center;max-width:720px;margin-top:6px}
+  h1{font-size:clamp(1.45rem,5vw,2.2rem);display:flex;align-items:center;justify-content:center;gap:10px}
+  h1 svg{width:.95em;height:.95em}
+  h1 .spark{color:var(--main)}
+  .sub{color:var(--soft);font-size:.95rem;margin:4px 0 12px}
+  .levels{display:flex;gap:8px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+  .levels button{border:2px solid var(--line);background:#fff;color:var(--ink);padding:8px 16px;border-radius:30px;
+    font-size:.92rem;cursor:pointer;transition:.2s;font-weight:600;font-family:inherit}
+  .levels button{border-color:var(--main);color:var(--deep)}
+  .levels button:hover{background:var(--tint)}
+  .levels button.active{background:var(--main);border-color:var(--main);color:#fff;box-shadow:0 4px 12px var(--glow)}
+  .hud{display:flex;gap:8px;justify-content:center;align-items:center;margin:4px 0 12px;font-size:.9rem;flex-wrap:wrap}
+  .hud span{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:30px;color:#fff;font-weight:600}
+  .hud b{font-size:1.05rem;font-weight:800} .hud em{font-style:normal}
+  .hud .h1{background:#16a34a} .hud .h2{background:#f97316} .hud .h3{background:#7c3aed} .hud .h4{background:#0ea5e9}
+
+  .card{width:min(680px,100%);background:#fff;border:3px solid var(--main);border-radius:22px;
+    padding:0 0 20px;box-shadow:0 12px 30px var(--glow);overflow:hidden}
+  #stage{padding:0 20px}
+  .strip{display:flex;gap:5px;justify-content:center;align-items:flex-end;flex-wrap:wrap;min-height:54px;
+    padding:10px 10px 8px;background:linear-gradient(180deg,#e0f2fe 0%,#f0f9ff 62%,var(--pale) 62%,var(--pale) 100%)}
+  .slot{width:36px;height:36px;display:flex;align-items:center;justify-content:center}
+  .slot svg{width:100%;height:100%}
+  .slot.empty{align-items:flex-end;padding-bottom:3px}
+  .slot.empty::after{content:"";width:11px;height:11px;border-radius:50%;background:#fff;border:3px solid var(--main);opacity:.45}
+  .slot.now::after{opacity:1;background:var(--acc);border-color:#fff;box-shadow:0 0 0 3px var(--acc);animation:pulse 1.1s infinite}
+  @keyframes pulse{50%{transform:scale(1.25)}}
+  .slot.pop svg{animation:grow .45s cubic-bezier(.3,1.5,.5,1)}
+  @keyframes grow{from{transform:scale(.2) translateY(8px);opacity:0}to{transform:none;opacity:1}}
+  .qhead{margin:0 -20px 16px;padding:14px 20px 16px;background:linear-gradient(135deg,var(--main),var(--deep));color:#fff}
+  .qnum{display:inline-block;font-size:.74rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+    background:rgba(255,255,255,.22);padding:3px 10px;border-radius:20px}
+  .qtext{font-size:1.22rem;font-weight:700;line-height:1.35;margin-top:8px}
+  .opts{display:grid;gap:9px}
+  .opt{display:flex;gap:12px;align-items:center;text-align:left;width:100%;background:#fff;border:2px solid var(--line);
+    border-radius:14px;padding:11px 14px;font-size:1rem;line-height:1.35;color:var(--ink);cursor:pointer;
+    font-family:inherit;transition:border-color .15s,background .15s,transform .15s}
+  .opt{--c:#0ea5e9;--ct:#f0f9ff;border-color:var(--c);background:var(--ct);font-weight:500}
+  .opt:nth-child(2){--c:#f97316;--ct:#fff7ed} .opt:nth-child(3){--c:#8b5cf6;--ct:#f5f3ff} .opt:nth-child(4){--c:#ec4899;--ct:#fdf2f8}
+  .opt .k{flex:none;width:34px;height:34px;border-radius:50%;background:var(--c);color:#fff;
+    font-weight:800;display:flex;align-items:center;justify-content:center;font-size:1rem}
+  .opt:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(15,47,68,.14)}
+  .opt:disabled{cursor:default}
+  .opt.right{border-color:var(--ok);background:#dcfce7;font-weight:700}
+  .opt.right .k{background:var(--ok);color:#fff}
+  .opt.wrong{border-color:var(--err);background:#fee2e2;animation:shake .3s}
+  .opt.wrong .k{background:var(--err);color:#fff}
+  .opt.dim{opacity:.5;background:#fff;border-color:var(--line)} .opt.dim .k{background:#94a3b8}
+  @keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+  .fb{margin-top:14px;border-radius:14px;padding:12px 14px;font-size:.96rem;line-height:1.45;background:#fffbeb;
+    border:2px dashed #fcd34d;min-height:52px;color:#92400e}
+  .fb.ok{background:#dcfce7;border:2px solid var(--ok);color:var(--ink)}
+  .fb.no{background:#fee2e2;border:2px solid var(--err);color:var(--ink)}
+  .fb b{display:block;margin-bottom:2px}
+  .fb.ok>b{color:#166534;font-size:1.05rem} .fb.no>b{color:#b91c1c;font-size:1.05rem}
+  .fb .more{margin-top:8px;padding:8px 10px;border-radius:10px;background:#fff} .fb .more b{color:#166534}
+  .fb .more{margin-top:6px}
+  .btn{background:var(--main);color:#fff;border:0;padding:11px 20px;border-radius:12px;font-weight:700;cursor:pointer;
+    font-size:1rem;font-family:inherit}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--line)}
+  .next{display:none;margin:14px auto 0;background:var(--acc);font-size:1.05rem;padding:12px 26px;box-shadow:0 5px 14px rgba(15,47,68,.2)}
+  .next.show{display:block}
+
+  .end{text-align:center;padding-top:16px}
+  .end h2{font-size:1.5rem;margin:6px 0 4px;color:var(--deep)}
+  .end p{color:var(--soft)}
+  .stats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+  .stat{background:#16a34a;border-radius:14px;padding:9px 16px;font-weight:800;font-size:1.2rem;color:#fff;min-width:84px}
+  .stat:nth-child(2){background:#7c3aed} .stat:nth-child(3){background:#f97316} .stat:nth-child(4){background:#0ea5e9}
+  .stat span{display:block;font-size:.72rem;font-weight:600;color:#fff;opacity:.92}
+  .savebox{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+  .savebox input{padding:10px 12px;border-radius:10px;border:2px solid var(--line);font-size:1rem;width:220px;font-family:inherit}
+  .review{text-align:left;margin-top:16px;border-top:2px solid var(--line);padding-top:12px}
+  .review h3{font-size:1rem;margin-bottom:6px}
+  .review li{list-style:none;padding:8px 0;border-bottom:1px solid var(--line);font-size:.93rem;line-height:1.4}
+  .review li:last-child{border-bottom:0}
+  .review .a{color:#166534;font-weight:700}
+
+  .ranking{margin-top:16px;width:min(680px,100%);background:#fff;border:3px solid #fbbf24;border-radius:18px;padding:0 16px 12px;overflow:hidden}
+  .ranking h3{font-size:1.02rem;margin:0 -16px 8px;padding:10px 16px;background:#fbbf24;color:#451a03}
+  .ranking h3 span{color:#fff;background:#b45309;padding:2px 10px;border-radius:20px;font-size:.88rem}
+  .ranking li:nth-child(1) .pos{color:#b45309} .ranking li:nth-child(1){font-weight:700}
+  .ranking ol{list-style:none}
+  .ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.93rem}
+  .ranking li:last-child{border-bottom:0}
+  .ranking .pos{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+  .note{font-size:.8rem;color:var(--soft);margin-top:6px}
+  footer{margin-top:22px;font-size:.8rem;color:var(--soft);text-align:center;line-height:1.6}
+  footer .credit{font-weight:700;color:var(--ink)}
+
+
+  /* ---- cor unica por jogo: todos os destaques sao tons da mesma cor ---- */
+  :root{--tint:var(--t100);--pale:var(--t300);--acc:var(--dark)}
+  .hub:hover{background:var(--t50)}
+  .levels button{border-color:var(--t300)}
+  .hud .h1{background:var(--t500)} .hud .h2{background:var(--main)} .hud .h3{background:var(--deep)} .hud .h4{background:var(--dark)}
+  .strip{background:linear-gradient(180deg,var(--t50) 0%,var(--t100) 62%,var(--t300) 62%,var(--t300) 100%)}
+  .qhead{background:linear-gradient(135deg,var(--main),var(--dark))}
+  .opt,.opt:nth-child(2),.opt:nth-child(3),.opt:nth-child(4){--c:var(--main);--ct:var(--t50);border-color:var(--t300)}
+  .opt:not(:disabled):hover{border-color:var(--main);background:var(--t100)}
+  .fb{background:var(--t50);border:2px dashed var(--t300);color:var(--deep)}
+  .next{background:var(--deep)}
+  .stat{background:var(--t500)} .stat:nth-child(2){background:var(--main)} .stat:nth-child(3){background:var(--deep)} .stat:nth-child(4){background:var(--dark)}
+  .ranking{border-color:var(--main)}
+  .ranking h3{background:var(--main);color:#fff}
+  .ranking h3 span{background:var(--dark);color:#fff}
+  .ranking li:nth-child(1) .pos{color:var(--deep)}
+  @media(max-width:560px){
+    body{padding:8px 8px 32px}
+    .sub{display:none}
+    h1{margin-bottom:8px}
+    .hub{padding:4px 10px;font-size:.82rem}
+    .levels button{padding:7px 12px;font-size:.85rem}
+    .hud{gap:10px;font-size:.86rem;margin:2px 0 8px}
+    .card{padding:0 0 14px;border-radius:18px}
+    .qtext{font-size:1.05rem;margin-bottom:10px}
+    .opt{padding:9px 10px;font-size:.94rem;gap:9px}
+    .opt .k{width:28px;height:28px;font-size:.86rem}
+    .slot{width:27px;height:27px}
+    .strip{min-height:44px;padding:8px 6px 6px}
+    .qhead{margin:0 -12px 12px;padding:10px 12px 12px}
+    #stage{padding:0 12px}
+    .hud span{padding:4px 9px;font-size:.78rem} .hud b{font-size:.92rem} .hud{gap:5px}
+    .fb{font-size:.9rem}
   }
-  header.top p{margin:0;opacity:.92;font-size:clamp(.9rem,2.5vw,1.05rem)}
-  .levels{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0}
-  .levels button{
-    border:none;cursor:pointer;font-weight:700;
-    padding:10px 16px;border-radius:999px;font-size:.95rem;
-    background:rgba(255,255,255,.16);color:#fff;backdrop-filter:blur(4px);
-    transition:transform .2s,background .2s,box-shadow .2s;
-  }
-  .levels button:hover{transform:translateY(-2px);background:rgba(255,255,255,.28)}
-  .levels button.active{background:var(--accent);color:#3a2400;box-shadow:0 6px 16px rgba(255,182,39,.45)}
-  .levels button.carbo.active{background:linear-gradient(120deg,#7b2ff7,#36d1dc);color:#fff}
-  .hud{
-    display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:12px;
-  }
-  .hud .chip{
-    background:var(--card);border-radius:12px;padding:8px 14px;font-weight:700;
-    box-shadow:var(--shadow);font-size:.92rem;color:var(--ink);
-  }
-  .hud .chip span{color:var(--accent2)}
-  .card{
-    background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
-    padding:18px 18px 20px;margin-bottom:14px;
-  }
-  .instruction{
-    background:var(--card2);border:1px dashed var(--line);border-radius:12px;
-    padding:10px 14px;font-size:.92rem;color:var(--muted);margin-bottom:12px;
-  }
-  .healthwrap{margin-bottom:14px}
-  .healthwrap .lbl{display:flex;justify-content:space-between;font-weight:700;font-size:.9rem;margin-bottom:5px}
-  .bar{height:16px;border-radius:999px;background:#e7efe9;overflow:hidden}
-  .bar > i{display:block;height:100%;border-radius:999px;transition:width .5s ease,background .5s}
-  .progress{height:8px;border-radius:999px;background:#e7efe9;overflow:hidden;margin-bottom:14px}
-  .progress > i{display:block;height:100%;background:var(--accent);transition:width .4s}
-  .scene{font-size:clamp(1.02rem,2.6vw,1.18rem);line-height:1.55;margin:6px 0 16px}
-  .scene .badge{
-    display:inline-block;background:var(--bg2);color:#fff;border-radius:8px;
-    padding:2px 10px;font-size:.78rem;font-weight:700;margin-bottom:10px;letter-spacing:.3px;
-  }
-  .options{display:flex;flex-direction:column;gap:10px}
-  .options button{
-    text-align:left;cursor:pointer;border:2px solid var(--line);background:#fff;
-    padding:14px 16px;border-radius:14px;font-size:1rem;color:var(--ink);font-weight:600;
-    transition:transform .2s,border-color .2s,box-shadow .2s,background .2s;line-height:1.4;
-  }
-  .options button:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:var(--shadow)}
-  .options button:disabled{cursor:default;opacity:.96}
-  .options button.pick-good{border-color:var(--good);background:#eafaf0;animation:pop .4s}
-  .options button.pick-bad{border-color:var(--bad);background:#fdecec;animation:shake .4s}
-  .options button.dim{opacity:.5}
-  @keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.04)}100%{transform:scale(1)}}
-  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
-  .feedback{
-    margin-top:14px;border-radius:12px;padding:12px 14px;font-size:.95rem;line-height:1.5;
-    background:var(--card2);border-left:5px solid var(--accent);min-height:20px;
-  }
-  .feedback.good{border-left-color:var(--good)}
-  .feedback.bad{border-left-color:var(--bad)}
-  .nextbtn{
-    margin-top:14px;display:none;width:100%;cursor:pointer;border:none;border-radius:14px;
-    padding:14px;font-size:1.05rem;font-weight:800;color:#3a2400;
-    background:linear-gradient(120deg,var(--accent),var(--accent2));
-    box-shadow:0 6px 16px rgba(255,122,24,.4);transition:transform .2s;
-  }
-  .nextbtn:hover{transform:translateY(-2px)}
-  .final{text-align:center;display:none}
-  .final h2{font-size:clamp(1.4rem,4.5vw,2rem);margin:.2em 0}
-  .final .emoji{font-size:3rem;animation:pop .6s}
-  .final .stats{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:14px 0}
-  .final .stats .s{background:var(--card2);border-radius:12px;padding:10px 16px;font-weight:700}
-  .final .stats .s b{display:block;font-size:1.5rem;color:var(--accent2)}
-  .rank{margin-top:6px}
-  .rank h3{margin:.1em 0 .4em;font-size:1.05rem}
-  .rank .who{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-  .rank input{flex:1;min-width:140px;padding:10px 12px;border-radius:10px;border:2px solid var(--line);font-size:1rem}
-  .rank .sendbtn{cursor:pointer;border:none;border-radius:10px;padding:10px 18px;font-weight:800;background:var(--good);color:#fff;transition:transform .2s}
-  .rank .sendbtn:hover{transform:translateY(-2px)}
-  .rank .note{font-size:.82rem;color:var(--muted)}
-  table.lb{width:100%;border-collapse:collapse;font-size:.92rem}
-  table.lb th,table.lb td{padding:7px 8px;text-align:left;border-bottom:1px solid var(--line)}
-  table.lb th{color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.4px}
-  table.lb td.sc{font-weight:800;color:var(--accent2);text-align:right}
-  table.lb td.pos{width:30px;color:var(--muted);font-weight:700}
-  .playagain{margin-top:14px;cursor:pointer;border:none;border-radius:12px;padding:12px 22px;font-weight:800;background:var(--bg2);color:#fff;transition:transform .2s}
-  .playagain:hover{transform:translateY(-2px)}
-  footer{color:#dff3e8;text-align:center;font-size:.82rem;margin-top:18px;line-height:1.6;opacity:.95}
-  footer .by{font-weight:700}
+  @media(prefers-reduced-motion:reduce){.slot.pop svg,.opt.wrong{animation:none}}
+
+  /* ---------- decisoes ---------- */
+  .card{width:min(860px,100%)} .ranking{width:min(860px,100%)}
+  .qdesc{font-size:.96rem;line-height:1.45;margin-top:6px;opacity:.96}
+  .goal{border:2px solid var(--t300);background:var(--t50);border-radius:16px;padding:10px 14px;margin-bottom:12px}
+  .goal h4{font-size:.92rem;color:var(--dark);margin-bottom:8px}
+  .meters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px}
+  .mtop{display:flex;justify-content:space-between;align-items:center;font-size:.84rem;font-weight:700;color:var(--ink);margin-bottom:4px}
+  .mtop b{font-size:1rem}
+  .mbar{position:relative;height:12px;border-radius:8px;background:#e5e7eb}
+  .mbar i{display:block;height:100%;border-radius:8px;transition:width .6s}
+  .mbar u{position:absolute;top:-4px;bottom:-4px;width:3px;background:#111827;border-radius:2px}
+  .delta{display:inline-block;margin-left:6px;font-size:.78rem;font-weight:900;border-radius:8px;padding:1px 6px;animation:dpop .5s}
+  .delta.up{background:#dcfce7;color:#166534} .delta.down{background:#fee2e2;color:#991b1b}
+  @keyframes dpop{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+  .scene{margin:0 0 12px;border-radius:16px;overflow:hidden;border:2px solid var(--t300)}
+  .scene svg{display:block;width:100%;height:auto}
+  .sc-title{display:flex;align-items:center;gap:10px;font-size:1.15rem;font-weight:800;color:var(--dark);margin-bottom:6px}
+  .sc-title svg{width:40px;height:40px;flex:none}
+  .sc-text{font-size:1rem;line-height:1.5;margin-bottom:12px}
+  .opts{display:grid;gap:9px}
+  .opt{display:flex;gap:12px;align-items:center;text-align:left;width:100%;background:#fff;border:2px solid var(--t300);
+    border-radius:14px;padding:12px 14px;font-size:1rem;line-height:1.35;color:var(--ink);cursor:pointer;font-family:inherit;transition:border-color .15s,background .15s,transform .15s}
+  .opt:hover:not(:disabled){border-color:var(--main);background:var(--t50);transform:translateY(-1px)}
+  .opt .k{flex:none;width:30px;height:30px;border-radius:50%;background:var(--t100);color:var(--dark);font-weight:800;display:flex;align-items:center;justify-content:center}
+  .opt:disabled{cursor:default}
+  .opt.good{border-color:var(--ok);background:#dcfce7} .opt.good .k{background:var(--ok);color:#fff}
+  .opt.mid{border-color:#f59e0b;background:#fef3c7} .opt.mid .k{background:#f59e0b;color:#fff}
+  .opt.bad{border-color:var(--err);background:#fee2e2} .opt.bad .k{background:var(--err);color:#fff}
+  .opt.best{outline:3px dashed var(--ok);outline-offset:2px}
+  .opt.dim{opacity:.55}
+  .fb{margin-top:12px}
+  .fb.mid{background:#fef3c7;border:2px solid #f59e0b;color:var(--ink)} .fb.mid>b{color:#92400e;font-size:1.05rem}
+  .next{display:none;margin:14px auto 0}
+  .next.show{display:block}
+  .verdict{border-radius:14px;padding:10px 14px;font-weight:700;margin:10px auto;max-width:560px}
+  .verdict.ok{background:#dcfce7;color:#166534;border:2px solid #86efac}
+  .verdict.no{background:#fee2e2;color:#991b1b;border:2px solid #fca5a5}
+  .review .c{font-weight:700} .review .c.good{color:#166534} .review .c.mid{color:#92400e} .review .c.bad{color:#b91c1c}
+  .modelnote{font-size:.78rem;color:var(--soft);text-align:center;margin-top:12px;line-height:1.4}
+  .lost{position:absolute;right:10px;top:10px;background:#dc2626;color:#fff;font-weight:900;font-size:.95rem;border-radius:999px;padding:3px 10px;pointer-events:none;animation:lost 1.4s ease-out forwards;z-index:5}
+  .gain{background:#16a34a}
+  @keyframes lost{0%{opacity:0;transform:translateY(6px)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-18px)}}
+  #stage{position:relative}
+  @media(max-width:560px){ .meters{grid-template-columns:1fr 1fr;gap:6px 10px} .mtop{font-size:.76rem} .opt{font-size:.94rem;padding:10px 11px} .sc-text{font-size:.95rem} }
+  @media(prefers-reduced-motion:reduce){.delta,.lost{animation:none}.mbar i{transition:none}}
+  .tl{font:700 8px Segoe UI,system-ui,sans-serif;fill:#7e22ce}
+  .tsw{animation:tsw 3s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:bottom}
+  @keyframes tsw{from{transform:rotate(-2deg)}to{transform:rotate(2deg)}}
+  .fly{animation:fly 4s ease-in-out infinite alternate}
+  @keyframes fly{from{transform:translate(-10px,2px)}to{transform:translate(14px,-4px)}}
+  .walk{animation:walk 5s ease-in-out infinite alternate}
+  @keyframes walk{from{transform:translateX(-10px)}to{transform:translateX(10px)}}
+  .flk{animation:flk .6s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:bottom}
+  @keyframes flk{from{transform:scaleY(.9)}to{transform:scaleY(1.08)}}
+  @media(prefers-reduced-motion:reduce){.tsw,.fly,.walk,.flk{animation:none}}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="top">
-    <h1>🐆 Missão Extinção Zero</h1>
-    <p>Você decide o destino da fauna brasileira. Cada escolha muda o ecossistema.</p>
-  </header>
-
-  <div class="levels" id="levels">
-    <button data-lv="basico" onclick="setLevel('basico')">🌱 Básico</button>
-    <button data-lv="intermediario" onclick="setLevel('intermediario')">🌿 Intermediário</button>
-    <button data-lv="dificil" onclick="setLevel('dificil')">🌳 Difícil</button>
-    <button class="carbo" data-lv="carbonauta" onclick="setLevel('carbonauta')">🛰️ Carbonauta</button>
-  </div>
-
-  <div class="hud">
-    <div class="chip">Tempo: <span id="hudTime">0s</span></div>
-    <div class="chip">Pontos: <span id="hudPts">0</span></div>
-    <div class="chip">Acertos: <span id="hudHits">0</span></div>
-  </div>
-
-  <div class="card" id="gameCard">
-    <div class="instruction" id="instruction">Escolha um nível e tome decisões para proteger as espécies. A barra mostra a saúde do ecossistema.</div>
-
-    <div class="healthwrap">
-      <div class="lbl"><span>Saúde do ecossistema</span><span id="healthPct">50%</span></div>
-      <div class="bar"><i id="healthBar" style="width:50%;background:var(--accent)"></i></div>
-    </div>
-    <div class="progress"><i id="progBar" style="width:0%"></i></div>
-
-    <div id="playArea">
-      <div class="scene" id="scene"></div>
-      <div class="options" id="options"></div>
-      <div class="feedback" id="feedback" style="display:none"></div>
-      <button class="nextbtn" id="nextBtn" onclick="nextNode()">Próxima decisão →</button>
-    </div>
-
-    <div class="final" id="final">
-      <div class="emoji" id="finalEmoji">🌍</div>
-      <h2 id="finalTitle"></h2>
-      <p id="finalMsg" style="color:var(--muted);line-height:1.55"></p>
-      <div class="stats">
-        <div class="s">Pontuação<b id="finalScore">0</b></div>
-        <div class="s">Saúde final<b id="finalHealth">0%</b></div>
-        <div class="s">Tempo<b id="finalTime">0s</b></div>
-      </div>
-      <div class="rank card" style="text-align:left">
-        <h3>🏆 Ranking Global — nível <span id="rankLevelName">—</span></h3>
-        <div class="who">
-          <input id="playerName" maxlength="18" placeholder="Seu nome ou apelido" />
-          <button class="sendbtn" onclick="submitScore()">Enviar</button>
-        </div>
-        <div class="note" id="rankNote">Envie sua pontuação e veja como você se compara!</div>
-        <table class="lb"><thead><tr><th class="pos">#</th><th>Jogador</th><th style="text-align:right">Pontos</th></tr></thead>
-        <tbody id="lbBody"><tr><td colspan="3" class="note">Carregando ranking…</td></tr></tbody></table>
-      </div>
-      <button class="playagain" onclick="restart()">↺ Jogar de novo</button>
-    </div>
-  </div>
-
-  <footer>
-    <div class="by">— Idealizado por Ernandes Sobreira —</div>
-    <div>Tema: Biodiversidade e espécies ameaçadas · Gênero: Cenário de decisões ramificado · app ambiental do dia (2026-06-17)</div>
-  </footer>
+<div class="top">
+  <a class="hub" href="index.html">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Todos os jogos
+  </a>
 </div>
 
-<script type="module">
-/* ============ CONTEÚDO DOS NÍVEIS (cenários ramificados) ============ */
-/* Cada nó: { txt, badge, opts:[{t,dh,pts,best,fb}] }  dh = variação de saúde */
+<header>
+  <h1><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l9 4v6c0 5-4 9-9 10-5-1-9-5-9-10V6z" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.8"/><circle cx="12" cy="12" r="4" fill="#f59e0b"/><circle cx="10.6" cy="11.4" r=".7" fill="#1f2937"/><circle cx="13.4" cy="11.4" r=".7" fill="#1f2937"/></svg> <span>Missão <span class="spark">Extinção Zero</span></span></h1>
+  <p class="sub">Você protege espécies ameaçadas. Cada decisão mexe com as populações, o habitat, o apoio da comunidade e o que se sabe sobre os animais. Termine com todos os indicadores acima da meta.</p>
+</header>
 
-const SCENARIOS = {
-  basico: {
-    label:"Básico",
-    intro:"Você é guarda-parque de uma reserva. Cuide bem dos animais!",
-    nodes:[
-      { badge:"NA FAZENDA", txt:"Uma onça-pintada foi vista perto do gado de uma fazenda vizinha. O fazendeiro está nervoso. O que você faz?",
-        opts:[
-          {t:"Monitorar a onça com a equipe e orientar o fazendeiro", dh:18, pts:120, best:true, fb:"A onça-pintada é quase ameaçada. O conflito com fazendas é uma das maiores causas de mortes; monitorar e dialogar evita perdas dos dois lados."},
-          {t:"Assustar a onça com barulho de fogos bem alto", dh:-10, pts:30, best:false, fb:"Assustar pode fazer a onça fugir para outra fazenda e gerar mais conflito. O melhor é manejo e diálogo, não susto."},
-          {t:"Não fazer nada e esperar para ver", dh:-6, pts:20, best:false, fb:"Ignorar o conflito costuma terminar em caça à onça. Agir cedo, com calma, protege o animal."}
-        ]},
-      { badge:"NO RIO", txt:"Você encontra muito lixo plástico boiando no rio onde os animais bebem água. E agora?",
-        opts:[
-          {t:"Organizar um mutirão de limpeza com a comunidade", dh:16, pts:110, best:true, fb:"Plástico machuca e mata animais que o engolem. Limpeza coletiva resolve e ainda educa a vizinhança."},
-          {t:"Empurrar o lixo para a margem de baixo do rio", dh:-9, pts:30, best:false, fb:"Empurrar só leva o problema para outro trecho e outros animais. O lixo precisa ser retirado, não movido."},
-          {t:"Tirar uma foto bonita e seguir o passeio", dh:-4, pts:25, best:false, fb:"Registrar ajuda a denunciar, mas sozinho não tira o plástico da água. É preciso agir."}
-        ]},
-      { badge:"FILHOTE PERDIDO", txt:"Um filhote de tamanduá-bandeira aparece sozinho, parecendo perdido e fraco.",
-        opts:[
-          {t:"Chamar os veterinários especializados da reserva", dh:15, pts:110, best:true, fb:"O tamanduá-bandeira é vulnerável. Filhotes precisam de cuidado técnico; profissionais sabem se a mãe voltará ou se há resgate."},
-          {t:"Levar o filhote para casa como animal de estimação", dh:-12, pts:25, best:false, fb:"Animal silvestre não é pet: ele adoece, perde instintos e isso é crime. Resgate é trabalho de especialistas."},
-          {t:"Fingir que não viu e ir embora rápido", dh:-6, pts:20, best:false, fb:"Abandonar um filhote em risco pode custar sua vida. O certo é avisar quem pode ajudar."}
-        ]},
-      { badge:"CORREDOR VERDE", txt:"Há um terreno vazio entre duas matas. Plantar nele pode ligar as florestas. O que plantar?",
-        opts:[
-          {t:"Mudas de árvores nativas da própria região", dh:17, pts:120, best:true, fb:"Espécies nativas alimentam a fauna local e criam corredores que ligam populações de animais isoladas."},
-          {t:"Eucalipto, porque cresce bem rapidinho", dh:-8, pts:35, best:false, fb:"Eucalipto cresce rápido, mas dá pouco alimento e abrigo à fauna nativa. Corredores pedem plantas nativas."},
-          {t:"Nada, deixar o terreno pelado mesmo", dh:-5, pts:20, best:false, fb:"Terreno pelado mantém as matas separadas. Sem o corredor, os animais ficam ilhados."}
-        ]},
-      { badge:"VISITANTES", txt:"Turistas querem dar comida aos macacos para tirar fotos de pertinho. Como você reage?",
-        opts:[
-          {t:"Explicar que alimentar adoece e vicia os animais", dh:14, pts:110, best:true, fb:"Comida humana deixa macacos doentes e dependentes, mudando seu comportamento natural. Educar o visitante protege a fauna."},
-          {t:"Vender pacotinhos de comida para eles darem", dh:-10, pts:30, best:false, fb:"Lucrar com a alimentação piora o problema: gera dependência e conflitos. A regra é não alimentar."},
-          {t:"Deixar rolar, é só uma foto rápida", dh:-5, pts:25, best:false, fb:"Uma vez vira hábito: os animais passam a cercar pessoas. O melhor é não começar."}
-        ]}
-    ]
-  },
+<div class="levels" id="levels"></div>
 
-  intermediario: {
-    label:"Intermediário",
-    intro:"Você coordena um projeto de conservação. Pense em habitat, populações e manejo.",
-    nodes:[
-      { badge:"FRAGMENTAÇÃO", txt:"Uma população de mico-leão-dourado está isolada num fragmento de Mata Atlântica pequeno demais. Qual estratégia priorizar?",
-        opts:[
-          {t:"Restaurar corredores ecológicos entre os fragmentos", dh:18, pts:140, best:true, fb:"O mico-leão-dourado quase desapareceu, mas corredores e translocações ajudaram a população a se recuperar para cerca de 3.700 indivíduos."},
-          {t:"Cercar o fragmento para isolar e proteger melhor", dh:-9, pts:45, best:false, fb:"Isolar aumenta a endogamia e o risco de extinção local. Conectar habitats é mais eficaz que cercar."},
-          {t:"Capturar todos e manter só em cativeiro", dh:-7, pts:40, best:false, fb:"Cativeiro é apoio (ex situ), não substitui a conservação no habitat (in situ). O objetivo é manter populações livres."}
-        ]},
-      { badge:"ESPÉCIE-BANDEIRA", txt:"O orçamento é curto. Investir numa espécie carismática pode atrair recursos. Como decidir?",
-        opts:[
-          {t:"Usar a onça-pintada como espécie-bandeira do bioma", dh:16, pts:130, best:true, fb:"Espécies-bandeira atraem apoio e, por exigirem grandes áreas, protegem muitas outras espécies junto (efeito guarda-chuva)."},
-          {t:"Dividir o dinheiro igualmente entre todas espécies", dh:-5, pts:60, best:false, fb:"Pulverizar o recurso pode não bastar para nenhuma. Estratégias-bandeira costumam render proteção mais ampla."},
-          {t:"Focar só na espécie mais bonita para o marketing", dh:-8, pts:45, best:false, fb:"Beleza ajuda no engajamento, mas a escolha deve ter base ecológica, não só estética."}
-        ]},
-      { badge:"FOGO", txt:"Uma seca severa aumenta o risco de queimadas na reserva, ameaçando ninhos e tocas. O que fazer antes do fogo chegar?",
-        opts:[
-          {t:"Abrir aceiros e fazer manejo integrado do fogo", dh:17, pts:135, best:true, fb:"Aceiros e queimas controladas reduzem o material que alimenta grandes incêndios, protegendo a fauna que não consegue fugir a tempo."},
-          {t:"Esperar o fogo aparecer para então combatê-lo", dh:-10, pts:40, best:false, fb:"Combater só depois do início costuma ser tarde: incêndios em seca avançam rápido. Prevenção salva mais vidas."},
-          {t:"Proibir qualquer uso de fogo na região toda", dh:-4, pts:55, best:false, fb:"Proibição sem manejo acumula combustível e gera incêndios piores. O caminho é o manejo integrado, não a proibição cega."}
-        ]},
-      { badge:"ESPÉCIE INVASORA", txt:"Javalis (porcos selvagens invasores) estão destruindo ninhos e competindo com a fauna nativa. Qual ação?",
-        opts:[
-          {t:"Plano de controle da invasora com monitoramento", dh:16, pts:130, best:true, fb:"Espécies invasoras estão entre as maiores causas de perda de biodiversidade. Controle planejado protege as nativas."},
-          {t:"Deixar a natureza se equilibrar sozinha", dh:-11, pts:35, best:false, fb:"Invasoras não têm predadores locais e se multiplicam sem freio. Sem manejo, dominam o ambiente."},
-          {t:"Soltar mais predadores exóticos para caçá-los", dh:-9, pts:40, best:false, fb:"Trazer outro exótico cria um novo problema invasor. A solução não é somar invasões."}
-        ]},
-      { badge:"TURISMO", txt:"O turismo cresce e traz renda, mas pode estressar os animais. Como equilibrar?",
-        opts:[
-          {t:"Definir trilhas, limites de visitantes e horários", dh:15, pts:125, best:true, fb:"Zoneamento e capacidade de carga permitem renda sem afugentar a fauna. Turismo bem manejado financia a conservação."},
-          {t:"Liberar acesso total para maximizar a renda", dh:-10, pts:40, best:false, fb:"Visitação sem limite estressa animais e degrada o habitat. Lucro hoje vira prejuízo ecológico amanhã."},
-          {t:"Proibir totalmente a entrada de visitantes", dh:-3, pts:60, best:false, fb:"Fechar tudo perde uma fonte de recursos e de apoio social. O equilíbrio vem do manejo, não do veto."}
-        ]},
-      { badge:"DADOS", txt:"Você precisa saber se a população de antas está crescendo ou caindo. Como obter essa resposta?",
-        opts:[
-          {t:"Instalar armadilhas fotográficas e monitorar a longo prazo", dh:17, pts:135, best:true, fb:"Monitoramento contínuo gera dados confiáveis de tendência populacional, base para qualquer decisão de manejo."},
-          {t:"Confiar nos relatos dos moradores locais", dh:-4, pts:55, best:false, fb:"Relatos ajudam, mas são subjetivos. Decisões sólidas exigem dados padronizados e repetidos."},
-          {t:"Supor que está estável e seguir em frente", dh:-8, pts:40, best:false, fb:"Sem medir, você pode não perceber um declínio até ser grave. Monitorar é essencial."}
-        ]}
-    ]
-  },
+<div class="hud">
+  <span class="h1">Decisão <b id="hits">0/0</b></span>
+  <span class="h2">Escolhas ruins <b id="errs">0</b></span>
+  <span class="h3">Pontos <b id="score">0</b></span>
+  <span class="h4">Tempo <b id="timer">0s</b></span>
+</div>
 
-  dificil: {
-    label:"Difícil",
-    intro:"Você gere uma Unidade de Conservação. Aplique conceitos técnicos de manejo de populações.",
-    nodes:[
-      { badge:"VIABILIDADE", txt:"Uma metapopulação de muriqui mostra sinais de depressão endogâmica num fragmento isolado. Qual intervenção tem maior respaldo técnico?",
-        opts:[
-          {t:"Promover translocação de indivíduos para resgate genético", dh:18, pts:160, best:true, fb:"O resgate genético introduz variabilidade, reduz a endogamia e eleva a viabilidade da população (aumenta o Ne efetivo)."},
-          {t:"Suplementar alimento para elevar a natalidade local", dh:-7, pts:60, best:false, fb:"Mais comida não corrige a perda de variabilidade genética; a depressão endogâmica persiste mesmo com mais filhotes."},
-          {t:"Aguardar a seleção natural eliminar alelos deletérios", dh:-9, pts:50, best:false, fb:"Em populações pequenas, a deriva genética supera a seleção e os alelos deletérios podem se fixar. Esperar é arriscado."}
-        ]},
-      { badge:"CRITÉRIOS IUCN", txt:"Uma espécie teve queda populacional estimada acima de 50% em três gerações. Como classificá-la e agir?",
-        opts:[
-          {t:"Reavaliar como ameaçada e acionar plano de recuperação", dh:17, pts:155, best:true, fb:"Declínios dessa magnitude enquadram a espécie em categorias de ameaça da IUCN, exigindo Plano de Ação Nacional (PAN)."},
-          {t:"Manter a categoria atual até a próxima década", dh:-10, pts:45, best:false, fb:"Adiar a reavaliação atrasa a proteção legal e os recursos. Critérios quantitativos pedem reclassificação ágil."},
-          {t:"Rebaixar a prioridade por falta de carisma público", dh:-8, pts:50, best:false, fb:"Status de ameaça é técnico, não estético. Espécies pouco carismáticas também sustentam funções ecológicas."}
-        ]},
-      { badge:"CASCATA TRÓFICA", txt:"O principal predador de topo da reserva está em declínio acentuado. Que risco ecológico você prioriza monitorar?",
-        opts:[
-          {t:"Cascata trófica: superpopulação de herbívoros e perda de vegetação", dh:18, pts:160, best:true, fb:"A perda de predadores de topo desencadeia cascatas tróficas, com explosão de herbívoros e degradação do habitat."},
-          {t:"Apenas a redução direta do número daquele predador", dh:-6, pts:65, best:false, fb:"Olhar só o predador ignora os efeitos em cadeia. Predadores de topo regulam todo o ecossistema."},
-          {t:"Nenhum, pois a natureza se reequilibra sozinha", dh:-9, pts:45, best:false, fb:"Sem o regulador de topo, o sistema pode mudar de estado de forma duradoura. O reequilíbrio não é garantido."}
-        ]},
-      { badge:"CORREDORES", txt:"O orçamento permite uma grande intervenção de paisagem. Qual maximiza a conectividade funcional?",
-        opts:[
-          {t:"Restaurar corredores e stepping stones entre remanescentes", dh:17, pts:155, best:true, fb:"Corredores e trampolins de habitat aumentam o fluxo gênico e o forrageio, contrapondo a fragmentação."},
-          {t:"Ampliar uma única reserva já existente e isolada", dh:-5, pts:70, best:false, fb:"Uma área maior isolada ajuda, mas sem conectividade as populações permanecem geneticamente separadas."},
-          {t:"Construir cercas para impedir a saída dos animais", dh:-10, pts:45, best:false, fb:"Cercar bloqueia a dispersão e o fluxo gênico — o oposto da conectividade funcional desejada."}
-        ]},
-      { badge:"EX SITU", txt:"Uma espécie tem população selvagem mínima. Como integrar conservação ex situ e in situ?",
-        opts:[
-          {t:"Criar plantel ex situ ligado a programa de reintrodução", dh:18, pts:160, best:true, fb:"Bancos vivos ex situ servem como seguro genético e fonte para reintroduções, sempre articulados à proteção do habitat."},
-          {t:"Manter só no cativeiro, sem prazo de soltura", dh:-8, pts:55, best:false, fb:"Cativeiro perpétuo gera adaptação ao confinamento e não recupera populações livres. Reintrodução é o objetivo."},
-          {t:"Investir só no habitat e ignorar reserva ex situ", dh:-6, pts:60, best:false, fb:"Sem um seguro ex situ, eventos catastróficos podem extinguir a última população. As duas estratégias se complementam."}
-        ]},
-      { badge:"MUDANÇA CLIMÁTICA", txt:"O aquecimento desloca a zona climática ideal de uma espécie para fora da reserva. Qual resposta de manejo adaptativo?",
-        opts:[
-          {t:"Planejar reservas climáticas e possível migração assistida", dh:17, pts:155, best:true, fb:"Sob mudanças climáticas, refúgios climáticos e migração assistida ajudam espécies a acompanhar seus nichos em deslocamento."},
-          {t:"Fixar a espécie no local atual a qualquer custo", dh:-9, pts:50, best:false, fb:"Forçar a permanência num clima inadequado eleva a mortalidade. O manejo deve acompanhar o nicho, não engessá-lo."},
-          {t:"Considerar o clima irrelevante para a distribuição", dh:-10, pts:45, best:false, fb:"Clima é determinante na distribuição das espécies. Ignorá-lo leva a decisões equivocadas de conservação."}
-        ]},
-      { badge:"GOVERNANÇA", txt:"Comunidades do entorno dependem dos recursos da área. Como reduzir a pressão sobre a fauna?",
-        opts:[
-          {t:"Cogestão com renda alternativa e uso sustentável", dh:16, pts:150, best:true, fb:"Engajar comunidades com alternativas econômicas reduz a caça e o desmatamento, tornando a conservação socialmente viável."},
-          {t:"Reprimir o uso com fiscalização exclusivamente punitiva", dh:-7, pts:55, best:false, fb:"Só punir sem alternativa gera conflito e caça clandestina. A conservação dura quando há benefício local."},
-          {t:"Remover as comunidades da paisagem inteira", dh:-9, pts:45, best:false, fb:"Remoções forçadas causam dano social e resistência, minando a conservação a longo prazo."}
-        ]}
-    ]
-  },
+<div class="card">
+  <div id="stage"></div>
+</div>
 
-  carbonauta: {
-    label:"Carbonauta",
-    intro:"Nível pesquisador. Decisões baseadas em genética de populações, modelagem e teoria ecológica.",
-    nodes:[
-      { badge:"PVA", txt:"Sua Análise de Viabilidade Populacional (PVA) indica probabilidade de extinção >10% em 100 anos. Que parâmetro investigar primeiro para refinar o modelo?",
-        opts:[
-          {t:"Tamanho efetivo Ne e variância no sucesso reprodutivo", dh:18, pts:200, best:true, fb:"O Ne governa deriva e endogamia; quantificá-lo, junto à variância reprodutiva, é central para estimar risco em PVAs."},
-          {t:"Apenas o número total de indivíduos avistados", dh:-7, pts:80, best:false, fb:"O N censitário superestima a saúde genética: o que importa é o Ne, quase sempre muito menor que o N."},
-          {t:"A coloração da pelagem dos indivíduos amostrados", dh:-9, pts:60, best:false, fb:"Traços fenotípicos visíveis não capturam a dinâmica demográfica e genética que determina a viabilidade."}
-        ]},
-      { badge:"MVP", txt:"Defina a meta de uma população mínima viável (MVP) para persistência de longo prazo. Em que critério ancorar?",
-        opts:[
-          {t:"Persistência genético-demográfica com Ne suficiente para reter variabilidade", dh:18, pts:200, best:true, fb:"A MVP combina critérios demográficos e genéticos: um Ne capaz de limitar endogamia e reter potencial adaptativo."},
-          {t:"O maior número que o orçamento atual conseguir pagar", dh:-6, pts:85, best:false, fb:"Orçamento condiciona a execução, mas não define a meta biológica. A MVP deriva de critérios populacionais."},
-          {t:"Qualquer valor acima de dez casais reprodutores", dh:-8, pts:65, best:false, fb:"Regras fixas e baixas ignoram a estocasticidade ambiental e genética; a MVP é espécie-específica e costuma ser bem maior."}
-        ]},
-      { badge:"RESGATE GENÉTICO", txt:"Você considera fluxo gênico assistido entre populações divergentes. Qual o principal risco técnico a mitigar?",
-        opts:[
-          {t:"Depressão exogâmica e ruptura de adaptações locais", dh:18, pts:200, best:true, fb:"Cruzar linhagens muito divergentes pode causar depressão exogâmica; o desenho deve equilibrar resgate genético e adaptação local."},
-          {t:"O custo do transporte logístico dos animais", dh:-5, pts:90, best:false, fb:"Logística importa na execução, mas o risco biológico central é a quebra de complexos gênicos coadaptados."},
-          {t:"A cor das marcas de identificação usadas", dh:-9, pts:60, best:false, fb:"Detalhe operacional irrelevante frente ao risco genético do cruzamento entre populações divergentes."}
-        ]},
-      { badge:"DEFAUNAÇÃO", txt:"A 'floresta vazia' (defaunação) avança: vegetação intacta, fauna esvaziada. Que função ecológica priorizar restaurar?",
-        opts:[
-          {t:"Dispersão de sementes por frugívoros de grande porte", dh:18, pts:200, best:true, fb:"A perda de grandes frugívoros colapsa a dispersão de sementes grandes, alterando a composição e o estoque de carbono da floresta."},
-          {t:"Somente a cobertura vegetal medida por satélite", dh:-6, pts:85, best:false, fb:"Dossel intacto pode mascarar a defaunação: a floresta parece sã, mas perdeu processos-chave mediados pela fauna."},
-          {t:"A estética da paisagem para fins de turismo", dh:-9, pts:60, best:false, fb:"Valor cênico não restaura interações ecológicas. A prioridade são as funções perdidas, como a dispersão."}
-        ]},
-      { badge:"AMOSTRAGEM", txt:"Você precisa estimar abundância de uma espécie elusiva com detecção imperfeita. Qual desenho estatístico é mais robusto?",
-        opts:[
-          {t:"Modelos de captura-recaptura ou ocupação com probabilidade de detecção", dh:18, pts:200, best:true, fb:"Esses modelos corrigem a detecção imperfeita, evitando subestimar a abundância — viés comum em contagens simples."},
-          {t:"Contagem direta única, assumindo detecção perfeita", dh:-7, pts:80, best:false, fb:"Assumir detecção perfeita enviesa as estimativas para baixo. Espécies elusivas exigem modelos que estimem a detecção."},
-          {t:"Extrapolar a partir de um único relato anedótico", dh:-9, pts:60, best:false, fb:"Dado anedótico não sustenta inferência populacional. Rigor exige delineamento replicado e probabilístico."}
-        ]},
-      { badge:"PRIORIZAÇÃO", txt:"Recursos finitos, muitas espécies em risco. Que critério de priorização sistemática adotar?",
-        opts:[
-          {t:"Distintividade evolutiva e grau de ameaça combinados (EDGE)", dh:18, pts:200, best:true, fb:"Abordagens como EDGE priorizam espécies evolutivamente singulares e ameaçadas, maximizando a história evolutiva preservada."},
-          {t:"Ordem alfabética dos nomes científicos", dh:-8, pts:65, best:false, fb:"Critério arbitrário, sem base biológica. A priorização deve refletir ameaça e valor evolutivo, não o alfabeto."},
-          {t:"Apenas a popularidade nas redes sociais", dh:-7, pts:70, best:false, fb:"Engajamento ajuda a captar recursos, mas não deve substituir critérios objetivos de priorização da biodiversidade."}
-        ]},
-      { badge:"CONECTIVIDADE", txt:"Você modela conectividade da paisagem para o fluxo gênico. Qual abordagem capta melhor os caminhos reais de dispersão?",
-        opts:[
-          {t:"Teoria de circuitos sobre superfícies de resistência da paisagem", dh:18, pts:200, best:true, fb:"Modelos de resistência e teoria de circuitos representam múltiplas rotas de dispersão melhor que uma simples linha reta entre manchas."},
-          {t:"Distância em linha reta entre os fragmentos", dh:-6, pts:85, best:false, fb:"A distância euclidiana ignora a matriz e as barreiras; a conectividade funcional depende da resistência do terreno."},
-          {t:"A área total somada de todos os fragmentos", dh:-8, pts:65, best:false, fb:"Somar áreas mede quantidade de habitat, não conexão entre elas. Conectividade é sobre fluxo, não soma."}
-        ]},
-      { badge:"GENÔMICA", txt:"Dados genômicos revelam baixa diversidade e alta carga de mutações deletérias numa população relictual. Qual interpretação orienta o manejo?",
-        opts:[
-          {t:"Risco de meltdown por acúmulo de carga genética; planejar fluxo gênico", dh:18, pts:200, best:true, fb:"O acúmulo de mutações deletérias em populações minúsculas pode levar ao colapso genético, motivando resgate e ampliação do Ne."},
-          {t:"A população está saudável, pois ainda existe", dh:-9, pts:60, best:false, fb:"Persistir não significa viável: a carga genética pode comprometer a adaptação e a sobrevivência futura."},
-          {t:"Genômica é supérflua para decisões de conservação", dh:-8, pts:65, best:false, fb:"A genômica informa endogamia, carga e potencial adaptativo — hoje é ferramenta central da conservação baseada em evidências."}
-        ]}
-    ]
-  }
+<div class="ranking">
+  <h3>Ranking Global, nível <span id="rankLevel"></span></h3>
+  <ol id="rankList"><li><span>Carregando o ranking...</span></li></ol>
+  <p class="note" id="rankNote"></p>
+</div>
+
+<footer>
+  Biodiversidade e espécies ameaçadas · Cenário de decisões<br>
+  <span class="credit">Idealizado por Ernandes Sobreira</span>
+</footer>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
 };
-
-/* ============ ESTADO ============ */
-let level = "basico";
-let order = [];      // índices dos nós embaralhados? -> manter ordem narrativa
-let idx = 0;
-let health = 50;
-let points = 0;
-let hits = 0;
-let answered = false;
-let seconds = 0;
-let timer = null;
-let started = false;
-
 const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-function shuffle(a){ // Fisher–Yates
-  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
-  return a;
-}
-
-function setLevel(lv){
-  level = lv;
-  document.querySelectorAll('#levels button').forEach(b=>{
-    b.classList.toggle('active', b.dataset.lv===lv);
-  });
-  $('rankLevelName').textContent = SCENARIOS[lv].label;
-  restart();
-}
-
-function restart(){
-  idx=0; health=50; points=0; hits=0; answered=false; seconds=0; started=false;
-  if(timer){clearInterval(timer);timer=null;}
-  $('hudTime').textContent="0s"; $('hudPts').textContent="0"; $('hudHits').textContent="0";
-  $('final').style.display="none";
-  $('playArea').style.display="block";
-  $('instruction').textContent = SCENARIOS[level].intro + " Sua primeira decisão começa o cronômetro.";
-  updateHealth();
-  renderNode();
-}
-
-function startTimerIfNeeded(){
-  if(started) return;
-  started=true;
-  timer=setInterval(()=>{seconds++; $('hudTime').textContent=seconds+"s";},1000);
-}
-
-function updateHealth(){
-  health=Math.max(0,Math.min(100,health));
-  $('healthBar').style.width=health+"%";
-  $('healthPct').textContent=Math.round(health)+"%";
-  let c = health>=66 ? "var(--good)" : health>=33 ? "var(--accent)" : "var(--bad)";
-  $('healthBar').style.background=c;
-}
-
-function renderNode(){
-  answered=false;
-  const sc = SCENARIOS[level];
-  const node = sc.nodes[idx];
-  $('progBar').style.width = ((idx)/sc.nodes.length*100)+"%";
-  $('scene').innerHTML = '<span class="badge">'+node.badge+'</span><br>'+node.txt;
-  const opts = shuffle(node.opts.map((o,i)=>({...o})));
-  const box = $('options'); box.innerHTML="";
-  opts.forEach(o=>{
-    const b=document.createElement('button');
-    b.textContent=o.t;
-    b.onclick=()=>choose(b,o);
-    box.appendChild(b);
-  });
-  $('feedback').style.display="none";
-  $('feedback').className="feedback";
-  $('nextBtn').style.display="none";
-}
-
-function choose(btn, o){
-  if(answered) return;
-  answered=true;
-  startTimerIfNeeded();
-  health += o.dh;
-  points += o.pts;
-  if(o.best){hits++; btn.classList.add('pick-good');}
-  else {btn.classList.add('pick-bad');}
-  updateHealth();
-  $('hudPts').textContent=points;
-  $('hudHits').textContent=hits;
-  // desabilita e marca a melhor
-  document.querySelectorAll('#options button').forEach(b=>{
-    b.disabled=true;
-    if(b!==btn) b.classList.add('dim');
-  });
-  const fb=$('feedback');
-  fb.style.display="block";
-  fb.className="feedback "+(o.best?"good":"bad");
-  fb.innerHTML=(o.best?"✅ Ótima escolha! ":"⚠️ Reveja: ")+o.fb;
-  $('nextBtn').style.display="block";
-  $('nextBtn').textContent = (idx>=SCENARIOS[level].nodes.length-1) ? "Ver resultado final 🌍" : "Próxima decisão →";
-}
-
-function nextNode(){
-  idx++;
-  if(idx>=SCENARIOS[level].nodes.length){ endGame(); return; }
-  renderNode();
-}
-
-function endGame(){
-  if(timer){clearInterval(timer);timer=null;}
-  $('progBar').style.width="100%";
-  $('playArea').style.display="none";
-  const total = SCENARIOS[level].nodes.length;
-  const score = Math.round(points + health*3); // saúde pesa no placar; maior=melhor
-  let emoji,title,msg;
-  if(health>=75){emoji="🌳";title="Ecossistema Próspero!";msg="Suas decisões mantiveram a fauna forte e os habitats conectados. As espécies ameaçadas têm futuro com gestores como você.";}
-  else if(health>=45){emoji="🌿";title="Ecossistema Estável";msg="Você evitou o colapso, mas algumas escolhas custaram caro. Há espécies ainda em risco — dá para fazer melhor numa próxima rodada.";}
-  else {emoji="🍂";title="Ecossistema Frágil";msg="O ecossistema sofreu perdas sérias. Reveja os feedbacks: prevenção, conectividade e decisões baseadas em ciência salvam mais espécies.";}
-  $('finalEmoji').textContent=emoji;
-  $('finalTitle').textContent=title;
-  $('finalMsg').textContent=msg+" (Acertos: "+hits+"/"+total+")";
-  $('finalScore').textContent=score;
-  $('finalHealth').textContent=Math.round(health)+"%";
-  $('finalTime').textContent=seconds+"s";
-  $('final').style.display="block";
-  window._finalScore=score;
-  loadLeaderboard();
-}
-
-/* ============ FIREBASE RANKING (Cloud Firestore) ============ */
-const firebaseConfig = { apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ", authDomain: "jogos-ranking.firebaseapp.com", databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com", projectId: "jogos-ranking", storageBucket: "jogos-ranking.firebasestorage.app", messagingSenderId: "958784915420", appId: "1:958784915420:web:4212d3ad278f02d600f119" };
+/* ---------- dados deste jogo ---------- */
 const GAME_ID = "2026-06-17-missao-extincao-zero";
-
-let _db=null, _fs=null;
-async function getDB(){
-  if(_db) return _db;
-  try{
-    const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
-    _fs = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
-    const app = appMod.initializeApp(firebaseConfig);
-    _db = _fs.getFirestore(app);
-    return _db;
-  }catch(e){ console.warn("Firebase indisponível, jogo segue offline.",e); return null; }
+function saveDoc(name, s, lv, f){ return {name, score:s.score, level:lv, seconds:s.seconds, goal:s.goalMet, ts:f.serverTimestamp()}; }
+const RANK = {field:'level', val:k=>k};
+const SCORE_NOTE = 'Cada decisão soma 10 vezes o efeito total nos quatro indicadores. Escolhas ruins tiram pontos.';
+const METERS = [
+  {id:'pop', label:'Populações de animais', color:'#f59e0b'},
+  {id:'hab', label:'Habitat', color:'#16a34a'},
+  {id:'apoio', label:'Apoio da comunidade', color:'#a855f7'},
+  {id:'dados', label:'Dados e ciência', color:'#0ea5e9'}
+];
+const START = {pop:50, hab:50, apoio:50, dados:50};
+const GOAL = 60;
+const BR = '#78350f';
+const ci = d => `<svg viewBox="0 0 40 40" aria-hidden="true">${d}</svg>`;
+const SCENE_ICONS = {
+  onca: ci(`<circle cx="20" cy="20" r="18" fill="#fef3c7"/><circle cx="20" cy="22" r="10" fill="#f59e0b"/><circle cx="12" cy="13" r="3.400" fill="#f59e0b"/><circle cx="28" cy="13" r="3.400" fill="#f59e0b"/><circle cx="16" cy="20" r="1.400" fill="#1f2937"/><circle cx="24" cy="20" r="1.400" fill="#1f2937"/><circle cx="14" cy="26" r="1.200" fill="#78350f"/><circle cx="26" cy="27" r="1.200" fill="#78350f"/>`),
+  rio: ci(`<circle cx="20" cy="20" r="18" fill="#e0f2fe"/><path d="M4 22c4-3 8-3 12 0s8 3 12 0 8-3 8-2v10H4z" fill="#38bdf8"/><rect x="12" y="14" width="8" height="10" rx="2" fill="#f8fafc" stroke="#94a3b8"/>`),
+  filhote: ci(`<circle cx="20" cy="20" r="18" fill="#f5f5f4"/><ellipse cx="18" cy="24" rx="11" ry="6" fill="#57534e"/><path d="M28 22l9 4-9 1z" fill="#57534e"/><path d="M8 22c-4 2-6 0-6-4" stroke="#a8a29e" stroke-width="4" fill="none"/><path d="M14 22l6 6" stroke="#fff" stroke-width="2"/>`),
+  mata: ci(`<circle cx="20" cy="20" r="18" fill="#dcfce7"/><circle cx="10" cy="20" r="7" fill="#16a34a"/><circle cx="30" cy="20" r="7" fill="#16a34a"/><path d="M15 21h10" stroke="#22c55e" stroke-width="5"/>`),
+  gente: ci(`<circle cx="20" cy="20" r="18" fill="#f3e8ff"/><circle cx="14" cy="14" r="4" fill="#a855f7"/><circle cx="26" cy="14" r="4" fill="#7e22ce"/><path d="M8 30c0-6 3-9 6-9s6 3 6 9M20 30c0-6 3-9 6-9s6 3 6 9" fill="#c084fc"/>`),
+  fogo: ci(`<circle cx="20" cy="20" r="18" fill="#ffedd5"/><path d="M14 32c-6-6-2-16 6-20 0 6 4 6 4 0 6 4 8 14 2 20z" fill="#f97316"/>`),
+  dados: ci(`<circle cx="20" cy="20" r="18" fill="#e0f2fe"/><rect x="11" y="12" width="18" height="14" rx="3" fill="#334155"/><circle cx="20" cy="19" r="4" fill="#38bdf8"/><path d="M20 26v8" stroke="#78350f" stroke-width="3"/>`),
+  dna: ci(`<circle cx="20" cy="20" r="18" fill="#ede9fe"/><path d="M14 6c12 8 0 20 12 28M26 6c-12 8 0 20-12 28" stroke="#7c3aed" stroke-width="2.400" fill="none"/><path d="M16 12h8M15 20h10M16 28h8" stroke="#a78bfa" stroke-width="2"/>`),
+  javali: ci(`<circle cx="20" cy="20" r="18" fill="#fee2e2"/><ellipse cx="18" cy="23" rx="11" ry="7" fill="#57534e"/><circle cx="29" cy="21" r="5" fill="#57534e"/><path d="M33 23l3 1" stroke="#fff" stroke-width="2"/><path d="M12 29v5M24 29v5" stroke="#57534e" stroke-width="2.400"/>`),
+  clima: ci(`<circle cx="20" cy="20" r="18" fill="#fee2e2"/><rect x="17" y="6" width="6" height="20" rx="3" fill="#fff" stroke="#dc2626" stroke-width="2"/><circle cx="20" cy="29" r="6" fill="#dc2626"/>`),
+  estrada: ci(`<circle cx="20" cy="20" r="18" fill="#e5e7eb"/><path d="M14 36L18 4h4l4 32z" fill="#4b5563"/><path d="M20 8v4M20 16v4M20 24v4" stroke="#fde047" stroke-width="2"/>`)
+};
+const mix = (a,b,t) => { a=a.replace('#',''); b=b.replace('#',''); t=Math.max(0,Math.min(1,t)); return '#'+[0,2,4].map(i=>Math.round(parseInt(a.substr(i,2),16)*(1-t)+parseInt(b.substr(i,2),16)*t).toString(16).padStart(2,'0')).join(''); };
+function RENDER(v, art){
+  const P = v.pop/100, H = v.hab/100, A = v.apoio/100, Dd = v.dados/100;
+  let s = `<rect width="600" height="210" fill="#ecfeff"/><circle cx="545" cy="32" r="17" fill="#fbbf24"/>`;
+  s += `<path d="M0 110c120-20 240 6 360-8s180-8 240 2V210H0z" fill="${mix('#bbf7d0','#e7e5e4',1-H)}"/>`;
+  /* habitat: manchas de mata que crescem e se ligam */
+  const R = 16 + H*24;
+  [[90,110],[300,100],[500,112]].forEach(([x,y],i)=>{ s += `<g class="tsw" style="animation-delay:-${i*0.5}s"><circle cx="${x}" cy="${y}" r="${R.toFixed(0)}" fill="#16a34a"/><circle cx="${x-R*0.6}" cy="${y+8}" r="${(R*0.7).toFixed(0)}" fill="#22c55e"/><circle cx="${x+R*0.6}" cy="${y+6}" r="${(R*0.7).toFixed(0)}" fill="#15803d"/></g>`; });
+  if(H > .6) s += `<path d="M110 126L280 118M320 118L480 128" stroke="#22c55e" stroke-width="${(H*14).toFixed(0)}" stroke-linecap="round" opacity=".85"/>`;
+  if(art==='estrada') s += `<path d="M0 170h600" stroke="#4b5563" stroke-width="16"/><path d="M0 170h600" stroke="#fde047" stroke-width="1.400" stroke-dasharray="12 10"/>`;
+  if(art==='rio') s += `<path d="M0 190c100-12 200 10 300-2s200-12 300 0" stroke="#38bdf8" stroke-width="12" fill="none"/>`;
+  if(art==='fogo') s += `<g class="flk"><path d="M200 150c-8-8-4-18 4-22 0 8 6 8 6 2 6 6 8 14 0 20z" fill="#f97316"/></g><circle cx="210" cy="104" r="24" fill="#94a3b8" opacity=".35"/>`;
+  /* animais */
+  const na = Math.round(P*7);
+  for(let i=0;i<na;i++){ const x = 60 + (i*83)%500, y = 150 + (i%2)*16;
+    s += [
+      `<g class="walk" style="animation-delay:-${i}s"><ellipse cx="${x}" cy="${y}" rx="14" ry="6" fill="#f59e0b"/><circle cx="${x+13}" cy="${y-4}" r="5" fill="#f59e0b"/><circle cx="${x-4}" cy="${y-1}" r="1.400" fill="#78350f"/><circle cx="${x+4}" cy="${y+1}" r="1.400" fill="#78350f"/></g>`,
+      `<g class="walk" style="animation-delay:-${i}s"><ellipse cx="${x}" cy="${y}" rx="13" ry="6" fill="#57534e"/><path d="M${x+12} ${y-1}l10 3-10 2z" fill="#57534e"/><path d="M${x-12} ${y-2}c-6-4-6-10-2-12" stroke="#a8a29e" stroke-width="4" fill="none"/></g>`,
+      `<g class="walk" style="animation-delay:-${i}s"><ellipse cx="${x}" cy="${y}" rx="13" ry="8" fill="#78716c"/><path d="M${x+11} ${y-4}c5 0 8 2 9 5" stroke="#78716c" stroke-width="3"/></g>`
+    ][i%3]; }
+  const nb = Math.round(P*5);
+  for(let i=0;i<nb;i++) s += `<g class="fly" style="animation-delay:-${i*0.7}s"><path d="M${70+i*90} ${32+(i%3)*12}c6-6 12-6 14 0 2-6 8-6 14 0" stroke="#2563eb" stroke-width="2.600" fill="none"/></g>`;
+  /* comunidade */
+  s += `<rect x="520" y="150" width="40" height="26" fill="#fde68a"/><path d="M516 150l24-14 24 14z" fill="#c2410c"/>`;
+  const np = Math.round(A*4);
+  for(let i=0;i<np;i++) s += `<g><circle cx="${470-i*16}" cy="${160}" r="4" fill="#a855f7"/><path d="M${470-i*16} 164v12" stroke="#a855f7" stroke-width="4"/></g>`;
+  /* dados: armadilhas fotograficas e antena */
+  const nc = Math.round(Dd*4);
+  for(let i=0;i<nc;i++) s += `<g><path d="M${150+i*100} 186v-14" stroke="${BR}" stroke-width="2.400"/><rect x="${144+i*100}" y="164" width="12" height="9" rx="2" fill="#334155"/><circle cx="${150+i*100}" cy="168" r="2" fill="#38bdf8"/></g>`;
+  if(Dd > .65) s += `<path d="M30 180V120" stroke="#64748b" stroke-width="2.400"/><path d="M22 126l8-6 8 6" stroke="#64748b" stroke-width="2" fill="none"/>`;
+  return `<svg viewBox="0 0 600 210" role="img" aria-label="Reserva com mata, animais, comunidade e equipamentos de pesquisa">${s}</svg>`;
 }
+const LEVELS = {
+  basico: { label:'Básico', title:'Guarda-parque por um ano', start:{dados:56},
+    desc:'Você é guarda-parque de uma reserva. Cada decisão mexe com os animais, com o habitat, com o apoio da comunidade e com o que se sabe sobre as espécies.',
+    scenes:[
+      {ic:'onca', art:'', title:'Onça perto do gado', text:'Uma onça-pintada foi vista perto do gado de uma fazenda vizinha. O fazendeiro está nervoso. O que você faz?',
+        choices:[
+          {t:'Acompanhar a onça com a equipe e orientar o fazendeiro sobre o curral', eff:{pop:6, hab:0, apoio:6, dados:3}, fb:'O conflito com fazendas é uma das grandes causas de morte de onças. Monitorar e orientar evita perdas dos dois lados.'},
+          {t:'Assustar a onça com fogos', eff:{pop:-4, hab:0, apoio:1, dados:0}, fb:'O susto pode empurrar a onça para outra fazenda e só mudar o conflito de lugar.'},
+          {t:'Esperar para ver o que acontece', eff:{pop:-5, hab:0, apoio:-3, dados:0}, fb:'Ignorar o conflito costuma terminar com a onça morta.'}]},
+      {ic:'rio', art:'rio', title:'Plástico no rio', text:'Há muito lixo plástico boiando no rio onde os animais bebem água. E agora?',
+        choices:[
+          {t:'Mutirão de limpeza com a comunidade', eff:{pop:4, hab:6, apoio:5, dados:0}, fb:'Plástico machuca e mata animais que o engolem. O mutirão limpa e ainda envolve os vizinhos.'},
+          {t:'Empurrar o lixo para um trecho mais abaixo do rio, longe da sede', eff:{pop:-3, hab:-4, apoio:-1, dados:0}, fb:'Empurrar só leva o lixo para outros animais.'},
+          {t:'Tirar uma foto e seguir', eff:{pop:-1, hab:-2, apoio:0, dados:1}, fb:'Registrar ajuda a denunciar, mas não tira o plástico da água.'}]},
+      {ic:'filhote', art:'', title:'Filhote sozinho', text:'Um filhote de tamanduá-bandeira aparece sozinho e fraco perto da trilha.',
+        choices:[
+          {t:'Chamar a equipe de resgate', eff:{pop:7, hab:0, apoio:2, dados:2}, fb:'O tamanduá-bandeira é vulnerável. A equipe sabe se a mãe vai voltar ou se é caso de resgate.'},
+          {t:'Levar o filhote para casa e criar como animal de estimação', eff:{pop:-6, hab:0, apoio:-1, dados:0}, fb:'Animal silvestre não é bicho de estimação. Ele adoece, perde os instintos, e isso é crime.'},
+          {t:'Fingir que não viu', eff:{pop:-4, hab:0, apoio:0, dados:0}, fb:'Abandonar um filhote em risco pode custar a vida dele.'}]},
+      {ic:'mata', art:'', title:'Terreno entre duas matas', text:'Há um terreno vazio entre duas matas. Plantar nele pode ligar as duas. O que plantar?',
+        choices:[
+          {t:'Mudas nativas da região', eff:{pop:4, hab:10, apoio:1, dados:0}, fb:'Plantas nativas alimentam a fauna e formam um corredor que liga populações isoladas.'},
+          {t:'Eucalipto, porque cresce rápido e dá sombra logo nos primeiros anos', eff:{pop:-2, hab:-3, apoio:2, dados:0}, fb:'O eucalipto cresce rápido, mas dá pouco alimento e abrigo para a fauna nativa.'},
+          {t:'Deixar o terreno vazio', eff:{pop:-2, hab:-3, apoio:0, dados:0}, fb:'Sem corredor, os animais continuam ilhados.'}]},
+      {ic:'gente', art:'', title:'Comida para os macacos', text:'Turistas querem dar comida aos macacos para tirar fotos de perto. Como você reage?',
+        choices:[
+          {t:'Explicar que comida humana adoece e acostuma mal os animais', eff:{pop:6, hab:0, apoio:4, dados:0}, fb:'Comida humana deixa os macacos doentes e dependentes, e eles passam a cercar as pessoas.'},
+          {t:'Vender pacotes de comida', eff:{pop:-6, hab:0, apoio:2, dados:0}, fb:'Lucrar com isso piora o problema.'},
+          {t:'Deixar, é só uma foto', eff:{pop:-3, hab:0, apoio:1, dados:0}, fb:'Uma vez vira hábito, e o hábito vira conflito.'}]},
+      {ic:'dados', art:'', title:'Quantas antas existem?', text:'Você quer saber se as antas da reserva estão aumentando ou diminuindo. Como descobrir?',
+        choices:[
+          {t:'Instalar armadilhas fotográficas', eff:{pop:2, hab:0, apoio:1, dados:10}, fb:'Câmeras deixadas por meses mostram quantas antas passam e se o número muda com o tempo.'},
+          {t:'Perguntar aos moradores mais antigos se eles têm visto antas por ali', eff:{pop:0, hab:0, apoio:3, dados:2}, fb:'Os relatos ajudam, mas sozinhos não mostram a tendência com segurança.'},
+          {t:'Supor que está tudo igual', eff:{pop:-2, hab:0, apoio:0, dados:-4}, fb:'Sem medir, um declínio só aparece quando já é grave.'}]}
+    ]},
+  intermediario: { label:'Intermediário', title:'Projeto de conservação', start:{dados:57},
+    desc:'Agora você coordena um projeto. As decisões envolvem habitat, populações e manejo. A meta continua a mesma.',
+    scenes:[
+      {ic:'mata', art:'', title:'Micos isolados', text:'Um grupo de micos-leões-dourados vive num pedaço de mata pequeno demais. Qual estratégia priorizar?',
+        choices:[
+          {t:'Ligar os fragmentos com corredores', eff:{pop:6, hab:8, apoio:0, dados:1}, fb:'Corredores e solturas ajudaram o mico-leão-dourado a se recuperar. O censo de 2023 estimou cerca de 4.800 indivíduos.'},
+          {t:'Cercar o fragmento para proteger melhor os micos que estão ali', eff:{pop:-4, hab:-1, apoio:0, dados:0}, fb:'Isolar aumenta o cruzamento entre parentes e o risco de sumir.'},
+          {t:'Levar todos para o cativeiro', eff:{pop:-3, hab:-2, apoio:-2, dados:1}, fb:'O cativeiro apoia, mas não substitui a população livre na mata.'}]},
+      {ic:'onca', art:'', title:'Pouca verba', text:'O orçamento é curto. Uma espécie carismática pode atrair apoio. Como decidir?',
+        choices:[
+          {t:'Usar a onça como espécie-bandeira do bioma', eff:{pop:5, hab:5, apoio:5, dados:0}, fb:'A onça precisa de áreas grandes. Protegê-la protege muitas outras espécies junto, o efeito guarda-chuva.'},
+          {t:'Dividir o dinheiro igual entre todas as espécies da reserva', eff:{pop:1, hab:0, apoio:0, dados:1}, fb:'Espalhar pouco dinheiro pode não bastar para nenhuma espécie.'},
+          {t:'Escolher a mais bonita', eff:{pop:-1, hab:0, apoio:2, dados:-2}, fb:'Beleza ajuda, mas a escolha precisa de base ecológica.'}]},
+      {ic:'fogo', art:'fogo', title:'Seca forte', text:'Uma seca forte aumenta o risco de fogo e ameaça ninhos e tocas. O que fazer antes do fogo chegar?',
+        choices:[
+          {t:'Aceiros e manejo integrado do fogo', eff:{pop:5, hab:8, apoio:1, dados:0}, fb:'Aceiros e queimas controladas reduzem o capim seco que alimenta os grandes incêndios.'},
+          {t:'Esperar o fogo aparecer para então mandar a brigada combater', eff:{pop:-5, hab:-7, apoio:0, dados:0}, fb:'Na seca o fogo avança rápido. Prevenir salva mais vidas.'},
+          {t:'Proibir qualquer fogo', eff:{pop:-1, hab:-2, apoio:-2, dados:0}, fb:'Proibir sem manejo acumula capim seco e gera incêndios piores.'}]},
+      {ic:'javali', art:'', title:'Javalis na reserva', text:'Javalis, uma espécie invasora, estão destruindo ninhos e competindo com a fauna nativa. Qual ação?',
+        choices:[
+          {t:'Controle planejado com monitoramento', eff:{pop:6, hab:4, apoio:1, dados:3}, fb:'Espécies invasoras estão entre as maiores causas de perda de biodiversidade.'},
+          {t:'Deixar a natureza se equilibrar', eff:{pop:-6, hab:-3, apoio:0, dados:0}, fb:'Sem predadores que deem conta, o javali se multiplica sem freio.'},
+          {t:'Soltar outro animal exótico que seja capaz de caçar os javalis', eff:{pop:-7, hab:-2, apoio:-1, dados:0}, fb:'Trazer outro exótico cria um novo problema.'}]},
+      {ic:'gente', art:'', title:'Turismo crescendo', text:'O turismo cresce, traz renda, mas estressa os animais. Como equilibrar?',
+        choices:[
+          {t:'Trilhas, limite de visitantes e horários', eff:{pop:3, hab:2, apoio:5, dados:0}, fb:'Com regras, o turismo gera renda sem espantar a fauna.'},
+          {t:'Liberar tudo para ganhar mais', eff:{pop:-5, hab:-4, apoio:3, dados:0}, fb:'Visita sem limite estressa os animais e estraga o habitat.'},
+          {t:'Proibir a entrada de qualquer visitante na reserva', eff:{pop:1, hab:1, apoio:-6, dados:0}, fb:'Fechar tudo perde renda e apoio da sociedade.'}]},
+      {ic:'estrada', art:'estrada', title:'Atropelamentos', text:'Uma rodovia ao lado da reserva mata tamanduás e lobos-guará todos os meses. O que você propõe?',
+        choices:[
+          {t:'Passagens de fauna com cercas que guiam os animais até elas', eff:{pop:8, hab:2, apoio:1, dados:1}, fb:'Passagens por baixo ou por cima da pista, com cercas-guia, reduzem muito os atropelamentos.'},
+          {t:'Só placas de aviso', eff:{pop:1, hab:0, apoio:1, dados:0}, fb:'Placas ajudam pouco se a velocidade continuar alta.'},
+          {t:'Nada, estrada é assim', eff:{pop:-5, hab:0, apoio:0, dados:0}, fb:'Atropelamento é uma causa importante de morte para várias espécies ameaçadas.'}]}
+    ]},
+  dificil: { label:'Difícil', title:'Gestor de unidade de conservação', start:{apoio:55},
+    desc:'Você gere uma unidade de conservação e precisa usar conceitos de manejo de populações. A meta continua a mesma.',
+    scenes:[
+      {ic:'dna', art:'', title:'Muriquis aparentados', text:'Um grupo de muriquis isolado mostra sinais de cruzamento entre parentes. Qual intervenção tem mais respaldo técnico?',
+        choices:[
+          {t:'Trazer indivíduos de outro grupo, o resgate genético', eff:{pop:7, hab:0, apoio:0, dados:3}, fb:'Indivíduos de fora trazem diversidade genética e reduzem os efeitos do cruzamento entre parentes.'},
+          {t:'Dar mais comida para nascerem mais filhotes', eff:{pop:1, hab:0, apoio:0, dados:0}, fb:'Mais filhotes não corrigem a falta de diversidade genética.'},
+          {t:'Esperar que a seleção natural elimine os genes ruins com o tempo', eff:{pop:-4, hab:0, apoio:0, dados:0}, fb:'Em populações pequenas, o acaso pesa mais que a seleção, e genes ruins podem se fixar.'}]},
+      {ic:'dados', art:'', title:'Queda forte', text:'Uma espécie perdeu mais da metade dos indivíduos em pouco tempo. Como agir?',
+        choices:[
+          {t:'Pedir reavaliação do risco e um plano de recuperação', eff:{pop:6, hab:2, apoio:1, dados:5}, fb:'Quedas grandes enquadram a espécie nas categorias de ameaça e abrem caminho para um plano de ação.'},
+          {t:'Esperar a próxima avaliação, daqui a dez anos', eff:{pop:-5, hab:0, apoio:0, dados:-1}, fb:'Esperar atrasa a proteção legal e os recursos.'},
+          {t:'Deixar de lado porque é pouco conhecida', eff:{pop:-5, hab:0, apoio:0, dados:-2}, fb:'Ameaça é critério técnico, não fama.'}]},
+      {ic:'onca', art:'', title:'Sem predador de topo', text:'O principal predador da reserva está sumindo. Que risco você prioriza monitorar?',
+        choices:[
+          {t:'Aumento de herbívoros e perda de plantas, a cascata trófica', eff:{pop:4, hab:5, apoio:0, dados:4}, fb:'Sem o predador, os herbívoros podem aumentar e comer demais a vegetação.'},
+          {t:'Só o número do próprio predador', eff:{pop:1, hab:0, apoio:0, dados:1}, fb:'Olhar só o predador ignora o efeito em cadeia.'},
+          {t:'Nenhum, a natureza se reequilibra', eff:{pop:-3, hab:-3, apoio:0, dados:-1}, fb:'O reequilíbrio não é garantido e pode levar a outro estado.'}]},
+      {ic:'mata', art:'', title:'Uma grande intervenção', text:'O orçamento permite uma grande obra na paisagem. Qual liga melhor as populações?',
+        choices:[
+          {t:'Corredores e pequenas manchas de mata servindo de trampolim', eff:{pop:5, hab:8, apoio:0, dados:0}, fb:'Corredores e trampolins de habitat deixam os animais circularem e trocarem genes.'},
+          {t:'Aumentar só a reserva isolada', eff:{pop:2, hab:3, apoio:0, dados:0}, fb:'Ajuda, mas sem conexão as populações continuam separadas.'},
+          {t:'Cercar a reserva', eff:{pop:-4, hab:-2, apoio:-1, dados:0}, fb:'Cercar bloqueia a passagem, o contrário do que se quer.'}]},
+      {ic:'filhote', art:'', title:'Poucos na natureza', text:'Restam pouquíssimos indivíduos de uma espécie na natureza. Como juntar cativeiro e natureza?',
+        choices:[
+          {t:'Criação em cativeiro ligada a um plano de soltura', eff:{pop:7, hab:1, apoio:1, dados:2}, fb:'O cativeiro funciona como seguro e fonte de animais para devolver à natureza, junto com a proteção do habitat.'},
+          {t:'Manter só no cativeiro, sem prazo para soltar nenhum animal', eff:{pop:-3, hab:0, apoio:-1, dados:1}, fb:'Sem soltura, a população livre não se recupera.'},
+          {t:'Investir só no habitat', eff:{pop:-1, hab:4, apoio:0, dados:0}, fb:'Sem uma reserva em cativeiro, uma catástrofe pode acabar com a última população.'}]},
+      {ic:'gente', art:'', title:'Quem vive no entorno', text:'Comunidades do entorno dependem dos recursos da área. Como reduzir a pressão sobre a fauna?',
+        choices:[
+          {t:'Gestão compartilhada com renda alternativa', eff:{pop:4, hab:3, apoio:8, dados:0}, fb:'Quando a comunidade ganha com a conservação, a caça e o desmatamento diminuem.'},
+          {t:'Só multar e reprimir', eff:{pop:1, hab:1, apoio:-7, dados:0}, fb:'Punir sem dar alternativa gera conflito e caça escondida.'},
+          {t:'Tirar as comunidades de toda a área, mesmo contra a vontade delas', eff:{pop:-1, hab:1, apoio:-10, dados:0}, fb:'Remoções forçadas causam dano social e resistência à conservação.'}]}
+    ]},
+  avancado: { label:'Avançado', title:'Escolhas com dois lados', start:{hab:55, apoio:56},
+    desc:'Agora todas as opções têm um custo. Pense em quem ganha e em quem perde. A meta continua a mesma.',
+    scenes:[
+      {ic:'clima', art:'', title:'Parque eólico', text:'Um parque de energia eólica, que ajuda o clima, vai ser instalado perto de uma caverna de morcegos. O que você recomenda?',
+        choices:[
+          {t:'Mudar a posição de algumas torres e parar as pás nas noites de mais voo', eff:{pop:6, hab:2, apoio:2, dados:3}, fb:'Morcegos e aves morrem nas pás. Escolher bem o local e parar as turbinas em horários críticos reduz as mortes.'},
+          {t:'Liberar como está', eff:{pop:-6, hab:-1, apoio:2, dados:0}, fb:'Energia limpa também precisa cuidar da fauna.'},
+          {t:'Barrar o parque', eff:{pop:2, hab:1, apoio:-4, dados:0}, fb:'Barrar protege os morcegos aqui, mas atrasa a troca de energia que também ajuda as espécies.'}]},
+      {ic:'gente', art:'', title:'Tráfico de aves', text:'Uma feira da cidade vende aves silvestres. Muita gente cria passarinho por tradição. O que fazer?',
+        choices:[
+          {t:'Fiscalizar a feira e fazer campanha nas escolas', eff:{pop:6, hab:0, apoio:3, dados:1}, fb:'O tráfico tira milhões de animais da natureza. Fiscalização e educação atacam a oferta e a procura.'},
+          {t:'Só prender os vendedores', eff:{pop:3, hab:0, apoio:-4, dados:0}, fb:'Prender ajuda, mas sem mudar a procura outros vendedores aparecem.'},
+          {t:'Deixar, porque é tradição de muitos anos na cidade', eff:{pop:-7, hab:0, apoio:1, dados:0}, fb:'Tradição não torna o tráfico menos danoso para as espécies.'}]},
+      {ic:'javali', art:'', title:'Gatos soltos', text:'Gatos de moradores entram na reserva e caçam aves e lagartos. Os donos não querem prender os gatos. O que você propõe?',
+        choices:[
+          {t:'Castração, gatos dentro de casa e conversa com os donos', eff:{pop:7, hab:0, apoio:3, dados:0}, fb:'Gatos soltos estão entre os predadores que mais matam aves pequenas no mundo.'},
+          {t:'Capturar todos os gatos e levar para longe da cidade sem avisar os donos', eff:{pop:3, hab:0, apoio:-7, dados:0}, fb:'Tira os gatos, mas cria revolta e eles voltam com novos donos.'},
+          {t:'Não fazer nada', eff:{pop:-5, hab:0, apoio:0, dados:0}, fb:'A caça dos gatos continua todos os dias.'}]},
+      {ic:'rio', art:'rio', title:'Barragem e peixes migradores', text:'Uma barragem vai cortar o caminho de peixes que sobem o rio para se reproduzir. Ela vai gerar energia para a região. O que você defende?',
+        choices:[
+          {t:'Manter trechos livres do rio e avaliar outra fonte de energia', eff:{pop:6, hab:6, apoio:-1, dados:1}, fb:'Para muitos peixes migradores, manter rios sem barragem é a forma mais segura de garantir a reprodução.'},
+          {t:'Aceitar com escada para peixes', eff:{pop:-2, hab:-3, apoio:2, dados:0}, fb:'Escadas funcionam mal para muitos migradores brasileiros.'},
+          {t:'Soltar alevinos de cativeiro todo ano', eff:{pop:-1, hab:-3, apoio:2, dados:0}, fb:'Repovoar não resolve a falta do caminho para a reprodução.'}]},
+      {ic:'dados', art:'', title:'Zoológico ou natureza', text:'Um zoológico quer receber parte dos últimos indivíduos de uma ave criticamente ameaçada. O que você decide?',
+        choices:[
+          {t:'Aceitar um grupo pequeno, com plano de reprodução e soltura', eff:{pop:5, hab:0, apoio:2, dados:3}, fb:'A ararinha-azul só voltou à natureza graças a aves criadas em cativeiro.'},
+          {t:'Mandar todas as aves para o zoológico', eff:{pop:-3, hab:-2, apoio:1, dados:1}, fb:'Sem população na natureza, o habitat deixa de ser protegido.'},
+          {t:'Recusar e deixar todas as aves na natureza', eff:{pop:-1, hab:1, apoio:0, dados:0}, fb:'Se algo der errado na natureza, não há reserva para recomeçar.'}]},
+      {ic:'clima', art:'', title:'O clima está mudando', text:'O aquecimento empurra a faixa de clima ideal de uma espécie para fora da reserva. Qual resposta?',
+        choices:[
+          {t:'Proteger refúgios climáticos e estudar a migração assistida', eff:{pop:5, hab:5, apoio:0, dados:3}, fb:'Refúgios e, em alguns casos, a mudança planejada de população ajudam a espécie a acompanhar o clima.'},
+          {t:'Manter a espécie onde está a qualquer custo', eff:{pop:-4, hab:0, apoio:0, dados:0}, fb:'Num clima inadequado, a mortalidade sobe.'},
+          {t:'Ignorar o clima, porque ele não interfere em onde as espécies vivem', eff:{pop:-4, hab:-1, apoio:0, dados:-3}, fb:'O clima é decisivo para onde as espécies conseguem viver.'}]}
+    ]},
+  carbonauta: { label:'Carbonauta', title:'Pesquisador de conservação', goal:65, start:{apoio:66, hab:56},
+    desc:'Decisões baseadas em genética de populações, estatística e ecologia. A meta sobe para 65.',
+    scenes:[
+      {ic:'dna', art:'', title:'Quantos indivíduos contam?', text:'Um modelo mostra risco alto de extinção nos próximos cem anos. Que informação refinar primeiro?',
+        choices:[
+          {t:'O tamanho efetivo da população', eff:{pop:5, hab:0, apoio:0, dados:8}, fb:'O tamanho efetivo, quase sempre menor que o número de animais, mede quantos de fato passam genes adiante.'},
+          {t:'Só o número de animais avistados nas trilhas durante o último ano', eff:{pop:-1, hab:0, apoio:0, dados:-1}, fb:'Contar animais superestima a saúde genética da população.'},
+          {t:'A cor dos pelos', eff:{pop:-2, hab:0, apoio:0, dados:-3}, fb:'Aparência não diz nada sobre a viabilidade.'}]},
+      {ic:'dna', art:'', title:'Misturar populações', text:'Você pensa em trazer genes de uma população muito diferente. Qual o principal risco?',
+        choices:[
+          {t:'Perder adaptações locais, a depressão por exogamia', eff:{pop:5, hab:0, apoio:0, dados:6}, fb:'Cruzar linhagens muito diferentes pode quebrar combinações de genes adaptadas ao lugar.'},
+          {t:'O custo do transporte', eff:{pop:-1, hab:0, apoio:0, dados:0}, fb:'Logística importa, mas o risco biológico é maior.'},
+          {t:'A cor das anilhas de marcação que vão ser usadas nos animais', eff:{pop:-2, hab:0, apoio:0, dados:-2}, fb:'Detalhe sem importância perto do risco genético.'}]},
+      {ic:'mata', art:'', title:'Floresta vazia', text:'A floresta continua de pé, mas os grandes animais sumiram pela caça. Que função ecológica restaurar primeiro?',
+        choices:[
+          {t:'A dispersão de sementes grandes por animais que comem frutos', eff:{pop:6, hab:6, apoio:0, dados:1}, fb:'Sem antas, muriquis e jacutingas, sementes grandes não se espalham e a floresta muda.'},
+          {t:'Só a cobertura vista por satélite', eff:{pop:-2, hab:-1, apoio:0, dados:-1}, fb:'De cima a floresta parece sadia, mas perdeu processos que dependem da fauna.'},
+          {t:'A beleza da paisagem para o turismo', eff:{pop:-2, hab:-1, apoio:2, dados:0}, fb:'Beleza não restaura as interações perdidas.'}]},
+      {ic:'dados', art:'', title:'Espécie difícil de ver', text:'Você precisa estimar quantos indivíduos existem de uma espécie que quase nunca aparece. Qual método é mais robusto?',
+        choices:[
+          {t:'Modelos que estimam a chance de detectar o animal', eff:{pop:1, hab:0, apoio:0, dados:10}, fb:'Esses modelos corrigem o fato de que nem todo animal presente é visto.'},
+          {t:'Uma contagem só, assumindo que todos foram vistos', eff:{pop:-1, hab:0, apoio:0, dados:-4}, fb:'Isso subestima a abundância de espécies discretas.'},
+          {t:'Um relato de um morador que viu um bicho parecido há alguns anos', eff:{pop:0, hab:0, apoio:1, dados:-4}, fb:'Um relato isolado não sustenta uma estimativa.'}]},
+      {ic:'gente', art:'', title:'Muitas espécies, pouco dinheiro', text:'Há muitas espécies em risco e pouca verba. Que critério usar para priorizar?',
+        choices:[
+          {t:'Combinar grau de ameaça e singularidade evolutiva', eff:{pop:5, hab:2, apoio:0, dados:5}, fb:'Abordagens como a EDGE priorizam espécies ameaçadas e sem parentes próximos, para preservar mais história evolutiva.'},
+          {t:'Ordem alfabética', eff:{pop:-2, hab:0, apoio:-1, dados:-3}, fb:'Critério sem base biológica.'},
+          {t:'Só a popularidade nas redes sociais, que ajuda a conseguir doações', eff:{pop:-1, hab:0, apoio:3, dados:-3}, fb:'Engajamento ajuda a captar recursos, mas não deve definir prioridades.'}]},
+      {ic:'mata', art:'', title:'Medindo conexão', text:'Você quer saber por onde os animais realmente passam entre os fragmentos. Qual abordagem usar?',
+        choices:[
+          {t:'Mapas de resistência da paisagem com várias rotas possíveis', eff:{pop:4, hab:6, apoio:0, dados:5}, fb:'Esses modelos consideram estradas, pastos e cidades, e mostram vários caminhos possíveis.'},
+          {t:'A distância em linha reta', eff:{pop:-1, hab:-1, apoio:0, dados:-2}, fb:'Linha reta ignora as barreiras do caminho.'},
+          {t:'Somar a área de todos os fragmentos de mata da região', eff:{pop:-1, hab:0, apoio:0, dados:-2}, fb:'Somar áreas mede quantidade de habitat, não conexão.'}]}
+    ]}
+};
+const NOTE = 'Os números dos indicadores são uma escala do jogo, de 0 a 100. Eles mostram se cada decisão ajuda ou atrapalha, não são medidas reais.';
 
-async function submitScore(){
-  const name=($('playerName').value||"").trim().slice(0,18) || "Anônimo";
-  const score=window._finalScore||0;
-  const note=$('rankNote');
-  note.textContent="Enviando…";
-  const db=await getDB();
-  if(!db){ note.textContent="Ranking offline no momento — sua pontuação local foi "+score+"."; return; }
-  try{
-    const { collection, addDoc, serverTimestamp } = _fs;
-    await addDoc(collection(db,"games",GAME_ID,"scores"),{
-      name, score, level, seconds, ts: serverTimestamp()
-    });
-    note.textContent="Pontuação enviada! 🎉";
-    loadLeaderboard();
-  }catch(e){ console.warn(e); note.textContent="Não foi possível enviar agora, mas o jogo continua normal."; }
+
+/* ---------- motor comum dos jogos de decisao ---------- */
+const KEYS = Object.keys(LEVELS);
+let level = KEYS[0], scenes = [], idx = 0, v = {}, path = [], score = 0, bads = 0;
+let startTime = null, timerInt = null, elapsed = 0, done = false, chosen = false, scoreSaved = false, db = null, fsFns = null;
+const st = () => ({score:Math.max(0,score), bads, seconds:elapsed, decisions:path.length, meters:Object.assign({}, v), goalMet:goalMet()});
+const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const clamp = x => Math.max(0, Math.min(100, x));
+const net = c => Object.entries(c.eff||{}).reduce((a,[k,d])=>a+d,0);
+const quality = c => { const n = net(c); return n >= (typeof GOOD_MIN!=='undefined'?GOOD_MIN:10) ? 'good' : n > 0 ? 'mid' : 'bad'; };
+const goalMin = () => (LEVELS[level].goal ?? GOAL);
+const goalMet = () => METERS.every(m => v[m.id] >= goalMin());
+function buildLevels(){ $('levels').innerHTML = KEYS.map(k=>`<button data-lvl="${k}" onclick="setLevel('${k}')">${LEVELS[k].label}</button>`).join(''); }
+function setLevel(l){
+  level = l;
+  document.querySelectorAll('.levels button').forEach(b=>b.classList.toggle('active',b.dataset.lvl===l));
+  $('rankLevel').textContent = LEVELS[l].label;
+  restart(); loadRanking();
 }
-
-async function loadLeaderboard(){
-  const body=$('lbBody');
-  body.innerHTML='<tr><td colspan="3" class="note">Carregando ranking…</td></tr>';
-  const db=await getDB();
-  if(!db){ body.innerHTML='<tr><td colspan="3" class="note">Ranking offline no momento.</td></tr>'; return; }
-  try{
-    const { collection, query, orderBy, limit, getDocs } = _fs;
-    // BUG evitado: sem where+orderBy combinados. Filtra nível no cliente.
-    const q=query(collection(db,"games",GAME_ID,"scores"), orderBy("score","desc"), limit(80));
-    const snap=await getDocs(q);
-    const rows=[];
-    snap.forEach(d=>{const v=d.data(); if(v.level===level) rows.push(v);});
-    rows.sort((a,b)=>b.score-a.score);
-    const top=rows.slice(0,10);
-    if(!top.length){ body.innerHTML='<tr><td colspan="3" class="note">Seja o primeiro deste nível!</td></tr>'; return; }
-    body.innerHTML="";
-    top.forEach((r,i)=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML='<td class="pos">'+(i+1)+'</td><td>'+escapeHtml(r.name||"Anônimo")+'</td><td class="sc">'+(r.score||0)+'</td>';
-      body.appendChild(tr);
-    });
-  }catch(e){ console.warn(e); body.innerHTML='<tr><td colspan="3" class="note">Não foi possível carregar o ranking agora.</td></tr>'; }
+function restart(){
+  clearInterval(timerInt); timerInt=null; startTime=null; elapsed=0; done=false; scoreSaved=false; score=0; bads=0; path=[]; idx=0;
+  $('timer').textContent='0s';
+  const L = LEVELS[level];
+  v = Object.assign({}, START, L.start||{});
+  scenes = L.scenes;
+  renderScene();
 }
-
-function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-
-/* ============ EXPOR AO WINDOW (onclick) ============ */
-window.setLevel=setLevel;
-window.nextNode=nextNode;
-window.restart=restart;
-window.submitScore=submitScore;
-
-function init(){ setLevel('basico'); }
-window.init=init;
-init();
+function hud(){ $('hits').textContent = Math.min(path.length+ (chosen?0:1), scenes.length)+'/'+scenes.length; $('errs').textContent = bads; $('score').textContent = score; }
+function startTimer(){
+  if(timerInt||done) return;
+  startTime = Date.now();
+  timerInt = setInterval(()=>{ elapsed = Math.floor((Date.now()-startTime)/1000); $('timer').textContent = elapsed+'s'; }, 500);
+}
+function metersHTML(deltas){
+  return `<div class="meters">${METERS.map(m=>{ const d = deltas && deltas[m.id];
+    return `<div><div class="mtop"><span>${m.label}${d ? `<span class="delta ${d>0?'up':'down'}">${d>0?'+':''}${d}</span>` : ''}</span><b>${Math.round(v[m.id])}</b></div>
+      <div class="mbar"><i style="width:${v[m.id]}%;background:${m.color}"></i><u style="left:${goalMin()}%"></u></div></div>`; }).join('')}</div>`;
+}
+function goalHTML(deltas){
+  return `<div class="goal"><h4>Meta: terminar com todos os indicadores em ${goalMin()} ou mais. A risca preta marca a meta.</h4><div id="meters">${metersHTML(deltas)}</div></div>`;
+}
+function renderScene(){
+  const L = LEVELS[level], sc = scenes[idx];
+  chosen = false;
+  const opts = shuffle(sc.choices.map((c,i)=>Object.assign({i}, c)));
+  $('stage').innerHTML = `
+    <div class="qhead"><div class="qnum">${L.label} · situação ${idx+1} de ${scenes.length}</div>
+      <div class="qtext">${L.title}</div>${idx===0 ? `<div class="qdesc">${L.desc}</div>` : ''}</div>
+    ${goalHTML()}
+    <div class="scene" id="scene">${RENDER(v, sc.art)}</div>
+    <div class="sc-title">${SCENE_ICONS[sc.ic] || ''}<span>${sc.title}</span></div>
+    <div class="sc-text">${sc.text}</div>
+    <div class="opts">${opts.map((c,k)=>`<button class="opt" data-i="${c.i}" onclick="choose(${c.i})"><span class="k">${'ABCD'[k]}</span><span>${c.t}</span></button>`).join('')}</div>
+    <div class="fb" id="fb" aria-live="polite">Pense nas consequências. O efeito de cada escolha só aparece depois que você decide.</div>
+    <button class="btn next" id="nextBtn" onclick="nextScene()">Próxima situação</button>
+    ${typeof NOTE!=='undefined' && NOTE ? `<p class="modelnote">${NOTE}</p>` : ''}`;
+  hud();
+}
+function choose(i){
+  if(chosen||done) return; chosen = true; startTimer();
+  const sc = scenes[idx], c = sc.choices[i], q = quality(c), n = net(c);
+  const deltas = {};
+  Object.entries(c.eff||{}).forEach(([k,d])=>{ const before = v[k]; v[k] = clamp(v[k]+d); deltas[k] = Math.round(v[k]-before); });
+  const gain = 10*n; score += gain;
+  if(q==='bad') bads++;
+  path.push({scene:sc, c, q});
+  const best = sc.choices.reduce((a,b)=>net(b)>net(a)?b:a);
+  document.querySelectorAll('.opt').forEach(b=>{ b.disabled = true; const ci = +b.dataset.i;
+    if(ci===i) b.classList.add(q); else b.classList.add('dim');
+    if(sc.choices[ci]===best && ci!==i) { b.classList.remove('dim'); b.classList.add('best'); } });
+  $('meters').innerHTML = metersHTML(deltas);
+  $('scene').innerHTML = RENDER(v, sc.art);
+  const tag = document.createElement('span'); tag.className = 'lost'+(gain>=0?' gain':''); tag.textContent = (gain>=0?'+':'')+gain; $('stage').appendChild(tag); setTimeout(()=>tag.remove(),1500);
+  const head = q==='good' ? 'Boa decisão' : q==='mid' ? 'Ajuda, mas não resolve' : 'Escolha ruim';
+  const fb = $('fb'); fb.className = 'fb '+(q==='good'?'ok':q==='mid'?'mid':'no');
+  fb.innerHTML = `<b>${head}. ${gain>=0?'Ganhou':'Perdeu'} ${Math.abs(gain)} pontos.</b>${c.fb}${q!=='good' ? ` <i>A melhor opção está marcada com borda tracejada.</i>` : ''}`;
+  const nb = $('nextBtn'); nb.textContent = idx+1>=scenes.length ? 'Ver o resultado' : 'Próxima situação'; nb.classList.add('show');
+  hud();
+}
+function nextScene(){ idx++; if(idx>=scenes.length){ finish(); return; } renderScene(); window.scrollTo({top:$('stage').getBoundingClientRect().top+scrollY-80, behavior:'smooth'}); }
+function finish(){ done = true; clearInterval(timerInt); timerInt=null; renderEnd(); }
+function renderEnd(){
+  const ok = goalMet(), low = METERS.filter(m=>v[m.id] < goalMin()).map(m=>m.label.toLowerCase());
+  const m = ok ? (typeof END_OK!=='undefined'?END_OK:['Meta cumprida!','Suas decisões deixaram todos os indicadores acima da meta.'])
+               : (typeof END_NO!=='undefined'?END_NO:['Meta não cumprida','Algumas decisões deixaram indicadores abaixo da meta.']);
+  $('stage').innerHTML = `
+    <div class="end">
+      <h2>${m[0]}</h2><p>${m[1]}</p>
+      <div class="verdict ${ok?'ok':'no'}">${ok ? 'Todos os indicadores terminaram em '+goalMin()+' ou mais.' : 'Ficaram abaixo da meta: '+low.join(', ')+'.'}</div>
+      ${goalHTML()}
+      <div class="scene">${RENDER(v, 'fim')}</div>
+      <div class="stats">
+        <div class="stat">${score}<span>Pontos</span></div>
+        <div class="stat">${path.filter(p=>p.q==='good').length}/${path.length}<span>Boas decisões</span></div>
+        <div class="stat">${bads}<span>Escolhas ruins</span></div>
+        <div class="stat">${elapsed}s<span>Tempo</span></div>
+      </div>
+      ${typeof SCORE_NOTE!=='undefined' ? `<p style="font-size:.85rem">${SCORE_NOTE}</p>` : ''}
+      <div class="savebox">
+        <input id="playerName" maxlength="20" placeholder="Seu nome (até 20 letras)">
+        <button class="btn" id="saveBtn" onclick="saveScore()">Salvar no ranking</button>
+      </div>
+      <p id="saveStatus" style="margin-top:8px;font-size:.85rem"></p>
+      <button class="btn ghost" style="margin-top:10px" onclick="restart()">Jogar de novo</button>
+      <div class="review"><h3>Suas decisões</h3><ul>${path.map(p=>{ const best = p.scene.choices.reduce((a,b)=>net(b)>net(a)?b:a);
+        return `<li><b>${p.scene.title}.</b> Você escolheu: <span class="c ${p.q}">${p.c.t}</span>.${p.q!=='good' ? ` Melhor opção: <span class="c good">${best.t}</span>. ${best.fb}` : ''}</li>`; }).join('')}</ul></div>
+    </div>`;
+  hud();
+}
+async function initFirebase(){
+  try{
+    const appM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const fsM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    db=fsM.getFirestore(appM.initializeApp(firebaseConfig)); fsFns=fsM;
+    loadRanking();
+  }catch(e){
+    $('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';
+    $('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';
+  }
+}
+async function saveScore(){
+  if(scoreSaved) return;
+  const name=$('playerName').value.trim(), stt=$('saveStatus');
+  if(!name){stt.textContent='Digite seu nome primeiro.';return;}
+  if(!db){stt.textContent='Sem conexão com o ranking. Seu resultado não foi enviado.';return;}
+  try{
+    $('saveBtn').disabled=true;
+    await fsFns.addDoc(fsFns.collection(db,'games',GAME_ID,'scores'), saveDoc(name.slice(0,20), st(), level, fsFns));
+    scoreSaved=true; stt.textContent='Salvo no Ranking Global!'; loadRanking();
+  }catch(e){ $('saveBtn').disabled=false; stt.textContent='Erro ao salvar. Verifique a internet e tente de novo.'; }
+}
+async function loadRanking(){
+  if(!db) return;
+  const list=$('rankList'), asked=level;
+  try{
+    const q=fsFns.query(fsFns.collection(db,'games',GAME_ID,'scores'),fsFns.where(RANK.field,'==',RANK.val(asked)),fsFns.limit(1000));
+    const snap=await fsFns.getDocs(q);
+    if(asked!==level) return;
+    const rows=[]; snap.forEach(d=>rows.push(d.data()));
+    const sec = r => Number(r.seconds ?? r.time ?? r.tempo) || 0, scr = r => Number(r.score) || 0;
+    rows.sort((a,b)=> (scr(b)-scr(a)) || (sec(a)-sec(b)));
+    if(!rows.length){list.innerHTML='<li><span>Seja o primeiro do ranking!</span></li>';return;}
+    list.innerHTML=rows.slice(0,10).map((r,i)=>
+      `<li><span><span class="pos">${i+1}º</span>${esc(r.name||'?')}</span><span>${scr(r)} pts · ${sec(r)}s</span></li>`).join('');
+    $('rankNote').textContent = '';
+  }catch(e){ list.innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>'; }
+}
+buildLevels();
+setLevel(KEYS[0]);
+initFirebase();
 </script>
 </body>
 </html>
