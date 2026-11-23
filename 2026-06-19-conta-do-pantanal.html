@@ -2,340 +2,767 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Conta do Pantanal 📐 — Cálculo de Carbono</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conta do Pantanal</title>
 <style>
-:root{--bg1:#001a33;--bg2:#003366;--accent:#38bdf8;--accent2:#0284c7;--ok:#22c55e;--err:#ef4444}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:"Segoe UI",system-ui,sans-serif;min-height:100vh;background:linear-gradient(160deg,var(--bg1),var(--bg2));color:#e0f2fe;display:flex;flex-direction:column;align-items:center;padding:16px}
-h1{font-size:clamp(1.4rem,4vw,2.1rem);text-align:center;margin:10px 0 2px}
-h1 span{color:var(--accent)}
-.tagline{text-align:center;opacity:.75;font-size:.88rem;margin-bottom:12px}
-.levels{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
-.lvl{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:6px 18px;cursor:pointer;font-size:.85rem;color:#e0f2fe;transition:.2s}
-.lvl:hover{background:rgba(255,255,255,.18)}
-.lvl.active{background:var(--accent);color:#001a33;font-weight:700;border-color:transparent}
-.hud{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
-.hud-item{background:rgba(255,255,255,.08);border-radius:10px;padding:6px 14px;font-size:.85rem;text-align:center}
-.hud-item span{color:var(--accent);font-weight:700}
-.formula-box{width:min(740px,98vw);background:rgba(255,255,255,.05);border-radius:12px;padding:14px;margin-bottom:12px;font-size:.82rem;line-height:1.55;opacity:.85;font-family:monospace}
-.formula-box strong{color:var(--accent)}
-.sim-grid{width:min(740px,98vw);display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-@media(max-width:520px){.sim-grid{grid-template-columns:1fr}}
-.panel{background:rgba(255,255,255,.06);border-radius:14px;padding:18px}
-.panel h3{font-size:.88rem;opacity:.7;margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px}
-.slider-row{margin-bottom:14px}
-.slider-label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:4px}
-.slider-val{color:var(--accent);font-weight:700}
-input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
-select{width:100%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 12px;color:#e0f2fe;font-size:.88rem;cursor:pointer}
-.metric{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:.85rem}
-.metric:last-child{border-bottom:none}
-.metric-val{font-weight:700;font-size:.95rem;color:var(--accent)}
-.metric-formula{font-size:.72rem;opacity:.55;font-family:monospace;display:block;margin-top:2px}
-.challenge{width:min(740px,98vw);background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.25);border-radius:14px;padding:16px;margin-bottom:12px}
-.challenge h3{color:var(--accent);font-size:.92rem;margin-bottom:6px}
-.challenge p{font-size:.88rem;line-height:1.45;opacity:.9}
-.challenge .hint{font-size:.8rem;opacity:.6;margin-top:6px;font-style:italic}
-.verify-btn{margin-top:10px;background:var(--accent);color:#001a33;border:none;border-radius:8px;padding:8px 22px;font-weight:700;cursor:pointer;font-size:.9rem}
-.result-msg{margin-top:8px;padding:8px 12px;border-radius:8px;font-size:.88rem;display:none}
-.result-msg.ok{background:rgba(34,197,94,.15);color:#86efac}
-.result-msg.err{background:rgba(239,68,68,.15);color:#fca5a5}
-.ranking{width:min(740px,98vw);background:rgba(255,255,255,.05);border-radius:14px;padding:16px;margin-bottom:14px}
-.ranking h3{font-size:.88rem;opacity:.7;margin-bottom:10px}
-.rank-list{display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto}
-.rank-item{display:flex;justify-content:space-between;font-size:.8rem;padding:5px 8px;background:rgba(255,255,255,.05);border-radius:6px}
-.endscreen{display:none;width:min(740px,98vw);background:rgba(255,255,255,.06);border-radius:16px;padding:24px;text-align:center;margin-bottom:14px}
-.endscreen h2{font-size:1.5rem;margin-bottom:8px}
-.score-big{font-size:2.6rem;font-weight:800;color:var(--accent)}
-.save-form{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
-.save-form input{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:8px 14px;color:#e0f2fe;font-size:.9rem;width:200px}
-.save-form button{background:var(--accent);color:#001a33;border:none;border-radius:8px;padding:8px 20px;font-weight:700;cursor:pointer}
-.restart-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 22px;color:#e0f2fe;cursor:pointer;font-size:.9rem;margin-top:8px}
-footer{margin-top:20px;opacity:.6;font-size:.78rem;text-align:center;line-height:1.6}
+  :root{
+    --ink:#0f2f44; --soft:#4b6a7d; --line:#dbe7ee; --ok:#16a34a; --err:#dc2626;
+    --t50:#f0fdfa; --t100:#ccfbf1; --t300:#5eead4; --t500:#14b8a6; --main:#0d9488; --deep:#0f766e; --dark:#115e59; --glow:rgba(13,148,136,.28);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+    min-height:100vh;color:var(--ink);background:#ffffff;
+    display:flex;flex-direction:column;align-items:center;padding:12px 14px 40px;
+  }
+  .top{width:100%;max-width:1040px;display:flex;justify-content:flex-start}
+  .hub{display:inline-flex;align-items:center;gap:6px;color:var(--deep);text-decoration:none;
+    font-weight:600;font-size:.9rem;padding:7px 12px;border-radius:20px;border:1.5px solid var(--line)}
+  .hub:hover{background:var(--tint)}
+  .hub svg{width:14px;height:14px}
+  header{text-align:center;max-width:720px;margin-top:6px}
+  h1{font-size:clamp(1.45rem,5vw,2.2rem);display:flex;align-items:center;justify-content:center;gap:10px}
+  h1 svg{width:.95em;height:.95em}
+  h1 .spark{color:var(--main)}
+  .sub{color:var(--soft);font-size:.95rem;margin:4px 0 12px}
+  .levels{display:flex;gap:8px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+  .levels button{border:2px solid var(--line);background:#fff;color:var(--ink);padding:8px 16px;border-radius:30px;
+    font-size:.92rem;cursor:pointer;transition:.2s;font-weight:600;font-family:inherit}
+  .levels button{border-color:var(--main);color:var(--deep)}
+  .levels button:hover{background:var(--tint)}
+  .levels button.active{background:var(--main);border-color:var(--main);color:#fff;box-shadow:0 4px 12px var(--glow)}
+  .hud{display:flex;gap:8px;justify-content:center;align-items:center;margin:4px 0 12px;font-size:.9rem;flex-wrap:wrap}
+  .hud span{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:30px;color:#fff;font-weight:600}
+  .hud b{font-size:1.05rem;font-weight:800}
+  .hud .h1{background:#16a34a} .hud .h2{background:#f97316} .hud .h3{background:#7c3aed} .hud .h4{background:#0ea5e9}
+
+  .card{width:min(680px,100%);background:#fff;border:3px solid var(--main);border-radius:22px;
+    padding:0 0 20px;box-shadow:0 12px 30px var(--glow);overflow:hidden}
+  #stage{padding:0 20px}
+  .strip{display:flex;gap:5px;justify-content:center;align-items:flex-end;flex-wrap:wrap;min-height:54px;
+    padding:10px 10px 8px;background:linear-gradient(180deg,#e0f2fe 0%,#f0f9ff 62%,var(--pale) 62%,var(--pale) 100%)}
+  .slot{width:36px;height:36px;display:flex;align-items:center;justify-content:center}
+  .slot svg{width:100%;height:100%}
+  .slot.empty{align-items:flex-end;padding-bottom:3px}
+  .slot.empty::after{content:"";width:11px;height:11px;border-radius:50%;background:#fff;border:3px solid var(--main);opacity:.45}
+  .slot.now::after{opacity:1;background:var(--acc);border-color:#fff;box-shadow:0 0 0 3px var(--acc);animation:pulse 1.1s infinite}
+  @keyframes pulse{50%{transform:scale(1.25)}}
+  .slot.pop svg{animation:grow .45s cubic-bezier(.3,1.5,.5,1)}
+  @keyframes grow{from{transform:scale(.2) translateY(8px);opacity:0}to{transform:none;opacity:1}}
+  .qhead{margin:0 -20px 16px;padding:14px 20px 16px;background:linear-gradient(135deg,var(--main),var(--deep));color:#fff}
+  .qnum{display:inline-block;font-size:.74rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+    background:rgba(255,255,255,.22);padding:3px 10px;border-radius:20px}
+  .qtext{font-size:1.22rem;font-weight:700;line-height:1.35;margin-top:8px}
+  .opts{display:grid;gap:9px}
+  .opt{display:flex;gap:12px;align-items:center;text-align:left;width:100%;background:#fff;border:2px solid var(--line);
+    border-radius:14px;padding:11px 14px;font-size:1rem;line-height:1.35;color:var(--ink);cursor:pointer;
+    font-family:inherit;transition:border-color .15s,background .15s,transform .15s}
+  .opt{--c:#0ea5e9;--ct:#f0f9ff;border-color:var(--c);background:var(--ct);font-weight:500}
+  .opt:nth-child(2){--c:#f97316;--ct:#fff7ed} .opt:nth-child(3){--c:#8b5cf6;--ct:#f5f3ff} .opt:nth-child(4){--c:#ec4899;--ct:#fdf2f8}
+  .opt .k{flex:none;width:34px;height:34px;border-radius:50%;background:var(--c);color:#fff;
+    font-weight:800;display:flex;align-items:center;justify-content:center;font-size:1rem}
+  .opt:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(15,47,68,.14)}
+  .opt:disabled{cursor:default}
+  .opt.right{border-color:var(--ok);background:#dcfce7;font-weight:700}
+  .opt.right .k{background:var(--ok);color:#fff}
+  .opt.wrong{border-color:var(--err);background:#fee2e2;animation:shake .3s}
+  .opt.wrong .k{background:var(--err);color:#fff}
+  .opt.dim{opacity:.5;background:#fff;border-color:var(--line)} .opt.dim .k{background:#94a3b8}
+  @keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+  .fb{margin-top:14px;border-radius:14px;padding:12px 14px;font-size:.96rem;line-height:1.45;background:#fffbeb;
+    border:2px dashed #fcd34d;min-height:52px;color:#92400e}
+  .fb.ok{background:#dcfce7;border:2px solid var(--ok);color:var(--ink)}
+  .fb.no{background:#fee2e2;border:2px solid var(--err);color:var(--ink)}
+  .fb b{display:block;margin-bottom:2px}
+  .fb.ok>b{color:#166534;font-size:1.05rem} .fb.no>b{color:#b91c1c;font-size:1.05rem}
+  .fb .more{margin-top:8px;padding:8px 10px;border-radius:10px;background:#fff} .fb .more b{color:#166534}
+  .fb .more{margin-top:6px}
+  .btn{background:var(--main);color:#fff;border:0;padding:11px 20px;border-radius:12px;font-weight:700;cursor:pointer;
+    font-size:1rem;font-family:inherit}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--line)}
+  .next{display:none;margin:14px auto 0;background:var(--acc);font-size:1.05rem;padding:12px 26px;box-shadow:0 5px 14px rgba(15,47,68,.2)}
+  .next.show{display:block}
+
+  .end{text-align:center;padding-top:16px}
+  .end h2{font-size:1.5rem;margin:6px 0 4px;color:var(--deep)}
+  .end p{color:var(--soft)}
+  .stats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+  .stat{background:#16a34a;border-radius:14px;padding:9px 16px;font-weight:800;font-size:1.2rem;color:#fff;min-width:84px}
+  .stat:nth-child(2){background:#7c3aed} .stat:nth-child(3){background:#f97316} .stat:nth-child(4){background:#0ea5e9}
+  .stat span{display:block;font-size:.72rem;font-weight:600;color:#fff;opacity:.92}
+  .savebox{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+  .savebox input{padding:10px 12px;border-radius:10px;border:2px solid var(--line);font-size:1rem;width:220px;font-family:inherit}
+  .review{text-align:left;margin-top:16px;border-top:2px solid var(--line);padding-top:12px}
+  .review h3{font-size:1rem;margin-bottom:6px}
+  .review li{list-style:none;padding:8px 0;border-bottom:1px solid var(--line);font-size:.93rem;line-height:1.4}
+  .review li:last-child{border-bottom:0}
+  .review .a{color:#166534;font-weight:700}
+
+  .ranking{margin-top:16px;width:min(680px,100%);background:#fff;border:3px solid #fbbf24;border-radius:18px;padding:0 16px 12px;overflow:hidden}
+  .ranking h3{font-size:1.02rem;margin:0 -16px 8px;padding:10px 16px;background:#fbbf24;color:#451a03}
+  .ranking h3 span{color:#fff;background:#b45309;padding:2px 10px;border-radius:20px;font-size:.88rem}
+  .ranking li:nth-child(1) .pos{color:#b45309} .ranking li:nth-child(1){font-weight:700}
+  .ranking ol{list-style:none}
+  .ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.93rem}
+  .ranking li:last-child{border-bottom:0}
+  .ranking .pos{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+  .note{font-size:.8rem;color:var(--soft);margin-top:6px}
+  footer{margin-top:22px;font-size:.8rem;color:var(--soft);text-align:center;line-height:1.6}
+  footer .credit{font-weight:700;color:var(--ink)}
+
+
+  /* ---- cor unica por jogo: todos os destaques sao tons da mesma cor ---- */
+  :root{--tint:var(--t100);--pale:var(--t300);--acc:var(--dark)}
+  .hub:hover{background:var(--t50)}
+  .levels button{border-color:var(--t300)}
+  .hud .h1{background:var(--t500)} .hud .h2{background:var(--main)} .hud .h3{background:var(--deep)} .hud .h4{background:var(--dark)}
+  .strip{background:linear-gradient(180deg,var(--t50) 0%,var(--t100) 62%,var(--t300) 62%,var(--t300) 100%)}
+  .qhead{background:linear-gradient(135deg,var(--main),var(--dark))}
+  .opt,.opt:nth-child(2),.opt:nth-child(3),.opt:nth-child(4){--c:var(--main);--ct:var(--t50);border-color:var(--t300)}
+  .opt:not(:disabled):hover{border-color:var(--main);background:var(--t100)}
+  .fb{background:var(--t50);border:2px dashed var(--t300);color:var(--deep)}
+  .next{background:var(--deep)}
+  .stat{background:var(--t500)} .stat:nth-child(2){background:var(--main)} .stat:nth-child(3){background:var(--deep)} .stat:nth-child(4){background:var(--dark)}
+  .ranking{border-color:var(--main)}
+  .ranking h3{background:var(--main);color:#fff}
+  .ranking h3 span{background:var(--dark);color:#fff}
+  .ranking li:nth-child(1) .pos{color:var(--deep)}
+  @media(max-width:560px){
+    body{padding:8px 8px 32px}
+    .sub{display:none}
+    h1{margin-bottom:8px}
+    .hub{padding:4px 10px;font-size:.82rem}
+    .levels button{padding:7px 12px;font-size:.85rem}
+    .hud{gap:10px;font-size:.86rem;margin:2px 0 8px}
+    .card{padding:0 0 14px;border-radius:18px}
+    .qtext{font-size:1.05rem;margin-bottom:10px}
+    .opt{padding:9px 10px;font-size:.94rem;gap:9px}
+    .opt .k{width:28px;height:28px;font-size:.86rem}
+    .slot{width:27px;height:27px}
+    .strip{min-height:44px;padding:8px 6px 6px}
+    .qhead{margin:0 -12px 12px;padding:10px 12px 12px}
+    #stage{padding:0 12px}
+    .hud span{padding:4px 9px;font-size:.78rem} .hud b{font-size:.92rem} .hud{gap:5px}
+    .fb{font-size:.9rem}
+  }
+  @media(prefers-reduced-motion:reduce){.slot.pop svg,.opt.wrong{animation:none}}
+
+  /* ---------- simulacao com controles ---------- */
+  .card{width:min(720px,100%)} .ranking{width:min(720px,100%)}
+  .qtext{font-size:1.18rem}
+  .qdesc{font-size:.96rem;line-height:1.45;margin-top:6px;opacity:.96}
+  .goalbox{margin-top:12px;background:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+  .goalbox h4{display:flex;align-items:center;gap:8px;font-size:.8rem;letter-spacing:.8px;text-transform:uppercase;color:var(--deep);margin-bottom:8px}
+  .goalbox h4 svg{width:22px;height:22px}
+  .goals{display:grid;gap:7px}
+  .gchip{display:flex;align-items:center;gap:10px;font-size:1.08rem;font-weight:800;color:var(--ink);background:var(--t50);border:2px solid var(--t300);border-radius:12px;padding:8px 12px;line-height:1.25}
+  .gchip i{flex:none;width:26px;height:26px;border-radius:50%;border:3px solid var(--t300);background:#fff;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:.95rem;color:#fff}
+  .gchip.ok{border-color:var(--ok);background:#dcfce7} .gchip.ok i{background:var(--ok);border-color:var(--ok)}
+  .gchip.no{border-color:var(--err);background:#fee2e2} .gchip.no i{background:var(--err);border-color:var(--err)}
+  .gchip.ok i::before{content:"\2713"} .gchip.no i::before{content:"\00d7"}
+  .tip{margin:0 0 14px;padding:10px 12px;border-radius:12px;background:var(--t50);border:2px dashed var(--t300);color:var(--deep);font-size:.92rem;line-height:1.4}
+  .tip b{color:var(--dark)}
+  .sliders{display:grid;gap:10px;margin-bottom:14px}
+  .srow{display:grid;grid-template-columns:58px 1fr;gap:12px;align-items:center;background:#fff;border:2px solid var(--t300);border-radius:16px;padding:10px 12px}
+  .sico{position:relative;width:58px;height:58px;border-radius:14px;background:var(--t50);border:2px solid var(--t300);overflow:hidden;display:flex;align-items:center;justify-content:center}
+  .sico::before{content:"";position:absolute;left:0;right:0;bottom:0;height:calc(var(--v,.5)*100%);background:var(--t300);transition:height .15s}
+  .sico svg{position:relative;width:38px;height:38px}
+  .shead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+  .shead label{font-weight:800;font-size:1rem;color:var(--ink)}
+  .shead output{font-weight:800;color:#fff;background:var(--main);border-radius:20px;padding:3px 12px;font-size:.9rem;white-space:nowrap}
+  .sends{display:flex;justify-content:space-between;font-size:.76rem;font-weight:700;color:var(--deep);margin-top:4px}
+  .shelp{font-size:.84rem;color:var(--soft);margin-top:3px;line-height:1.35}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:12px;border-radius:10px;background:var(--t100);border:1.5px solid var(--t300);outline-offset:4px;display:block}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:var(--main);border:3px solid #fff;box-shadow:0 2px 6px rgba(15,47,68,.35);cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:var(--main);border:3px solid #fff;box-shadow:0 2px 6px rgba(15,47,68,.35);cursor:pointer}
+  input[type=range]:disabled{opacity:.6}
+  .srow.locked{background:var(--t50);border-style:dashed}
+  .lock{font-size:.84rem;font-weight:800;color:var(--deep);background:#fff;border:2px dashed var(--t300);border-radius:10px;padding:5px 10px;display:inline-block}
+  .tries{display:flex;align-items:center;justify-content:center;gap:8px;font-size:.9rem;font-weight:700;color:var(--deep);margin:2px 0 10px}
+  .tries i{width:16px;height:16px;border-radius:50%;background:var(--main);display:inline-block}
+  .tries i.used{background:#fff;border:3px solid var(--t300)}
+  .viz{margin-bottom:12px}
+  .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:14px}
+  .metric{border-radius:14px;padding:10px 12px;background:var(--t50);border:2px solid var(--t300);border-left-width:8px}
+  .metric b{display:block;font-size:1.45rem;color:var(--dark);line-height:1.1}
+  .metric span{font-size:.8rem;color:var(--soft);font-weight:600}
+  .metric.q b{color:var(--t300)}
+  .metric.ok{border-left-color:var(--ok)} .metric.warn{border-left-color:#f59e0b} .metric.danger{border-left-color:var(--err)}
+  .verify{display:block;margin:0 auto;background:var(--deep);font-size:1.05rem;padding:12px 26px;box-shadow:0 5px 14px rgba(15,47,68,.2)}
+  .modelnote{font-size:.78rem;color:var(--soft);text-align:center;margin-top:12px;line-height:1.4}
+  @media(max-width:560px){
+    .srow{grid-template-columns:44px 1fr;gap:8px;padding:8px}
+    .sico{width:44px;height:44px} .sico svg{width:28px;height:28px}
+    .shead label{font-size:.92rem} .shead output{font-size:.8rem;padding:3px 8px}
+    .gchip{font-size:.96rem;padding:7px 9px}
+    .metrics{grid-template-columns:1fr 1fr}
+    .metric b{font-size:1.2rem}
+  }
+  .scene{width:100%;height:auto;display:block;border-radius:14px;border:2px solid var(--t300);background:#fff}
+  .pl{transform-box:fill-box;transform-origin:50% 100%;animation:sway 3.2s ease-in-out infinite alternate}
+  @keyframes sway{from{rotate:-2deg}to{rotate:2deg}}
+  .pop{animation:popin .5s ease-out both;transform-box:fill-box;transform-origin:50% 50%}
+  @keyframes popin{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+  .blab{font:700 14px Segoe UI,system-ui,sans-serif;fill:#fff}
+  .bnum{font:800 20px Segoe UI,system-ui,sans-serif;fill:#fff}
+  .qlab{font:700 15px Segoe UI,system-ui,sans-serif;fill:var(--deep)}
+  .ylab{font:700 13px Segoe UI,system-ui,sans-serif;fill:var(--deep)}
+  .landcap{display:flex;justify-content:space-between;gap:10px;font-size:.86rem;color:var(--soft);margin-top:6px;flex-wrap:wrap}
+  .fbox{margin-top:10px;background:var(--t50);border:2px dashed var(--t300);border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;gap:3px;font-size:.92rem;color:var(--dark)}
+  .fbox b{font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--deep);margin-bottom:2px}
+  @media(prefers-reduced-motion:reduce){.pl,.pop{animation:none}}
 </style>
 </head>
 <body>
-<h1>📐 <span>Conta do Pantanal</span></h1>
-<p class="tagline">Cálculo de Sequestro de Carbono · Matemática 📐 · Ciências 🔬 · Pantanal 🐊</p>
-
-<div class="levels">
-  <button class="lvl active" onclick="setLevel('basico',this)">🌱 Básico</button>
-  <button class="lvl" onclick="setLevel('intermediario',this)">📐 Intermediário</button>
-  <button class="lvl" onclick="setLevel('dificil',this)">🔬 Difícil</button>
-  <button class="lvl" onclick="setLevel('carbonauta',this)">🛰️ Carbonauta</button>
+<div class="top">
+  <a class="hub" href="index.html">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Todos os jogos
+  </a>
 </div>
+
+<header>
+  <h1><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4" fill="#14b8a6"/><path d="M7 9h4M9 7v4M13 9h4M7 15.5l3 0M13 14h4M13 17h4" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg> <span>Conta do <span class="spark">Pantanal</span></span></h1>
+  <p class="sub">Jogo de cálculo de carbono. Escolha área, tempo e vegetação, faça a conta e simule para ver se acertou a meta.</p>
+</header>
+
+<div class="levels" id="levels"></div>
 
 <div class="hud">
-  <div class="hud-item">Tempo: <span id="hTime">0s</span></div>
-  <div class="hud-item">Pontos: <span id="hScore">0</span></div>
-  <div class="hud-item">Desafios: <span id="hDesafios">0/3</span></div>
+  <span class="h1">Desafio <b id="hCh">1/1</b></span>
+  <span class="h2">Acertos <b id="hits">0</b></span>
+  <span class="h3">Pontos <b id="score">0</b></span>
+  <span class="h4">Tempo <b id="timer">0s</b></span>
 </div>
 
-<div class="formula-box" id="formulaBox"></div>
-
-<div class="sim-grid">
-  <div class="panel" id="slidersPanel"><h3>⚙️ Parâmetros</h3><div id="sliders"></div></div>
-  <div class="panel"><h3>📊 Resultados</h3><div id="metrics"></div></div>
-</div>
-
-<div class="challenge" id="challengeBox">
-  <h3>🎯 Desafio <span id="cNum">1</span>/3</h3>
-  <p id="cText"></p>
-  <p class="hint" id="cHint"></p>
-  <button class="verify-btn" onclick="verify()">Calcular e verificar</button>
-  <div class="result-msg" id="resultMsg"></div>
-</div>
-
-<div class="endscreen" id="endScreen">
-  <h2>🎉 Cálculos concluídos!</h2>
-  <div class="score-big" id="finalScore"></div>
-  <p style="opacity:.75;margin:8px 0">pontos · nível <span id="finalLevel"></span></p>
-  <div class="save-form">
-    <input id="playerName" placeholder="Seu nome" maxlength="20">
-    <button onclick="saveScore()">Salvar ranking</button>
-  </div>
-  <button class="restart-btn" onclick="init()">Jogar novamente</button>
+<div class="card">
+  <div id="stage"></div>
 </div>
 
 <div class="ranking">
-  <h3>🏆 Ranking Global — <span id="rankLevel">Básico</span></h3>
-  <div class="rank-list" id="rankList"><p style="opacity:.5;font-size:.82rem">Carregando…</p></div>
+  <h3>Ranking Global, nível <span id="rankLevel"></span></h3>
+  <ol id="rankList"><li><span>Carregando o ranking...</span></li></ol>
+  <p class="note" id="rankNote"></p>
 </div>
 
-<footer>Matemática 📐 · Sequestro de carbono no solo e vegetação · Pantanal 🐊<br>
-app ambiental do dia (2026-06-19)<br>— Idealizado por Ernandes Sobreira —</footer>
+<footer>
+  Cálculo de carbono em áreas restauradas · Simulação interativa<br>
+  <span class="credit">Idealizado por Ernandes Sobreira</span>
+</footer>
 
-<script type="module">
-import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import{getFirestore,collection,addDoc,query,orderBy,limit,getDocs,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-const fbApp=initializeApp({apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"});
-const db=getFirestore(fbApp);
-const GAME_ID="2026-06-19-conta-do-pantanal";
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-// Vegetation types: [name, tC/ha/yr taxa, description]
-const VEG_TYPES=[
-  {label:'Campo inundável',taxa:0.8,desc:'Gramíneas e ciperáceas inundadas sazonalmente'},
-  {label:'Vereda de buritis',taxa:1.5,desc:'Palmeiras buriti em solos hidromórficos'},
-  {label:'Cerradão do Pantanal',taxa:2.5,desc:'Floresta savânica densa com dossel fechado'},
-  {label:'Mata ciliar pantaneira',taxa:3.8,desc:'Floresta ribeirinha de alta biomassa'}
+/* ---------- dados e modelo deste jogo ---------- */
+const GAME_ID = "2026-06-19-conta-do-pantanal";
+const MODEL_NOTE = "Jogo de cálculo. As taxas de cada vegetação e o metano do alagado são valores de cenário escolhidos para o jogo, não medidas do Pantanal. A conversão de carbono para CO2 (44/12) e o peso do metano (27 vezes o CO2 em 100 anos, IPCC AR6, metano não fóssil) são reais.";
+const TRIES = 3;
+
+const VEG = [
+  {nome:'Campo inundável', taxa:0.8},
+  {nome:'Vereda com buritis', taxa:1.5},
+  {nome:'Cerradão', taxa:2.5},
+  {nome:'Mata ciliar', taxa:3.8}
+];
+const C2CO2 = 44/12, PRG_CH4 = 27, DESC = 0.08;
+
+function compute(p){
+  const area = p.area ?? 1000, anos = p.anos ?? 10, v = VEG[p.veg ?? 3], preco = p.preco ?? 0, solo = p.solo ?? 0, met = p.metano ?? 0;
+  const cVeg = v.taxa*area*anos;
+  const cSolo = solo/100*0.3*area*anos;
+  const cTot = cVeg + cSolo;
+  const co2 = cTot*C2CO2;
+  const ch4eq = met/1000*area*anos*PRG_CH4;
+  const liq = co2 - ch4eq;
+  const valor = Math.max(0, liq)*preco;
+  let vpl = 0; const anual = Math.max(0, liq)/anos*preco;
+  for(let t=1;t<=anos;t++) vpl += anual/Math.pow(1+DESC, t);
+  return {anual: v.taxa*area + solo/100*0.3*area, cVeg, cSolo, cTot, co2, ch4eq, liq, valor, vpl, taxa:v.taxa};
+}
+const br = (x, d=0) => Number(x).toLocaleString('pt-BR', {minimumFractionDigits:d, maximumFractionDigits:d});
+const brl = x => 'R$ ' + (Math.abs(x)>=1e6 ? br(x/1e6, 2)+' mi' : br(x));
+
+/* ---------- cena ---------- */
+function plant(k, x, y){
+  if(k===0) return `<path d="M${x-7} ${y}c1-7 2-10 5-12M${x} ${y}c0-9 1-13 2-15M${x+7} ${y}c-1-7-2-10-5-12" stroke="#16a34a" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+  if(k===1) return `<g><path d="M${x} ${y}v-20" stroke="#78350f" stroke-width="2.6"/><path d="M${x} ${y-20}l-10 4M${x} ${y-20}l10 4M${x} ${y-20}l-8-6M${x} ${y-20}l8-6M${x} ${y-20}v-9" stroke="#16a34a" stroke-width="3" stroke-linecap="round"/></g>`;
+  if(k===2) return `<g><path d="M${x} ${y}c-1-6 2-9 0-15" stroke="#78350f" stroke-width="2.6" fill="none"/><ellipse cx="${x}" cy="${y-17}" rx="11" ry="6" fill="#22c55e"/><ellipse cx="${x-3}" cy="${y-20}" rx="6" ry="4" fill="#4ade80"/></g>`;
+  return `<g><path d="M${x} ${y}v-12" stroke="#78350f" stroke-width="3"/><circle cx="${x-6}" cy="${y-17}" r="8" fill="#16a34a"/><circle cx="${x+6}" cy="${y-17}" r="8" fill="#15803d"/><circle cx="${x}" cy="${y-24}" r="9" fill="#22c55e"/></g>`;
+}
+function renderViz(m, p, animate){
+  const k = p.veg ?? 3, maxA = 15000, area = p.area ?? 1000, anos = p.anos ?? 10, met = p.metano;
+  const nOn = Math.max(1, Math.round(area/maxA*40));
+  let cells = '';
+  for(let i=0;i<40;i++){
+    const c = i%10, r = Math.floor(i/10), x = 14 + c*57, y = 14 + r*44, on = i < nOn;
+    cells += `<g><rect x="${x}" y="${y}" width="53" height="40" rx="6" fill="${on?'#ecfdf5':'#f8fafc'}" stroke="${on?'#86efac':'#e2e8f0'}" stroke-width="1.5"/>`
+      + (on && met!==undefined && met>0 ? `<rect x="${x+3}" y="${y+28}" width="47" height="9" rx="3" fill="#7dd3fc" opacity="${(0.25+met/300*0.7).toFixed(2)}"/>` : '')
+      + (on ? `<g class="pl" style="animation-delay:-${(i*0.21).toFixed(2)}s">${plant(k, x+26, y+36)}</g>` : '') + '</g>';
+  }
+  const years = Math.min(30, anos); let yb = '';
+  for(let i=0;i<30;i++) yb += `<rect x="${14+i*17}" y="196" width="14" height="10" rx="3" fill="${i<years?'var(--main)':'var(--t100)'}"/>`;
+  let out = '';
+  if(m){
+    const pos = m.liq >= 0;
+    out = `<g class="${animate?'pop':''}"><rect x="160" y="70" width="270" height="56" rx="16" fill="${pos?'var(--deep)':'#dc2626'}"/>
+      <text x="295" y="94" text-anchor="middle" class="blab">${pos?'Saldo guardado':'Saldo emitido'}</text>
+      <text x="295" y="116" text-anchor="middle" class="bnum">${br(Math.abs(m.liq))} t CO2</text></g>`;
+  } else {
+    out = `<rect x="175" y="78" width="240" height="40" rx="14" fill="#fff" stroke="var(--t300)" stroke-width="2"/><text x="295" y="104" text-anchor="middle" class="qlab">Saldo: calcule e simule</text>`;
+  }
+  const F = [`Carbono por ano = taxa x área`, `CO2 = carbono x 44/12 (cerca de 3,667)`];
+  if(p.solo!==undefined) F.push(`Solo = fator do solo x 0,3 x área x anos`);
+  if(met!==undefined) F.push(`Metano em CO2 = kg por ha / 1000 x área x anos x 27`);
+  F.push(p.solo!==undefined || met!==undefined ? `Saldo = CO2 guardado menos metano em CO2` : `Saldo = CO2 guardado no período`);
+  if(p.preco!==undefined) F.push(`Valor = saldo x preço`);
+  if(typeof level!=='undefined' && LEVELS[level] && LEVELS[level].vpl) F.push(`Valor presente = valor de cada ano dividido por 1,08 elevado ao número do ano, somado ano a ano`);
+  return `<svg class="scene" viewBox="0 0 598 214" role="img" aria-label="Mapa da área restaurada">
+    <rect width="598" height="214" fill="#fff"/>${cells}${out}${yb}
+    <text x="588" y="206" text-anchor="end" class="ylab">${anos} ${anos===1?'ano':'anos'}</text></svg>
+    <div class="landcap"><span>Cada quadro com planta = ${br(maxA/40)} ha de ${VEG[k].nome.toLowerCase()}</span><span>Taxa do jogo: ${br(VEG[k].taxa,1)} t C por ha por ano</span></div>
+    <div class="fbox"><b>Como calcular</b>${F.map(f=>`<span>${f}</span>`).join('')}</div>`;
+}
+function metricCards(m, L){
+  const has = id => L.sliders.some(s=>s.id===id);
+  const c = [
+    {v:br(m.anual,0)+' t', l:'Carbono guardado por ano'},
+    {v:br(m.co2,0)+' t', l:'CO2 guardado no período'}
+  ];
+  if(has('solo')) c.push({v:br(m.cSolo,0)+' t', l:'Carbono guardado no solo'});
+  if(has('metano')) c.push({v:br(m.ch4eq,0)+' t', l:'Metano convertido em CO2', s:m.ch4eq<m.co2*0.3?'ok':m.ch4eq<m.co2?'warn':'danger'});
+  if(has('metano')) c.push({v:br(m.liq,0)+' t', l:'Saldo em CO2', s:m.liq>0?'ok':'danger'});
+  if(has('preco')) c.push({v:brl(m.valor), l:'Valor do saldo'});
+  if(L.vpl) c.push({v:brl(m.vpl), l:'Valor presente (desconto de 8% ao ano)'});
+  return c;
+}
+function pointsFor(seconds){ return 200 + Math.max(0, 60 - Math.floor(seconds/2)); }
+const END_MSG = [
+  [100, 'Contas fechadas!', 'Você acertou todos os cálculos deste nível.'],
+  [60, 'Boas contas', 'Faltaram poucos. Refaça o nível para fechar tudo.'],
+  [40, 'Quase lá', 'Faça a conta no papel antes de simular.'],
+  [0, 'Hora de revisar', 'Use as fórmulas em Como calcular e simule de novo.']
 ];
 
-// Model
-function compute(p){
-  const{area=1000,anos=10,vegIdx=0,preco=25,water=50,cSolo=20}=p;
-  const veg=VEG_TYPES[vegIdx];
-  const taxa=veg.taxa;
-  // Carbon sequestration
-  const seqAnual=parseFloat((taxa*area).toFixed(1));
-  const seqTotal=parseFloat((taxa*area*anos).toFixed(1));
-  // CO2 equivalent (1 tC = 3.667 tCO2)
-  const co2Total=parseFloat((seqTotal*3.667).toFixed(1));
-  // Soil carbon
-  const soloTotal=parseFloat((cSolo/100*area*anos*0.3).toFixed(1));
-  const totalC=parseFloat((seqTotal+soloTotal).toFixed(1));
-  const totalCO2=parseFloat((totalC*3.667).toFixed(1));
-  // Economic value
-  const valor=parseFloat((totalCO2*preco).toFixed(0));
-  // CH4 from wet areas (Pantanal specific)
-  const ch4Annual=parseFloat(((water/100)**1.5*area*0.0015).toFixed(2));
-  const ch4CO2eq=parseFloat((ch4Annual*anos*28).toFixed(1));
-  const netCO2=parseFloat((totalCO2-ch4CO2eq).toFixed(1));
-  // Biomass
-  const biomass=parseFloat((seqTotal*2.5).toFixed(0));// rough above-below ratio
-  // Area equivalence
-  const ha_per_car=parseFloat((100000/(co2Total||1)).toFixed(2));
-  return{seqAnual,seqTotal,co2Total,soloTotal,totalC,totalCO2,valor,ch4Annual,ch4CO2eq,netCO2,biomass,taxa,vegName:veg.label,ha_per_car};
+const fixn = t => t.replace(/(\d?\.\d)00\b/g,'$1');
+const ic = d => fixn(`<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`);
+const COL = '#115e59';
+const S = {
+  area: {id:'area', label:'Área restaurada', min:100, max:5000, step:100, fmt:v=>br(v)+' ha',
+    icon:ic(`<rect x="3" y="3" width="8" height="8" rx="1.500" fill="${COL}"/><rect x="13" y="3" width="8" height="8" rx="1.500" fill="${COL}"/><rect x="3" y="13" width="8" height="8" rx="1.500" fill="${COL}"/><rect x="13" y="13" width="8" height="8" rx="1.500" fill="none" stroke="${COL}" stroke-width="1.800"/>`),
+    lo:'pequena', hi:'grande', help:'Um hectare é um quadrado de 100 por 100 metros, mais ou menos um campo de futebol.',
+    word:v=>v<1000?'sítio':v<5000?'fazenda':'paisagem'},
+  anos: {id:'anos', label:'Tempo do projeto', min:1, max:30, fmt:v=>v==1?'1 ano':v+' anos',
+    icon:ic(`<circle cx="12" cy="12" r="9" fill="none" stroke="${COL}" stroke-width="2"/><path d="M12 7v5l3.500 2" stroke="${COL}" stroke-width="2" stroke-linecap="round" fill="none"/>`),
+    lo:'curto', hi:'longo', help:'Quanto mais anos a vegetação cresce, mais carbono ela acumula.',
+    word:v=>v<5?'curto':v<15?'médio':'longo'},
+  veg: {id:'veg', label:'Vegetação plantada', min:0, max:3, fmt:v=>VEG[v].nome,
+    icon:ic(`<path d="M12 22v-8" stroke="${COL}" stroke-width="2.400" stroke-linecap="round"/><circle cx="8" cy="10" r="5" fill="${COL}"/><circle cx="16" cy="10" r="5" fill="${COL}"/><circle cx="12" cy="6" r="5" fill="${COL}"/>`),
+    lo:'campo', hi:'mata', help:'Cada vegetação tem uma taxa no jogo: campo 0,8, vereda 1,5, cerradão 2,5 e mata ciliar 3,8 toneladas de carbono por hectare por ano.'},
+  preco: {id:'preco', label:'Preço combinado da tonelada', min:5, max:200, step:5, fmt:v=>'R$ '+v,
+    icon:ic(`<circle cx="12" cy="12" r="9" fill="${COL}"/><path d="M14.500 8.500c-.800-.800-4.500-1.200-4.500 1.200 0 2.500 5 1.200 5 3.800 0 2.300-3.800 2-5 1M12 6.500v11" stroke="#fff" stroke-width="1.700" stroke-linecap="round" fill="none"/>`),
+    lo:'barato', hi:'caro', help:'É o valor que o comprador aceitou pagar por tonelada de CO2 neste projeto. Ele multiplica o saldo.',
+    word:v=>v<40?'baixo':v<110?'médio':'alto'},
+  solo: {id:'solo', label:'Fator do solo', min:0, max:80, step:5, unit:'%',
+    icon:ic(`<path d="M2 9h20" stroke="${COL}" stroke-width="2"/><rect x="2" y="11" width="20" height="10" rx="2" fill="${COL}"/><circle cx="7" cy="15" r="1.300" fill="#fff"/><circle cx="13" cy="17" r="1.300" fill="#fff"/><circle cx="17" cy="14" r="1.300" fill="#fff"/>`),
+    lo:'solo pobre', hi:'solo que acumula', help:'Parte do carbono vai para o solo pelas raízes e folhas. No jogo, o solo guarda até 0,3 t por hectare por ano vezes este fator.',
+    word:v=>v<25?'pouco':v<55?'médio':'muito'},
+  metano: {id:'metano', label:'Metano do alagado', min:0, max:300, step:10, fmt:v=>v+' kg/ha/ano',
+    icon:ic(`<path d="M2 17c2.500-2 5-2 7.500 0s5 2 7.500 0 4.500-2 5 0" fill="none" stroke="${COL}" stroke-width="2" stroke-linecap="round"/><circle cx="8" cy="10" r="2.600" fill="none" stroke="${COL}" stroke-width="1.800"/><circle cx="15" cy="7" r="3.200" fill="none" stroke="${COL}" stroke-width="1.800"/>`),
+    lo:'sem metano', hi:'muito metano', help:'Solo alagado sem oxigênio solta metano. Cada tonelada de metano esquenta o planeta como 27 toneladas de CO2 em 100 anos.',
+    word:v=>v<60?'pouco':v<180?'médio':'muito'}
+};
+const sl = (k, def, extra) => Object.assign({}, S[k], {def}, extra||{});
+const G = {
+  co2In: (a,b)=>({t:`CO2 guardado entre ${br(a)} e ${br(b)} t`, f:m=>m.co2>=a && m.co2<=b}),
+  co2Min: a=>({t:`CO2 guardado de pelo menos ${br(a)} t`, f:m=>m.co2>=a}),
+  anualIn: (a,b)=>({t:`Carbono por ano entre ${br(a)} e ${br(b)} t`, f:m=>m.anual>=a && m.anual<=b}),
+  valorIn: (a,b)=>({t:`Valor entre ${brl(a)} e ${brl(b)}`, f:m=>m.valor>=a && m.valor<=b}),
+  valorMin: a=>({t:`Valor acima de ${brl(a)}`, f:m=>m.valor>a}),
+  cTotMin: a=>({t:`Carbono total (plantas e solo) acima de ${br(a)} t`, f:m=>m.cTot>a}),
+  soloShare: x=>({t:`Solo com mais de ${x}% do carbono total`, f:m=>m.cTot>0 && m.cSolo/m.cTot*100>x}),
+  liqMin: a=>({t:`Saldo acima de ${br(a)} t CO2`, f:m=>m.liq>a}),
+  liqIn: (a,b)=>({t:`Saldo entre ${br(a)} e ${br(b)} t CO2`, f:m=>m.liq>=a && m.liq<=b}),
+  liqCMin: a=>({t:`Saldo em carbono acima de ${br(a)} t C`, f:m=>m.liq/C2CO2>a}),
+  ch4Min: a=>({t:`Metano equivalente a mais de ${br(a)} t CO2`, f:m=>m.ch4eq>a}),
+  vplMin: a=>({t:`Valor presente acima de ${brl(a)}`, f:m=>m.vpl>a}),
+  vplIn: (a,b)=>({t:`Valor presente entre ${brl(a)} e ${brl(b)}`, f:m=>m.vpl>=a && m.vpl<=b}),
+  areaMax: a=>({t:`Área de no máximo ${br(a)} ha`, f:(m,p)=>p.area<=a, live:true}),
+  precoMin: a=>({t:`Preço de pelo menos R$ ${a}`, f:(m,p)=>p.preco>=a, live:true}),
+  anosMax: a=>({t:`No máximo ${a} anos`, f:(m,p)=>p.anos<=a, live:true})
+};
+
+const LEVELS = {
+  basico: { label:'Básico', saved:'basico', sliders:[sl('area',1000), sl('anos',10), sl('veg',0), sl('preco',25)], challenges:[
+    { title:'Primeiro projeto',
+      desc:'Uma fazenda vai restaurar <b>mata ciliar</b> na beira do rio. Escolha área e tempo para guardar entre 20 mil e 30 mil toneladas de CO2.',
+      range:{veg:[3,3]},
+      goals:[G.co2In(20000,30000)],
+      tip:'CO2 = 3,8 x área x anos x 3,667. Cada hectare de mata ciliar guarda cerca de 14 t de CO2 por ano.',
+      ok:'A conta é sempre a mesma: taxa vezes área vezes anos, e depois vezes 44/12 para passar de carbono para CO2. O 44/12 vem da massa do CO2 dividida pela massa do carbono.',
+      fail:'Multiplique área por anos e procure um produto entre 1.440 e 2.150.' },
+    { title:'Carbono de cada ano',
+      desc:'O projeto dura <b>10 anos</b>. Faça a área guardar entre 3 mil e 4 mil toneladas de carbono por ano e valer mais de R$ 1 milhão.',
+      range:{anos:[10,10]},
+      goals:[G.anualIn(3000,4000), G.valorMin(1000000)],
+      tip:'Carbono por ano = taxa x área. Depois, valor = carbono x 3,667 x 10 x preço.',
+      ok:'Separar o ganho de cada ano do total ajuda a planejar. O total só depende de quanto tempo o projeto dura.',
+      fail:'Teste cada vegetação: com mata ciliar, cerca de 900 ha dão 3.420 t por ano.' },
+    { title:'Só campo inundável',
+      desc:'A área é de <b>campo inundável</b> e tem no máximo <b>2.000 ha</b>. Guarde entre 50 mil e 60 mil toneladas de CO2 em até <b>20 anos</b>.',
+      range:{veg:[0,0], area:[100,2000], anos:[1,20]},
+      goals:[G.co2In(50000,60000)],
+      tip:'Com campo, cada hectare guarda cerca de 2,93 t de CO2 por ano. Faça área vezes anos dar entre 17 mil e 20 mil.',
+      ok:'Vegetações com taxa baixa precisam de mais área ou mais tempo para chegar ao mesmo resultado. Campos inundáveis também guardam carbono no solo, que entra no próximo nível.',
+      fail:'Procure área e anos cujo produto fique entre 17.050 e 20.450.' },
+    { title:'Contrato fechado',
+      desc:'O comprador paga <b>R$ 50</b> por tonelada de CO2. O contrato precisa valer entre R$ 1 milhão e R$ 1,2 milhão.',
+      range:{preco:[50,50]},
+      goals:[G.valorIn(1000000,1200000)],
+      tip:'Com R$ 50, você precisa de 20 mil a 24 mil toneladas de CO2.',
+      ok:'Quando o preço é fixo, a conta volta para o CO2. Valor dividido pelo preço dá as toneladas de que você precisa.',
+      fail:'Divida o valor pelo preço e encontre o CO2 necessário, entre 20 mil e 24 mil t.' },
+    { title:'Qual vegetação?',
+      desc:'Área de <b>1.000 ha</b> por <b>10 anos</b>. Escolha a vegetação que guarda entre 50 mil e 60 mil toneladas de CO2, com valor acima de R$ 2 milhões.',
+      range:{area:[1000,1000], anos:[10,10]},
+      goals:[G.co2In(50000,60000), G.valorMin(2000000)],
+      tip:'1.000 ha x 10 anos x 3,667 dá 36.670. Multiplique pela taxa de cada vegetação.',
+      ok:'Com área e tempo fixos, só a taxa muda o resultado. Por isso escolher bem a vegetação para cada lugar faz tanta diferença.',
+      fail:'Faça 36.670 vezes cada taxa: 0,8, 1,5, 2,5 e 3,8.' }
+  ]},
+  intermediario: { label:'Intermediário', saved:'intermediario', sliders:[sl('area',1000,{max:10000}), sl('anos',10), sl('veg',0), sl('preco',25), sl('solo',20)], challenges:[
+    { title:'Área mínima',
+      desc:'Com <b>cerradão</b> por <b>15 anos</b> e sem contar o solo, guarde pelo menos 50 mil toneladas de CO2 usando a menor área possível.',
+      range:{veg:[2,2], anos:[15,15], solo:[0,0], area:[100,1000]},
+      goals:[G.co2Min(50000), G.areaMax(400)],
+      tip:'Área = 50.000 dividido por (2,5 x 15 x 3,667).',
+      ok:'Inverter a fórmula responde perguntas de planejamento: quanto preciso restaurar para chegar a uma meta. O resultado dá cerca de 364 ha, e o controle arredonda para 400.',
+      fail:'Faça 2,5 x 15 x 3,667 e divida 50.000 pelo resultado.' },
+    { title:'Plantas e solo',
+      desc:'A área vai até <b>1.000 ha</b>. Some plantas e solo para chegar entre 15 mil e 17 mil toneladas de carbono.',
+      range:{area:[100,1000]},
+      goals:[{t:'Carbono total (plantas e solo) entre 15.000 e 17.000 t', f:m=>m.cTot>=15000 && m.cTot<=17000}],
+      tip:'Carbono total = (taxa + fator x 0,3) x área x anos.',
+      ok:'Contar o solo aumenta o carbono do projeto. Solos que ficam alagados parte do ano tendem a acumular matéria orgânica.',
+      fail:'Calcule (taxa + fator x 0,3) x área x anos e ajuste até a faixa.' },
+    { title:'Preço alto, contrato grande',
+      desc:'Negocie um preço de pelo menos R$ 100 e faça o contrato valer entre R$ 10 e 12 milhões, com no máximo <b>3.000 ha</b>.',
+      range:{area:[100,3000]},
+      goals:[G.precoMin(100), G.valorIn(10000000,12000000)],
+      tip:'Valor = (taxa + fator x 0,3) x área x anos x 3,667 x preço.',
+      ok:'O preço multiplica tudo. Um projeto pequeno com preço alto pode valer mais que um grande com preço baixo.',
+      fail:'Com preço de R$ 100, você precisa de 100 mil a 120 mil toneladas de CO2.' },
+    { title:'O peso do solo',
+      desc:'Em <b>campo inundável</b>, faça o solo responder por mais de 20% do carbono, com o total entre 20 mil e 30 mil toneladas.',
+      range:{veg:[0,0]},
+      goals:[G.soloShare(20), {t:'Carbono total entre 20.000 e 30.000 t', f:m=>m.cTot>=20000 && m.cTot<=30000}],
+      tip:'A parte do solo é (fator x 0,3) dividido por (0,8 + fator x 0,3).',
+      ok:'Em vegetações baixas, o solo pesa mais no total. Em matas, a madeira e as raízes grossas dominam.',
+      fail:'Use fator do solo de 70% ou mais, depois ajuste área e anos.' },
+    { title:'Orçamento exato',
+      desc:'O preço é <b>R$ 40</b>, a área é <b>2.000 ha</b>, e o fator do solo é <b>40%</b>. O contrato deve valer entre R$ 3 e 3,5 milhões.',
+      range:{preco:[40,40], area:[2000,2000], solo:[40,40]},
+      goals:[G.valorIn(3000000,3500000)],
+      tip:'Você precisa de 75 mil a 87,5 mil toneladas de CO2. Combine vegetação e anos.',
+      ok:'Fixar preço, área e solo deixa só dois controles. É assim que se compara cenários em um projeto real.',
+      fail:'Calcule (taxa + 0,12) x 2.000 x anos x 3,667 para cada vegetação.' }
+  ]},
+  dificil: { label:'Difícil', saved:'dificil', sliders:[sl('area',1000,{max:10000}), sl('anos',10), sl('veg',0), sl('preco',25), sl('solo',20), sl('metano',50)], challenges:[
+    { title:'Alagado que solta metano',
+      desc:'Área entre <b>5.000 e 10.000 ha</b>, com metano entre <b>150 e 300</b> kg por hectare por ano. Só campo ou vereda. Mantenha o saldo positivo.',
+      range:{area:[5000,10000], metano:[150,300], veg:[0,1]},
+      goals:[G.liqMin(0), G.ch4Min(100000)],
+      tip:'Por hectare e por ano, o metano pesa kg / 1000 x 27 t de CO2. Compare com (taxa + solo) x 3,667.',
+      ok:'Áreas alagadas guardam carbono e soltam metano ao mesmo tempo. O saldo depende de qual dos dois pesa mais.',
+      fail:'Use vereda, fator do solo alto e o menor metano permitido.' },
+    { title:'Saldo em carbono',
+      desc:'Em até <b>15 anos</b> e sem mata ciliar, chegue a um saldo entre 10 mil e 12 mil toneladas de carbono.',
+      range:{anos:[1,15], veg:[0,2]},
+      goals:[{t:'Saldo em carbono entre 10.000 e 12.000 t C', f:m=>m.liq/C2CO2>=10000 && m.liq/C2CO2<=12000}],
+      tip:'Carbono líquido = saldo em CO2 dividido por 3,667.',
+      ok:'Passar de CO2 para carbono é só dividir por 44/12. Relatórios usam as duas unidades, e é fácil confundir.',
+      fail:'Calcule o saldo por hectare por ano, divida por 3,667 e ajuste área e anos.' },
+    { title:'Ponto de virada',
+      desc:'<b>1.000 ha</b> de <b>campo inundável</b> por <b>10 anos</b>. Ache a combinação de solo e metano que deixa o saldo quase zero.',
+      range:{area:[1000,1000], anos:[10,10], veg:[0,0]},
+      goals:[G.liqIn(-2000,2000)],
+      tip:'Saldo = (0,8 + fator x 0,3) x 36.670 menos metano x 270.',
+      ok:'Achar o ponto de virada mostra quanto metano uma área aguenta antes de virar fonte. Medir o metano no campo é o que decide de que lado ela fica.',
+      fail:'Com fator do solo zero, o metano precisa ficar perto de 110 kg.' },
+    { title:'Crédito só do saldo',
+      desc:'O preço é <b>R$ 60</b> e o metano fica entre <b>100 e 200</b> kg. Faça o saldo valer entre R$ 5 e 6 milhões.',
+      range:{preco:[60,60], metano:[100,200]},
+      goals:[G.valorIn(5000000,6000000)],
+      tip:'Você precisa de um saldo entre 83 mil e 100 mil toneladas de CO2.',
+      ok:'Um crédito honesto paga só o saldo, depois de descontar o metano. Contar só o CO2 guardado superestima o benefício.',
+      fail:'Calcule o saldo por hectare por ano e multiplique por área e anos até chegar na faixa.' },
+    { title:'Pouca terra, muito saldo',
+      desc:'Com no máximo <b>500 ha</b> e metano de pelo menos <b>80</b> kg, passe de 20 mil toneladas de saldo.',
+      range:{metano:[80,300]},
+      goals:[G.areaMax(500), G.liqMin(20000)],
+      tip:'Em área pequena, você precisa de taxa alta e muitos anos.',
+      ok:'Uma área pequena pode render muito quando a vegetação e o tempo ajudam. A mata ciliar tem a maior taxa do jogo.',
+      fail:'Mata ciliar, 500 ha, 30 anos, solo alto e metano baixo.' }
+  ]},
+  carbonauta: { label:'Carbonauta', saved:'carbonauta', vpl:true, sliders:[sl('area',1000,{max:15000}), sl('anos',10), sl('veg',0), sl('preco',25,{max:300}), sl('solo',20), sl('metano',50)], challenges:[
+    { title:'Um milhão de toneladas',
+      desc:'Monte um projeto que passe de 1 milhão de toneladas de saldo em CO2, com metano de pelo menos <b>100</b> kg.',
+      range:{metano:[100,300]},
+      goals:[G.liqMin(1000000)],
+      tip:'Um milhão de toneladas pede área grande, muitos anos e taxa alta.',
+      ok:'Projetos de paisagem trabalham com milhões de toneladas. O desconto do metano continua valendo nessa escala.',
+      fail:'Use mata ciliar, área e anos no máximo e metano no mínimo permitido.' },
+    { title:'Dinheiro que vale hoje',
+      desc:'Em até <b>15 anos</b>, deixe o valor presente entre R$ 5 e 6 milhões.',
+      range:{anos:[1,15]},
+      goals:[G.vplIn(5000000,6000000)],
+      tip:'O valor presente traz cada ano para hoje, dividindo por 1,08 elevado ao ano.',
+      ok:'Dinheiro recebido no futuro vale menos hoje. Por isso projetos longos têm valor presente bem menor que a soma simples.',
+      fail:'Fixe os anos e ajuste área e preço aos poucos.' },
+    { title:'Esperar custa',
+      desc:'Com pelo menos <b>25 anos</b>, deixe o valor presente entre R$ 10 e 12 milhões.',
+      range:{anos:[25,30]},
+      goals:[G.vplIn(10000000,12000000), {t:'Valor presente menor que metade do valor total', f:m=>m.vpl < m.valor/2}],
+      tip:'Com 8% ao ano, o último ano vale menos de um sexto do que valeria hoje.',
+      ok:'Com desconto de 8% e 25 anos ou mais, o valor presente fica abaixo da metade da soma simples. Com esse prazo, a segunda meta sempre se cumpre.',
+      fail:'Mantenha 25 anos ou mais e ajuste área e preço aos poucos.' },
+    { title:'Campo com muito metano',
+      desc:'Só campo ou vereda, com metano entre <b>200 e 300</b> kg. O projeto ainda precisa render valor presente acima de R$ 1 milhão.',
+      range:{veg:[0,1], metano:[200,300]},
+      goals:[G.liqMin(0), G.vplMin(1000000)],
+      tip:'Com tanto metano, o campo vira fonte. Veja se a vereda e o solo compensam.',
+      ok:'Quando o metano é alto, só vegetações com taxa maior e um solo que acumula mantêm o saldo positivo. Sem saldo, não existe crédito.',
+      fail:'Vereda, solo no máximo, metano 200 e área grande.' },
+    { title:'Valor presente na faixa',
+      desc:'O preço é <b>R$ 100</b>, a vegetação é <b>cerradão</b> e o metano é <b>60</b> kg. Deixe o valor presente entre R$ 8 e 9 milhões.',
+      range:{preco:[100,100], veg:[2,2], metano:[60,60]},
+      goals:[G.vplIn(8000000,9000000)],
+      tip:'Ajuste primeiro os anos, depois a área. O solo faz o ajuste fino.',
+      ok:'Fechar um valor numa faixa estreita exige entender como cada controle pesa. É o tipo de conta feita para avaliar um projeto antes de assinar.',
+      fail:'Comece com 10 anos, ajuste a área e use o solo para o ajuste fino.' }
+  ]}
+};
+
+
+/* ---------- motor comum das simulacoes ---------- */
+const KEYS = Object.keys(LEVELS);
+let level = KEYS[0], ci = 0, hits = 0, score = 0, params = {}, verified = false;
+let startTime = null, timerInt = null, elapsed = 0, scoreSaved = false;
+let db = null, fsFns = null;
+/* o nivel e gravado do mesmo jeito da versao anterior, para o ranking antigo continuar valendo */
+const levelVal = k => LEVELS[k].saved || LEVELS[k].label;
+
+function buildLevels(){
+  $('levels').innerHTML = KEYS.map(k=>`<button data-lvl="${k}" onclick="setLevel('${k}')">${LEVELS[k].label}</button>`).join('');
 }
-
-const CHALLENGES={
-basico:[
-  {text:"Ajuste a área para 2.000 ha com mata ciliar (tipo 4) por 10 anos. Qual é o total de CO₂ capturado?",check:m=>m.co2Total>10000,hint:"Dica: CO₂ total = taxa × área × anos × 3,667 (conversão C → CO₂)",fb:"✅ Mata ciliar pantaneira tem uma das maiores taxas de sequestro do Pantanal! Com 2.000 ha por 10 anos, você captura mais de 27.000 t CO₂ — equivalente a tirar 6.000 carros das ruas por um ano."},
-  {text:"Configure para que o valor econômico total supere R$ 500.000.",check:m=>m.valor>500000,hint:"Dica: Valor = CO₂ total × preço por tonelada. Aumente área, anos ou preço do carbono.",fb:"✅ Mercados de carbono pagam de R$20 a R$200 por tonelada de CO₂. A Mata Atlântica e o Pantanal têm grande potencial para gerar renda via créditos de carbono para proprietários rurais."},
-  {text:"Ajuste para que o sequestro anual seja entre 3.000 e 4.000 t de carbono.",check:m=>m.seqAnual>=3000&&m.seqAnual<=4000,hint:"Dica: Sequestro anual = taxa da vegetação × área (sem contar anos ainda).",fb:"✅ O Pantanal brasileiro estoca entre 1,5 e 3,5 bilhões de toneladas de carbono no solo e na vegetação. A flutuação sazonal do nível da água afeta diretamente o sequestro anual."}
-],
-intermediario:[
-  {text:"Calcule: para capturar 50.000 t CO₂ em 15 anos com cerradão, qual área mínima (aproximada) você precisa?",check:(m,p)=>p.anos>=15&&p.vegIdx===2&&m.co2Total>=50000,hint:"Dica: Área ≈ 50.000 ÷ (2,5 × 15 × 3,667). Calcule e ajuste os controles.",fb:"✅ Resposta: ≈ 365 ha de cerradão por 15 anos. O sequestro de carbono em escala de paisagem pode gerar créditos REDD+ que financiam a conservação do Pantanal."},
-  {text:"Inclua o carbono do solo (30%). Ajuste para que o carbono total (aéreo + solo) supere 15.000 t C.",check:m=>m.totalC>15000,hint:"Dica: O solo pode armazenar 30% a mais que a biomassa. Ative o controle de carbono do solo no nível intermediário.",fb:"✅ O solo do Pantanal é um imenso reservatório de carbono orgânico. Solos hidromórficos (alagados) acumulam matéria orgânica muito mais devagar mas de forma mais estável."},
-  {text:"Ajuste para que o valor econômico por tonelada de CO₂ fique acima de R$ 100 e o total supere R$ 1 milhão.",check:(m,p)=>p.preco>=100&&m.valor>1000000,hint:"Dica: Carbon pricing de R$100/t é realista para mercados voluntários premium de alta qualidade (VCS+CCBS).",fb:"✅ Créditos de carbono do Pantanal com co-benefícios (biodiversidade, comunidades, água) podem atingir US$20–50/t no mercado voluntário. A Verra (VCS) certifica projetos nesse padrão."}
-],
-dificil:[
-  {text:"Modele emissão de CH₄ com lâmina d'água de 80% e área de 5.000 ha. O balanço líquido de CO₂ (CO₂ capturado − CH₄ equivalente) ainda é positivo?",check:(m,p)=>p.water>=80&&p.area>=5000&&m.netCO2>0,hint:"Dica: CH₄ tem PRG-100 de 28× o CO₂. Em áreas muito alagadas, o metano pode compensar ou superar o sequestro de CO₂.",fb:"✅ O Pantanal é fonte líquida de CH₄ em anos de alta inundação. Pesquisas do INPE mostram que em anos el-Niño, o Pantanal pode ser fonte líquida de GEE em CO₂-equivalente."},
-  {text:"Calcule a 'equivalência em automóveis': quantos carros você tira de circulação por ano com 3.000 ha de mata ciliar por 20 anos? (1 carro ≈ 2,3 t CO₂/ano)",check:m=>m.totalCO2>100000,hint:"Dica: CO₂ total ÷ 2,3 ÷ 20 anos = número de carros/ano. Veja o resultado nos indicadores.",fb:"✅ Com 3.000 ha de mata ciliar por 20 anos, você sequestra ≈ 836.000 t CO₂ — equivalente a tirar 18.000 carros das ruas todo ano durante 20 anos. O Pantanal tem 150.000 km de rios!"},
-  {text:"Monte a equação completa: Sequestro total de C (aéreo + solo) − Emissão de CH₄ em CO₂eq > 10.000 t C líquido.",check:m=>m.netCO2/3.667>10000,hint:"Dica: C líquido = (totalC × 3,667 − ch4CO₂eq) ÷ 3,667. Use as fórmulas mostradas.",fb:"✅ O balanço líquido de carbono é o conceito central do IPCC para contabilidade climática. Incluir todos os gases e sumidouros é essencial para não superestimar o potencial do sequestro florestal."}
-],
-carbonauta:[
-  {text:"Modele um projeto REDD+ com 10.000 ha de mata ciliar por 30 anos. Calcule a linha de base: sem proteção, qual seria o total de CO₂ emitido? (considere que 2% da área seria desmatada por ano)",check:(m,p)=>p.area>=10000&&p.anos>=30&&p.vegIdx===3,hint:"Dica: Linha de base REDD+ = área × taxa desflorestamento × biomassa × 3,667. O projeto gera créditos pela diferença entre linha de base e emissões reais.",fb:"✅ Projetos REDD+ calculam créditos pela diferença entre o cenário 'sem projeto' (baseline) e o cenário 'com proteção'. O Pantanal tem potencial de 500 Mt CO₂ em REDD+ na próxima década."},
-  {text:"Calcule o 'permanence buffer' do VCS: projetos precisam manter 10–20% dos créditos em reserva. Se o projeto gera 500.000 tCO₂, quantos créditos ficam em buffer? Ajuste para gerar pelo menos 1 Mt tCO₂ total.",check:m=>m.totalCO2>=1000000,hint:"Dica: Buffer de 20% = 200.000 t em reserva de 1 Mt. Verifique o total de CO₂ nos indicadores.",fb:"✅ O buffer pool do VCS é a reserva de créditos que garante que, mesmo se parte da floresta for perdida (incêndios, etc.), o projeto ainda honra os créditos vendidos. É mecanismo essencial de credibilidade."},
-  {text:"Modelo avançado: calcule o Valor Presente Líquido (VPL) do projeto assumindo desconto de 8% ao ano. Maximize para VPL > R$ 5 milhões.",check:(m,p)=>{const taxa_desc=0.08;let vpl=0;for(let a=1;a<=p.anos;a++){const cr_anual=m.seqAnual*3.667*p.preco;vpl+=cr_anual/Math.pow(1+taxa_desc,a);}return vpl>5000000;},hint:"Dica: VPL = Σ(créditos_anuais / (1+0,08)^t). Requer anos suficientes e créditos anuais altos. O tempo e o preço do carbono são as principais alavancas.",fb:"✅ O VPL com desconto de 8% aa é a métrica padrão para avaliar projetos de carbono florestal. Projetos com VPL positivo são financeiramente viáveis sem subsídios — meta do mercado voluntário."}
-]
-};
-
-const SLIDERS_DEF={
-basico:[
-  {key:'area',label:'Área restaurada',unit:' ha',min:100,max:5000,val:1000,step:100},
-  {key:'anos',label:'Período (anos)',unit:' anos',min:1,max:30,val:10,step:1},
-  {key:'vegIdx',label:'Tipo de vegetação',unit:'',type:'select'},
-],
-intermediario:[
-  {key:'area',label:'Área restaurada',unit:' ha',min:100,max:10000,val:1000,step:100},
-  {key:'anos',label:'Período (anos)',unit:' anos',min:1,max:30,val:10,step:1},
-  {key:'vegIdx',label:'Tipo de vegetação',unit:'',type:'select'},
-  {key:'preco',label:'Preço do carbono',unit:' R$/t',min:5,max:200,val:25,step:5},
-  {key:'cSolo',label:'Fator solo (%)',unit:'%',min:0,max:80,val:20,step:5},
-],
-dificil:[
-  {key:'area',label:'Área restaurada',unit:' ha',min:100,max:10000,val:1000,step:100},
-  {key:'anos',label:'Período (anos)',unit:' anos',min:1,max:30,val:10,step:1},
-  {key:'vegIdx',label:'Tipo de vegetação',unit:'',type:'select'},
-  {key:'preco',label:'Preço do carbono',unit:' R$/t',min:5,max:200,val:25,step:5},
-  {key:'cSolo',label:'Fator solo (%)',unit:'%',min:0,max:80,val:20,step:5},
-  {key:'water',label:'Lâmina d\'água',unit:'%',min:0,max:100,val:50,step:5},
-],
-carbonauta:[
-  {key:'area',label:'Área restaurada',unit:' ha',min:100,max:15000,val:1000,step:100},
-  {key:'anos',label:'Período (anos)',unit:' anos',min:1,max:30,val:10,step:1},
-  {key:'vegIdx',label:'Tipo de vegetação',unit:'',type:'select'},
-  {key:'preco',label:'Preço do carbono',unit:' R$/t',min:5,max:300,val:25,step:5},
-  {key:'cSolo',label:'Fator solo (%)',unit:'%',min:0,max:80,val:20,step:5},
-  {key:'water',label:'Lâmina d\'água',unit:'%',min:0,max:100,val:50,step:5},
-]
-};
-
-const FORMULAS={
-basico:'<strong>Sequestro anual</strong> = Taxa × Área (t C/ano)\n<strong>CO₂ total</strong> = Taxa × Área × Anos × 3,667 (t CO₂)\n<strong>Valor</strong> = CO₂ total × Preço (R$)',
-intermediario:'<strong>CO₂ total</strong> = Taxa × Área × Anos × 3,667\n<strong>Solo</strong> = Solo% × Área × Anos × 0,3 (t C)\n<strong>Valor</strong> = (CO₂ total + Solo×3,667) × Preço',
-dificil:'<strong>CH₄</strong> = (Lâmina/100)^1.5 × Área × 0,0015 (t/ano)\n<strong>CH₄ em CO₂eq</strong> = CH₄ × Anos × 28 (PRG-100)\n<strong>Balanço líquido</strong> = CO₂ total − CH₄ em CO₂eq',
-carbonauta:'<strong>VPL</strong> = Σ [Créditos_t / (1+0,08)^t] para t=1..n\n<strong>Buffer REDD+</strong> = 20% dos créditos em reserva\n<strong>Linha de base</strong> = Área × 0,02 × Biomassa × 3,667'
-};
-
-let level='basico',cIdx=0,score=0,timer=0,timerInt=null,lastSave=null;
-let params={area:1000,anos:10,vegIdx:0,preco:25,cSolo:20,water:50};
-let desafiosConcluidos=0;
-
-function init(){
-  cIdx=0;score=0;timer=0;desafiosConcluidos=0;
-  clearInterval(timerInt);
-  timerInt=setInterval(()=>{timer++;document.getElementById('hTime').textContent=timer+'s';},1000);
-  document.getElementById('hScore').textContent='0';
-  document.getElementById('hDesafios').textContent='0/3';
-  document.getElementById('endScreen').style.display='none';
-  document.getElementById('rankLevel').textContent=level.charAt(0).toUpperCase()+level.slice(1);
-  params={area:1000,anos:10,vegIdx:0,preco:25,cSolo:20,water:50};
-  document.getElementById('formulaBox').innerHTML=FORMULAS[level].replace(/\n/g,'<br>');
-  buildSliders();
+function setLevel(l){
+  level = l;
+  document.querySelectorAll('.levels button').forEach(b=>b.classList.toggle('active',b.dataset.lvl===l));
+  $('rankLevel').textContent = LEVELS[l].label;
+  restart(); loadRanking();
+}
+function restart(){
+  clearInterval(timerInt); timerInt=null; startTime=null; elapsed=0;
+  ci=0; hits=0; score=0; scoreSaved=false;
+  $('timer').textContent='0s';
   renderChallenge();
-  updateSim();
-  loadRanking();
 }
+function hud(){
+  const n = LEVELS[level].challenges.length;
+  $('hCh').textContent = Math.min(ci+1,n)+'/'+n; $('hits').textContent=hits; $('score').textContent=score;
+}
+function startTimer(){
+  if(timerInt) return;
+  startTime = Date.now();
+  timerInt = setInterval(()=>{elapsed=Math.floor((Date.now()-startTime)/1000);$('timer').textContent=elapsed+'s';},500);
+}
+function fmtBase(s,v){ return s.fmt ? s.fmt(v) : v+(s.unit||''); }
+function fmt(s,v){ const base = fmtBase(s,v); return s.word ? base+' · '+s.word(v) : base; }
+const TARGET = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/></svg>`;
+let triesLeft = 0, lastSim = null;
+/* cada desafio tem uma lista de metas; ele so e vencido quando todas sao cumpridas na mesma simulacao */
+Object.values(LEVELS).forEach(L=>L.challenges.forEach(ch=>{ ch.check=(m,p)=>ch.goals.every(g=>g.f(m,p)); }));
 
-function buildSliders(){
-  const defs=SLIDERS_DEF[level];
-  const el=document.getElementById('sliders');
-  el.innerHTML=defs.map(s=>{
-    if(s.type==='select'){
-      return`<div class="slider-row">
-        <div class="slider-label"><span>${s.label}</span></div>
-        <select id="sl_${s.key}" onchange="updateSim('${s.key}',this.value)">
-          ${VEG_TYPES.map((v,i)=>`<option value="${i}">${v.label} (${v.taxa} tC/ha/a)</option>`).join('')}
-        </select>
-        <div style="font-size:.76rem;opacity:.6;margin-top:3px" id="vdesc"></div>
-      </div>`;
-    }
-    return`<div class="slider-row">
-      <div class="slider-label"><span>${s.label}</span><span class="slider-val" id="val_${s.key}">${s.val}${s.unit}</span></div>
-      <input type="range" min="${s.min}" max="${s.max}" value="${s.val}" step="${s.step||1}" oninput="updateSim('${s.key}',this.value)">
-    </div>`;
+/* cada desafio pode limitar a faixa de um controle (range) ou mudar o valor inicial (set) */
+function effSliders(){
+  const L = LEVELS[level], ch = L.challenges[ci];
+  return L.sliders.map(s=>{
+    const r = ch.range && ch.range[s.id], o = Object.assign({}, s, {gmin:s.min, gmax:s.max});
+    if(r){ o.min=r[0]; o.max=r[1]; o.limited=true; o.lo=fmtBase(s,r[0]); o.hi=fmtBase(s,r[1]); }
+    let d = (ch.set && ch.set[s.id]!==undefined) ? ch.set[s.id] : s.def;
+    o.def = Math.min(o.max, Math.max(o.min, d));
+    return o;
+  });
+}
+function goalChips(ch){
+  /* metas sobre os controles (live) sao marcadas na hora; metas sobre o resultado so depois de simular */
+  return ch.goals.map(g=>{
+    let cls = '';
+    if(g.live) cls = g.f(null,params) ? 'ok' : 'no';
+    else if(lastSim) cls = g.f(lastSim,params) ? 'ok' : 'no';
+    return `<div class="gchip ${cls}"><i></i><span>${g.t}</span></div>`;
   }).join('');
 }
-
-function updateSim(key,val){
-  if(key&&val!==undefined) params[key]=key==='vegIdx'?parseInt(val):parseFloat(val);
-  SLIDERS_DEF[level].forEach(s=>{const el=document.getElementById('val_'+s.key);if(el)el.textContent=params[s.key]+(s.unit||'');});
-  const vd=document.getElementById('vdesc');
-  if(vd)vd.textContent=VEG_TYPES[params.vegIdx].desc;
-  const m=compute(params);
-  const nCars=Math.round(m.totalCO2/2.3/params.anos);
-  document.getElementById('metrics').innerHTML=`
-    <div class="metric"><span>Sequestro anual</span><span class="metric-val">${m.seqAnual.toLocaleString('pt-BR')} t C/ano</span></div>
-    <div class="metric"><span>CO₂ capturado (total)</span><span class="metric-val">${m.co2Total.toLocaleString('pt-BR')} t CO₂</span></div>
-    ${level!=='basico'?`<div class="metric"><span>+ Carbono no solo</span><span class="metric-val">${m.soloTotal.toLocaleString('pt-BR')} t C</span></div>`:''}
-    ${level==='dificil'||level==='carbonauta'?`<div class="metric"><span>CH₄ emitido (CO₂eq)</span><span class="metric-val" style="color:#f87171">${m.ch4CO2eq.toLocaleString('pt-BR')} t CO₂eq</span></div>
-    <div class="metric"><span>Balanço líquido CO₂</span><span class="metric-val" style="color:${m.netCO2>0?'#4ade80':'#f87171'}">${m.netCO2.toLocaleString('pt-BR')} t</span></div>`:''}
-    <div class="metric"><span>Valor econômico</span><span class="metric-val">R$ ${m.valor.toLocaleString('pt-BR')}</span></div>
-    <div class="metric"><span>Equivalente em carros/ano</span><span class="metric-val">${nCars.toLocaleString('pt-BR')} 🚗</span></div>`;
+function triesHtml(){
+  let d=''; for(let i=0;i<TRIES;i++) d+=`<i class="${i<triesLeft?'':'used'}"></i>`;
+  return `${d}<span>${triesLeft===1?'Resta 1 simulação':'Restam '+triesLeft+' simulações'}</span>`;
 }
-window.updateSim=updateSim;
-
 function renderChallenge(){
-  const ch=CHALLENGES[level];
-  if(cIdx>=ch.length){endGame();return;}
-  document.getElementById('cNum').textContent=cIdx+1;
-  document.getElementById('cText').textContent=ch[cIdx].text;
-  document.getElementById('cHint').textContent=ch[cIdx].hint||'';
-  document.getElementById('resultMsg').style.display='none';
-  document.getElementById('challengeBox').style.display='block';
+  const L = LEVELS[level], ch = L.challenges[ci];
+  const SL = effSliders();
+  params = {}; SL.forEach(s=>params[s.id]=s.def);
+  verified = false; triesLeft = TRIES; lastSim = null; hud();
+  $('stage').innerHTML = `
+    <div class="qhead"><div class="qnum">Desafio ${ci+1} de ${L.challenges.length}</div>
+      <div class="qtext">${ch.title}</div>
+      <div class="qdesc">${ch.desc}</div>
+      <div class="goalbox"><h4>${TARGET} Sua meta</h4><div class="goals" id="goals"></div></div></div>
+    <div class="tip"><b>Dica.</b> ${ch.tip}</div>
+    <div class="sliders">${SL.map(s=>`
+      <div class="srow${s.min===s.max?' locked':''}" id="row-${s.id}"><div class="sico">${s.icon||''}</div>
+        <div><div class="shead"><label for="sl-${s.id}">${s.label}</label><output id="sv-${s.id}"></output></div>
+        ${s.min===s.max ? `<div class="lock">Fixo neste desafio</div>`
+          : `<input type="range" id="sl-${s.id}" min="${s.min}" max="${s.max}" step="${s.step||1}" value="${s.def}" oninput="setParam('${s.id}',this.value)">
+        <div class="sends"><span>${s.limited?'mínimo hoje: ':''}${s.lo||''}</span><span>${s.limited?'máximo hoje: ':''}${s.hi||''}</span></div>`}
+        <div class="shelp">${s.help||''}</div></div></div>`).join('')}</div>
+    <div class="viz" id="viz"></div>
+    <div class="metrics" id="metrics"></div>
+    <div class="tries" id="tries"></div>
+    <button class="btn verify" id="verify" onclick="verify()">Simular</button>
+    <div class="fb" id="fb" aria-live="polite">Ajuste os controles e clique em Simular para ver o que acontece. O resultado só aparece depois da simulação, e o tempo começa no primeiro ajuste.</div>
+    <button class="btn next" id="next" onclick="nextChallenge()"></button>
+    <p class="modelnote">${MODEL_NOTE}</p>`;
+  SL.forEach(s=>paintSlider(s));
+  draw();
+}
+function paintSlider(s){
+  $('sv-'+s.id).textContent = fmt(s,params[s.id]);
+  $('row-'+s.id).querySelector('.sico').style.setProperty('--v', ((params[s.id]-s.gmin)/(s.gmax-s.gmin)).toFixed(3));
+}
+function setParam(id,val){
+  if(verified) return;
+  startTimer();
+  params[id] = parseInt(val,10);
+  paintSlider(effSliders().find(x=>x.id===id));
+  if(lastSim){ lastSim = null; }   /* mexeu depois de simular: o resultado antigo deixa de valer */
+  draw();
+}
+function draw(animate){
+  const L = LEVELS[level], ch = L.challenges[ci];
+  $('goals').innerHTML = goalChips(ch);
+  $('viz').innerHTML = renderViz(lastSim, params, !!animate);
+  const cards = metricCards(lastSim || compute(params), L);
+  $('metrics').innerHTML = cards.map(c=> lastSim
+    ? `<div class="metric ${c.s||''}"><b>${c.v}</b><span>${c.l}</span></div>`
+    : `<div class="metric q"><b>?</b><span>${c.l}</span></div>`).join('');
+  $('tries').innerHTML = triesHtml();
+}
+function verify(){
+  if(verified || triesLeft<=0) return;
+  startTimer();
+  const L = LEVELS[level], ch = L.challenges[ci];
+  lastSim = compute(params); triesLeft--;
+  const ok = !!ch.check(lastSim, params);
+  draw(true);
+  const fb = $('fb');
+  if(!ok && triesLeft>0){
+    const miss = ch.goals.filter(g=>!g.f(lastSim,params)).map(g=>g.t).join('; ');
+    fb.className = 'fb no';
+    fb.innerHTML = `<b>Ainda não.</b>Faltou cumprir: ${miss}. Ajuste os controles e simule de novo.`;
+    return;
+  }
+  verified = true;
+  $('verify').disabled = true;
+  document.querySelectorAll('.sliders input').forEach(i=>i.disabled=true);
+  if(ok){ hits++; score += pointsFor(elapsed); }
+  hud();
+  fb.className = 'fb '+(ok?'ok':'no');
+  fb.innerHTML = ok ? `<b>Meta atingida.</b>${ch.ok}` : `<b>As simulações acabaram.</b>${ch.fail}<div class="more"><b>Para entender</b>${ch.ok}</div>`;
+  const nb = $('next');
+  nb.textContent = ci+1>=L.challenges.length ? 'Ver resultado' : 'Próximo desafio';
+  nb.classList.add('show');
+}
+function nextChallenge(){
+  ci++;
+  if(ci>=LEVELS[level].challenges.length) renderEnd(); else renderChallenge();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function renderEnd(){
+  clearInterval(timerInt); timerInt=null;
+  const total = LEVELS[level].challenges.length, pct = Math.round(hits/total*100);
+  const m = END_MSG.find(x=>pct>=x[0]);
+  $('hCh').textContent = total+'/'+total;
+  $('stage').innerHTML = `
+    <div class="end">
+      <h2>${m[1]}</h2>
+      <p>${m[2]}</p>
+      <div class="stats">
+        <div class="stat">${hits}/${total}<span>Acertos</span></div>
+        <div class="stat">${score}<span>Pontos</span></div>
+        <div class="stat">${pct}%<span>Aproveitamento</span></div>
+        <div class="stat">${elapsed}s<span>Tempo</span></div>
+      </div>
+      <div class="savebox">
+        <input id="playerName" maxlength="20" placeholder="Seu nome (até 20 letras)">
+        <button class="btn" id="saveBtn" onclick="saveScore()">Salvar no ranking</button>
+      </div>
+      <p id="saveStatus" style="margin-top:8px;font-size:.85rem"></p>
+      <button class="btn ghost" style="margin-top:10px" onclick="restart()">Jogar de novo</button>
+    </div>`;
 }
 
-function verify(){
-  const ch=CHALLENGES[level][cIdx];
-  const m=compute(params);
-  const ok=ch.check(m,params);
-  const msg=document.getElementById('resultMsg');
-  if(ok){
-    msg.className='result-msg ok';msg.textContent=ch.fb;msg.style.display='block';
-    score+=200+Math.max(0,60-Math.floor(timer/2));
-    desafiosConcluidos++;
-    document.getElementById('hScore').textContent=score;
-    document.getElementById('hDesafios').textContent=desafiosConcluidos+'/3';
-    setTimeout(()=>{cIdx++;renderChallenge();},2500);
-  } else {
-    msg.className='result-msg err';msg.textContent='❌ Ainda não! Revise os parâmetros e tente de novo.';msg.style.display='block';
+async function initFirebase(){
+  try{
+    const appM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const fsM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    db=fsM.getFirestore(appM.initializeApp(firebaseConfig)); fsFns=fsM;
+    loadRanking();
+  }catch(e){
+    $('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';
+    $('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';
   }
 }
-window.verify=verify;
-
-function endGame(){
-  clearInterval(timerInt);
-  document.getElementById('challengeBox').style.display='none';
-  document.getElementById('endScreen').style.display='block';
-  document.getElementById('finalScore').textContent=score;
-  document.getElementById('finalLevel').textContent=level;
-  lastSave=null;
-}
-
 async function saveScore(){
-  if(lastSave)return;
-  const name=document.getElementById('playerName').value.trim()||'Anônimo';
-  lastSave={name,score,level,seconds:timer};
+  if(scoreSaved) return;
+  const name=$('playerName').value.trim(), st=$('saveStatus');
+  if(!name){st.textContent='Digite seu nome primeiro.';return;}
+  if(!db){st.textContent='Sem conexão com o ranking. Seu resultado não foi enviado.';return;}
   try{
-    await addDoc(collection(db,`games/${GAME_ID}/scores`),{name,score,level,seconds:timer,ts:serverTimestamp()});
-    loadRanking();
-  }catch(e){console.warn('offline',e);}
+    $('saveBtn').disabled=true;
+    await fsFns.addDoc(fsFns.collection(db,'games',GAME_ID,'scores'),
+      {name:name.slice(0,20),score:score,level:levelVal(level),seconds:elapsed,hits:hits,total:LEVELS[level].challenges.length,ts:fsFns.serverTimestamp()});
+    scoreSaved=true; st.textContent='Salvo no Ranking Global!'; loadRanking();
+  }catch(e){ $('saveBtn').disabled=false; st.textContent='Erro ao salvar. Verifique a internet e tente de novo.'; }
 }
-
 async function loadRanking(){
-  const el=document.getElementById('rankList');
+  if(!db) return;
+  const list=$('rankList'), asked=level;
   try{
-    const q=query(collection(db,`games/${GAME_ID}/scores`),orderBy('score','desc'),limit(80));
-    const snap=await getDocs(q);
-    const rows=snap.docs.map(d=>d.data()).filter(d=>d.level===level).slice(0,15);
-    if(!rows.length){el.innerHTML='<p style="opacity:.5;font-size:.82rem">Seja o primeiro!</p>';return;}
-    el.innerHTML=rows.map((r,i)=>`<div class="rank-item"><span>${i+1}. ${r.name}</span><span>${r.score} pts</span></div>`).join('');
-  }catch(e){el.innerHTML='<p style="opacity:.5;font-size:.82rem">Ranking offline.</p>';}
+    /* filtra por nivel no servidor e ordena aqui: cada nivel tem o seu ranking completo */
+    const q=fsFns.query(fsFns.collection(db,'games',GAME_ID,'scores'),fsFns.where('level','==',levelVal(asked)),fsFns.limit(1000));
+    const snap=await fsFns.getDocs(q);
+    if(asked!==level) return;
+    const rows=[]; snap.forEach(d=>rows.push(d.data()));
+    rows.sort((a,b)=>((Number(b.score)||0)-(Number(a.score)||0))||((Number(a.seconds)||0)-(Number(b.seconds)||0)));
+    if(!rows.length){list.innerHTML='<li><span>Seja o primeiro do ranking!</span></li>';return;}
+    list.innerHTML=rows.slice(0,10).map((r,i)=>
+      `<li><span><span class="pos">${i+1}º</span>${esc(r.name||'?')}</span><span>${Number(r.score)||0} pts · ${Number(r.seconds)||0}s</span></li>`).join('');
+  }catch(e){ list.innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>'; }
 }
 
-function setLevel(l,btn){
-  level=l;
-  document.querySelectorAll('.lvl').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  init();
-}
-
-window.setLevel=setLevel;
-window.saveScore=saveScore;
-window.init=init;
-init();
+buildLevels();
+setLevel(KEYS[0]);
+initFirebase();
 </script>
 </body>
 </html>
