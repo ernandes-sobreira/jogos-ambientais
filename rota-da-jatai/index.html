@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rota da Jataí</title>
+<style>
+:root{--main:#ef8f00;--deep:#a85d00;--soft:#fff3e0;--line:#fde0b8;--ink:#2b2217;--mut:#6d5a44}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:780px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep)}h2{font-size:1.15rem;color:var(--deep);margin-bottom:6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 11px;font-weight:700;font-size:.86rem}
+.card{border:2px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit}
+.btn:hover{background:var(--deep)}.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas{width:100%;max-width:760px;margin:0 auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff}
+.pad{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,52px);gap:6px;justify-content:center;margin-top:10px}
+.pad button{border:2px solid var(--line);background:var(--soft);border-radius:12px;font-size:1.4rem;cursor:pointer;color:var(--deep);touch-action:manipulation}
+.pad button:active{background:#ffe0b2}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:8px}.tab td{border-bottom:1px solid var(--line);padding:5px 4px;vertical-align:top}
+.ops{display:grid;gap:8px;margin-top:10px}
+.ops button{border:2px solid var(--line);background:#fff;border-radius:12px;padding:11px;font-size:.95rem;cursor:pointer;font-family:inherit;text-align:left;color:var(--ink)}
+.ops button:hover{border-color:var(--main)}.ops button:disabled{opacity:.5;cursor:default}
+.fb{margin-top:10px;padding:11px 13px;border-radius:12px;font-size:.93rem}
+.fb.good{background:#e8f5e9;color:#1b5e20}.fb.bad{background:#ffebee;color:#8e1b1b}
+.big{font-size:2.3rem;font-weight:800;color:var(--deep)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1 id="tit">Rota da Jataí</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR">🍯 0</span><span class="pill" id="hV">❤️ 3</span><span class="pill" id="hT">⏱ 0</span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let actx=null;function beep(f,d,v){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=f;g.gain.setValueAtTime(v||.05,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+d);}catch(e){}}
+
+/* Regras do jogo: velocidade, flores, nuvens e metas são escolhas do jogo. */
+const COLS=24,ROWS=16;
+const FASES=[
+ {nome:'Mata preservada',vel:6.5,flores:9,nuvens:0,dur:80,meta:30,txt:'A jataí sai do ninho, visita as flores e volta com pólen e néctar. Cada flor visitada aumenta a carga que vem atrás dela. Leve a carga até o ninho para guardar.'},
+ {nome:'Borda da lavoura',vel:7.5,flores:7,nuvens:2,dur:90,meta:36,txt:'Do lado da lavoura vem a deriva da pulverização. Se a jataí atravessar a nuvem, fica desorientada: os comandos se invertem por alguns segundos e ela perde metade da carga.'},
+ {nome:'Paisagem fragmentada',vel:8.5,flores:5,nuvens:3,dur:100,meta:40,txt:'Sobrou pouca mata. As flores ficam longe umas das outras e a deriva é maior. Planeje a rota de volta ao ninho.'}
+];
+const PERG=[
+ {q:'Quantas espécies de abelhas-sem-ferrão existem no Brasil, segundo a Embrapa?',o:['Cerca de 300','Cerca de 30','Cerca de 3 milhões']},
+ {q:'O que o inseticida tiametoxam faz com as abelhas?',o:['Desorienta a abelha, que não consegue voltar à colmeia','Endurece a cera do ninho e a rainha fica presa lá dentro','Deixa o mel amargo e as larvas deixam de se alimentar dele']},
+ {q:'Segundo estudo citado pela Embrapa, que parte das espécies de plantas nativas do Pantanal as abelhas-sem-ferrão polinizam?',o:['Cerca de 30%','Cerca de 3%','Quase 100%']}
+];
+const CORES=['#e91e63','#ab47bc','#ffffff','#ffca28','#ff7043','#42a5f5'];
+let S,cv,cx,raf=null,last=0,T=30;
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';
+ if(S.g){const g=S.g;$('hV').textContent='❤️ '+g.vidas;$('hR').textContent='🍯 '+g.guardado+'/'+FASES[S.f].meta;$('hT').textContent='⏱ '+Math.max(0,Math.ceil(g.dur-g.t))+' s';}}
+function svgJatai(w){return `<svg viewBox="0 0 60 40" width="${w}" height="${w*2/3}" aria-label="jataí" style="vertical-align:-6px"><ellipse cx="24" cy="12" rx="13" ry="7" fill="#e3f2fd" opacity=".85" stroke="#90caf9"/><ellipse cx="34" cy="11" rx="11" ry="6" fill="#e3f2fd" opacity=".85" stroke="#90caf9"/><ellipse cx="20" cy="24" rx="13" ry="8" fill="#f9b233"/><path d="M13 19 Q14 24 13 29 M19 17 Q20 24 19 31" stroke="#8d5a00" stroke-width="2" fill="none"/><ellipse cx="34" cy="23" rx="8" ry="7" fill="#3e2a14"/><circle cx="44" cy="22" r="6" fill="#2b1d0e"/><circle cx="46" cy="20" r="1.6" fill="#fff"/><path d="M46 17 q5 -7 9 -6 M44 16 q3 -8 7 -8" stroke="#2b1d0e" stroke-width="1.4" fill="none"/></svg>`;}
+function inicio(){
+ parar();$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><h2>Ajude a jataí a abastecer o ninho</h2>
+ <table class="tab"><tr><td>${svgJatai(40)}</td><td>A jataí é uma abelha-sem-ferrão nativa. Ela anda sem parar: você só muda a direção.</td></tr>
+ <tr><td>🌸</td><td>Cada flor visitada aumenta a carga de pólen que segue a abelha.</td></tr>
+ <tr><td>🏠</td><td>Leve a carga até a entrada do ninho. Quanto maior a carga entregue, mais pontos.</td></tr>
+ <tr><td>☁️</td><td>A nuvem de deriva de agrotóxico desorienta a jataí: os comandos se invertem e ela perde metade da carga.</td></tr>
+ <tr><td>💥</td><td>Bater na borda ou na própria carga custa uma vida, e a carga se perde.</td></tr>
+ <tr><td>⌨️ 👆</td><td>Setas do teclado, deslize o dedo ou use os botões.</td></tr></table>
+ <p class="small" style="margin-top:8px">🎯 Meta: guardar no ninho a quantidade de pólen da fase antes do tempo acabar.</p>
+ <div class="row" style="margin-top:12px"><button class="btn" onclick="novo()">Começar →</button></div></div>`;
+}
+function novo(){S={f:0,tot:0,fp:0};salvo=false;$('rankBox').style.display='none';fase();}
+function fase(){const F=FASES[S.f];S.fp=0;S.g=null;hud();
+ $('tela').innerHTML=`<div class="card"><h2>Fase ${S.f+1}: ${F.nome}</h2><p>${F.txt}</p><p class="small" style="margin-top:6px">🎯 Meta: guardar ${F.meta} cargas de pólen em ${F.dur} s.</p><div class="row" style="margin-top:12px"><button class="btn" id="bg">Voar →</button></div></div>`;
+ $('bg').onclick=jogar;}
+const NINHO={x:2,y:8};
+function livre(x,y){const g=S.g;if(Math.abs(x-NINHO.x)<=1&&Math.abs(y-NINHO.y)<=1)return false;if(g.corpo.some(c=>c.x===x&&c.y===y))return false;if(g.flores.some(f=>f.x===x&&f.y===y))return false;return true;}
+function novaFlor(){const g=S.g,F=FASES[S.f];let x,y,t=0;do{x=1+Math.floor(Math.random()*(COLS-2));y=1+Math.floor(Math.random()*(ROWS-2));t++;}while((!livre(x,y)||(S.f===2&&x<7&&t<200))&&t<400);
+ g.flores.push({x,y,cor:CORES[Math.floor(Math.random()*CORES.length)]});}
+function novaNuvem(){const g=S.g;const y=rr(1,ROWS-3),dir=Math.random()<.5?1:-1;g.nuvens.push({x:dir>0?-3:COLS+3,y,vx:dir*rr(1.2,2.2)*(1+S.f*.2),vy:rr(-.3,.3),r:rr(1.6,2.4)});}
+function jogar(){const F=FASES[S.f];
+ S.g={t:0,dur:F.dur,vidas:3,guardado:0,corpo:[{x:5,y:8},{x:4,y:8},{x:3,y:8}],carga:0,dir:'r',quer:'r',prog:0,flores:[],nuvens:[],deso:0,fim:false,msg:'',msgT:0,proxN:3};
+ for(let i=0;i<F.flores;i++)novaFlor();
+ $('tela').innerHTML=`<div class="card"><canvas id="cv"></canvas>
+ <div class="pad"><span></span><button data-d="u">⬆️</button><span></span><button data-d="l">⬅️</button><button data-d="d">⬇️</button><button data-d="r">➡️</button></div></div>`;
+ cv=$('cv');T=cv.clientWidth<520?18:30;cv.width=COLS*T;cv.height=ROWS*T;cx=cv.getContext('2d');
+ document.querySelectorAll('.pad button').forEach(b=>b.onpointerdown=e=>{e.preventDefault();virar(b.dataset.d);});
+ let t0=null;cv.onpointerdown=e=>{t0=[e.clientX,e.clientY];};
+ cv.onpointerup=e=>{if(!t0)return;const dx=e.clientX-t0[0],dy=e.clientY-t0[1];if(Math.max(Math.abs(dx),Math.abs(dy))>16)virar(Math.abs(dx)>Math.abs(dy)?(dx>0?'r':'l'):(dy>0?'d':'u'));t0=null;};
+ hud();last=performance.now();parar();raf=requestAnimationFrame(loop);}
+const OPO={u:'d',d:'u',l:'r',r:'l'},DV={u:[0,-1],d:[0,1],l:[-1,0],r:[1,0]};
+document.addEventListener('keydown',e=>{if(!S||!S.g||S.g.fim)return;const m={ArrowUp:'u',ArrowDown:'d',ArrowLeft:'l',ArrowRight:'r',w:'u',s:'d',a:'l',d:'r'}[e.key];if(m){virar(m);e.preventDefault();}});
+function virar(d){const g=S.g;if(!g)return;if(g.deso>0)d=OPO[d];if(d===OPO[g.dir])return;g.quer=d;}
+function msg(t){S.g.msg=t;S.g.msgT=2.4;}
+function perdeVida(txt){const g=S.g;g.vidas--;S.fp-=10;g.carga=0;beep(120,.4,.08);msg(txt+' −10.');
+ g.corpo=[{x:5,y:8},{x:4,y:8},{x:3,y:8}];g.dir='r';g.quer='r';g.deso=0;if(g.vidas<=0)terminar();}
+function passo(){const g=S.g;g.dir=g.quer;const h=g.corpo[0];const n={x:h.x+DV[g.dir][0],y:h.y+DV[g.dir][1]};
+ if(n.x<0||n.x>=COLS||n.y<0||n.y>=ROWS){perdeVida('💥 A jataí bateu na borda.');return;}
+ if(g.corpo.slice(1).some(c=>c.x===n.x&&c.y===n.y)){perdeVida('💥 A jataí trombou na própria carga.');return;}
+ g.corpo.unshift(n);
+ const fi=g.flores.findIndex(f=>f.x===n.x&&f.y===n.y);
+ if(fi>=0){g.flores.splice(fi,1);g.carga++;S.fp+=1;beep(700+g.carga*30,.05);novaFlor();}
+ else g.corpo.pop();
+ // tamanho visível: cabeça + 2 + carga
+ while(g.corpo.length>3+g.carga)g.corpo.pop();
+ if(Math.abs(n.x-NINHO.x)<=0&&Math.abs(n.y-NINHO.y)<=0&&g.carga>0){const c=g.carga;g.guardado+=c;S.fp+=c*c;beep(990,.2);msg(`🏠 ${c} carga(s) guardada(s) no ninho! +${c*c}.`);g.carga=0;while(g.corpo.length>3)g.corpo.pop();
+  if(g.guardado>=FASES[S.f].meta)terminar();}}
+function update(dt){const g=S.g;if(!g||g.fim)return;const F=FASES[S.f];
+ g.t+=dt;g.msgT-=dt;g.deso-=dt;
+ g.prog+=F.vel*dt;while(g.prog>=1&&!g.fim){g.prog-=1;passo();}
+ if(F.nuvens){g.proxN-=dt;if(g.proxN<=0&&g.nuvens.length<F.nuvens){novaNuvem();g.proxN=rr(3,6);}}
+ for(const n of g.nuvens){n.x+=n.vx*dt;n.y+=n.vy*dt;}g.nuvens=g.nuvens.filter(n=>n.x>-5&&n.x<COLS+5);
+ const h=g.corpo[0];if(g.deso<=0)for(const n of g.nuvens){if(Math.hypot(h.x+.5-n.x,h.y+.5-n.y)<n.r){g.deso=4;const perdeu=Math.ceil(g.carga/2);g.carga-=perdeu;while(g.corpo.length>3+g.carga)g.corpo.pop();S.fp-=5;beep(200,.3);msg(`☁️ Deriva de agrotóxico! A jataí ficou desorientada e perdeu ${perdeu} carga(s).`);break;}}
+ if(g.t>=g.dur)terminar();}
+function flor(x,y,cor,s){cx.save();cx.translate(x,y);cx.fillStyle=cor;for(let i=0;i<5;i++){cx.rotate(Math.PI*2/5);cx.beginPath();cx.ellipse(0,-s*.3,s*.18,s*.28,0,0,7);cx.fill();}cx.fillStyle='#fbc02d';cx.beginPath();cx.arc(0,0,s*.16,0,7);cx.fill();cx.restore();}
+function abelha(x,y,s,dir){cx.save();cx.translate(x,y);const ang={r:0,d:Math.PI/2,l:Math.PI,u:-Math.PI/2}[dir];cx.rotate(ang);const k=s/60;cx.scale(k,k);cx.translate(-28,-22);
+ const bat=Math.sin(performance.now()/40)*3;cx.fillStyle='rgba(227,242,253,.85)';cx.strokeStyle='#90caf9';cx.beginPath();cx.ellipse(24,12+bat*.3,13,7,0,0,7);cx.fill();cx.stroke();cx.beginPath();cx.ellipse(34,32-bat*.3,11,6,0,0,7);cx.fill();cx.stroke();
+ cx.fillStyle='#f9b233';cx.beginPath();cx.ellipse(20,22,13,8,0,0,7);cx.fill();cx.strokeStyle='#8d5a00';cx.lineWidth=2;cx.beginPath();cx.moveTo(13,16);cx.quadraticCurveTo(14,22,13,28);cx.moveTo(19,15);cx.quadraticCurveTo(20,22,19,29);cx.stroke();
+ cx.fillStyle='#3e2a14';cx.beginPath();cx.ellipse(34,22,8,7,0,0,7);cx.fill();cx.fillStyle='#2b1d0e';cx.beginPath();cx.arc(44,22,6,0,7);cx.fill();cx.fillStyle='#fff';cx.beginPath();cx.arc(46,20,1.6,0,7);cx.fill();cx.restore();}
+function desenha(){const g=S.g;if(!g||!cx)return;
+ cx.clearRect(0,0,cv.width,cv.height);
+ if(S.f===0){cx.fillStyle='#f1f8e9';cx.fillRect(0,0,cv.width,cv.height);}
+ else{cx.fillStyle='#f1f8e9';cx.fillRect(0,0,cv.width,cv.height);cx.fillStyle='#fff9c4';const lav=S.f===1?.35:.55;cx.fillRect(cv.width*(1-lav),0,cv.width*lav,cv.height);
+  cx.strokeStyle='rgba(158,157,36,.35)';cx.lineWidth=1;for(let y=T/2;y<cv.height;y+=T/2){cx.beginPath();cx.moveTo(cv.width*(1-lav),y);cx.lineTo(cv.width,y);cx.stroke();}
+  cx.fillStyle='#9e9d24';cx.font='bold '+(T*.45)+'px system-ui';cx.textAlign='right';cx.fillText('lavoura',cv.width-6,cv.height-T*.3);}
+ // ninho
+ const nx=NINHO.x*T+T/2,ny=NINHO.y*T+T/2;cx.fillStyle='#8d6e63';cx.beginPath();cx.roundRect(nx-T*1.4,ny-T*1.6,T*1.3,T*3.2,6);cx.fill();
+ cx.fillStyle='#ffe082';cx.beginPath();cx.ellipse(nx,ny,T*.42,T*.28,0,0,7);cx.fill();cx.strokeStyle='#c49000';cx.lineWidth=2;cx.stroke();
+ cx.fillStyle='#4e342e';cx.beginPath();cx.ellipse(nx+T*.12,ny,T*.14,T*.12,0,0,7);cx.fill();
+ cx.fillStyle='#5d4037';cx.font='bold '+(T*.38)+'px system-ui';cx.textAlign='center';cx.fillText('ninho',nx-T*.75,ny+T*2.1);
+ for(const f of g.flores)flor(f.x*T+T/2,f.y*T+T/2,f.cor,T);
+ // carga
+ for(let i=g.corpo.length-1;i>=1;i--){const c=g.corpo[i];if(i<=2){cx.fillStyle='rgba(249,178,51,.25)';cx.beginPath();cx.arc(c.x*T+T/2,c.y*T+T/2,T*.22,0,7);cx.fill();continue;}
+  cx.fillStyle=i%2?'#ffb300':'#ffca28';cx.beginPath();cx.arc(c.x*T+T/2,c.y*T+T/2,T*.36,0,7);cx.fill();cx.strokeStyle='#e08e00';cx.lineWidth=1;cx.stroke();}
+ const h=g.corpo[0];const ox=DV[g.dir][0]*g.prog*0,oy=0;
+ cx.save();if(g.deso>0){cx.globalAlpha=.6+.4*Math.sin(performance.now()/80);}abelha(h.x*T+T/2,h.y*T+T/2,T*2.1,g.dir);cx.restore();
+ for(const n of g.nuvens){const gr=cx.createRadialGradient(n.x*T,n.y*T,0,n.x*T,n.y*T,n.r*T);gr.addColorStop(0,'rgba(158,157,36,.55)');gr.addColorStop(1,'rgba(158,157,36,0)');cx.fillStyle=gr;cx.beginPath();cx.arc(n.x*T,n.y*T,n.r*T,0,7);cx.fill();
+  cx.fillStyle='rgba(85,85,20,.7)';for(let i=0;i<6;i++){cx.beginPath();cx.arc(n.x*T+Math.cos(i)*n.r*T*.5,n.y*T+Math.sin(i*1.7)*n.r*T*.4,2,0,7);cx.fill();}}
+ if(g.deso>0){cx.fillStyle='#827717';cx.font='bold '+(T*.5)+'px system-ui';cx.textAlign='center';cx.fillText('Desorientada! Comandos invertidos: '+Math.ceil(g.deso)+' s',cv.width/2,cv.height-T*.4);}
+ if(g.msgT>0){cx.font='bold '+(T*.48)+'px system-ui';cx.textAlign='center';cx.fillStyle='rgba(255,255,255,.9)';cx.fillRect(0,2,cv.width,T*.8);cx.fillStyle='#a85d00';cx.fillText(g.msg,cv.width/2,T*.58);}
+}
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);desenha();hud();if(S.g&&!S.g.fim)raf=requestAnimationFrame(loop);}
+function parar(){if(raf)cancelAnimationFrame(raf);raf=null;}
+function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=FASES[S.f],ok=g.guardado>=F.meta&&g.vidas>0;
+ const sobra=Math.max(0,Math.ceil(g.dur-g.t));if(ok){S.fp+=30+sobra;beep(880,.2);}hud();
+ $('tela').innerHTML=`<div class="card"><h2>${ok?'Ninho abastecido':'O ninho ficou com pouco alimento'}</h2>
+ <p>Cargas guardadas: <b>${g.guardado}</b> de ${F.meta}. Vidas restantes: <b>${g.vidas}</b>.</p>
+ ${ok?`<div class="fb good">🎯 Meta cumprida! +30 e +${sobra} pelo tempo que sobrou.</div>`:'<div class="fb bad">A meta não foi cumprida. Volte ao ninho antes de a carga ficar grande demais e desvie da deriva.</div>'}
+ <div class="row" style="margin-top:12px">${ok?'<button class="btn" id="bq">Pergunta da fase →</button>':'<button class="btn" id="br">Tentar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
+ if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}}
+function pergunta(){
+ const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
+ $('tela').innerHTML=`<div class="card"><h2>Pergunta da fase</h2><p style="margin:6px 0 4px">${P.q}</p><p class="small">Acerto +20, erro −10.</p><div class="ops">${ops.map((o,i)=>`<button data-i="${i}">${o.t}</button>`).join('')}</div><div id="pf"></div></div>`;
+ document.querySelectorAll('#tela .ops button').forEach(b=>b.onclick=()=>{const o=ops[+b.dataset.i];S.fp+=o.c?20:-10;beep(o.c?880:170,.15);hud();
+  document.querySelectorAll('#tela .ops button').forEach((x,j)=>{x.disabled=true;if(ops[j].c){x.style.borderColor='#2e7d32';x.style.opacity=1;}});
+  $('pf').innerHTML=`<div class="fb ${o.c?'good':'bad'}">${o.c?'✅ +20.':'❌ −10. A resposta certa está marcada em verde.'}<div class="row" style="margin-top:10px"><button class="btn" id="bn">${S.f===FASES.length-1?'Ver resultado →':'Próxima fase →'}</button></div></div>`;
+  $('bn').onclick=()=>{S.tot+=S.fp;S.fp=0;if(S.f===FASES.length-1)final(true);else{S.f++;fase();}};});
+}
+function final(tudo){
+ S.g=null;$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
+ $('tela').innerHTML=`<div class="card" style="text-align:center"><div class="big">${tudo?'🏆':svgJatai(90)}</div><h2>${tudo?'O ninho da jataí está cheio!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
+ <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
+ <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Embrapa Meio Ambiente, cerca de 300 espécies de abelhas-sem-ferrão no Brasil; Embrapa, polinização de cerca de 30% das espécies nativas da Caatinga e do Pantanal (Kerr et al., 2001); Ibama (fevereiro de 2024), restrição ao tiametoxam, inseticida que afeta o sistema nervoso das abelhas e as desorienta, e proibição da pulverização aérea e terrestre não dirigida, por causa da deriva. Velocidade, flores, nuvens e metas são regras do jogo.</div></div>`;
+ $('bS').onclick=()=>salvar(nivel);
+}
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="rota-da-jatai";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__rj={get S(){return S},update,virar,passo,FASES,NINHO,COLS,ROWS};
+$('tit').innerHTML=svgJatai(42)+' Rota da Jataí';
+inicio();
+</script>
+</body>
+</html>
