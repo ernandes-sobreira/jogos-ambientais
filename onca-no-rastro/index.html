@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Onça no Rastro</title>
+<style>
+:root{--main:#8d5524;--deep:#5d3714;--soft:#fbf1e6;--line:#ecd9c3;--ink:#2a1f15;--mut:#6b5846}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:780px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep)}h2{font-size:1.15rem;color:var(--deep);margin-bottom:6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 11px;font-weight:700;font-size:.86rem}
+.card{border:2px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit}
+.btn:hover{background:var(--deep)}.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas{width:100%;max-width:760px;margin:0 auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff}
+.pad{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,52px);gap:6px;justify-content:center;margin-top:10px}
+.pad button{border:2px solid var(--line);background:var(--soft);border-radius:12px;font-size:1.4rem;cursor:pointer;color:var(--deep);touch-action:manipulation}
+.pad button:active{background:#dcedc8}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:8px}.tab td{border-bottom:1px solid var(--line);padding:5px 4px;vertical-align:top}
+.ops{display:grid;gap:8px;margin-top:10px}
+.ops button{border:2px solid var(--line);background:#fff;border-radius:12px;padding:11px;font-size:.95rem;cursor:pointer;font-family:inherit;text-align:left;color:var(--ink)}
+.ops button:hover{border-color:var(--main)}.ops button:disabled{opacity:.5;cursor:default}
+.fb{margin-top:10px;padding:11px 13px;border-radius:12px;font-size:.93rem}
+.fb.good{background:#e8f5e9;color:#1b5e20}.fb.bad{background:#ffebee;color:#8e1b1b}
+.big{font-size:2.3rem;font-weight:800;color:var(--deep)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+.fotos{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.fotos canvas{width:220px;max-width:46%;border-radius:10px;border:2px solid var(--line)}
+.cat{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:10px}
+.cat button{border:2px solid var(--line);background:#fff;border-radius:12px;padding:6px;cursor:pointer;font-family:inherit;font-size:.85rem;color:var(--ink)}.cat button:hover{border-color:var(--main)}.cat button canvas{width:100%;border-radius:6px;display:block;margin-bottom:4px}
+.cat button.alt{display:flex;align-items:center;justify-content:center;min-height:70px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>📷 Onça no Rastro</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR">📷 0</span><span class="pill" id="hV">✔️ 0 identificadas</span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let actx=null;function beep(f,d,v){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=f;g.gain.setValueAtTime(v||.05,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+d);}catch(e){}}
+function rng(seed){let s=seed>>>0;return ()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
+
+/* Mapa: # mata, . trilha. Rotas das onças, sinais e falhas das câmeras são regras do jogo. */
+const MAPA=['##############','#....#....#..#','#.##.#.##.#.##','#.#......#...#','#.#.####.#.#.#','#......#...#.#','###.##.#.###.#','#.........#..#','##############'];
+const ROWS=MAPA.length,COLS=MAPA[0].length;
+const FASES=[
+ {nome:'Fazenda na beira do rio',oncas:3,cams:6,sinal:.6,meta:2,txt:'Três onças usam as trilhas desta área. As pegadas mostram por onde elas andam. Instale as câmeras e depois identifique cada onça pelas rosetas.'},
+ {nome:'Trilhas da cordilheira',oncas:4,cams:6,sinal:.38,meta:3,txt:'Agora são quatro onças e menos pegadas. Pense onde vale gastar duas câmeras no mesmo ponto.'},
+ {nome:'Grande levantamento',oncas:5,cams:8,sinal:.25,meta:4,txt:'Cinco onças, poucos sinais e um catálogo maior para conferir. Cuidado para não contar a mesma onça duas vezes.'}
+];
+const PERG=[
+ {q:'Como os pesquisadores diferenciam uma onça-pintada de outra nas fotos?',o:['Pelo desenho das rosetas, que é único em cada animal','Pela cor dos olhos, que muda de onça para onça','Pelo tamanho das pegadas deixadas na trilha']},
+ {q:'Por que muitas vezes se instalam duas câmeras, uma de frente para a outra?',o:['Para fotografar os dois lados do corpo, que têm desenhos diferentes','Para uma câmera vigiar a outra contra roubo','Para tirar a mesma foto duas vezes e escolher a melhor']},
+ {q:'O que acontece se a mesma onça for contada como duas onças diferentes?',o:['A população da área fica superestimada','A onça muda de território','A câmera para de funcionar']}
+];
+let S,cv,cx,raf=null,last=0,T=48;
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';
+ if(S.g){$('hR').textContent='📷 '+(FASES[S.f].cams-S.g.usadas)+' câmeras';$('hV').textContent='✔️ '+(S.g.catalogo?Object.values(S.g.catalogo).filter(c=>c.E&&c.D).length:0)+' identificadas';}}
+function inicio(){
+ parar();$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><h2>Fotografe e identifique as onças-pintadas</h2>
+ <table class="tab"><tr><td>🐾</td><td>Pegadas mostram as trilhas que as onças usam.</td></tr>
+ <tr><td>📷</td><td>Toque numa trilha para instalar uma câmera. Toque de novo para pôr a segunda câmera no mesmo ponto, uma de frente para a outra. Um terceiro toque tira as câmeras.</td></tr>
+ <tr><td>🌙</td><td>Depois, as câmeras ficam três noites no campo. Elas fotografam quem passa, mas às vezes falham.</td></tr>
+ <tr><td>🔎</td><td>No laboratório, compare as rosetas de cada foto com o catálogo. Cada lado do corpo tem um desenho diferente. As rosetas do jogo são desenhos gerados por computador.</td></tr></table>
+ <p class="small" style="margin-top:8px">Acerto na identificação +10, erro −10. Onça com os dois lados no catálogo vale +20. 🎯 Meta: identificar pelos dois lados a quantidade de onças da fase.</p>
+ <div class="row" style="margin-top:12px"><button class="btn" onclick="novo()">Começar →</button></div></div>`;
+}
+function novo(){S={f:0,tot:0,fp:0};salvo=false;$('rankBox').style.display='none';fase();}
+function fase(){const F=FASES[S.f];S.fp=0;S.g=null;hud();
+ $('tela').innerHTML=`<div class="card"><h2>Fase ${S.f+1}: ${F.nome}</h2><p>${F.txt}</p><p class="small" style="margin-top:6px">${F.cams} câmeras. 🎯 Meta: identificar pelos dois lados pelo menos ${F.meta} onças.</p><div class="row" style="margin-top:12px"><button class="btn" id="bg">Ir para o campo →</button></div></div>`;
+ $('bg').onclick=campo;}
+const trilha=(x,y)=>y>=0&&y<ROWS&&x>=0&&x<COLS&&MAPA[y][x]==='.';
+function rotas(){const F=FASES[S.f],cells=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(trilha(x,y))cells.push([x,y]);
+ const r=[];for(let i=0;i<F.oncas;i++){let [x,y]=cells[Math.floor(Math.random()*cells.length)],px=-1,py=-1;const path=[[x,y]];
+  for(let k=0;k<34;k++){const viz=[[1,0],[-1,0],[0,1],[0,-1]].map(([dx,dy])=>[x+dx,y+dy]).filter(([a,b])=>trilha(a,b));let ops=viz.filter(([a,b])=>!(a===px&&b===py));if(!ops.length)ops=viz;const n=ops[Math.floor(Math.random()*ops.length)];px=x;py=y;[x,y]=n;path.push(n);}
+  r.push(path);}return r;}
+function campo(){const F=FASES[S.f];
+ S.g={rotas:rotas(),cams:{},usadas:0,sinais:{},seed:Math.floor(Math.random()*1e6)};
+ S.g.rotas.forEach(p=>p.forEach(([x,y])=>{if(Math.random()<F.sinal/3)S.g.sinais[x+','+y]=true;}));
+ $('tela').innerHTML=`<div class="card"><canvas id="cv"></canvas><p class="small" style="margin-top:8px" id="dica">Toque nas trilhas para instalar as câmeras. Uma câmera fotografa só um lado da onça. Duas no mesmo ponto fotografam os dois lados.</p><div class="row" style="margin-top:10px"><button class="btn" id="bn">Deixar as câmeras por três noites →</button></div></div>`;
+ cv=$('cv');T=cv.clientWidth<520?30:52;cv.width=COLS*T;cv.height=ROWS*T;cx=cv.getContext('2d');
+ cv.onclick=e=>{const r=cv.getBoundingClientRect(),x=Math.floor((e.clientX-r.left)*cv.width/r.width/T),y=Math.floor((e.clientY-r.top)*cv.height/r.height/T);instalar(x,y);};
+ $('bn').onclick=noites;hud();mapa();}
+function instalar(x,y){const g=S.g,F=FASES[S.f];if(!trilha(x,y))return;const k=x+','+y,n=g.cams[k]||0;
+ if(n===2){delete g.cams[k];g.usadas-=2;}else if(g.usadas<F.cams){g.cams[k]=n+1;g.usadas++;beep(700,.05);}else{if(n){delete g.cams[k];g.usadas-=n;}else{beep(170,.15);$('dica').textContent='Acabaram as câmeras. Toque numa câmera instalada para tirar.';}}
+ hud();mapa();}
+function mapa(onc){const g=S.g;cx.clearRect(0,0,cv.width,cv.height);
+ for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){if(MAPA[y][x]==='#'){cx.fillStyle=(x+y)%2?'#a5d6a7':'#9ccc65';cx.fillRect(x*T,y*T,T,T);cx.font=(T*.6)+'px system-ui';cx.textAlign='center';cx.textBaseline='middle';if((x*7+y*3)%4===0)cx.fillText('🌳',x*T+T/2,y*T+T/2);}
+  else{cx.fillStyle='#efe0c6';cx.fillRect(x*T,y*T,T,T);}}
+ cx.font=(T*.42)+'px system-ui';cx.textAlign='center';cx.textBaseline='middle';
+ for(const k in g.sinais){const [x,y]=k.split(',').map(Number);cx.fillText('🐾',x*T+T/2,y*T+T/2);}
+ for(const k in g.cams){const [x,y]=k.split(',').map(Number),n=g.cams[k];cx.fillStyle='rgba(255,255,255,.85)';cx.beginPath();cx.arc(x*T+T/2,y*T+T/2,T*.42,0,7);cx.fill();cx.strokeStyle=n===2?'#2e7d32':'#8d5524';cx.lineWidth=3;cx.stroke();
+  cx.font=(T*.36)+'px system-ui';if(n===2){cx.fillText('📷',x*T+T*.32,y*T+T/2);cx.save();cx.translate(x*T+T*.68,y*T+T/2);cx.scale(-1,1);cx.fillText('📷',0,0);cx.restore();}else cx.fillText('📷',x*T+T/2,y*T+T/2);}
+ if(onc){for(const o of onc){desenhaOncaMapa(o.x*T+T/2,o.y*T+T/2,T*.8,o.cor);}}
+ if(onc&&g.flash)for(const f of g.flash){cx.fillStyle='rgba(255,255,255,'+f.a+')';cx.beginPath();cx.arc(f.x*T+T/2,f.y*T+T/2,T*.7,0,7);cx.fill();}}
+function desenhaOncaMapa(x,y,s,cor){cx.save();cx.translate(x,y);cx.fillStyle='#e0a040';cx.beginPath();cx.ellipse(0,0,s*.42,s*.24,0,0,7);cx.fill();cx.beginPath();cx.arc(s*.4,-s*.06,s*.17,0,7);cx.fill();cx.fillStyle='#3e2412';for(let i=0;i<5;i++){cx.beginPath();cx.arc(-s*.25+i*s*.12,(i%2?-1:1)*s*.08,s*.04,0,7);cx.fill();}cx.fillStyle=cor;cx.beginPath();cx.arc(0,-s*.32,s*.08,0,7);cx.fill();cx.restore();}
+function noites(){const g=S.g;if(!g.usadas){$('dica').textContent='Instale pelo menos uma câmera.';return;}
+ $('bn').disabled=true;$('dica').textContent='🌙 Três noites passando... as câmeras disparam quando uma onça passa.';
+ const cores=['#e53935','#1e88e5','#43a047','#8e24aa','#fb8c00'];g.eventos=[];const vistos={};let passo=0;g.flash=[];
+ const dur=g.rotas[0].length;parar();const tick=()=>{if(passo>=dur){mapa();laboratorio();return;}
+  const onc=g.rotas.map((p,i)=>({x:p[passo][0],y:p[passo][1],cor:cores[i],i}));
+  for(const o of onc){const k=o.x+','+o.y,n=g.cams[k];if(n){const key=o.i+'@'+k;if(!vistos[key]){const fl=new Set();if(n===2){if(Math.random()<.9)fl.add('E');if(Math.random()<.9)fl.add('D');}else if(Math.random()<.85)fl.add(Math.random()<.5?'E':'D');
+     if(fl.size){vistos[key]=true;g.eventos.push({ind:o.i,fl,k});g.flash.push({x:o.x,y:o.y,a:.9});beep(1500,.04,.03);}}}}
+  g.flash.forEach(f=>f.a-=.3);g.flash=g.flash.filter(f=>f.a>0);mapa(onc);passo++;raf=setTimeout(tick,230);};tick();}
+function parar(){if(raf){clearTimeout(raf);cancelAnimationFrame(raf);}raf=null;}
+/* Rosetas: cada onça tem um desenho próprio em cada lado do corpo */
+function corpoOnca(k,w,h){const X=v=>v*w,Y=v=>v*h;k.beginPath();
+ k.moveTo(X(-.30),Y(-.06));k.bezierCurveTo(X(-.20),Y(-.20),X(.08),Y(-.22),X(.22),Y(-.15));
+ k.bezierCurveTo(X(.27),Y(-.13),X(.29),Y(-.17),X(.31),Y(-.2));k.bezierCurveTo(X(.36),Y(-.28),X(.44),Y(-.25),X(.46),Y(-.15));
+ k.bezierCurveTo(X(.49),Y(-.1),X(.47),Y(-.03),X(.42),Y(-.02));k.bezierCurveTo(X(.36),Y(0),X(.32),Y(.02),X(.27),Y(.06));
+ k.bezierCurveTo(X(.2),Y(.14),X(-.1),Y(.16),X(-.26),Y(.1));k.bezierCurveTo(X(-.32),Y(.07),X(-.34),Y(0),X(-.30),Y(-.06));k.closePath();}
+function desenhaFlanco(c,ind,lado,ruido){const k=c.getContext('2d'),w=c.width,h=c.height;const r=rng((S.g.seed+ind*977+(lado==='E'?13:71))>>>0);
+ const bg=k.createLinearGradient(0,0,0,h);bg.addColorStop(0,'#e8f1e1');bg.addColorStop(1,'#cfdcbf');k.fillStyle=bg;k.fillRect(0,0,w,h);
+ k.fillStyle='rgba(120,140,90,.25)';for(let i=0;i<12;i++){k.fillRect(i*w/12,h*.78,2,h*.22);}
+ k.save();const n=ruido?{dx:rr(-6,6),dy:rr(-4,4),s:rr(.94,1.06)}:{dx:0,dy:0,s:1};k.translate(w/2+n.dx,h*.52+n.dy);k.scale(n.s*(lado==='E'?1:-1),n.s);
+ const pele='#d9a441',pernas='#c9913a';
+ // cauda
+ k.strokeStyle=pele;k.lineWidth=h*.06;k.lineCap='round';k.beginPath();k.moveTo(-w*.3,-h*.04);k.bezierCurveTo(-w*.42,h*.0,-w*.46,h*.2,-w*.4,h*.3);k.stroke();
+ k.strokeStyle='#2b1d10';k.lineWidth=h*.06;k.beginPath();k.moveTo(-w*.405,h*.24);k.lineTo(-w*.4,h*.3);k.stroke();
+ // pernas
+ k.fillStyle=pernas;for(const [x,o] of [[-.25,0],[-.19,.01],[.16,0],[.22,.01]]){k.beginPath();k.roundRect(w*x,h*(.04+o),w*.05,h*.26,w*.015);k.fill();}
+ // corpo
+ const g=k.createLinearGradient(0,-h*.2,0,h*.15);g.addColorStop(0,'#c98f2e');g.addColorStop(.6,pele);g.addColorStop(1,'#f3e2bd');k.fillStyle=g;corpoOnca(k,w,h);k.fill();
+ // orelha, olho, focinho
+ k.fillStyle='#c98f2e';k.beginPath();k.arc(w*.36,-h*.24,w*.018,0,7);k.fill();k.fillStyle='#2b1d10';k.beginPath();k.arc(w*.405,-h*.15,w*.008,0,7);k.fill();k.beginPath();k.arc(w*.468,-h*.11,w*.008,0,7);k.fill();
+ k.fillStyle='#f3e2bd';k.beginPath();k.ellipse(w*.44,-h*.05,w*.03,h*.03,0,0,7);k.fill();
+ // rosetas dentro do corpo
+ k.save();corpoOnca(k,w,h);k.clip();
+ for(let i=0;i<13;i++){const x=(-.26+r()*.48)*w,y=(-.17+r()*.26)*h,rad=(.022+r()*.016)*w;
+  k.fillStyle='#b8802f';k.beginPath();k.arc(x,y,rad*.75,0,7);k.fill();
+  k.fillStyle='#2b1d10';const pet=4+Math.floor(r()*3);for(let p=0;p<pet;p++){const a=p/pet*Math.PI*2+r()*.6;k.beginPath();k.ellipse(x+Math.cos(a)*rad,y+Math.sin(a)*rad,rad*.42,rad*.26,a+Math.PI/2,0,7);k.fill();}
+  if(r()<.6){k.beginPath();k.arc(x,y,rad*.2,0,7);k.fill();}}
+ for(let i=0;i<10;i++){k.fillStyle='#2b1d10';k.beginPath();k.arc((.24+r()*.18)*w,(-.22+r()*.16)*h,(.005+r()*.006)*w,0,7);k.fill();}
+ k.restore();k.restore();
+ k.fillStyle='rgba(0,0,0,.55)';k.fillRect(0,h-16,w,16);k.fillStyle='#fff';k.font='11px monospace';k.textAlign='left';k.fillText('CAM  '+(lado==='E'?'lado esquerdo':'lado direito'),6,h-4);}
+function foto(ind,lado,ruido,w=220,h=140){const c=document.createElement('canvas');c.width=w;c.height=h;desenhaFlanco(c,ind,lado,ruido);return c;}
+function laboratorio(){const g=S.g;g.catalogo={};g.nomes={};g.ordem=0;g.ev=0;g.acertos=0;g.erros=0;g.eventos=shuf(g.eventos);
+ if(!g.eventos.length){$('tela').innerHTML=`<div class="card"><h2>Nenhuma foto de onça</h2><p>As câmeras não registraram nenhuma onça. Instale as câmeras onde há mais pegadas.</p><div class="row" style="margin-top:12px"><button class="btn" id="br">Tentar de novo</button></div></div>`;$('br').onclick=fase;return;}
+ proximaFoto();}
+function cartaoID(id){return g=>g.nomes[id];}
+function proximaFoto(){const g=S.g;if(g.ev>=g.eventos.length){fimFase();return;}
+ const e=g.eventos[g.ev];const fl=[...e.fl].sort();
+ const cards=Object.keys(g.catalogo);
+ $('tela').innerHTML=`<div class="card"><h2>🔎 Laboratório: foto ${g.ev+1} de ${g.eventos.length}</h2>
+ <p class="small">Compare as rosetas com o catálogo. ${fl.length===2?'Esta estação tinha duas câmeras: você tem os dois lados.':'Esta foto mostra só o lado '+(fl[0]==='E'?'esquerdo':'direito')+'.'}</p>
+ <div class="fotos" id="fts"></div>
+ <p style="margin-top:10px"><b>Que onça é esta?</b></p>
+ <div class="cat" id="cat"></div><div id="fbk"></div></div>`;
+ fl.forEach(l=>$('fts').appendChild(foto(e.ind,l,true)));
+ const cat=$('cat');
+ for(const id of cards){const c=g.catalogo[id];const b=document.createElement('button');b.dataset.id=id;
+  for(const l of ['E','D']){if(c[l]){const fc=foto(+c.ind,l,false,150,96);b.appendChild(fc);}else{const d=document.createElement('div');d.className='small';d.style.padding='18px 0';d.textContent='lado '+(l==='E'?'esquerdo':'direito')+' desconhecido';b.appendChild(d);}}
+  const t=document.createElement('div');t.innerHTML='<b>'+g.nomes[id]+'</b>';b.appendChild(t);b.onclick=()=>responder(id);cat.appendChild(b);}
+ const nb=document.createElement('button');nb.className='alt';nb.textContent='🆕 Onça nova';nb.onclick=()=>responder('nova');cat.appendChild(nb);
+ if(fl.length===1&&cards.length){const nd=document.createElement('button');nd.className='alt';nd.textContent='❓ Não dá para saber (só um lado)';nd.onclick=()=>responder('?');cat.appendChild(nd);}
+}
+function certa(e){const g=S.g;const fl=[...e.fl];const id=Object.keys(g.catalogo).find(k=>g.catalogo[k].ind===e.ind&&fl.some(l=>g.catalogo[k][l]));if(id)return id;
+ if(fl.length===2)return 'nova';
+ // um lado só, sem esse lado no catálogo: se existe ficha sem esse lado, não dá para saber
+ const amb=Object.keys(g.catalogo).some(k=>!g.catalogo[k][fl[0]]);return amb?'?':'nova';}
+function responder(r){const g=S.g,e=g.eventos[g.ev],c=certa(e),ok=r===c;S.fp+=ok?10:-10;ok?g.acertos++:g.erros++;beep(ok?880:170,.15);
+ let txt;
+ if(ok){if(r==='nova'){const id='o'+(++g.ordem);g.catalogo[id]={ind:e.ind};g.nomes[id]='Onça '+g.ordem;e.fl.forEach(l=>g.catalogo[id][l]=true);txt=`✅ +10. Nova ficha no catálogo: ${g.nomes[id]}.`;}
+  else if(r==='?'){txt='✅ +10. Com um lado só, não dá para ligar esta foto a uma ficha que tem apenas o outro lado. A foto fica guardada sem identificação.';}
+  else{e.fl.forEach(l=>g.catalogo[r][l]=true);txt=`✅ +10. É a ${g.nomes[r]}. ${e.fl.size===2?'Agora a ficha tem os dois lados.':''}`;}}
+ else{const nome=c==='nova'?'uma onça nova':c==='?'?'impossível de identificar com um lado só':g.nomes[c];txt=`❌ −10. O certo era: ${nome}. Compare a posição dos grupos de rosetas.`;
+  if(c==='nova'){const id='o'+(++g.ordem);g.catalogo[id]={ind:e.ind};g.nomes[id]='Onça '+g.ordem;e.fl.forEach(l=>g.catalogo[id][l]=true);}
+  else if(c!=='?')e.fl.forEach(l=>g.catalogo[c][l]=true);}
+ document.querySelectorAll('#cat button').forEach(b=>b.disabled=true);hud();
+ $('fbk').innerHTML=`<div class="fb ${ok?'good':'bad'}">${txt}<div class="row" style="margin-top:10px"><button class="btn" id="bp">Próxima foto →</button></div></div>`;
+ $('bp').onclick=()=>{g.ev++;proximaFoto();};}
+function fimFase(){const g=S.g,F=FASES[S.f];const dois=Object.values(g.catalogo).filter(c=>c.E&&c.D).length;const tot=g.acertos+g.erros;const tx=tot?g.acertos/tot:0;
+ S.fp+=20*dois;const ok=dois>=F.meta&&tx>=.7;if(ok){S.fp+=30;beep(880,.2);}hud();
+ $('tela').innerHTML=`<div class="card"><h2>${ok?'Levantamento concluído':'Faltou identificar onças'}</h2>
+ <p>Onças identificadas pelos dois lados: <b>${dois}</b> de ${F.oncas} na área (meta: ${F.meta}). Acertos no laboratório: <b>${g.acertos}</b> de ${tot}.</p>
+ ${ok?`<div class="fb good">🎯 Meta cumprida! +${20*dois} pelas fichas completas e +30.</div>`:`<div class="fb bad">A meta não foi cumprida. ${dois<F.meta?'Use pares de câmeras nas trilhas com mais pegadas para ter os dois lados.':'Erros demais no laboratório: compare os grupos de rosetas com calma.'}</div>`}
+ <div class="row" style="margin-top:12px">${ok?'<button class="btn" id="bq">Pergunta da fase →</button>':'<button class="btn" id="br">Tentar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
+ if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}}
+function pergunta(){
+ const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
+ $('tela').innerHTML=`<div class="card"><h2>Pergunta da fase</h2><p style="margin:6px 0 4px">${P.q}</p><p class="small">Acerto +20, erro −10.</p><div class="ops">${ops.map((o,i)=>`<button data-i="${i}">${o.t}</button>`).join('')}</div><div id="pf"></div></div>`;
+ document.querySelectorAll('#tela .ops button').forEach(b=>b.onclick=()=>{const o=ops[+b.dataset.i];S.fp+=o.c?20:-10;beep(o.c?880:170,.15);hud();
+  document.querySelectorAll('#tela .ops button').forEach((x,j)=>{x.disabled=true;if(ops[j].c){x.style.borderColor='#2e7d32';x.style.opacity=1;}});
+  $('pf').innerHTML=`<div class="fb ${o.c?'good':'bad'}">${o.c?'✅ +20.':'❌ −10. A resposta certa está marcada em verde.'}<div class="row" style="margin-top:10px"><button class="btn" id="bn">${S.f===FASES.length-1?'Ver resultado →':'Próxima fase →'}</button></div></div>`;
+  $('bn').onclick=()=>{S.tot+=S.fp;S.fp=0;if(S.f===FASES.length-1)final(true);else{S.f++;fase();}};});
+}
+function final(tudo){
+ S.g=null;$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
+ $('tela').innerHTML=`<div class="card" style="text-align:center"><div class="big">${tudo?'🏆':'📷'}</div><h2>${tudo?'Catálogo de onças completo!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
+ <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
+ <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Revista Pesquisa FAPESP (2024) e Guia de Identificação das Onças-Pintadas do Estado de São Paulo (Beisiegel, 2023), identificação de cada onça pelo padrão único de rosetas em fotos de armadilhas fotográficas; trabalho da UFPA com câmeras duplas, que registram os dois lados do animal. As rotas das onças, as pegadas e as falhas das câmeras são regras do jogo, e as rosetas são desenhos gerados pelo jogo.</div></div>`;
+ $('bS').onclick=()=>salvar(nivel);
+}
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="onca-no-rastro";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__or={get S(){return S},instalar,noites,responder,certa,FASES,MAPA,laboratorio};
+inicio();
+</script>
+</body>
+</html>
