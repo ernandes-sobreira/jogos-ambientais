@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sovi Caçador</title>
+<style>
+:root{--main:#546e7a;--deep:#37474f;--soft:#eceff1;--line:#cfd8dc;--ink:#1c2529;--mut:#5f6b70}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:780px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep)}h2{font-size:1.15rem;color:var(--deep);margin-bottom:6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 11px;font-weight:700;font-size:.86rem}
+.card{border:2px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit}
+.btn:hover{background:var(--deep)}.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas{width:100%;max-width:760px;margin:0 auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff}
+.pad{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,52px);gap:6px;justify-content:center;margin-top:10px}
+.pad button{border:2px solid var(--line);background:var(--soft);border-radius:12px;font-size:1.4rem;cursor:pointer;color:var(--deep);touch-action:manipulation}
+.pad button:active{background:#dcedc8}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:8px}.tab td{border-bottom:1px solid var(--line);padding:5px 4px;vertical-align:top}
+.ops{display:grid;gap:8px;margin-top:10px}
+.ops button{border:2px solid var(--line);background:#fff;border-radius:12px;padding:11px;font-size:.95rem;cursor:pointer;font-family:inherit;text-align:left;color:var(--ink)}
+.ops button:hover{border-color:var(--main)}.ops button:disabled{opacity:.5;cursor:default}
+.fb{margin-top:10px;padding:11px 13px;border-radius:12px;font-size:.93rem}
+.fb.good{background:#e8f5e9;color:#1b5e20}.fb.bad{background:#ffebee;color:#8e1b1b}
+.big{font-size:2.3rem;font-weight:800;color:var(--deep)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>🦗 Sovi Caçador</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR">🦗 0</span><span class="pill" id="hV">🦶 vazio</span><span class="pill" id="hT">⏱ 0 s</span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let actx=null;function beep(f,d,v){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=f;g.gain.setValueAtTime(v||.05,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+d);}catch(e){}}
+/* Ciência: o sovi (Ictinia plumbea) é um gavião insetívoro, com cerca de 95% da dieta de insetos, que caça sobrevoando queimadas ((o))eco);
+   apanha insetos com os pés em pleno voo e alimenta ninhegos com insetos pequenos e jovens com insetos maiores, como o gafanhoto Tropidacris collaris (Jacomassa 2011, Biotemas).
+   Velocidades, quantidades e pontos são regras do jogo. */
+const INS={
+ gaf:{n:'gafanhoto',g:0,cor:'#7cb342',sz:1,pula:1,pts:5},
+ giga:{n:'gafanhoto-gigante',g:1,cor:'#558b2f',sz:1.7,pula:1,pts:6},
+ form:{n:'formiga alada',g:0,cor:'#5d4037',sz:.7,voa:1,pts:3},
+ bes:{n:'besouro',g:0,cor:'#33691e',sz:.8,voa:1,pts:3},
+ lib:{n:'libélula',g:1,cor:'#0288d1',sz:1.4,voa:1,rap:1,pts:6}
+};
+const FASES=[
+ {nome:'Caça em pleno voo',dur:50,meta:30,mix:['gaf','gaf','gaf','form','bes'],txt:'O sovi pega insetos com os pés em pleno voo. Os gafanhotos ficam no capim: passe baixo para fazer eles pularem e pegue no ar.'},
+ {nome:'Ninhego no ninho',dur:70,meta:12,mix:['form','form','bes','bes','gaf','giga'],entrega:'pequeno',txt:'Há um ninhego no ninho. Ele ainda é pequeno e come insetos pequenos, como formigas aladas e besouros. Pegue um e leve até o ninho.'},
+ {nome:'Jovem e a queimada',dur:70,meta:10,mix:['giga','giga','lib','lib','gaf','form'],entrega:'grande',fogo:1,txt:'O filhote cresceu e agora come insetos maiores, como libélulas e o gafanhoto-gigante. Há uma queimada no campo: não voe dentro da fumaça.'}
+];
+const PERG=[
+ {q:'Segundo o ((o))eco, quanto da alimentação do sovi é formada por insetos?',o:['Cerca de 95%','Cerca de 30%','Cerca de 5%']},
+ {q:'Num ninho estudado no Rio Grande do Sul, com o que os pais alimentavam os ninhegos ainda pequenos?',o:['Insetos pequenos, como himenópteros e besouros','Gafanhotos gigantes e libélulas grandes','Frutos maduros e sementes do chão']},
+ {q:'Por que o sovi e outros gaviões costumam sobrevoar áreas de queimada?',o:['Para caçar insetos nessas áreas','Para buscar galhos secos para o ninho','Para se aquecer no ar quente do fogo']}
+];
+let S,cv,cx,raf=null,last=0,W=760,H=460,inp={x:null,y:null},tec={};
+const CAP=()=>H-70;
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';
+ if(S.g){const F=FASES[S.f];$('hR').textContent=(F.entrega?'🪺 ':'🦗 ')+(F.entrega?S.g.entregas:S.g.pegos)+'/'+F.meta;$('hV').textContent=F.fogo?'❤️ '+S.g.vidas:(S.g.leva?'🦶 '+INS[S.g.leva].n:'🦶 vazio');$('hT').textContent='⏱ '+Math.max(0,Math.ceil(S.g.dur-S.g.t))+' s';}}
+function inicio(){parar();$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><h2>Voe e pegue gafanhotos</h2>
+ <table class="tab"><tr><td>🦅</td><td>Você é um sovi, um gavião que come quase só insetos. Toque ou arraste para guiar o voo. No teclado, use as setas.</td></tr>
+ <tr><td>🦗</td><td>Ele pega os insetos com os pés, em pleno voo. Gafanhoto parado no capim não dá para pegar: passe baixo, ele pula e aí você agarra no ar.</td></tr>
+ <tr><td>🪺</td><td>Nas fases 2 e 3, leve o inseto certo até o ninho na árvore. Leva um de cada vez.</td></tr>
+ <tr><td>🔥</td><td>Na fase 3 há uma queimada. A fumaça tira vida.</td></tr></table>
+ <p class="small" style="margin-top:8px">🎯 Meta: a quantidade de insetos da fase dentro do tempo.</p>
+ <div class="row" style="margin-top:12px"><button class="btn" onclick="novo()">Começar →</button></div></div>`;}
+function novo(){S={f:0,tot:0,fp:0};salvo=false;$('rankBox').style.display='none';fase();}
+function fase(){const F=FASES[S.f];S.fp=0;S.g=null;hud();
+ $('tela').innerHTML=`<div class="card"><h2>Fase ${S.f+1}: ${F.nome}</h2><p>${F.txt}</p><p class="small" style="margin-top:6px">🎯 Meta: ${F.meta} ${F.entrega?'entregas no ninho':'insetos'} em ${F.dur} s.</p><div class="row" style="margin-top:12px"><button class="btn" id="bg">Levantar voo →</button></div></div>`;
+ $('bg').onclick=jogar;}
+function ninho(){return [W<520?58:70,H*.34];}
+function jogar(){$('tela').innerHTML=`<div class="card"><canvas id="cv"></canvas><p class="small" style="margin-top:8px;text-align:center">Toque ou arraste para voar. Passe baixo sobre o capim para os gafanhotos pularem.</p></div>`;
+ cv=$('cv');if(cv.clientWidth<520){W=440;H=560;}else{W=760;H=460;}cv.width=W;cv.height=H;cx=cv.getContext('2d');
+ S.g={t:0,dur:FASES[S.f].dur,x:W*.4,y:H*.3,vx:0,vy:0,dir:1,asa:0,ins:[],pegos:0,entregas:0,leva:null,vidas:3,inv:0,fim:false,msg:'',msgT:0,fumaca:[],fogoX:W+40};inp.x=null;
+ for(let i=0;i<10;i++)S.g.ins.push(novoIns());
+ const pos=e=>{const r=cv.getBoundingClientRect();return [(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height];};
+ cv.onpointerdown=e=>{cv.setPointerCapture(e.pointerId);[inp.x,inp.y]=pos(e);e.preventDefault();};
+ cv.onpointermove=e=>{if(e.buttons)[inp.x,inp.y]=pos(e);};
+ hud();last=performance.now();parar();raf=requestAnimationFrame(loop);}
+document.addEventListener('keydown',e=>{if(e.key.startsWith('Arrow')){tec[e.key]=1;if(S&&S.g&&!S.g.fim)e.preventDefault();}});
+document.addEventListener('keyup',e=>{tec[e.key]=0;});
+function msg(t){S.g.msg=t;S.g.msgT=2.2;}
+function novoIns(){const F=FASES[S.f];const k=F.mix[Math.floor(Math.random()*F.mix.length)],I=INS[k];
+ if(I.pula)return {k,x:rr(W*.22,W-20),y:CAP()+rr(12,40),vx:0,vy:0,ar:0,f:rr(0,6),cd:0};
+ return {k,x:rr(W*.25,W-20),y:rr(H*.15,CAP()-30),vx:rr(-40,40),vy:rr(-20,20),ar:1,f:rr(0,6)};}
+function update(dt){const g=S.g;if(!g||g.fim)return;const F=FASES[S.f];g.t+=dt;g.msgT-=dt;g.inv-=dt;g.asa+=dt*(10+Math.hypot(g.vx,g.vy)*.02);
+ const kx=(tec.ArrowRight?1:0)-(tec.ArrowLeft?1:0),ky=(tec.ArrowDown?1:0)-(tec.ArrowUp?1:0);let dx=0,dy=0;
+ if(kx||ky){dx=kx;dy=ky;inp.x=null;}else if(inp.x!=null){dx=inp.x-g.x;dy=inp.y-g.y;if(Math.hypot(dx,dy)<6){dx=0;dy=0;}}
+ const d=Math.hypot(dx,dy);let tvx=0,tvy=0;if(d>0){const fr=inp.x!=null&&!(kx||ky)?Math.min(1,d/50):1;tvx=dx/d*240*fr;tvy=dy/d*240*fr;}
+ const ac=Math.min(1,dt*5);g.vx+=(tvx-g.vx)*ac;g.vy+=(tvy-g.vy)*ac;g.x=Math.max(14,Math.min(W-14,g.x+g.vx*dt));g.y=Math.max(14,Math.min(CAP()+10,g.y+g.vy*dt));if(Math.abs(g.vx)>12)g.dir=Math.sign(g.vx);
+ const pex=g.x+g.dir*7,pey=g.y+22;
+ // fogo e fumaça
+ if(F.fogo){g.fogoX=Math.max(W*.62,g.fogoX-dt*14);if(Math.random()<dt*2.6)g.fumaca.push({x:g.fogoX+rr(0,W-g.fogoX),y:CAP(),r:rr(16,26),vy:-rr(40,70),vx:rr(-25,-8),t:0});
+  for(const s of g.fumaca){s.x+=s.vx*dt;s.y+=s.vy*dt;s.r+=dt*9;s.t+=dt;}g.fumaca=g.fumaca.filter(s=>s.y>-60&&s.t<7);
+  if(g.inv<=0&&g.fumaca.some(s=>s.t>.4&&Math.hypot(s.x-g.x,s.y-g.y)<s.r*.75)){g.vidas--;g.inv=1.5;beep(140,.3,.07);msg('💨 Fumaça! −1 vida. Voe longe da queimada.');if(g.vidas<=0){terminar();return;}}}
+ // insetos
+ for(const i of g.ins){const I=INS[i.k];i.f+=dt*20;
+  if(!i.ar){i.cd-=dt;const perto=Math.hypot(i.x-g.x,i.y-g.y)<110||(F.fogo&&i.x>g.fogoX-60);if(perto&&i.cd<=0){i.ar=1;i.vy=-rr(330,430)*(I.sz>1.2?.85:1);i.vx=rr(-90,90);beep(1200,.02,.02);}}
+  else if(I.pula){i.vy+=(i.vy<0?520:260)*dt;i.x+=i.vx*dt;i.y+=i.vy*dt;if(i.y>=CAP()+rr(12,30)){i.ar=0;i.vy=0;i.cd=1.2;}}
+  else{if(Math.random()<dt*(I.rap?2.5:1)){const a=rr(0,7),v=I.rap?rr(90,150):rr(30,60);i.vx=Math.cos(a)*v;i.vy=Math.sin(a)*v;}
+   const fx=Math.hypot(i.x-g.x,i.y-g.y);if(fx<70){i.vx+=(i.x-g.x)/fx*120*dt;i.vy+=(i.y-g.y)/fx*120*dt;}
+   i.x+=i.vx*dt;i.y+=i.vy*dt;if(i.x<W*.2||i.x>W-10)i.vx*=-1;if(i.y<20||i.y>CAP()-10)i.vy*=-1;i.x=Math.max(W*.2,Math.min(W-10,i.x));i.y=Math.max(20,Math.min(CAP()-10,i.y));}
+  if(i.ar&&!g.leva&&Math.hypot(i.x-pex,i.y-pey)<16+I.sz*5){i.pego=1;pegar(i.k);}}
+ g.ins=g.ins.filter(i=>!i.pego&&i.x>-20&&i.x<W+20);while(g.ins.length<10)g.ins.push(novoIns());
+ // ninho
+ const [nx,ny]=ninho();if(F.entrega&&g.leva&&Math.hypot(g.x-nx,g.y-ny)<36){g.entregas++;S.fp+=8;beep(1100,.15);msg('🪺 Entregue! O filhote comeu. +8.');g.leva=null;}
+ if((F.entrega?g.entregas:g.pegos)>=F.meta||g.t>=g.dur)terminar();}
+function pegar(k){const g=S.g,F=FASES[S.f],I=INS[k];
+ if(!F.entrega){g.pegos++;S.fp+=I.pts;beep(900,.06);if(k==='giga')msg('Gafanhoto-gigante! +6.');return;}
+ const certo=F.entrega==='pequeno'?!I.g:I.g;
+ if(certo){g.leva=k;beep(900,.06);msg('🦶 Pegou '+I.n+'. Leve até o ninho!');}
+ else{S.fp+=1;beep(600,.05);msg(F.entrega==='pequeno'?`O ${I.n} é grande demais para o ninhego. O sovi come e ganha +1.`:`O ${I.n} é pequeno para o jovem. O sovi come e ganha +1.`);}}
+function sovi(x,y,dir,asa,leva,pisca){cx.save();cx.translate(x,y);cx.scale(1.5*dir,1.5);if(pisca&&Math.floor(performance.now()/100)%2)cx.globalAlpha=.4;
+ const a=Math.sin(asa);
+ cx.fillStyle='#546e7a';cx.beginPath();cx.moveTo(-14,0);cx.lineTo(-30,-3);cx.lineTo(-30,5);cx.closePath();cx.fill();
+ cx.strokeStyle='#eceff1';cx.lineWidth=1.2;for(const t of [-25,-20]){cx.beginPath();cx.moveTo(t,-2);cx.lineTo(t,4);cx.stroke();}
+ // asa de trás
+ cx.fillStyle='#455a64';cx.beginPath();cx.moveTo(-4,-2);cx.quadraticCurveTo(-14,-22*a-4,-34,-30*a-2);cx.quadraticCurveTo(-12,-8*a,4,0);cx.fill();
+ cx.fillStyle='#607d8b';cx.beginPath();cx.ellipse(0,0,16,8,0,0,7);cx.fill();
+ cx.fillStyle='#78909c';cx.beginPath();cx.arc(14,-3,7,0,7);cx.fill();
+ cx.fillStyle='#37474f';cx.beginPath();cx.moveTo(19,-5);cx.quadraticCurveTo(26,-3,22,1);cx.lineTo(19,-1);cx.fill();
+ cx.fillStyle='#d32f2f';cx.beginPath();cx.arc(15.5,-4.5,2,0,7);cx.fill();cx.fillStyle='#111';cx.beginPath();cx.arc(16,-4.5,.9,0,7);cx.fill();
+ // asa da frente com primárias castanho-avermelhadas
+ cx.fillStyle='#546e7a';cx.beginPath();cx.moveTo(-2,-2);cx.quadraticCurveTo(-6,-26*a-6,-26,-38*a-4);cx.quadraticCurveTo(-10,-10*a,6,1);cx.fill();
+ cx.fillStyle='#a1543b';cx.beginPath();cx.moveTo(-14,-22*a-4);cx.quadraticCurveTo(-22,-34*a-4,-26,-38*a-4);cx.quadraticCurveTo(-18,-24*a-2,-10,-14*a-2);cx.fill();
+ cx.strokeStyle='#f9a825';cx.lineWidth=2;cx.beginPath();cx.moveTo(2,7);cx.lineTo(4,15);cx.moveTo(6,7);cx.lineTo(8,15);cx.stroke();
+ cx.restore();if(leva){desenhaIns({k:leva,x:x+dir*7,y:y+26,ar:1,f:0,vx:dir,vy:0});}}
+function desenhaIns(i){const I=INS[i.k],s=I.sz*1.2;cx.save();cx.translate(i.x,i.y);if(i.vx<0)cx.scale(-1,1);
+ if(I.pula){cx.fillStyle=I.cor;cx.beginPath();cx.ellipse(0,0,9*s,3.4*s,0,0,7);cx.fill();cx.beginPath();cx.arc(8*s,-1*s,3*s,0,7);cx.fill();
+  cx.strokeStyle=I.cor;cx.lineWidth=1.6*s;cx.beginPath();cx.moveTo(-2*s,1*s);cx.lineTo(-7*s,-6*s);cx.lineTo(-10*s,4*s);cx.stroke();
+  cx.lineWidth=1;cx.beginPath();cx.moveTo(10*s,-3*s);cx.quadraticCurveTo(16*s,-10*s,20*s,-8*s);cx.stroke();
+  if(i.ar){cx.fillStyle=i.k==='giga'?'rgba(229,57,53,.75)':'rgba(205,220,57,.6)';cx.beginPath();cx.ellipse(-2*s,-5*s,8*s,3*s*Math.abs(Math.sin(i.f)),-.2,0,7);cx.fill();}}
+ else if(i.k==='lib'){cx.fillStyle=I.cor;cx.fillRect(-14,-1.2,22,2.4);cx.beginPath();cx.arc(9,0,2.6,0,7);cx.fill();cx.fillStyle='rgba(179,229,252,.75)';const w=Math.sin(i.f)*4;cx.beginPath();cx.ellipse(2,-5-w*.3,8,2.5,-.3,0,7);cx.ellipse(2,5+w*.3,8,2.5,.3,0,7);cx.fill();}
+ else{cx.fillStyle=I.cor;cx.beginPath();cx.ellipse(0,0,5*s,3.2*s,0,0,7);cx.fill();cx.beginPath();cx.arc(5*s,0,2.2*s,0,7);cx.fill();cx.fillStyle='rgba(255,255,255,.7)';const w=Math.abs(Math.sin(i.f));cx.beginPath();cx.ellipse(-1,-4*s*w-1,5*s,2*s,-.4,0,7);cx.fill();}
+ cx.restore();}
+function desenha(){const g=S.g;if(!g||!cx)return;const F=FASES[S.f];cx.clearRect(0,0,W,H);
+ const gr=cx.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#e1f5fe');gr.addColorStop(1,'#fffde7');cx.fillStyle=gr;cx.fillRect(0,0,W,H);
+ cx.fillStyle='#fff';for(let i=0;i<4;i++){const x=(i*230+g.t*8)%(W+160)-80,y=40+i*28;cx.beginPath();cx.ellipse(x,y,46,14,0,0,7);cx.ellipse(x+30,y-6,30,12,0,0,7);cx.fill();}
+ // árvore e ninho
+ const [nx,ny]=ninho();cx.fillStyle='#6d4c41';cx.fillRect(nx-14,ny,16,H-ny);cx.strokeStyle='#6d4c41';cx.lineWidth=6;cx.beginPath();cx.moveTo(nx-6,ny+30);cx.lineTo(nx+30,ny+8);cx.stroke();
+ for(let j=0;j<6;j++){cx.fillStyle=j%2?'#7cb342':'#558b2f';cx.beginPath();cx.arc(nx-6+Math.cos(j)*30,ny-40+Math.sin(j)*22,30,0,7);cx.fill();}
+ cx.fillStyle='#8d6e63';cx.beginPath();cx.ellipse(nx,ny+4,20,8,0,0,7);cx.fill();
+ if(F.entrega){cx.fillStyle='#cfd8dc';cx.beginPath();cx.arc(nx-2,ny-4,F.entrega==='pequeno'?5:8,0,7);cx.fill();cx.fillStyle='#111';cx.beginPath();cx.arc(nx,ny-5,1.2,0,7);cx.fill();
+  if(g.leva){cx.strokeStyle='rgba(255,152,0,'+(.5+.4*Math.sin(g.t*8))+')';cx.lineWidth=3;cx.beginPath();cx.arc(nx,ny,32,0,7);cx.stroke();}
+  cx.fillStyle='rgba(255,255,255,.9)';cx.fillRect(nx-34,ny+16,68,16);cx.fillStyle='#37474f';cx.font='bold 10px system-ui';cx.textAlign='center';cx.fillText(F.entrega==='pequeno'?'ninhego':'jovem',nx,ny+28);}
+ // queimada
+ if(F.fogo){cx.fillStyle='#4e342e';cx.fillRect(g.fogoX,CAP()-4,W-g.fogoX,H-CAP()+4);for(let x=g.fogoX;x<W;x+=14){const h=10+Math.abs(Math.sin(x*.3+g.t*9))*16;cx.fillStyle='#ff7043';cx.beginPath();cx.moveTo(x,CAP());cx.quadraticCurveTo(x+5,CAP()-h,x+10,CAP());cx.fill();cx.fillStyle='#ffca28';cx.beginPath();cx.moveTo(x+3,CAP());cx.quadraticCurveTo(x+5,CAP()-h*.5,x+7,CAP());cx.fill();}
+  for(const s of g.fumaca){cx.fillStyle=`rgba(97,97,97,${Math.max(0,.34-s.t*.045)})`;cx.beginPath();cx.arc(s.x,s.y,s.r,0,7);cx.fill();}}
+ // capim
+ cx.fillStyle='#c5e1a5';cx.fillRect(0,CAP(),F.fogo?g.fogoX:W,H-CAP());cx.strokeStyle='#8bc34a';cx.lineWidth=2;for(let x=4;x<(F.fogo?g.fogoX:W);x+=7){const h=14+((x*37)%12);cx.beginPath();cx.moveTo(x,H);cx.lineTo(x+Math.sin(x+g.t*2)*3,CAP()+20-h);cx.stroke();}
+ for(const i of g.ins)desenhaIns(i);
+ sovi(g.x,g.y,g.dir,g.asa,g.leva,g.inv>0);
+ if(inp.x!=null){cx.strokeStyle='rgba(55,71,79,.35)';cx.lineWidth=2;cx.beginPath();cx.arc(inp.x,inp.y,8,0,7);cx.stroke();}
+ if(g.msgT>0){cx.font='bold 13px system-ui';cx.textAlign='center';cx.fillStyle='rgba(255,255,255,.93)';cx.fillRect(0,H-30,W,24);cx.fillStyle='#37474f';cx.fillText(g.msg,W/2,H-13);}}
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);desenha();if(S.g&&!S.g.fim){hud();raf=requestAnimationFrame(loop);}}
+function parar(){if(raf)cancelAnimationFrame(raf);raf=null;}
+function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=FASES[S.f],n=F.entrega?g.entregas:g.pegos,ok=n>=F.meta&&g.vidas>0;const sobra=Math.max(0,Math.ceil(g.dur-g.t));if(ok){S.fp+=30+sobra;beep(880,.2);}hud();
+ $('tela').innerHTML=`<div class="card"><h2>${ok?'Boa caçada!':'A caçada não rendeu'}</h2>
+ <p>${F.entrega?'Entregas no ninho':'Insetos pegos em voo'}: <b>${n}</b> (meta ${F.meta}).${F.fogo?` Vidas restantes: <b>${Math.max(0,g.vidas)}</b>.`:''}</p>
+ ${ok?`<div class="fb good">🎯 Meta cumprida! +30 e +${sobra} pelo tempo que sobrou.</div>`:'<div class="fb bad">A meta não foi cumprida. Passe baixo sobre o capim para os gafanhotos pularem e pegue no ar.</div>'}
+ <div class="row" style="margin-top:12px">${ok?'<button class="btn" id="bq">Pergunta da fase →</button>':'<button class="btn" id="br">Tentar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
+ if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}}
+function pergunta(){
+ const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
+ $('tela').innerHTML=`<div class="card"><h2>Pergunta da fase</h2><p style="margin:6px 0 4px">${P.q}</p><p class="small">Acerto +20, erro −10.</p><div class="ops">${ops.map((o,i)=>`<button data-i="${i}">${o.t}</button>`).join('')}</div><div id="pf"></div></div>`;
+ document.querySelectorAll('#tela .ops button').forEach(b=>b.onclick=()=>{const o=ops[+b.dataset.i];S.fp+=o.c?20:-10;beep(o.c?880:170,.15);hud();
+  document.querySelectorAll('#tela .ops button').forEach((x,j)=>{x.disabled=true;if(ops[j].c){x.style.borderColor='#2e7d32';x.style.opacity=1;}});
+  $('pf').innerHTML=`<div class="fb ${o.c?'good':'bad'}">${o.c?'✅ +20.':'❌ −10. A resposta certa está marcada em verde.'}<div class="row" style="margin-top:10px"><button class="btn" id="bn">${S.f===FASES.length-1?'Ver resultado →':'Próxima fase →'}</button></div></div>`;
+  $('bn').onclick=()=>{S.tot+=S.fp;S.fp=0;if(S.f===FASES.length-1)final(true);else{S.f++;fase();}};});
+}
+function final(tudo){
+ S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
+ $('tela').innerHTML=`<div class="card" style="text-align:center"><div class="big">${tudo?'🏆':'🦗'}</div><h2>${tudo?'Caçador de primeira!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
+ <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
+ <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: ((o))eco, Sovi, o gavião de chumbo: cerca de 95% da alimentação do sovi é de insetos, e ele caça sobrevoando áreas de queimada; Jacomassa, F. A. F. (2011), Observações em um ninho de sovi Ictinia plumbea no sul do Brasil, Biotemas 24(1): 77-82: insetos apanhados com os pés em pleno voo, ninhegos alimentados com insetos pequenos (Hymenoptera e Coleoptera) e jovens com insetos maiores (Odonata, Lepidoptera e o gafanhoto Tropidacris collaris). Velocidades, quantidades e pontos são regras do jogo.</div></div>`;
+ $('bS').onclick=()=>salvar(nivel);
+}
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="sovi-cacador";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__sv={get S(){return S},update,parar,inp,FASES,ninho,INS};
+inicio();
+</script>
+</body>
+</html>
