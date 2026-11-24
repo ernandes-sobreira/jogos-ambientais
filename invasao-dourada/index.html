@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Invasão Dourada</title>
+<style>
+:root{--main:#b8860b;--deep:#7a5900;--soft:#fff8e1;--line:#f3e3b5;--ink:#2a2414;--mut:#6b5d3d}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:780px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep)}h2{font-size:1.15rem;color:var(--deep);margin-bottom:6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 11px;font-weight:700;font-size:.86rem}
+.card{border:2px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit}
+.btn:hover{background:var(--deep)}.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas{width:100%;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff;user-select:none;-webkit-user-select:none}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:8px}.tab td{border-bottom:1px solid var(--line);padding:5px 4px;vertical-align:top}
+.ops{display:grid;gap:8px;margin-top:10px}
+.ops button{border:2px solid var(--line);background:#fff;border-radius:12px;padding:11px;font-size:.95rem;cursor:pointer;font-family:inherit;text-align:left;color:var(--ink)}
+.ops button:hover{border-color:var(--main)}.ops button:disabled{opacity:.5;cursor:default}
+.fb{margin-top:10px;padding:11px 13px;border-radius:12px;font-size:.93rem}
+.fb.good{background:#e8f5e9;color:#1b5e20}.fb.bad{background:#ffebee;color:#8e1b1b}
+.big{font-size:2.3rem;font-weight:800;color:var(--deep)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1><svg viewBox="0 0 60 40" width="40" height="27" style="vertical-align:-5px" aria-label="mexilhão-dourado"><ellipse cx="22" cy="22" rx="16" ry="8" transform="rotate(-25 22 22)" fill="#d4a017" stroke="#7a5900" stroke-width="2"/><path d="M10 27 Q22 20 34 16" stroke="#7a5900" stroke-width="1.5" fill="none"/><ellipse cx="40" cy="22" rx="14" ry="7" transform="rotate(20 40 22)" fill="#e0b52a" stroke="#7a5900" stroke-width="2"/><path d="M29 18 Q40 22 51 26" stroke="#7a5900" stroke-width="1.5" fill="none"/></svg> Invasão Dourada</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hA">🚤 0</span><span class="pill" id="hV">🚰 0%</span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let actx=null;function beep(f,d,v){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=f;g.gain.setValueAtTime(v||.05,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+d);}catch(e){}}
+
+/* Regras do jogo: velocidade, número de barcos e taxa de larvas são escolhas do jogo. */
+const FASES=[
+ {nome:'Primeiros cascos',linhas:2,cols:6,infect:.75,hp:2,vel:22,larva:2.0,meta:50,txt:'Barcos descem o rio Paraguai com mexilhão-dourado grudado no casco. Lave os cascos com o jato antes que as larvas cheguem à tomada d\'água.'},
+ {nome:'Hidrovia movimentada',linhas:3,cols:6,infect:.65,hp:2,vel:27,larva:1.5,meta:50,txt:'Mais barcos e mais larvas. Barco limpo não precisa de jato: acertar nele tira pontos.'},
+ {nome:'Infestação',linhas:4,cols:6,infect:.6,hp:3,vel:32,larva:1.15,meta:50,txt:'Os cascos estão cheios de mexilhão e as larvas caem sem parar. Proteja as grades da tomada d\'água.'}
+];
+const PERG=[
+ {q:'De onde veio o mexilhão-dourado?',o:['Dos rios da China, na Ásia','Dos rios da Amazônia, no Brasil','Do litoral da Austrália']},
+ {q:'Como o mexilhão-dourado chegou ao Pantanal?',o:['Grudado no casco de embarcações da hidrovia Paraguai-Paraná','Trazido de propósito para limpar a água dos rios','Levado pelo vento junto com a poeira da seca']},
+ {q:'Que problema o mexilhão-dourado causa em usinas e estações de tratamento de água?',o:['Incrusta e entope tubulações e grades','Deixa a água salgada para consumo','Corrói o concreto das barragens até quebrar']}
+];
+let S,cv,cx,raf=null,last=0,W=760,H=520,inp={x:null,tiro:false,esq:false,dir:false};
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';
+ if(S.g){$('hA').textContent='🚤 '+S.g.barcos.filter(b=>b.inf&&!b.limpo).length+' sujos';$('hV').textContent='🚰 '+Math.round(S.g.entope)+'% entupido';}}
+function inicio(){
+ parar();$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><h2>Lave os cascos e proteja a tomada d'água</h2>
+ <table class="tab"><tr><td>🖱️ / 👆</td><td>Arraste para mover o barco de inspeção. Segure para soltar o jato de lavagem.</td></tr>
+ <tr><td>⌨️</td><td>Setas para andar e espaço para o jato.</td></tr>
+ <tr><td>🟡</td><td>Barco com crosta dourada embaixo do casco tem mexilhão. Casco lavado vale +15.</td></tr>
+ <tr><td>⚪</td><td>Barco de casco todo branco está sem mexilhão e não precisa de jato: a inspeção libera esse barco sozinha depois de alguns segundos. Acertar nele tira 10.</td></tr>
+ <tr><td>🔸</td><td>Larvas caem dos barcos sujos. Na grade, gastam a grade. Na tomada d'água, entopem o cano.</td></tr></table>
+ <p class="small" style="margin-top:8px">🎯 Meta: lavar todos os cascos sujos com a tomada d'água abaixo de 50% de entupimento, acertando no máximo 2 barcos limpos.</p>
+ <div class="row" style="margin-top:12px"><button class="btn" onclick="novo()">Começar →</button></div></div>`;
+}
+function novo(){S={f:0,tot:0,fp:0};salvo=false;$('rankBox').style.display='none';fase();}
+function fase(){const F=FASES[S.f];S.fp=0;S.g=null;hud();
+ $('tela').innerHTML=`<div class="card"><h2>Fase ${S.f+1}: ${F.nome}</h2><p>${F.txt}</p><p class="small" style="margin-top:6px">🎯 Meta: lavar todos os cascos sujos com menos de ${F.meta}% de entupimento e acertar no máximo 2 barcos limpos.</p><div class="row" style="margin-top:12px"><button class="btn" id="bg">Jogar →</button></div></div>`;
+ $('bg').onclick=jogar;}
+const PY=()=>H-120,GY=()=>H-78,TY=()=>H-34;
+function jogar(){
+ const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><canvas id="cv"></canvas><p class="small" style="margin-top:8px">Arraste para mover e segure para lavar. No teclado, use as setas e o espaço.</p></div>`;
+ cv=$('cv');if(cv.clientWidth<520){W=440;H=600;}else{W=760;H=520;}cv.width=W;cv.height=H;cx=cv.getContext('2d');
+ const esp=Math.min(92,(W-60)/F.cols);const barcos=[];
+ const nInf=Math.round(F.linhas*F.cols*F.infect);const idx=shuf([...Array(F.linhas*F.cols).keys()]).slice(0,nInf);
+ for(let r=0;r<F.linhas;r++)for(let c=0;c<F.cols;c++){const i=r*F.cols+c;barcos.push({ox:c*esp,oy:r*50,inf:idx.includes(i),hp:F.hp,limpo:false,sai:0,flash:0,libera:rr(4,12)});}
+ S.g={erros:0,t:0,px:W/2,fx:30,fy:50,dir:1,esp,barcos,jatos:[],larvas:[],grades:[{x:W*.2,hp:6},{x:W*.5,hp:6},{x:W*.8,hp:6}],entope:0,cd:0,stun:0,prox:1.5,fim:false,msg:'',msgT:0,lavados:0};
+ const pos=e=>{const r=cv.getBoundingClientRect();return (e.clientX-r.left)*W/r.width;};
+ cv.onpointerdown=e=>{cv.setPointerCapture(e.pointerId);inp.x=pos(e);inp.tiro=true;e.preventDefault();};
+ cv.onpointermove=e=>{if(inp.tiro)inp.x=pos(e);};
+ cv.onpointerup=cv.onpointercancel=()=>{inp.tiro=false;inp.x=null;};
+ hud();last=performance.now();parar();raf=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown',e=>{if(!S||!S.g||S.g.fim)return;if(e.key==='ArrowLeft')inp.esq=true;if(e.key==='ArrowRight')inp.dir=true;if(e.key===' '){inp.tiro=true;e.preventDefault();}});
+document.addEventListener('keyup',e=>{if(e.key==='ArrowLeft')inp.esq=false;if(e.key==='ArrowRight')inp.dir=false;if(e.key===' ')inp.tiro=false;});
+function msg(t){S.g.msg=t;S.g.msgT=2.2;}
+function bpos(b){const g=S.g;return [g.fx+b.ox+g.esp/2,g.fy+b.oy-b.sai*60];}
+function update(dt){const g=S.g;if(!g||g.fim)return;const F=FASES[S.f];
+ g.t+=dt;g.msgT-=dt;g.cd-=dt;g.stun-=dt;
+ const vel=300;if(inp.esq)g.px-=vel*dt;if(inp.dir)g.px+=vel*dt;
+ if(inp.x!=null){const d=inp.x-g.px;g.px+=Math.sign(d)*Math.min(Math.abs(d),vel*1.4*dt);}
+ g.px=Math.max(24,Math.min(W-24,g.px));
+ if(inp.tiro&&g.cd<=0&&g.stun<=0){g.jatos.push({x:g.px,y:PY()-24});g.cd=.26;beep(900,.03,.02);}
+ for(const j of g.jatos)j.y-=540*dt;
+ // formação
+ const ativos=g.barcos.filter(b=>!b.limpo);
+ const sujos=ativos.filter(b=>b.inf).length;const acel=1+ (1-sujos/Math.max(1,g.barcos.filter(b=>b.inf).length))*.8;
+ g.fx+=g.dir*F.vel*acel*dt;
+ if(ativos.length){const xs=ativos.map(b=>g.fx+b.ox);const mn=Math.min(...xs),mx=Math.max(...xs)+g.esp;
+  if(mx>W-8&&g.dir>0||mn<8&&g.dir<0){g.dir*=-1;g.fy+=12;}}
+ for(const b of g.barcos){if(b.limpo)b.sai+=dt;b.flash-=dt;if(!b.inf&&!b.limpo&&g.t>b.libera){b.limpo=true;b.ok=true;}}
+ // larvas
+ g.prox-=dt;if(g.prox<=0){const sj=ativos.filter(b=>b.inf);if(sj.length){const b=sj[Math.floor(Math.random()*sj.length)];const [x,y]=bpos(b);g.larvas.push({x,y:y+14});}g.prox=F.larva*rr(.6,1.3);}
+ for(const l of g.larvas)l.y+=130*dt;
+ // colisões jato
+ for(const j of g.jatos){if(j.hit)continue;for(const b of ativos){const [x,y]=bpos(b);if(Math.abs(j.x-x)<g.esp*.42&&Math.abs(j.y-y)<18){j.hit=true;
+   if(b.inf){b.hp--;b.flash=.15;beep(650,.05);if(b.hp<=0){b.limpo=true;g.lavados++;S.fp+=15;beep(1000,.1);}}
+   else{S.fp-=10;g.erros++;b.limpo=true;b.flash=.3;beep(200,.2);msg('⚪ Esse casco já estava limpo. A inspeção liberou o barco, mas custou 10.');}break;}}}
+ // larvas
+ for(const l of g.larvas){if(l.done)continue;
+  if(Math.abs(l.x-g.px)<20&&Math.abs(l.y-PY())<16){l.done=true;g.stun=.7;S.fp-=5;beep(220,.15);msg('🔸 Larvas grudaram no seu barco. −5.');continue;}
+  for(const gr of g.grades){if(gr.hp>0&&Math.abs(l.x-gr.x)<34&&Math.abs(l.y-GY())<8){l.done=true;gr.hp--;beep(300,.05);break;}}
+  if(!l.done&&l.y>TY()-6){l.done=true;g.entope+=2.5;beep(160,.2);}}
+ g.jatos=g.jatos.filter(j=>!j.hit&&j.y>-20);g.larvas=g.larvas.filter(l=>!l.done);
+ const fundo=ativos.length?Math.max(...ativos.map(b=>bpos(b)[1])):0;
+ if(g.entope>=100){g.entope=100;terminar('entupiu');return;}
+ if(fundo>PY()-26){g.entope=100;terminar('chegou');return;}
+ if(sujos===0&&g.larvas.length===0)terminar('ok');
+}
+function casco(x,y,w,cor,cab){const h=w*.28;cx.fillStyle=cor;cx.strokeStyle='#546e7a';cx.lineWidth=1.5;cx.beginPath();cx.moveTo(x-w/2,y-h*.2);cx.lineTo(x+w/2,y-h*.2);cx.lineTo(x+w*.36,y+h*.7);cx.lineTo(x-w*.4,y+h*.7);cx.closePath();cx.fill();cx.stroke();
+ cx.fillStyle=cab;cx.beginPath();cx.roundRect(x-w*.18,y-h*1.05,w*.34,h*.85,3);cx.fill();cx.stroke();cx.fillStyle='#b3e5fc';cx.fillRect(x-w*.12,y-h*.9,w*.22,h*.35);}
+function desenhaBarco(b){const g=S.g,[x,y]=bpos(b);if(b.limpo&&b.sai>1.2)return;const w=g.esp*.72,h=w*.28;
+ cx.save();cx.globalAlpha=b.limpo?Math.max(0,1-b.sai):1;casco(x,y,w,'#ffffff','#eceff1');
+ if(b.inf&&!b.limpo){const n=2+b.hp*3;for(let i=0;i<n;i++){const px=x-w*.36+i*(w*.7/(n-1));cx.fillStyle=i%2?'#c9930c':'#e8b923';cx.beginPath();cx.ellipse(px,y+h*.28+(i%3)*h*.12,w*.06,w*.035,.5,0,7);cx.fill();cx.strokeStyle='#7a5900';cx.lineWidth=.8;cx.stroke();}}
+ if(b.flash>0){cx.strokeStyle=b.inf?'#29b6f6':'#c62828';cx.lineWidth=2.5;cx.beginPath();cx.arc(x,y,w*.55,0,7);cx.stroke();}
+ if(b.limpo&&b.sai<1){cx.font='bold '+(w*.28)+'px system-ui';cx.textAlign='center';cx.fillStyle=b.ok||!b.inf?'#455a64':'#2e7d32';cx.fillText(b.inf?'limpo!':'liberado',x,y-h*1.4);}
+ cx.restore();}
+function desenha(){const g=S.g;if(!g||!cx)return;
+ cx.clearRect(0,0,W,H);const gr=cx.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#e1f5fe');gr.addColorStop(1,'#b3e5fc');cx.fillStyle=gr;cx.fillRect(0,0,W,H);
+ // tomada d'água
+ cx.fillStyle='#cfd8dc';cx.fillRect(0,TY(),W,H-TY());cx.fillStyle='#90a4ae';for(let i=0;i<6;i++){cx.beginPath();cx.arc(W*(i+.5)/6,TY()+16,10,0,7);cx.fill();}
+ cx.fillStyle='#455a64';cx.font='bold 12px system-ui';cx.textAlign='left';cx.fillText('Tomada d\'água da estação',8,H-6);
+ cx.fillStyle='#d4a017';cx.fillRect(W-130,H-16,1.2*g.entope,8);cx.strokeStyle='#7a5900';cx.strokeRect(W-130,H-16,120,8);
+ // grades
+ for(const q of g.grades){if(q.hp<=0)continue;cx.strokeStyle='#607d8b';cx.lineWidth=2;for(let i=0;i<7;i++){const x=q.x-30+i*10;cx.globalAlpha=.3+.7*q.hp/6;cx.beginPath();cx.moveTo(x,GY()-8);cx.lineTo(x,GY()+8);cx.stroke();}cx.globalAlpha=1;cx.beginPath();cx.moveTo(q.x-32,GY()-8);cx.lineTo(q.x+32,GY()-8);cx.stroke();}
+ for(const b of g.barcos)desenhaBarco(b);
+ cx.fillStyle='#e0a800';for(const l of g.larvas){cx.beginPath();cx.arc(l.x,l.y,3.5,0,7);cx.fill();}
+ cx.fillStyle='#29b6f6';for(const j of g.jatos){cx.beginPath();cx.ellipse(j.x,j.y,3,8,0,0,7);cx.fill();}
+ cx.save();cx.globalAlpha=g.stun>0?.5:1;casco(g.px,PY(),52,'#0277bd','#e1f5fe');cx.fillStyle='#fff';cx.font='bold 9px system-ui';cx.textAlign='center';cx.fillText('INSPEÇÃO',g.px,PY()+8);cx.restore();
+ if(g.msgT>0){cx.font='bold 15px system-ui';cx.textAlign='center';cx.fillStyle='rgba(255,255,255,.9)';cx.fillRect(0,4,W,24);cx.fillStyle='#7a5900';cx.fillText(g.msg,W/2,17);}
+}
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);desenha();hud();if(S.g&&!S.g.fim)raf=requestAnimationFrame(loop);}
+function parar(){if(raf)cancelAnimationFrame(raf);raf=null;inp.tiro=false;inp.x=null;}
+function terminar(motivo){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=FASES[S.f];const ok=motivo==='ok'&&g.entope<F.meta&&g.erros<=2;
+ if(ok){const b=30+Math.round((100-g.entope)/2);S.fp+=b;g.bonus=b;beep(880,.2);}hud();
+ const porque=motivo==='ok'&&g.erros>2?'Você jogou o jato em barcos limpos demais e atrasou a hidrovia.':motivo==='chegou'?'Os barcos sujos passaram pela estação sem lavar o casco.':motivo==='entupiu'?'A tomada d\'água entupiu de mexilhão.':'O entupimento passou da meta.';
+ $('tela').innerHTML=`<div class="card"><h2>${ok?'Cascos lavados':'A invasão passou'}</h2>
+ <p>Cascos lavados: <b>${g.lavados}</b>. Barcos limpos atingidos: <b>${g.erros}</b> (máximo 2). Entupimento: <b>${Math.round(g.entope)}%</b> (meta: abaixo de ${F.meta}%).</p>
+ ${ok?`<div class="fb good">🎯 Meta cumprida! +${g.bonus}.</div>`:`<div class="fb bad">${porque} Lave primeiro os barcos que estão mais baixos e use as grades como escudo.</div>`}
+ <div class="row" style="margin-top:12px">${ok?'<button class="btn" id="bq">Pergunta da fase →</button>':'<button class="btn" id="br">Tentar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
+ if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}
+}
+function pergunta(){
+ const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
+ $('tela').innerHTML=`<div class="card"><h2>Pergunta da fase</h2><p style="margin:6px 0 4px">${P.q}</p><p class="small">Acerto +20, erro −10.</p><div class="ops">${ops.map((o,i)=>`<button data-i="${i}">${o.t}</button>`).join('')}</div><div id="pf"></div></div>`;
+ document.querySelectorAll('#tela .ops button').forEach(b=>b.onclick=()=>{const o=ops[+b.dataset.i];S.fp+=o.c?20:-10;beep(o.c?880:170,.15);hud();
+  document.querySelectorAll('#tela .ops button').forEach((x,j)=>{x.disabled=true;if(ops[j].c){x.style.borderColor='#2e7d32';x.style.opacity=1;}});
+  $('pf').innerHTML=`<div class="fb ${o.c?'good':'bad'}">${o.c?'✅ +20.':'❌ −10. A resposta certa está marcada em verde.'}<div class="row" style="margin-top:10px"><button class="btn" id="bn">${S.f===FASES.length-1?'Ver resultado →':'Próxima fase →'}</button></div></div>`;
+  $('bn').onclick=()=>{S.tot+=S.fp;S.fp=0;if(S.f===FASES.length-1)final(true);else{S.f++;fase();}};});
+}
+function final(tudo){
+ S.g=null;$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
+ $('tela').innerHTML=`<div class="card" style="text-align:center"><div class="big">${tudo?'🏆':'🚤'}</div><h2>${tudo?'A tomada d\'água está livre!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
+ <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
+ <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Embrapa Pantanal (Oliveira et al.), origem do mexilhão-dourado nos rios da China, chegada ao rio da Prata em 1991 pela água de lastro e ao Pantanal em 1998 no casco de embarcações; incrustação em tubulações e grades de estações de água e usinas. No jogo, lavar o casco com jato à distância é uma simplificação: na vida real a limpeza e a inspeção dos cascos são feitas de perto, e não há como acabar com a espécie depois que ela se instala no rio.</div></div>`;
+ $('bS').onclick=()=>salvar(nivel);
+}
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="invasao-dourada";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__id={get S(){return S},update,parar,inp,FASES,bpos,get W(){return W},get H(){return H}};
+inicio();
+</script>
+</body>
+</html>
