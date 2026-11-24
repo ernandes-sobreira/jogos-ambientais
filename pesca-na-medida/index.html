@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pesca na Medida</title>
+<style>
+:root{--main:#0277bd;--deep:#01579b;--soft:#e1f5fe;--line:#cce8f6;--ink:#17242d;--mut:#4f6270}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:780px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep)}h2{font-size:1.15rem;color:var(--deep);margin-bottom:6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 11px;font-weight:700;font-size:.86rem}
+.card{border:2px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit}
+.btn:hover{background:var(--deep)}.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas{width:100%;max-width:620px;margin:0 auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff}
+.pad{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,52px);gap:6px;justify-content:center;margin-top:10px}
+.pad button{border:2px solid var(--line);background:var(--soft);border-radius:12px;font-size:1.4rem;cursor:pointer;color:var(--deep);touch-action:manipulation}
+.pad button:active{background:#dcedc8}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:8px}.tab td{border-bottom:1px solid var(--line);padding:5px 4px;vertical-align:top}
+.ops{display:grid;gap:8px;margin-top:10px}
+.ops button{border:2px solid var(--line);background:#fff;border-radius:12px;padding:11px;font-size:.95rem;cursor:pointer;font-family:inherit;text-align:left;color:var(--ink)}
+.ops button:hover{border-color:var(--main)}.ops button:disabled{opacity:.5;cursor:default}
+.fb{margin-top:10px;padding:11px 13px;border-radius:12px;font-size:.93rem}
+.fb.good{background:#e8f5e9;color:#1b5e20}.fb.bad{background:#ffebee;color:#8e1b1b}
+.big{font-size:2.3rem;font-weight:800;color:var(--deep)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+.decide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.75)}.decide .box{background:#fff;border:3px solid var(--main);border-radius:16px;padding:14px 16px;max-width:320px;text-align:center}.cw{position:relative}.tabela{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.tabela span{background:var(--soft);border-radius:8px;padding:3px 8px;font-size:.82rem;color:var(--deep)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>🎣 Pesca na Medida</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR">🎯 0</span><span class="pill" id="hV">⚠️ 0</span><span class="pill" id="hT">⏱ 0</span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let actx=null;function beep(f,d,v){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=f;g.gain.setValueAtTime(v||.05,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+d);}catch(e){}}
+
+/* Medidas mínimas de captura em Mato Grosso, conforme a Sema-MT (carteira de pesca). */
+const ESP={
+ piraputanga:{n:'Piraputanga',min:30,cor:'#b0bec5',cauda:'#e53935',forma:'fina'},
+ curimbata:{n:'Curimbatá',min:38,cor:'#9e9e9e',cauda:'#757575',forma:'alta'},
+ pacu:{n:'Pacu',min:45,cor:'#546e7a',cauda:'#37474f',forma:'redonda'},
+ barbado:{n:'Barbado',min:60,cor:'#a1887f',cauda:'#795548',forma:'bagre'},
+ cachara:{n:'Cachara',min:80,cor:'#90a4ae',cauda:'#607d8b',forma:'listrado'},
+ pintado:{n:'Pintado',min:85,cor:'#b0bec5',cauda:'#78909c',forma:'pintado'},
+ jau:{n:'Jaú',min:95,cor:'#6d4c41',cauda:'#4e342e',forma:'jau'}
+};
+const FASES=[
+ {nome:'Beira do rio',dur:60,esp:['piraputanga','pacu','pintado'],tabela:true,meta:180,n:6,txt:'Pegue os peixes com o anzol. Cada peixe fisgado aparece com a medida. Você decide se leva ou se solta. A tabela de medidas mínimas fica na tela.'},
+ {nome:'Corixo cheio',dur:70,esp:['piraputanga','curimbata','pacu','cachara','pintado'],tabela:true,meta:240,n:8,txt:'Mais espécies e peixes mais rápidos. Lixo no fundo prende o anzol.'},
+ {nome:'De memória',dur:75,esp:['piraputanga','curimbata','pacu','barbado','cachara','pintado','jau'],tabela:false,meta:280,n:9,txt:'Agora a tabela some. Lembre a medida mínima de cada espécie, como faria no barco.'}
+];
+const PERG=[
+ {q:'Por que existe medida mínima para pescar?',o:['Para o peixe ter chance de se reproduzir antes de ser pescado','Porque peixe pequeno tem menos proteína para comer','Para os barcos maiores pescarem só os peixes grandes']},
+ {q:'Em Mato Grosso, qual é a medida mínima de captura do pacu?',o:['45 cm','30 cm','85 cm']},
+ {q:'Onde o pescador de Mato Grosso pode consultar as medidas mínimas dos peixes?',o:['Na carteira de pesca do Estado','Na nota fiscal do combustível do barco','No rótulo da isca comprada na loja']}
+];
+let S,cv,cx,raf=null,last=0,W=760,H=480;
+const AGUA=()=>H*.2;
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';
+ if(S.g){$('hV').textContent='⚠️ '+S.g.ileg+' fora da medida';$('hR').textContent='🎯 '+Math.max(0,S.fp)+'/'+FASES[S.f].meta;$('hT').textContent='⏱ '+Math.max(0,Math.ceil(S.g.dur-S.g.t))+' s';}}
+function tabelaHTML(lista){return '<div class="tabela">'+lista.map(k=>`<span>${ESP[k].n}: <b>${ESP[k].min} cm</b></span>`).join('')+'</div>';}
+function inicio(){
+ parar();$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><h2>Pesque só o que está na medida</h2>
+ <table class="tab"><tr><td>🎣</td><td>Arraste o dedo ou o mouse na água: o anzol vai atrás. Encoste o anzol na boca do peixe para fisgar e espere o peixe subir.</td></tr>
+ <tr><td>📏</td><td>Peixe na medida e levado: +10 e mais 1 ponto por cm acima do mínimo.</td></tr>
+ <tr><td>🔙</td><td>Peixe abaixo da medida solto de volta: +5. Peixe na medida solto: 0.</td></tr>
+ <tr><td>⚠️</td><td>Levar peixe abaixo da medida: −25. Na vida real isso dá multa.</td></tr>
+ <tr><td>🥫</td><td>Lixo no fundo prende o anzol por alguns segundos.</td></tr></table>
+ <p class="small" style="margin-top:8px">🎯 Meta: fazer os pontos da fase levando no máximo 1 peixe fora da medida.</p>
+ <div class="row" style="margin-top:12px"><button class="btn" onclick="novo()">Começar →</button></div></div>`;
+}
+function novo(){S={f:0,tot:0,fp:0};salvo=false;$('rankBox').style.display='none';fase();}
+function fase(){const F=FASES[S.f];S.fp=0;S.g=null;hud();
+ $('tela').innerHTML=`<div class="card"><h2>Fase ${S.f+1}: ${F.nome}</h2><p>${F.txt}</p>${tabelaHTML(F.esp)}<p class="small" style="margin-top:8px">🎯 Meta: ${F.meta} pontos em ${F.dur} s, com no máximo 1 peixe fora da medida levado.</p><div class="row" style="margin-top:12px"><button class="btn" id="bg">Jogar →</button></div></div>`;
+ $('bg').onclick=jogar;}
+function novoPeixe(){const F=FASES[S.f],k=F.esp[Math.floor(Math.random()*F.esp.length)],E=ESP[k];
+ const cm=Math.round(E.min*rr(.6,1.35));const esq=Math.random()<.5;const len=Math.max(34,Math.min(150,cm*1.35))*(W<500?.75:1);
+ return {k,cm,len,x:esq?-len:W+len,y:rr(AGUA()+40,H-40),vx:(esq?1:-1)*rr(40,80)*(1+S.f*.25),fase:Math.random()*6};}
+function jogar(){
+ const F=FASES[S.f];
+ S.g={t:0,dur:F.dur,ileg:0,peixes:[],lixo:[],hx:W/2,hy:AGUA()+60,tx:W/2,ty:AGUA()+60,preso:0,pausa:false,fim:false,msg:'',msgT:0,cnt:{lev:0,sol:0}};
+ $('tela').innerHTML=`<div class="card"><div class="cw"><canvas id="cv"></canvas><div id="dec"></div></div>${F.tabela?tabelaHTML(F.esp):'<p class="small" style="margin-top:8px">Tabela escondida nesta fase.</p>'}</div>`;
+ cv=$('cv');if(cv.clientWidth<520){W=440;H=560;}else{W=760;H=480;}cv.width=W;cv.height=H;cx=cv.getContext('2d');
+ const g=S.g;g.hx=g.tx=W/2;g.hy=g.ty=AGUA()+60;
+ for(let i=0;i<F.n;i++){const p=novoPeixe();p.x=rr(0,W);S.g.peixes.push(p);}
+ if(S.f>0)for(let i=0;i<S.f+1;i++)g.lixo.push({x:rr(60,W-60),y:H-rr(18,40),ic:['🥫','🛞','🧴'][i%3]});
+ const pos=e=>{const r=cv.getBoundingClientRect();return [(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height];};
+ cv.onpointerdown=e=>{cv.setPointerCapture(e.pointerId);[g.tx,g.ty]=pos(e);e.preventDefault();};
+ cv.onpointermove=e=>{if(e.buttons||e.pointerType==='mouse'){[g.tx,g.ty]=pos(e);}};
+ hud();last=performance.now();parar();raf=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown',e=>{if(!S||!S.g||S.g.fim||S.g.pausa)return;const g=S.g,st=40;if(e.key==='ArrowLeft')g.tx-=st;if(e.key==='ArrowRight')g.tx+=st;if(e.key==='ArrowUp')g.ty-=st;if(e.key==='ArrowDown')g.ty+=st;});
+function msg(t){S.g.msg=t;S.g.msgT=2.4;}
+function fisgou(p){const g=S.g,F=FASES[S.f],E=ESP[p.k];g.pausa=true;beep(700,.12);
+ $('dec').innerHTML=`<div class="decide"><div class="box"><div style="font-size:1.1rem;font-weight:800;color:var(--deep)">${E.n}</div>
+ <div style="font-size:2rem;font-weight:800;margin:4px 0">📏 ${p.cm} cm</div>${F.tabela?`<div class="small">Mínimo: ${E.min} cm</div>`:'<div class="small">Lembra da medida mínima?</div>'}
+ <div class="row" style="justify-content:center;margin-top:10px"><button class="btn" id="dl">Levar</button><button class="btn ghost" id="ds">Soltar</button></div></div></div>`;
+ $('dl').onclick=()=>decide(p,true);$('ds').onclick=()=>decide(p,false);}
+function decide(p,levar){const g=S.g,E=ESP[p.k],ok=p.cm>=E.min;
+ if(levar){g.cnt.lev++;if(ok){const b=10+(p.cm-E.min);S.fp+=b;beep(900,.12);msg(`✅ ${E.n} na medida. +${b}.`);}else{S.fp-=25;g.ileg++;beep(150,.35,.08);msg(`⚠️ ${E.n} com ${p.cm} cm está abaixo de ${E.min} cm. −25.`);}}
+ else{g.cnt.sol++;if(!ok){S.fp+=5;beep(800,.08);msg(`🔙 Bom! ${E.n} pequeno volta para crescer. +5.`);}else msg(`${E.n} na medida solto. 0.`);}
+ g.peixes=g.peixes.filter(x=>x!==p);g.peixes.push(novoPeixe());$('dec').innerHTML='';g.pausa=false;g.ty=AGUA()+40;last=performance.now();hud();
+ if(g.ileg>1){/* continua, mas a meta já falhou */}}
+function update(dt){const g=S.g;if(!g||g.fim||g.pausa)return;
+ g.t+=dt;g.msgT-=dt;
+ g.tx=Math.max(10,Math.min(W-10,g.tx));g.ty=Math.max(AGUA()+15,Math.min(H-12,g.ty));
+ if(g.puxa){const p=g.puxa;g.hy-=150*dt;p.x=g.hx-(p.vx>0?p.len/2:-p.len/2);p.y=g.hy;p.fase+=dt*20;p.y+=Math.sin(p.fase)*3;
+  if(g.hy<=AGUA()+8){g.puxa=null;fisgou(p);}
+  for(const q of g.peixes)if(q!==p){q.x+=q.vx*dt;}return;}
+ if(g.preso>0){g.preso-=dt;}else{const dx=g.tx-g.hx,dy=g.ty-g.hy,d=Math.hypot(dx,dy),mx=230*dt;if(d>0){const k=Math.min(1,mx/d);g.hx+=dx*k;g.hy+=dy*k;}}
+ for(const p of g.peixes){p.x+=p.vx*dt;p.fase+=dt*3;p.y+=Math.sin(p.fase)*.25;if(p.vx>0&&p.x>W+p.len)Object.assign(p,novoPeixe(),{x:-p.len});if(p.vx<0&&p.x<-p.len)Object.assign(p,novoPeixe(),{x:W+p.len});}
+ if(g.preso<=0)for(const l of g.lixo){if(Math.hypot(l.x-g.hx,l.y-g.hy)<18){g.preso=2.5;g.ty=AGUA()+40;msg('🥫 O anzol enroscou no lixo do fundo.');beep(180,.25);break;}}
+ if(g.preso<=0)for(const p of g.peixes){const bx=p.x+(p.vx>0?p.len/2:-p.len/2),by=p.y;if(Math.hypot(bx-g.hx,by-g.hy)<14){g.puxa=p;beep(500,.08);break;}}
+ if(g.t>=g.dur)terminar();
+}
+function desenhaPeixe(p){const E=ESP[p.k],L=p.len,h=L*(E.forma==='redonda'?.62:E.forma==='alta'?.42:E.forma==='fina'?.3:.26);
+ cx.save();cx.translate(p.x,p.y);if(p.vx<0)cx.scale(-1,1);
+ cx.fillStyle=E.cauda;cx.beginPath();cx.moveTo(-L*.42,0);cx.lineTo(-L*.62,-h*.55);cx.lineTo(-L*.58,0);cx.lineTo(-L*.62,h*.55);cx.closePath();cx.fill();
+ cx.fillStyle=E.cor;cx.beginPath();cx.ellipse(0,0,L/2,h/2,0,0,7);cx.fill();
+ if(E.forma==='pintado'){cx.fillStyle='#37474f';for(let i=0;i<9;i++){cx.beginPath();cx.arc(-L*.3+i*L*.07,(i%2?-1:1)*h*.12,L*.018,0,7);cx.fill();}}
+ if(E.forma==='listrado'){cx.strokeStyle='#37474f';cx.lineWidth=Math.max(1.5,L*.012);for(let i=0;i<6;i++){cx.beginPath();cx.moveTo(-L*.28+i*L*.09,-h*.38);cx.lineTo(-L*.24+i*L*.09,h*.1);cx.stroke();}}
+ if(E.forma==='bagre'||E.forma==='pintado'||E.forma==='listrado'||E.forma==='jau'){cx.strokeStyle='#263238';cx.lineWidth=1.2;cx.beginPath();cx.moveTo(L*.46,h*.05);cx.quadraticCurveTo(L*.62,h*.2,L*.7,h*.5);cx.moveTo(L*.46,h*.1);cx.quadraticCurveTo(L*.58,h*.35,L*.6,h*.7);cx.stroke();}
+ cx.fillStyle='#fff';cx.beginPath();cx.arc(L*.34,-h*.12,Math.max(2,L*.03),0,7);cx.fill();cx.fillStyle='#111';cx.beginPath();cx.arc(L*.35,-h*.12,Math.max(1.2,L*.018),0,7);cx.fill();
+ cx.restore();
+ if(FASES[S.f].tabela||S.f<2){cx.font='11px system-ui';cx.textAlign='center';cx.fillStyle='rgba(1,87,155,.75)';cx.fillText(E.n,p.x,p.y-h/2-6);}
+}
+function desenha(){const g=S.g;if(!g||!cx)return;const a=AGUA();
+ cx.clearRect(0,0,W,H);cx.fillStyle='#e3f2fd';cx.fillRect(0,0,W,a);
+ const gr=cx.createLinearGradient(0,a,0,H);gr.addColorStop(0,'#b3e5fc');gr.addColorStop(1,'#81d4fa');cx.fillStyle=gr;cx.fillRect(0,a,W,H-a);
+ cx.fillStyle='#bcaaa4';cx.fillRect(0,H-10,W,10);
+ cx.font='30px system-ui';cx.textAlign='center';cx.textBaseline='middle';for(const l of g.lixo)cx.fillText(l.ic,l.x,l.y);
+ for(const p of g.peixes)desenhaPeixe(p);
+ // barco
+ cx.font='40px system-ui';cx.fillText('🛶',g.hx,a-14);
+ cx.strokeStyle='#37474f';cx.lineWidth=1.5;cx.beginPath();cx.moveTo(g.hx+14,a-24);cx.lineTo(g.hx,g.hy);cx.stroke();
+ cx.strokeStyle=g.preso>0?'#c62828':'#37474f';cx.lineWidth=2.5;cx.beginPath();cx.arc(g.hx,g.hy+4,6,0,Math.PI);cx.moveTo(g.hx,g.hy-6);cx.lineTo(g.hx,g.hy+4);cx.stroke();
+ if(g.msgT>0){cx.font='bold 15px system-ui';cx.fillStyle='rgba(255,255,255,.9)';cx.fillRect(0,6,W,26);cx.fillStyle='#01579b';cx.fillText(g.msg,W/2,19);}
+}
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);desenha();hud();if(S.g&&!S.g.fim)raf=requestAnimationFrame(loop);}
+function parar(){if(raf)cancelAnimationFrame(raf);raf=null;}
+function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=FASES[S.f],ok=S.fp>=F.meta&&g.ileg<=1;
+ if(ok){S.fp+=30;beep(880,.2);}hud();
+ $('tela').innerHTML=`<div class="card"><h2>${ok?'Pescaria dentro da lei':'Pescaria fora da meta'}</h2>
+ <p>Peixes levados: <b>${g.cnt.lev}</b>. Soltos: <b>${g.cnt.sol}</b>. Fora da medida levados: <b>${g.ileg}</b>.</p>
+ ${ok?'<div class="fb good">🎯 Meta cumprida! +30.</div>':`<div class="fb bad">A meta não foi cumprida. ${g.ileg>1?'Você levou peixes demais abaixo da medida.':'Faltaram pontos: procure os peixes grandes na medida.'}</div>`}
+ <div class="row" style="margin-top:12px">${ok?'<button class="btn" id="bq">Pergunta da fase →</button>':'<button class="btn" id="br">Tentar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
+ if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}
+}
+function pergunta(){
+ const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
+ $('tela').innerHTML=`<div class="card"><h2>Pergunta da fase</h2><p style="margin:6px 0 4px">${P.q}</p><p class="small">Acerto +20, erro −10.</p><div class="ops">${ops.map((o,i)=>`<button data-i="${i}">${o.t}</button>`).join('')}</div><div id="pf"></div></div>`;
+ document.querySelectorAll('#tela .ops button').forEach(b=>b.onclick=()=>{const o=ops[+b.dataset.i];S.fp+=o.c?20:-10;beep(o.c?880:170,.15);hud();
+  document.querySelectorAll('#tela .ops button').forEach((x,j)=>{x.disabled=true;if(ops[j].c){x.style.borderColor='#2e7d32';x.style.opacity=1;}});
+  $('pf').innerHTML=`<div class="fb ${o.c?'good':'bad'}">${o.c?'✅ +20.':'❌ −10. A resposta certa está marcada em verde.'}<div class="row" style="margin-top:10px"><button class="btn" id="bn">${S.f===FASES.length-1?'Ver resultado →':'Próxima fase →'}</button></div></div>`;
+  $('bn').onclick=()=>{S.tot+=S.fp;S.fp=0;if(S.f===FASES.length-1)final(true);else{S.f++;fase();}};});
+}
+function final(tudo){
+ S.g=null;$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
+ $('tela').innerHTML=`<div class="card" style="text-align:center"><div class="big">${tudo?'🏆':'🎣'}</div><h2>${tudo?'Pescador consciente!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
+ <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
+ <div class="small" style="margin-top:12px;text-align:left">📚 Fonte das medidas: Sema-MT, medidas mínimas de captura que constam na carteira de pesca do Estado (piraputanga 30 cm, curimbatá 38 cm, pacu 45 cm, barbado 60 cm, cachara 80 cm, pintado 85 cm, jaú 95 cm). A medida pode variar conforme a bacia; confira sempre a regra em vigor. Tamanhos dos peixes do jogo e pontuação são regras do jogo.</div></div>`;
+ $('bS').onclick=()=>salvar(nivel);
+}
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="pesca-na-medida";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__pm={get S(){return S},update,decide,ESP,FASES};
+inicio();
+</script>
+</body>
+</html>
