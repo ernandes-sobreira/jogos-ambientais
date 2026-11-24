@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Brigada contra o Fogo</title>
+<style>
+:root{--main:#d84315;--deep:#a52c0b;--soft:#fbe9e7;--line:#f5d3ca;--ink:#2b1d19;--mut:#6d5650}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:780px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep)}h2{font-size:1.15rem;color:var(--deep);margin-bottom:6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 11px;font-weight:700;font-size:.86rem}
+.card{border:2px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit}
+.btn:hover{background:var(--deep)}.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas{width:100%;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff;user-select:none;-webkit-user-select:none}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:8px}.tab td{border-bottom:1px solid var(--line);padding:5px 4px;vertical-align:top}
+.ops{display:grid;gap:8px;margin-top:10px}
+.ops button{border:2px solid var(--line);background:#fff;border-radius:12px;padding:11px;font-size:.95rem;cursor:pointer;font-family:inherit;text-align:left;color:var(--ink)}
+.ops button:hover{border-color:var(--main)}.ops button:disabled{opacity:.5;cursor:default}
+.fb{margin-top:10px;padding:11px 13px;border-radius:12px;font-size:.93rem}
+.fb.good{background:#e8f5e9;color:#1b5e20}.fb.bad{background:#ffebee;color:#8e1b1b}
+.big{font-size:2.3rem;font-weight:800;color:var(--deep)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>🧑‍🚒 Brigada contra o Fogo</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hA">💧 100%</span><span class="pill" id="hV">🌿 100%</span><span class="pill" id="hT">⏱ 0</span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let actx=null;function beep(f,d,v){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=f;g.gain.setValueAtTime(v||.05,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+d);}catch(e){}}
+
+/* Regras do jogo: vida do fogo, velocidade, gasto de água e dano são escolhas do jogo. */
+const FASES=[
+ {nome:'Foco pequeno',dur:45,int:2.2,hp:2,v:22,esp:0,bichos:0,vento:0,meta:60,txt:'Focos de fogo descem pelo campo. Mire o jato e apague antes que cheguem à mata lá embaixo.'},
+ {nome:'Vento forte',dur:55,int:2.1,hp:2,v:24,esp:12,bichos:6,vento:14,meta:60,txt:'O vento empurra o fogo para o lado, e foco que fica aceso espalha para perto. Bichos fogem do fogo: não jogue água neles.'},
+ {nome:'Seca extrema',dur:65,int:2.05,hp:3,v:24,esp:11,bichos:4.5,vento:20,meta:55,txt:'Na seca o fogo se espalha mais rápido. Economize água e volte ao corixo para encher a bomba.'}
+];
+const BICHOS=['🦌','🐊','🦜','🐆','🐒'];
+const PERG=[
+ {q:'Por que os brigadistas abrem aceiros?',o:['Para tirar o material que queima e o fogo não passar','Para molhar o solo e fazer a grama crescer de novo','Para os animais terem um caminho de fuga mais rápido']},
+ {q:'Qual telefone se usa no Brasil para chamar o Corpo de Bombeiros?',o:['193','190','192']},
+ {q:'Em 2020, que parte do Pantanal brasileiro foi queimada, segundo estudo do INPE com imagens de satélite?',o:['Cerca de 30%','Cerca de 3%','Cerca de 80%']}
+];
+let S,cv,cx,raf=null,last=0,W=760,H=520,inp={x:null,tiro:false,esq:false,dir:false};
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';
+ if(S.g){$('hA').textContent='💧 '+Math.round(S.g.agua)+'%';$('hV').textContent='🌿 '+Math.max(0,Math.round(S.g.vida))+'%';$('hT').textContent='⏱ '+Math.max(0,Math.ceil(S.g.dur-S.g.t))+' s';}}
+function inicio(){
+ parar();$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><h2>Apague o fogo antes que ele chegue à mata</h2>
+ <table class="tab"><tr><td>🖱️ / 👆</td><td>Arraste para mover o brigadista. Segure para jogar água.</td></tr>
+ <tr><td>⌨️</td><td>Setas para andar e espaço para jogar água.</td></tr>
+ <tr><td>💧</td><td>A bomba nas costas tem água limitada. Pare em cima do corixo, nos cantos de baixo, e solte o jato para encher.</td></tr>
+ <tr><td>🔥</td><td>Foco apagado +10. Foco que chega à mata tira 10% da vida dela e 15 pontos.</td></tr>
+ <tr><td>🦌</td><td>Jato de água num bicho em fuga tira 10 pontos.</td></tr></table>
+ <p class="small" style="margin-top:8px">🎯 Meta: terminar cada fase com a mata acima do mínimo.</p>
+ <div class="row" style="margin-top:12px"><button class="btn" onclick="novo()">Começar →</button></div></div>`;
+}
+function novo(){S={f:0,tot:0,fp:0};salvo=false;$('rankBox').style.display='none';fase();}
+function fase(){const F=FASES[S.f];S.fp=0;S.g=null;hud();
+ $('tela').innerHTML=`<div class="card"><h2>Fase ${S.f+1}: ${F.nome}</h2><p>${F.txt}</p><p class="small" style="margin-top:6px">Duração: ${F.dur} s. 🎯 Meta: mata com pelo menos ${F.meta}% de vida.</p><div class="row" style="margin-top:12px"><button class="btn" id="bg">Jogar →</button></div></div>`;
+ $('bg').onclick=jogar;}
+function jogar(){
+ S.g={t:0,dur:FASES[S.f].dur,px:W/2,agua:100,vida:100,fogos:[],jatos:[],bichos:[],prox:1,proxB:3,cd:0,apag:0,fim:false,msg:'',msgT:0};
+ $('tela').innerHTML=`<div class="card"><canvas id="cv"></canvas><p class="small" style="margin-top:8px">Arraste para mover e segure para jogar água. No teclado, use as setas e o espaço.</p></div>`;
+ cv=$('cv');if(cv.clientWidth<520){W=440;H=600;}else{W=760;H=520;}cv.width=W;cv.height=H;S.g.px=W/2;cx=cv.getContext('2d');
+ const pos=e=>{const r=cv.getBoundingClientRect();return (e.clientX-r.left)*W/r.width;};
+ cv.onpointerdown=e=>{cv.setPointerCapture(e.pointerId);inp.x=pos(e);inp.tiro=true;e.preventDefault();};
+ cv.onpointermove=e=>{if(inp.tiro)inp.x=pos(e);};
+ cv.onpointerup=cv.onpointercancel=()=>{inp.tiro=false;inp.x=null;};
+ hud();last=performance.now();parar();raf=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown',e=>{if(!S||!S.g||S.g.fim)return;if(e.key==='ArrowLeft')inp.esq=true;if(e.key==='ArrowRight')inp.dir=true;if(e.key===' '){inp.tiro=true;inp.tecla=true;e.preventDefault();}});
+document.addEventListener('keyup',e=>{if(e.key==='ArrowLeft')inp.esq=false;if(e.key==='ArrowRight')inp.dir=false;if(e.key===' '){inp.tiro=false;inp.tecla=false;}});
+const CHAO=()=>H-70,CORIXO=70;
+function msg(t){S.g.msg=t;S.g.msgT=2.2;}
+function spawnFogo(x,y){const F=FASES[S.f];S.g.fogos.push({x:x??rr(30,W-30),y:y??-20,hp:F.hp,max:F.hp,v:F.v*rr(.85,1.2),vx:F.vento*rr(-1,1),idade:0});}
+function update(dt){const g=S.g;if(!g||g.fim)return;const F=FASES[S.f];
+ g.t+=dt;g.msgT-=dt;
+ // movimento
+ const vel=320;if(inp.esq)g.px-=vel*dt;if(inp.dir)g.px+=vel*dt;
+ if(inp.x!=null){const d=inp.x-g.px;g.px+=Math.sign(d)*Math.min(Math.abs(d),vel*1.4*dt);}
+ g.px=Math.max(20,Math.min(W-20,g.px));
+ // corixo
+ const noCorixo=g.px<CORIXO||g.px>W-CORIXO;
+ if(noCorixo&&!inp.tiro&&g.agua<100){g.agua=Math.min(100,g.agua+45*dt);}
+ // tiro
+ g.cd-=dt;
+ if(inp.tiro&&g.cd<=0){if(g.agua>=1.5){g.agua-=1.5;g.jatos.push({x:g.px,y:CHAO()-30});g.cd=.18;beep(900,.03,.02);}else if(g.msgT<0)msg('💧 A bomba secou. Vá ao corixo encher.');}
+ for(const j of g.jatos)j.y-=520*dt;
+ // fogo
+ if(g.t<g.dur){g.prox-=dt;if(g.prox<=0){spawnFogo();g.prox=F.int*rr(.7,1.3);}
+  if(F.bichos){g.proxB-=dt;if(g.proxB<=0){const esq=Math.random()<.5;g.bichos.push({ic:BICHOS[Math.floor(Math.random()*BICHOS.length)],x:esq?-20:W+20,y:rr(H*.3,H*.62),vx:(esq?1:-1)*rr(70,110)});g.proxB=F.bichos*rr(.7,1.3);}}}
+ for(const f of g.fogos){f.y+=f.v*dt;f.x+=f.vx*dt;if(f.x<15||f.x>W-15)f.vx*=-1;f.idade+=dt;
+  if(F.esp&&f.idade>F.esp&&f.y<CHAO()-60&&g.fogos.length<40){f.idade=0;spawnFogo(Math.max(20,Math.min(W-20,f.x+rr(-60,60))),f.y-rr(10,30));}}
+ for(const b of g.bichos)b.x+=b.vx*dt;
+ // colisões
+ for(const j of g.jatos){if(j.hit)continue;
+  for(const b of g.bichos){if(!b.hit&&Math.abs(j.x-b.x)<20&&Math.abs(j.y-b.y)<20){b.hit=true;j.hit=true;S.fp-=10;beep(200,.2);msg('🦌 O jato acertou um bicho em fuga. −10.');break;}}
+  if(j.hit)continue;
+  for(const f of g.fogos){if(f.hp>0&&Math.abs(j.x-f.x)<22&&Math.abs(j.y-f.y)<24){f.hp--;j.hit=true;if(f.hp<=0){g.apag++;S.fp+=10;beep(700,.06);}break;}}}
+ for(const f of g.fogos){if(f.hp>0&&f.y>CHAO()-8){f.hp=0;f.chegou=true;g.vida-=10;S.fp-=15;beep(120,.3,.07);msg('🔥 O fogo chegou à mata. −15.');}}
+ g.jatos=g.jatos.filter(j=>!j.hit&&j.y>-20);g.fogos=g.fogos.filter(f=>f.hp>0);g.bichos=g.bichos.filter(b=>b.x>-40&&b.x<W+40&&!b.hit);
+ if(g.vida<=0){g.vida=0;terminar();}
+ else if(g.t>=g.dur&&g.fogos.length===0)terminar();
+ else if(g.t>=g.dur+20)terminar();
+}
+function desenha(){const g=S.g;if(!g||!cx)return;
+ cx.clearRect(0,0,W,H);
+ const gr=cx.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#fff8e1');gr.addColorStop(1,'#f1f8e9');cx.fillStyle=gr;cx.fillRect(0,0,W,H);
+ // mata
+ const ch=CHAO();cx.fillStyle='#c8e6c9';cx.fillRect(0,ch,W,H-ch);
+ cx.font='26px system-ui';cx.textAlign='center';const vivos=Math.round((W/44)*Math.max(0,g.vida)/100);
+ for(let i=0;i<Math.floor(W/44);i++)cx.fillText(i<vivos?'🌳':'🪵',22+i*44,ch+30);
+ // corixos
+ cx.fillStyle='#b3e5fc';cx.fillRect(0,ch+38,CORIXO,H-ch-38);cx.fillRect(W-CORIXO,ch+38,CORIXO,H-ch-38);
+ cx.font='12px system-ui';cx.fillStyle='#0277bd';cx.fillText('💧 corixo',CORIXO/2,H-10);cx.fillText('💧 corixo',W-CORIXO/2,H-10);
+ // bichos, fogo, jatos
+ cx.font='30px system-ui';for(const b of g.bichos){cx.save();if(b.vx>0){cx.translate(b.x,b.y);cx.scale(-1,1);cx.fillText(b.ic,0,10);}else cx.fillText(b.ic,b.x,b.y+10);cx.restore();}
+ for(const f of g.fogos){const s=24+8*f.hp/f.max;cx.font=s+'px system-ui';cx.fillText('🔥',f.x,f.y+10);}
+ cx.fillStyle='#29b6f6';for(const j of g.jatos){cx.beginPath();cx.arc(j.x,j.y,5,0,7);cx.fill();}
+ // brigadista
+ cx.font='38px system-ui';cx.fillText('🧑‍🚒',g.px,ch-8);
+ cx.fillStyle='#e0e0e0';cx.fillRect(g.px-22,ch-2,44,6);cx.fillStyle='#29b6f6';cx.fillRect(g.px-22,ch-2,44*g.agua/100,6);
+ if(g.msgT>0){cx.font='bold 15px system-ui';cx.fillStyle='#a52c0b';cx.fillText(g.msg,W/2,28);}
+}
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);desenha();hud();if(S.g&&!S.g.fim)raf=requestAnimationFrame(loop);}
+function parar(){if(raf)cancelAnimationFrame(raf);raf=null;inp.tiro=false;inp.x=null;}
+function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=FASES[S.f];const ok=g.vida>=F.meta;
+ if(ok){S.fp+=30+Math.round(g.vida/2);beep(880,.2);}hud();
+ $('tela').innerHTML=`<div class="card"><h2>${ok?'Fase concluída':'O fogo venceu desta vez'}</h2>
+ <p>Focos apagados: <b>${g.apag}</b>. Vida da mata: <b>${Math.max(0,Math.round(g.vida))}%</b> (meta: ${F.meta}%).</p>
+ ${ok?`<div class="fb good">🎯 Meta cumprida! +30 e +${Math.round(g.vida/2)} pela mata que ficou em pé.</div>`:'<div class="fb bad">A meta não foi cumprida. Apague os focos enquanto estão longe e não deixe a bomba secar no meio do ataque.</div>'}
+ <div class="row" style="margin-top:12px">${ok?'<button class="btn" id="bq">Pergunta da fase →</button>':'<button class="btn" id="br">Tentar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
+ if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}
+}
+function pergunta(){
+ const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
+ $('tela').innerHTML=`<div class="card"><h2>Pergunta da fase</h2><p style="margin:6px 0 4px">${P.q}</p><p class="small">Acerto +20, erro −10.</p><div class="ops">${ops.map((o,i)=>`<button data-i="${i}">${o.t}</button>`).join('')}</div><div id="pf"></div></div>`;
+ document.querySelectorAll('#tela .ops button').forEach(b=>b.onclick=()=>{const o=ops[+b.dataset.i];S.fp+=o.c?20:-10;beep(o.c?880:170,.15);hud();
+  document.querySelectorAll('#tela .ops button').forEach((x,j)=>{x.disabled=true;if(ops[j].c){x.style.borderColor='#2e7d32';x.style.opacity=1;}});
+  $('pf').innerHTML=`<div class="fb ${o.c?'good':'bad'}">${o.c?'✅ +20.':'❌ −10. A resposta certa está marcada em verde.'}<div class="row" style="margin-top:10px"><button class="btn" id="bn">${S.f===FASES.length-1?'Ver resultado →':'Próxima fase →'}</button></div></div>`;
+  $('bn').onclick=()=>{S.tot+=S.fp;S.fp=0;if(S.f===FASES.length-1)final(true);else{S.f++;fase();}};});
+}
+function final(tudo){
+ S.g=null;$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
+ $('tela').innerHTML=`<div class="card" style="text-align:center"><div class="big">${tudo?'🏆':'🔥'}</div><h2>${tudo?'A mata ficou em pé!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
+ <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
+ <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Shimabukuro et al. (2023), Fire 6:277, área queimada no Pantanal em 2020 (INPE);  Corpo de Bombeiros, telefone 193. Velocidade do fogo, água da bomba e dano à mata são regras do jogo.</div></div>`;
+ $('bS').onclick=()=>salvar(nivel);
+}
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="brigada-contra-o-fogo";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__bf={get S(){return S},update,parar,inp,FASES,get W(){return W}};
+inicio();
+</script>
+</body>
+</html>
