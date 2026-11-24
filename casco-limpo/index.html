@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Casco Limpo</title>
+<style>
+:root{--main:#b8860b;--deep:#7a5900;--soft:#fff8e1;--line:#f3e3b5;--ink:#2a2414;--mut:#6b5d3d}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:780px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep)}h2{font-size:1.15rem;color:var(--deep);margin-bottom:6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 11px;font-weight:700;font-size:.86rem}
+.card{border:2px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit}
+.btn:hover{background:var(--deep)}.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas{width:100%;max-width:760px;cursor:crosshair;margin:0 auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff}
+.pad{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,52px);gap:6px;justify-content:center;margin-top:10px}
+.pad button{border:2px solid var(--line);background:var(--soft);border-radius:12px;font-size:1.4rem;cursor:pointer;color:var(--deep);touch-action:manipulation}
+.pad button:active{background:#dcedc8}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:8px}.tab td{border-bottom:1px solid var(--line);padding:5px 4px;vertical-align:top}
+.ops{display:grid;gap:8px;margin-top:10px}
+.ops button{border:2px solid var(--line);background:#fff;border-radius:12px;padding:11px;font-size:.95rem;cursor:pointer;font-family:inherit;text-align:left;color:var(--ink)}
+.ops button:hover{border-color:var(--main)}.ops button:disabled{opacity:.5;cursor:default}
+.fb{margin-top:10px;padding:11px 13px;border-radius:12px;font-size:.93rem}
+.fb.good{background:#e8f5e9;color:#1b5e20}.fb.bad{background:#ffebee;color:#8e1b1b}
+.big{font-size:2.3rem;font-weight:800;color:var(--deep)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1><svg viewBox="0 0 60 40" width="40" height="27" style="vertical-align:-5px" aria-label="mexilhão-dourado"><ellipse cx="22" cy="22" rx="16" ry="8" transform="rotate(-25 22 22)" fill="#d4a017" stroke="#7a5900" stroke-width="2"/><path d="M10 27 Q22 20 34 16" stroke="#7a5900" stroke-width="1.5" fill="none"/><ellipse cx="40" cy="22" rx="14" ry="7" transform="rotate(20 40 22)" fill="#e0b52a" stroke="#7a5900" stroke-width="2"/><path d="M29 18 Q40 22 51 26" stroke="#7a5900" stroke-width="1.5" fill="none"/></svg> Casco Limpo</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR">🚤 1/3</span><span class="pill" id="hV">🟡 0</span><span class="pill" id="hT">⏱ 0</span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let actx=null;function beep(f,d,v){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=f;g.gain.setValueAtTime(v||.05,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+d);}catch(e){}}
+
+/* Regras do jogo: quantidade de mexilhões, tempo e pressão do jato são escolhas do jogo. */
+const FASES=[
+ {nome:'Voadeira de pesca',tipo:'voadeira',barcos:[55,70,85],tempo:25,txt:'Uma voadeira saiu do rio Paraguai com mexilhão-dourado grudado no casco. Antes de ela ir para outro rio, tire todos os mexilhões com o jato de alta pressão.'},
+ {nome:'Lancha de passeio',tipo:'lancha',barcos:[95,115,135],tempo:27,txt:'Lanchas ficam mais tempo na água e chegam com mais mexilhões. Procure também na rabeta do motor, perto da entrada de água.'},
+ {nome:'Chalana de turismo',tipo:'chalana',barcos:[140,165,190],tempo:30,txt:'Chalana passa semanas no rio. O casco grande chega coberto de mexilhões e o tempo é curto.'}
+];
+const META=.9;
+const PERG=[
+ {q:'O que fazer com os mexilhões tirados do casco?',o:['Descartar em terra, longe da água','Jogar de volta no rio onde foram tirados','Guardar no barco até chegar ao próximo rio']},
+ {q:'Por que drenar a água do motor e do fundo do barco, mesmo depois de tirar os mexilhões?',o:['A larva do mexilhão é invisível a olho nu e pode estar nessa água','A água do rio estraga o motor de alumínio','O peso da água deixa o barco mais lento']},
+ {q:'Como o mexilhão-dourado chegou ao Pantanal?',o:['Grudado no casco de embarcações da hidrovia Paraguai-Paraná','Trazido de propósito para limpar a água dos rios','Levado pelo vento junto com a poeira da seca']}
+];
+let S,cv,cx,raf=null,last=0,W=760,H=460,mira={x:380,y:230,tiro:false};
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';
+ if(S.g){const g=S.g;$('hR').textContent='🚤 Barco '+(g.b+1)+'/3';$('hV').textContent='🟡 '+g.mex.filter(m=>m.hp>0).length+' mexilhões';$('hT').textContent='⏱ '+Math.max(0,Math.ceil(g.resta))+' s';}}
+function inicio(){
+ parar();$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><h2>Tire o mexilhão-dourado do casco</h2>
+ <p>Barcos que saem de um rio com mexilhão-dourado podem levar o invasor para outros rios. Na rampa, antes da viagem, o casco precisa ficar limpo.</p>
+ <table class="tab"><tr><td>🎯</td><td>Mire e toque (ou clique) para disparar o jato de alta pressão. Segure para disparar sem parar.</td></tr>
+ <tr><td>🟡</td><td>Cada mexilhão tirado vale +2. Mexilhão grande precisa de dois jatos.</td></tr>
+ <tr><td>💨</td><td>A pressão do jato cai a cada disparo e volta quando você para. Disparo no casco limpo gasta pressão à toa.</td></tr>
+ <tr><td>⏱</td><td>Cada barco tem tempo. A cada barco chegam mais mexilhões.</td></tr></table>
+ <p class="small" style="margin-top:8px">🎯 Meta: tirar pelo menos 90% dos mexilhões de cada barco antes do tempo acabar.</p>
+ <div class="row" style="margin-top:12px"><button class="btn" onclick="novo()">Começar →</button></div></div>`;
+}
+function novo(){S={f:0,tot:0,fp:0};salvo=false;$('rankBox').style.display='none';fase();}
+function fase(){const F=FASES[S.f];S.fp=0;S.g=null;hud();
+ $('tela').innerHTML=`<div class="card"><h2>Fase ${S.f+1}: ${F.nome}</h2><p>${F.txt}</p><p class="small" style="margin-top:6px">3 barcos, com ${F.barcos.join(', ')} mexilhões. ${F.tempo} s para cada um. 🎯 Meta: tirar 90% dos mexilhões de cada barco.</p><div class="row" style="margin-top:12px"><button class="btn" id="bg">Ir para a rampa →</button></div></div>`;
+ $('bg').onclick=()=>{S.g={b:0,falhas:0,res:[]};barco();};}
+
+/* Geometria do barco (coordenadas em fração da tela) */
+function forma(tipo){
+ if(tipo==='voadeira')return {proa:.1,popa:.82,borda:.36,linha:.55,quilha:.68,motor:true,cab:false,cor1:'#cfd8dc',cor2:'#90a4ae',faixa:'#1565c0'};
+ if(tipo==='lancha')return {proa:.06,popa:.84,borda:.32,linha:.53,quilha:.7,motor:true,cab:true,cor1:'#fafafa',cor2:'#cfd8dc',faixa:'#c62828'};
+ return {proa:.04,popa:.9,borda:.26,linha:.5,quilha:.72,motor:false,cab:true,chalana:true,cor1:'#fff8e1',cor2:'#d7ccc8',faixa:'#2e7d32'};}
+function cascoY(f,x){/* fundo do casco: curva da proa até a popa */const t=(x-f.proa*W)/((f.popa-f.proa)*W);if(t<0||t>1)return null;
+ const qy=f.quilha*H;const by=f.borda*H;if(t<.18){const u=t/.18;return by+(qy-by)*Math.sin(u*Math.PI/2);}return qy;}
+function dentroSubmerso(f,x,y){const fy=cascoY(f,x);if(fy==null)return false;return y>f.linha*H&&y<fy-4;}
+function gerar(n){const g=S.g,f=g.f;const mex=[];let tent=0;
+ // núcleos de agregação: o mexilhão vive em colônias
+ const nucleos=Array.from({length:Math.max(3,Math.round(n/9))},()=>{let x,y;do{x=rr(f.proa*W+30,f.popa*W-10);y=rr(f.linha*H+6,f.quilha*H-8);}while(!dentroSubmerso(f,x,y));return [x,y];});
+ if(f.motor)nucleos.push([f.popa*W+W*.024,H*(f.quilha+.04)]);
+ while(mex.length<n&&tent<5000){tent++;const c=nucleos[Math.floor(Math.random()*nucleos.length)];const gx=(Math.random()+Math.random()+Math.random()-1.5)/1.5,gy=(Math.random()+Math.random()+Math.random()-1.5)/1.5;const x=c[0]+gx*46,y=c[1]+gy*20;
+  const noMotor=f.motor&&Math.abs(x-(f.popa*W+W*.024))<14&&y>H*f.linha&&y<H*(f.quilha+.1);
+  if(!dentroSubmerso(f,x,y)&&!noMotor)continue;
+  const grande=Math.random()<.35;mex.push({x,y,ang:rr(-1.2,1.2),s:grande?rr(1.1,1.4):rr(.7,1),hp:grande?2:1,max:grande?2:1,cai:0});}
+ return mex;}
+function barco(){const F=FASES[S.f],g=S.g;g.f=forma(F.tipo);
+ $('tela').innerHTML=`<div class="card"><canvas id="cv"></canvas><div class="row" style="justify-content:space-between;margin-top:8px"><span class="small">Mire e toque para disparar. Segure para jato contínuo.</span><span class="small" id="pres"></span></div></div>`;
+ cv=$('cv');if(cv.clientWidth<520){W=460;H=420;}else{W=760;H=460;}cv.width=W;cv.height=H;cx=cv.getContext('2d');
+ g.mex=gerar(F.barcos[g.b]);g.total=g.mex.length;g.resta=F.tempo;g.pressao=100;g.cd=0;g.jatos=[];g.fim=false;g.gotas=[];g.msg='';g.msgT=0;
+ const pos=e=>{const r=cv.getBoundingClientRect();return [(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height];};
+ cv.onpointerdown=e=>{cv.setPointerCapture(e.pointerId);[mira.x,mira.y]=pos(e);mira.tiro=true;e.preventDefault();};
+ cv.onpointermove=e=>{[mira.x,mira.y]=pos(e);};
+ cv.onpointerup=cv.onpointercancel=()=>{mira.tiro=false;};
+ hud();last=performance.now();parar();raf=requestAnimationFrame(loop);}
+function bico(){return [W*.5,H-6];}
+function update(dt){const g=S.g;if(!g||g.fim||!g.mex)return;
+ g.resta-=dt;g.cd-=dt;g.msgT-=dt;
+ if(!mira.tiro)g.pressao=Math.min(100,g.pressao+24*dt);
+ if(mira.tiro&&g.cd<=0){if(g.pressao>=9){g.pressao-=9;g.cd=.16;disparo(mira.x,mira.y);}else if(g.msgT<0){g.msg='💨 Pressão baixa. Solte o gatilho um instante.';g.msgT=1.5;}}
+ for(const j of g.jatos)j.t-=dt;g.jatos=g.jatos.filter(j=>j.t>0);
+ for(const m of g.mex)if(m.hp<=0&&m.cai<1)m.cai+=dt*1.6;
+ for(const d of g.gotas){d.x+=d.vx*dt;d.y+=d.vy*dt;d.vy+=500*dt;d.t-=dt;}g.gotas=g.gotas.filter(d=>d.t>0);
+ const vivos=g.mex.filter(m=>m.hp>0).length;
+ if(vivos===0||g.resta<=0)fimBarco();
+ const p=$('pres');if(p)p.textContent='💨 Pressão '+Math.round(g.pressao)+'%';}
+function disparo(x,y){const g=S.g;g.jatos.push({x,y,t:.1});beep(1200,.025,.015);
+ let acertou=0;for(const m of g.mex){if(m.hp>0&&Math.hypot(m.x-x,m.y-y)<13){m.hp--;acertou++;if(m.hp<=0){S.fp+=2;m.vy=0;}}}
+ for(let i=0;i<5;i++)g.gotas.push({x,y,vx:rr(-90,90),vy:rr(-150,-40),t:.4});
+ if(acertou)beep(500,.04,.03);}
+function desenhaMexilhao(m){const k=m.cai;if(k>=1)return;cx.save();cx.translate(m.x,m.y+k*k*120);cx.rotate(m.ang+k*3);cx.globalAlpha=1-k;const L=17*m.s,h=7.5*m.s;
+ const gr=cx.createLinearGradient(-L/2,0,L/2,0);gr.addColorStop(0,'#5d4316');gr.addColorStop(.35,'#a8780e');gr.addColorStop(1,'#e8c04a');
+ cx.fillStyle=gr;cx.beginPath();cx.moveTo(-L/2,0);cx.bezierCurveTo(-L/2,-h*.7,L*.25,-h,L/2,-h*.25);cx.bezierCurveTo(L*.55,h*.25,L*.1,h*.75,-L/2,0);cx.fill();
+ cx.strokeStyle='rgba(60,40,10,.55)';cx.lineWidth=.8;cx.stroke();
+ cx.strokeStyle='rgba(255,240,180,.5)';cx.beginPath();cx.moveTo(-L*.35,-h*.05);cx.quadraticCurveTo(0,-h*.45,L*.4,-h*.2);cx.stroke();
+ if(m.max===2&&m.hp===1){cx.strokeStyle='#fff';cx.lineWidth=1.2;cx.beginPath();cx.moveTo(-2,-3);cx.lineTo(2,3);cx.stroke();}
+ cx.restore();}
+function desenhaBarco(){const f=S.g.f;const x0=f.proa*W,x1=f.popa*W,by=f.borda*H,qy=f.quilha*H;
+ // casco
+ cx.beginPath();cx.moveTo(x0,by);
+ for(let x=x0;x<=x1;x+=4){const y=cascoY(f,x);cx.lineTo(x,y);}cx.lineTo(x1,by-4);cx.closePath();
+ const gr=cx.createLinearGradient(0,by,0,qy);gr.addColorStop(0,f.cor1);gr.addColorStop(1,f.cor2);cx.fillStyle=gr;cx.fill();cx.strokeStyle='#455a64';cx.lineWidth=2.5;cx.stroke();
+ // faixas do costado e rebites
+ cx.save();cx.clip();
+ cx.fillStyle=f.faixa;cx.fillRect(x0,by+6,x1-x0,7);
+ cx.strokeStyle='rgba(69,90,100,.35)';cx.lineWidth=1.2;for(let k=1;k<4;k++){const yy=by+(qy-by)*k/4;cx.beginPath();cx.moveTo(x0,yy);cx.lineTo(x1,yy);cx.stroke();}
+ if(S.g.f.cor1==='#cfd8dc'){cx.fillStyle='rgba(69,90,100,.5)';for(let x=x0+20;x<x1;x+=22)for(let k=1;k<4;k++){cx.beginPath();cx.arc(x,by+(qy-by)*k/4,1.3,0,7);cx.fill();}}
+ // linha d'água e tinta antiincrustante abaixo dela
+ cx.fillStyle='rgba(121,85,72,.18)';cx.fillRect(x0,f.linha*H,x1-x0,qy-f.linha*H);
+ cx.strokeStyle='#6d4c41';cx.lineWidth=2;cx.beginPath();cx.moveTo(x0,f.linha*H);cx.lineTo(x1,f.linha*H);cx.stroke();
+ cx.restore();
+ // borda (alcatrate) e espelho de popa
+ cx.strokeStyle='#37474f';cx.lineWidth=4;cx.beginPath();cx.moveTo(x0-2,by);cx.lineTo(x1,by-4);cx.stroke();
+ cx.fillStyle=f.cor2;cx.fillRect(x1-6,by-4,8,qy-by+4);
+ if(f.cab){cx.fillStyle='#eceff1';cx.strokeStyle='#546e7a';cx.lineWidth=2;const cxl=f.chalana?x0+W*.12:x0+W*.38,cw=f.chalana?W*.6:W*.2,ch=f.chalana?H*.15:H*.1;
+  cx.beginPath();cx.roundRect(cxl,by-ch,cw,ch,6);cx.fill();cx.stroke();cx.fillStyle='#b3e5fc';const nj=f.chalana?7:2;for(let i=0;i<nj;i++){cx.fillRect(cxl+10+i*(cw-20)/nj,by-ch+8,(cw-20)/nj-8,ch*.4);}
+  if(f.chalana){cx.fillStyle='#8d6e63';cx.fillRect(cxl-6,by-ch-8,cw+12,8);}}
+ if(f.motor){const mx=x1-W*.01;cx.fillStyle='#263238';cx.beginPath();cx.roundRect(mx,by-H*.12,W*.07,H*.11,8);cx.fill();
+  cx.fillStyle='#37474f';cx.fillRect(mx+W*.025,by-H*.02,W*.018,qy-by+H*.04);
+  cx.beginPath();cx.ellipse(mx+W*.034,qy+H*.04,W*.03,H*.018,0,0,7);cx.fill();
+  cx.fillStyle='#90a4ae';cx.beginPath();cx.ellipse(mx+W*.01,qy+H*.04,W*.006,H*.03,0,0,7);cx.fill();}
+}
+function desenha(){const g=S.g;if(!g||!cx||!g.mex)return;
+ cx.clearRect(0,0,W,H);const sky=cx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#e3f2fd');sky.addColorStop(1,'#fffde7');cx.fillStyle=sky;cx.fillRect(0,0,W,H);
+ // rampa de concreto e rio ao fundo
+ cx.fillStyle='#e0e0e0';cx.beginPath();cx.moveTo(0,H*.86);cx.lineTo(W,H*.8);cx.lineTo(W,H);cx.lineTo(0,H);cx.fill();
+ // reboque
+ const f=g.f;cx.strokeStyle='#546e7a';cx.lineWidth=5;cx.beginPath();cx.moveTo(f.proa*W+20,H*(f.quilha+.07));cx.lineTo(f.popa*W,H*(f.quilha+.07));cx.stroke();
+ for(const wx of [.38,.55]){cx.fillStyle='#263238';cx.beginPath();cx.arc(W*wx,H*(f.quilha+.11),H*.045,0,7);cx.fill();cx.fillStyle='#b0bec5';cx.beginPath();cx.arc(W*wx,H*(f.quilha+.11),H*.018,0,7);cx.fill();}
+ desenhaBarco();
+ for(const m of g.mex)desenhaMexilhao(m);
+ // jato
+ const [bx,by]=bico();cx.strokeStyle='rgba(41,182,246,.85)';cx.lineWidth=4;for(const j of g.jatos){cx.beginPath();cx.moveTo(bx,by);cx.lineTo(j.x,j.y);cx.stroke();cx.fillStyle='rgba(225,245,254,.9)';cx.beginPath();cx.arc(j.x,j.y,9,0,7);cx.fill();}
+ cx.fillStyle='#4fc3f7';for(const d of g.gotas){cx.beginPath();cx.arc(d.x,d.y,2,0,7);cx.fill();}
+ // lavadora
+ cx.fillStyle='#f9a825';cx.beginPath();cx.roundRect(bx-16,by-14,32,14,4);cx.fill();cx.fillStyle='#424242';cx.fillRect(bx-3,by-26,6,14);
+ // mira
+ cx.strokeStyle='#c62828';cx.lineWidth=1.5;cx.beginPath();cx.arc(mira.x,mira.y,14,0,7);cx.moveTo(mira.x-20,mira.y);cx.lineTo(mira.x-8,mira.y);cx.moveTo(mira.x+8,mira.y);cx.lineTo(mira.x+20,mira.y);cx.moveTo(mira.x,mira.y-20);cx.lineTo(mira.x,mira.y-8);cx.moveTo(mira.x,mira.y+8);cx.lineTo(mira.x,mira.y+20);cx.stroke();
+ // barras
+ cx.fillStyle='#eee';cx.fillRect(10,10,140,10);cx.fillStyle=g.pressao>20?'#29b6f6':'#e53935';cx.fillRect(10,10,1.4*g.pressao,10);cx.fillStyle='#37474f';cx.font='11px system-ui';cx.textAlign='left';cx.fillText('pressão do jato',12,32);
+ const pct=1-g.mex.filter(m=>m.hp>0).length/g.total;cx.fillStyle='#eee';cx.fillRect(W-150,10,140,10);cx.fillStyle='#7cb342';cx.fillRect(W-150,10,140*pct,10);cx.fillStyle='#37474f';cx.textAlign='right';cx.fillText('casco limpo '+Math.round(pct*100)+'%',W-10,32);
+ if(g.msgT>0){cx.textAlign='center';cx.font='bold 14px system-ui';cx.fillStyle='#7a5900';cx.fillText(g.msg,W/2,26);}
+}
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);desenha();hud();if(S.g&&!S.g.fim)raf=requestAnimationFrame(loop);}
+function parar(){if(raf)cancelAnimationFrame(raf);raf=null;mira.tiro=false;}
+function fimBarco(){const g=S.g,F=FASES[S.f];if(g.fim)return;g.fim=true;parar();
+ const tirados=g.mex.filter(m=>m.hp<=0).length,pct=tirados/g.total,ok=pct>=META;const sobra=Math.max(0,Math.ceil(g.resta));
+ if(ok){const b=10+sobra;S.fp+=b;g.bonus=b;}else{S.fp-=20;g.falhas++;}
+ g.res.push(Math.round(pct*100));hud();
+ $('tela').innerHTML=`<div class="card"><h2>${ok?'✅ Casco limpo':'❌ Ainda tem mexilhão no casco'}</h2>
+ <p>Você tirou <b>${tirados}</b> de ${g.total} mexilhões (${Math.round(pct*100)}%). ${ok?`+${g.bonus} pelo tempo que sobrou.`:'O barco levaria mexilhões para outro rio. −20.'}</p>
+ <p style="margin-top:10px"><b>Antes de liberar o barco, o que mais fazer?</b></p>
+ <div class="ops"><button data-r="1">Drenar a água do motor e do fundo do barco em terra</button><button data-r="0">Nada, o casco já está limpo</button></div><div id="rb"></div></div>`;
+ document.querySelectorAll('#tela .ops button').forEach(b=>b.onclick=()=>{const c=b.dataset.r==='1';S.fp+=c?10:-15;beep(c?880:170,.15);hud();
+  document.querySelectorAll('#tela .ops button').forEach(x=>{x.disabled=true;if(x.dataset.r==='1'){x.style.borderColor='#2e7d32';x.style.opacity=1;}});
+  $('rb').innerHTML=`<div class="fb ${c?'good':'bad'}">${c?'✅ +10. A larva é invisível e pode estar na água parada do barco.':'❌ −15. A larva é invisível a olho nu e pode estar na água do motor e do fundo do barco.'}<div class="row" style="margin-top:10px"><button class="btn" id="bn">${g.b<2?'Próximo barco →':'Fim da fase →'}</button></div></div>`;
+  $('bn').onclick=()=>{if(g.b<2){g.b++;barco();}else fimFase();};});}
+function fimFase(){const g=S.g,F=FASES[S.f];const ok=g.falhas===0;if(ok){S.fp+=30;beep(880,.2);}hud();
+ $('tela').innerHTML=`<div class="card"><h2>${ok?'Todos os cascos limpos':'Mexilhão passou pela rampa'}</h2><p>Limpeza de cada barco: <b>${g.res.join('%, ')}%</b>. Meta: pelo menos 90% em todos.</p>
+ ${ok?'<div class="fb good">🎯 Meta cumprida! +30.</div>':'<div class="fb bad">A meta não foi cumprida. Mire nas colônias maiores primeiro e não deixe a pressão zerar.</div>'}
+ <div class="row" style="margin-top:12px">${ok?'<button class="btn" id="bq">Pergunta da fase →</button>':'<button class="btn" id="br">Tentar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
+ if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}}
+function pergunta(){
+ const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
+ $('tela').innerHTML=`<div class="card"><h2>Pergunta da fase</h2><p style="margin:6px 0 4px">${P.q}</p><p class="small">Acerto +20, erro −10.</p><div class="ops">${ops.map((o,i)=>`<button data-i="${i}">${o.t}</button>`).join('')}</div><div id="pf"></div></div>`;
+ document.querySelectorAll('#tela .ops button').forEach(b=>b.onclick=()=>{const o=ops[+b.dataset.i];S.fp+=o.c?20:-10;beep(o.c?880:170,.15);hud();
+  document.querySelectorAll('#tela .ops button').forEach((x,j)=>{x.disabled=true;if(ops[j].c){x.style.borderColor='#2e7d32';x.style.opacity=1;}});
+  $('pf').innerHTML=`<div class="fb ${o.c?'good':'bad'}">${o.c?'✅ +20.':'❌ −10. A resposta certa está marcada em verde.'}<div class="row" style="margin-top:10px"><button class="btn" id="bn">${S.f===FASES.length-1?'Ver resultado →':'Próxima fase →'}</button></div></div>`;
+  $('bn').onclick=()=>{S.tot+=S.fp;S.fp=0;if(S.f===FASES.length-1)final(true);else{S.f++;fase();}};});
+}
+function final(tudo){
+ S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
+ $('tela').innerHTML=`<div class="card" style="text-align:center"><div class="big">${tudo?'🏆':'🚤'}</div><h2>${tudo?'Nenhum mexilhão saiu da rampa!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
+ <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
+ <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Embrapa Pantanal, origem do mexilhão-dourado e chegada ao Pantanal em 1998 no casco de embarcações; Ibama, Plano de Ação Emergencial (2004), lavagem de casco, viveiros e reboque; regras para embarcações publicadas no Diário Oficial da União (drenar o motor e secar os compartimentos úmidos); orientações de prevenção (larva invisível a olho nu, resíduos descartados em terra). Quantidade de mexilhões, tempo e pressão do jato são regras do jogo.</div></div>`;
+ $('bS').onclick=()=>salvar(nivel);
+}
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="casco-limpo";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__cl={get S(){return S},update,disparo,parar,mira,FASES};
+inicio();
+</script>
+</body>
+</html>
