@@ -3,343 +3,354 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Corrida da Caatinga 🦎 | Runner · Biologia</title>
+<title>Corrida da Caatinga</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:#1a0e00;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:100vh;padding:10px;font-family:"Segoe UI",system-ui,sans-serif;color:#f0e0c0}
-h1{font-size:1.4rem;margin:6px 0 2px;text-align:center}
-.tagline{font-size:.78rem;opacity:.65;margin-bottom:6px;text-align:center}
-.hud{display:flex;gap:10px;margin:4px 0 6px;font-size:.82rem;flex-wrap:wrap;justify-content:center}
-.hud span{background:rgba(255,255,255,.09);border-radius:8px;padding:3px 10px}
-.hud b{color:#fb923c}
-canvas{border:2px solid rgba(200,120,40,.25);border-radius:8px;display:block;max-width:100%}
-.save-box{margin-top:10px;display:none;flex-direction:column;align-items:center;gap:8px}
-.save-box input{padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-size:.95rem;width:220px;outline:none}
-.save-box button{padding:8px 20px;border-radius:8px;border:none;background:#ea580c;color:#fff;font-size:.9rem;cursor:pointer;font-weight:600}
-.ranking{width:min(780px,98vw);background:rgba(255,255,255,.05);border-radius:10px;padding:10px;margin-top:8px}
-.ranking h3{font-size:.78rem;opacity:.6;margin-bottom:6px}
-.rank-list{display:flex;flex-direction:column;gap:3px;max-height:150px;overflow-y:auto}
-.rank-item{display:flex;justify-content:space-between;font-size:.76rem;padding:3px 8px;background:rgba(255,255,255,.04);border-radius:5px}
-footer{margin-top:12px;opacity:.45;font-size:.68rem;text-align:center}
+  :root{
+    --ink:#2b2118; --soft:#6b5a4b; --line:#eadfd3; --ok:#16a34a; --err:#dc2626;
+    --t50:#fff7ed; --t100:#ffedd5; --t300:#fdba74; --t500:#f97316; --main:#ea580c; --deep:#c2410c; --dark:#9a3412; --glow:rgba(234,88,12,.25);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;min-height:100vh;color:var(--ink);background:#fff;
+    display:flex;flex-direction:column;align-items:center;padding:12px 14px 40px}
+  .top{width:100%;max-width:1040px}
+  .hub{display:inline-flex;align-items:center;gap:6px;color:var(--deep);text-decoration:none;font-weight:600;font-size:.9rem;
+    padding:7px 12px;border-radius:20px;border:1.5px solid var(--line)}
+  .hub:hover{background:var(--t50)} .hub svg{width:14px;height:14px}
+  header{text-align:center;max-width:720px;margin-top:6px}
+  h1{font-size:clamp(1.45rem,5vw,2.2rem);display:flex;align-items:center;justify-content:center;gap:10px}
+  h1 svg{width:1.3em;height:1em} h1 .spark{color:var(--main)}
+  .sub{color:var(--soft);font-size:.95rem;margin:4px 0 10px}
+  .hud{display:flex;gap:8px;justify-content:center;margin:4px 0 10px;font-size:.9rem;flex-wrap:wrap}
+  .hud span{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:30px;color:#fff;font-weight:600}
+  .hud b{font-size:1.05rem;font-weight:800}
+  .hud .h1{background:var(--t500)} .hud .h2{background:var(--main)} .hud .h3{background:var(--deep)} .hud .h4{background:var(--dark)}
+  .card{width:min(820px,100%);background:#fff;border:3px solid var(--main);border-radius:22px;padding:12px;box-shadow:0 12px 30px var(--glow);position:relative}
+  .goal{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:.92rem;font-weight:600;color:var(--deep)}
+  .bar{flex:1;height:12px;background:var(--t100);border-radius:20px;overflow:hidden;border:1.5px solid var(--t300)}
+  .bar i{display:block;height:100%;width:0;background:var(--main);transition:width .25s}
+  canvas{display:block;width:100%;height:auto;border-radius:14px;background:#f3faff;touch-action:none}
+  .cwrap{position:relative}
+  .ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;
+    padding:12px 16px;background:rgba(255,255,255,.95);border-radius:14px;overflow:auto;cursor:pointer}
+  .ov[hidden]{display:none}
+  .ov h2{font-size:clamp(1.15rem,4vw,1.6rem);color:var(--deep)}
+  .ov p{font-size:clamp(.86rem,2.6vw,1rem);line-height:1.4;max-width:600px;color:var(--ink)}
+  .ov .btn{margin-top:6px}
+  @media(max-width:600px){.ov{position:fixed;inset:auto 12px;top:50%;transform:translateY(-50%);max-height:80vh;border:3px solid var(--main);box-shadow:0 18px 40px rgba(0,0,0,.25);z-index:20;justify-content:flex-start;background:#fff}}
+  .pad{display:none;justify-content:space-between;gap:10px;margin-top:10px;user-select:none;-webkit-user-select:none}
+  .pad .g{display:flex;gap:10px}
+  .pad button{width:72px;height:60px;border-radius:16px;border:3px solid var(--main);background:var(--t50);color:var(--deep);
+    font-size:1.5rem;font-weight:800;touch-action:none;font-family:inherit}
+  .pad button.on{background:var(--main);color:#fff}
+  .pad .jump{width:110px;font-size:1rem}
+  @media (pointer:coarse){.pad{display:flex}}
+  .keys{font-size:.82rem;color:var(--soft);text-align:center;margin-top:8px}
+  @media (pointer:coarse){.keys{display:none}}
+  .lost{position:absolute;right:22px;top:58px;background:#dc2626;color:#fff;font-weight:900;border-radius:999px;padding:3px 10px;
+    animation:lost 1.4s ease-out forwards;pointer-events:none}
+  @keyframes lost{0%{opacity:0;transform:translateY(6px)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-18px)}}
+  .savebox{display:none;flex-direction:column;align-items:center;gap:8px;margin-top:12px;text-align:center}
+  .savebox .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .savebox input{padding:10px 12px;border-radius:10px;border:2px solid var(--line);font-size:1rem;width:220px;font-family:inherit}
+  .btn{background:var(--main);color:#fff;border:0;padding:11px 20px;border-radius:12px;font-weight:700;cursor:pointer;font-size:1rem;font-family:inherit}
+  .btn:disabled{opacity:.5} .btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--line)}
+  .ranking{margin-top:16px;width:min(820px,100%);background:#fff;border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden}
+  .ranking h3{font-size:1.02rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+  .ranking ol{list-style:none}
+  .ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.93rem}
+  .ranking li:last-child{border-bottom:0} .ranking li:nth-child(1){font-weight:700}
+  .ranking .pos{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+  .note{font-size:.8rem;color:var(--soft);margin-top:6px}
+  footer{margin-top:22px;font-size:.8rem;color:var(--soft);text-align:center;line-height:1.6}
+  footer .credit{font-weight:700;color:var(--ink)}
+  @media(max-width:560px){body{padding:8px 8px 32px}.sub{display:none}.hud span{padding:4px 9px;font-size:.78rem}.hud b{font-size:.92rem}.hud{gap:5px}.card{padding:8px}}
 </style>
 </head>
 <body>
-<h1>🦎 Corrida da Caatinga</h1>
-<p class="tagline">Runner · Biologia · Educação Física · Caatinga — ↑ ou Espaço pular · ↓ agachar</p>
-<div class="hud">
-  <span>Fase: <b id="hP">1/10</b></span>
-  <span>Pontos: <b id="hS">0</b></span>
-  <span>Vidas: <b id="hL">❤️❤️❤️</b></span>
-  <span>Meta: <b id="hD">0 m</b></span>
+<div class="top">
+  <a class="hub" href="index.html">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 2 4 8l6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Todos os jogos
+  </a>
 </div>
-<canvas id="c" width="780" height="380"></canvas>
-<div class="save-box" id="saveBox">
-  <p style="font-size:.85rem;opacity:.8">🏆 Você cruzou a Caatinga! Salve seu recorde:</p>
-  <input type="text" id="pName" maxlength="24" placeholder="Seu nome…">
-  <button onclick="window.saveScore()">Salvar Pontuação</button>
+<header>
+  <h1><svg viewBox="0 0 30 20" aria-hidden="true"><path d="M2 14q8 0 10-2" stroke="#65a30d" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="16" cy="11" rx="7" ry="3.5" fill="#65a30d"/><ellipse cx="25" cy="9.5" rx="4" ry="3" fill="#65a30d"/><circle cx="26.5" cy="8.5" r="1" fill="#111"/><path d="M13 13l-2 4M19 13l2 4" stroke="#4d7c0f" stroke-width="2" stroke-linecap="round"/></svg>
+    <span>Corrida da <span class="spark">Caatinga</span></span></h1>
+  <p class="sub">Corra com o calango pela Caatinga, pule os obstáculos e abaixe para o gavião passar. Cada batida tira pontos e uma vida.</p>
+</header>
+<div class="hud">
+  <span class="h1">Fase <b id="hP">1/6</b></span>
+  <span class="h2">Pontos <b id="hS">0</b></span>
+  <span class="h3">Vidas <b id="hL">3</b></span>
+  <span class="h4">Tempo <b id="hT">0s</b></span>
+</div>
+<div class="card" id="card">
+  <div class="goal"><span id="goalTxt">Distância 0 m</span><span class="bar"><i id="goalBar"></i></span></div>
+  <div class="cwrap"><canvas id="c" width="780" height="380" aria-label="Área do jogo"></canvas><div class="ov" id="ov" hidden></div></div>
+  <div class="pad" id="pad">
+    <button class="jump" data-k="D">Abaixar</button>
+    <button class="jump" data-k="J">Pular</button>
+  </div>
+  <p class="keys">Seta para cima, W ou Espaço para pular. Seta para baixo ou S para abaixar.</p>
+  <div class="savebox" id="saveBox">
+    <p id="endMsg" style="font-weight:700;color:var(--deep)"></p>
+    <div class="row"><input id="pName" maxlength="20" placeholder="Seu nome (até 20 letras)"><button class="btn" id="saveBtn" onclick="saveScore()">Salvar no ranking</button></div>
+    <p id="saveStatus" style="font-size:.85rem"></p>
+    <button class="btn ghost" onclick="restartGame()">Jogar de novo</button>
+  </div>
 </div>
 <div class="ranking">
-  <h3>🏆 Ranking</h3>
-  <div class="rank-list" id="rankList"><p style="opacity:.45;font-size:.76rem;padding:4px">Carregando…</p></div>
+  <h3>Ranking Global</h3>
+  <ol id="rankList"><li><span>Carregando o ranking...</span></li></ol>
+  <p class="note" id="rankNote"></p>
 </div>
-<footer>Biologia · Educação Física · Caatinga Nordestina 🌵 | 2026-06-28 — Idealizado por Ernandes Sobreira</footer>
+<footer>
+  Caatinga · Corrida<br>
+  <span class="credit">Idealizado por Ernandes Sobreira</span>
+</footer>
 
-<script type="module">
-import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import{getFirestore,collection,addDoc,query,orderBy,limit,getDocs,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-const fbApp=initializeApp({apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"});
-const db=getFirestore(fbApp);
-const GAME_ID="2026-06-28-corrida-caatinga";
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",
+  authDomain: "jogos-ranking.firebaseapp.com",
+  databaseURL: "https://jogos-ranking-default-rtdb.firebaseio.com",
+  projectId: "jogos-ranking",
+  storageBucket: "jogos-ranking.firebasestorage.app",
+  messagingSenderId: "958784915420",
+  appId: "1:958784915420:web:4212d3ad278f02d600f119"
+};
+const GAME_ID = "2026-06-28-corrida-caatinga";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-const W=780,H=380,GROUND=320;
-const GRAV=1400,JUMP=-580;
+const W=780, H=380, GROUND=320;
+const GRAV=1400, JUMP=-600;
+const DROP_PTS=8, HIT_PTS=25;
 
+/* seis fases; as cinco primeiras mantem velocidade e distancia da versao anterior.
+   os obstaculos saem com intervalo minimo, para sempre haver como passar */
 const PHASES=[
- {spd:260,dist:2200,obsRate:.50,
-  fact:"A Caatinga é o único bioma 100% brasileiro e o único no mundo a predominar uma região semiárida tropical. Abriga mais de 10.000 espécies animais e vegetais.",
-  name:"Sertão Aberto",bgTop:'#3a1500',bgBot:'#1a0800'},
- {spd:300,dist:2600,obsRate:.46,
-  fact:"O tatu-peba pode correr até 30 km/h e se enrolar completamente como uma bola de armadura quitinosa para se defender de predadores como onças e cobras.",
-  name:"Terra das Mandacarus",bgTop:'#2a0f00',bgBot:'#150800'},
- {spd:345,dist:3000,obsRate:.42,
-  fact:"A ararinha-azul (Cyanopsitta spixii) é um símbolo da Caatinga. Extinta na natureza desde 2000, um programa de reintrodução libertou 8 aves no habitat em 2022.",
-  name:"Raso da Catarina",bgTop:'#200a00',bgBot:'#100500'},
- {spd:390,dist:3500,obsRate:.38,
-  fact:"O umbuzeiro é chamado de 'Árvore da Vida' da Caatinga. Seus raízes-reservatório podem guardar até 3.000 litros de água, sustentando animais e humanos na seca.",
-  name:"Serra da Capivara",bgTop:'#180800',bgBot:'#0c0400'},
- {spd:440,dist:4000,obsRate:.34,
-  fact:"A cisterna de placa é uma tecnologia social que captura e armazena água de chuva no semiárido brasileiro. Já beneficiou mais de 1 milhão de famílias na Caatinga.",
-  name:"Vale do Rio São Francisco",bgTop:'#100600',bgBot:'#080300'},
- {spd:495,dist:4600,obsRate:.30,
-  fact:"O gavião-carijó e a raposa-do-nordeste são predadores-chave da Caatinga. Sem eles, as populações de roedores explodem e destroem lavouras inteiras na seca.",
-  name:"Chapada Diamantina",bgTop:'#1a0800',bgBot:'#0d0500'},
- {spd:555,dist:5200,obsRate:.26,
-  fact:"A Caatinga perde mais de 46.000 km² de vegetação por década devido ao desmatamento para carvão, pastagem e agricultura. Apenas 8% da área original é protegida.",
-  name:"Sertão em Cinzas",bgTop:'#140600',bgBot:'#0a0300'},
- {spd:620,dist:5900,obsRate:.22,
-  fact:"O fenômeno El Niño intensifica as secas na Caatinga. Eventos extremos de 2012-2017 causaram perda de colheitas de 20 bilhões de reais e êxodo de 1 milhão de pessoas.",
-  name:"Seca do Século",bgTop:'#0e0400',bgBot:'#060200'},
- {spd:695,dist:6700,obsRate:.17,
-  fact:"O sertanejo desenvolveu técnicas milenares de convivência com a seca: forrageiras xerófilas, barragens subterrâneas e calendários agrícolas baseados em sinais naturais.",
-  name:"Resistência do Sertão",bgTop:'#080200',bgBot:'#040100'},
- {spd:780,dist:7500,obsRate:.12,
-  fact:"Proteger a Caatinga é proteger a água. O bioma abriga mais de 30 rios temporários e permanentes, incluindo o São Francisco — o 'Rio da Unidade Nacional' do Brasil.",
-  name:"Última Corrida",bgTop:'#050100',bgBot:'#020100'},
+ {name:"Sertão aberto", spd:260, dist:2200, gap:[1.25,2.0], kinds:['cacto','pedra','xique'], sky:["#fef3c7","#fff7ed"],
+  fact:"A Caatinga só existe no Brasil. Ela ocupa boa parte do Nordeste e o norte de Minas Gerais."},
+ {name:"Terra dos mandacarus", spd:300, dist:2600, gap:[1.1,1.8], kinds:['cacto','pedra','xique','cactoAlto'], sky:["#ffedd5","#fff7ed"],
+  fact:"O tatu-bola, que se fecha como uma bola para se proteger, vive principalmente na Caatinga e está ameaçado de extinção."},
+ {name:"Raso da Catarina", spd:345, dist:3000, gap:[1.0,1.6], kinds:['cacto','pedra','xique','gaviao'], sky:["#fef9c3","#fff7ed"],
+  fact:"A ararinha-azul desapareceu da natureza. Em 2022, aves criadas em cativeiro voltaram a ser soltas na Caatinga da Bahia."},
+ {name:"Serra da Capivara", spd:390, dist:3500, gap:[.95,1.5], kinds:['cacto','pedra','cactoAlto','gaviao'], sky:["#ffedd5","#fef3c7"],
+  fact:"O umbuzeiro guarda água e reservas em estruturas nas raízes, o que ajuda a planta a atravessar a seca."},
+ {name:"Vale do São Francisco", spd:440, dist:4000, gap:[.9,1.4], kinds:['cacto','pedra','xique','cactoAlto','gaviao'], sky:["#e0f2fe","#fff7ed"],
+  fact:"A cisterna de placa guarda a água da chuva do telhado e ajuda famílias do semiárido a ter água na época seca."},
+ {name:"Seca forte", spd:500, dist:4600, gap:[.85,1.3], kinds:['cacto','pedra','xique','cactoAlto','gaviao','gaviao'], sky:["#fee2e2","#fff7ed"],
+  fact:"Muitas árvores da Caatinga perdem as folhas na seca para economizar água e ficam verdes de novo quando a chuva volta."}
 ];
+const NP=PHASES.length;
+const KIND={ cacto:{w:26,h:50}, cactoAlto:{w:24,h:66}, pedra:{w:38,h:28}, xique:{w:44,h:24}, gaviao:{w:40,h:22,fly:true} };
 
-// Obstacle types: emoji, w, h, isHigh (fly over), duck
-const OBS=[
-  {e:'🌵',w:28,h:50,duck:false},
-  {e:'🦂',w:26,h:22,duck:false},
-  {e:'🪨',w:36,h:30,duck:false},
-  {e:'🦅',w:30,h:26,duck:true,y:-60},  // flying: duck under
-  {e:'🌵',w:22,h:66,duck:false},
-];
-
-// Collectable: raindrops
-const COLL_E='💧';
-
-const c=document.getElementById('c');
-const ctx=c.getContext('2d');
+const c=$('c'), ctx=c.getContext('2d');
 const keys={};
-let jumpBuf=0,coyote=0;
-document.addEventListener('keydown',e=>{keys[e.key]=true;if([' ','ArrowUp','ArrowDown'].includes(e.key))e.preventDefault();});
+document.addEventListener('keydown',e=>{ if(e.target.tagName==='INPUT') return; keys[e.key]=true;
+  if([' ','ArrowUp','ArrowDown'].includes(e.key)) e.preventDefault();
+  if((e.key===' '||e.key==='Enter') && gState!=='play') advance(); });
 document.addEventListener('keyup',e=>{keys[e.key]=false;});
+const pad={J:false,D:false};
+document.querySelectorAll('#pad button').forEach(b=>{
+  const k=b.dataset.k, on=e=>{e.preventDefault(); pad[k]=true; b.classList.add('on'); if(gState!=='play') advance();},
+        off=e=>{e.preventDefault(); pad[k]=false; b.classList.remove('on');};
+  b.addEventListener('pointerdown',on); b.addEventListener('pointerup',off); b.addEventListener('pointercancel',off); b.addEventListener('pointerleave',off);
+});
+c.addEventListener('pointerdown',()=>{ if(gState!=='play') advance(); });
+$('ov').addEventListener('click',()=>{ if(gState!=='play') advance(); });
 
-let gState='title',phase=0,score=0,lives=3;
-let lizard,obs=[],drops=[],parts=[],dist=0,totalDist=0,speed=0,legAnim=0;
+let gState='title', phase=0, score=0, lives=3, hits=0, liz=null, obs=[], drops=[], parts=[], dist=0, speed=0, nextObs=0, nextDrop=0, scroll=0;
+let startTime=null, elapsed=0, finished=false, scoreSaved=false, jBuf=0, coyote=0;
 
 function initPhase(){
   const ph=PHASES[phase];
-  speed=ph.spd;
-  lizard={x:110,y:GROUND-34,vy:0,w:36,h:32,grnd:true,ducking:false,inv:0,leg:0};
-  obs=[];drops=[];parts=[];
-  dist=0;totalDist=ph.dist;legAnim=0;
-  document.getElementById('hP').textContent=`${phase+1}/10`;
-  document.getElementById('hD').textContent=`0 / ${totalDist} m`;
-  gState='play';
+  liz={x:110,y:GROUND-30,vy:0,w:44,h:30,grnd:true,duck:false,inv:0,leg:0};
+  obs=[]; drops=[]; parts=[]; dist=0; speed=ph.spd; nextObs=1.2; nextDrop=.6;
+  $('hP').textContent=`${phase+1}/${NP}`; goal(); gState='play';
+  if(!startTime) startTime=Date.now();
 }
-
+function goal(){
+  const ph=PHASES[phase], m=Math.floor(dist/10), tot=ph.dist/10;
+  $('goalTxt').textContent=`Distância ${Math.min(m,tot)}/${tot} m`;
+  $('goalBar').style.width=Math.min(100,dist/ph.dist*100)+'%';
+}
+function hud(){ $('hS').textContent=score; $('hL').textContent=lives; }
+function advance(){
+  if(gState==='title') initPhase();
+  else if(gState==='phend'){ if(phase<NP-1){ phase++; initPhase(); } else { finished=true; endGame(); } }
+}
 function aabb(ax,ay,aw,ah,bx,by,bw,bh){return ax<bx+bw&&ax+aw>bx&&ay<by+bh&&ay+ah>by;}
-function spPart(x,y,col,n=5){for(let i=0;i<n;i++)parts.push({x,y,vx:(Math.random()-.5)*180,vy:-Math.random()*160-30,c:col,t:.7});}
+function burst(x,y,col,n=8){for(let i=0;i<n;i++)parts.push({x,y,vx:(Math.random()-.5)*200,vy:-Math.random()*200-60,c:col,t:.7});}
+function chip(txt){ const t=document.createElement('span'); t.className='lost'; t.textContent=txt; $('card').appendChild(t); setTimeout(()=>t.remove(),1500); }
 
 function update(dt){
-  if(gState!=='play')return;
+  if(gState!=='play') return;
+  elapsed=Math.floor((Date.now()-startTime)/1000); $('hT').textContent=elapsed+'s';
   const ph=PHASES[phase];
-
-  const J=keys['ArrowUp']||keys['w']||keys[' '];
-  const D=keys['ArrowDown']||keys['s'];
-
-  // Jump logic
-  if(J)jumpBuf=.12; else jumpBuf=Math.max(0,jumpBuf-dt);
-  if(!J)coyote=Math.max(0,coyote-dt);
-  if(jumpBuf>0&&coyote>0&&!lizard.ducking){
-    lizard.vy=JUMP;jumpBuf=0;coyote=0;
-    spPart(lizard.x+18,lizard.y+lizard.h,'#fb923c');
+  const J=keys['ArrowUp']||keys['w']||keys['W']||keys[' ']||pad.J, D=keys['ArrowDown']||keys['s']||keys['S']||pad.D;
+  if(J) jBuf=.12; else jBuf=Math.max(0,jBuf-dt);
+  coyote=Math.max(0,coyote-dt);
+  if(jBuf>0&&coyote>0){ liz.vy=JUMP; jBuf=0; coyote=0; }
+  const wasG=liz.grnd; liz.duck=D&&wasG; const nh=liz.duck?18:30; if(nh!==liz.h){ if(wasG) liz.y=GROUND-nh; liz.h=nh; }
+  if(D&&!liz.grnd) liz.vy+=GRAV*1.2*dt; /* segurar para baixo no ar faz descer mais rapido */
+  liz.vy=Math.min(900,liz.vy+GRAV*dt); liz.y+=liz.vy*dt; liz.grnd=false;
+  if(liz.y>=GROUND-liz.h){ liz.y=GROUND-liz.h; liz.vy=0; liz.grnd=true; coyote=.1; }
+  liz.leg+=dt*(speed/22);
+  speed=ph.spd+dist*.02;
+  nextObs-=dt;
+  if(nextObs<=0){
+    const k=ph.kinds[Math.floor(Math.random()*ph.kinds.length)], K=KIND[k];
+    obs.push({k,x:W+10,y:K.fly?GROUND-K.h-15:GROUND-K.h,w:K.w,h:K.h,fly:!!K.fly,t:0});
+    nextObs=ph.gap[0]+Math.random()*(ph.gap[1]-ph.gap[0]);
   }
-
-  // Duck
-  lizard.ducking=D&&lizard.grnd;
-  lizard.h=lizard.ducking?18:32;
-
-  lizard.vy+=GRAV*dt;
-  if(lizard.vy>900)lizard.vy=900;
-  lizard.y+=lizard.vy*dt;
-  lizard.grnd=false;
-
-  if(lizard.y>=GROUND-lizard.h){lizard.y=GROUND-lizard.h;lizard.vy=0;lizard.grnd=true;coyote=.1;}
-
-  legAnim+=dt*10;
-
-  // Speed ramp
-  speed=ph.spd+dist*.025;
-
-  // Obstacle spawn
-  if(Math.random()<ph.obsRate*dt){
-    const ot=OBS[Math.floor(Math.random()*OBS.length)];
-    const oy=ot.y?GROUND-ot.h+ot.y:GROUND-ot.h;
-    obs.push({...ot,x:W,y:oy});
-  }
-
-  // Drop spawn
-  if(Math.random()<.8*dt){
-    drops.push({x:W+10,y:GROUND-80-Math.random()*100,t:0,got:false});
-  }
-
-  // Obs update
-  for(let i=obs.length-1;i>=0;i--){
-    const o=obs[i];
-    o.x-=speed*dt;
-    if(lizard.inv<=0&&aabb(lizard.x+4,lizard.y+4,lizard.w-8,lizard.h-8,o.x,o.y,o.w,o.h)){
-      lives--;document.getElementById('hL').textContent='❤️'.repeat(Math.max(0,lives));
-      lizard.inv=1.5;spPart(lizard.x,lizard.y,'#ef4444');
-      if(lives<=0){gState='over';return;}
-    }
-    if(o.x+o.w<0)obs.splice(i,1);
-  }
-
-  // Drops update
-  for(let i=drops.length-1;i>=0;i--){
-    const d=drops[i];
-    d.x-=speed*.4*dt;d.t+=dt*3;
-    if(!d.got&&aabb(lizard.x,lizard.y,lizard.w,lizard.h,d.x-10,d.y-10,20,20)){
-      d.got=true;score+=8;spPart(d.x,d.y,'#60a5fa',4);
-      document.getElementById('hS').textContent=score;
-    }
-    if(d.x<-20)drops.splice(i,1);
-  }
-
-  dist+=speed*dt;
+  nextDrop-=dt;
+  if(nextDrop<=0){ drops.push({x:W+10,y:GROUND-70-Math.random()*90,t:0}); nextDrop=.8+Math.random()*1.1; }
+  for(let i=obs.length-1;i>=0;i--){ const o=obs[i]; o.x-=speed*dt*(o.fly?1.15:1); o.t+=dt;
+    if(liz.inv<=0&&aabb(liz.x+6,liz.y+4,liz.w-12,liz.h-6,o.x+3,o.y+3,o.w-6,o.h-4)) hurt();
+    if(o.x+o.w<-10) obs.splice(i,1); }
+  for(let i=drops.length-1;i>=0;i--){ const d=drops[i]; d.x-=speed*dt; d.t+=dt*3;
+    if(aabb(liz.x,liz.y,liz.w,liz.h,d.x-9,d.y-11,18,22)){ score+=DROP_PTS; burst(d.x,d.y,'#0ea5e9',5); drops.splice(i,1); continue; }
+    if(d.x<-20) drops.splice(i,1); }
+  dist+=speed*dt; scroll+=speed*dt;
   score+=Math.floor(speed*dt*.1);
-  document.getElementById('hS').textContent=score;
-  document.getElementById('hD').textContent=`${Math.floor(dist)} / ${totalDist} m`;
-
-  if(dist>=totalDist){score+=300+phase*100;document.getElementById('hS').textContent=score;gState='phend';}
-
-  parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=350*dt;p.t-=dt;});
-  parts=parts.filter(p=>p.t>0);
-  if(lizard.inv>0)lizard.inv-=dt;
+  hud(); goal();
+  if(dist>=ph.dist){ score+=300+phase*100; hud(); gState='phend'; return; }
+  parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=400*dt;p.t-=dt;}); parts=parts.filter(p=>p.t>0);
+  if(liz.inv>0) liz.inv-=dt;
+}
+function hurt(){
+  const lost=Math.min(HIT_PTS,score); score-=lost; hits++; lives--;
+  chip(lost?'-'+lost:'Ai!'); burst(liz.x+20,liz.y+10,'#dc2626',10); hud();
+  if(lives<=0){ gState='over'; endGame(); return; }
+  liz.inv=1.6;
 }
 
-function drawLizard(){
-  const l=lizard;
-  if(l.inv>0&&Math.floor(l.inv*8)%2===0)return;
-  const duckShift=l.ducking?14:0;
-  ctx.save();
-  ctx.font=`${l.ducking?24:28}px serif`;
-  ctx.fillText('🦎',l.x,l.y+l.h+2+duckShift);
+/* ---------- desenho ---------- */
+function drawLizard(l){
+  if(l.inv>0&&Math.floor(l.inv*8)%2===0) return;
+  ctx.save(); ctx.translate(l.x,l.y+l.h);
+  const sq=l.duck?.6:1, a=Math.sin(l.leg)*5;
+  ctx.fillStyle='#65a30d';
+  ctx.beginPath(); ctx.moveTo(4,-8*sq); ctx.quadraticCurveTo(-18,-6*sq,-26,-2); ctx.quadraticCurveTo(-14,-2,4,-3*sq); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(20,-10*sq,17,7*sq,0,0,6.29); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(39,-12*sq,8,5.5*sq,.15,0,6.29); ctx.fill();
+  ctx.fillStyle='#3f6212'; for(const x of [12,20,28]){ ctx.beginPath(); ctx.arc(x,-13*sq,1.6,0,6.29); ctx.fill(); }
+  ctx.strokeStyle='#4d7c0f'; ctx.lineWidth=3; ctx.lineCap='round';
+  [[10,a],[30,-a]].forEach(([x,d])=>{ ctx.beginPath(); ctx.moveTo(x,-6*sq); ctx.lineTo(x+d,0); ctx.stroke(); });
+  ctx.fillStyle='#111'; ctx.beginPath(); ctx.arc(42,-14*sq,1.6,0,6.29); ctx.fill();
   ctx.restore();
 }
+function drawObs(o){
+  const x=o.x, y=o.y;
+  if(o.k==='cacto'||o.k==='cactoAlto'){
+    ctx.fillStyle='#15803d'; ctx.beginPath(); ctx.roundRect?ctx.roundRect(x+o.w/2-6,y,12,o.h,6):ctx.rect(x+o.w/2-6,y,12,o.h); ctx.fill();
+    ctx.fillRect(x,y+o.h*.35,6,o.h*.3); ctx.fillRect(x,y+o.h*.35,o.w/2,6);
+    ctx.fillRect(x+o.w-6,y+o.h*.2,6,o.h*.3); ctx.fillRect(x+o.w/2,y+o.h*.48,o.w/2,6);
+    ctx.strokeStyle='#bbf7d0'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(x+o.w/2,y+4); ctx.lineTo(x+o.w/2,y+o.h-2); ctx.stroke();
+  } else if(o.k==='pedra'){
+    ctx.fillStyle='#a8a29e'; ctx.beginPath(); ctx.moveTo(x,y+o.h); ctx.lineTo(x+6,y+8); ctx.lineTo(x+20,y); ctx.lineTo(x+34,y+10); ctx.lineTo(x+o.w,y+o.h); ctx.fill();
+    ctx.fillStyle='#d6d3d1'; ctx.beginPath(); ctx.moveTo(x+10,y+9); ctx.lineTo(x+20,y+3); ctx.lineTo(x+24,y+12); ctx.fill();
+  } else if(o.k==='xique'){
+    ctx.fillStyle='#4d7c0f'; for(let i=0;i<4;i++){ ctx.beginPath(); ctx.roundRect?ctx.roundRect(x+i*11,y+(i%2)*6,9,o.h-(i%2)*6,4):ctx.rect(x+i*11,y,9,o.h); ctx.fill(); }
+    ctx.fillStyle='#fde68a'; for(let i=0;i<4;i++) ctx.fillRect(x+i*11+3,y+(i%2)*6+3,2,2);
+  } else if(o.k==='gaviao'){
+    const f=Math.sin(o.t*14)*7;
+    ctx.fillStyle='#78716c'; ctx.beginPath(); ctx.ellipse(x+20,y+12,14,6,0,0,6.29); ctx.fill();
+    ctx.fillStyle='#57534e'; ctx.beginPath(); ctx.moveTo(x+14,y+10); ctx.lineTo(x+24,y-4+f); ctx.lineTo(x+30,y+10); ctx.fill();
+    ctx.fillStyle='#e7e5e4'; ctx.beginPath(); ctx.arc(x+6,y+10,5,0,6.29); ctx.fill();
+    ctx.fillStyle='#f59e0b'; ctx.beginPath(); ctx.moveTo(x+2,y+9); ctx.lineTo(x-3,y+12); ctx.lineTo(x+3,y+12); ctx.fill();
+  }
+}
+function drawDrop(d){
+  const y=d.y+Math.sin(d.t)*3;
+  ctx.fillStyle='#0ea5e9'; ctx.beginPath(); ctx.moveTo(d.x,y-11); ctx.quadraticCurveTo(d.x+8,y,d.x,y+6); ctx.quadraticCurveTo(d.x-8,y,d.x,y-11); ctx.fill();
+  ctx.fillStyle='#e0f2fe'; ctx.beginPath(); ctx.arc(d.x-2,y-1,2,0,6.29); ctx.fill();
+}
+let ovKey='';
+function panel(title,lines,cta,col){
+  ctx.fillStyle='rgba(255,255,255,.6)'; ctx.fillRect(0,0,W,H);
+  const key=title+lines.join('|')+cta; if(key===ovKey) return; ovKey=key;
+  const ov=$('ov'); ov.hidden=false;
+  ov.innerHTML=`<h2 style="color:${col||'var(--deep)'}">${title}</h2>${lines.map(l=>`<p>${l}</p>`).join('')}${cta?`<button class="btn" type="button">${cta}</button><p class="keys" style="margin:0">ou aperte Espaço</p>`:''}`;
+}
+function hidePanel(){ if(ovKey){ ovKey=''; $('ov').hidden=true; } }
 
+function render(t){
+  if(gState==='play') hidePanel();
+  const ph=PHASES[Math.min(phase,NP-1)];
+  const g=ctx.createLinearGradient(0,0,0,GROUND); g.addColorStop(0,ph.sky[0]); g.addColorStop(1,ph.sky[1]);
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(251,191,36,.55)'; ctx.beginPath(); ctx.arc(690,60,34,0,6.29); ctx.fill();
+  ctx.fillStyle='rgba(214,170,120,.45)'; ctx.beginPath(); ctx.moveTo(0,GROUND);
+  for(let x=0;x<=W;x+=40) ctx.lineTo(x,250-Math.sin((x+scroll*.1)/90)*20); ctx.lineTo(W,GROUND); ctx.fill();
+  ctx.strokeStyle='rgba(120,113,108,.45)'; ctx.lineWidth=2;
+  for(let i=0;i<6;i++){ const bx=((i*150-scroll*.35)%(W+150)+W+150)%(W+150)-60; ctx.beginPath(); ctx.moveTo(bx,GROUND); ctx.lineTo(bx,GROUND-40); ctx.moveTo(bx,GROUND-26); ctx.lineTo(bx-14,GROUND-44); ctx.moveTo(bx,GROUND-30); ctx.lineTo(bx+12,GROUND-50); ctx.stroke(); }
+  ctx.fillStyle='#d6a36d'; ctx.fillRect(0,GROUND,W,H-GROUND);
+  ctx.fillStyle='#b45309'; ctx.fillRect(0,GROUND,W,4);
+  ctx.fillStyle='rgba(146,64,14,.35)'; for(let i=0;i<14;i++) ctx.fillRect(((i*70-scroll)%W+W)%W,GROUND+14+(i%3)*12,26,3);
+  drops.forEach(drawDrop);
+  obs.forEach(drawObs);
+  if(liz && (gState==='play'||gState==='phend')) drawLizard(liz);
+  parts.forEach(p=>{ ctx.globalAlpha=Math.max(0,p.t/.7); ctx.fillStyle=p.c; ctx.fillRect(p.x-3,p.y-3,6,6); ctx.globalAlpha=1; });
+  ctx.fillStyle='rgba(43,33,24,.75)'; ctx.font='bold 15px Segoe UI, sans-serif'; ctx.fillText(`Fase ${Math.min(phase+1,NP)}: ${ph.name}`,12,22);
+  if(gState==='title') panel('Corrida da Caatinga',['Corra com o calango pela Caatinga. Pule cactos, pedras e moitas de xique-xique. Abaixe para o gavião passar.','Cada gota de água vale 8 pontos. Bater num obstáculo tira 25 pontos e uma vida.'],'Começar');
+  else if(gState==='phend') panel(`Fase ${phase+1} completa!`,[`Bônus de fase: ${300+phase*100} pontos.`,'Você sabia? '+ph.fact],phase<NP-1?'Próxima fase':'Ver o resultado','#16a34a');
+  else if(gState==='over') panel('Fim de jogo',[`Você chegou à fase ${phase+1}.`,`Pontuação: ${score}`],'','#dc2626');
+  else if(gState==='win') panel('Você cruzou a Caatinga!',['Você completou as 6 fases.',`Pontuação final: ${score}`],'');
+}
 let lastT=0;
-function loop(t){requestAnimationFrame(loop);const dt=Math.min((t-(lastT||t))/1000,.05);lastT=t;update(dt);render(t);}
+function loop(t){ requestAnimationFrame(loop); const dt=Math.min((t-(lastT||t))/1000,.05); lastT=t; update(dt); render(t); }
 
-function render(ts){
-  const ph=PHASES[phase]||PHASES[0];
-  const g=ctx.createLinearGradient(0,0,0,H);
-  g.addColorStop(0,ph.bgTop);g.addColorStop(1,ph.bgBot);
-  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-
-  // Sun
-  ctx.globalAlpha=.6;ctx.fillStyle='#fbbf24';
-  ctx.beginPath();ctx.arc(680,60,38,0,Math.PI*2);ctx.fill();
-  ctx.globalAlpha=1;
-
-  // Distant landscape
-  ctx.fillStyle='rgba(120,50,10,.3)';
-  for(let i=0;i<8;i++){
-    const mx=(i*120+dist*.02)%W;
-    ctx.fillRect(mx,260,60,60);
-    ctx.fillRect(mx+20,240,20,80);
-  }
-
-  // Ground
-  ctx.fillStyle='#6b3510';ctx.fillRect(0,GROUND,W,H-GROUND);
-  ctx.fillStyle='#8b4513';ctx.fillRect(0,GROUND,W,5);
-  ctx.fillStyle='#5a2a08';
-  for(let i=0;i<12;i++){ctx.fillRect((i*80+dist*1.5)%W,GROUND+5,40,4);}
-
-  // Cacti in background (scrolling)
-  ctx.font='18px serif';
-  for(let i=0;i<5;i++){
-    const bx=((i*200+dist*.3)%W+W)%W;
-    ctx.fillText('🌵',bx,GROUND-5);
-  }
-
-  // Drops
-  drops.forEach(d=>{
-    if(d.got)return;
-    const bob=Math.sin(d.t)*.5;
-    ctx.font='16px serif';ctx.textAlign='center';ctx.fillText(COLL_E,d.x,d.y+bob);
-  });
-
-  // Obstacles
-  obs.forEach(o=>{
-    ctx.font=`${Math.max(20,o.h*.9)}px serif`;ctx.textAlign='center';
-    ctx.fillText(o.e,o.x+o.w/2,o.y+o.h);
-  });
-
-  // Particles
-  parts.forEach(p=>{
-    ctx.globalAlpha=Math.max(0,p.t/.7);
-    ctx.fillStyle=p.c;ctx.fillRect(p.x-3,p.y-3,6,6);
-    ctx.globalAlpha=1;
-  });
-
-  if(gState==='play'||gState==='phend')drawLizard();
-
-  // Progress bar
-  const pct=Math.min(1,dist/totalDist);
-  ctx.fillStyle='rgba(0,0,0,.4)';ctx.fillRect(10,10,200,12);
-  ctx.fillStyle='#fb923c';ctx.fillRect(10,10,200*pct,12);
-  ctx.fillStyle='rgba(255,255,255,.6)';ctx.font='10px sans-serif';ctx.textAlign='left';
-  ctx.fillText(`${Math.floor(pct*100)}%`,215,21);
-
-  ctx.textAlign='center';
-
-  if(gState==='title'){
-    ctx.fillStyle='rgba(0,0,0,.78)';ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#fb923c';ctx.font='bold 36px sans-serif';ctx.fillText('🦎 Corrida da Caatinga',W/2,H/2-68);
-    ctx.fillStyle='#f0e0c0';ctx.font='16px sans-serif';ctx.fillText('Corra, pule e desvie pela Caatinga!',W/2,H/2-26);
-    ctx.fillStyle='#e0c090';ctx.font='14px sans-serif';
-    ctx.fillText('↑ / Espaço pular   ·   ↓ agachar',W/2,H/2+14);
-    ctx.fillStyle='#fbbf24';ctx.font='bold 19px sans-serif';
-    if(Math.sin(ts/300)>.2)ctx.fillText('▶  ESPAÇO para começar  ◀',W/2,H/2+57);
-    if(keys[' ']||keys['ArrowUp']){keys[' ']=false;keys['ArrowUp']=false;initPhase();}
-    return;
-  }
-  if(gState==='phend'){
-    ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#fb923c';ctx.font='bold 27px sans-serif';ctx.fillText(`✅ Fase ${phase+1} — ${PHASES[phase].name}`,W/2,65);
-    ctx.fillStyle='#f0e0c0';ctx.font='13.5px sans-serif';
-    const words=PHASES[phase].fact.split(' ');let line='',py=108;
-    for(const w of words){const tt=line+w+' ';if(ctx.measureText(tt).width>680&&line){ctx.fillText(line.trim(),W/2,py);py+=21;line=w+' ';}else line=tt;}
-    if(line)ctx.fillText(line.trim(),W/2,py);
-    ctx.fillStyle='#fbbf24';ctx.font='bold 17px sans-serif';
-    if(Math.sin(ts/300)>.2)ctx.fillText(phase<9?'ESPAÇO → próxima fase':'🎉 ESPAÇO → salvar recorde',W/2,H-38);
-    if(keys[' ']){if(phase<4){phase++;setTimeout(initPhase,80);}else{gState='win';document.getElementById('saveBox').style.display='flex';}}
-    return;
-  }
-  if(gState==='over'){
-    ctx.fillStyle='rgba(0,0,0,.85)';ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#ef4444';ctx.font='bold 34px sans-serif';ctx.fillText('💀 Game Over',W/2,H/2-40);
-    ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação: ${score}`,W/2,H/2+8);
-    ctx.fillStyle='#fbbf24';ctx.font='17px sans-serif';ctx.fillText('ESPAÇO → recomeçar',W/2,H/2+50);
-    if(keys[' ']){phase=0;score=0;lives=3;document.getElementById('hL').textContent='❤️❤️❤️';document.getElementById('hS').textContent=0;gState='title';}
-    return;
-  }
-  if(gState==='win'){
-    ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#4ade80';ctx.font='bold 30px sans-serif';ctx.fillText('🦎 Você cruzou a Caatinga!',W/2,90);
-    ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.fillText(`Pontuação: ${score}`,W/2,145);
-    ctx.fillStyle='#fb923c';ctx.font='14px sans-serif';ctx.fillText('Resistência, cor e vida no semiárido brasileiro. 🌵',W/2,185);
-    ctx.fillStyle='#fbbf24';ctx.font='15px sans-serif';ctx.fillText('Use o campo abaixo para salvar.',W/2,230);
-    return;
-  }
-  ctx.textAlign='left';
+function endGame(){
+  if(finished) gState='win';
+  $('endMsg').textContent = finished ? `Você completou as 6 fases com ${score} pontos, ${hits} batidas e ${elapsed}s.` : `Fim de jogo na fase ${phase+1}, com ${score} pontos.`;
+  $('saveBox').style.display='flex'; $('saveStatus').textContent=''; $('saveBtn').disabled=false; scoreSaved=false;
+}
+function restartGame(){
+  phase=0; score=0; lives=3; hits=0; startTime=null; elapsed=0; finished=false; liz=null; obs=[]; drops=[];
+  $('saveBox').style.display='none'; $('hT').textContent='0s'; hud(); $('hP').textContent=`1/${NP}`; $('goalTxt').textContent='Distância 0 m'; $('goalBar').style.width='0';
+  gState='title';
 }
 
-async function saveScore(){
-  const name=(document.getElementById('pName').value||'Anônimo').trim().slice(0,24);
-  await addDoc(collection(db,'games',GAME_ID,'scores'),{name,score,level:'Completo',seconds:0,ts:serverTimestamp()});
-  document.getElementById('saveBox').style.display='none';
-  loadRanking();
-}
-
-async function loadRanking(){
-  const rl=document.getElementById('rankList');
+let db=null, fsFns=null;
+async function initFirebase(){
   try{
-    const q=query(collection(db,'games',GAME_ID,'scores'),orderBy('score','desc'),limit(80));
-    const snap=await getDocs(q);
-    const docs=snap.docs.map(d=>d.data()).slice(0,10);
-    if(!docs.length){rl.innerHTML='<p style="opacity:.45;font-size:.76rem;padding:4px">Nenhum recorde ainda.</p>';return;}
-    rl.innerHTML=docs.map((d,i)=>`<div class="rank-item"><span>${['🥇','🥈','🥉'][i]||`${i+1}.`} ${d.name}</span><span>${d.score} pts</span></div>`).join('');
-  }catch(e){rl.innerHTML='<p style="opacity:.35;font-size:.76rem">Não foi possível carregar.</p>';}
+    const appM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const fsM=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    db=fsM.getFirestore(appM.initializeApp(firebaseConfig)); fsFns=fsM; loadRanking();
+  }catch(e){
+    $('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';
+    $('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';
+  }
 }
-
-window.saveScore=saveScore;
+async function saveScore(){
+  if(scoreSaved) return;
+  const name=$('pName').value.trim(), st=$('saveStatus');
+  if(!name){st.textContent='Digite seu nome primeiro.';return;}
+  if(!db){st.textContent='Sem conexão com o ranking. Seu resultado não foi enviado.';return;}
+  try{
+    $('saveBtn').disabled=true;
+    /* como na versao anterior: um ranking unico por pontos; quem termina tudo grava Completo */
+    await fsFns.addDoc(fsFns.collection(db,'games',GAME_ID,'scores'),
+      {name:name.slice(0,20),score,level:finished?'Completo':'Fase '+(phase+1),seconds:elapsed,hits,ts:fsFns.serverTimestamp()});
+    scoreSaved=true; st.textContent='Salvo no Ranking Global!'; loadRanking();
+  }catch(e){ $('saveBtn').disabled=false; st.textContent='Erro ao salvar. Verifique a internet e tente de novo.'; }
+}
+async function loadRanking(){
+  if(!db) return;
+  const list=$('rankList');
+  try{
+    const q=fsFns.query(fsFns.collection(db,'games',GAME_ID,'scores'),fsFns.orderBy('score','desc'),fsFns.limit(10));
+    const snap=await fsFns.getDocs(q); const rows=[]; snap.forEach(d=>rows.push(d.data()));
+    $('rankNote').textContent='Maior pontuação primeiro. Ao lado do nome aparece até onde a pessoa chegou.';
+    if(!rows.length){list.innerHTML='<li><span>Seja o primeiro do ranking!</span></li>';return;}
+    list.innerHTML=rows.map((r,i)=>`<li><span><span class="pos">${i+1}º</span>${esc(r.name||'?')}</span><span>${Number(r.score)||0} pts · ${esc(r.level||'')}</span></li>`).join('');
+  }catch(e){ list.innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>'; }
+}
 requestAnimationFrame(loop);
-loadRanking();
+initFirebase();
 </script>
 </body>
 </html>
