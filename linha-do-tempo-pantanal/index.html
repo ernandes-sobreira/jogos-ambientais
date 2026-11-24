@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Linha do Tempo do Pantanal</title>
+<style>
+:root{--main:#b5651d;--deep:#7a3e0e;--soft:#fdf0e3;--line:#efd9c3;--ink:#2d2219;--mut:#6d5c4d;--bad:#c62828;--good:#2e7d32}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:820px;margin:0 auto;padding:12px 14px 40px}
+.wrap>*{min-width:0}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep)}
+h2{font-size:1.15rem;color:var(--deep);margin-bottom:6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 11px;font-weight:700;font-size:.86rem}
+.card{border:2px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit}
+.btn:hover{background:var(--deep)}.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+.mao{border:3px dashed var(--main);border-radius:16px;padding:14px;background:var(--soft);margin:10px 0}
+.mao .ev{font-weight:800;font-size:1.05rem}
+.linha{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.slot{border:2px dashed #d7b899;border-radius:12px;background:#fff;color:var(--deep);font-weight:800;padding:8px;text-align:center;cursor:pointer;font-family:inherit;font-size:.92rem}
+.slot:hover{background:var(--soft);border-color:var(--main)}
+.pos{display:flex;gap:10px;align-items:flex-start;border:2px solid var(--line);border-radius:14px;padding:10px 12px;background:#fff}
+.pos .ano{min-width:62px;font-weight:900;color:var(--deep);font-size:1.1rem}
+.pos.novo{border-color:var(--good);background:#f1f8f1}.pos.errou{border-color:var(--bad);background:#fff5f5}
+.fb{margin-top:10px;padding:12px 14px;border-radius:14px;font-size:.95rem;display:none}
+.fb.good{display:block;background:#e8f5e9;color:#1b5e20}.fb.bad{display:block;background:#ffebee;color:#8e1b1b}
+.big{font-size:2.3rem;font-weight:800;color:var(--deep)}
+.fases{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.fases div{background:var(--soft);border-radius:12px;padding:10px 6px;text-align:center;font-size:.82rem;font-weight:700;color:var(--deep)}
+.fases div span{display:block;font-size:1.4rem}
+.fontes{font-size:.82rem;color:var(--mut);margin-top:8px}.fontes li{margin:3px 0 3px 16px}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+@media(max-width:560px){.fases{grid-template-columns:repeat(2,1fr)}h1{font-size:1.2rem}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>⏳ Linha do Tempo do Pantanal</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/4</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hE">❌ 0</span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let actx=null;function beep(f,d){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=f;g.gain.setValueAtTime(.07,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+d);}catch(e){}}
+
+/* Eventos conferidos em fontes oficiais (lista no fim do jogo). ord = ano + fração do dia, para desempate. */
+const EV={
+ corumba:{a:1778,ord:1778.72,ic:'🏰',t:'Fundação de Corumbá, com o nome de Nossa Senhora da Conceição de Albuquerque',d:'Em 21 de setembro de 1778, para garantir a fronteira portuguesa no Rio Paraguai.'},
+ caceres:{a:1778,ord:1778.76,ic:'⛪',t:'Fundação de Vila Maria do Paraguai, hoje Cáceres',d:'Em 6 de outubro de 1778, por ordem do governador Luís de Albuquerque de Melo Pereira e Cáceres.'},
+ porto:{a:1853,ord:1853,ic:'⚓',t:'O porto de Corumbá é aberto ao comércio por decreto imperial',d:'Corumbá passou a receber navios e mercadorias pelo Rio Paraguai.'},
+ guerra:{a:1865,ord:1865,ic:'⚔️',t:'Tropas paraguaias ocupam Corumbá durante a Guerra do Paraguai',d:'A cidade só foi retomada em junho de 1867.'},
+ cidade:{a:1874,ord:1874,ic:'🏛️',t:'Vila Maria vira cidade, com o nome de São Luiz de Cáceres',d:'Lei provincial de 30 de maio de 1874.'},
+ nome:{a:1938,ord:1938,ic:'🪧',t:'São Luiz de Cáceres passa a se chamar apenas Cáceres',d:'Decreto-lei estadual de outubro de 1938.'},
+ taiama:{a:1981,ord:1981.42,ic:'🐊',t:'Criação da Estação Ecológica de Taiamã',d:'Em 2 de junho de 1981, numa ilha entre os rios Paraguai e Bracinho.'},
+ parna:{a:1981,ord:1981.73,ic:'🌿',t:'Criação do Parque Nacional do Pantanal Matogrossense',d:'Em 24 de setembro de 1981, com cerca de 135 mil hectares.'},
+ constituicao:{a:1988,ord:1988,ic:'📜',t:'A Constituição declara o Pantanal Mato-Grossense patrimônio nacional',d:'Artigo 225, parágrafo 4º, da Constituição de 1988.'},
+ ramsar:{a:1993,ord:1993,ic:'💧',t:'O Parque Nacional vira sítio Ramsar, área úmida de importância internacional',d:'Designação de maio de 1993.'},
+ unesco:{a:2000,ord:2000,ic:'🌎',t:'A UNESCO reconhece o Pantanal como Patrimônio Mundial e Reserva da Biosfera',d:'As duas designações saíram em 2000.'},
+ lei:{a:2008,ord:2008,ic:'⚖️',t:'Mato Grosso aprova a Lei do Pantanal (Lei 8.830)',d:'Política estadual de proteção da Bacia do Alto Paraguai, de 21 de janeiro de 2008.'},
+ ramsarTaiama:{a:2018,ord:2018,ic:'🦆',t:'Taiamã vira sítio Ramsar',d:'A Estação Ecológica entrou na lista de áreas úmidas de importância internacional em 2018.'},
+ fogo:{a:2020,ord:2020,ic:'🔥',t:'Incêndios queimam cerca de 30% do Pantanal brasileiro',d:'Um estudo do INPE calculou quase 45 mil km² queimados nesse ano de seca extrema.'},
+ mudaLei:{a:2022,ord:2022,ic:'✏️',t:'A Lei 11.861 altera a Lei do Pantanal de Mato Grosso',d:'A mudança, de agosto de 2022, foi contestada na Justiça por reduzir a proteção.'},
+ ampliacao:{a:2026,ord:2026,ic:'🗺️',t:'Taiamã e o Parque Nacional são ampliados',d:'Decretos de 23 de março de 2026 levaram Taiamã a cerca de 68,5 mil ha e o Parque a cerca de 183 mil ha.'}
+};
+/* Cada fase: eventos na mesa no início e cartas para encaixar. Mais cartas e anos mais próximos nas fases finais. */
+const FASES=[
+ {nome:'Séculos',ico:'🏰',mesa:['caceres'],mao:['guerra','constituicao','fogo'],meta:1},
+ {nome:'Cidades e leis',ico:'🏛️',mesa:['corumba'],mao:['cidade','nome','parna','lei'],meta:1},
+ {nome:'Proteção',ico:'🌿',mesa:['taiama'],mao:['porto','constituicao','ramsar','unesco','ampliacao'],meta:1},
+ {nome:'Anos próximos',ico:'🔥',mesa:['unesco'],mao:['ramsar','lei','ramsarTaiama','fogo','mudaLei','ampliacao'],meta:2}
+];
+let S;
+function hud(){$('hud').style.display='flex';$('hF').textContent=FASES[S.f].ico+' Fase '+(S.f+1)+'/4';$('hP').textContent=(S.tot+S.fp)+' pts';$('hE').textContent='❌ '+S.ef;}
+function inicio(){
+ $('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><h2>Coloque a história na ordem</h2>
+ <p>Você recebe uma carta com um acontecimento do Pantanal. Toque no espaço da linha do tempo onde ela se encaixa: antes, entre ou depois das cartas que já estão lá.</p>
+ <p class="small" style="margin-top:6px">Acerto vale +20. Erro tira 10, e a carta vai para o lugar certo. 🎯 Meta: errar no máximo 1 vez nas fases 1 a 3 e 2 vezes na fase 4.</p>
+ <div class="fases">${FASES.map(F=>`<div><span>${F.ico}</span>${F.nome}</div>`).join('')}</div>
+ <button class="btn" onclick="novo()">Começar →</button></div>`;
+}
+function novo(){S={f:0,tot:0,fp:0,ef:0,erros:0};salvo=false;$('rankBox').style.display='none';fase();}
+function fase(){const F=FASES[S.f];S.fp=0;S.ef=0;S.mesa=F.mesa.slice();S.mao=shuf(F.mao);S.ult=null;hud();desenha();}
+function ordena(){S.mesa.sort((a,b)=>EV[a].ord-EV[b].ord);}
+function desenha(fbHtml){
+ ordena();const c=S.mao[0];
+ let h=`<div class="card"><h2>Fase ${S.f+1}: ${FASES[S.f].nome}</h2><p class="small">Cartas restantes: ${S.mao.length}</p>`;
+ if(c){const e=EV[c];h+=`<div class="mao"><div class="small">Onde entra este acontecimento?</div><div class="ev">${e.ic} ${e.t}</div></div>`;}
+ h+='<div class="linha">';
+ S.mesa.forEach((k,i)=>{if(c)h+=`<button class="slot" data-i="${i}">⬇ ${i===0?'Antes de tudo':'Aqui'}</button>`;
+  const e=EV[k];h+=`<div class="pos ${S.ult&&S.ult.k===k?(S.ult.ok?'novo':'errou'):''}"><span class="ano">${e.a}</span><span>${e.ic} <b>${e.t}</b><br><span class="small">${e.d}</span></span></div>`;});
+ if(c)h+=`<button class="slot" data-i="${S.mesa.length}">⬇ Depois de tudo</button>`;
+ h+='</div>'+(fbHtml||'')+'</div>';
+ $('tela').innerHTML=h;
+ document.querySelectorAll('.slot').forEach(b=>b.onclick=()=>colocar(+b.dataset.i));
+ if(!c)fimFase();
+}
+function colocar(i){
+ const k=S.mao.shift(),e=EV[k];ordena();
+ const antes=S.mesa[i-1],depois=S.mesa[i];
+ const ok=(!antes||EV[antes].a<=e.a)&&(!depois||e.a<=EV[depois].a);
+ S.mesa.push(k);S.ult={k,ok};
+ if(ok){S.fp+=20;beep(760,.12);}else{S.fp-=10;S.ef++;S.erros++;beep(170,.3);}
+ hud();
+ desenha(`<div class="fb ${ok?'good':'bad'}">${ok?'✅ Certo! +20.':'❌ Não era aí. −10. A carta foi para '+e.a+'.'}</div>`);
+}
+function fimFase(){
+ const F=FASES[S.f],ok=S.ef<=F.meta,ult=S.f===FASES.length-1;
+ if(ok){S.fp+=30;}
+ hud();
+ const box=document.createElement('div');box.className='card';box.style.textAlign='center';
+ box.innerHTML=`<h2>${ok?'✅ Fase concluída':'⚠️ Erros demais'}</h2><p>Você errou ${S.ef} vez(es). A meta era no máximo ${F.meta}. ${ok?'+30 pontos.':''}</p>
+ <div class="row" style="justify-content:center;margin-top:10px">${ok?`<button class="btn" id="bp">${ult?'Ver resultado →':'Próxima fase →'}</button>`:'<button class="btn" id="bp">Tentar de novo</button><button class="btn ghost" id="bq">Encerrar</button>'}</div>`;
+ $('tela').prepend(box);
+ $('bp').onclick=()=>{if(ok){S.tot+=S.fp;S.fp=0;if(ult)final();else{S.f++;fase();}}else fase();};
+ if($('bq'))$('bq').onclick=()=>final(true);
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+function final(parou){
+ $('rankBox').style.display='block';const nivel=parou?'Fase '+(S.f+1):'Linha completa';S.fp=0;hud();
+ $('tela').innerHTML=`<div class="card" style="text-align:center"><div class="big">${parou?'⏳':'🏆'}</div><h2>${parou?'Fim de jogo':'Você montou a história do Pantanal!'}</h2>
+ <div class="big">${S.tot} pts</div><p class="small">${S.erros} erro(s) · chegou até: ${nivel}</p>
+ <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
+ <details style="text-align:left;margin-top:14px"><summary class="small" style="cursor:pointer">📚 Fontes das datas</summary><ul class="fontes">
+ <li>IBGE, histórico dos municípios de Cáceres (MT) e Corumbá (MS).</li>
+ <li>Decreto 86.061/1981 (Taiamã), Decreto 86.392/1981 (Parque Nacional) e Decretos 12.886 e 12.887/2026 (ampliações).</li>
+ <li>Constituição Federal de 1988, art. 225, § 4º.</li>
+ <li>Convenção de Ramsar, sítios 602 (Parque Nacional) e 2363 (Taiamã).</li>
+ <li>UNESCO, Patrimônio Mundial n.º 999, Pantanal Conservation Area (2000).</li>
+ <li>Lei estadual MT 8.830/2008 e Lei 11.861/2022.</li>
+ <li>Estudo do INPE publicado na revista Fire (2023), divulgado pela Agência FAPESP.</li></ul></details></div>`;
+ $('bS').onclick=()=>salvar(nivel);
+}
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="linha-do-tempo-pantanal";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__lt={get S(){return S},EV,colocar};
+inicio();
+</script>
+</body>
+</html>
