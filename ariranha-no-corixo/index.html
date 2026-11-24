@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ariranha no Corixo</title>
+<style>
+:root{--main:#6a1b9a;--deep:#4a148c;--soft:#f3e5f5;--line:#e4cfea;--ink:#241a2b;--mut:#62546b}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:780px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep)}h2{font-size:1.15rem;color:var(--deep);margin-bottom:6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 11px;font-weight:700;font-size:.86rem}
+.card{border:2px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit}
+.btn:hover{background:var(--deep)}.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas{width:100%;max-width:620px;margin:0 auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff}
+.pad{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,52px);gap:6px;justify-content:center;margin-top:10px}
+.pad button{border:2px solid var(--line);background:var(--soft);border-radius:12px;font-size:1.4rem;cursor:pointer;color:var(--deep);touch-action:manipulation}
+.pad button:active{background:#e1bee7}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:8px}.tab td{border-bottom:1px solid var(--line);padding:5px 4px;vertical-align:top}
+.ops{display:grid;gap:8px;margin-top:10px}
+.ops button{border:2px solid var(--line);background:#fff;border-radius:12px;padding:11px;font-size:.95rem;cursor:pointer;font-family:inherit;text-align:left;color:var(--ink)}
+.ops button:hover{border-color:var(--main)}.ops button:disabled{opacity:.5;cursor:default}
+.fb{margin-top:10px;padding:11px 13px;border-radius:12px;font-size:.93rem}
+.fb.good{background:#e8f5e9;color:#1b5e20}.fb.bad{background:#ffebee;color:#8e1b1b}
+.big{font-size:2.3rem;font-weight:800;color:var(--deep)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>🦦 Ariranha no Corixo</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hV">❤️ 3</span><span class="pill" id="hR">🐟 0</span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let actx=null;function beep(f,d,v){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=f;g.gain.setValueAtTime(v||.05,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+d);}catch(e){}}
+
+/* Mapa: # margem com aguapé, . peixe, o fiscalização, P ariranha, G ameaças */
+const MAPA=[
+'###################',
+'#o.......#.......o#',
+'#.##.###.#.###.##.#',
+'#.................#',
+'#.##.#.#####.#.##.#',
+'#....#...#...#....#',
+'#.##.###.#.###.##.#',
+'#....##.GGG.##....#',
+'#.##.##.###.##.##.#',
+'#........P........#',
+'#.##.###.#.###.##.#',
+'#o.#.....#.....#.o#',
+'#..#.#.#####.#.#..#',
+'#.................#',
+'###################'];
+const ROWS=MAPA.length,COLS=MAPA[0].length;
+const DIRS={u:[0,-1],d:[0,1],l:[-1,0],r:[1,0]},OPO={u:'d',d:'u',l:'r',r:'l'};
+const AMEACAS=[{ic:'🚤',n:'Lancha de pesca ilegal',modo:'caca'},{ic:'🕸️',n:'Rede de espera',modo:'vaga'},{ic:'🎣',n:'Pesca predatória',modo:'emboscada'},{ic:'🕸️',n:'Rede de espera',modo:'vaga'}];
+const FASES=[
+ {nome:'Corixo tranquilo',n:2,vel:3.0,poder:7,lixo:3,txt:'Coma todos os peixes do corixo. A lancha de pesca ilegal persegue você. A rede vaga pelos canais.'},
+ {nome:'Temporada de pesca',n:3,vel:3.25,poder:6,lixo:5,txt:'Chega a pesca predatória, que tenta cortar o seu caminho. Há mais lixo na água.'},
+ {nome:'Seca no corixo',n:4,vel:3.3,poder:5,lixo:7,txt:'Com a seca, as ameaças ficam mais rápidas e a fiscalização dura menos.'}
+];
+const PERG=[
+ {q:'Do que a ariranha se alimenta principalmente?',o:['Peixes','Frutos e sementes caídos na água','Folhas de aguapé e capim']},
+ {q:'Como a ariranha costuma viver?',o:['Em grupos familiares com um casal dominante','Sozinha, encontrando outras só para brigar','Em bandos de centenas de indivíduos']},
+ {q:'Qual a situação da ariranha na avaliação oficial de risco de extinção no Brasil?',o:['Vulnerável','Fora de perigo','Extinta na natureza']}
+];
+let S,cv,cx,raf=null,last=0,T=32;
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';
+ if(S.g){$('hV').textContent='❤️ '+S.g.vidas;$('hR').textContent='🐟 '+S.g.peixes;}}
+function inicio(){
+ parar();$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><h2>Ajude a ariranha a se alimentar no corixo</h2>
+ <table class="tab"><tr><td>🐟</td><td>Coma todos os peixes para terminar a fase. Cada um vale +2.</td></tr>
+ <tr><td>🚨</td><td>A fiscalização chegou: por alguns segundos você pode recolher redes e barcos ilegais (+50).</td></tr>
+ <tr><td>🚤 🕸️ 🎣</td><td>Encostar numa ameaça sem a fiscalização custa uma vida e 30 pontos.</td></tr>
+ <tr><td>🥤</td><td>Lixo plástico boiando. Se a ariranha comer, perde 15 pontos.</td></tr>
+ <tr><td>⌨️ 👆</td><td>Setas do teclado, deslize o dedo no corixo ou use os botões.</td></tr></table>
+ <p class="small" style="margin-top:8px">🎯 Meta: comer todos os peixes antes de perder as 3 vidas. Cada vida que sobrar vale +20.</p>
+ <div class="row" style="margin-top:12px"><button class="btn" onclick="novo()">Começar →</button></div></div>`;
+}
+function novo(){S={f:0,tot:0,fp:0};salvo=false;$('rankBox').style.display='none';fase();}
+function fase(){const F=FASES[S.f];S.fp=0;S.g=null;hud();
+ $('tela').innerHTML=`<div class="card"><h2>Fase ${S.f+1}: ${F.nome}</h2><p>${F.txt}</p><p class="small" style="margin-top:6px">🎯 Meta: comer todos os peixes antes de perder as 3 vidas.</p><div class="row" style="margin-top:12px"><button class="btn" id="bg">Jogar →</button></div></div>`;
+ $('bg').onclick=jogar;}
+function parede(c,r){return r<0||r>=ROWS||c<0||c>=COLS||MAPA[r][c]==='#';}
+function montar(){const F=FASES[S.f],g=S.g;g.item={};let start,gs=[];
+ for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const ch=MAPA[r][c];
+  if(ch==='.')g.item[c+','+r]='p';if(ch==='o')g.item[c+','+r]='o';if(ch==='P')start=[c,r];if(ch==='G')gs.push([c,r]);}
+ const cand=shuf(Object.keys(g.item).filter(k=>g.item[k]==='p'&&Math.abs(+k.split(',')[1]-9)>1));
+ for(let i=0;i<F.lixo;i++)g.item[cand[i]]='l';
+ g.start=start;g.gs=gs;g.peixes=Object.values(g.item).filter(v=>v==='p').length;}
+function reposicionar(){const g=S.g,F=FASES[S.f];
+ g.p={x:g.start[0],y:g.start[1],dir:null,quer:null,prog:0,vel:5.2};
+ g.am=[];for(let i=0;i<F.n;i++){const A=AMEACAS[i];const s=g.gs[i%g.gs.length];g.am.push({...A,x:s[0],y:s[1],dir:'u',prog:0,espera:1+i*1.5,fora:false});}
+ g.pausa=1.2;}
+function jogar(){
+ S.g={vidas:3,perdidas:0,poder:0,fim:false,msg:'',msgT:0,comidos:0};montar();reposicionar();
+ $('tela').innerHTML=`<div class="card"><canvas id="cv"></canvas>
+ <div class="pad"><span></span><button data-d="u">⬆️</button><span></span><button data-d="l">⬅️</button><button data-d="d">⬇️</button><button data-d="r">➡️</button></div></div>`;
+ cv=$('cv');T=cv.clientWidth<500?22:32;cv.width=COLS*T;cv.height=ROWS*T;cx=cv.getContext('2d');
+ document.querySelectorAll('.pad button').forEach(b=>b.onpointerdown=e=>{e.preventDefault();S.g.p.quer=b.dataset.d;});
+ let t0=null;cv.onpointerdown=e=>{t0=[e.clientX,e.clientY];};
+ cv.onpointerup=e=>{if(!t0)return;const dx=e.clientX-t0[0],dy=e.clientY-t0[1];if(Math.max(Math.abs(dx),Math.abs(dy))>18)S.g.p.quer=Math.abs(dx)>Math.abs(dy)?(dx>0?'r':'l'):(dy>0?'d':'u');t0=null;};
+ hud();last=performance.now();parar();raf=requestAnimationFrame(loop);
+}
+document.addEventListener('keydown',e=>{if(!S||!S.g||S.g.fim)return;const m={ArrowUp:'u',ArrowDown:'d',ArrowLeft:'l',ArrowRight:'r',w:'u',s:'d',a:'l',d:'r'}[e.key];if(m){S.g.p.quer=m;e.preventDefault();}});
+function msg(t){S.g.msg=t;S.g.msgT=2.2;}
+function pode(e,d){const [dx,dy]=DIRS[d];return !parede(e.x+dx,e.y+dy);}
+function andar(e,vel,dt,escolher){
+ e.prog+=vel*dt;
+ while(e.prog>=1||e.dir===null){
+  if(e.dir!==null){e.prog-=1;e.x+=DIRS[e.dir][0];e.y+=DIRS[e.dir][1];}
+  escolher(e);
+  if(e.dir===null||!pode(e,e.dir)){e.dir=null;e.prog=0;return true;}
+ }
+ return false;}
+function dist2(a,b){return (a[0]-b[0])**2+(a[1]-b[1])**2;}
+function escolherAmeaca(a){const g=S.g,p=g.p;
+ const ops=Object.keys(DIRS).filter(d=>pode(a,d)&&d!==OPO[a.dir]);const lista=ops.length?ops:Object.keys(DIRS).filter(d=>pode(a,d));
+ if(!lista.length){a.dir=null;return;}
+ let alvo=[p.x,p.y];
+ if(a.modo==='emboscada'&&p.dir){alvo=[p.x+DIRS[p.dir][0]*4,p.y+DIRS[p.dir][1]*4];}
+ if(g.poder>0){a.dir=lista.sort((d1,d2)=>dist2([a.x+DIRS[d2][0],a.y+DIRS[d2][1]],alvo)-dist2([a.x+DIRS[d1][0],a.y+DIRS[d1][1]],alvo))[0];return;}
+ if(a.modo==='vaga'||Math.random()<.2){a.dir=lista[Math.floor(Math.random()*lista.length)];return;}
+ a.dir=lista.sort((d1,d2)=>dist2([a.x+DIRS[d1][0],a.y+DIRS[d1][1]],alvo)-dist2([a.x+DIRS[d2][0],a.y+DIRS[d2][1]],alvo))[0];}
+function pos(e){return e.dir?[e.x+DIRS[e.dir][0]*e.prog,e.y+DIRS[e.dir][1]*e.prog]:[e.x,e.y];}
+function comer(){const g=S.g,p=g.p,k=p.x+','+p.y,it=g.item[k];if(!it)return;delete g.item[k];
+ if(it==='p'){S.fp+=2;g.peixes--;beep(520,.03,.03);}
+ if(it==='o'){S.fp+=10;g.poder=FASES[S.f].poder;beep(990,.2);msg('🚨 A fiscalização chegou! Recolha as redes e barcos.');}
+ if(it==='l'){S.fp-=15;beep(160,.3);msg('🥤 A ariranha engoliu plástico. −15.');}
+ if(g.peixes===0)terminar();}
+function update(dt){const g=S.g;if(!g||g.fim)return;const F=FASES[S.f];
+ g.msgT-=dt;if(g.pausa>0){g.pausa-=dt;return;}
+ if(g.poder>0)g.poder=Math.max(0,g.poder-dt);
+ const p=g.p;
+ if(p.dir&&p.quer===OPO[p.dir]){p.x+=DIRS[p.dir][0];p.y+=DIRS[p.dir][1];p.prog=1-p.prog;p.dir=p.quer;}
+ andar(p,p.vel,dt,e=>{comer();if(g.fim)return;if(e.quer&&pode(e,e.quer))e.dir=e.quer;});
+ if(g.fim)return;
+ for(const a of g.am){if(a.espera>0){a.espera-=dt;continue;}
+  andar(a,g.poder>0?F.vel*.55:F.vel,dt,escolherAmeaca);}
+ const pp=pos(p);
+ for(const a of g.am){if(a.espera>0)continue;const ap=pos(a);
+  if(Math.abs(ap[0]-pp[0])+Math.abs(ap[1]-pp[1])<.55){
+   if(g.poder>0){S.fp+=50;g.comidos++;beep(1200,.15);msg(a.ic+' recolhida! +50.');const s=g.gs[1];a.x=s[0];a.y=s[1];a.dir='u';a.prog=0;a.espera=3;}
+   else{g.vidas--;g.perdidas++;S.fp-=30;beep(120,.4,.08);
+    if(g.vidas<=0){terminar();return;}msg('💥 A ariranha se machucou. −30.');reposicionar();return;}}}
+}
+function desenha(){const g=S.g;if(!g||!cx)return;
+ cx.clearRect(0,0,cv.width,cv.height);cx.fillStyle='#e1f5fe';cx.fillRect(0,0,cv.width,cv.height);
+ for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){if(MAPA[r][c]==='#'){cx.fillStyle='#a5d6a7';cx.beginPath();cx.roundRect(c*T+1,r*T+1,T-2,T-2,6);cx.fill();}}
+ cx.textAlign='center';cx.textBaseline='middle';
+ for(const k in g.item){const [c,r]=k.split(',').map(Number),it=g.item[k],x=c*T+T/2,y=r*T+T/2;
+  if(it==='p'){cx.font=(T*.45)+'px system-ui';cx.fillText('🐟',x,y);}
+  if(it==='o'){cx.font=(T*.75)+'px system-ui';cx.fillText('🚨',x,y);}
+  if(it==='l'){cx.font=(T*.6)+'px system-ui';cx.fillText('🥤',x,y);}}
+ for(const a of g.am){const [x,y]=pos(a);cx.globalAlpha=a.espera>0?.45:1;cx.font=(T*.85)+'px system-ui';
+  if(g.poder>0&&a.espera<=0){cx.fillStyle=g.poder<1.5&&Math.floor(g.poder*6)%2?'#fff':'#ce93d8';cx.beginPath();cx.arc(x*T+T/2,y*T+T/2,T*.48,0,7);cx.fill();}
+  cx.fillText(a.ic,x*T+T/2,y*T+T/2);cx.globalAlpha=1;}
+ const [px,py]=pos(g.p);cx.font=(T*.9)+'px system-ui';cx.save();cx.translate(px*T+T/2,py*T+T/2);if(g.p.dir==='l')cx.scale(-1,1);cx.fillText('🦦',0,0);cx.restore();
+ if(g.poder>0){cx.fillStyle='#6a1b9a';cx.fillRect(0,cv.height-4,cv.width*g.poder/FASES[S.f].poder,4);}
+ if(g.msgT>0||g.pausa>0){const t=g.pausa>0?'Prepare-se...':g.msg;cx.font='bold '+(T*.5)+'px system-ui';cx.fillStyle='rgba(255,255,255,.85)';cx.fillRect(0,T*7-T*.45,cv.width,T*.9+T*0);cx.fillStyle='#4a148c';cx.fillText(t,cv.width/2,T*7);}
+}
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);desenha();hud();if(S.g&&!S.g.fim)raf=requestAnimationFrame(loop);}
+function parar(){if(raf)cancelAnimationFrame(raf);raf=null;}
+function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const limpo=g.peixes===0,ok=limpo;
+ if(ok){S.fp+=30+20*g.vidas;beep(880,.2);}hud();
+ $('tela').innerHTML=`<div class="card"><h2>${limpo?'Corixo limpo de peixes':'A ariranha precisou descansar'}</h2>
+ <p>Peixes restantes: <b>${g.peixes}</b>. Vidas perdidas: <b>${g.perdidas}</b>. Ameaças recolhidas: <b>${g.comidos}</b>.</p>
+ ${ok?`<div class="fb good">🎯 Meta cumprida! +30 e +${20*g.vidas} pelas vidas que sobraram.</div>`:'<div class="fb bad">A meta não foi cumprida. Use a fiscalização 🚨 quando as ameaças estiverem perto e desvie do lixo.</div>'}
+ <div class="row" style="margin-top:12px">${ok?'<button class="btn" id="bq">Pergunta da fase →</button>':'<button class="btn" id="br">Tentar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
+ if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}
+}
+function pergunta(){
+ const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
+ $('tela').innerHTML=`<div class="card"><h2>Pergunta da fase</h2><p style="margin:6px 0 4px">${P.q}</p><p class="small">Acerto +20, erro −10.</p><div class="ops">${ops.map((o,i)=>`<button data-i="${i}">${o.t}</button>`).join('')}</div><div id="pf"></div></div>`;
+ document.querySelectorAll('#tela .ops button').forEach(b=>b.onclick=()=>{const o=ops[+b.dataset.i];S.fp+=o.c?20:-10;beep(o.c?880:170,.15);hud();
+  document.querySelectorAll('#tela .ops button').forEach((x,j)=>{x.disabled=true;if(ops[j].c){x.style.borderColor='#2e7d32';x.style.opacity=1;}});
+  $('pf').innerHTML=`<div class="fb ${o.c?'good':'bad'}">${o.c?'✅ +20.':'❌ −10. A resposta certa está marcada em verde.'}<div class="row" style="margin-top:10px"><button class="btn" id="bn">${S.f===FASES.length-1?'Ver resultado →':'Próxima fase →'}</button></div></div>`;
+  $('bn').onclick=()=>{S.tot+=S.fp;S.fp=0;if(S.f===FASES.length-1)final(true);else{S.f++;fase();}};});
+}
+function final(tudo){
+ S.g=null;$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
+ $('tela').innerHTML=`<div class="card" style="text-align:center"><div class="big">${tudo?'🏆':'🦦'}</div><h2>${tudo?'A ariranha atravessou os três corixos!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
+ <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
+ <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Embrapa Pantanal, folder sobre a ariranha (dieta, grupos sociais e situação de ameaça); Rodrigues, Leuchtenberger e Silva (2013), Avaliação do risco de extinção da ariranha no Brasil, Biodiversidade Brasileira (ICMBio), categoria Vulnerável. As ameaças do labirinto e a pontuação são regras do jogo.</div></div>`;
+ $('bS').onclick=()=>salvar(nivel);
+}
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="ariranha-no-corixo";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__ar={get S(){return S},update,parar,FASES,MAPA,parede,pos,DIRS};
+inicio();
+</script>
+</body>
+</html>
