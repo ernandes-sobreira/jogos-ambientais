@@ -43,7 +43,7 @@ canvas{width:100%;max-width:760px;margin:0 auto;display:block;border:2px solid v
 <a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
 <header>
   <h1>🥚 Ninho de Jacaré</h1>
-  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR">🥚 30</span><span class="pill" id="hT">📅 dia 0</span></div>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR">🥚 30</span><span class="pill" id="hV">⚡ 100%</span><span class="pill" id="hT">📅 dia 0</span></div>
 </header>
 <main id="tela"></main>
 <div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
@@ -56,39 +56,45 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 let actx=null;function beep(f,d,v){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=f;g.gain.setValueAtTime(v||.05,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+d);}catch(e){}}
 
 /* No jogo, 1 segundo vale 1 dia de incubação. O limite de 31,5 °C e o período de definição do sexo
-   seguem a Embrapa Pantanal; a temperatura de cada dia é simulada pelo jogo. */
+   seguem a Embrapa Pantanal; a temperatura de cada dia, a fome e o calor da fêmea são regras do jogo. */
 const DIAS=70,DEFINE=40,LIMITE=31.5,OVOS=30;
 const PRED={
- teiu:{n:'Teiú',cor:'#455a64',v:62,come:2,r:14},
- quati:{n:'Quati',cor:'#a1887f',v:72,come:2,r:13},
- lobinho:{n:'Lobinho',cor:'#8d6e63',v:88,come:3,r:14},
- porco:{n:'Porco-monteiro',cor:'#5d4037',v:48,come:5,r:18}
+ teiu:{n:'Teiú',cor:'#546e7a',v:60,come:2},
+ quati:{n:'Quati',cor:'#a1887f',v:70,come:2},
+ lobinho:{n:'Lobinho',cor:'#8d6e63',v:84,come:3},
+ porco:{n:'Porco-monteiro',cor:'#5d4037',v:48,come:5}
 };
 const LOCAIS={
- mata:{n:'Mata',base:30.8,amp:.9,pred:2.6,cheia:0,txt:'Na mata, a temperatura do ninho varia pouco, mas os predadores aparecem mais.'},
- flutuante:{n:'Vegetação flutuante',base:31.6,amp:2.2,pred:1.5,cheia:.6,txt:'Na vegetação flutuante, o ninho esquenta e esfria mais com o sol e a chuva. Há menos predadores, mas a água pode subir.'}
+ mata:{n:'Mata',base:30.8,amp:.9,pred:2.0,cheia:0,sombra:.55,txt:'Na mata, a temperatura do ninho varia pouco e a sombra deixa a fêmea esquentar devagar. Os predadores aparecem mais e a água fica longe.'},
+ flutuante:{n:'Vegetação flutuante',base:31.6,amp:2.2,pred:1.4,cheia:.6,sombra:1,txt:'Na vegetação flutuante, o ninho esquenta e esfria mais. A água fica perto e há menos predadores, mas a água pode subir.'}
 };
 const FASES=[
- {nome:'Ninho na mata',local:'mata',meta:26,txt:'A fêmea fez o ninho de folhas e gravetos na mata e fica de guarda. Afaste os predadores até os ovos eclodirem.'},
- {nome:'Ninho na vegetação flutuante',local:'flutuante',meta:23,txt:'Agora o ninho está sobre a vegetação flutuante. Repare como a temperatura muda e o que isso faz com os filhotes.'},
- {nome:'Você escolhe o lugar',local:null,meta:24,txt:'Escolha onde construir o ninho. Cada lugar tem vantagens e riscos.'}
+ {nome:'Ninho na mata',local:'mata',meta:21,txt:'A fêmea fez o ninho de folhas e gravetos na mata e fica de guarda. Mas ela também precisa ir à água comer e se refrescar. Escolha a hora certa de sair.'},
+ {nome:'Ninho na vegetação flutuante',local:'flutuante',meta:21,txt:'Agora o ninho está sobre a vegetação flutuante, perto da água. Repare como a temperatura muda e o que isso faz com os filhotes.'},
+ {nome:'Você escolhe o lugar',local:null,meta:19,txt:'Escolha onde construir o ninho. Cada lugar tem vantagens e riscos.'}
 ];
 const PERG=[
  {q:'O que decide se um filhote de jacaré-do-pantanal vai ser macho ou fêmea?',o:['A temperatura em que o ovo foi incubado','O tamanho da mãe na hora da postura','A quantidade de chuva no dia da eclosão']},
- {q:'No jacaré-do-pantanal, ninhos incubados acima de 31,5 °C produzem principalmente...',o:['Machos','Fêmeas','Ovos que não eclodem']},
+ {q:'O que os filhotes de jacaré fazem quando estão prontos para sair do ovo?',o:['Emitem sons parecidos com piados para avisar a mãe','Ficam em silêncio para não atrair predadores','Quebram o ninho e correm sozinhos para longe da água']},
  {q:'Quais são as principais causas de morte dos ovos de jacaré no Pantanal, segundo a Embrapa?',o:['Inundação e predação dos ninhos','Frio intenso e falta de chuva','Pisoteio do gado e chuva de granizo']}
 ];
-let S,cv,cx,raf=null,last=0,W=760,H=460,inp={x:null,y:null};
+let S,cv,cx,raf=null,last=0,W=760,H=480,inp={x:null,y:null},tec={};
+const VERT=()=>W<520;
+function noAgua(x,y){return VERT()?y>H*.72+Math.sin(x*.03)*8:x<W*.27+Math.sin(y*.03)*8;}
+function ninhoPos(){const L=S.local;if(VERT())return L==='mata'?[W*.55,H*.24]:[W*.5,H*.6];return L==='mata'?[W*.64,H*.46]:[W*.42,H*.5];}
+const NX=()=>S.g.nx,NY=()=>S.g.ny;
 function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';
- if(S.g){$('hR').textContent='🥚 '+S.g.ovos;$('hT').textContent='📅 dia '+Math.min(DIAS,Math.floor(S.g.t));}}
+ if(S.g){$('hR').textContent='🥚 '+S.g.ovos;$('hV').textContent='⚡ '+Math.round(S.g.en)+'%';$('hT').textContent='📅 dia '+Math.min(DIAS,Math.floor(S.g.t));}}
 function inicio(){
  parar();$('hud').style.display='none';$('rankBox').style.display='block';
  $('tela').innerHTML=`<div class="card"><h2>Proteja o ninho do jacaré-do-pantanal</h2>
- <table class="tab"><tr><td>🛡️</td><td>Você é a fêmea do jacaré. Ela fica perto do ninho e espanta os predadores. Aponte para onde ela deve ir.</td></tr>
- <tr><td>🥚</td><td>O ninho começa com ${OVOS} ovos. Predador que chega ao ninho come ovos.</td></tr>
+ <table class="tab"><tr><td>🐊</td><td>Você é a fêmea do jacaré. Toque ou arraste no campo para ela ir até lá. No teclado, use as setas. Chegar perto de um predador espanta o bicho: +5.</td></tr>
+ <tr><td>⚡</td><td>Ficar parada no ninho gasta energia. Ela precisa ir à água pegar peixes e insetos aquáticos. Com pouca energia, fica lenta, e sem energia não consegue espantar ninguém.</td></tr>
+ <tr><td>☀️</td><td>O jacaré não produz o próprio calor. No sol o corpo esquenta, e na água ele se refresca. Muito quente, ela fica lenta e sem forças para espantar.</td></tr>
+ <tr><td>🌿</td><td>Os predadores chegam em ondas. Na calmaria entre uma onda e outra, aproveite para ir à água.</td></tr>
  <tr><td>🌡️</td><td>Nos primeiros ${DEFINE} dias, a temperatura do ninho define o sexo dos filhotes. Acima de ${LIMITE} °C nascem principalmente machos. Abaixo, fêmeas.</td></tr>
- <tr><td>📅</td><td>No jogo, cada segundo é um dia. Os filhotes eclodem no dia ${DIAS}.</td></tr></table>
- <p class="small" style="margin-top:8px">Predador espantado +5. Filhote que eclode +5. 🎯 Meta: chegar à eclosão com a quantidade de ovos da fase.</p>
+ <tr><td>🐣</td><td>No dia ${DIAS} os filhotes piam dentro dos ovos. Vá até o ninho para abrir e leve os filhotes até a água.</td></tr></table>
+ <p class="small" style="margin-top:8px">Cada segundo é um dia. Filhote que chega à eclosão +5. Abrir o ninho +20. Levar os filhotes à água +20. 🎯 Meta: chegar à eclosão com a quantidade de ovos da fase.</p>
  <div class="row" style="margin-top:12px"><button class="btn" onclick="novo()">Começar →</button></div></div>`;
 }
 function novo(){S={f:0,tot:0,fp:0};salvo=false;$('rankBox').style.display='none';fase();}
@@ -101,68 +107,154 @@ function fase(){const F=FASES[S.f];S.fp=0;S.g=null;hud();
  $('tela').innerHTML=`<div class="card"><h2>Fase ${S.f+1}: ${F.nome}</h2><p>${F.txt}</p><p class="small" style="margin-top:6px">${LOCAIS[F.local].txt} 🎯 Meta: chegar à eclosão com pelo menos ${F.meta} ovos.</p><div class="row" style="margin-top:12px"><button class="btn" id="bg">Começar a incubação →</button></div></div>`;
  $('bg').onclick=jogar;}
 function jogar(){const L=LOCAIS[S.local];
- $('tela').innerHTML=`<div class="card"><canvas id="cv"></canvas><p class="small" style="margin-top:8px">Aponte para onde a fêmea deve ir. Ela espanta o predador que estiver perto.</p></div>`;
- cv=$('cv');if(cv.clientWidth<520){W=440;H=460;}else{W=760;H=460;}cv.width=W;cv.height=H;cx=cv.getContext('2d');
- S.g={t:0,ovos:OVOS,mx:W/2+60,my:H/2,olha:-1,preds:[],prox:3,temps:[],quente:0,dias:0,cheia:null,fim:false,msg:'',msgT:0,espantados:0,temp:L.base,chuva:0};
+ $('tela').innerHTML=`<div class="card"><canvas id="cv"></canvas><p class="small" style="margin-top:8px;text-align:center">Toque ou arraste para guiar a fêmea. Setas do teclado também funcionam.</p></div>`;
+ cv=$('cv');if(cv.clientWidth<520){W=440;H=600;}else{W=760;H=480;}cv.width=W;cv.height=H;cx=cv.getContext('2d');
+ S.g={t:0,ovos:OVOS,mx:0,my:0,vx:0,vy:0,ang:0,passo:0,en:100,cal:20,preds:[],comida:[],prox:3,temps:[],quente:0,dias:0,cheia:null,fim:false,msg:'',msgT:0,espantados:0,temp:L.base,chuva:0,estado:'inc',tEst:0,filhotes:[],abriu:false,levou:false,rast:[]};
+ const [nx,ny]=ninhoPos();S.g.nx=nx;S.g.ny=ny;S.g.mx=nx+(VERT()?0:-50);S.g.my=ny+(VERT()?50:0);S.g.ang=VERT()?Math.PI/2:Math.PI;inp.x=null;inp.y=null;
+ for(let i=0;i<6;i++)S.g.comida.push(novaComida());
  const pos=e=>{const r=cv.getBoundingClientRect();return [(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height];};
  cv.onpointerdown=e=>{cv.setPointerCapture(e.pointerId);[inp.x,inp.y]=pos(e);e.preventDefault();};
- cv.onpointermove=e=>{if(e.buttons||e.pointerType==='mouse')[inp.x,inp.y]=pos(e);};
+ cv.onpointermove=e=>{if(e.buttons)[inp.x,inp.y]=pos(e);};
  hud();last=performance.now();parar();raf=requestAnimationFrame(loop);}
-function msg(t){S.g.msg=t;S.g.msgT=2.2;}
-const NX=()=>W/2,NY=()=>H/2;
-function spawn(){const g=S.g;const tipos=Object.keys(PRED);const k=tipos[Math.floor(Math.random()*tipos.length)];const lado=Math.floor(Math.random()*4);
- const x=lado===0?-20:lado===1?W+20:rr(0,W),y=lado===2?-20:lado===3?H+20:rr(0,H);g.preds.push({k,x,y,foge:0});}
+document.addEventListener('keydown',e=>{if(e.key.startsWith('Arrow')){tec[e.key]=1;if(S&&S.g&&!S.g.fim)e.preventDefault();}});
+document.addEventListener('keyup',e=>{tec[e.key]=0;});
+function msg(t){S.g.msg=t;S.g.msgT=2.4;}
+function novaComida(){let x,y,k=0;do{x=rr(10,W-10);y=rr(10,H-10);k++;}while(!noAgua(x,y)||(k<50&&(VERT()?y>H-14:x<14)));
+ const peixe=Math.random()<.55,a=rr(0,7);return {x,y,peixe,vx:Math.cos(a)*(peixe?40:8),vy:Math.sin(a)*(peixe?40:8),f:rr(0,6)};}
+function spawn(){const g=S.g;const tipos=Object.keys(PRED);const k=tipos[Math.floor(Math.random()*tipos.length)];let x,y;
+ if(VERT()){const l=Math.floor(Math.random()*3);x=l===0?-20:l===1?W+20:rr(0,W);y=l===2?-20:rr(0,H*.6);}
+ else{const l=Math.floor(Math.random()*3);x=l===0?W+20:rr(W*.35,W);y=l===1?-20:l===2?H+20:rr(0,H);}
+ g.preds.push({k,x,y,foge:0,f:rr(0,6)});}
+function cabeca(){const g=S.g;return [g.mx+Math.cos(g.ang)*24,g.my+Math.sin(g.ang)*24];}
 function update(dt){const g=S.g;if(!g||g.fim)return;const L=LOCAIS[S.local];
- const dia0=Math.floor(g.t);g.t+=dt;g.msgT-=dt;
- // temperatura do ninho: ciclo de sol e chuva
+ const dia0=Math.floor(g.t);if(g.estado==='inc')g.t+=dt;g.msgT-=dt;
+ // temperatura do ninho
  if(Math.random()<dt*.08)g.chuva=rr(2,5);g.chuva-=dt;
  const alvo=L.base+L.amp*Math.sin(g.t*1.3)+(g.chuva>0?-L.amp*1.2:0);g.temp+=(alvo-g.temp)*Math.min(1,dt*1.5);
- if(Math.floor(g.t)>dia0&&g.t<=DEFINE){g.dias++;if(g.temp>LIMITE)g.quente++;g.temps.push(g.temp);if(g.temps.length>DEFINE)g.temps.shift();}
- // fêmea
- if(inp.x!=null){const dx=inp.x-g.mx,dy=inp.y-g.my,d=Math.hypot(dx,dy);if(d>4){const v=Math.min(d,130*dt);g.mx+=dx/d*v;g.my+=dy/d*v;if(Math.abs(dx)>4)g.olha=Math.sign(dx);}}
+ if(Math.floor(g.t)>dia0&&g.t<=DEFINE){g.dias++;if(g.temp>LIMITE)g.quente++;g.temps.push(g.temp);}
+ // movimento da fêmea
+ const agua=noAgua(g.mx,g.my);let dx=0,dy=0;
+ const kx=(tec.ArrowRight?1:0)-(tec.ArrowLeft?1:0),ky=(tec.ArrowDown?1:0)-(tec.ArrowUp?1:0);
+ if(kx||ky){dx=kx;dy=ky;inp.x=null;}else if(inp.x!=null){dx=inp.x-g.mx;dy=inp.y-g.my;const d=Math.hypot(dx,dy);if(d<6){dx=0;dy=0;inp.x=null;}}
+ let vmax=agua?175:150;if(g.en<30)vmax*=.6;if(g.en<=0)vmax*=.55;if(g.cal>=100)vmax*=.45;
+ const d=Math.hypot(dx,dy);let tvx=0,tvy=0;if(d>0){const fre=inp.x!=null&&!(kx||ky)?Math.min(1,d/50):1;tvx=dx/d*vmax*fre;tvy=dy/d*vmax*fre;}
+ const ac=Math.min(1,dt*7);g.vx+=(tvx-g.vx)*ac;g.vy+=(tvy-g.vy)*ac;
+ g.mx=Math.max(12,Math.min(W-12,g.mx+g.vx*dt));g.my=Math.max(12,Math.min(H-12,g.my+g.vy*dt));
+ const sp=Math.hypot(g.vx,g.vy);if(sp>8){const alvoA=Math.atan2(g.vy,g.vx);let da=alvoA-g.ang;while(da>Math.PI)da-=2*Math.PI;while(da<-Math.PI)da+=2*Math.PI;g.ang+=da*Math.min(1,dt*8);}
+ g.passo+=sp*dt*.09;
+ // fome e calor
+ g.en=Math.max(0,g.en-dt*(1.1+.7*sp/175));
+ const sol=.75+.25*Math.sin(g.t*.35);
+ if(agua)g.cal=Math.max(0,g.cal-dt*22);else g.cal=Math.min(100,g.cal+dt*3.4*sol*L.sombra);
+ if(g.cal>=100&&g.msgT<=0)msg('☀️ A fêmea esquentou demais e ficou lenta. Leve ela até a água.');
+ else if(g.en<=0&&g.msgT<=0)msg('⚡ Sem energia, ela mal anda. Vá à água comer.');
+ // comida na água
+ const [hx,hy]=cabeca();
+ for(const c of g.comida){c.f+=dt*8;if(Math.random()<dt*.8){const a=rr(0,7),v=c.peixe?40:8;c.vx=Math.cos(a)*v;c.vy=Math.sin(a)*v;}
+  const nx=c.x+c.vx*dt,ny=c.y+c.vy*dt;if(noAgua(nx,ny)&&nx>6&&nx<W-6&&ny>6&&ny<H-6){c.x=nx;c.y=ny;}else{c.vx=-c.vx;c.vy=-c.vy;}
+  if(Math.hypot(c.x-hx,c.y-hy)<20){c.comido=1;g.en=Math.min(100,g.en+(c.peixe?22:9));beep(c.peixe?760:980,.06);}}
+ g.comida=g.comida.filter(c=>!c.comido);while(g.comida.length<6&&Math.random()<dt*1.2)g.comida.push(novaComida());
  // predadores
- g.prox-=dt;if(g.prox<=0){spawn();if(Math.random()<.25+S.f*.1)spawn();g.prox=rr(1.4,2.8)/L.pred*(1-S.f*.1);}
- for(const p of g.preds){const P=PRED[p.k];
-  if(Math.hypot(p.x-g.mx,p.y-g.my)<40&&!p.foge){p.foge=1;g.espantados++;S.fp+=5;beep(600,.08);}
-  if(p.foge){const dx=p.x-NX(),dy=p.y-NY(),d=Math.hypot(dx,dy)||1;p.x+=dx/d*P.v*1.6*dt;p.y+=dy/d*P.v*1.6*dt;}
-  else{const dx=NX()-p.x,dy=NY()-p.y,d=Math.hypot(dx,dy);if(d<30){g.ovos=Math.max(0,g.ovos-P.come);p.foge=1;beep(150,.3,.07);msg(`${P.n} comeu ${P.come} ovo(s)!`);}else{p.x+=dx/d*P.v*dt;p.y+=dy/d*P.v*dt;}}}
- g.preds=g.preds.filter(p=>p.x>-60&&p.x<W+60&&p.y>-60&&p.y<H+60);
- // cheia na vegetação flutuante
- if(L.cheia&&!g.cheia&&g.t>20&&Math.random()<dt*L.cheia*.04){g.cheia=4;const perde=Math.min(g.ovos,Math.floor(rr(3,7)));g.ovos-=perde;beep(200,.4);msg(`🌊 A água subiu e encharcou parte do ninho: ${perde} ovos perdidos.`);}
+ if(g.estado==='inc'&&(g.t%12)<7.5){g.prox-=dt;if(g.prox<=0){spawn();if(Math.random()<.2+S.f*.1)spawn();g.prox=rr(1.6,3)/L.pred*(1-S.f*.08);}}
+ for(const p of g.preds){const P=PRED[p.k];p.f+=dt*10;
+  const fraca=g.en<=0||g.cal>=100;
+  if(!p.foge&&fraca&&Math.hypot(p.x-g.mx,p.y-g.my)<44&&g.msgT<=0)msg('😩 Fraca demais para espantar. Ela precisa comer e se refrescar na água.');
+  if(!p.foge&&!fraca&&(Math.hypot(p.x-g.mx,p.y-g.my)<44||Math.hypot(p.x-hx,p.y-hy)<36)){p.foge=1;g.espantados++;S.fp+=5;beep(600,.08);}
+  if(p.foge){const ex=p.x-g.mx,ey=p.y-g.my,dd=Math.hypot(ex,ey)||1;p.x+=ex/dd*P.v*1.7*dt;p.y+=ey/dd*P.v*1.7*dt;}
+  else{const ex=NX()-p.x,ey=NY()-p.y,dd=Math.hypot(ex,ey);if(dd<26){g.ovos=Math.max(0,g.ovos-P.come);p.foge=1;beep(150,.3,.07);msg(`${P.n} comeu ${P.come} ovo(s)!`);}else{p.x+=ex/dd*P.v*dt;p.y+=ey/dd*P.v*dt;}}}
+ g.preds=g.preds.filter(p=>p.x>-70&&p.x<W+70&&p.y>-70&&p.y<H+70);
+ // cheia
+ if(L.cheia&&!g.cheia&&g.t>20&&g.estado==='inc'&&Math.random()<dt*L.cheia*.04){g.cheia=4;const perde=Math.min(g.ovos,Math.floor(rr(3,7)));g.ovos-=perde;beep(200,.4);msg(`🌊 A água subiu e encharcou parte do ninho: ${perde} ovos perdidos.`);}
  if(g.cheia)g.cheia-=dt;
- if(g.ovos<=0||g.t>=DIAS)terminar();}
-function corpoJacare(x,y,s,olha){cx.save();cx.translate(x,y);cx.scale(olha,1);const k=s/100;cx.scale(k,k);
- cx.fillStyle='#4e5a2a';cx.beginPath();cx.moveTo(-95,0);cx.quadraticCurveTo(-60,-6,-30,-12);cx.lineTo(-30,12);cx.quadraticCurveTo(-60,6,-95,0);cx.fill();
- cx.fillStyle='#5f6d34';cx.beginPath();cx.ellipse(0,0,36,17,0,0,7);cx.fill();
- cx.beginPath();cx.moveTo(30,-10);cx.quadraticCurveTo(70,-8,80,-3);cx.lineTo(80,3);cx.quadraticCurveTo(70,8,30,10);cx.fill();
- cx.fillStyle='#3f4a20';for(let i=0;i<7;i++){cx.beginPath();cx.ellipse(-26+i*8,0,2.6,6,0,0,7);cx.fill();}
- cx.fillStyle='#3f4a20';for(const [lx,ly] of [[-18,-17],[-18,17],[20,-15],[20,15]]){cx.beginPath();cx.ellipse(lx,ly+(ly>0?6:-6),5,8,0,0,7);cx.fill();}
- cx.fillStyle='#d4c33a';cx.beginPath();cx.arc(36,-7,3,0,7);cx.arc(36,7,3,0,7);cx.fill();cx.fillStyle='#111';cx.beginPath();cx.ellipse(36,-7,.9,2.4,0,0,7);cx.ellipse(36,7,.9,2.4,0,0,7);cx.fill();cx.restore();}
-function desenhaPred(p){const P=PRED[p.k];cx.save();cx.translate(p.x,p.y);const ang=p.foge?Math.atan2(p.y-NY(),p.x-NX()):Math.atan2(NY()-p.y,NX()-p.x);cx.rotate(ang);
- cx.fillStyle=P.cor;if(p.k==='teiu'){cx.beginPath();cx.ellipse(0,0,14,6,0,0,7);cx.fill();cx.beginPath();cx.moveTo(-12,0);cx.lineTo(-34,0);cx.lineWidth=4;cx.strokeStyle=P.cor;cx.stroke();cx.fillStyle='#eceff1';for(let i=0;i<4;i++)cx.fillRect(-8+i*5,-4,2,8);}
- else if(p.k==='quati'){cx.beginPath();cx.ellipse(0,0,13,7,0,0,7);cx.fill();cx.beginPath();cx.moveTo(12,-3);cx.lineTo(22,0);cx.lineTo(12,3);cx.fill();cx.strokeStyle='#5d4037';cx.lineWidth=4;cx.setLineDash([4,3]);cx.beginPath();cx.moveTo(-12,0);cx.lineTo(-30,-6);cx.stroke();cx.setLineDash([]);}
- else if(p.k==='lobinho'){cx.beginPath();cx.ellipse(0,0,14,7,0,0,7);cx.fill();cx.beginPath();cx.moveTo(12,-5);cx.lineTo(22,0);cx.lineTo(12,5);cx.fill();cx.fillStyle='#4e342e';cx.beginPath();cx.ellipse(-18,0,8,3,0,0,7);cx.fill();}
- else{cx.beginPath();cx.ellipse(0,0,18,10,0,0,7);cx.fill();cx.fillStyle='#8d6e63';cx.beginPath();cx.ellipse(17,0,5,4,0,0,7);cx.fill();}
- cx.restore();cx.fillStyle='rgba(40,40,40,.8)';cx.font='bold 10px system-ui';cx.textAlign='center';cx.fillText(P.n,p.x,p.y-16);}
-function desenha(){const g=S.g;if(!g||!cx)return;const L=LOCAIS[S.local];
- cx.clearRect(0,0,W,H);
- if(S.local==='mata'){cx.fillStyle='#dcedc8';cx.fillRect(0,0,W,H);cx.fillStyle='rgba(56,142,60,.25)';for(let i=0;i<26;i++){const x=(i*137)%W,y=(i*89)%H;cx.beginPath();cx.arc(x,y,26,0,7);cx.fill();}}
- else{cx.fillStyle='#b3e5fc';cx.fillRect(0,0,W,H);cx.fillStyle='#aed581';for(let i=0;i<40;i++){const x=(i*97)%W,y=(i*61)%H;cx.beginPath();cx.ellipse(x,y,18,10,i,0,7);cx.fill();}
-  cx.fillStyle='#9ccc65';cx.beginPath();cx.ellipse(NX(),NY(),120,90,0,0,7);cx.fill();}
- if(g.cheia>0){cx.fillStyle='rgba(41,182,246,.35)';cx.fillRect(0,0,W,H);}
+ if(g.ovos<=0){terminar();return;}
+ // eclosão
+ if(g.estado==='inc'&&g.t>=DIAS){g.estado='chamado';g.tEst=12;g.preds.forEach(p=>p.foge=1);msg('🐣 Os filhotes estão piando! Vá até o ninho para abrir.');beep(1200,.1);}
+ else if(g.estado==='chamado'){g.tEst-=dt;if(Math.random()<dt*3)beep(1500+Math.random()*300,.04,.02);
+  if(Math.hypot(g.mx-NX(),g.my-NY())<42){g.estado='leva';g.tEst=15;g.abriu=true;S.fp+=20;beep(900,.15);msg('Ninho aberto! +20. Leve os filhotes até a água.');
+   const n=Math.min(g.ovos,14);for(let i=0;i<n;i++)g.filhotes.push({x:NX()+rr(-14,14),y:NY()+rr(-10,10),f:rr(0,6),d:22+i*7});}
+  else if(g.tEst<=0)terminar();}
+ else if(g.estado==='leva'){g.tEst-=dt;g.rast.unshift([g.mx,g.my]);if(g.rast.length>200)g.rast.pop();
+  for(const fi of g.filhotes){fi.f+=dt*12;const idx=Math.min(g.rast.length-1,Math.floor(fi.d/3));const [tx,ty]=g.rast[idx]||[g.mx,g.my];const ex=tx-fi.x,ey=ty-fi.y,dd=Math.hypot(ex,ey);if(dd>2){const v=Math.min(dd,140*dt);fi.x+=ex/dd*v;fi.y+=ey/dd*v;}}
+  const chegaram=g.filhotes.filter(fi=>noAgua(fi.x,fi.y)).length;
+  if(chegaram>=g.filhotes.length*.8){g.levou=true;S.fp+=20;beep(1000,.2);terminar();}else if(g.tEst<=0)terminar();}}
+/* ---------- desenho ---------- */
+function jacare(x,y,ang,s,passo,nada){cx.save();cx.translate(x,y);cx.rotate(ang);cx.scale(s,s);
+ const ond=Math.sin(passo*2);
+ if(nada){cx.strokeStyle='rgba(255,255,255,.55)';cx.lineWidth=1.5;for(let k=0;k<2;k++){cx.beginPath();cx.ellipse(-10,0,58+k*12+((passo*8)%8),20+k*6,0,0,7);cx.stroke();}}
+ // cauda
+ const pts=[];for(let i=0;i<=10;i++){const u=i/10;pts.push([-26-u*62,Math.sin(passo*2-u*2.4)*(3+u*9)]);}
+ cx.fillStyle='#55602d';cx.beginPath();cx.moveTo(-24,-9);for(let i=0;i<=10;i++){const u=i/10,[px,py]=pts[i];cx.lineTo(px,py-9*(1-u)-1);}for(let i=10;i>=0;i--){const u=i/10,[px,py]=pts[i];cx.lineTo(px,py+9*(1-u)+1);}cx.closePath();cx.fill();
+ cx.fillStyle='#2f3816';for(let i=1;i<10;i+=2){const u=i/10,[px,py]=pts[i];cx.beginPath();cx.ellipse(px,py,2.2,7*(1-u)+1.5,0,0,7);cx.fill();}
+ // patas
+ const pata=(px,py,lado,fase)=>{const sw=nada?-.9:Math.sin(passo*2+fase)*.6;cx.save();cx.translate(px,py);cx.rotate(lado*(1.25)+sw*lado*-1+(nada?lado*-.5:0));
+  cx.fillStyle='#4a5526';cx.beginPath();cx.ellipse(0,9*(nada?.6:1),4.5,9*(nada?.6:1),0,0,7);cx.fill();cx.fillStyle='#3a431d';for(let t=-1;t<=1;t++){cx.beginPath();cx.ellipse(t*3,18*(nada?.6:1),1.4,3.5,t*.3,0,7);cx.fill();}cx.restore();};
+ pata(16,-11,-1,0);pata(16,11,1,Math.PI);pata(-18,-12,-1,Math.PI);pata(-18,12,1,0);
+ // corpo
+ cx.fillStyle='#64733a';cx.beginPath();cx.ellipse(-2,0,32,15,0,0,7);cx.fill();
+ cx.fillStyle='#7c8a4a';cx.beginPath();cx.ellipse(-2,0,30,7,0,0,7);cx.fill();
+ cx.fillStyle='#3c4620';for(let r=-1;r<=1;r+=2)for(let i=0;i<6;i++){cx.beginPath();cx.ellipse(-24+i*8,r*4.5,2.6,1.9,0,0,7);cx.fill();}
+ // pescoço e cabeça
+ cx.fillStyle='#64733a';cx.beginPath();cx.moveTo(24,-10);cx.quadraticCurveTo(34,-9,40,-8);cx.quadraticCurveTo(58,-6,70,-3.5);cx.quadraticCurveTo(75,0,70,3.5);cx.quadraticCurveTo(58,6,40,8);cx.quadraticCurveTo(34,9,24,10);cx.closePath();cx.fill();
+ cx.strokeStyle='#3c4620';cx.lineWidth=1.4;for(const bx of [50,58]){cx.beginPath();cx.moveTo(bx,-5.5);cx.lineTo(bx,5.5);cx.stroke();}
+ cx.fillStyle='#e2c94c';cx.beginPath();cx.ellipse(38,-6.5,3.6,3,0,0,7);cx.ellipse(38,6.5,3.6,3,0,0,7);cx.fill();
+ cx.fillStyle='#1b1b1b';cx.beginPath();cx.ellipse(38.5,-6.5,1,2.3,0,0,7);cx.ellipse(38.5,6.5,1,2.3,0,0,7);cx.fill();
+ cx.fillStyle='#2f3816';cx.beginPath();cx.arc(70,-1.6,1.1,0,7);cx.arc(70,1.6,1.1,0,7);cx.fill();
+ if(nada){cx.fillStyle='rgba(129,212,250,.35)';cx.beginPath();cx.ellipse(-30,0,60,18,0,0,7);cx.fill();}
+ cx.restore();}
+function desenhaPred(p){const P=PRED[p.k];const alvoA=p.foge?Math.atan2(p.y-S.g.my,p.x-S.g.mx):Math.atan2(NY()-p.y,NX()-p.x);
+ cx.save();cx.translate(p.x,p.y);cx.rotate(alvoA);const w=Math.sin(p.f)*3;
+ cx.fillStyle='rgba(0,0,0,.12)';cx.beginPath();cx.ellipse(1,3,18,8,0,0,7);cx.fill();
+ cx.strokeStyle=P.cor;cx.lineWidth=3;cx.lineCap='round';for(const [lx,s] of [[7,1],[-7,-1]]){cx.beginPath();cx.moveTo(lx,-4);cx.lineTo(lx+w*s,-11);cx.moveTo(lx,4);cx.lineTo(lx-w*s,11);cx.stroke();}
+ cx.fillStyle=P.cor;
+ if(p.k==='teiu'){cx.beginPath();cx.ellipse(0,0,14,6,0,0,7);cx.fill();cx.beginPath();cx.moveTo(12,-4);cx.lineTo(22,0);cx.lineTo(12,4);cx.fill();cx.strokeStyle=P.cor;cx.lineWidth=4;cx.beginPath();cx.moveTo(-12,0);cx.quadraticCurveTo(-24,w*2,-36,0);cx.stroke();cx.fillStyle='#eceff1';for(let i=0;i<4;i++)cx.fillRect(-8+i*5,-4,2,8);}
+ else if(p.k==='quati'){cx.beginPath();cx.ellipse(0,0,13,7,0,0,7);cx.fill();cx.beginPath();cx.moveTo(11,-4);cx.lineTo(24,0);cx.lineTo(11,4);cx.fill();cx.strokeStyle='#5d4037';cx.lineWidth=4;cx.setLineDash([4,3]);cx.beginPath();cx.moveTo(-12,0);cx.quadraticCurveTo(-22,-4+w,-32,-8);cx.stroke();cx.setLineDash([]);}
+ else if(p.k==='lobinho'){cx.beginPath();cx.ellipse(0,0,14,7,0,0,7);cx.fill();cx.beginPath();cx.moveTo(11,-6);cx.lineTo(24,0);cx.lineTo(11,6);cx.fill();cx.beginPath();cx.moveTo(13,-6);cx.lineTo(10,-11);cx.lineTo(16,-6);cx.moveTo(13,6);cx.lineTo(10,11);cx.lineTo(16,6);cx.fill();cx.fillStyle='#4e342e';cx.beginPath();cx.ellipse(-19,w*.5,9,3.5,0,0,7);cx.fill();}
+ else{cx.beginPath();cx.ellipse(0,0,19,11,0,0,7);cx.fill();cx.beginPath();cx.ellipse(17,0,7,6,0,0,7);cx.fill();cx.fillStyle='#bcaaa4';cx.beginPath();cx.ellipse(24,0,3,4,0,0,7);cx.fill();}
+ cx.restore();cx.fillStyle='rgba(40,40,40,.85)';cx.font='bold 10px system-ui';cx.textAlign='center';cx.fillText(P.n,p.x,p.y-18);}
+let fundoCache=null;
+function fundo(){const k=S.local+W+'x'+H;if(fundoCache&&fundoCache.k===k)return fundoCache.c;const c=document.createElement('canvas');c.width=W;c.height=H;const o=c.getContext('2d');
+ o.fillStyle=S.local==='mata'?'#dfeccb':'#e6efc9';o.fillRect(0,0,W,H);
+ for(let i=0;i<160;i++){const x=(i*173)%W,y=(i*97)%H;o.fillStyle=i%3?'rgba(141,110,99,.18)':'rgba(104,159,56,.22)';o.beginPath();o.ellipse(x,y,5,2.5,i,0,7);o.fill();}
+ // água
+ o.save();o.beginPath();if(VERT()){o.moveTo(0,H);for(let x=0;x<=W;x+=8)o.lineTo(x,H*.72+Math.sin(x*.03)*8);o.lineTo(W,H);}else{o.moveTo(0,0);for(let y=0;y<=H;y+=8)o.lineTo(W*.27+Math.sin(y*.03)*8,y);o.lineTo(0,H);}o.closePath();
+ const gr=VERT()?o.createLinearGradient(0,H*.7,0,H):o.createLinearGradient(W*.27,0,0,0);gr.addColorStop(0,'#9fd8f2');gr.addColorStop(1,'#4fb3e0');o.fillStyle=gr;o.fill();o.clip();
+ for(let i=0;i<14;i++){const x=VERT()?(i*67)%W:(i*29)%(W*.25),y=VERT()?H*.75+(i*31)%(H*.25):(i*71)%H;o.fillStyle='#7cb342';for(let j=0;j<4;j++){o.beginPath();o.ellipse(x+j*7-10,y+(j%2)*6,7,5,j,0,7);o.fill();}o.fillStyle='#b39ddb';o.beginPath();o.arc(x,y-3,3,0,7);o.fill();}
+ o.restore();o.strokeStyle='rgba(121,85,72,.45)';o.lineWidth=3;o.beginPath();if(VERT()){for(let x=0;x<=W;x+=8)o.lineTo(x,H*.72+Math.sin(x*.03)*8);}else{for(let y=0;y<=H;y+=8)o.lineTo(W*.27+Math.sin(y*.03)*8,y);}o.stroke();
+ // árvores da mata ou capim
+ if(S.local==='mata'){const arv=VERT()?[[.12,.1],[.88,.12],[.2,.45],[.85,.5],[.6,.05]]:[[.45,.12],[.92,.15],[.55,.85],[.95,.8],[.62,.18],[.84,.92]];
+  for(const [ax,ay] of arv){const x=ax*W,y=ay*H;o.fillStyle='rgba(0,0,0,.1)';o.beginPath();o.ellipse(x+8,y+10,44,34,0,0,7);o.fill();for(let j=0;j<6;j++){o.fillStyle=j%2?'#7cb342':'#689f38';o.beginPath();o.arc(x+Math.cos(j)*20,y+Math.sin(j)*16,24,0,7);o.fill();}}}
+ else{const [nx,ny]=ninhoPos();o.fillStyle='#aed581';o.beginPath();o.ellipse(nx,ny,85,62,0,0,7);o.fill();o.fillStyle='#9ccc65';for(let j=0;j<18;j++){o.beginPath();o.ellipse(nx+Math.cos(j)*60,ny+Math.sin(j*1.3)*42,12,8,j,0,7);o.fill();}}
+ fundoCache={k,c};return c;}
+function barra(x,y,w,lab,v,cor){cx.fillStyle='#37474f';cx.font='bold 11px system-ui';cx.textAlign='left';cx.fillText(lab,x,y);cx.fillStyle='#e0e0e0';cx.fillRect(x,y+4,w,8);cx.fillStyle=cor;cx.fillRect(x,y+4,w*Math.max(0,Math.min(1,v)),8);}
+function desenha(){const g=S.g;if(!g||!cx)return;
+ cx.clearRect(0,0,W,H);cx.drawImage(fundo(),0,0);
+ const t=performance.now()/1000;cx.strokeStyle='rgba(255,255,255,.5)';cx.lineWidth=1;for(let i=0;i<10;i++){const x=VERT()?(i*53+t*12)%W:(i*23)%(W*.24),y=VERT()?H*.76+(i*29)%(H*.22):(i*61+t*12)%H;if(noAgua(x,y)){cx.beginPath();cx.moveTo(x-6,y);cx.quadraticCurveTo(x,y-3,x+6,y);cx.stroke();}}
+ if(g.cheia>0){cx.fillStyle='rgba(41,182,246,.3)';cx.fillRect(0,0,W,H);}
+ // comida
+ for(const c of g.comida){cx.save();cx.translate(c.x,c.y);cx.rotate(Math.atan2(c.vy,c.vx));if(c.peixe){cx.fillStyle='#78909c';cx.beginPath();cx.ellipse(0,0,8,3.5,0,0,7);cx.fill();cx.beginPath();cx.moveTo(-6,0);cx.lineTo(-12,-4+Math.sin(c.f)*1.5);cx.lineTo(-12,4+Math.sin(c.f)*1.5);cx.fill();cx.fillStyle='#fff';cx.beginPath();cx.arc(4,-1,1,0,7);cx.fill();}
+  else{cx.fillStyle='#4e342e';cx.beginPath();cx.ellipse(0,0,4,3,0,0,7);cx.fill();cx.strokeStyle='#4e342e';cx.lineWidth=1;cx.beginPath();cx.moveTo(-2,-2);cx.lineTo(-5,-6);cx.moveTo(-2,2);cx.lineTo(-5,6);cx.stroke();}cx.restore();}
  // ninho
- cx.fillStyle='#8d6e63';cx.beginPath();cx.ellipse(NX(),NY(),40,30,0,0,7);cx.fill();cx.strokeStyle='#5d4037';cx.lineWidth=2;for(let i=0;i<14;i++){const a=i*.45;cx.beginPath();cx.moveTo(NX()+Math.cos(a)*34,NY()+Math.sin(a)*24);cx.lineTo(NX()+Math.cos(a+.6)*22,NY()+Math.sin(a+.6)*14);cx.stroke();}
- cx.fillStyle='#fffde7';const vis=Math.min(g.ovos,12);for(let i=0;i<vis;i++){cx.beginPath();cx.ellipse(NX()-18+(i%4)*12,NY()-8+Math.floor(i/4)*9,5,4,0,0,7);cx.fill();}
+ const nx=NX(),ny=NY();cx.fillStyle='rgba(0,0,0,.12)';cx.beginPath();cx.ellipse(nx+4,ny+6,44,32,0,0,7);cx.fill();
+ cx.fillStyle='#8d6e63';cx.beginPath();cx.ellipse(nx,ny,42,31,0,0,7);cx.fill();cx.fillStyle='#a1887f';cx.beginPath();cx.ellipse(nx-3,ny-3,30,21,0,0,7);cx.fill();
+ cx.strokeStyle='#5d4037';cx.lineWidth=1.6;for(let i=0;i<18;i++){const a=i*.37;cx.beginPath();cx.moveTo(nx+Math.cos(a)*38,ny+Math.sin(a)*27);cx.lineTo(nx+Math.cos(a+.7)*18,ny+Math.sin(a+.7)*12);cx.stroke();}
+ if(g.estado!=='inc'||g.abriu){cx.fillStyle='#fffde7';for(let i=0;i<Math.min(g.ovos,10);i++){cx.beginPath();cx.ellipse(nx-16+(i%4)*10,ny-6+Math.floor(i/4)*8,4.5,3.5,0,0,7);cx.fill();}}
+ cx.fillStyle='#4e342e';cx.font='bold 11px system-ui';cx.textAlign='center';cx.fillText('🥚 '+g.ovos,nx,ny+46);
+ if(g.estado==='chamado'){const r=46+Math.sin(t*8)*5;cx.strokeStyle='rgba(255,152,0,.8)';cx.lineWidth=3;cx.beginPath();cx.arc(nx,ny,r,0,7);cx.stroke();cx.fillStyle='#e65100';cx.font='bold 13px system-ui';cx.fillText('piu piu!',nx,ny-40);}
+ for(const fi of g.filhotes){cx.save();cx.translate(fi.x,fi.y);cx.fillStyle='#8d9a50';cx.beginPath();cx.ellipse(0,0,6,2.5,0,0,7);cx.fill();cx.beginPath();cx.moveTo(-5,0);cx.lineTo(-12,Math.sin(fi.f)*2);cx.lineTo(-5,1);cx.fill();cx.fillStyle='#222';cx.beginPath();cx.ellipse(-1,0,2.5,1,0,0,7);cx.fill();cx.restore();}
  for(const p of g.preds)desenhaPred(p);
- corpoJacare(g.mx,g.my,70,g.olha);
- // termômetro
- const tx=14,ty=14,th=140;cx.fillStyle='rgba(255,255,255,.9)';cx.fillRect(tx-6,ty-6,140,th+50);cx.fillStyle='#eee';cx.fillRect(tx,ty,14,th);
- const tmin=27,tmax=35,yy=t=>ty+th-(t-tmin)/(tmax-tmin)*th;cx.fillStyle=g.temp>LIMITE?'#e53935':'#1e88e5';cx.fillRect(tx,yy(g.temp),14,ty+th-yy(g.temp));
- cx.strokeStyle='#111';cx.setLineDash([3,2]);cx.beginPath();cx.moveTo(tx-2,yy(LIMITE));cx.lineTo(tx+20,yy(LIMITE));cx.stroke();cx.setLineDash([]);
- cx.fillStyle='#222';cx.font='bold 12px system-ui';cx.textAlign='left';cx.fillText(g.temp.toFixed(1)+' °C',tx+22,yy(g.temp)+4);cx.font='10px system-ui';cx.fillText('31,5 °C',tx+22,yy(LIMITE)-4);
- const pm=g.dias?g.quente/g.dias:0;cx.font='11px system-ui';cx.fillText(g.t<=DEFINE?'definindo o sexo: dia '+Math.min(DEFINE,Math.floor(g.t))+'/'+DEFINE:'sexo já definido',tx,ty+th+16);
- cx.fillText('previsão: '+Math.round(pm*100)+'% machos',tx,ty+th+32);
- if(g.msgT>0){cx.font='bold 14px system-ui';cx.textAlign='center';cx.fillStyle='rgba(255,255,255,.9)';cx.fillRect(0,H-30,W,24);cx.fillStyle='#3e5414';cx.fillText(g.msg,W/2,H-13);}}
+ jacare(g.mx,g.my,g.ang,VERT()?.62:.7,g.passo,noAgua(g.mx,g.my));
+ if(inp.x!=null){cx.strokeStyle='rgba(46,125,50,.5)';cx.lineWidth=2;cx.beginPath();cx.arc(inp.x,inp.y,8,0,7);cx.stroke();}
+ // painel
+ const px=VERT()?8:W-186,py=8,pw=178;cx.fillStyle='rgba(255,255,255,.92)';cx.fillRect(px,py,pw,134);
+ barra(px+8,py+15,pw-16,'⚡ Energia da fêmea',g.en/100,g.en<30?'#e53935':'#43a047');
+ barra(px+8,py+40,pw-16,'☀️ Calor do corpo',g.cal/100,g.cal>80?'#e53935':'#ffa000');
+ cx.fillStyle='#37474f';cx.font='bold 11px system-ui';cx.textAlign='left';cx.fillStyle=g.temp>LIMITE?'#c62828':'#1565c0';cx.fillText('🌡️ Ninho: '+g.temp.toFixed(1).replace('.',',')+' °C',px+8,py+70);cx.fillStyle='#37474f';cx.font='11px system-ui';cx.fillText('limite 31,5',px+pw-62,py+70);
+ const pm=g.dias?g.quente/g.dias:0;cx.font='11px system-ui';cx.fillText(g.t<=DEFINE?'definindo o sexo: dia '+Math.min(DEFINE,Math.floor(g.t))+'/'+DEFINE:'sexo já definido',px+8,py+88);
+ cx.fillText('previsão: '+Math.round(pm*100)+'% machos',px+8,py+104);
+
+ if(g.estado==='inc'){const calma=(g.t%12)>=7.5;cx.font='bold 11px system-ui';cx.fillStyle=calma?'#2e7d32':'#c62828';cx.fillText(calma?'🌿 Calmaria: hora de ir à água':'⚠️ Predadores rondando',px+8,py+124);}
+ if(g.estado!=='inc'){cx.fillStyle='rgba(255,255,255,.92)';cx.fillRect(W/2-90,VERT()?134:8,180,22);cx.fillStyle='#e65100';cx.font='bold 12px system-ui';cx.textAlign='center';cx.fillText((g.estado==='chamado'?'Abra o ninho: ':'Leve à água: ')+Math.ceil(g.tEst)+' s',W/2,VERT()?149:23);}
+ if(g.msgT>0){cx.font='bold 13px system-ui';cx.textAlign='center';cx.fillStyle='rgba(255,255,255,.93)';cx.fillRect(0,H-30,W,24);cx.fillStyle='#3e5414';cx.fillText(g.msg,W/2,H-13);}}
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);desenha();hud();if(S.g&&!S.g.fim)raf=requestAnimationFrame(loop);}
 function parar(){if(raf)cancelAnimationFrame(raf);raf=null;}
 function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=FASES[S.f],ok=g.ovos>=F.meta&&g.t>=DIAS;
@@ -171,7 +263,8 @@ function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=FASES
  $('tela').innerHTML=`<div class="card"><h2>${ok?'Os filhotes eclodiram!':'O ninho não vingou como devia'}</h2>
  <p>Local: <b>${LOCAIS[S.local].n}</b>. Ovos que chegaram à eclosão: <b>${g.ovos}</b> de ${OVOS} (meta: ${F.meta}). Predadores espantados: <b>${g.espantados}</b>.</p>
  <p style="margin-top:6px">🌡️ Em ${g.quente} dos ${g.dias} primeiros dias o ninho ficou acima de 31,5 °C. Estimativa do jogo: <b>${machos} machos</b> e <b>${femeas} fêmeas</b>.</p>
- ${ok?`<div class="fb good">🎯 Meta cumprida! +${5*g.ovos} pelos filhotes e +30.</div>`:'<div class="fb bad">A meta não foi cumprida. Fique entre o ninho e os predadores e reaja logo a quem chega mais rápido.</div>'}
+ ${g.t>=DIAS?`<p style="margin-top:6px">🐣 Abriu o ninho: <b>${g.abriu?'sim':'não'}</b>. Levou os filhotes à água: <b>${g.levou?'sim':'não'}</b>.</p>`:''}
+ ${ok?`<div class="fb good">🎯 Meta cumprida! +${5*g.ovos} pelos filhotes e +30.</div>`:'<div class="fb bad">A meta não foi cumprida. Vá comer e se refrescar quando não houver predador por perto e volte logo para o ninho.</div>'}
  <div class="row" style="margin-top:12px">${ok?'<button class="btn" id="bq">Pergunta da fase →</button>':'<button class="btn" id="br">Tentar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
  if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}}
 function pergunta(){
@@ -187,7 +280,7 @@ function final(tudo){
  $('tela').innerHTML=`<div class="card" style="text-align:center"><div class="big">${tudo?'🏆':'🥚'}</div><h2>${tudo?'Três ninhadas de jacaré salvas!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
  <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
- <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Campos, Z., Embrapa Pantanal, Papel da temperatura na vida dos jacarés (ninhos abaixo de 31,5 °C produzem fêmeas e acima produzem principalmente machos; ninhos de mata variam menos que os de vegetação flutuante); Embrapa Pantanal, Boletim 42 (2003): predadores de ninhos (teiú, quati, lobinho e porco-monteiro), sexo definido nos primeiros 40 dias, inundação e predação como causas de morte dos ovos, predação alta em ninhos de mata; Embrapa Pantanal, Boletim 43: até 70 dias da postura à eclosão. A temperatura diária, a velocidade dos predadores e o número de ovos são regras do jogo.</div></div>`;
+ <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Campos, Z., Embrapa Pantanal, Papel da temperatura na vida dos jacarés (ninhos abaixo de 31,5 °C produzem fêmeas e acima produzem principalmente machos; ninhos de mata variam menos que os de vegetação flutuante); Embrapa Pantanal, Boletim 42 (2003): predadores de ninhos (teiú, quati, lobinho e porco-monteiro), sexo definido nos primeiros 40 dias, inundação e predação como causas de morte dos ovos, predação alta em ninhos de mata; Embrapa Pantanal, Boletim 43: até 70 dias da postura à eclosão; INPP, folder Eu sou o jacaré-do-pantanal (2025): filhotes piam dentro dos ovos e a mãe ajuda a sair do ninho e leva até a água; Santos et al. (1996), Herpetological Journal 6: 111-117: a dieta do jacaré-do-pantanal é principalmente de insetos e peixes. A temperatura diária, a fome, o calor da fêmea, a velocidade dos predadores e o número de ovos são regras do jogo.</div></div>`;
  $('bS').onclick=()=>salvar(nivel);
 }
 const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
@@ -196,7 +289,7 @@ const GAME_ID="ninho-de-jacare";let db=null,fs=null,salvo=false;
 async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
 async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
  $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
-window.__nj={get S(){return S},update,parar,inp,FASES,NX,NY};
+window.__nj={get S(){return S},update,parar,inp,FASES,NX,NY,noAgua,cabeca};
 inicio();
 </script>
 </body>

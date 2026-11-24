@@ -78,6 +78,8 @@ function inicio(){
  <table class="tab"><tr><td><img src="${TAM.src}" width="90" alt="tamanduá-bandeira"></td><td>O tamanduá-bandeira não tem dentes. Ele abre o ninho com as garras e pega os insetos com a língua comprida e pegajosa.</td></tr>
  <tr><td>👆</td><td>Toque num inseto: a língua sai e busca. Inseto pego +2. A língua precisa voltar antes da próxima lambida.</td></tr>
  <tr><td>⚔️</td><td>Soldados têm cabeça grande e escura. Lamber um soldado é mordida no focinho: −10.</td></tr>
+ <tr><td>🪵</td><td>Gravetos no ninho bloqueiam a língua. Mire por outro caminho.</td></tr>
+ <tr><td>🐛</td><td>De vez em quando aparece uma câmara de larvas. Lamba rápido: +10 e conta 3 insetos.</td></tr>
  <tr><td>➡️</td><td>Com o tempo chegam mais soldados. Troque de ninho antes que eles dominem: +10 pela colônia que continua viva.</td></tr></table>
  <p class="small" style="margin-top:8px">🎯 Meta: comer a quantidade de insetos da fase no tempo, com no máximo 3 mordidas.</p>
  <div class="row" style="margin-top:12px"><button class="btn" onclick="novo()">Começar →</button></div></div>`;
@@ -86,10 +88,12 @@ function novo(){S={f:0,tot:0,fp:0};salvo=false;$('rankBox').style.display='none'
 function fase(){const F=FASES[S.f];S.fp=0;S.g=null;hud();
  $('tela').innerHTML=`<div class="card"><h2>Fase ${S.f+1}: ${F.nome}</h2><p>${F.txt}</p><p class="small" style="margin-top:6px">🎯 Meta: ${F.meta} insetos em ${F.dur} s, com no máximo 3 mordidas.</p><div class="row" style="margin-top:12px"><button class="btn" id="bg">Abrir o ninho →</button></div></div>`;
  $('bg').onclick=jogar;}
-function boca(){return [W*.2,H*.5];}
+function boca(){return [W<520?W*.25:W*.21,H*.5];}
+function corta(ax,ay,bx,by,s){const [cx1,cy1,dx1,dy1]=s;const r=(bx-ax)*(dy1-cy1)-(by-ay)*(dx1-cx1);if(Math.abs(r)<1e-6)return null;const t=((cx1-ax)*(dy1-cy1)-(cy1-ay)*(dx1-cx1))/r,u=((cx1-ax)*(by-ay)-(cy1-ay)*(bx-ax))/r;return t>0&&t<1&&u>0&&u<1?t:null;}
 function novoNinho(){const g=S.g,F=FASES[S.f];g.ninhoN++;g.tNinho=0;g.trocando=0;
  g.tipoN=F.tipo==='misto'?(g.ninhoN%2?'formiga':'cupim'):F.tipo;
- g.ins=[];for(let i=0;i<F.n;i++)g.ins.push(novoInseto('op'));g.soldProx=1.2;}
+ g.ins=[];for(let i=0;i<F.n;i++)g.ins.push(novoInseto('op'));g.soldProx=1.2;g.larva=null;g.larvaProx=rr(3,6);
+ g.gal=[];const cx0=W*.62,cy0=H*.55;for(let i=0;i<S.f+1;i++){const x=cx0+rr(-.18,.1)*W,y=cy0+rr(-.25,.25)*H,a=rr(-1.2,1.2),l=rr(55,90);g.gal.push([x-Math.cos(a)*l/2,y-Math.sin(a)*l/2,x+Math.cos(a)*l/2,y+Math.sin(a)*l/2]);}}
 function novoInseto(t){const g=S.g,F=FASES[S.f];const cx0=W*.62,cy0=H*.55;const a=rr(0,7),r=rr(0,1);
  const vel=(g.tipoN==='formiga'?F.vel:F.vel*.65)*rr(.7,1.3);const ang=rr(0,7);
  return {x:cx0+Math.cos(a)*r*W*.3,y:cy0+Math.sin(a)*r*H*.32,vx:Math.cos(ang)*vel,vy:Math.sin(ang)*vel,t,vel,f:Math.random()*6,vivo:true};}
@@ -105,13 +109,16 @@ function trocar(){const g=S.g;if(!g||g.fim||g.trocando>0)return;const sold=g.ins
  if(g.tNinho>2&&sold<tot*.5){S.fp+=10;msg('🌱 Saiu a tempo: a colônia continua viva. +10.');beep(900,.1);}
  g.trocando=1;g.ling=null;}
 function lamber(x,y){const g=S.g;if(!g||g.fim||g.trocando>0||g.ling||g.cd>0)return;const [bx,by]=boca();if(x<bx+10)return;
- g.ling={tx:x,ty:y,p:0,ida:true,pegou:[]};beep(700,.03,.02);}
+ let lim=1;const [ax,ay]=boca();for(const sg of g.gal){const t=corta(ax,ay,x,y,sg);if(t!=null&&t<lim)lim=t;}
+ g.ling={tx:ax+(x-ax)*lim,ty:ay+(y-ay)*lim,p:0,ida:true,pegou:[],bateu:lim<1};beep(700,.03,.02);}
 function update(dt){const g=S.g;if(!g||g.fim)return;const F=FASES[S.f];
  g.t+=dt;g.msgT-=dt;g.cd-=dt;
  if(g.trocando>0){g.trocando-=dt/1.1;if(g.trocando<=0){novoNinho();}if(g.t>=g.dur)terminar();return;}
  g.tNinho+=dt;
  // soldados chegam cada vez mais
  g.soldProx-=dt;if(g.soldProx<=0){const n=1+Math.floor(g.tNinho*F.soldRit*.5);for(let i=0;i<n;i++)g.ins.push(novoInseto('sold'));g.soldProx=rr(.8,1.4);}
+ g.larvaProx-=dt;if(!g.larva&&g.larvaProx<=0){const cx1=W*.62,cy1=H*.55,a=rr(0,7),r=rr(0,.8);g.larva={x:cx1+Math.cos(a)*r*W*.28,y:cy1+Math.sin(a)*r*H*.3,t:4};}
+ if(g.larva){g.larva.t-=dt;if(g.larva.t<=0){g.larva=null;g.larvaProx=rr(4,7);}}
  // operárias saem de dentro do ninho
  if(g.ins.filter(i=>i.vivo&&i.t==='op').length<F.n*.6&&Math.random()<dt*3)g.ins.push(novoInseto('op'));
  const cx0=W*.62,cy0=H*.55;
@@ -123,7 +130,9 @@ function update(dt){const g=S.g;if(!g||g.fim)return;const F=FASES[S.f];
  // língua
  if(g.ling){const L=g.ling,[bx,by]=boca();const dist=Math.hypot(L.tx-bx,L.ty-by);const sp=1400/Math.max(120,dist);
   if(L.ida){L.p+=sp*dt;if(L.p>=1){L.p=1;L.ida=false;
-    for(const i of g.ins){if(i.vivo&&Math.hypot(i.x-L.tx,i.y-L.ty)<16){i.vivo=false;L.pegou.push(i);}}
+    if(L.bateu){msg('🪵 A língua bateu no graveto. Mire por outro lado.');beep(220,.08);g.cd=.35;}
+    else{for(const i of g.ins){if(i.vivo&&Math.hypot(i.x-L.tx,i.y-L.ty)<16){i.vivo=false;L.pegou.push(i);}}
+    if(g.larva&&Math.hypot(g.larva.x-L.tx,g.larva.y-L.ty)<22){g.comidos+=3;S.fp+=10;g.larva=null;g.larvaProx=rr(4,7);beep(1300,.12);msg('🐛 Câmara de larvas! +10 e conta 3 insetos.');}}
     const sold=L.pegou.filter(i=>i.t==='sold').length,ops=L.pegou.length-sold;
     if(sold){g.mordidas+=1;S.fp-=10;beep(150,.3,.07);msg('⚔️ Mordida de soldado no focinho! −10.');g.cd=.6;}
     if(ops){g.comidos+=ops;S.fp+=2*ops;beep(900+ops*60,.05);}}}
@@ -144,13 +153,31 @@ function desenha(){const g=S.g;if(!g||!cx)return;
  const gr=cx.createRadialGradient(cx0,cy0,10,cx0,cy0,W*.36);gr.addColorStop(0,'#8d6e63');gr.addColorStop(.6,'#a1887f');gr.addColorStop(1,'#d7ccc8');cx.fillStyle=gr;cx.beginPath();cx.ellipse(cx0,cy0,W*.36,H*.41,0,0,7);cx.fill();
  cx.fillStyle='rgba(62,39,35,.45)';for(let k=0;k<14;k++){const a=k*.9,r=(k%5)/5;cx.beginPath();cx.ellipse(cx0+Math.cos(a)*r*W*.25,cy0+Math.sin(a)*r*H*.28,10,6,a,0,7);cx.fill();}
  cx.fillStyle='#5d4037';cx.font='bold 12px system-ui';cx.textAlign='center';cx.fillText(g.tipoN==='formiga'?'formigueiro aberto':'cupinzeiro aberto',cx0,cy0-H*.43+12);
+ // gravetos e larvas
+ for(const sg of g.gal){cx.strokeStyle='#5d4037';cx.lineWidth=7;cx.lineCap='round';cx.beginPath();cx.moveTo(sg[0],sg[1]);cx.lineTo(sg[2],sg[3]);cx.stroke();cx.strokeStyle='#8d6e63';cx.lineWidth=3;cx.beginPath();cx.moveTo(sg[0],sg[1]-1);cx.lineTo(sg[2],sg[3]-1);cx.stroke();
+  const mx=(sg[0]+sg[2])/2,my=(sg[1]+sg[3])/2;cx.strokeStyle='#5d4037';cx.lineWidth=3;cx.beginPath();cx.moveTo(mx,my);cx.lineTo(mx+8,my-12);cx.stroke();}
+ if(g.larva){const L=g.larva,pul=1+Math.sin(performance.now()/120)*.12;cx.strokeStyle='rgba(255,193,7,.9)';cx.lineWidth=3;cx.beginPath();cx.arc(L.x,L.y,20*pul,0,7);cx.stroke();
+  cx.fillStyle='#fffde7';for(let k=0;k<7;k++){const a=k*.9;cx.beginPath();cx.ellipse(L.x+Math.cos(a)*(k?8:0),L.y+Math.sin(a)*(k?6:0),5,3.4,a,0,7);cx.fill();cx.strokeStyle='#e0c97a';cx.lineWidth=1;cx.stroke();}
+  cx.fillStyle='#e65100';cx.font='bold 11px system-ui';cx.textAlign='center';cx.fillText('larvas',L.x,L.y-24);}
  for(const i of g.ins)if(i.vivo)desenhaInseto(i);
- // cabeça e focinho do tamanduá
- const [bx,by]=boca();cx.fillStyle='#8a7d72';cx.beginPath();cx.moveTo(-10,by-70);cx.quadraticCurveTo(W*.1,by-46,bx,by-6);cx.lineTo(bx,by+6);cx.quadraticCurveTo(W*.1,by+40,-10,by+80);cx.fill();
- cx.fillStyle='#1b1716';cx.beginPath();cx.moveTo(-10,by+40);cx.quadraticCurveTo(W*.05,by+30,W*.09,by+60);cx.lineTo(W*.07,by+80);cx.lineTo(-10,by+80);cx.fill();
- cx.fillStyle='#f2ede4';cx.beginPath();cx.moveTo(-10,by+34);cx.quadraticCurveTo(W*.05,by+24,W*.095,by+52);cx.lineTo(W*.09,by+58);cx.quadraticCurveTo(W*.05,by+32,-10,by+42);cx.fill();
- cx.fillStyle='#111';cx.beginPath();cx.arc(W*.06,by-26,4,0,7);cx.fill();cx.fillStyle='#6d625a';cx.beginPath();cx.ellipse(W*.03,by-50,8,6,0,0,7);cx.fill();
- if(g.ling){const L=g.ling;const tx=bx+(L.tx-bx)*L.p,ty=by+(L.ty-by)*L.p;cx.strokeStyle='#d81b60';cx.lineWidth=4;cx.lineCap='round';cx.beginPath();cx.moveTo(bx,by);cx.quadraticCurveTo((bx+tx)/2,(by+ty)/2+8,tx,ty);cx.stroke();cx.fillStyle='rgba(216,27,96,.35)';cx.beginPath();cx.arc(tx,ty,6,0,7);cx.fill();}
+ // tamanduá de perfil: corpo, cabeça, focinho comprido e boca na ponta
+ const [bx,by]=boca();const hx=bx-W*.15,hr=Math.min(46,H*.1);
+ cx.fillStyle='#7d7065';cx.beginPath();cx.ellipse(hx-60,by+40,90,70,0,0,7);cx.fill();
+ cx.fillStyle='#1b1716';cx.beginPath();cx.moveTo(hx-150,by+30);cx.quadraticCurveTo(hx-40,by+10,hx+10,by+70);cx.lineTo(hx-10,by+110);cx.quadraticCurveTo(hx-60,by+50,hx-150,by+70);cx.fill();
+ cx.fillStyle='#f2ede4';cx.beginPath();cx.moveTo(hx-150,by+22);cx.quadraticCurveTo(hx-40,by+2,hx+16,by+62);cx.lineTo(hx+10,by+70);cx.quadraticCurveTo(hx-40,by+12,hx-150,by+32);cx.fill();
+ cx.fillStyle='#8a7d72';cx.beginPath();cx.ellipse(hx,by-4,hr,hr*.8,-.15,0,7);cx.fill();
+ cx.beginPath();cx.moveTo(hx+hr*.5,by-hr*.55);cx.quadraticCurveTo((hx+bx)/2,by-14,bx-2,by-5);cx.quadraticCurveTo(bx+4,by,bx-2,by+5);cx.quadraticCurveTo((hx+bx)/2,by+10,hx+hr*.6,by+hr*.45);cx.closePath();cx.fill();
+ cx.strokeStyle='rgba(60,50,45,.25)';cx.lineWidth=1.5;cx.beginPath();cx.moveTo(hx+hr*.7,by+4);cx.quadraticCurveTo((hx+bx)/2,by+7,bx-6,by+3);cx.stroke();
+ cx.fillStyle='#6d625a';cx.beginPath();cx.ellipse(hx-hr*.55,by-hr*.75,9,7,-.4,0,7);cx.fill();
+ cx.fillStyle='#111';cx.beginPath();cx.arc(hx+hr*.35,by-hr*.25,3.6,0,7);cx.fill();cx.fillStyle='#fff';cx.beginPath();cx.arc(hx+hr*.35+1,by-hr*.25-1,1.1,0,7);cx.fill();
+ cx.fillStyle='#2b2421';cx.beginPath();cx.ellipse(bx-1,by+1,3.2,3.6,0,0,7);cx.fill();
+ // língua saindo da boca
+ const t0=performance.now()/1000;
+ if(g.ling){const L=g.ling;const tx=bx+(L.tx-bx)*L.p,ty=by+(L.ty-by)*L.p;const ox=(tx-bx),oy=(ty-by),dd=Math.hypot(ox,oy)||1,nx=-oy/dd,ny=ox/dd,ond=Math.sin(t0*30)*4;
+  cx.strokeStyle='#ad1457';cx.lineWidth=5;cx.lineCap='round';cx.beginPath();cx.moveTo(bx,by+1);cx.quadraticCurveTo(bx+ox/2+nx*ond,by+oy/2+ny*ond+1,tx,ty);cx.stroke();
+  cx.strokeStyle='#f06292';cx.lineWidth=2.5;cx.beginPath();cx.moveTo(bx,by+1);cx.quadraticCurveTo(bx+ox/2+nx*ond,by+oy/2+ny*ond+1,tx,ty);cx.stroke();
+  cx.fillStyle='rgba(240,98,146,.45)';cx.beginPath();cx.arc(tx,ty,6,0,7);cx.fill();}
+ else{const k=Math.max(0,Math.sin(t0*3))*6;if(k>1){cx.strokeStyle='#f06292';cx.lineWidth=3;cx.lineCap='round';cx.beginPath();cx.moveTo(bx,by+1);cx.lineTo(bx+k,by+2);cx.stroke();}}
  // alarme da colônia
  const sold=g.ins.filter(i=>i.vivo&&i.t==='sold').length,tot=Math.max(1,g.ins.filter(i=>i.vivo).length);const fr=sold/tot;
  cx.fillStyle='rgba(255,255,255,.9)';cx.fillRect(W-190,10,180,34);cx.fillStyle='#3e2723';cx.font='bold 11px system-ui';cx.textAlign='left';cx.fillText('Soldados no ninho: '+Math.round(fr*100)+'%',W-184,24);
@@ -188,7 +215,7 @@ const GAME_ID="lingua-ligeira";let db=null,fs=null,salvo=false;
 async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
 async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
  $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
-window.__ll={get S(){return S},update,lamber,trocar,parar,FASES,boca};
+window.__ll={get S(){return S},update,lamber,trocar,parar,FASES,boca,corta};
 $('tit').innerHTML='<img src="'+TAM.src+'" width="64" style="vertical-align:-8px" alt=""> Língua Ligeira';
 inicio();
 </script>
