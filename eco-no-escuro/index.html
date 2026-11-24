@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Eco no Escuro</title>
+<style>
+:root{--main:#1f4e79;--deep:#163a5a;--soft:#eef3f8;--line:#d6e0ea;--ink:#1d2329;--mut:#55606b}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:780px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep)}h2{font-size:1.15rem;color:var(--deep);margin-bottom:6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 11px;font-weight:700;font-size:.86rem}
+.card{border:2px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit}
+.btn:hover{background:var(--deep)}.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas{width:100%;max-width:760px;margin:0 auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff}
+.pad{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,52px);gap:6px;justify-content:center;margin-top:10px}
+.pad button{border:2px solid var(--line);background:var(--soft);border-radius:12px;font-size:1.4rem;cursor:pointer;color:var(--deep);touch-action:manipulation}
+.pad button:active{background:#dcedc8}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:8px}.tab td{border-bottom:1px solid var(--line);padding:5px 4px;vertical-align:top}
+.ops{display:grid;gap:8px;margin-top:10px}
+.ops button{border:2px solid var(--line);background:#fff;border-radius:12px;padding:11px;font-size:.95rem;cursor:pointer;font-family:inherit;text-align:left;color:var(--ink)}
+.ops button:hover{border-color:var(--main)}.ops button:disabled{opacity:.5;cursor:default}
+.fb{margin-top:10px;padding:11px 13px;border-radius:12px;font-size:.93rem}
+.fb.good{background:#e8f5e9;color:#1b5e20}.fb.bad{background:#ffebee;color:#8e1b1b}
+.big{font-size:2.3rem;font-weight:800;color:var(--deep)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+.pill{font-variant-numeric:tabular-nums}.card h2{letter-spacing:-.01em}.tab td:first-child{font-weight:600;white-space:nowrap;color:var(--deep);width:1%}input[type=range]{width:100%;accent-color:var(--main)}.kv{font-variant-numeric:tabular-nums}</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>Eco no Escuro</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1 de 3</span><span class="pill" id="hP">0 pontos</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let actx=null;function beep(f,d,v){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=f;g.gain.setValueAtTime(v||.05,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+d);}catch(e){}}
+/* ---------- biblioteca visual: estilo guia de campo + painel de dados ---------- */
+const TINTA='#2b2a26',PAPEL='#fbfaf6',GRADE='rgba(43,42,38,.07)';
+function papel(c,w,h,cor){c.fillStyle=cor||PAPEL;c.fillRect(0,0,w,h);c.fillStyle='rgba(120,100,70,.035)';for(let i=0;i<260;i++){const x=(i*397)%w,y=(i*211)%h;c.fillRect(x,y,1.5,1.5);}}
+function grade(c,x,y,w,h,p){c.strokeStyle=GRADE;c.lineWidth=1;c.beginPath();for(let i=x;i<=x+w;i+=p){c.moveTo(i,y);c.lineTo(i,y+h);}for(let j=y;j<=y+h;j+=p){c.moveTo(x,j);c.lineTo(x+w,j);}c.stroke();}
+function painel(c,x,y,w,h,tit){c.save();c.fillStyle='rgba(255,255,255,.94)';c.strokeStyle='rgba(43,42,38,.35)';c.lineWidth=1;c.beginPath();c.rect(x+.5,y+.5,w,h);c.fill();c.stroke();
+ if(tit){c.fillStyle='rgba(43,42,38,.75)';c.font='600 10px system-ui';c.textAlign='left';c.fillText(tit.toUpperCase(),x+8,y+14);c.strokeStyle='rgba(43,42,38,.15)';c.beginPath();c.moveTo(x+8,y+19);c.lineTo(x+w-8,y+19);c.stroke();}c.restore();}
+function txt(c,s,x,y,o){o=o||{};c.font=(o.b?'600 ':'')+(o.s||12)+'px system-ui';c.fillStyle=o.c||TINTA;c.textAlign=o.a||'left';c.fillText(s,x,y);}
+function barraH(c,x,y,w,h,v,cor){c.fillStyle='rgba(43,42,38,.08)';c.fillRect(x,y,w,h);c.fillStyle=cor;c.fillRect(x,y,w*Math.max(0,Math.min(1,v)),h);}
+function aviso(c,W,H,m){if(!m)return;c.font='13px system-ui';const w=Math.min(W-20,c.measureText(m).width+28);c.fillStyle='rgba(255,255,255,.95)';c.strokeStyle='rgba(43,42,38,.3)';c.fillRect(W/2-w/2,H-34,w,24);c.strokeRect(W/2-w/2+.5,H-33.5,w,24);c.fillStyle=TINTA;c.textAlign='center';c.fillText(m,W/2,H-17);}
+const fmt=(v,d)=>v.toFixed(d===undefined?1:d).replace('.',',');
+/* peixe de perfil, naturalista. esp: curimbata, pacu, tucunare, piraiba, aracu, dourado */
+function peixe(c,x,y,L,esp,dir,ond){c.save();c.translate(x,y);c.scale(dir||1,1);const k=L/100,o=Math.sin(ond||0)*3;
+ const P={curimbata:{c1:'#9aa3a6',c2:'#d9dcd8',al:22,cau:'#4a4f52'},pacu:{c1:'#5d6266',c2:'#a9a59a',al:40,cau:'#3c3f41'},tucunare:{c1:'#a9a84a',c2:'#e8e2a6',al:26,cau:'#7b7c35'},
+  piraiba:{c1:'#6f7579',c2:'#c9cbc6',al:20,cau:'#4b5054'},aracu:{c1:'#a7a28c',c2:'#e6e1cf',al:22,cau:'#6b6650'},dourado:{c1:'#d39a2c',c2:'#f3d88b',al:24,cau:'#b5651d'}}[esp]||{c1:'#999',c2:'#ddd',al:22,cau:'#555'};
+ const a=P.al*k;
+ c.fillStyle=P.cau;c.beginPath();c.moveTo(-44*k,0);c.lineTo(-62*k,-a*.75+o);c.quadraticCurveTo(-55*k,o,-62*k,a*.75+o);c.closePath();c.fill();
+ const g=c.createLinearGradient(0,-a,0,a);g.addColorStop(0,P.c1);g.addColorStop(.55,P.c2);g.addColorStop(1,'#f1f0ea');c.fillStyle=g;
+ c.beginPath();c.moveTo(48*k,0);c.bezierCurveTo(40*k,-a*1.05,-20*k,-a*1.1,-46*k,-a*.25);c.lineTo(-46*k,a*.25);c.bezierCurveTo(-20*k,a*1.05,40*k,a*.9,48*k,0);c.fill();
+ c.fillStyle=P.cau;c.globalAlpha=.8;c.beginPath();c.moveTo(-2*k,-a*.95);c.quadraticCurveTo(-14*k,-a*1.6,-24*k,-a*.9);c.fill();c.beginPath();c.moveTo(-16*k,a*.85);c.quadraticCurveTo(-24*k,a*1.3,-30*k,a*.75);c.fill();c.globalAlpha=1;
+ c.strokeStyle='rgba(40,40,40,.25)';c.lineWidth=Math.max(.6,k);c.beginPath();c.moveTo(30*k,-a*.1);c.quadraticCurveTo(-5*k,-a*.25,-44*k,0);c.stroke();
+ c.beginPath();c.moveTo(30*k,-a*.7);c.quadraticCurveTo(34*k,0,30*k,a*.6);c.stroke();
+ if(esp==='tucunare'){c.fillStyle='rgba(40,45,20,.45)';for(const bx of [16,-4,-24]){c.fillRect(bx*k,-a*.9,5*k,a*1.3);}c.fillStyle='#2b2a1a';c.beginPath();c.arc(-48*k,-a*.05,4.5*k,0,7);c.fill();c.strokeStyle='#e0a33a';c.lineWidth=1.5*k;c.stroke();}
+ if(esp==='aracu'){c.fillStyle='rgba(40,40,30,.5)';for(const bx of [10,-8,-26])c.beginPath(),c.arc(bx*k,-a*.15,3*k,0,7),c.fill();}
+ if(esp==='piraiba'){c.strokeStyle='#3f4447';c.lineWidth=1.2*k;c.beginPath();c.moveTo(46*k,a*.1);c.quadraticCurveTo(60*k,a*.6,70*k,a*.4);c.moveTo(44*k,a*.25);c.quadraticCurveTo(54*k,a*.8,62*k,a*.9);c.stroke();}
+ if(esp==='curimbata'){c.fillStyle='rgba(40,40,40,.18)';for(let i=0;i<4;i++){c.fillRect((-30+i*14)*k,-a*.55,1.2*k,a*1.1);}}
+ c.fillStyle='#f4f1e6';c.beginPath();c.arc(36*k,-a*.25,4*k,0,7);c.fill();c.fillStyle='#1b1b1b';c.beginPath();c.arc(36.8*k,-a*.25,2.3*k,0,7);c.fill();
+ c.restore();}
+/* morcego em voo, vista frontal levemente de cima */
+function morcego(c,x,y,s,bat,cor){c.save();c.translate(x,y);c.scale(s,s);const a=Math.sin(bat);cor=cor||'#4a3f38';
+ c.fillStyle=cor;
+ for(const sd of [-1,1]){c.save();c.scale(sd,1);c.beginPath();c.moveTo(4,-2);c.lineTo(18,-10-a*10);c.lineTo(34,-6-a*16);c.lineTo(44,2-a*14);
+  c.quadraticCurveTo(36,4-a*6,32,10-a*8);c.quadraticCurveTo(26,6-a*3,20,12-a*4);c.quadraticCurveTo(14,6,6,8);c.closePath();c.globalAlpha=.88;c.fill();c.globalAlpha=1;
+  c.strokeStyle='rgba(20,15,12,.6)';c.lineWidth=.8;c.beginPath();c.moveTo(18,-10-a*10);c.lineTo(32,10-a*8);c.moveTo(18,-10-a*10);c.lineTo(20,12-a*4);c.moveTo(34,-6-a*16);c.lineTo(32,10-a*8);c.stroke();c.restore();}
+ c.beginPath();c.ellipse(0,2,6,9,0,0,7);c.fill();c.beginPath();c.arc(0,-8,5,0,7);c.fill();
+ c.beginPath();c.moveTo(-4,-11);c.lineTo(-6,-18);c.lineTo(-1,-12);c.moveTo(4,-11);c.lineTo(6,-18);c.lineTo(1,-12);c.fill();
+ c.fillStyle='#d8cfc6';c.beginPath();c.arc(-2,-8.5,.9,0,7);c.arc(2,-8.5,.9,0,7);c.fill();c.restore();}
+/* mariposa vista de cima */
+function mariposa(c,x,y,s,f){c.save();c.translate(x,y);c.scale(s,s);const a=.6+Math.abs(Math.sin(f))*.4;c.fillStyle='#a08c6c';
+ for(const sd of [-1,1]){c.beginPath();c.ellipse(sd*7*a,-2,8*a,5,sd*.5,0,7);c.fill();c.beginPath();c.ellipse(sd*5*a,5,5*a,3.5,-sd*.4,0,7);c.fill();}
+ c.fillStyle='#5d4c39';c.beginPath();c.ellipse(0,0,2,7,0,0,7);c.fill();c.strokeStyle='#5d4c39';c.lineWidth=.8;c.beginPath();c.moveTo(-1,-6);c.lineTo(-4,-11);c.moveTo(1,-6);c.lineTo(4,-11);c.stroke();c.restore();}
+/* urubu-de-cabeça-preta planando, vista de baixo */
+function urubu(c,x,y,s,ang){c.save();c.translate(x,y);c.rotate(ang||0);c.scale(s,s);c.fillStyle='#1f1d1b';
+ c.beginPath();c.moveTo(0,-6);for(const sd of [1,-1]){}c.moveTo(-6,-2);c.quadraticCurveTo(-30,-10,-58,-4);
+ for(let i=0;i<5;i++){c.lineTo(-64-i*.5,-1+i*2.2);c.lineTo(-58+i,0+i*2.4);}c.quadraticCurveTo(-30,8,-6,6);c.closePath();c.fill();
+ c.beginPath();c.moveTo(6,-2);c.quadraticCurveTo(30,-10,58,-4);for(let i=0;i<5;i++){c.lineTo(64+i*.5,-1+i*2.2);c.lineTo(58-i,0+i*2.4);}c.quadraticCurveTo(30,8,6,6);c.closePath();c.fill();
+ c.fillStyle='#d9d4c9';c.globalAlpha=.85;c.beginPath();c.ellipse(-50,0,7,4,0,0,7);c.ellipse(50,0,7,4,0,0,7);c.fill();c.globalAlpha=1;
+ c.fillStyle='#1f1d1b';c.beginPath();c.ellipse(0,1,7,12,0,0,7);c.fill();c.beginPath();c.moveTo(-6,10);c.lineTo(0,20);c.lineTo(6,10);c.fill();
+ c.fillStyle='#3b3936';c.beginPath();c.arc(0,-11,4,0,7);c.fill();c.restore();}
+/* onça-pintada em silhueta lateral pequena */
+function oncaSil(c,x,y,s,dir){c.save();c.translate(x,y);c.scale(s*(dir||1),s);c.fillStyle='#c9963f';c.beginPath();c.moveTo(-30,0);c.quadraticCurveTo(-28,-14,-6,-14);c.quadraticCurveTo(14,-16,24,-12);c.quadraticCurveTo(34,-14,36,-6);c.quadraticCurveTo(34,2,26,0);
+ c.lineTo(24,14);c.lineTo(20,14);c.lineTo(18,2);c.lineTo(-18,4);c.lineTo(-20,14);c.lineTo(-24,14);c.lineTo(-26,2);c.quadraticCurveTo(-36,0,-46,-6);c.lineTo(-44,-9);c.quadraticCurveTo(-36,-4,-30,0);c.fill();
+ c.fillStyle='rgba(40,25,10,.7)';for(let i=0;i<9;i++){c.beginPath();c.arc(-22+i*5.5,-8+(i%2)*4,1.6,0,7);c.fill();}c.restore();}
+/* lobo-guará lateral */
+function loboSil(c,x,y,s,dir,p){c.save();c.translate(x,y);c.scale(s*(dir||1),s);const w=Math.sin(p||0)*4;c.strokeStyle='#1d1a17';c.lineWidth=3;c.lineCap='round';
+ c.beginPath();c.moveTo(14,0);c.lineTo(16+w,22);c.moveTo(10,0);c.lineTo(8-w,22);c.moveTo(-14,0);c.lineTo(-12+w,22);c.moveTo(-18,0);c.lineTo(-20-w,22);c.stroke();
+ c.fillStyle='#c0662b';c.beginPath();c.ellipse(-2,-4,22,9,0,0,7);c.fill();c.beginPath();c.moveTo(14,-8);c.quadraticCurveTo(22,-22,28,-20);c.lineTo(36,-16);c.lineTo(28,-12);c.quadraticCurveTo(22,-6,16,-2);c.fill();
+ c.fillStyle='#1d1a17';c.beginPath();c.moveTo(14,-10);c.quadraticCurveTo(10,-18,4,-12);c.lineTo(12,-6);c.fill();c.beginPath();c.moveTo(24,-20);c.lineTo(22,-30);c.lineTo(28,-21);c.fill();
+ c.fillStyle='#eee5d6';c.beginPath();c.moveTo(-24,-6);c.quadraticCurveTo(-34,-2,-36,6);c.quadraticCurveTo(-30,0,-24,0);c.fill();c.restore();}
+/* Física: d = v·t/2, com v = 331 + 0,6·T (m/s, T em °C), relação usada pelo Smithsonian (How Things Fly).
+   Morcegos emitem ultrassom que volta como eco e indica a distância (UFRGS; Guimarães 2021, UnB). Distâncias e temperaturas de cada rodada são sorteadas pelo jogo. */
+const FASES=[
+ {nome:'Um eco, uma presa',n:8,meta:6,eco2:0,temp:0,txt:'A 20 °C o som viaja a 343 m/s no ar. Emita um pulso, leia no osciloscópio o tempo do eco e calcule a distância da mariposa com d = v·t/2.'},
+ {nome:'Galho ou presa?',n:8,meta:6,eco2:1,temp:0,txt:'Agora há um galho parado e uma mariposa voando. Emita dois pulsos: o eco que muda de tempo é o da presa.'},
+ {nome:'Noite quente, noite fria',n:8,meta:6,eco2:1,temp:1,txt:'A temperatura do ar muda a cada rodada, e com ela a velocidade do som: v = 331 + 0,6·T. Use o termômetro antes de calcular.'}
+];
+const PERG=[
+ {q:'A 20 °C, o eco volta 40 ms depois do pulso. A que distância está o inseto?',o:['Cerca de 6,9 m','Cerca de 13,7 m','Cerca de 3,4 m']},
+ {q:'Por que a distância é calculada com v·t dividido por 2?',o:['Porque o som vai até o alvo e volta','Porque o eco perde metade da energia','Porque o morcego tem duas orelhas']},
+ {q:'Se a noite esquenta de 15 °C para 35 °C, o que acontece com a velocidade do som no ar?',o:['Aumenta cerca de 12 m/s','Diminui cerca de 12 m/s','Continua igual, pois não depende da temperatura']}
+];
+let S,cv,cx,raf=null,last=0,W=760,H=460;
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+' de 3';$('hP').textContent=(S.tot+S.fp)+' pontos';
+ if(S.g){$('hR').textContent='Capturas '+S.g.cap+'/'+FASES[S.f].meta;$('hV').textContent='Rodada '+Math.min(S.g.r+1,FASES[S.f].n)+'/'+FASES[S.f].n;$('hT').textContent=Math.max(0,Math.ceil(S.g.tr))+' s';}}
+function inicio(){parar();$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><h2>Ecolocalização: medir distância com som</h2>
+ <p>Morcegos insetívoros emitem pulsos de ultrassom. O som bate na presa e volta como eco. Pelo tempo de ida e volta, o morcego sabe a que distância ela está.</p>
+ <table class="tab"><tr><td>Pulso</td><td>Toque em Emitir pulso. O osciloscópio mostra o pulso em 0 ms e o eco que voltou.</td></tr>
+ <tr><td>Cálculo</td><td>d = v·t/2. O tempo vem em milissegundos: 40 ms = 0,040 s.</td></tr>
+ <tr><td>Bote</td><td>Ajuste a distância do bote e ataque. Erro de até 0,4 m captura a mariposa: +15. Errou: −5.</td></tr></table>
+ <p class="small" style="margin-top:8px">Meta: 6 capturas em 8 rodadas por fase.</p>
+ <div class="row" style="margin-top:12px"><button class="btn" onclick="novo()">Começar</button></div></div>`;}
+function novo(){S={f:0,tot:0,fp:0};salvo=false;$('rankBox').style.display='none';fase();}
+function fase(){const F=FASES[S.f];S.fp=0;S.g=null;hud();
+ $('tela').innerHTML=`<div class="card"><h2>Fase ${S.f+1}: ${F.nome}</h2><p>${F.txt}</p><div class="row" style="margin-top:12px"><button class="btn" id="bg">Iniciar</button></div></div>`;$('bg').onclick=jogar;}
+function jogar(){$('tela').innerHTML=`<div class="card"><canvas id="cv"></canvas>
+ <div style="margin-top:10px"><label class="small">Distância do bote: <b class="kv" id="dv">5,0 m</b></label><input type="range" id="sl" min="0.5" max="14" step="0.1" value="5"></div>
+ <div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost" id="bp">Emitir pulso</button><button class="btn" id="ba">Atacar</button></div></div>`;
+ cv=$('cv');if(cv.clientWidth<520){W=440;H=520;}else{W=760;H=460;}cv.width=W;cv.height=H;cx=cv.getContext('2d');
+ S.g={r:0,cap:0,fim:false,msg:'',msgT:0,anim:null,f:0};rodada();
+ $('sl').oninput=()=>{$('dv').textContent=fmt(+$('sl').value)+' m';};$('bp').onclick=pulso;$('ba').onclick=atacar;
+ hud();last=performance.now();parar();raf=requestAnimationFrame(loop);}
+function vSom(){return 331+0.6*S.g.T;}
+function rodada(){const g=S.g,F=FASES[S.f];g.T=F.temp?Math.round(rr(14,36)):20;g.d=+rr(2,12).toFixed(2);g.dg=F.eco2?+rr(2,12).toFixed(2):null;
+ if(g.dg&&Math.abs(g.dg-g.d)<1.5)g.dg=g.d>7?g.d-3:g.d+3;g.pulsos=[];g.tr=25;g.estado='ok';g.ondas=[];g.f=0;}
+function pulso(){const g=S.g;if(!g||g.fim||g.estado!=='ok')return;if(g.pulsos.length>=4){msg('No máximo 4 pulsos por rodada.');return;}
+ if(g.pulsos.length&&FASES[S.f].eco2){g.d=+Math.max(1.5,Math.min(13,g.d+rr(-.9,.9))).toFixed(2);}
+ const v=vSom();const ecos=[{t:2*g.d/v*1000,a:.75,tipo:'p'}];if(g.dg)ecos.push({t:2*g.dg/v*1000,a:1,tipo:'g'});
+ g.pulsos.push(shuf(ecos));g.ondas.push({t:0});beep(2400,.03,.02);}
+function msg(t){S.g.msg=t;S.g.msgT=2.6;}
+function atacar(){const g=S.g;if(!g||g.fim||g.estado!=='ok')return;if(!g.pulsos.length){msg('Emita um pulso antes do bote.');return;}
+ const ds=+$('sl').value,err=Math.abs(ds-g.d);g.estado='anim';g.anim={t:0,ds,ok:err<=.4,err};
+ if(err<=.4){g.cap++;S.fp+=15;beep(900,.12);}else{S.fp-=5;beep(170,.2);}}
+function proxima(){const g=S.g;g.r++;if(g.r>=FASES[S.f].n){terminar();return;}rodada();}
+function escala(){const x0=W<520?50:70;return {x0,pm:(W-x0-30)/14};}
+function update(dt){const g=S.g;if(!g||g.fim)return;g.msgT-=dt;g.f+=dt*10;for(const o of g.ondas)o.t+=dt;g.ondas=g.ondas.filter(o=>o.t<1.4);
+ if(g.estado==='ok'){g.tr-=dt;if(g.tr<=0){S.fp-=5;msg('Tempo esgotado: a mariposa escapou. −5.');g.estado='anim';g.anim={t:0,ds:null,ok:false,err:null,tempo:1};}}
+ else if(g.estado==='anim'){g.anim.t+=dt;if(g.anim.t>1.8){const a=g.anim;if(a.ds!==null)msg(a.ok?`Capturada! Distância real ${fmt(g.d,2)} m. +15.`:`Errou por ${fmt(a.err,2)} m. A mariposa estava a ${fmt(g.d,2)} m. −5.`);proxima();}}}
+function cena(){const g=S.g,{x0,pm}=escala();const hc=H*.52;
+ const gr=cx.createLinearGradient(0,0,0,hc);gr.addColorStop(0,'#eef0f4');gr.addColorStop(1,'#f7f5ee');cx.fillStyle=gr;cx.fillRect(0,0,W,hc);
+ // mata em camadas, tons claros
+ for(let l=0;l<3;l++){cx.fillStyle=['#dfe5dc','#cfd9cc','#bccab8'][l];cx.beginPath();cx.moveTo(0,hc);for(let x=0;x<=W;x+=18){const y=hc-40-l*-14-Math.abs(Math.sin(x*.013+l*2))*(60-l*12)-Math.sin(x*.05+l)*8;cx.lineTo(x,y);}cx.lineTo(W,hc);cx.fill();}
+ for(let i=0;i<7;i++){const tx=(i*137+60)%W,th=hc*(.45+(i%3)*.12);cx.fillStyle='rgba(120,135,115,.55)';cx.fillRect(tx-3,hc-th*.55,6,th*.55);
+  for(let j=0;j<5;j++){cx.beginPath();cx.arc(tx+Math.cos(j*1.3)*18,hc-th*.55-th*.12+Math.sin(j*1.3)*10,20,0,7);cx.fill();}}
+ cx.fillStyle='rgba(43,42,38,.08)';cx.fillRect(0,hc-6,W,6);
+ // ondas sonoras
+ for(const o of g.ondas){const r=o.t*W*.9;cx.strokeStyle=`rgba(60,90,140,${Math.max(0,.45-o.t*.3)})`;cx.lineWidth=1.5;for(let k=0;k<3;k++){cx.beginPath();cx.arc(x0,hc*.45,Math.max(1,r-k*10),-.5,.5);cx.stroke();}}
+ const yb=hc*.45;let bx=x0,by=yb;
+ if(g.estado==='anim'&&g.anim.ds!==null){const u=Math.min(1,g.anim.t/.7);bx=x0+g.anim.ds*pm*u;by=yb-Math.sin(u*Math.PI)*14;}
+ if(g.estado==='anim'&&g.anim.ds!==null){const mx=x0+g.d*pm;if(!(g.anim.ok&&g.anim.t>.7))mariposa(cx,mx+(g.anim.ok?0:Math.min(40,g.anim.t*60)),yb-(g.anim.ok?0:g.anim.t*40),1.1,g.f*3);
+  if(g.dg){const gx=x0+g.dg*pm;cx.strokeStyle='#6b5a45';cx.lineWidth=5;cx.beginPath();cx.moveTo(gx,hc);cx.lineTo(gx+6,yb-30);cx.stroke();cx.lineWidth=2.5;cx.beginPath();cx.moveTo(gx+3,yb+10);cx.lineTo(gx-22,yb-12);cx.moveTo(gx+5,yb-12);cx.lineTo(gx+26,yb-30);cx.stroke();cx.fillStyle='#7d8f6a';for(const [lx,ly] of [[-22,-12],[26,-30],[10,-34]]){cx.beginPath();cx.ellipse(gx+lx,yb+ly,8,4,.5,0,7);cx.fill();}txt(cx,'galho',gx,hc-8,{a:'center',s:10,c:'rgba(43,42,38,.7)'});}
+  if(g.anim.t>.7){cx.strokeStyle='rgba(43,42,38,.45)';cx.setLineDash([3,3]);cx.beginPath();cx.moveTo(x0,hc-14);cx.lineTo(x0+g.d*pm,hc-14);cx.stroke();cx.setLineDash([]);txt(cx,fmt(g.d,2)+' m',x0+g.d*pm/2,hc-18,{a:'center',s:11});}}
+ morcego(cx,bx,by,W<520?.75:.95,g.f*1.6);
+ painel(cx,W-(W<520?150:190),8,W<520?142:182,52,'Condições do ar');
+ txt(cx,'Temperatura: '+g.T+' °C',W-(W<520?142:182),40,{s:12,b:1});txt(cx,'v = 331 + 0,6·T',W-(W<520?142:182),54,{s:11,c:'rgba(43,42,38,.7)'});}
+function osc(){const g=S.g,y0=H*.55,h=H*.42-6,x=10,w=W-20;painel(cx,x,y0,w,h,'Osciloscópio · eco recebido');
+ const px=x+38,pw=w-56,py=y0+28,ph=h-58,tmax=80;cx.save();grade(cx,px,py,pw,ph,pw/16);cx.strokeStyle='rgba(43,42,38,.45)';cx.strokeRect(px+.5,py+.5,pw,ph);
+ for(let t=0;t<=tmax;t+=10){const xx=px+t/tmax*pw;txt(cx,String(t),xx,py+ph+13,{a:'center',s:10,c:'rgba(43,42,38,.7)'});}
+ txt(cx,'tempo (ms)',px+pw,py+ph+26,{a:'right',s:10,c:'rgba(43,42,38,.7)'});
+ const n=g.pulsos.length,cores=['#7a8ca8','#1f4e79','#7a8ca8','#1f4e79'];
+ g.pulsos.forEach((ecos,i)=>{const yb=py+ph*(n>1?(.3+.55*i/(n-1||1)):.7);const al=i===n-1?1:.35;cx.globalAlpha=al;
+  cx.strokeStyle='#8b3a2b';cx.lineWidth=1.6;cx.beginPath();cx.moveTo(px,yb);for(let k=0;k<=pw;k++){const t=k/pw*tmax;let y=0;if(t<2.5)y=Math.sin(t*12)*ph*.22*(1-t/2.5);
+   for(const e of ecos){const dt=t-e.t;if(dt>0&&dt<2.5)y+=Math.sin(dt*12)*ph*.18*e.a*(1-dt/2.5);}cx.lineTo(px+k,yb-y);}cx.stroke();
+  if(i===n-1){ecos.forEach((e,j)=>{const xx=px+e.t/tmax*pw;cx.strokeStyle='rgba(31,78,121,.5)';cx.setLineDash([2,3]);cx.beginPath();cx.moveTo(xx,py);cx.lineTo(xx,py+ph);cx.stroke();cx.setLineDash([]);
+   txt(cx,(ecos.length>1?String.fromCharCode(65+j)+': ':'eco: ')+fmt(e.t,1)+' ms',xx+4,py+12+j*13,{s:11,b:1,c:'#1f4e79'});});}
+  cx.globalAlpha=1;});
+ if(!n)txt(cx,'Emita um pulso para ver o eco.',px+pw/2,py+ph/2,{a:'center',s:12,c:'rgba(43,42,38,.6)'});
+ if(n>1)txt(cx,'pulsos anteriores em cinza claro',px+pw,y0+14,{a:'right',s:10,c:'rgba(43,42,38,.6)'});
+ cx.restore();}
+function desenha(){const g=S.g;if(!g||!cx)return;cx.clearRect(0,0,W,H);papel(cx,W,H);cena();osc();aviso(cx,W,H*.52,g.msgT>0?g.msg:'');}
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);desenha();if(S.g&&!S.g.fim){hud();raf=requestAnimationFrame(loop);}}
+function parar(){if(raf)cancelAnimationFrame(raf);raf=null;}
+function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=FASES[S.f],ok=g.cap>=F.meta;if(ok){S.fp+=30;beep(880,.2);}hud();
+ $('tela').innerHTML=`<div class="card"><h2>${ok?'Caçada bem-sucedida':'Poucas capturas'}</h2><p>Capturas: <b>${g.cap}</b> de ${F.n} (meta ${F.meta}).</p>
+ ${ok?'<div class="fb good">Meta cumprida. +30.</div>':'<div class="fb bad">Meta não cumprida. Converta o tempo para segundos antes de multiplicar e lembre de dividir por 2.</div>'}
+ <div class="row" style="margin-top:12px">${ok?'<button class="btn" id="bq">Pergunta da fase</button>':'<button class="btn" id="br">Tentar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
+ if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}}
+function pergunta(){
+ const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
+ $('tela').innerHTML=`<div class="card"><h2>Pergunta da fase</h2><p style="margin:6px 0 4px">${P.q}</p><p class="small">Acerto +20, erro −10.</p><div class="ops">${ops.map((o,i)=>`<button data-i="${i}">${o.t}</button>`).join('')}</div><div id="pf"></div></div>`;
+ document.querySelectorAll('#tela .ops button').forEach(b=>b.onclick=()=>{const o=ops[+b.dataset.i];S.fp+=o.c?20:-10;beep(o.c?880:170,.15);hud();
+  document.querySelectorAll('#tela .ops button').forEach((x,j)=>{x.disabled=true;if(ops[j].c){x.style.borderColor='#2e7d32';x.style.opacity=1;}});
+  $('pf').innerHTML=`<div class="fb ${o.c?'good':'bad'}">${o.c?'Correto. +20.':'Incorreto. −10. A resposta certa está marcada em verde.'}<div class="row" style="margin-top:10px"><button class="btn" id="bn">${S.f===FASES.length-1?'Ver resultado →':'Próxima fase →'}</button></div></div>`;
+  $('bn').onclick=()=>{S.tot+=S.fp;S.fp=0;if(S.f===FASES.length-1)final(true);else{S.f++;fase();}};});
+}
+function final(tudo){
+ S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
+ $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Três noites de caça':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
+ <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
+ <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Smithsonian National Air and Space Museum, How Things Fly: v = 331 + 0,6·T para a velocidade do som no ar; UFRGS Ciência, referência de sinais sonoros de morcegos brasileiros: morcegos emitem ondas ultrassônicas que refletem no alvo e voltam como eco, indicando posição e distância; Guimarães, L. C., dissertação de mestrado na UnB: sinais de ecolocalização de 8 kHz até acima de 200 kHz, com 1 a 100 ms de duração. Distâncias, temperaturas e pontos são sorteados pelo jogo.</div></div>`;
+ $('bS').onclick=()=>salvar(nivel);
+}
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="eco-no-escuro";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__ec={get S(){return S},update,parar,pulso,atacar,FASES,vSom};
+inicio();
+</script>
+</body>
+</html>
