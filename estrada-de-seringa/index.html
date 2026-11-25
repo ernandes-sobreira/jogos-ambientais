@@ -206,47 +206,154 @@ function cavalo(k,x,y,s,dir,p,cor){k.save();k.translate(x,y);k.scale(s*dir,s);co
  k.fillStyle='#3e2723';k.beginPath();k.moveTo(24,-40);k.quadraticCurveTo(30,-60,40,-60);k.lineTo(36,-56);k.quadraticCurveTo(30,-52,28,-36);k.fill();k.beginPath();k.moveTo(-24,-34);k.quadraticCurveTo(-38,-26,-34,-6);k.quadraticCurveTo(-30,-22,-22,-28);k.fill();
  k.fillStyle='rgba(0,0,0,.15)';k.beginPath();k.ellipse(3,-23,24,4,0,0,7);k.fill();k.fillStyle='#5d4037';k.fillRect(-8,-44,22,6);k.restore();}
 function cavaleiro(k,x,y,s,dir,p,o){cavalo(k,x,y,s,dir,p,o&&o.cor);k.save();k.translate(x,y);k.scale(s*dir,s);pessoa(k,2,-30,.62,Object.assign({passo:0,bracoE:.9,bracoD:1.3,calca:'#4e342e'},o||{}));k.restore();}
-/* Seringa: entram na mata antes do sol nascer e percorrem a estrada de seringa duas vezes, cortando e depois coletando (reportagem na Resex Chico Mendes, PT); no inverno as árvores não são cortadas por risco de água no látex; corte em bandeira (Revista Brasileira de Geografia, IBGE); Resex Chico Mendes criada em 12/03/1990 (IHU); Chico Mendes assassinado em 1988 em Xapuri (Revista Ruris/core). Distâncias, chuva, escuridão e pontos são regras do jogo. */
+/* Estrada de Seringa, versão 2.
+Fontes: Embrapa, Tópicos especiais em tecnologia (a incisão deve atingir os vasos laticíferos sem atingir o câmbio, pois pode matar a árvore; faca, tigela, bica);
+Embrapa Cerrados, Recomendação técnica 44 (corte retira fatia de casca de cerca de 1,5 mm; canaleta leva o látex até a bica e a caneca; corte inclinado);
+Revista Brasileira de Geografia, IBGE (cada seringueiro cuida de duas ou três estradas de 150 a 200 árvores; no inverno as árvores não são cortadas pelo risco de água no látex; coagulação por defumação, que forma a péla, com fumaça de cavacos de maçaranduba e cocos de ouricuri e jaci);
+Embrapa Amazônia Oriental (segundo percurso da estrada, de 6 a 10 km, para coletar o látex); Embrapa IAN (gases da defumação são tóxicos); O Eco (o seringueiro atravessa a mata duas vezes por dia).
+Número de árvores no jogo, faixas de profundidade, chuva, vento, metas e pontos são regras do jogo. */
 const SR={};
-SR.fundo=function(k,w,h){ceu(k,w,h,['#cfe7d6','#e9f3e3']);const R=rng(3);for(let i=0;i<22;i++){const x=R()*w,y=h*(.3+R()*.2);k.strokeStyle='rgba(90,120,90,.35)';k.lineWidth=6+R()*8;k.beginPath();k.moveTo(x,h*.8);k.lineTo(x,y);k.stroke();copa(k,x,y,30+R()*30,['#9bb99a','#a9c6a6','#bdd6b8'],i);}};
-SR.meio=function(k,w,h){const R=rng(8);k.globalAlpha=.55;for(let i=0;i<9;i++){const x=R()*w;tronco(k,x,h*.8,h*.1,7,5,'#8f9c88','#74826e');copa(k,x,h*.12,50+R()*30,['#7f9f78','#8fae86','#a6c29c'],i+20);}k.globalAlpha=1;
- k.fillStyle=lg(k,0,h*.7,0,h,['#6e8f52','#56763f']);k.fillRect(0,h*.74,w,h*.26);capim(k,0,h*.72,w,h*.06,'rgba(60,100,40,.6)',2,Math.floor(w/5));
- k.fillStyle='#b39a74';k.beginPath();k.moveTo(0,h*.8);k.quadraticCurveTo(w*.5,h*.78,w,h*.8);k.lineTo(w,h*.88);k.quadraticCurveTo(w*.5,h*.9,0,h*.88);k.fill();k.fillStyle='rgba(120,90,60,.3)';for(let i=0;i<30;i++)k.fillRect(R()*w,h*(.81+R()*.06),6,2);};
-function seringueira(k,x,y,h,c,cheia,estr){tronco(k,x,y,y-h,15,11,'#cbbca5','#9a8a72');k.strokeStyle='rgba(60,40,20,.2)';k.lineWidth=1;for(let i=0;i<4;i++){k.beginPath();k.moveTo(x-10,y-h*.2-i*10);k.lineTo(x+10,y-h*.25-i*10);k.stroke();}
- copa(k,x,y-h,h*.3,['#3f6e35','#538a46','#76ad5e'],x|0);
- if(c){k.strokeStyle='#fffbea';k.lineWidth=2.5;for(let i=0;i<3;i++){k.beginPath();k.moveTo(x-11,y-h*.5-i*7);k.lineTo(x+9,y-h*.45-i*7);k.stroke();}k.strokeStyle='#fffbea';k.lineWidth=1.5;k.beginPath();k.moveTo(x+8,y-h*.45);k.lineTo(x+10,y-h*.37);k.stroke();
-  k.fillStyle='#8d8d8d';k.beginPath();k.moveTo(x+3,y-h*.37);k.lineTo(x+19,y-h*.37);k.lineTo(x+16,y-h*.31);k.lineTo(x+6,y-h*.31);k.fill();if(cheia){k.fillStyle=estr?'#b0c4d0':'#fdfdf6';k.fillRect(x+5,y-h*.37,12,3.5);}}}
-const G={titulo:'Estrada de Seringa',rotulo:'Tigelas de látex',vidas:1,
- resumo:'No Acre, o seringueiro sai de madrugada e anda a estrada de seringa duas vezes. Na ida faz o corte nas seringueiras. Na volta recolhe o látex que escorreu para as tigelas.',
- como:[['Ida','Quando a seringueira passar pelo círculo, toque para cortar.'],['Volta','Na volta, toque de novo nas mesmas árvores para recolher a tigela.'],['Tempo','Na chuva o seringueiro para e espera. Corte na chuva estraga o látex.']],
- dica:'Toque quando a árvore estiver dentro do círculo.',dicaErro:'Corte todas na ida. Árvore sem corte não dá látex na volta.',
- FASES:[{nome:'Primeira estrada',dur:46,meta:5,n:7,vel:110,metaTxt:'recolher 5 tigelas de látex em 46 s.',txt:'Faca na mão. Ida para cortar, volta para colher.',fato:'O seringueiro percorre a estrada de seringa duas vezes. Na ida corta as árvores e na volta recolhe o látex.'},
-  {nome:'Estrada comprida',dur:52,meta:8,n:10,vel:140,metaTxt:'recolher 8 tigelas em 52 s.',txt:'Mais seringueiras pelo caminho e passo mais rápido.',fato:'Os seringueiros entram na mata bem antes do sol nascer e só saem no meio da tarde.'},
-  {nome:'Tempo de chuva',dur:68,meta:7,n:12,vel:140,chuva:1,metaTxt:'recolher 7 tigelas em 68 s, sem cortar na chuva.',txt:'O céu fecha de vez em quando. Na chuva o seringueiro espera. Corte só depois que parar.',fato:'Na época das chuvas as seringueiras não são cortadas, porque a água entra no látex e estraga a produção.'},
-  {nome:'Neblina da madrugada',dur:56,meta:8,n:11,vel:130,escuro:1,metaTxt:'recolher 8 tigelas em 56 s, na neblina.',txt:'O dia nem clareou e a neblina cobre a mata. Só dá para ver perto. Fique atento ao círculo.',fato:'A Reserva Extrativista Chico Mendes foi criada no Acre em 1990, depois do assassinato do líder seringueiro em Xapuri, em 1988.'}],
- init(g){const F=FASES[S.f];g.vidas=3;g.n=0;g.vol=false;g.d=0;g.arv=[];for(let i=0;i<F.n;i++)g.arv.push({x:W*.3+130+i*(230+Math.random()*40),c:false,col:false});g.fim0=g.arv[g.arv.length-1].x+120;g.ch=0;g.chT=3;g.pas=0;},
- meta(g){return [g.n,FASES[S.f].meta];},cedo(g){return g.vol&&g.d<=0;},
- update(g,dt){const F=FASES[S.f];const v=g.ch?0:F.vel*dt;g.pas+=v;if(!g.vol){g.d+=v;if(g.d>=g.fim0){g.vol=true;msg('Hora de voltar e recolher o látex.');}}else g.d-=v;
-  if(F.chuva){g.chT-=dt;if(g.chT<=0){g.ch=g.ch?0:1;g.chT=g.ch?2.2:4+Math.random()*2;}}
-  const zx=W*.3;if(inp.tap||tec[' ']){tec[' ']=0;const a=g.arv.find(a=>Math.abs(a.x-g.d-zx)<44);
-   if(a){if(!g.vol){if(a.c)return;if(g.ch){g.vidas--;a.c=true;a.estr=true;ganha(-10,zx,H*.3);msg('Corte na chuva estragou o látex.');}else{a.c=true;ganha(5,zx,H*.3);}}
-    else if(a.c&&!a.col){a.col=true;if(!a.estr){g.n++;ganha(10,zx,H*.3);}else msg('Essa tigela encheu de água.');}}}},
- draw(g){const F=FASES[S.f];const fa=cache('srf',W,H,SR.fundo),me=cache('srm',W*2,H,SR.meio);const o1=(g.d*.3)%W,o2=g.d%(W*2);
-  cx.drawImage(fa,-o1,0);cx.drawImage(fa,W-o1,0);cx.drawImage(me,-o2,0);cx.drawImage(me,W*2-o2,0);const y0=H*.84;
-  for(const a of g.arv){const x=a.x-g.d;if(x>-80&&x<W+80)seringueira(cx,x,y0,H*.5,a.c,g.vol&&a.c&&!a.col,a.estr);}
-  const zx=W*.3;cx.strokeStyle='#ff9800';cx.lineWidth=3;cx.setLineDash([8,6]);cx.beginPath();cx.arc(zx,y0-H*.24,40,0,7);cx.stroke();cx.setLineDash([]);
-  const s=H/460;pessoa(cx,zx-48*s,y0+4,1.05*s,{camisa:'#ef6c00',calca:'#3e4a52',passo:g.ch?0:g.pas*.06,dir:g.vol?-1:1,chapeu:'#6d4c41'});
-  if(F.escuro){cx.save();cx.fillStyle=rg(cx,zx-20,y0-H*.24,70,Math.max(W,H)*.36,['rgba(245,248,250,0)','rgba(245,248,250,.96)']);cx.fillRect(0,0,W,H);cx.restore();}
-  if(g.ch){cx.fillStyle='rgba(60,80,110,.25)';cx.fillRect(0,0,W,H);cx.strokeStyle='rgba(200,220,255,.6)';cx.lineWidth=1.5;for(let i=0;i<80;i++){const x=(i*53+g.t*260)%W,y=(i*97+g.t*700)%H;cx.beginPath();cx.moveTo(x,y);cx.lineTo(x-4,y+12);cx.stroke();}cx.fillStyle='#fff';cx.font='bold 15px system-ui';cx.textAlign='center';cx.fillText('Chuva: espere passar',W/2,H*.12);}
-  cx.fillStyle='#263238';cx.font='bold 15px system-ui';cx.textAlign='right';cx.fillText(g.vol?'VOLTA: recolher':'IDA: cortar',W-14,H*.96);vinheta(cx,W,H);},
- capa(k,w,h){const o=cx,oW=W,oH=H;cx=k;W=w;H=h;k.drawImage(cache('srf',w,h,SR.fundo),0,0);k.drawImage(cache('srm',w*2,h,SR.meio),0,0);for(const x of [.42,.66,.9])seringueira(k,w*x,h*.84,h*.6,true,true);pessoa(k,w*.2,h*.86,h/300,{camisa:'#ef6c00',passo:.6});vinheta(k,w,h);cx=o;W=oW;H=oH;}
+SR.fundo=function(k,w,h){k.fillStyle=lg(k,0,0,0,h,['#e3efe2','#cfe2cc','#b9d2b4']);k.fillRect(0,0,w,h);const R=rng(3);
+ for(let i=0;i<26;i++){const x=R()*w,y=h*(.08+R()*.3);k.fillStyle='rgba(110,140,105,'+(.2+R()*.2)+')';k.fillRect(x-4,y,8+R()*6,h*.8-y);k.beginPath();k.ellipse(x,y,22+R()*26,14+R()*12,0,0,7);k.fill();}
+ for(let i=0;i<6;i++){k.fillStyle='rgba(255,255,235,.18)';const x=R()*w;k.beginPath();k.moveTo(x,0);k.lineTo(x+40,0);k.lineTo(x+140,h*.8);k.lineTo(x+60,h*.8);k.fill();}};
+SR.meio=function(k,w,h){const R=rng(8);for(let i=0;i<16;i++){const x=R()*w,y0=h*.8;k.fillStyle='rgba(70,110,65,.55)';for(let f=0;f<7;f++){const a=-Math.PI/2+(f-3)*.38,L=26+R()*20;k.save();k.translate(x,y0);k.rotate(a+Math.PI/2);k.beginPath();k.ellipse(0,-L/2,5,L/2,0,0,7);k.restore();k.fill();}}
+ k.strokeStyle='#5b7444';k.lineWidth=2;for(let i=0;i<8;i++){const x=R()*w;k.beginPath();k.moveTo(x,0);k.bezierCurveTo(x+20,h*.2,x-24,h*.4,x+8,h*.3+R()*h*.3);k.stroke();}};
+SR.chao=function(k,w,h){const y0=h*.8;k.fillStyle=lg(k,0,y0-6,0,h,['#9a7a52','#7d6040']);k.fillRect(0,y0-4,w,h-y0+4);k.fillStyle='rgba(60,45,25,.25)';const R=rng(12);for(let i=0;i<120;i++){k.beginPath();k.ellipse(R()*w,y0+R()*(h-y0),2+R()*5,1+R()*1.5,R()*3,0,7);k.fill();}
+ k.fillStyle='#6f9a4a';for(let i=0;i<90;i++){const x=R()*w;k.beginPath();k.moveTo(x,y0);k.lineTo(x+3,y0-8-R()*8);k.lineTo(x+6,y0);k.fill();}};
+/* seringueira na mata: tronco liso acinzentado, painel com cortes velhos, tigela */
+function seringueiraP(k,x,y,h,st){const tw=h*.075;k.fillStyle=lg(k,x-tw,0,x+tw,0,['#8b8276','#c2b8a8','#a59b8b','#7d7468']);k.beginPath();k.moveTo(x-tw,y);k.lineTo(x-tw*.7,y-h);k.lineTo(x+tw*.7,y-h);k.lineTo(x+tw,y);k.fill();
+ k.strokeStyle='rgba(60,50,40,.18)';k.lineWidth=1;for(let i=0;i<12;i++){const yy=y-h*.1-i*h*.07;k.beginPath();k.moveTo(x-tw*.8,yy);k.quadraticCurveTo(x,yy+3,x+tw*.8,yy);k.stroke();}
+ /* cortes antigos em bandeira */k.strokeStyle='rgba(90,60,35,.55)';k.lineWidth=1.6;for(let i=0;i<5;i++){const yy=y-h*.5+i*h*.045;k.beginPath();k.moveTo(x-tw*.8,yy-h*.05);k.lineTo(x+tw*.8,yy);k.stroke();}
+ if(st&&st.cort){k.strokeStyle=st.ferida?'#c62828':'#f5f1e6';k.lineWidth=3;k.beginPath();k.moveTo(x-tw*.85,y-h*.3-h*.05);k.lineTo(x+tw*.85,y-h*.3);k.stroke();
+  if(!st.ferida&&st.rend>0){k.strokeStyle='rgba(250,248,240,.95)';k.lineWidth=2;k.beginPath();k.moveTo(x+tw*.85,y-h*.3);k.lineTo(x+tw*.85,y-h*.22);k.stroke();}}
+ /* bica e tigela */k.fillStyle='#9e9e9e';k.fillRect(x+tw*.7,y-h*.23,7,2);k.fillStyle='#6d4c2e';k.beginPath();k.moveTo(x+tw*.4,y-h*.22);k.lineTo(x+tw*1.5,y-h*.22);k.lineTo(x+tw*1.3,y-h*.17);k.lineTo(x+tw*.6,y-h*.17);k.fill();
+ if(st&&st.cort&&!st.ferida&&!st.col){const f=Math.min(1,st.t/6)*st.rend;k.fillStyle=st.agua?'#b9d5de':'#fbfaf3';k.fillRect(x+tw*.55,y-h*.22,tw*.9*Math.max(.15,f),2.5);}
+ /* copa alta com folhas trifolioladas */const R=rng(Math.round(x));k.fillStyle='rgba(60,110,50,.9)';for(let i=0;i<7;i++){const a=R()*6.28,r=R()*h*.12;k.beginPath();k.ellipse(x+Math.cos(a)*r,y-h-6+Math.sin(a)*r*.5,h*.09,h*.05,0,0,7);k.fill();}}
+/* seringueiro andando: chapéu, camisa de manga comprida, bota, faca de seringa e balde */
+function seringueiroP(k,x,y,s,d,ph,balde,cor){k.save();k.translate(x,y);k.scale(s*d,s);k.lineCap='round';k.lineJoin='round';const sw=Math.sin(ph),pele='#a86a42',cam=cor||'#ef6c00',cal='#3e4a52',bot='#263238';
+ const bob=-Math.abs(Math.cos(ph))*2;k.translate(0,bob);
+ k.strokeStyle=shade(cal,-.2);k.lineWidth=8;k.beginPath();k.moveTo(-2,-46);k.lineTo(-2-sw*8,-24);k.lineTo(-2-sw*12,-4);k.stroke();k.fillStyle=bot;k.beginPath();k.roundRect(-8-sw*12,-12,12,12,2);k.fill();
+ k.strokeStyle=shade(cam,-.25);k.lineWidth=6;k.beginPath();k.moveTo(0,-82);k.lineTo(-6-sw*10,-62);k.lineTo(-4-sw*12,-48);k.stroke();
+ k.fillStyle=cam;k.beginPath();k.moveTo(-10,-48);k.lineTo(-11,-82);k.quadraticCurveTo(0,-90,10,-82);k.lineTo(9,-48);k.closePath();k.fill();k.fillStyle='rgba(0,0,0,.12)';k.fillRect(2,-84,7,36);
+ /* embornal */k.strokeStyle='#5d4037';k.lineWidth=2;k.beginPath();k.moveTo(-8,-84);k.lineTo(8,-56);k.stroke();k.fillStyle='#8d6e4a';k.beginPath();k.roundRect(-16,-62,12,14,3);k.fill();
+ k.strokeStyle=cal;k.lineWidth=8;k.beginPath();k.moveTo(2,-46);k.lineTo(2+sw*8,-24);k.lineTo(2+sw*12,-4);k.stroke();k.fillStyle=bot;k.beginPath();k.roundRect(-3+sw*12,-12,13,12,2);k.fill();
+ k.fillStyle=pele;k.fillRect(-3,-94,7,8);k.beginPath();k.ellipse(1,-100,8,9,0,0,7);k.fill();k.fillStyle='#2b1a10';k.beginPath();k.arc(5,-101,1.2,0,7);k.fill();
+ k.fillStyle='#d7c08a';k.beginPath();k.ellipse(1,-106,15,3.5,0,0,7);k.fill();k.beginPath();k.moveTo(-8,-106);k.quadraticCurveTo(-7,-116,1,-117);k.quadraticCurveTo(9,-116,9,-106);k.fill();k.fillStyle='#8d6e3c';k.fillRect(-8,-109,17,2.5);
+ /* braço de cá com faca ou balde */k.strokeStyle=cam;k.lineWidth=6;k.beginPath();k.moveTo(2,-82);k.lineTo(6+sw*10,-62);k.lineTo(10+sw*12,-50);k.stroke();k.fillStyle=pele;k.beginPath();k.arc(10+sw*12,-49,3.2,0,7);k.fill();
+ if(balde){k.fillStyle='#b0bec5';k.beginPath();k.moveTo(4+sw*12,-46);k.lineTo(18+sw*12,-46);k.lineTo(16+sw*12,-30);k.lineTo(6+sw*12,-30);k.fill();k.fillStyle='#fbfaf3';k.fillRect(5+sw*12,-45,12,4);}
+ else{k.strokeStyle='#5d4037';k.lineWidth=3;k.beginPath();k.moveTo(10+sw*12,-49);k.lineTo(14+sw*12,-40);k.stroke();k.strokeStyle='#cfd8dc';k.lineWidth=2;k.beginPath();k.moveTo(14+sw*12,-40);k.quadraticCurveTo(20+sw*12,-38,19+sw*12,-33);k.stroke();}
+ k.restore();}
+/* painel de corte */
+SR.pan=()=>{const m=MOB();return m?{x:W*.04,y:H*.1,w:W*.92,h:H*.74}:{x:W*.4,y:H*.07,w:W*.57,h:H*.86};};
+SR.linha=(F)=>{const P=SR.pan(),tx=P.x+P.w*.4,tw=P.w*.26;const a={x:tx-tw,y:P.y+P.h*.34},b={x:tx+tw,y:P.y+P.h*.34+tw*2*Math.tan(F.ang||.5)};return {a,b,tx,tw};};
+const G={titulo:'Estrada de Seringa',get rotulo(){return S&&S.f===3?'Camadas na péla':'Tigelas boas';},vidas:0,
+ resumo:'No Acre, o seringueiro sai de madrugada e anda a estrada de seringa duas vezes. Na ida corta a casca das seringueiras. Na volta recolhe o látex que escorreu para as tigelas. Depois defuma o látex até virar a péla de borracha.',
+ como:[['Cortar','Quando chegar numa seringueira, arraste o dedo pela linha do corte, da esquerda para a direita.'],['Profundidade','O painel ao lado mostra a faca dentro da casca. Em cima da linha a faca fica na zona do látex. Abaixo dela, fere o câmbio e machuca a árvore.'],['Chuva e fumaça','Na chuva, espere ou pule a árvore. Na defumação, mantenha a péla dentro da fumaça.']],
+ get dica(){return S&&S.f===3?'Arraste para pôr a péla na fumaça. Segure DESPEJAR para pôr látex, sem exagerar.':'Arraste em cima da linha tracejada. Verde é a profundidade certa. Vermelho fere o câmbio.';},
+ dicaErro:'Corte em cima da linha, sem descer para o câmbio. Na chuva, espere ou pule. Na defumação, só despeje com a péla na fumaça.',
+ FASES:[
+  {nome:'Primeiro corte',dur:60,meta:4,n:5,tol:24,ang:.45,metaTxt:'encher 4 tigelas boas em 60 s.',txt:'Na ida você corta. Arraste o dedo em cima da linha tracejada da seringueira. Verde é a profundidade certa.',fato:'A faca deve atingir os vasos onde corre o látex, sem chegar ao câmbio. Ferir o câmbio pode matar a seringueira.'},
+  {nome:'Estrada comprida',dur:75,meta:6,n:7,tol:19,ang:.55,metaTxt:'encher 6 tigelas boas em 75 s.',txt:'Mais árvores no caminho e a faixa certa fica mais fina. Corte com calma, mas sem parar muito.',fato:'Cada seringueiro cuida de duas ou três estradas, cada uma com 150 a 200 seringueiras. A volta para colher o látex pode passar de 6 km.'},
+  {nome:'Chuva na estrada',dur:90,meta:5,n:7,tol:19,ang:.55,chuva:1,metaTxt:'encher 5 tigelas boas em 90 s. Não corte com chuva chegando.',txt:'O tempo está virando. Quando a nuvem carregada aparecer, não corte: a chuva vai cair na tigela. Pule a árvore ou espere a chuva passar.',fato:'No inverno amazônico as seringueiras não são cortadas, porque a água entra no látex e a produção se perde.'},
+  {nome:'Defumar a péla',dur:45,meta:20,tipo:'def',metaTxt:'pôr 20 camadas de látex na péla em 45 s.',txt:'No tapiri, o látex vira borracha na fumaça. Gire a péla dentro da fumaça e despeje o látex aos poucos. O vento muda a fumaça de lugar.',fato:'O látex era coagulado na fumaça de cavacos de maçaranduba e cocos de ouricuri, formando a péla. Essa fumaça é tóxica, e por isso surgiram outros jeitos de preparar a borracha.'}],
+ init(g){const F=FASES[S.f];g.n=0;g.pops2=[];g.part=[];
+  if(F.tipo==='def'){g.px=W*.5;g.fx=W*.5;g.vento=0;g.raio=10;g.desp=0;g.contin=0;g.pingo=[];g.camT=0;g.perd=0;return;}
+  g.arv=[];for(let i=0;i<F.n;i++)g.arv.push({x:W*.62+i*(W*.55),cort:0,ferida:0,rend:0,t:0,col:0,agua:0});g.d=0;g.vol=0;g.modo='anda';g.ph=0;g.alvo=null;g.ch=0;g.chT=F.chuva?6:1e9;g.chAv=0;g.balde=0;},
+ meta(g){return [g.n,FASES[S.f].meta];},
+ cedo(g){const F=FASES[S.f];if(F.tipo==='def')return g.n>=F.meta;return g.vol&&g.d<=0&&g.modo==='anda';},
+ iniciaCorte(g,a){const F=FASES[S.f];g.modo='corte';g.alvo=a;const L=SR.linha(F);g.L=L;g.pts=[];const n=Math.floor(Math.hypot(L.b.x-L.a.x,L.b.y-L.a.y)/5);for(let i=0;i<=n;i++){g.pts.push({x:L.a.x+(L.b.x-L.a.x)*i/n,y:L.a.y+(L.b.y-L.a.y)*i/n,z:null});}g.prof=0;g.fimC=0;g.chuvaCorte=0;},
+ update(g,dt){const F=FASES[S.f];for(const p of g.part){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=300*dt;p.t-=dt;}g.part=g.part.filter(p=>p.t>0);
+  if(F.tipo==='def')return G.updDef(g,dt);
+  /* chuva */
+  if(F.chuva){g.chT-=dt;if(g.chT<=0){if(g.ch){g.ch=0;g.chT=7+Math.random()*4;msg('A chuva passou.');}else if(!g.chAv){g.chAv=4.5;msg('Nuvem carregada chegando. Corte agora vai pegar chuva.');}}
+   if(g.chAv>0){g.chAv-=dt;if(g.chAv<=0){g.chAv=0;g.ch=1;g.chT=4+Math.random()*2;msg('Chuva! Espere ou pule a árvore.');}}
+   if(g.ch)for(const a of g.arv)if(a.cort&&!a.col&&!a.ferida&&a.t<4&&!a.agua){a.agua=1;pop(a.x-g.d,H*.4,'água no látex','#1565c0');}}
+  for(const a of g.arv)if(a.cort)a.t+=dt;
+  if(g.modo==='anda'){const v=(g.vol?330:150)*dt;g.ph+=dt*(g.vol?11:7);
+   if(!g.vol){const prox=g.arv.find(a=>!a.cort&&!a.pul&&a.x-g.d<=W*.3+40);if(prox){G.iniciaCorte(g,prox);return;}g.d+=v;if(g.d>g.arv[g.arv.length-1].x+W*.2){g.vol=1;msg('Fim da estrada. Agora volte recolhendo o látex.');}}
+   else{g.d-=v;for(const a of g.arv)if(a.cort&&!a.col&&a.x-g.d>=W*.3-10){a.col=1;if(a.ferida){}else if(a.agua){ganha(-10,W*.3,H*.4);msg('Tigela com água da chuva. Látex perdido.');}else if(a.rend>=.6){g.n++;g.balde++;ganha(10,W*.3,H*.4);}else if(a.rend>0){ganha(3,W*.3,H*.4);pop(W*.3,H*.34,'tigela pela metade','#f9a825');}}
+    if(g.d<0)g.d=0;}
+   return;}
+  /* modo corte */
+  if(inp.tap&&G.btPular&&g.fimC<=0){const b=G.btPular();if(inp.tap.x>b.x&&inp.tap.x<b.x+b.w&&inp.tap.y>b.y&&inp.tap.y<b.y+b.h){g.alvo.pul=1;g.modo='anda';msg('Árvore pulada.');return;}}
+  if(g.fimC>0){g.fimC-=dt;if(g.fimC<=0){g.modo='anda';}return;}
+  const L=g.L,ux=(L.b.x-L.a.x),uy=(L.b.y-L.a.y),ul=Math.hypot(ux,uy),nx=-uy/ul,ny=ux/ul;const T=F.tol*(MOB()?.85:1);
+  g.cortando=0;if(inp.down&&inp.x!==null){const rx=inp.x-L.a.x,ry=inp.y-L.a.y;const along=(rx*ux+ry*uy)/ul,o=rx*nx+ry*ny;/* o>0: abaixo da linha = mais fundo */
+   if(along>-20&&along<ul+20&&Math.abs(o)<T*1.8){g.cortando=1;const z=o>T*.4?'fundo':o<-T*.4?'raso':'ok';g.prof=Math.max(-1,Math.min(1,o/(T*1.2)));
+    if(g.ch&&!g.chuvaCorte){g.chuvaCorte=1;ganha(-10,inp.x,inp.y-30);msg('Cortar na chuva põe água no látex.');}
+    for(const p of g.pts)if(Math.abs(((p.x-L.a.x)*ux+(p.y-L.a.y)*uy)/ul-along)<8){if(p.z===null||z==='fundo')p.z=z;}
+    if(Math.random()<.5)g.part.push({x:inp.x,y:inp.y,vx:(Math.random()-.5)*90,vy:-40-Math.random()*60,t:.4});}
+   else g.prof=0;}
+  const feitos=g.pts.filter(p=>p.z!==null).length;if(feitos>=g.pts.length*.96){const ok=g.pts.filter(p=>p.z==='ok').length/g.pts.length,fu=g.pts.filter(p=>p.z==='fundo').length/g.pts.length;const a=g.alvo;a.cort=1;a.t=0;a.rend=ok;if(g.chuvaCorte)a.agua=1;
+   if(fu>.15){a.ferida=1;ganha(-10,W/2,H*.3);msg('A faca chegou no câmbio. A seringueira ficou ferida.');}
+   else if(ok>=.6){ganha(5,W/2,H*.3);msg('Corte bom: '+Math.round(ok*100)+'% na profundidade certa.');}
+   else msg('Corte raso: só '+Math.round(ok*100)+'% na profundidade certa. Pouco látex.');g.fimC=1.3;}},
+ btPular(){const P=SR.pan();return {x:P.x+P.w-120,y:P.y+P.h-48,w:108,h:38};},
+ updDef(g,dt){const F=FASES[S.f];g.vento+=dt;const alvo=W*.5+Math.sin(g.vento*.75)*W*.24+Math.sin(g.vento*1.9)*W*.08;g.fx+=(alvo-g.fx)*Math.min(1,dt*2);
+  if(inp.down&&inp.x!==null&&!G.btDesp(inp.x,inp.y)){g.px+=(inp.x-g.px)*Math.min(1,dt*10);}
+  const kx=(tec.ArrowRight?1:0)-(tec.ArrowLeft?1:0);g.px+=kx*260*dt;g.px=Math.max(W*.12,Math.min(W*.88,g.px));
+  const naFum=Math.abs(g.px-g.fx)<W*.07;const desp=(inp.down&&inp.x!==null&&G.btDesp(inp.x,inp.y))||tec[' '];
+  if(desp){g.contin+=dt;g.camT+=dt;g.desp=1;if(Math.random()<.5)g.pingo.push({x:g.px+(Math.random()-.5)*6,y:H*.36,vy:60,t:1});
+   if(g.contin>1.4){g.perd+=dt;if(Math.random()<.3){g.part.push({x:g.px,y:H*.5,vx:(Math.random()-.5)*40,vy:80,t:.6,leite:1});}if(g.contin>1.4&&g.contin-dt<=1.4){msg('Látex demais de uma vez: está escorrendo.');ganha(-3,g.px,H*.4);}}
+   else if(g.camT>=.8){g.camT=0;if(naFum){g.n++;g.raio+=1.2;ganha(5,g.px,H*.36);}else{ganha(-5,g.px,H*.36);msg('Fora da fumaça o látex não vira borracha.');}}}
+  else{g.desp=0;g.contin=Math.max(0,g.contin-dt*2);}
+  for(const p of g.pingo){p.y+=p.vy*dt;p.vy+=500*dt;p.t-=dt;}g.pingo=g.pingo.filter(p=>p.y<H*.52&&p.t>0);},
+ btDesp(x,y){const m=MOB(),b={x:W-(m?140:170),y:H-62,w:m?128:156,h:50};return x>b.x&&x<b.x+b.w&&y>b.y&&y<b.y+b.h?b:(arguments.length?0:b);},
+ faixa(t,cor){if(S.g.msgT>0)return;cx.font='bold '+(MOB()?12:14)+'px system-ui';const w=Math.min(W-16,cx.measureText(t).width+28);rrk(cx,W/2-w/2,10,w,30,15,'rgba(255,255,255,.96)');cx.strokeStyle=cor||'#00796b';cx.lineWidth=2;cx.beginPath();cx.roundRect(W/2-w/2,10,w,30,15);cx.stroke();cx.fillStyle=cor||'#004d40';cx.textAlign='center';cx.fillText(t,W/2,30);},
+ draw(g){const F=FASES[S.f],m=MOB();if(F.tipo==='def')return G.drawDef(g);
+  const fa=cache('srf2'+W,W,H,SR.fundo),me=cache('srm2'+W,W*2,H,SR.meio),ch=cache('src2'+W,W*2,H,SR.chao);const o1=(g.d*.3)%W,o2=(g.d*.7)%(W*2),o3=g.d%(W*2);
+  cx.drawImage(fa,-o1,0);cx.drawImage(fa,W-o1,0);cx.drawImage(me,-o2,0);cx.drawImage(me,W*2-o2,0);cx.drawImage(ch,-o3,0);cx.drawImage(ch,W*2-o3,0);const y0=H*.8;
+  for(const a of g.arv){const x=a.x-g.d;if(x>-80&&x<W+80){seringueiraP(cx,x,y0,H*.62,a);if(a.pul){cx.fillStyle='rgba(255,255,255,.85)';cx.font='bold 11px system-ui';cx.textAlign='center';cx.fillText('pulada',x,y0-H*.1);}}}
+  const s=m?.95:1.05;sombraE(cx,W*.3,y0+2,18,4,.2);seringueiroP(cx,W*.3,y0,s,g.vol?-1:1,g.modo==='anda'?g.ph:0,g.vol,'#ef6c00');
+  if(g.vol){rrk(cx,10,H-36,170,26,13,'rgba(255,255,255,.92)');cx.fillStyle='#004d40';cx.font='bold 12px system-ui';cx.textAlign='left';cx.fillText('Balde: '+g.balde+' tigelas boas',20,H-18);}
+  if(g.ch||g.chAv){cx.fillStyle='rgba(70,90,120,'+(g.ch?.28:.12)+')';cx.fillRect(0,0,W,H);if(g.ch){cx.strokeStyle='rgba(210,225,255,.65)';cx.lineWidth=1.5;for(let i=0;i<90;i++){const x=(i*53+g.t*260)%W,y=(i*97+g.t*700)%H;cx.beginPath();cx.moveTo(x,y);cx.lineTo(x-4,y+12);cx.stroke();}}}
+  if(g.modo==='corte')G.drawCorte(g);
+  for(const p of g.part){cx.globalAlpha=Math.min(1,p.t*2.5);cx.fillStyle='#8d6e4a';cx.fillRect(p.x,p.y,3,2);cx.globalAlpha=1;}
+  let t,cor;if(g.modo==='corte'){t=g.ch?'Chovendo: espere a chuva passar ou toque em PULAR.':g.chAv?'Chuva chegando! Corte agora vai encher a tigela de água. Pule ou espere.':'Arraste o dedo em cima da linha tracejada, da esquerda para a direita.';cor=(g.ch||g.chAv)?'#1565c0':null;}
+  else if(g.vol)t='Voltando: o seringueiro recolhe o látex das tigelas.';else t='Andando pela estrada até a próxima seringueira...';
+  G.faixa(t,cor);vinheta(cx,W,H);},
+ drawCorte(g){const F=FASES[S.f],P=SR.pan(),L=g.L,m=MOB();rrk(cx,P.x,P.y,P.w,P.h,16,'rgba(255,255,255,.97)');cx.strokeStyle='#00796b';cx.lineWidth=2;cx.beginPath();cx.roundRect(P.x,P.y,P.w,P.h,16);cx.stroke();
+  /* tronco em close */const tx=L.tx,tw=L.tw*1.25;cx.fillStyle=lg(cx,tx-tw,0,tx+tw,0,['#8b8276','#c9bfae','#b0a694','#7d7468']);cx.fillRect(tx-tw,P.y+8,tw*2,P.h-16);
+  cx.strokeStyle='rgba(90,60,35,.45)';cx.lineWidth=2;for(let i=1;i<5;i++){const dy=i*(m?20:26);cx.beginPath();cx.moveTo(L.a.x,L.a.y+dy);cx.lineTo(L.b.x,L.b.y+dy);cx.stroke();}
+  cx.fillStyle='rgba(90,60,35,.6)';cx.font='bold 11px system-ui';cx.textAlign='left';cx.fillText('cortes antigos',tx-tw+6,L.a.y+(m?100:126));
+  /* faixa de tolerância */const ux=L.b.x-L.a.x,uy=L.b.y-L.a.y,ul=Math.hypot(ux,uy),nx=-uy/ul,ny=ux/ul,T=F.tol*(m?.85:1);
+  cx.fillStyle='rgba(76,175,80,.18)';cx.beginPath();cx.moveTo(L.a.x-nx*T*.4,L.a.y-ny*T*.4);cx.lineTo(L.b.x-nx*T*.4,L.b.y-ny*T*.4);cx.lineTo(L.b.x+nx*T*.4,L.b.y+ny*T*.4);cx.lineTo(L.a.x+nx*T*.4,L.a.y+ny*T*.4);cx.fill();
+  cx.setLineDash([8,6]);cx.strokeStyle='#1b5e20';cx.lineWidth=2;cx.beginPath();cx.moveTo(L.a.x,L.a.y);cx.lineTo(L.b.x,L.b.y);cx.stroke();cx.setLineDash([]);
+  /* sulco cortado */const cz={ok:'#f5f1e6',raso:'#f9a825',fundo:'#c62828'};for(let i=1;i<g.pts.length;i++){const p=g.pts[i],q=g.pts[i-1];if(p.z&&q.z){cx.strokeStyle=cz[p.z];cx.lineWidth=5;cx.beginPath();cx.moveTo(q.x,q.y);cx.lineTo(p.x,p.y);cx.stroke();}}
+  /* látex escorrendo depois do corte */if(g.fimC>0&&!g.alvo.ferida){const k=1-g.fimC/1.3;cx.strokeStyle='#fbfaf3';cx.lineWidth=4;cx.beginPath();cx.moveTo(L.b.x,L.b.y);cx.lineTo(L.b.x,L.b.y+k*(m?60:80));cx.stroke();}
+  /* bica e tigela */cx.fillStyle='#9e9e9e';cx.fillRect(L.b.x-6,L.b.y+(m?62:82),14,4);cx.fillStyle='#6d4c2e';cx.beginPath();cx.moveTo(L.b.x-22,L.b.y+(m?68:88));cx.lineTo(L.b.x+26,L.b.y+(m?68:88));cx.lineTo(L.b.x+18,L.b.y+(m?88:110));cx.lineTo(L.b.x-14,L.b.y+(m?88:110));cx.fill();
+  cx.fillStyle='#004d40';cx.font='bold 11px system-ui';cx.textAlign='center';cx.fillText('tigela',L.b.x+2,L.b.y+(m?102:126));
+  /* faca */if(g.cortando&&inp.x!==null){cx.save();cx.translate(inp.x,inp.y);cx.rotate(Math.atan2(uy,ux));cx.fillStyle='#5d4037';cx.fillRect(-28,-4,20,8);cx.strokeStyle='#cfd8dc';cx.lineWidth=3;cx.beginPath();cx.moveTo(-8,0);cx.quadraticCurveTo(4,-2,6,6);cx.stroke();cx.restore();}
+  /* corte da casca em camadas: profundidade */
+  const gx=m?P.x+P.w-70:P.x+P.w-110,gy=P.y+46,gw=m?56:86,gh=m?P.h*.48:P.h*.6;cx.fillStyle='#004d40';cx.font='bold 11px system-ui';cx.textAlign='center';cx.fillText('profundidade',gx+gw/2,gy-10);
+  const cam=[['casca','#8b6b4a',.3],['látex','#f3ecd8',.3],['câmbio','#7cb342',.1],['madeira','#d7b98a',.3]];let yy=gy;for(const [nm,c,f] of cam){cx.fillStyle=c;cx.fillRect(gx,yy,gw,gh*f);cx.fillStyle=nm==='látex'?'#1b5e20':nm==='câmbio'?'#fff':'#3e2723';cx.font='bold '+(m?9:10)+'px system-ui';cx.fillText(nm,gx+gw/2,yy+gh*f/2+4);yy+=gh*f;}
+  cx.strokeStyle='#263238';cx.lineWidth=1;cx.strokeRect(gx,gy,gw,gh);
+  if(g.cortando){const dz=gy+gh*(.45+g.prof*.3);cx.fillStyle='#263238';cx.beginPath();cx.moveTo(gx-12,dz-7);cx.lineTo(gx-2,dz);cx.lineTo(gx-12,dz+7);cx.fill();cx.fillRect(gx-2,dz-1.5,gw+4,3);}
+  const feitos=g.pts.filter(p=>p.z!==null).length;rrk(cx,P.x+14,P.y+P.h-34,P.w*.45,14,7,'#e0e0e0');rrk(cx,P.x+14,P.y+P.h-34,P.w*.45*feitos/g.pts.length,14,7,'#26a69a');cx.fillStyle='#004d40';cx.font='bold 11px system-ui';cx.textAlign='left';cx.fillText('corte '+Math.round(100*feitos/g.pts.length)+'%',P.x+14,P.y+P.h-40);
+  if(g.fimC<=0){const b=G.btPular();rrk(cx,b.x,b.y,b.w,b.h,10,'#eceff1');cx.fillStyle='#37474f';cx.font='bold 13px system-ui';cx.textAlign='center';cx.fillText('PULAR',b.x+b.w/2,b.y+b.h/2+5);}},
+ drawDef(g){const F=FASES[S.f],m=MOB();cx.fillStyle=lg(cx,0,0,0,H,['#e8efe6','#d7e3d3']);cx.fillRect(0,0,W,H);
+  /* tapiri */cx.fillStyle='#a1887f';cx.fillRect(W*.06,H*.18,8,H*.62);cx.fillRect(W*.92,H*.18,8,H*.62);cx.fillStyle='#c8a96a';cx.beginPath();cx.moveTo(W*.02,H*.2);cx.lineTo(W*.5,H*.02);cx.lineTo(W*.98,H*.2);cx.closePath();cx.fill();cx.strokeStyle='rgba(120,90,40,.5)';for(let i=0;i<24;i++){cx.beginPath();cx.moveTo(W*.02+i*W*.04,H*.2);cx.lineTo(W*.5,H*.02);cx.stroke();}
+  cx.fillStyle='#8d7350';cx.fillRect(0,H*.8,W,H*.2);
+  /* fogo e fumaça */const fx=W*.5;cx.fillStyle='#5d4037';cx.fillRect(fx-50,H*.76,100,14);for(let i=0;i<6;i++){cx.fillStyle=['#ff7043','#ffa726','#ffca28'][i%3];cx.beginPath();cx.ellipse(fx-30+i*12,H*.75-Math.abs(Math.sin(g.t*8+i))*8,6,12+Math.sin(g.t*10+i)*4,0,0,7);cx.fill();}
+  for(let i=0;i<14;i++){const t=((g.t*.6+i/14)%1),y=H*.74-t*H*.62,x=fx+(g.fx-fx)*Math.min(1.6,t/.52)+Math.sin(g.t*2+i)*6;cx.fillStyle='rgba(150,150,150,'+(.45*(1-t)+.1)+')';cx.beginPath();cx.arc(x,y,14+t*30,0,7);cx.fill();}
+  cx.fillStyle='#455a64';cx.font='bold 12px system-ui';cx.textAlign='center';cx.fillText('fumaça',fx+(g.fx-fx)*1.6,H*.2);
+  /* bastão com a péla */const py=H*.42;cx.strokeStyle='#6d4c2e';cx.lineWidth=6;cx.beginPath();cx.moveTo(g.px-W*.3,py+10);cx.lineTo(g.px+W*.06,py);cx.stroke();
+  const r=g.raio*(m?1.3:1.6);cx.fillStyle=rg(cx,g.px-r*.3,py-r*.3,2,r,['#fff7dc','#d9c08a','#8a6a3a']);cx.beginPath();cx.arc(g.px,py,r,0,7);cx.fill();cx.strokeStyle='rgba(90,60,20,.4)';cx.lineWidth=1.2;for(let i=0;i<3;i++){const a=g.t*3+i*2.1;cx.beginPath();cx.ellipse(g.px,py,r*Math.abs(Math.cos(a)),r,0,0,7);cx.stroke();}
+  const naFum=Math.abs(g.px-g.fx)<W*.07;cx.fillStyle=naFum?'#2e7d32':'#c62828';cx.font='bold 12px system-ui';cx.fillText(naFum?'na fumaça':'fora da fumaça',g.px,py-r-10);
+  for(const p of g.pingo){cx.fillStyle='#fbfaf3';cx.beginPath();cx.ellipse(p.x,p.y,2.5,4,0,0,7);cx.fill();}
+  for(const p of g.part){if(p.leite){cx.fillStyle='#fbfaf3';cx.beginPath();cx.arc(p.x,p.y,3,0,7);cx.fill();}}
+  /* cuia */cx.fillStyle='#795548';cx.beginPath();cx.ellipse(g.px,H*.3,16,6,0,0,Math.PI);cx.fill();
+  /* barra de excesso */rrk(cx,10,H-40,m?150:200,30,12,'rgba(255,255,255,.92)');cx.fillStyle='#004d40';cx.font='bold 11px system-ui';cx.textAlign='left';cx.fillText('Despejo contínuo',18,H-28);const bw=(m?150:200)-20;rrk(cx,18,H-22,bw,8,4,'#e0e0e0');rrk(cx,18,H-22,bw*Math.min(1,g.contin/1.4),8,4,g.contin>1.1?'#e53935':'#26a69a');
+  const b=G.btDesp();rrk(cx,b.x,b.y,b.w,b.h,14,g.desp?'#004d40':'#00796b');cx.fillStyle='#fff';cx.font='bold 15px system-ui';cx.textAlign='center';cx.fillText('DESPEJAR',b.x+b.w/2,b.y+b.h/2+5);
+  G.faixa(naFum?'Segure DESPEJAR aos poucos. Solte antes da barra ficar vermelha.':'Arraste a péla para dentro da fumaça.',naFum?null:'#c62828');vinheta(cx,W,H);},
+ capa(k,w,h){const o=cx,oW=W,oH=H;cx=k;W=w;H=h;k.drawImage(cache('srfc',w,h,SR.fundo),0,0);SR.chao(k,w,h);seringueiraP(k,w*.62,h*.8,h*.78,{cort:1,rend:1,t:6});seringueiraP(k,w*.9,h*.8,h*.7,null);seringueiroP(k,w*.42,h*.8,1.15,1,1,false,'#ef6c00');vinheta(k,w,h);cx=o;W=oW;H=oH;}
 };
 const FASES=G.FASES;
 const PERG=[
- {q:'Por que o seringueiro percorre a estrada de seringa duas vezes?',o:['Na ida corta as árvores e na volta recolhe o látex','Na ida procura caça e na volta procura frutas do mato','Para medir a altura de todas as seringueiras']},
- {q:'A que horas o seringueiro costuma entrar na mata?',o:['Antes do sol nascer','Depois do almoço','Só à noite, depois das dez']},
- {q:'Por que as seringueiras não são cortadas na época de chuvas?',o:['A água entra no látex e estraga','A árvore fica dura demais para a faca','Os seringueiros fazem festa nesse período']},
- {q:'Em que estado fica a Reserva Extrativista Chico Mendes?',o:['Acre','Amapá','Roraima']}
+ {q:'Até onde deve ir a faca no corte da seringueira?',o:['Até os vasos do látex, sem chegar ao câmbio','Até o meio da madeira do tronco','Só raspar o musgo de fora da casca']},
+ {q:'Quantas árvores tem, em geral, uma estrada de seringa?',o:['De 150 a 200','Umas 10','Mais de 5 mil']},
+ {q:'Por que as seringueiras não são cortadas no inverno amazônico?',o:['A água entra no látex e a produção se perde','A casca fica dura demais para a faca','As árvores perdem todas as folhas']},
+ {q:'Como o látex virava a péla de borracha?',o:['Na fumaça de cavacos e cocos queimados','Secando ao sol sobre folhas','Fervendo em panela com sal']}
 ];
 function pergunta(){
  const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
@@ -261,7 +368,7 @@ function final(tudo){
  $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Seringueiro da Resex!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
  <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
- <div class="small" style="margin-top:12px;text-align:left">Fontes: PT, A vida dos seringueiros 30 anos após a morte de Chico Mendes; Revista Brasileira de Geografia, IBGE, artigo sobre o trabalho do seringueiro (corte em bandeira e pausa no inverno); IHU Unisinos (04/07/2018), Resex Chico Mendes; The Chico Mendes Extractive Reserve, Revista Ruris (criação em 1990 e assassinato em 1988). Distância, chuva, escuridão e pontos são regras do jogo.</div></div>`;
+ <div class="small" style="margin-top:12px;text-align:left">Fontes: Embrapa, Tópicos Especiais em Ciência e Tecnologia de Alimentos vol. 7 (sangria da seringueira sem atingir o câmbio); Pereira e Pereira (2001), Embrapa Cerrados, Recomendação Técnica 44, abertura de painel de sangria; Revista Brasileira de Geografia, IBGE, artigo sobre os seringais (estradas de 150 a 200 árvores, pausa no inverno, defumação e péla); Embrapa Amazônia Oriental, documento sobre borracha de seringais nativos (segundo percurso de 6 a 10 km); Embrapa IAN, Boletim Técnico 31 (gases tóxicos da defumação); O Eco, Seringueiros em extinção no Acre. Número de árvores no jogo, faixas de profundidade, chuva, vento, metas e pontos são regras do jogo.</div></div>`;
  $('bS').onclick=()=>salvar(nivel);
 }
 const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
