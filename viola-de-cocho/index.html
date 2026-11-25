@@ -237,24 +237,24 @@ VI.caminhos=function(tipo){const L=[];const fecha=(f)=>{const p=VI.borda.map(([x
  const P=[];L.forEach((pl,li)=>{for(let j=0;j<pl.length-1;j++){const [a,b]=[pl[j],pl[j+1]];const n=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/4));for(let t=0;t<n;t++)P.push({x:a[0]+(b[0]-a[0])*t/n,y:a[1]+(b[1]-a[1])*t/n,l:li,v:0});}});return {L,P};};
 const G={titulo:'Viola de Cocho',rotulo:'Precisão %',vidas:0,semTempo:1,
  resumo:'Em Mato Grosso e Mato Grosso do Sul, o mestre cururueiro faz a viola de cocho de um tronco inteiro. Aqui você ajuda a fazer uma, seguindo as linhas com o dedo com muito cuidado.',
- como:[['Siga','Passe o dedo em cima da linha tracejada, do começo ao fim.'],['Capriche','O jogo mede a sua precisão. Fora da linha a precisão cai.'],['Você decide','Quando terminar a linha, escolha: refazer para melhorar ou ir para a pergunta.']],
+ como:[['Siga','Passe o dedo em cima da linha tracejada, do começo ao fim.'],['Capriche','Cada vez que o dedo sai da linha conta como erro e tira precisão.'],['Você decide','Quando terminar a linha, escolha: refazer para melhorar ou ir para a pergunta.']],
  dica:'Devagar e em cima da linha.',dicaErro:'Faça devagar, com o dedo sempre em cima da linha tracejada.',
  FASES:[{nome:'Escavar o cocho',dur:99999,meta:70,tipo:'esc',metaTxt:'contornar o bojo com 70% de precisão ou mais.',txt:'Passe o formão em cima da linha para escavar a viola, como se faz com o cocho do gado.',fato:'A viola é esculpida numa tora inteiriça. Madeiras como a ximbuva e o sarã-de-leite são usadas porque são macias e fáceis de escavar.'},
   {nome:'Colar o tampo',dur:99999,meta:72,tipo:'cola',metaTxt:'passar o grude em toda a borda com 72% de precisão ou mais.',txt:'Passe o grude de poca em cima da borda, sem sair dela.',fato:'As partes da viola são coladas com um grude feito da poca, a bexiga natatória dos peixes.'},
   {nome:'Amarrar os pontos',dur:99999,meta:75,tipo:'ponto',metaTxt:'passar os 6 fios com 75% de precisão ou mais.',txt:'Passe o fio de um lado ao outro do braço em cada marca.',fato:'Os trastes da viola de cocho são chamados de pontos. São feitos de fio de algodão revestido com cera de abelha.'},
   {nome:'Encordoar',dur:99999,meta:75,tipo:'corda',metaTxt:'esticar as 5 cordas com 75% de precisão ou mais.',txt:'Siga cada corda da cabeça até o cavalete.',fato:'A viola tem cinco cordas. Antigamente eram feitas de tripa de bugio. Hoje costumam ser de náilon.'}],
- init(g){const F=FASES[S.f];const c=VI.caminhos(F.tipo);g.L=c.L;g.P=c.P;g.tot=0;g.dentro=0;g.trilha=[];g.fim2=false;g.pronto=false;g.last=null;},
- prec(g){return g.tot?Math.round(100*g.dentro/g.tot):0;},
+ init(g){const F=FASES[S.f];const c=VI.caminhos(F.tipo);g.L=c.L;g.P=c.P;g.tot=0;g.dentro=0;g.fora=0;g.sai=0;g.prevOk=true;g.trilha=[];g.fim2=false;g.pronto=false;g.last=null;},
+ prec(g){const t=g.dentro+3*g.fora;return t?Math.max(0,Math.round(100*g.dentro/t)-4*g.sai):0;},
  prog(g){return g.P.filter(p=>p.v).length/g.P.length;},
  meta(g){return [G.prec(g),FASES[S.f].meta];},cedo(g){return g.pronto;},
  botoesFim(){return [{x:W*.3,y:H*.9,w:W*.36,h:46,t:'Refazer',c:'#78909c',a:'re'},{x:W*.7,y:H*.9,w:W*.36,h:46,t:'Ir para a pergunta',c:'#2e7d32',a:'ok'}];},
  update(g,dt){const tol=11;
   if(g.fim2){const T=inp.tap;if(!T)return;const b=G.botoesFim().find(b=>Math.abs(T.x-b.x)<b.w/2&&Math.abs(T.y-b.y)<b.h/2);if(!b)return;if(b.a==='ok')g.pronto=true;else{G.init(g);S.fp=0;}return;}
-  if(inp.down&&inp.x!==null){const [lx,ly]=VI.loc(inp.x,inp.y);if(g.last&&Math.hypot(lx-g.last[0],ly-g.last[1])<1.2)return;g.last=[lx,ly];
-   let dm=1e9;for(const p of g.P){const d=Math.hypot(p.x-lx,p.y-ly);if(d<dm)dm=d;if(d<tol*1.15)p.v=1;}
-   g.tot++;const ok=dm<=tol;if(ok)g.dentro++;g.trilha.push({x:lx,y:ly,ok});if(g.trilha.length>4000)g.trilha.shift();
+  if(inp.down&&inp.x!==null){const [lx,ly]=VI.loc(inp.x,inp.y);const mv=g.last?Math.hypot(lx-g.last[0],ly-g.last[1]):0;if(g.last&&mv<1.2)return;g.last=[lx,ly];
+   let dm=1e9;for(const p of g.P){const d=Math.hypot(p.x-lx,p.y-ly);if(d<dm)dm=d;if(d<tol)p.v=1;}
+   g.tot++;const ok=dm<=tol;if(ok)g.dentro+=mv;else{g.fora+=mv;if(g.prevOk){g.sai++;}}g.prevOk=ok;g.trilha.push({x:lx,y:ly,ok});if(g.trilha.length>4000)g.trilha.shift();
    if(G.prog(g)>=.97){g.fim2=true;g.P.forEach(p=>p.v=1);const pr=G.prec(g);S.fp=pr;msg(pr>=FASES[S.f].meta?'Linha completa! Precisão '+pr+'%.':'Linha completa, mas precisão de '+pr+'%. Dá para refazer.');}}
-  else g.last=null;},
+  else{g.last=null;g.prevOk=true;}},
  draw(g){const F=FASES[S.f];cx.drawImage(cache('ofi',W,H,oficina),0,0);
   cx.save();VI.tr(cx);cx.fillStyle='rgba(40,20,5,.12)';cx.beginPath();cx.ellipse(10,-60,100,238,0,0,7);cx.fill();
   if(F.tipo==='esc')tora(cx);viola(cx,F.tipo==='esc'||F.tipo==='cola'?1:2);
@@ -267,7 +267,7 @@ const G={titulo:'Viola de Cocho',rotulo:'Precisão %',vidas:0,semTempo:1,
   for(const t of g.trilha)if(!t.ok){cx.fillStyle='rgba(229,57,53,.55)';cx.beginPath();cx.arc(t.x,t.y,2.2,0,7);cx.fill();}
   if(!g.fim2){const p0=g.P.find(p=>!p.v);if(p0){cx.fillStyle='rgba(255,179,0,.9)';cx.beginPath();cx.arc(p0.x,p0.y,5+Math.sin(g.t*6)*1.5,0,7);cx.fill();}}
   cx.restore();
-  rrk(cx,10,52,W>H?250:205,50,14,'rgba(255,255,255,.9)');cx.fillStyle='#4e342e';cx.font='bold 14px system-ui';cx.textAlign='left';cx.fillText('Linha feita: '+Math.round(G.prog(g)*100)+'%',22,72);const pr=G.prec(g);cx.fillStyle=pr>=F.meta?'#2e7d32':'#c62828';cx.fillText('Precisão: '+(g.tot?pr+'%':'--')+'  (meta '+F.meta+'%)',22,92);
+  rrk(cx,10,52,W>H?270:225,68,14,'rgba(255,255,255,.9)');cx.fillStyle='#4e342e';cx.font='bold 14px system-ui';cx.textAlign='left';cx.fillText('Linha feita: '+Math.round(G.prog(g)*100)+'%',22,72);const pr=G.prec(g);cx.fillStyle=pr>=F.meta?'#2e7d32':'#c62828';cx.fillText('Precisão: '+(g.tot?pr+'%':'--')+'  (meta '+F.meta+'%)',22,92);cx.fillStyle=g.sai?'#c62828':'#4e342e';cx.fillText('Saídas da linha: '+g.sai+' (−4% cada)',22,110);
   if(g.fim2)for(const b of G.botoesFim()){rrk(cx,b.x-b.w/2,b.y-b.h/2,b.w,b.h,16,b.c);cx.fillStyle='#fff';cx.font='bold 15px system-ui';cx.textAlign='center';cx.fillText(b.t,b.x,b.y+5);}
   vinheta(cx,W,H);},
  capa(k,w,h){const o=cx,oW=W,oH=H;cx=k;W=w;H=h;k.drawImage(cache('ofi',w,h,oficina),0,0);k.save();k.translate(w*.5,h*.5);k.rotate(-Math.PI/2);k.scale(.58,.58);k.translate(0,60);viola(k,2);k.setLineDash([5,5]);k.strokeStyle='#fff';k.lineWidth=2;for(let i=0;i<5;i++){k.beginPath();k.moveTo(-8+i*4,-282);k.lineTo(-16+i*8,96);k.stroke();}k.setLineDash([]);k.strokeStyle='#fffde7';k.lineWidth=2.5;k.beginPath();k.moveTo(-8,-282);k.lineTo(-16,96);k.stroke();k.restore();vinheta(k,w,h);cx=o;W=oW;H=oH;}
