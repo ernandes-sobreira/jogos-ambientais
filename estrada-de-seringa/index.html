@@ -248,7 +248,7 @@ SR.pan=()=>{const m=MOB();return m?{x:W*.04,y:H*.1,w:W*.92,h:H*.74}:{x:W*.4,y:H*
 SR.linha=(F)=>{const P=SR.pan(),tx=P.x+P.w*.4,tw=P.w*.26;const a={x:tx-tw,y:P.y+P.h*.34},b={x:tx+tw,y:P.y+P.h*.34+tw*2*Math.tan(F.ang||.5)};return {a,b,tx,tw};};
 const G={titulo:'Estrada de Seringa',get rotulo(){return S&&S.f===3?'Camadas na péla':'Tigelas boas';},vidas:0,
  resumo:'No Acre, o seringueiro sai de madrugada e anda a estrada de seringa duas vezes. Na ida corta a casca das seringueiras. Na volta recolhe o látex que escorreu para as tigelas. Depois defuma o látex até virar a péla de borracha.',
- como:[['Cortar','Quando chegar numa seringueira, arraste o dedo pela linha do corte, da esquerda para a direita.'],['Profundidade','O painel ao lado mostra a faca dentro da casca. Em cima da linha a faca fica na zona do látex. Abaixo dela, fere o câmbio e machuca a árvore.'],['Chuva e fumaça','Na chuva, espere ou pule a árvore. Na defumação, mantenha a péla dentro da fumaça.']],
+ como:[['Cortar','Quando chegar numa seringueira, arraste o dedo pela linha do corte, da esquerda para a direita.'],['Corte certo','O painel ao lado mostra a faca dentro da casca. Em cima da linha a faca fica na zona do látex. Abaixo dela, fere o câmbio e machuca a árvore.'],['Chuva e fumaça','Na chuva, espere ou pule a árvore. Na defumação, mantenha a péla dentro da fumaça.']],
  get dica(){return S&&S.f===3?'Arraste para pôr a péla na fumaça. Segure DESPEJAR para pôr látex, sem exagerar.':'Arraste em cima da linha tracejada. Verde é a profundidade certa. Vermelho fere o câmbio.';},
  dicaErro:'Corte em cima da linha, sem descer para o câmbio. Na chuva, espere ou pule. Na defumação, só despeje com a péla na fumaça.',
  FASES:[
@@ -309,8 +309,8 @@ const G={titulo:'Estrada de Seringa',get rotulo(){return S&&S.f===3?'Camadas na 
   if(g.ch||g.chAv){cx.fillStyle='rgba(70,90,120,'+(g.ch?.28:.12)+')';cx.fillRect(0,0,W,H);if(g.ch){cx.strokeStyle='rgba(210,225,255,.65)';cx.lineWidth=1.5;for(let i=0;i<90;i++){const x=(i*53+g.t*260)%W,y=(i*97+g.t*700)%H;cx.beginPath();cx.moveTo(x,y);cx.lineTo(x-4,y+12);cx.stroke();}}}
   if(g.modo==='corte')G.drawCorte(g);
   for(const p of g.part){cx.globalAlpha=Math.min(1,p.t*2.5);cx.fillStyle='#8d6e4a';cx.fillRect(p.x,p.y,3,2);cx.globalAlpha=1;}
-  let t,cor;if(g.modo==='corte'){t=g.ch?'Chovendo: espere a chuva passar ou toque em PULAR.':g.chAv?'Chuva chegando! Corte agora vai encher a tigela de água. Pule ou espere.':'Arraste o dedo em cima da linha tracejada, da esquerda para a direita.';cor=(g.ch||g.chAv)?'#1565c0':null;}
-  else if(g.vol)t='Voltando: o seringueiro recolhe o látex das tigelas.';else t='Andando pela estrada até a próxima seringueira...';
+  let t,cor;if(g.modo==='corte'){t=g.ch?(MOB()?'Chovendo: espere ou PULAR.':'Chovendo: espere a chuva passar ou toque em PULAR.'):g.chAv?(MOB()?'Chuva chegando! Pule ou espere.':'Chuva chegando! Corte agora vai encher a tigela de água. Pule ou espere.'):(MOB()?'Arraste em cima da linha tracejada.':'Arraste o dedo em cima da linha tracejada, da esquerda para a direita.');cor=(g.ch||g.chAv)?'#1565c0':null;}
+  else if(g.vol)t=MOB()?'Voltando e recolhendo o látex.':'Voltando: o seringueiro recolhe o látex das tigelas.';else t=MOB()?'Andando até a próxima seringueira...':'Andando pela estrada até a próxima seringueira...';
   G.faixa(t,cor);vinheta(cx,W,H);},
  drawCorte(g){const F=FASES[S.f],P=SR.pan(),L=g.L,m=MOB();rrk(cx,P.x,P.y,P.w,P.h,16,'rgba(255,255,255,.97)');cx.strokeStyle='#00796b';cx.lineWidth=2;cx.beginPath();cx.roundRect(P.x,P.y,P.w,P.h,16);cx.stroke();
   /* tronco em close */const tx=L.tx,tw=L.tw*1.25;cx.fillStyle=lg(cx,tx-tw,0,tx+tw,0,['#8b8276','#c9bfae','#b0a694','#7d7468']);cx.fillRect(tx-tw,P.y+8,tw*2,P.h-16);
@@ -345,7 +345,7 @@ const G={titulo:'Estrada de Seringa',get rotulo(){return S&&S.f===3?'Camadas na 
   /* cuia */cx.fillStyle='#795548';cx.beginPath();cx.ellipse(g.px,H*.3,16,6,0,0,Math.PI);cx.fill();
   /* barra de excesso */rrk(cx,10,H-40,m?150:200,30,12,'rgba(255,255,255,.92)');cx.fillStyle='#004d40';cx.font='bold 11px system-ui';cx.textAlign='left';cx.fillText('Despejo contínuo',18,H-28);const bw=(m?150:200)-20;rrk(cx,18,H-22,bw,8,4,'#e0e0e0');rrk(cx,18,H-22,bw*Math.min(1,g.contin/1.4),8,4,g.contin>1.1?'#e53935':'#26a69a');
   const b=G.btDesp();rrk(cx,b.x,b.y,b.w,b.h,14,g.desp?'#004d40':'#00796b');cx.fillStyle='#fff';cx.font='bold 15px system-ui';cx.textAlign='center';cx.fillText('DESPEJAR',b.x+b.w/2,b.y+b.h/2+5);
-  G.faixa(naFum?'Segure DESPEJAR aos poucos. Solte antes da barra ficar vermelha.':'Arraste a péla para dentro da fumaça.',naFum?null:'#c62828');vinheta(cx,W,H);},
+  G.faixa(naFum?(MOB()?'Segure DESPEJAR aos poucos.':'Segure DESPEJAR aos poucos. Solte antes da barra ficar vermelha.'):'Arraste a péla para dentro da fumaça.',naFum?null:'#c62828');vinheta(cx,W,H);},
  capa(k,w,h){const o=cx,oW=W,oH=H;cx=k;W=w;H=h;k.drawImage(cache('srfc',w,h,SR.fundo),0,0);SR.chao(k,w,h);seringueiraP(k,w*.62,h*.8,h*.78,{cort:1,rend:1,t:6});seringueiraP(k,w*.9,h*.8,h*.7,null);seringueiroP(k,w*.42,h*.8,1.15,1,1,false,'#ef6c00');vinheta(k,w,h);cx=o;W=oW;H=oH;}
 };
 const FASES=G.FASES;
