@@ -213,6 +213,7 @@ VI.dentro=(x,y,f)=>VI.E.some(([a,b,rx,ry])=>((x-a)/(rx*f))**2+((y-b)/(ry*f))**2<
 VI.rot=()=>W>H?-Math.PI/2:0;VI.esc=()=>W>H?Math.min(W*.84/460,H*.8/210):Math.min(H*.84/460,W*.8/210);VI.org=()=>({x:W*.5,y:H*(W>H?.52:.5)});
 VI.loc=(px,py)=>{const s=VI.esc(),o=VI.org();const dx=(px-o.x)/s,dy=(py-o.y)/s;return W>H?[-dy,dx-60]:[dx,dy-60];};
 VI.tr=k=>{const s=VI.esc(),o=VI.org();k.translate(o.x,o.y);k.rotate(VI.rot());k.scale(s,s);k.translate(0,60);};
+VI.noPoli=(x,y,f)=>{const P=VI.borda;let c=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const xi=P[i][0]*f,yi=10+(P[i][1]-10)*f,xj=P[j][0]*f,yj=10+(P[j][1]-10)*f;if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)c=!c;}return c;};
 VI.contorno=(k,f)=>{k.beginPath();VI.borda.forEach(([x,y],i)=>{const xx=x*f,yy=10+(y-10)*f;i?k.lineTo(xx,yy):k.moveTo(xx,yy);});k.closePath();};
 function oficina(k,w,h){k.fillStyle=lg(k,0,0,0,h,['#f3e3c8','#e7cfa8']);k.fillRect(0,0,w,h);k.strokeStyle='rgba(120,80,40,.09)';k.lineWidth=2;for(let x=0;x<w;x+=56){k.beginPath();k.moveTo(x,0);k.lineTo(x,h);k.stroke();}
  k.fillStyle=lg(k,0,0,0,h,['rgba(255,248,230,0)','rgba(120,70,30,.08)']);k.fillRect(0,0,w,h);
@@ -240,11 +241,12 @@ VI.caminhos=function(tipo){const L=[];const fecha=(f)=>{const p=VI.borda.map(([x
  if(tipo==='ponto')for(const y of [-235,-213,-191,-169,-147,-125])L.push([[-15,y],[15,y]]);
  if(tipo==='crav')for(let i=0;i<5;i++){const cx0=i%2?14:-14,cy0=-286+i*9;const c=[];for(let a=0;a<=12;a++)c.push([cx0+Math.cos(a/12*6.283)*5,cy0+Math.sin(a/12*6.283)*5]);L.push(c);}
  if(tipo==='corda')for(let i=0;i<5;i++)L.push([[-8+i*4,-282],[-16+i*8,96]]);
+ if(tipo==='esc'){const P=[];for(let y=-120;y<=180;y+=7)for(let x=-90;x<=90;x+=7)if(VI.noPoli(x,y,.8))P.push({x,y,l:0,v:0});return {L,P,area:1};}
  const P=[];L.forEach((pl,li)=>{for(let j=0;j<pl.length-1;j++){const [a,b]=[pl[j],pl[j+1]];const n=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/4));for(let t=0;t<n;t++)P.push({x:a[0]+(b[0]-a[0])*t/n,y:a[1]+(b[1]-a[1])*t/n,l:li,v:0});}});return {L,P};};
 function violaEtapa(k,e){const tipo=ETAPAS[e];
  if(e<=1){tora(k);k.strokeStyle='rgba(60,30,10,.55)';k.lineWidth=2;if(e===1){const P=corpoPath();k.stroke(P);}return;}
  viola(k,e>=4?2:1,true);
- if(e===2||e===3){k.save();VI.contorno(k,e===2?.8:.92);k.clip();if(e===3){k.fillStyle=rg(k,0,40,20,160,['#3a1d09','#6b3d1c']);k.fillRect(-100,-130,200,320);}k.restore();}
+ if(e===2||e===3){k.save();VI.contorno(k,.8);k.clip();if(e===3){k.fillStyle=rg(k,0,40,20,160,['#3a1d09','#6b3d1c']);k.fillRect(-100,-130,200,320);}k.restore();}
  if(e>=4){if(e<5)k.fillStyle='rgba(0,0,0,0)';}
  if(e>=5){k.fillStyle='#5d3a1a';k.beginPath();k.roundRect(-28,92,56,10,4);k.fill();}
  if(e>=6)for(const y of [-235,-213,-191,-169,-147,-125]){k.strokeStyle='#fafafa';k.lineWidth=3.5;k.beginPath();k.moveTo(-15,y);k.lineTo(15,y);k.stroke();}
@@ -255,13 +257,13 @@ const G={titulo:'Viola de Cocho',rotulo:'Precisão %',vidas:0,semTempo:1,
  dica:'Devagar e em cima da linha.',dicaErro:'Faça devagar, com o dedo sempre em cima da linha tracejada.',
  FASES:[{nome:'Passo 1 de 8: riscar o molde',dur:99999,meta:65,tipo:'risco',metaTxt:'riscar o contorno do corpo com 65% de precisão ou mais.',txt:'O mestre escolhe uma tora inteira de madeira macia e risca nela o formato da viola. Risque o contorno do corpo.',fato:'A viola é feita de uma tora inteiriça. Madeiras como a ximbuva e o sarã-de-leite são usadas porque são macias e fáceis de escavar.'},
   {nome:'Passo 2 de 8: talhar o braço',dur:99999,meta:65,tipo:'braco',metaTxt:'contornar o braço e a cabeça com 65% de precisão ou mais.',txt:'Agora o mestre talha a tora no formato de viola. Contorne o braço e a cabeça.',fato:'A tora é talhada no formato de viola, com corpo, braço e cabeça na mesma peça de madeira.'},
-  {nome:'Passo 3 de 8: escavar o cocho',dur:99999,meta:70,tipo:'esc',metaTxt:'contornar o bojo com 70% de precisão ou mais.',txt:'Com o formão, o mestre escava o corpo por dentro. Passe o formão em cima da linha.',fato:'O corpo é escavado e fica oco por dentro, como o cocho onde se põe o sal do gado. Daí vem o nome viola de cocho.'},
+  {nome:'Passo 3 de 8: escavar o cocho',dur:99999,meta:70,tipo:'esc',metaTxt:'escavar todo o bojo com 70% de precisão ou mais.',txt:'Com o formão, o mestre escava o corpo por dentro. Esfregue o dedo dentro da linha até tirar toda a madeira, sem passar da borda.',fato:'O corpo é escavado e fica oco por dentro, como o cocho onde se põe o sal do gado. Daí vem o nome viola de cocho.'},
   {nome:'Passo 4 de 8: colar o tampo',dur:99999,meta:70,tipo:'cola',metaTxt:'passar o grude na borda com 70% de precisão ou mais.',txt:'Passe o grude de poca na borda para colar o tampo por cima do cocho.',fato:'O tampo é colado com grude de poca, feito da bexiga natatória dos peixes. Para o tampo, os mestres usam madeira de raiz de figueira.'},
   {nome:'Passo 5 de 8: o cavalete',dur:99999,meta:70,tipo:'cav',metaTxt:'colar o cavalete com 70% de precisão ou mais.',txt:'Cole o cavalete no tampo. É nele que as cordas vão se apoiar embaixo.',fato:'Depois do tampo, o mestre fixa as outras partes da viola, como o cavalete, o espelho, o rastilho e as cravelhas. Para essas peças se usa o cedro.'},
   {nome:'Passo 6 de 8: amarrar os pontos',dur:99999,meta:75,tipo:'ponto',metaTxt:'passar os 6 fios com 75% de precisão ou mais.',txt:'Passe o fio de um lado ao outro do braço, em cada marca.',fato:'Os trastes da viola de cocho são chamados de pontos. São feitos de fio de algodão revestido com cera de abelha.'},
   {nome:'Passo 7 de 8: as cravelhas',dur:99999,meta:70,tipo:'crav',metaTxt:'contornar as 5 cravelhas com 70% de precisão ou mais.',txt:'Contorne cada cravelha na cabeça da viola. Elas vão segurar as cordas em cima.',fato:'Esse saber é passado de boca em boca, entre familiares e amigos, principalmente na zona rural.'},
   {nome:'Passo 8 de 8: encordoar',dur:99999,meta:75,tipo:'corda',metaTxt:'esticar as 5 cordas com 75% de precisão ou mais.',txt:'Siga cada corda da cravelha até o cavalete. A viola fica pronta!',fato:'A viola tem cinco cordas. Antigamente eram feitas de tripa de bugio. Hoje costumam ser de náilon. O modo de fazer a viola de cocho é Patrimônio Cultural do Brasil.'}],
- init(g){const F=FASES[S.f];const c=VI.caminhos(F.tipo);g.L=c.L;g.P=c.P;g.tot=0;g.dentro=0;g.fora=0;g.sai=0;g.prevOk=true;g.trilha=[];g.fim2=false;g.pronto=false;g.last=null;},
+ init(g){const F=FASES[S.f];const c=VI.caminhos(F.tipo);g.L=c.L;g.P=c.P;g.area=!!c.area;g.lascas=[];g.tot=0;g.dentro=0;g.fora=0;g.sai=0;g.prevOk=true;g.trilha=[];g.fim2=false;g.pronto=false;g.last=null;},
  prec(g){const t=g.dentro+3*g.fora;return t?Math.max(0,Math.round(100*g.dentro/t)-4*g.sai):0;},
  prog(g){return g.P.filter(p=>p.v).length/g.P.length;},
  meta(g){return [G.prec(g),FASES[S.f].meta];},cedo(g){return g.pronto;},
@@ -269,21 +271,27 @@ const G={titulo:'Viola de Cocho',rotulo:'Precisão %',vidas:0,semTempo:1,
  update(g,dt){const tol=11;
   if(g.fim2){const T=inp.tap;if(!T)return;const b=G.botoesFim().find(b=>Math.abs(T.x-b.x)<b.w/2&&Math.abs(T.y-b.y)<b.h/2);if(!b)return;if(b.a==='ok')g.pronto=true;else{G.init(g);S.fp=0;}return;}
   if(inp.down&&inp.x!==null){const [lx,ly]=VI.loc(inp.x,inp.y);const mv=g.last?Math.hypot(lx-g.last[0],ly-g.last[1]):0;if(g.last&&mv<1.2)return;g.last=[lx,ly];
-   let dm=1e9;for(const p of g.P){const d=Math.hypot(p.x-lx,p.y-ly);if(d<dm)dm=d;if(d<tol)p.v=1;}
-   g.tot++;const ok=dm<=tol;if(ok)g.dentro+=mv;else{g.fora+=mv;if(g.prevOk){g.sai++;}}g.prevOk=ok;g.trilha.push({x:lx,y:ly,ok});if(g.trilha.length>4000)g.trilha.shift();
-   if(G.prog(g)>=.97){g.fim2=true;g.P.forEach(p=>p.v=1);const pr=G.prec(g);S.fp=pr;msg(pr>=FASES[S.f].meta?'Linha completa! Precisão '+pr+'%.':'Linha completa, mas precisão de '+pr+'%. Dá para refazer.');}}
-  else{g.last=null;g.prevOk=true;}},
+   let dm=1e9,novos=0;const rv=g.area?11:tol;for(const p of g.P){const d=Math.hypot(p.x-lx,p.y-ly);if(d<dm)dm=d;if(d<rv&&!p.v){p.v=1;novos++;}}
+   if(g.area&&novos)for(let i=0;i<Math.min(3,novos);i++)g.lascas.push({x:lx,y:ly,vx:(Math.random()-.5)*120,vy:(Math.random()-.5)*120,a:Math.random()*6,t:.7});
+   g.tot++;const ok=g.area?VI.noPoli(lx,ly,.85):dm<=tol;if(ok)g.dentro+=mv;else{g.fora+=mv;if(g.prevOk){g.sai++;}}g.prevOk=ok;g.trilha.push({x:lx,y:ly,ok});if(g.trilha.length>4000)g.trilha.shift();
+   if(G.prog(g)>=(g.area?.95:.97)){g.fim2=true;g.P.forEach(p=>p.v=1);const pr=G.prec(g);S.fp=pr;const nm=g.area?'Cocho escavado':'Linha completa';msg(pr>=FASES[S.f].meta?nm+'! Precisão '+pr+'%.':nm+', mas precisão de '+pr+'%. Dá para refazer.');}}
+  else{g.last=null;g.prevOk=true;}
+  for(const l of g.lascas){l.x+=l.vx*dt;l.y+=l.vy*dt;l.vy+=160*dt;l.a+=dt*8;l.t-=dt;}g.lascas=g.lascas.filter(l=>l.t>0);},
  draw(g){const F=FASES[S.f];cx.drawImage(cache('ofi',W,H,oficina),0,0);
   cx.save();VI.tr(cx);cx.fillStyle='rgba(40,20,5,.12)';cx.beginPath();cx.ellipse(10,-60,100,238,0,0,7);cx.fill();
   violaEtapa(cx,S.f);
   const cor={risco:'#3e2723',braco:'#3e2723',esc:'#3a1d09',cola:'#fff3c4',cav:'#5d3a1a',ponto:'#fafafa',crav:'#4e342e',corda:'#fffde7'}[F.tipo];const lw={risco:3,braco:3,esc:9,cola:7,cav:9,ponto:4,crav:4,corda:2.2}[F.tipo];
   cx.lineCap='round';cx.lineJoin='round';
   for(const pl of g.L){cx.setLineDash([5,5]);cx.strokeStyle='rgba(255,255,255,.95)';cx.lineWidth=2;cx.beginPath();pl.forEach(([x,y],i)=>i?cx.lineTo(x,y):cx.moveTo(x,y));cx.stroke();cx.setLineDash([]);}
-  cx.strokeStyle=cor;cx.lineWidth=lw;for(let i=1;i<g.P.length;i++){const a=g.P[i-1],b=g.P[i];if(a.v&&b.v&&a.l===b.l&&Math.hypot(a.x-b.x,a.y-b.y)<8){cx.beginPath();cx.moveTo(a.x,a.y);cx.lineTo(b.x,b.y);cx.stroke();}}
+  if(g.area){cx.save();VI.contorno(cx,.8);cx.clip();cx.fillStyle=rg(cx,0,30,10,150,['#2a1406','#5a3317']);cx.beginPath();for(const p of g.P)if(p.v)cx.rect(p.x-5,p.y-5,10,10);cx.fill();
+   cx.strokeStyle='rgba(255,220,170,.18)';cx.lineWidth=1;for(const p of g.P)if(p.v&&((p.x+p.y)%21===0)){cx.beginPath();cx.moveTo(p.x-3,p.y);cx.lineTo(p.x+3,p.y-1);cx.stroke();}cx.restore();
+   cx.strokeStyle='rgba(70,35,10,.5)';cx.lineWidth=2;VI.contorno(cx,.8);cx.stroke();
+   for(const l of g.lascas){cx.save();cx.translate(l.x,l.y);cx.rotate(l.a);cx.globalAlpha=Math.min(1,l.t*2);cx.fillStyle='#e8be8c';cx.fillRect(-4,-1.2,8,2.4);cx.restore();}cx.globalAlpha=1;}
+  else{cx.strokeStyle=cor;cx.lineWidth=lw;for(let i=1;i<g.P.length;i++){const a=g.P[i-1],b=g.P[i];if(a.v&&b.v&&a.l===b.l&&Math.hypot(a.x-b.x,a.y-b.y)<8){cx.beginPath();cx.moveTo(a.x,a.y);cx.lineTo(b.x,b.y);cx.stroke();}}}
   for(const t of g.trilha)if(!t.ok){cx.fillStyle='rgba(229,57,53,.55)';cx.beginPath();cx.arc(t.x,t.y,2.2,0,7);cx.fill();}
   if(!g.fim2){const p0=g.P.find(p=>!p.v);if(p0){cx.fillStyle='rgba(255,179,0,.9)';cx.beginPath();cx.arc(p0.x,p0.y,5+Math.sin(g.t*6)*1.5,0,7);cx.fill();}}
   cx.restore();
-  rrk(cx,10,52,W>H?270:225,68,14,'rgba(255,255,255,.9)');cx.fillStyle='#4e342e';cx.font='bold 14px system-ui';cx.textAlign='left';cx.fillText('Linha feita: '+Math.round(G.prog(g)*100)+'%',22,72);const pr=G.prec(g);cx.fillStyle=pr>=F.meta?'#2e7d32':'#c62828';cx.fillText('Precisão: '+(g.tot?pr+'%':'--')+'  (meta '+F.meta+'%)',22,92);cx.fillStyle=g.sai?'#c62828':'#4e342e';cx.fillText('Saídas da linha: '+g.sai+' (−4% cada)',22,110);
+  rrk(cx,10,52,W>H?270:225,68,14,'rgba(255,255,255,.9)');cx.fillStyle='#4e342e';cx.font='bold 14px system-ui';cx.textAlign='left';cx.fillText((g.area?'Madeira escavada: ':'Linha feita: ')+Math.round(G.prog(g)*100)+'%',22,72);const pr=G.prec(g);cx.fillStyle=pr>=F.meta?'#2e7d32':'#c62828';cx.fillText('Precisão: '+(g.tot?pr+'%':'--')+'  (meta '+F.meta+'%)',22,92);cx.fillStyle=g.sai?'#c62828':'#4e342e';cx.fillText((g.area?'Saídas da borda: ':'Saídas da linha: ')+g.sai+' (−4% cada)',22,110);
   if(g.fim2)for(const b of G.botoesFim()){rrk(cx,b.x-b.w/2,b.y-b.h/2,b.w,b.h,16,b.c);cx.fillStyle='#fff';cx.font='bold 15px system-ui';cx.textAlign='center';cx.fillText(b.t,b.x,b.y+5);}
   vinheta(cx,W,H);},
  capa(k,w,h){const o=cx,oW=W,oH=H;cx=k;W=w;H=h;k.drawImage(cache('ofi',w,h,oficina),0,0);k.save();k.translate(w*.5,h*.5);k.rotate(-Math.PI/2);k.scale(.58,.58);k.translate(0,60);viola(k,2);k.setLineDash([5,5]);k.strokeStyle='#fff';k.lineWidth=2;for(let i=0;i<5;i++){k.beginPath();k.moveTo(-8+i*4,-282);k.lineTo(-16+i*8,96);k.stroke();}k.setLineDash([]);k.strokeStyle='#fffde7';k.lineWidth=2.5;k.beginPath();k.moveTo(-8,-282);k.lineTo(-16,96);k.stroke();k.restore();vinheta(k,w,h);cx=o;W=oW;H=oH;}
