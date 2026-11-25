@@ -277,10 +277,10 @@ const ROUPAS=[{saia:'#6a1b9a',blusa:'#ef6c00',lenco:'#00897b'},{saia:'#1565c0',b
 function sorteiaN(){const r=Math.random();return r<.1?1:r<.3?2:r<.7?3:r<.9?4:5;}
 const PARTES=[{p:'Amêndoa',d:'semente dentro da casca dura',ok:0},{p:'Mesocarpo',d:'camada de massa entre a fibra e a casca dura',ok:1},{p:'Endocarpo',d:'a casca dura e lenhosa',ok:2}];
 const DEST=['Óleo e azeite','Farinha','Carvão'];
-const G={titulo:'Quebra do Babaçu',rotulo:'No cesto',vidas:0,
+const G={titulo:'Quebra do Babaçu',get rotulo(){return S&&S.f===0?'No monte':'No cesto';},vidas:0,
  resumo:'Nos babaçuais do Maranhão, do Piauí, do Tocantins e do Pará, as quebradeiras de coco sentam no chão, prendem o machado sob a perna com a lâmina para cima, apoiam o coco na lâmina e batem com um porrete de madeira para tirar as amêndoas.',
  como:[['Coco reto','O coco balança na lâmina. O arco em cima dele mostra o ângulo. O golpe só vale com o ponteiro no verde. Comece a segurar antes, para a força chegar no verde junto.'],['Força certa','Segure o botão do porrete: a barra de força sobe. Solte com o marcador no verde. Pouca força não racha, força demais esmaga a amêndoa.'],['Amêndoa boa','Cada golpe certo solta uma amêndoa na esteira. Toque nas boas para pôr no cesto. Amêndoa com gongo não vai para o cesto.']],
- dica:'Segure o botão do porrete, espere o coco ficar reto e solte com o anel no verde. Depois toque nas amêndoas boas.',dicaErro:'Comece a segurar o porrete um pouco antes do coco ficar reto. Solte com o coco reto e a força no verde.',
+ get dica(){return S&&S.f===0?'Toque num coco para pôr no cofo. O cofo leva 8. Cheio, toque no monte, à esquerda, para despejar.':'Segure o botão SEGURE. Solte quando o coco estiver reto e a força no verde. Depois toque nas amêndoas boas da esteira.';},get dicaErro(){return S&&S.f===0?'Só contam os cocos que chegam ao monte. Despeje o cofo no monte toda vez que ele encher.':this.dicaE;},dicaE:'Comece a segurar o porrete um pouco antes do coco ficar reto. Solte com o coco reto e a força no verde.',
  FASES:[
   {nome:'Juntar o coco',dur:45,meta:30,tipo:'col',metaTxt:'levar 30 cocos ao monte em 45 s. O cofo leva 8 cocos por vez.',txt:'Cedo, o trabalho começa no babaçual. Toque nos cocos para pôr no cofo. Quando o cofo encher, toque no monte para despejar.',fato:'Os homens costumam ajudar na coleta do coco inteiro. A quebra, quase sempre, é trabalho das mulheres.'},
   {nome:'Primeira quebra',dur:75,meta:10,tipo:'q',amp:.42,ws:1.5,tol:.17,fs:.75,f0:.48,f1:.8,gongo:.12,metaTxt:'pôr 10 amêndoas boas no cesto em 75 s.',txt:'Sente no chão, prenda o machado sob a perna e apoie o coco na lâmina. Bata com o porrete com o coco reto e a força certa.',fato:'Cada coco babaçu tem de 1 a 5 amêndoas. O mais comum é ter 3.'},
@@ -332,6 +332,8 @@ const G={titulo:'Quebra do Babaçu',rotulo:'No cesto',vidas:0,
    /* cofo */const bx=W*(m?.6:.56),by=H*.95;cx.fillStyle=lg(cx,bx-46,0,bx+46,0,['#9c7a3c','#d0aa64','#9c7a3c']);cx.beginPath();cx.moveTo(bx-46,by-46);cx.lineTo(bx+46,by-46);cx.lineTo(bx+34,by);cx.lineTo(bx-34,by);cx.fill();cx.strokeStyle='rgba(90,60,20,.45)';cx.lineWidth=1.3;for(let i=-4;i<=4;i++){cx.beginPath();cx.moveTo(bx+i*11,by-46);cx.lineTo(bx+i*8,by);cx.stroke();}for(let j=1;j<4;j++){cx.beginPath();cx.moveTo(bx-46+j*3,by-46+j*11.5);cx.lineTo(bx+46-j*3,by-46+j*11.5);cx.stroke();}
    for(let i=0;i<g.cofo;i++)cocoInt(cx,bx-30+(i%4)*20,by-50-Math.floor(i/4)*12,8,i);
    rrk(cx,bx-58,by-84,116,22,11,'rgba(255,255,255,.9)');rrk(cx,bx-56,by-82,112*g.cofo/8,18,9,g.cofo>=8?'#e53935':'#8d6e63');cx.fillStyle='#3e2723';cx.font='bold 12px system-ui';cx.fillText('cofo '+g.cofo+'/8',bx,by-68);
+   if(g.cofo>=8){const pu=.5+.5*Math.sin(g.t*8);cx.strokeStyle='rgba(229,57,53,'+(.4+.5*pu)+')';cx.lineWidth=4;cx.beginPath();cx.arc(mx,my,46+pu*6,0,7);cx.stroke();}
+   G.faixa(g.cofo>=8?'Cofo cheio! Toque no monte para despejar.':'Toque nos cocos do chão para encher o cofo ('+g.cofo+'/8).');
    vinheta(cx,W,H);return;}
   const L=BB.lay(),c=g.c,tilt=G.tilt(g);
   /* esteira de palha */rrk(cx,L.matX-8,L.matY-8,L.matW+16,L.matH+16,10,'#c9a86a');cx.strokeStyle='rgba(120,90,40,.45)';cx.lineWidth=2;for(let i=0;i<L.matW+16;i+=9){cx.beginPath();cx.moveTo(L.matX-8+i,L.matY-8);cx.lineTo(L.matX-8+i,L.matY+L.matH+8);cx.stroke();}
@@ -365,7 +367,9 @@ const G={titulo:'Quebra do Babaçu',rotulo:'No cesto',vidas:0,
   if(g.sep){const P=PARTES[g.sep.i];const pw=m?W-30:440,ph=150,px=W/2-pw/2,py=H*(m?.4:.36);rrk(cx,px,py,pw,ph,16,'rgba(255,255,255,.97)');cx.strokeStyle='#bf360c';cx.lineWidth=2;cx.beginPath();cx.roundRect(px,py,pw,ph,16);cx.stroke();
    cx.fillStyle='#3e2723';cx.textAlign='center';cx.font='bold 16px system-ui';cx.fillText('Para onde vai: '+P.p+'?',W/2,py+28);cx.font='12px system-ui';cx.fillText('('+P.d+')',W/2,py+48);
    G.sepBotoes().forEach((r,i)=>{rrk(cx,r[0],r[1],r[2],r[3],12,'#ffccbc');cx.fillStyle='#8c2500';cx.font='bold '+(m?12:14)+'px system-ui';cx.fillText(DEST[i],r[0]+r[2]/2,r[1]+28);});}
+  if(!g.sep)G.faixa(g.mat.some(a=>a.tipo==='boa')?'Toque nas amêndoas boas da esteira. A com gongo fica.':g.seg?'Solte quando o coco estiver reto e a força no verde.':'Segure o botão SEGURE para levantar o porrete.');
   vinheta(cx,W,H);},
+ faixa(t){if(S.g.msgT>0)return;cx.font='bold '+(MOB()?12:14)+'px system-ui';const w=Math.min(W-16,cx.measureText(t).width+28);rrk(cx,W/2-w/2,10,w,30,15,'rgba(255,255,255,.96)');cx.strokeStyle='#bf360c';cx.lineWidth=2;cx.beginPath();cx.roundRect(W/2-w/2,10,w,30,15);cx.stroke();cx.fillStyle='#8c2500';cx.textAlign='center';cx.fillText(t,W/2,30);},
  capa(k,w,h){const o=cx,oW=W,oH=H;cx=k;W=w;H=h;BB.cena(k,w,h,1);const s=1.55;quebradeiraP(k,w*.3,h*.95,s,1,.08,(x,y,r,a)=>cocoInt(k,x,y,r,a),ROUPAS[0]);for(let i=0;i<5;i++)amendoa(k,w*.68+i*24,h*.86-(i%2)*8,12,i*.5,i===3?'gongo':'');vinheta(k,w,h);cx=o;W=oW;H=oH;}
 };
 const FASES=G.FASES;
