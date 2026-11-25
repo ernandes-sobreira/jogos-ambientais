@@ -283,7 +283,7 @@ const G={titulo:'Estrada de Seringa',get rotulo(){return S&&S.f===3?'Camadas na 
  meta(g){return [g.n,FASES[S.f].meta];},
  cedo(g){const F=FASES[S.f];if(F.tipo==='def')return g.n>=F.meta;return g.vol&&g.d<=0&&g.modo==='anda';},
  iniciaCorte(g,a){g.modo='bica';g.alvo=a;const Z=SR.geo();g.Z=Z;g.pts=[];const n=Math.floor(Math.hypot(Z.b.x-Z.a.x,Z.b.y-Z.a.y)/5);for(let i=0;i<=n;i++)g.pts.push({x:Z.a.x+(Z.b.x-Z.a.x)*i/n,y:Z.a.y+(Z.b.y-Z.a.y)*i/n,z:null});
-  g.bica={x:Z.bandeja.x+46,y:Z.bandeja.y+Z.bandeja.h/2,pos:0};g.tig={x:Z.bandeja.x+Z.bandeja.w-50,y:Z.bandeja.y+Z.bandeja.h/2,pos:0};g.drag=null;g.prof=0;g.gotas=[];g.cap=0;g.tot=0;g.escT=0;g.chuvaCorte=0;g.mao=null;},
+  g.bica={x:Z.bandeja.x+46,y:Z.bandeja.y+Z.bandeja.h/2,pos:0};g.tig={x:Z.bandeja.x+Z.bandeja.w-50,y:Z.bandeja.y+Z.bandeja.h/2,pos:0};g.drag=null;g.prof=0;g.gotas=[];g.rastro=[];g.avBica=0;g.cap=0;g.tot=0;g.escT=0;g.chuvaCorte=0;g.mao=null;},
  update(g,dt){const F=FASES[S.f];for(const p of g.part){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=380*dt;p.a=(p.a||0)+dt*8;p.t-=dt;}g.part=g.part.filter(p=>p.t>0);
   if(F.tipo==='def')return G.updDef(g,dt);
   if(g.modo==='ferr'){if(inp.tap&&SR.hit(SR.btn('entendi'),inp.tap))g.modo='anda';return;}
@@ -302,7 +302,7 @@ const G={titulo:'Estrada de Seringa',get rotulo(){return S&&S.f===3?'Camadas na 
     if(g.d<0)g.d=0;}return;}
   const Z=g.Z;
   /* botões do painel */
-  if(inp.tap&&g.modo!=='escorre'){if(SR.hit(SR.btn('pular'),inp.tap)){g.alvo.pul=1;g.modo='anda';msg('Árvore pulada.');return;}if(SR.hit(SR.btn('amolar'),inp.tap)){g.amo={volta:g.modo,lado:0,n:0};g.modo='amolar';return;}}
+  if(inp.tap&&g.modo!=='escorre'&&g.modo!=='nota'){if(SR.hit(SR.btn('pular'),inp.tap)){g.alvo.pul=1;g.modo='anda';msg('Árvore pulada.');return;}if(SR.hit(SR.btn('amolar'),inp.tap)){g.amo={volta:g.modo,lado:0,n:0};g.modo='amolar';return;}}
   /* arrastar bica e tigela */
   if(g.modo==='bica'||g.modo==='tigela'){const it=g.modo==='bica'?g.bica:g.tig,alvo=g.modo==='bica'?Z.bica:Z.tig;
    if(inp.down&&inp.x!==null){if(!g.drag&&Math.hypot(inp.x-it.x,inp.y-it.y)<40)g.drag=1;if(g.drag){it.x=inp.x;it.y=inp.y;}}
@@ -323,13 +323,16 @@ const G={titulo:'Estrada de Seringa',get rotulo(){return S&&S.f===3?'Camadas na 
     else{msg(ok>=.6?'Corte bom: '+Math.round(ok*100)+'% na profundidade certa.':'Corte irregular: '+Math.round(ok*100)+'% na profundidade certa.');g.modo='escorre';g.escT=4.5;
      for(let i=0;i<g.pts.length;i+=2){const p=g.pts[i];if(p.z==='ok'||p.z==='raso'&&Math.random()<.3)g.gotas.push({x:p.x,y:p.y,fase:0,del:Math.random()*1.1,v:0});}g.tot=g.gotas.length;}}
    return;}
+  if(g.modo==='nota'){g.nota.t+=dt;if((inp.tap&&g.nota.t>.4)||g.nota.t>6)g.modo='anda';return;}
   if(g.modo==='escorre'){g.escT-=dt;const bOk=Math.hypot(g.bica.x-Z.bica.x,g.bica.y-Z.bica.y)<26;
    for(const q of g.gotas){if(q.del>0){q.del-=dt;continue;}
     if(q.fase===0){const dx=Z.b.x-q.x,dy=Z.b.y-q.y,d=Math.hypot(dx,dy);if(d<4){q.fase=1;}else{q.x+=dx/d*150*dt;q.y+=dy/d*150*dt;}}
-    else if(q.fase===1){const tx=bOk?g.bica.x+10:Z.b.x,ty=bOk?g.bica.y:Z.b.y+60;const dx=tx-q.x,dy=ty-q.y,d=Math.hypot(dx,dy);if(d<4){q.fase=2;q.v=40;}else{q.x+=dx/d*70*dt;q.y+=dy/d*70*dt;}}
+    else if(q.fase===1){if(!bOk){q.fase=3;q.ox=q.x;q.w=Math.random()*6;}else{const tx=g.bica.x+18,ty=g.bica.y+4;const dx=tx-q.x,dy=ty-q.y,d=Math.hypot(dx,dy);if(d<4){q.fase=2;q.v=40;}else{q.x+=dx/d*70*dt;q.y+=dy/d*70*dt;}}}
+    else if(q.fase===3){q.y+=38*dt;q.x=q.ox+Math.sin(q.y*.06+q.w)*5;if(!g.rastro)g.rastro=[];if(Math.random()<.3)g.rastro.push({x:q.x,y:q.y});if(q.y>g.Z.P.y+g.Z.P.h-10)q.fim=2;}
     else if(q.fase===2){q.v+=500*dt;q.y+=q.v*dt;const ti=g.tig;if(!q.fim&&Math.abs(q.x-ti.x)<22&&q.y>ti.y-8&&q.y<ti.y+30&&ti.pos){q.fim=1;g.cap++;}if(q.y>g.Z.P.y+g.Z.P.h-6&&!q.fim){q.fim=2;g.part.push({x:q.x,y:q.y-4,vx:-30,vy:-60,t:.3},{x:q.x,y:q.y-4,vx:30,vy:-60,t:.3});}}}
    g.gotas=g.gotas.filter(q=>!q.fim);
-   if(g.escT<=0||(!g.gotas.length&&g.escT<2.4)){const a=g.alvo;a.cort=1;a.t=0;a.capt=g.tot?g.cap/g.tot:0;if(g.chuvaCorte)a.agua=1;if(!a.ferida&&a.capt<.5)msg('Boa parte do látex caiu fora da tigela.');g.modo='anda';}
+   if(!bOk&&!g.avBica){g.avBica=1;msg('Sem a bica no lugar, o látex escorre pelo tronco e não chega na tigela.');g.escT=Math.max(g.escT,3.5);}
+   if(g.escT<=0||(!g.gotas.length&&g.escT<2.4)){const a=g.alvo;a.cort=1;a.t=0;a.capt=g.tot?g.cap/g.tot:0;if(g.chuvaCorte)a.agua=1;const bOk2=Math.hypot(g.bica.x-Z.bica.x,g.bica.y-Z.bica.y)<26;const nota=a.ferida?0:Math.round(10*a.rend*a.capt);g.nota={bica:bOk2,capt:a.capt,rend:a.rend,ferida:a.ferida,fio:g.fio,agua:a.agua,nota,t:0};if(nota>=8)ganha(5,W/2,H*.3);g.modo='nota';}
    return;}},
  updAmolar(g,dt){const A=g.amo;if(inp.tap&&SR.hit(SR.btn('pronto'),inp.tap)){g.modo=A.volta;return;}
   const sx0=W*.25,sx1=W*.75,sy=H*.5;if(inp.down&&inp.x!==null){A.fx=inp.x;A.fy=inp.y;const naPedra=Math.abs(inp.y-sy)<30;A.naPedra=naPedra;
@@ -345,7 +348,8 @@ const G={titulo:'Estrada de Seringa',get rotulo(){return S&&S.f===3?'Camadas na 
   if(g.ch||g.chAv){cx.fillStyle='rgba(70,90,120,'+(g.ch?.28:.14)+')';cx.fillRect(0,0,W,H);if(g.chAv){cx.fillStyle='rgba(90,100,120,.5)';for(let i=0;i<5;i++){cx.beginPath();cx.ellipse(W*(.15+i*.18),H*.06,W*.12,H*.05,0,0,7);cx.fill();}}if(g.ch){cx.strokeStyle='rgba(210,225,255,.65)';cx.lineWidth=1.5;for(let i=0;i<90;i++){const x=(i*53+g.t*260)%W,y=(i*97+g.t*700)%H;cx.beginPath();cx.moveTo(x,y);cx.lineTo(x-4,y+12);cx.stroke();}}}
   if(g.modo==='anda'){G.fioBar(g,10,H-44);const b=SR.btn('amolarRua');rrk(cx,b.x,b.y,b.w,b.h,12,'#455a64');cx.fillStyle='#fff';cx.font='bold 13px system-ui';cx.textAlign='center';cx.fillText('AMOLAR',b.x+b.w/2,b.y+b.h/2+5);
    if(g.vol){rrk(cx,10,H-78,180,26,13,'rgba(255,255,255,.95)');cx.fillStyle='#004d40';cx.font='bold 12px system-ui';cx.textAlign='left';cx.fillText('Balde: '+g.balde+' tigelas cheias',20,H-60);}}
-  if(['bica','tigela','corte','escorre'].includes(g.modo))G.drawPainel(g);
+  if(['bica','tigela','corte','escorre','nota'].includes(g.modo))G.drawPainel(g);
+  if(g.modo==='nota')G.drawNota(g);
   if(g.modo==='amolar')G.drawAmolar(g);
   if(g.modo==='ferr')G.drawFerr(g);
   for(const p of g.part){cx.globalAlpha=Math.min(1,p.t*2.5);if(p.raspa){cx.save();cx.translate(p.x,p.y);cx.rotate(p.a);cx.strokeStyle='#c9a77a';cx.lineWidth=2;cx.beginPath();cx.arc(0,0,4,0,4);cx.stroke();cx.restore();}else if(p.faisca){cx.fillStyle='#ffca28';cx.fillRect(p.x,p.y,2.5,2.5);}else{cx.fillStyle='#fbfaf3';cx.beginPath();cx.arc(p.x,p.y,2.2,0,7);cx.fill();}cx.globalAlpha=1;}
@@ -355,7 +359,8 @@ const G={titulo:'Estrada de Seringa',get rotulo(){return S&&S.f===3?'Camadas na 
   else if(g.modo==='bica')t=curto?'Arraste a bica para o fim do corte.':'Arraste a bica até o fim do corte, no ponto que brilha.';
   else if(g.modo==='tigela')t=curto?'Arraste a tigela para baixo da bica.':'Arraste a tigela para bem embaixo da bica, onde o látex vai pingar.';
   else if(g.modo==='corte'){if(g.ch||g.chAv){t=curto?'Chuva! Pule ou espere.':'Chuva chegando ou caindo: cortar agora põe água no látex. Pule ou espere.';cor='#1565c0';}else t=curto?'Corte em cima da linha tracejada.':'Arraste a faca em cima da linha tracejada, da esquerda alta para a direita baixa.';}
-  else if(g.modo==='escorre')t='O látex escorre pelo corte até a bica e pinga na tigela.';
+  else if(g.modo==='escorre')t=g.avBica?(m?'Sem bica: látex escorre no tronco.':'Sem a bica no lugar, o látex escorre pelo tronco.'):(m?'O látex desce até a bica e pinga.':'O látex escorre pelo corte até a bica e pinga na tigela.');
+  else if(g.modo==='nota')t=m?'Veja como foi a sangria.':'Veja como foi a sangria desta seringueira.';
   else if(g.vol)t=curto?'Voltando e recolhendo o látex.':'Voltando: o seringueiro recolhe o látex de cada tigela.';
   else t=g.fio<.35?(curto?'Faca cega! Toque em AMOLAR.':'Faca cega! Toque em AMOLAR antes da próxima árvore.'):(curto?'Andando até a próxima seringueira...':'Andando pela estrada até a próxima seringueira...');
   if(g.fio<.35&&g.modo==='anda')cor='#c62828';
@@ -380,6 +385,7 @@ const G={titulo:'Estrada de Seringa',get rotulo(){return S&&S.f===3?'Camadas na 
   if(g.modo==='tigela'){cx.strokeStyle='rgba(255,193,7,'+(.5+.5*pul)+')';cx.lineWidth=3;cx.setLineDash([5,4]);cx.strokeRect(Z.tig.x-22,Z.tig.y-10,44,22);cx.setLineDash([]);cx.strokeStyle='rgba(255,255,255,.7)';cx.lineWidth=1.5;cx.setLineDash([3,4]);cx.beginPath();cx.moveTo(g.bica.x+10,g.bica.y);cx.lineTo(g.bica.x+10,Z.tig.y);cx.stroke();cx.setLineDash([]);}
   /* látex escorrendo: gotas */
   for(const q of g.gotas){if(q.del>0)continue;cx.fillStyle='#fbfaf3';cx.strokeStyle='rgba(150,140,120,.6)';cx.lineWidth=.8;cx.beginPath();cx.ellipse(q.x,q.y,q.fase===2?2.6:3,q.fase===2?4:3,0,0,7);cx.fill();cx.stroke();}
+  if(g.rastro)for(const r of g.rastro){cx.fillStyle='rgba(251,250,243,.8)';cx.beginPath();cx.arc(r.x,r.y,2.2,0,7);cx.fill();}
   /* rastro branco no sulco durante o escorrimento */if(g.modo==='escorre'&&!g.alvo.ferida){cx.strokeStyle='rgba(251,250,243,.85)';cx.lineWidth=3;cx.beginPath();cx.moveTo(Z.a.x,Z.a.y);cx.lineTo(Z.b.x,Z.b.y);cx.stroke();}
   /* bica e tigela */ferramenta(cx,'bica',g.bica.x,g.bica.y,1.7);if(g.modo==='bica'||g.modo==='tigela'){cx.fillStyle='#37474f';cx.font='bold 12px system-ui';cx.textAlign='center';cx.fillText('bica',g.bica.x,g.bica.y+24);}
   {const ti=g.tig;ferramenta(cx,'tigela',ti.x,ti.y,1.2);const f=g.tot?Math.min(1,g.cap/(g.tot*.9)):0;if(f>0){cx.fillStyle='#fbfaf3';cx.fillRect(ti.x-17,ti.y-8+ (1-f)*8,34,f*8+2);}}
@@ -400,8 +406,16 @@ const G={titulo:'Estrada de Seringa',get rotulo(){return S&&S.f===3?'Camadas na 
   }
   /* fio da faca e progresso */if(g.modo==='corte'||g.modo==='escorre')G.fioBar(g,P.x+P.w-(m?164:196),P.y+P.h-(m?96:100));
   if(g.modo==='corte'){const feitos=g.pts.filter(p=>p.z!==null).length;const px=m?P.x+P.w-164:P.x+P.w-196,py=P.y+P.h-(m?62:66);rrk(cx,px,py,m?150:180,10,5,'#e0e0e0');rrk(cx,px,py,(m?150:180)*feitos/g.pts.length,10,5,'#26a69a');}
-  if(g.modo==='escorre'){const px=m?P.x+P.w-164:P.x+P.w-196;cx.fillStyle='#004d40';cx.font='bold 12px system-ui';cx.textAlign='left';cx.fillText('Na tigela: '+(g.tot?Math.round(100*g.cap/g.tot):0)+'%',px,P.y+P.h-(m?56:58));}
+  if(g.modo==='nota'){}else if(g.modo==='escorre'){const px=m?P.x+P.w-164:P.x+P.w-196;cx.fillStyle='#004d40';cx.font='bold 12px system-ui';cx.textAlign='left';cx.fillText('Na tigela: '+(g.tot?Math.round(100*g.cap/g.tot):0)+'%',px,P.y+P.h-(m?56:58));}
   else{for(const id of ['pular','amolar']){const b=SR.btn(id);rrk(cx,b.x,b.y,b.w,b.h,10,id==='amolar'?'#455a64':'#eceff1');cx.fillStyle=id==='amolar'?'#fff':'#37474f';cx.font='bold 13px system-ui';cx.textAlign='center';cx.fillText(id==='amolar'?'AMOLAR':'PULAR',b.x+b.w/2,b.y+b.h/2+5);}}},
+ drawNota(g){const N=g.nota,m=MOB();const w=m?W-40:380,h=m?250:260,x=W/2-w/2,y=H/2-h/2;rrk(cx,x,y,w,h,16,'rgba(255,255,255,.98)');cx.strokeStyle='#00796b';cx.lineWidth=2.5;cx.beginPath();cx.roundRect(x,y,w,h,16);cx.stroke();
+  cx.fillStyle='#004d40';cx.textAlign='center';cx.font='bold 17px system-ui';cx.fillText('Nota desta seringueira',W/2,y+30);
+  const est=N.nota>=8?3:N.nota>=5?2:N.nota>=2?1:0;cx.font='28px system-ui';for(let i=0;i<3;i++){cx.fillStyle=i<est?'#ffb300':'#cfd8dc';cx.fillText('★',W/2-36+i*36,y+66);}
+  cx.font='bold 22px system-ui';cx.fillStyle=N.nota>=8?'#2e7d32':N.nota>=5?'#f9a825':'#c62828';cx.fillText(N.nota+' / 10',W/2,y+96);
+  const pc=Math.round(N.capt*100),pr=Math.round(N.rend*100);const it=[[N.bica,'Bica',N.bica?'no fim do corte':'fora do lugar'],[N.capt>=.8,'Tigela',pc+'% do látex dentro'],[!N.ferida&&N.rend>=.6,'Corte',N.ferida?'feriu o câmbio':pr+'% na profundidade certa'],[N.fio>=.4,'Faca',N.fio>=.4?'com fio':'cega, amole antes da próxima']];
+  it.forEach((r,i)=>{const yy=y+124+i*26;cx.textAlign='left';cx.font='bold 14px system-ui';cx.fillStyle=r[0]?'#2e7d32':'#c62828';cx.fillText(r[0]?'✓':'✗',x+22,yy);cx.fillStyle='#263238';cx.fillText(r[1],x+44,yy);cx.font='13px system-ui';cx.fillStyle='#455a64';cx.fillText(r[2],x+(m?100:110),yy);});
+  if(N.agua){cx.fillStyle='#1565c0';cx.font='bold 12px system-ui';cx.textAlign='center';cx.fillText('Cortada com chuva: o látex vai ter água.',W/2,y+h-30);}
+  cx.fillStyle='#78909c';cx.font='12px system-ui';cx.textAlign='center';cx.fillText('toque para continuar',W/2,y+h-12);},
  drawAmolar(g){const m=MOB();cx.fillStyle='rgba(250,252,248,.98)';cx.fillRect(0,0,W,H);const sx0=W*.25,sx1=W*.75,sy=H*.5;
   cx.fillStyle='#004d40';cx.font='bold 16px system-ui';cx.textAlign='center';cx.fillText('Pedra de amolar',W/2,H*.22);cx.font='13px system-ui';if(m){cx.fillText('Passe a faca de uma ponta à outra.',W/2,H*.28);cx.fillText('Faca com fio corta a casca sem rasgar.',W/2,H*.28+17);}else cx.fillText('Passe a faca de uma ponta à outra. Faca com fio corta a casca sem rasgar.',W/2,H*.29);
   cx.fillStyle='#6d4c41';cx.fillRect(sx0-20,sy+14,sx1-sx0+40,18);cx.fillStyle=lg(cx,0,sy-14,0,sy+14,['#90a4ae','#78909c','#607d8b']);cx.beginPath();cx.roundRect(sx0,sy-14,sx1-sx0,28,6);cx.fill();cx.fillStyle='rgba(255,255,255,.25)';cx.fillRect(sx0+6,sy-12,sx1-sx0-12,5);
