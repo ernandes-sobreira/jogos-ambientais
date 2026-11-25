@@ -224,25 +224,43 @@ function tora(k){k.fillStyle=lg(k,-110,0,110,0,['#9a5e33','#d39b63','#c88b55','#
  k.strokeStyle='rgba(90,50,20,.22)';k.lineWidth=1.4;for(let i=-86;i<=86;i+=13){k.beginPath();k.moveTo(i,-296);k.bezierCurveTo(i+8,-150,i-10,0,i+4,166);k.stroke();}
  k.fillStyle='rgba(255,255,255,.12)';k.fillRect(-70,-296,14,460);}
 function corpoPath(){const p=new Path2D();VI.borda.forEach(([x,y],i)=>i?p.lineTo(x,y):p.moveTo(x,y));p.closePath();return p;}
-function viola(k,est){const P=corpoPath();k.fillStyle=lg(k,-80,0,80,0,['#b9773f','#e2b07a','#d79e63','#a9692f']);k.fill(P);k.beginPath();k.moveTo(-15,-100);k.lineTo(-13,-250);k.lineTo(13,-250);k.lineTo(15,-100);k.fill();k.beginPath();k.roundRect(-22,-292,44,46,10);k.fill();
+function viola(k,est,semCav){const P=corpoPath();k.fillStyle=lg(k,-80,0,80,0,['#b9773f','#e2b07a','#d79e63','#a9692f']);k.fill(P);k.beginPath();k.moveTo(-15,-100);k.lineTo(-13,-250);k.lineTo(13,-250);k.lineTo(15,-100);k.fill();k.beginPath();k.roundRect(-22,-292,44,46,10);k.fill();
  k.save();k.clip(P);k.strokeStyle='rgba(90,50,20,.2)';k.lineWidth=1.2;for(let i=-74;i<=74;i+=11){k.beginPath();k.moveTo(i,-120);k.bezierCurveTo(i+6,-20,i-8,80,i+2,170);k.stroke();}k.restore();
  if(est>=2){k.fillStyle=lg(k,-70,-60,70,120,['#f7e2bb','#ecc994','#e2b980']);k.fill(P);k.fillStyle=rg(k,0,-12,4,20,['#120802','#3b2412']);k.beginPath();k.arc(0,-12,13,0,7);k.fill();k.strokeStyle='rgba(120,70,30,.6)';k.lineWidth=1.5;k.beginPath();k.arc(0,-12,17,0,7);k.stroke();k.beginPath();k.arc(0,-12,20,0,7);k.stroke();
-  k.fillStyle='#5d3a1a';k.beginPath();k.roundRect(-28,92,56,10,4);k.fill();k.fillStyle='#8d6e63';k.fillRect(-20,-248,40,4);}
+  if(!semCav){k.fillStyle='#5d3a1a';k.beginPath();k.roundRect(-28,92,56,10,4);k.fill();}k.fillStyle='#8d6e63';k.fillRect(-20,-248,40,4);}
  k.strokeStyle='rgba(70,35,10,.6)';k.lineWidth=2.5;k.stroke(P);k.fillStyle='rgba(255,255,255,.14)';k.beginPath();k.ellipse(-30,40,10,50,.1,0,7);k.fill();}
 
+
+const ETAPAS=['risco','braco','esc','cola','cav','ponto','crav','corda'];
 VI.caminhos=function(tipo){const L=[];const fecha=(f)=>{const p=VI.borda.map(([x,y])=>[x*f,10+(y-10)*f]);p.push(p[0]);return p;};
- if(tipo==='esc')L.push(fecha(.8));if(tipo==='cola')L.push(fecha(1));
+ if(tipo==='risco')L.push(fecha(1));
+ if(tipo==='braco')L.push([[-15,-100],[-13,-246],[-22,-246],[-22,-292],[22,-292],[22,-246],[13,-246],[15,-100]]);
+ if(tipo==='esc')L.push(fecha(.8));if(tipo==='cola')L.push(fecha(.97));
+ if(tipo==='cav')L.push([[-26,97],[26,97]]);
  if(tipo==='ponto')for(const y of [-235,-213,-191,-169,-147,-125])L.push([[-15,y],[15,y]]);
+ if(tipo==='crav')for(let i=0;i<5;i++){const cx0=i%2?14:-14,cy0=-286+i*9;const c=[];for(let a=0;a<=12;a++)c.push([cx0+Math.cos(a/12*6.283)*5,cy0+Math.sin(a/12*6.283)*5]);L.push(c);}
  if(tipo==='corda')for(let i=0;i<5;i++)L.push([[-8+i*4,-282],[-16+i*8,96]]);
  const P=[];L.forEach((pl,li)=>{for(let j=0;j<pl.length-1;j++){const [a,b]=[pl[j],pl[j+1]];const n=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/4));for(let t=0;t<n;t++)P.push({x:a[0]+(b[0]-a[0])*t/n,y:a[1]+(b[1]-a[1])*t/n,l:li,v:0});}});return {L,P};};
+function violaEtapa(k,e){const tipo=ETAPAS[e];
+ if(e<=1){tora(k);k.strokeStyle='rgba(60,30,10,.55)';k.lineWidth=2;if(e===1){const P=corpoPath();k.stroke(P);}return;}
+ viola(k,e>=4?2:1,true);
+ if(e===2||e===3){k.save();VI.contorno(k,e===2?.8:.92);k.clip();if(e===3){k.fillStyle=rg(k,0,40,20,160,['#3a1d09','#6b3d1c']);k.fillRect(-100,-130,200,320);}k.restore();}
+ if(e>=4){if(e<5)k.fillStyle='rgba(0,0,0,0)';}
+ if(e>=5){k.fillStyle='#5d3a1a';k.beginPath();k.roundRect(-28,92,56,10,4);k.fill();}
+ if(e>=6)for(const y of [-235,-213,-191,-169,-147,-125]){k.strokeStyle='#fafafa';k.lineWidth=3.5;k.beginPath();k.moveTo(-15,y);k.lineTo(15,y);k.stroke();}
+ if(e>=7)for(let i=0;i<5;i++){k.fillStyle='#4e342e';k.beginPath();k.arc(i%2?14:-14,-286+i*9,5,0,7);k.fill();}}
 const G={titulo:'Viola de Cocho',rotulo:'Precisão %',vidas:0,semTempo:1,
- resumo:'Em Mato Grosso e Mato Grosso do Sul, o mestre cururueiro faz a viola de cocho de um tronco inteiro. Aqui você ajuda a fazer uma, seguindo as linhas com o dedo com muito cuidado.',
- como:[['Siga','Passe o dedo em cima da linha tracejada, do começo ao fim.'],['Capriche','Cada vez que o dedo sai da linha conta como erro e tira precisão.'],['Você decide','Quando terminar a linha, escolha: refazer para melhorar ou ir para a pergunta.']],
+ resumo:'Em Mato Grosso e Mato Grosso do Sul, o mestre cururueiro faz a viola de cocho de um tronco inteiro. Siga as linhas com o dedo e faça a viola passo a passo, da tora até a viola pronta.',
+ como:[['Siga','Passe o dedo em cima da linha tracejada, do começo ao fim.'],['Capriche','Cada vez que o dedo sai da linha conta como erro e tira precisão.'],['Você decide','Quando terminar, escolha: refazer para melhorar ou ir para a pergunta.']],
  dica:'Devagar e em cima da linha.',dicaErro:'Faça devagar, com o dedo sempre em cima da linha tracejada.',
- FASES:[{nome:'Escavar o cocho',dur:99999,meta:70,tipo:'esc',metaTxt:'contornar o bojo com 70% de precisão ou mais.',txt:'Passe o formão em cima da linha para escavar a viola, como se faz com o cocho do gado.',fato:'A viola é esculpida numa tora inteiriça. Madeiras como a ximbuva e o sarã-de-leite são usadas porque são macias e fáceis de escavar.'},
-  {nome:'Colar o tampo',dur:99999,meta:72,tipo:'cola',metaTxt:'passar o grude em toda a borda com 72% de precisão ou mais.',txt:'Passe o grude de poca em cima da borda, sem sair dela.',fato:'As partes da viola são coladas com um grude feito da poca, a bexiga natatória dos peixes.'},
-  {nome:'Amarrar os pontos',dur:99999,meta:75,tipo:'ponto',metaTxt:'passar os 6 fios com 75% de precisão ou mais.',txt:'Passe o fio de um lado ao outro do braço em cada marca.',fato:'Os trastes da viola de cocho são chamados de pontos. São feitos de fio de algodão revestido com cera de abelha.'},
-  {nome:'Encordoar',dur:99999,meta:75,tipo:'corda',metaTxt:'esticar as 5 cordas com 75% de precisão ou mais.',txt:'Siga cada corda da cabeça até o cavalete.',fato:'A viola tem cinco cordas. Antigamente eram feitas de tripa de bugio. Hoje costumam ser de náilon.'}],
+ FASES:[{nome:'Passo 1 de 8: riscar o molde',dur:99999,meta:65,tipo:'risco',metaTxt:'riscar o contorno do corpo com 65% de precisão ou mais.',txt:'O mestre escolhe uma tora inteira de madeira macia e risca nela o formato da viola. Risque o contorno do corpo.',fato:'A viola é feita de uma tora inteiriça. Madeiras como a ximbuva e o sarã-de-leite são usadas porque são macias e fáceis de escavar.'},
+  {nome:'Passo 2 de 8: talhar o braço',dur:99999,meta:65,tipo:'braco',metaTxt:'contornar o braço e a cabeça com 65% de precisão ou mais.',txt:'Agora o mestre talha a tora no formato de viola. Contorne o braço e a cabeça.',fato:'A tora é talhada no formato de viola, com corpo, braço e cabeça na mesma peça de madeira.'},
+  {nome:'Passo 3 de 8: escavar o cocho',dur:99999,meta:70,tipo:'esc',metaTxt:'contornar o bojo com 70% de precisão ou mais.',txt:'Com o formão, o mestre escava o corpo por dentro. Passe o formão em cima da linha.',fato:'O corpo é escavado e fica oco por dentro, como o cocho onde se põe o sal do gado. Daí vem o nome viola de cocho.'},
+  {nome:'Passo 4 de 8: colar o tampo',dur:99999,meta:70,tipo:'cola',metaTxt:'passar o grude na borda com 70% de precisão ou mais.',txt:'Passe o grude de poca na borda para colar o tampo por cima do cocho.',fato:'O tampo é colado com grude de poca, feito da bexiga natatória dos peixes. Para o tampo, os mestres usam madeira de raiz de figueira.'},
+  {nome:'Passo 5 de 8: o cavalete',dur:99999,meta:70,tipo:'cav',metaTxt:'colar o cavalete com 70% de precisão ou mais.',txt:'Cole o cavalete no tampo. É nele que as cordas vão se apoiar embaixo.',fato:'Depois do tampo, o mestre fixa as outras partes da viola, como o cavalete, o espelho, o rastilho e as cravelhas. Para essas peças se usa o cedro.'},
+  {nome:'Passo 6 de 8: amarrar os pontos',dur:99999,meta:75,tipo:'ponto',metaTxt:'passar os 6 fios com 75% de precisão ou mais.',txt:'Passe o fio de um lado ao outro do braço, em cada marca.',fato:'Os trastes da viola de cocho são chamados de pontos. São feitos de fio de algodão revestido com cera de abelha.'},
+  {nome:'Passo 7 de 8: as cravelhas',dur:99999,meta:70,tipo:'crav',metaTxt:'contornar as 5 cravelhas com 70% de precisão ou mais.',txt:'Contorne cada cravelha na cabeça da viola. Elas vão segurar as cordas em cima.',fato:'Esse saber é passado de boca em boca, entre familiares e amigos, principalmente na zona rural.'},
+  {nome:'Passo 8 de 8: encordoar',dur:99999,meta:75,tipo:'corda',metaTxt:'esticar as 5 cordas com 75% de precisão ou mais.',txt:'Siga cada corda da cravelha até o cavalete. A viola fica pronta!',fato:'A viola tem cinco cordas. Antigamente eram feitas de tripa de bugio. Hoje costumam ser de náilon. O modo de fazer a viola de cocho é Patrimônio Cultural do Brasil.'}],
  init(g){const F=FASES[S.f];const c=VI.caminhos(F.tipo);g.L=c.L;g.P=c.P;g.tot=0;g.dentro=0;g.fora=0;g.sai=0;g.prevOk=true;g.trilha=[];g.fim2=false;g.pronto=false;g.last=null;},
  prec(g){const t=g.dentro+3*g.fora;return t?Math.max(0,Math.round(100*g.dentro/t)-4*g.sai):0;},
  prog(g){return g.P.filter(p=>p.v).length/g.P.length;},
@@ -257,10 +275,8 @@ const G={titulo:'Viola de Cocho',rotulo:'Precisão %',vidas:0,semTempo:1,
   else{g.last=null;g.prevOk=true;}},
  draw(g){const F=FASES[S.f];cx.drawImage(cache('ofi',W,H,oficina),0,0);
   cx.save();VI.tr(cx);cx.fillStyle='rgba(40,20,5,.12)';cx.beginPath();cx.ellipse(10,-60,100,238,0,0,7);cx.fill();
-  if(F.tipo==='esc')tora(cx);viola(cx,F.tipo==='esc'||F.tipo==='cola'?1:2);
-  if(F.tipo==='cola'||F.tipo==='esc'){cx.save();VI.contorno(cx,F.tipo==='esc'?.8:.92);cx.clip();if(F.tipo==='cola'){cx.fillStyle=rg(cx,0,40,20,160,['#3a1d09','#6b3d1c']);cx.fillRect(-100,-130,200,320);}cx.restore();}
-  if(F.tipo==='corda')for(let i=0;i<5;i++){cx.fillStyle='#4e342e';cx.beginPath();cx.arc(i%2?14:-14,-286+i*9,4,0,7);cx.fill();}
-  const cor={esc:'#3a1d09',cola:'#fff3c4',ponto:'#fafafa',corda:'#fffde7'}[F.tipo];const lw={esc:9,cola:7,ponto:4,corda:2.2}[F.tipo];
+  violaEtapa(cx,S.f);
+  const cor={risco:'#3e2723',braco:'#3e2723',esc:'#3a1d09',cola:'#fff3c4',cav:'#5d3a1a',ponto:'#fafafa',crav:'#4e342e',corda:'#fffde7'}[F.tipo];const lw={risco:3,braco:3,esc:9,cola:7,cav:9,ponto:4,crav:4,corda:2.2}[F.tipo];
   cx.lineCap='round';cx.lineJoin='round';
   for(const pl of g.L){cx.setLineDash([5,5]);cx.strokeStyle='rgba(255,255,255,.95)';cx.lineWidth=2;cx.beginPath();pl.forEach(([x,y],i)=>i?cx.lineTo(x,y):cx.moveTo(x,y));cx.stroke();cx.setLineDash([]);}
   cx.strokeStyle=cor;cx.lineWidth=lw;for(let i=1;i<g.P.length;i++){const a=g.P[i-1],b=g.P[i];if(a.v&&b.v&&a.l===b.l&&Math.hypot(a.x-b.x,a.y-b.y)<8){cx.beginPath();cx.moveTo(a.x,a.y);cx.lineTo(b.x,b.y);cx.stroke();}}
@@ -274,10 +290,14 @@ const G={titulo:'Viola de Cocho',rotulo:'Precisão %',vidas:0,semTempo:1,
 };
 const FASES=G.FASES;
 const PERG=[
- {q:'De que é feita a caixa da viola de cocho?',o:['De uma tora de madeira inteiriça escavada','De tábuas finas coladas umas nas outras','De uma cabaça seca cortada ao meio']},
- {q:'O que é a poca usada no grude da viola?',o:['A bexiga natatória dos peixes','A resina tirada do tronco do cedro','Uma cera tirada da cana']},
- {q:'Como são chamados os trastes da viola de cocho na região?',o:['Pontos','Casas','Degraus']},
- {q:'De que material eram feitas as cordas antigamente?',o:['Tripa de bugio','Fibra de buriti trançada','Fio de cobre fino']}
+ {q:'De que é feita a viola de cocho?',o:['De uma tora inteira de madeira','De tábuas finas coladas','De uma cabaça seca']},
+ {q:'O que o mestre faz depois de riscar o molde?',o:['Talha a tora no formato de viola','Pinta a viola de vermelho','Coloca as cordas']},
+ {q:'Por que se chama viola de cocho?',o:['O corpo é escavado como o cocho do gado','Ela era guardada no cocho','Só era tocada perto do gado']},
+ {q:'O que é a poca usada no grude?',o:['A bexiga natatória dos peixes','A resina tirada do tronco do cedro','Uma cera tirada da cana']},
+ {q:'Qual madeira se usa no cavalete e nas outras peças?',o:['Cedro','Eucalipto','Pinho']},
+ {q:'Como se chamam os trastes da viola de cocho?',o:['Pontos','Casas','Degraus']},
+ {q:'Como esse saber passa de uma pessoa para outra?',o:['De boca em boca, entre família e amigos','Só pela internet','Num livro de escola']},
+ {q:'De que eram feitas as cordas antigamente?',o:['Tripa de bugio','Fibra de buriti trançada','Fio de cobre fino']}
 ];
 function pergunta(){
  const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
@@ -292,7 +312,7 @@ function final(tudo){
  $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Mestre da viola!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
  <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
- <div class="small" style="margin-top:12px;text-align:left">Fontes: IPHAN, Parecer Técnico 67/2021 IPHAN-MT; Agência Brasil (10/12/2021), Modo de Fazer Viola de Cocho é revalidado como Patrimônio Cultural; Portal Amazônia, Modo de Fazer Viola de Cocho no Livro dos Saberes; Sena, Cururueiros no Pantanal sul-mato-grossense, Revista Brasileira de História e Ciências Sociais (FURG); Revista USP, Na toada da viola; Corrêa e Borges (2010), DAPesquisa 5(7). Linhas, precisão, metas e pontos são regras do jogo.</div></div>`;
+ <div class="small" style="margin-top:12px;text-align:left">Fontes: IPHAN, Parecer Técnico 67/2021 IPHAN-MT; Agência Brasil (10/12/2021), Modo de Fazer Viola de Cocho é revalidado como Patrimônio Cultural (tora inteiriça, sarã-de-leite e ximbuva); Portal Amazônia, Modo de Fazer Viola de Cocho no Livro dos Saberes (grude de poca, partes, pontos de algodão, tripa nas cordas); Sena, Cururueiros no Pantanal sul-mato-grossense, Revista Brasileira de História e Ciências Sociais, FURG (formato de viola, partes, transmissão oral, tripa de bugio); ECA USP, Viola-de-cocho: modo de fazer (raiz de figueira no tampo, cedro nas demais peças, fios com cera de abelha); Revista USP, Na toada da viola (cinco cordas, hoje de náilon). Linhas, precisão, metas e pontos são regras do jogo.</div></div>`;
  $('bS').onclick=()=>salvar(nivel);
 }
 const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
