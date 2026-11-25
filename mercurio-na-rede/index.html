@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Peixe Seguro</title>
 <style>
-:root{--main:#1e88e5;--deep:#1565c0;--soft:#e8f4fd;--line:#cfe6f8;--ink:#152230;--mut:#546778}
+:root{--main:#00838f;--deep:#004d55;--soft:#e0f7fa;--line:#b2ebf2;--ink:#10212b;--mut:#4d6370}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
 .wrap{max-width:780px;margin:0 auto;padding:12px 14px 40px}
@@ -43,7 +43,7 @@ canvas{width:100%;max-width:760px;margin:0 auto;display:block;border:2px solid v
 <a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
 <header>
   <h1>Peixe Seguro</h1>
-  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
 </header>
 <main id="tela"></main>
 <div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
@@ -117,7 +117,7 @@ let S,cv,cx,raf=null,last=0,W=720,H=460,inp={x:null,y:null,down:false,tap:null},
 const MOB=()=>W<520;
 function rrect(x,y,w,h,r,cor){cx.fillStyle=cor;cx.beginPath();cx.roundRect(x,y,w,h,r);cx.fill();}
 function sombra(x,y,rx,ry){cx.fillStyle='rgba(0,0,0,.12)';cx.beginPath();cx.ellipse(x,y,rx,ry,0,0,7);cx.fill();}
-function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/'+G.FASES.length;$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
  if(g&&!g.fim){const [a,m]=G.meta(g);$('hR').textContent=G.rotulo+' '+a+'/'+m;$('hV').textContent=G.vidas?'Vidas '+'●'.repeat(Math.max(0,g.vidas)):'';$('hT').textContent=G.semTempo?'':Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s';}
  ['hR','hV','hT'].forEach(k=>$(k).style.display=$(k).textContent?'':'none');}
 function inicio(){parar();$('hud').style.display='none';$('rankBox').style.display='block';
@@ -151,37 +151,196 @@ function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=G.FAS
  <p class="small" style="margin-top:6px">${ok?G.FASES[S.f].fato:G.dicaErro}</p>
  <div class="row" style="justify-content:center;margin-top:14px">${ok?'<button class="btn grande" id="bq">Pergunta rápida</button>':'<button class="btn grande" id="br">Jogar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
  if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}}
-/* Peixes predadores acumulam mais mercúrio porque ele se acumula ao longo da cadeia alimentar; limites da ANVISA: 0,5 mg/kg para não predadores e 1,0 mg/kg para predadores. Regras e pontos são do jogo. */
-const ESP=[{k:'pacu',d:'pacu',n:'pacu',pred:0,L:70},{k:'tambaqui',d:'pacu',n:'tambaqui',pred:0,L:84},{k:'aracu',d:'aracu',n:'aracu',pred:0,L:66},{k:'tucunare',d:'tucunare',n:'tucunaré',pred:1,L:80},{k:'piraiba',d:'piraiba',n:'piraíba',pred:1,L:104},{k:'piranha',d:'pacu',n:'piranha',pred:1,L:56}];
-const G={titulo:'Peixe Seguro',rotulo:'Peixes seguros',vidas:1,
- resumo:'No rio Tapajós, o mercúrio do garimpo entra na cadeia alimentar. Peixes que caçam outros peixes acumulam mais mercúrio do que os que comem frutos e plantas.',
- como:[['Toque','Pesque só os peixes que comem frutos e plantas: pacu, tambaqui e aracu. +10.'],['Evite','Peixes predadores, como tucunaré, piranha e piraíba. −10.'],['Gotas','Nas fases 2 e 3 caem gotas de mercúrio. Peixe que encosta nelas fica cinza: não pesque.']],
- dica:'Toque nos peixes seguros.',dicaErro:'Olhe a etiqueta do peixe antes de tocar: predador não vale.',
- FASES:[{nome:'Conheça os peixes',dur:40,meta:10,v:70,gotas:0,metaTxt:'pescar 10 peixes seguros em 40 s.',txt:'Toque em pacus, tambaquis e aracus. Deixe os predadores passarem.',fato:'Peixes que comem frutos e plantas ficam mais embaixo na cadeia alimentar e acumulam menos mercúrio.'},
-  {nome:'Gotas de mercúrio',dur:45,meta:12,v:90,gotas:1,metaTxt:'pescar 12 peixes seguros em 45 s.',txt:'Gotas de mercúrio caem na água. Peixe que encosta numa gota fica contaminado e cinza.',fato:'Na água, microrganismos transformam o mercúrio em metilmercúrio, a forma que se acumula nos peixes.'},
-  {nome:'Rio abaixo do garimpo',dur:45,meta:14,v:115,gotas:2,metaTxt:'pescar 14 peixes seguros em 45 s.',txt:'Mais gotas e peixes mais rápidos. Atenção redobrada.',fato:'A ANVISA aceita até 0,5 mg/kg de mercúrio em peixes não predadores e até 1,0 mg/kg em predadores.'}],
- init(g){g.vidas=3;g.ok=0;g.ps=[];g.gt=[];g.prox=0;},meta(g){return [g.ok,FASES[S.f].meta];},cedo(g){return g.ok>=FASES[S.f].meta;},
- update(g,dt){const F=FASES[S.f];g.prox-=dt;if(g.prox<=0){const e=ESP[Math.floor(Math.random()*ESP.length)],dir=Math.random()<.5?1:-1;g.ps.push({e,dir,x:dir>0?-60:W+60,y:rr(H*.3,H*.9),v:F.v*rr(.8,1.3),f:0,cont:0});g.prox=rr(.5,.9);}
-  if(F.gotas&&Math.random()<dt*F.gotas*1.2)g.gt.push({x:rr(30,W-30),y:-10,v:rr(80,120)});
-  for(const d of g.gt){d.y+=d.v*dt;for(const p of g.ps)if(Math.hypot(p.x-d.x,p.y-d.y)<30){p.cont=1;d.y=H+50;}}g.gt=g.gt.filter(d=>d.y<H+20);
-  for(const p of g.ps){p.x+=p.dir*p.v*dt;p.f+=dt*8;}
-  if(inp.tap){let alvo=null;for(const p of g.ps)if(Math.hypot(p.x-inp.tap.x,p.y-inp.tap.y)<p.e.L*.6)alvo=p;
-   if(alvo){alvo.fora=1;if(!alvo.e.pred&&!alvo.cont){g.ok++;ganha(10,alvo.x,alvo.y);}else{g.vidas--;ganha(-10,alvo.x,alvo.y);msg(alvo.cont?'Peixe contaminado pelo mercúrio!':'O '+alvo.e.n+' é predador: acumula mais mercúrio.');}}}
-  g.ps=g.ps.filter(p=>!p.fora&&p.x>-90&&p.x<W+90);},
- draw(g){cx.fillStyle='#e8f6fb';cx.fillRect(0,0,W,H*.2);const gr=cx.createLinearGradient(0,H*.2,0,H);gr.addColorStop(0,'#7cc7e3');gr.addColorStop(1,'#3d93b8');cx.fillStyle=gr;cx.fillRect(0,H*.2,W,H*.8);
-  cx.fillStyle='#8fbf6a';for(let x=0;x<W;x+=40){cx.beginPath();cx.arc(x+20,H*.2,26,Math.PI,0);cx.fill();}
-  cx.fillStyle='#c9a46a';cx.fillRect(0,H-18,W,18);
-  cx.fillStyle='rgba(255,255,255,.25)';for(let i=0;i<8;i++){cx.fillRect((i*97+g.t*30)%W,H*.25+i*40,40,3);}
-  for(const d of g.gt){cx.fillStyle='#b0bec5';cx.beginPath();cx.arc(d.x,d.y,7,0,7);cx.fill();cx.fillStyle='#fff';cx.beginPath();cx.arc(d.x-2,d.y-2,2,0,7);cx.fill();}
-  for(const p of g.ps){if(p.cont)cx.filter='grayscale(1) brightness(.85)';peixe(cx,p.x,p.y,p.e.L*(MOB()?.9:1),p.e.d,p.dir,p.f);cx.filter='none';
-   const t=p.e.n;cx.font='bold 12px system-ui';const w=cx.measureText(t).width+14;rrect(p.x-w/2,p.y-p.e.L*.42-20,w,18,9,p.cont?'#90a4ae':p.e.pred?'#ef5350':'#43a047');cx.fillStyle='#fff';cx.textAlign='center';cx.fillText(t,p.x,p.y-p.e.L*.42-7);}},
- capa(k,w,h){const o=cx;cx=k;k.fillStyle='#7cc7e3';k.fillRect(0,0,w,h);peixe(k,180,110,150,'pacu',1,0);peixe(k,450,120,160,'tucunare',-1,1);k.font='bold 18px system-ui';k.textAlign='center';k.fillStyle='#43a047';k.fillText('pode',180,40);k.fillStyle='#ef5350';k.fillText('evite',450,40);cx=o;}
+/* ---------- arte vetorial compartilhada ---------- */
+beep=function(){};
+function rng(s){s=s%2147483647;if(s<=0)s+=2147483646;return()=>{s=s*16807%2147483647;return(s-1)/2147483646;};}
+function lg(k,x0,y0,x1,y1,st){const g=k.createLinearGradient(x0,y0,x1,y1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+function rg(k,x,y,r0,r1,st){const g=k.createRadialGradient(x,y,r0,x,y,r1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+const CACHE={};
+function cache(key,w,h,fn){const id=key+'_'+w+'x'+h;if(!CACHE[id]){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);CACHE[id]=c;}return CACHE[id];}
+function ceu(k,w,h,cs){k.fillStyle=lg(k,0,0,0,h,cs);k.fillRect(0,0,w,h);}
+function sol(k,x,y,r,c){k.fillStyle=rg(k,x,y,0,r*4,[c,'rgba(255,255,255,0)']);k.fillRect(x-r*4,y-r*4,r*8,r*8);k.fillStyle=c;k.beginPath();k.arc(x,y,r,0,7);k.fill();}
+function nuvem(k,x,y,s,a){k.fillStyle='rgba(255,255,255,'+(a||.8)+')';for(const [dx,dy,r] of [[0,0,1],[1.1,.15,.8],[-1,.2,.75],[.5,-.45,.7],[-.4,-.35,.6]]){k.beginPath();k.arc(x+dx*s,y+dy*s,r*s,0,7);k.fill();}k.fillRect(x-1.7*s,y+.2*s,3.6*s,.8*s);}
+function serra(k,w,y,amp,cor,seed){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,y+amp*2);let x=0;k.lineTo(0,y);while(x<w+40){x+=30+r()*50;k.lineTo(x,y-r()*amp);}k.lineTo(w,y+amp*4);k.lineTo(0,y+amp*4);k.fill();}
+function matas(k,w,y,amp,cor,seed,base){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,base);k.lineTo(0,y);let x=0;while(x<w+30){const rr=8+r()*amp;k.arc(x+rr,y-r()*amp*.6,rr,Math.PI,0);x+=rr*1.6;}k.lineTo(w,base);k.closePath();k.fill();}
+function capim(k,x0,y0,w,h,cor,seed,n){const r=rng(seed);k.strokeStyle=cor;k.lineCap='round';for(let i=0;i<n;i++){const x=x0+r()*w,y=y0+r()*h,l=4+r()*10;k.lineWidth=1+r()*1.2;for(let j=-1;j<=1;j++){k.beginPath();k.moveTo(x,y);k.quadraticCurveTo(x+j*3,y-l*.6,x+j*5+r()*2,y-l);k.stroke();}}}
+function copa(k,x,y,r,cs,seed){const R=rng(seed);const pts=[];for(let i=0;i<9;i++){const a=R()*Math.PI*2,d=R()*r*.55;pts.push([x+Math.cos(a)*d,y+Math.sin(a)*d*.7,r*(.35+R()*.3)]);}
+ k.fillStyle=cs[0];for(const [a,b,c] of pts){k.beginPath();k.arc(a+c*.12,b+c*.18,c,0,7);k.fill();}
+ k.fillStyle=cs[1];for(const [a,b,c] of pts){k.beginPath();k.arc(a,b,c*.92,0,7);k.fill();}
+ k.fillStyle=cs[2];for(const [a,b,c] of pts){k.beginPath();k.arc(a-c*.25,b-c*.3,c*.5,0,7);k.fill();}}
+function tronco(k,x,y0,y1,w0,w1,c1,c2){k.fillStyle=lg(k,x-w0,0,x+w0,0,[c2,c1,c1,c2]);k.beginPath();k.moveTo(x-w0,y0);k.lineTo(x-w1,y1);k.lineTo(x+w1,y1);k.lineTo(x+w0,y0);k.fill();k.strokeStyle='rgba(0,0,0,.12)';k.lineWidth=1;for(let y=y1+8;y<y0;y+=11){const t=(y-y1)/(y0-y1),ww=w1+(w0-w1)*t;k.beginPath();k.moveTo(x-ww*.6,y);k.quadraticCurveTo(x,y+3,x+ww*.5,y-1);k.stroke();}}
+function palmeira(k,x,y,h,lean,cfr,ctr,seed,nf){const R=rng(seed);const tx=x+lean,ty=y-h;k.strokeStyle=ctr;k.lineCap='round';for(let i=0;i<14;i++){const t0=i/14,t1=(i+1)/14;k.lineWidth=h*.05*(1-t0*.35);const xa=x+lean*t0*t0,ya=y-h*t0,xb=x+lean*t1*t1,yb=y-h*t1;k.beginPath();k.moveTo(xa,ya);k.lineTo(xb,yb);k.stroke();}
+ k.strokeStyle='rgba(0,0,0,.15)';k.lineWidth=1;for(let i=1;i<14;i++){const t=i/14,xa=x+lean*t*t,ya=y-h*t;k.beginPath();k.moveTo(xa-h*.022,ya);k.lineTo(xa+h*.022,ya);k.stroke();}
+ nf=nf||9;for(let f=0;f<nf;f++){const a=-Math.PI/2+(f-(nf-1)/2)*(2.6/nf)+(R()-.5)*.2,L=h*(.38+R()*.12),dr=.55+R()*.25;const ex=tx+Math.cos(a)*L,ey=ty+Math.sin(a)*L*.55+L*dr*.5;const mx=tx+Math.cos(a)*L*.5,my=ty+Math.sin(a)*L*.5-L*.12;
+  k.strokeStyle=cfr[0];k.lineWidth=2;k.beginPath();k.moveTo(tx,ty);k.quadraticCurveTo(mx,my,ex,ey);k.stroke();
+  for(let j=1;j<16;j++){const t=j/16,px=(1-t)*(1-t)*tx+2*(1-t)*t*mx+t*t*ex,py=(1-t)*(1-t)*ty+2*(1-t)*t*my+t*t*ey;const ll=L*.16*(1-t*.5);k.strokeStyle=cfr[j%2];k.lineWidth=1.6;k.beginPath();k.moveTo(px,py);k.lineTo(px+Math.cos(a+1.6)*ll*.5,py+ll);k.moveTo(px,py);k.lineTo(px+Math.cos(a-1.6)*ll*.5,py+ll*.9);k.stroke();}}}
+function sombraE(k,x,y,rx,ry,a){k.fillStyle='rgba(20,30,20,'+(a||.18)+')';k.beginPath();k.ellipse(x,y,rx,ry,0,0,7);k.fill();}
+function vinheta(k,w,h){k.fillStyle=rg(k,w/2,h/2,Math.min(w,h)*.45,Math.max(w,h)*.8,['rgba(0,0,0,0)','rgba(0,0,0,.18)']);k.fillRect(0,0,w,h);}
+function rrk(k,x,y,w,h,r,c){k.fillStyle=c;k.beginPath();k.roundRect(x,y,w,h,r);k.fill();}
+/* figura humana: o={pele,camisa,calca,chapeu,passo,bracoE,bracoD} ângulos em rad a partir de baixo */
+function pessoa(k,x,y,s,o){o=o||{};const p=o.passo||0;k.save();k.translate(x,y);k.scale(s*(o.dir||1),s);k.lineCap='round';k.lineJoin='round';
+ const pl=Math.sin(p)*.35;k.strokeStyle=o.calca||'#37474f';k.lineWidth=7;k.beginPath();k.moveTo(-3,-38);k.lineTo(-3+Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18,0);k.stroke();k.beginPath();k.moveTo(3,-38);k.lineTo(3-Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(3-Math.sin(pl)*20-Math.sin(pl*.5)*18,0);k.stroke();
+ k.fillStyle='#3e2723';k.beginPath();k.ellipse(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.ellipse(3-Math.sin(pl)*20-Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.fill();
+ k.fillStyle=o.camisa||'#1e88e5';k.beginPath();k.moveTo(-9,-40);k.lineTo(-10,-68);k.quadraticCurveTo(0,-74,10,-68);k.lineTo(9,-40);k.closePath();k.fill();k.fillStyle='rgba(0,0,0,.12)';k.fillRect(2,-68,7,28);
+ const be=o.bracoE!==undefined?o.bracoE:-pl*.8,bd=o.bracoD!==undefined?o.bracoD:pl*.8;k.strokeStyle=o.camisa||'#1e88e5';k.lineWidth=6;
+ for(const [sx,a] of [[-8,be],[8,bd]]){k.beginPath();k.moveTo(sx,-66);const ex=sx+Math.sin(a)*14,ey=-66+Math.cos(a)*14;k.lineTo(ex,ey);k.stroke();k.strokeStyle=o.pele||'#c68b59';k.beginPath();k.moveTo(ex,ey);k.lineTo(ex+Math.sin(a*1.15)*13,ey+Math.cos(a*1.15)*13);k.stroke();k.strokeStyle=o.camisa||'#1e88e5';}
+ k.fillStyle=o.pele||'#c68b59';k.fillRect(-3,-76,6,6);k.beginPath();k.ellipse(0,-83,7.5,8.5,0,0,7);k.fill();
+ if(o.chapeu!==false){k.fillStyle=o.chapeu||'#795548';k.beginPath();k.ellipse(0,-88,15,3.5,0,0,7);k.fill();k.beginPath();k.moveTo(-8,-88);k.quadraticCurveTo(-7,-99,0,-99);k.quadraticCurveTo(7,-99,8,-88);k.fill();k.fillStyle='rgba(0,0,0,.25)';k.fillRect(-8,-91,16,2.5);}
+ k.restore();}
+/* boi nelore em perfil, olhando para +x */
+function boi(k,x,y,s,dir,cor,p){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#ece6da';p=p||0;
+ const pern=[[-26,0],[-18,Math.PI],[18,Math.PI],[26,0]];
+ for(let i=0;i<4;i++){const [lx,ph]=pern[i];const a=Math.sin(p+ph)*.3;k.strokeStyle=i==1||i==2?shade(c,-.12):c;k.lineCap='round';k.lineWidth=6.5;k.beginPath();k.moveTo(lx,-24);k.lineTo(lx+Math.sin(a)*9,-10);k.lineTo(lx+Math.sin(a)*7,2);k.stroke();k.fillStyle='#3e2723';k.fillRect(lx+Math.sin(a)*7-3.5,1,7,3);}
+ k.fillStyle=c;k.beginPath();k.moveTo(-34,-40);k.quadraticCurveTo(-38,-24,-30,-20);k.quadraticCurveTo(0,-14,26,-20);k.quadraticCurveTo(34,-26,32,-40);k.quadraticCurveTo(28,-50,20,-54);k.quadraticCurveTo(12,-56,8,-48);k.quadraticCurveTo(-10,-46,-28,-48);k.quadraticCurveTo(-34,-46,-34,-40);k.fill();
+ k.fillStyle=lg(k,0,-50,0,-18,['rgba(255,255,255,.18)','rgba(0,0,0,0)','rgba(60,40,20,.22)']);k.fill();
+ k.fillStyle=c;k.beginPath();k.moveTo(26,-44);k.quadraticCurveTo(38,-44,44,-38);k.lineTo(54,-24);k.quadraticCurveTo(56,-18,51,-17);k.quadraticCurveTo(46,-18,42,-24);k.quadraticCurveTo(34,-26,28,-22);k.fill();
+ k.beginPath();k.moveTo(28,-26);k.quadraticCurveTo(34,-14,30,-12);k.quadraticCurveTo(24,-16,22,-24);k.fill();
+ k.fillStyle=shade(c,-.35);k.beginPath();k.ellipse(52,-19,3.4,2.6,.4,0,7);k.fill();k.fillStyle='#1b1b1b';k.beginPath();k.arc(44,-34,1.8,0,7);k.fill();
+ k.fillStyle=shade(c,-.08);k.beginPath();k.ellipse(38,-41,8,2.8,.5,0,7);k.fill();k.strokeStyle='#cfc4b0';k.lineWidth=2.4;k.lineCap='round';k.beginPath();k.moveTo(41,-44);k.quadraticCurveTo(44,-49,42,-52);k.stroke();
+ k.strokeStyle=c;k.lineWidth=2.2;k.beginPath();k.moveTo(-34,-42);k.quadraticCurveTo(-40,-28,-37,-14);k.stroke();k.fillStyle='#4e342e';k.beginPath();k.ellipse(-37,-13,2.2,4.5,0,0,7);k.fill();
+ k.restore();}
+function shade(hex,f){let n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;const t=f<0?0:255,p=Math.abs(f);r=Math.round((t-r)*p+r);g=Math.round((t-g)*p+g);b=Math.round((t-b)*p+b);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+function cavalo(k,x,y,s,dir,p,cor){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#8d5a3b';k.strokeStyle=c;k.lineCap='round';k.lineWidth=6;
+ for(const [lx,ph] of [[-20,0],[-12,Math.PI],[18,Math.PI],[26,0]]){const a=Math.sin(p+ph)*.45;k.beginPath();k.moveTo(lx,-22);k.lineTo(lx+Math.sin(a)*10,-8);k.lineTo(lx+Math.sin(a)*8,4);k.stroke();}
+ k.fillStyle=c;k.beginPath();k.ellipse(3,-30,28,12,0,0,7);k.fill();k.beginPath();k.moveTo(22,-36);k.quadraticCurveTo(30,-56,40,-58);k.lineTo(50,-48);k.quadraticCurveTo(44,-44,38,-46);k.lineTo(30,-26);k.fill();
+ k.fillStyle='#3e2723';k.beginPath();k.moveTo(24,-40);k.quadraticCurveTo(30,-60,40,-60);k.lineTo(36,-56);k.quadraticCurveTo(30,-52,28,-36);k.fill();k.beginPath();k.moveTo(-24,-34);k.quadraticCurveTo(-38,-26,-34,-6);k.quadraticCurveTo(-30,-22,-22,-28);k.fill();
+ k.fillStyle='rgba(0,0,0,.15)';k.beginPath();k.ellipse(3,-23,24,4,0,0,7);k.fill();k.fillStyle='#5d4037';k.fillRect(-8,-44,22,6);k.restore();}
+function cavaleiro(k,x,y,s,dir,p,o){cavalo(k,x,y,s,dir,p,o&&o.cor);k.save();k.translate(x,y);k.scale(s*dir,s);pessoa(k,2,-30,.62,Object.assign({passo:0,bracoE:.9,bracoD:1.3,calca:'#4e342e'},o||{}));k.restore();}
+/* tela cheia genérica para os jogos do motor arcade */
+const FS={on:false};
+(function(){const st=document.createElement('style');st.textContent='.fsmode{position:fixed!important;inset:0!important;z-index:9999!important;background:#fff!important;margin:0!important;padding:0!important;border-radius:0!important;max-width:none!important;width:100vw!important;height:100dvh!important;border:0!important}.fsmode canvas{width:100vw!important;height:100dvh!important;max-width:none!important;border:0!important;border-radius:0!important}.fsmode p.small{display:none}.fsmode .fsrow{position:fixed;top:48px;right:8px;z-index:10000;margin:0!important}.fsmode .fsrow .btn{padding:6px 14px;font-size:13px}';document.head.appendChild(st);
+ document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&FS.on)FS.set(false);});addEventListener('resize',()=>{if(FS.on)setTimeout(FS.ajusta,50);});})();
+FS.ajusta=function(){const c=$('cv');if(!c)return;if(FS.on){W=Math.round(innerWidth);H=Math.round(innerHeight);}else{if(c.clientWidth<520){W=420;H=560;}else{W=720;H=460;}}c.width=W;c.height=H;cx=c.getContext('2d');if(G.reajusta)G.reajusta(S.g);};
+FS.set=function(on){const c=$('cv');if(!c)return;const card=c.parentNode;FS.on=on;const b=$('btfs');if(b)b.textContent=on?'Sair':'Tela cheia';
+ if(on){card.classList.add('fsmode');try{const r=document.documentElement.requestFullscreen;if(r)r.call(document.documentElement).catch(()=>{});}catch(e){}}
+ else{card.classList.remove('fsmode');try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}}
+ setTimeout(FS.ajusta,80);};
+FS.botao=()=>'<div class="row fsrow" style="justify-content:center;margin-top:8px"><button class="btn ghost" id="btfs" onclick="FS.set(!FS.on)">Tela cheia</button></div>';
+FS.ligar=()=>{if(FS.on){const c=$('cv');c.parentNode.classList.add('fsmode');const b=$('btfs');if(b)b.textContent='Sair';FS.ajusta();}};
+FS.hud=(g,cor)=>{if(!FS.on||!g)return;const [a,m2]=G.meta(g);const t='Fase '+(S.f+1)+'/'+G.FASES.length+'  ·  '+(S.tot+S.fp)+' pts  ·  '+G.rotulo+' '+a+'/'+m2+(G.semTempo?'':'  ·  '+Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s');cx.font='bold 13px system-ui';const w=cx.measureText(t).width+24;rrk(cx,10,48,w,26,13,'rgba(255,255,255,.95)');cx.fillStyle=cor||'#37474f';cx.textAlign='left';cx.fillText(t,22,66);};
+/* Peixe Seguro, versão 2.
+Fontes: Basta et al. (2023), Nota técnica Análise regional dos níveis de mercúrio em peixes consumidos pela população da Amazônia brasileira (Ensp/Fiocruz, UFOPA, Greenpeace, Iepé, ISA, WWF-Brasil): média de 0,603 µg/g em carnívoros (n = 522) e 0,092 µg/g em não carnívoros (n = 488); 21,3% dos peixes com 0,5 µg/g ou mais; 100 g de peixe por pessoa por dia nas cidades; dose de referência da EPA de 0,1 µg por kg de peso por dia; mulheres em idade fértil até 9 vezes e crianças de 2 a 4 anos até 31 vezes a dose;
+Medeiros Filho (IHU, 2022): o amálgama é aquecido para separar o ouro, o mercúrio vira vapor e volta com a chuva; a contaminação é maior nas áreas mais impactadas pelo garimpo;
+WWF-Brasil, nota técnica Dinâmica do mercúrio: com matéria orgânica o mercúrio vira metilmercúrio, que se acumula na cadeia alimentar;
+ANVISA, RDC 42/2013: 0,5 mg/kg em não predadores e 1,0 mg/kg em predadores.
+O mercúrio de cada peixe é sorteado pelo jogo em torno das médias do estudo. Família, pesos, limite de 0,2 µg/g para o prato da criança, tempos e pontos são regras do jogo. */
+const PS={};
+PS.s=()=>Math.max(.8,Math.min(1.5,Math.min(W,H)/440));
+PS.ys=()=>H*.26;PS.fundo=()=>H*.92;
+PS.ESP={pacu:{n:'Pacu',gu:'herbívoro',car:0,kg:[1,3],L:[52,70],zy:[.2,.6]},tambaqui:{n:'Tambaqui',gu:'herbívoro',car:0,kg:[2,5],L:[70,92],zy:[.25,.6]},jaraqui:{n:'Jaraqui',gu:'detritívoro',car:0,kg:[.3,.6],L:[40,52],zy:[.7,.95]},
+ tucunare:{n:'Tucunaré',gu:'carnívoro',car:1,kg:[1,4],L:[58,80],zy:[.3,.7]},piranha:{n:'Piranha',gu:'carnívoro',car:1,kg:[.3,1],L:[36,48],zy:[.2,.9]},filhote:{n:'Filhote',gu:'carnívoro',car:1,kg:[5,12],L:[96,120],zy:[.82,.97]}};
+function peixeR(k,x,y,L,sp,dir,f,cinza){k.save();k.translate(x,y);k.scale(dir,1);const sw=Math.sin(f)*L*.035;const C={pacu:['#5f6b70','#a9b3b5','#e0703a'],tambaqui:['#5a5a2e','#a39a52','#2c2c2c'],jaraqui:['#6f7f88','#c9d3d8','#e9eef0'],tucunare:['#6f7a2c','#d2b43a','#e9d98a'],piranha:['#6a7880','#b9c6cb','#d9472b'],filhote:['#5a6168','#8d959c','#d6d9dc']}[sp];
+ const h={pacu:.44,tambaqui:.42,jaraqui:.27,tucunare:.27,piranha:.46,filhote:.18}[sp]*L;const cat=sp==='filhote';
+ k.fillStyle=cinza?'#8d9599':C[0];k.beginPath();k.moveTo(-L*.36,0);k.lineTo(-L*.5,-h*.5+sw);k.quadraticCurveTo(-L*.44,0,-L*.5,h*.5+sw);k.closePath();k.fill();
+ if(sp==='jaraqui'){k.fillStyle='#222';k.fillRect(-L*.48,-h*.42+sw,L*.06,h*.12);k.fillRect(-L*.48,h*.3+sw,L*.06,h*.12);k.fillStyle='#e3c34a';k.fillRect(-L*.48,-h*.3+sw,L*.06,h*.1);k.fillRect(-L*.48,h*.2+sw,L*.06,h*.1);}
+ k.fillStyle=cinza?'#8d9599':C[0];k.beginPath();if(cat){k.moveTo(-L*.1,-h*.45);k.lineTo(-L*.02,-h*1.05);k.lineTo(L*.06,-h*.45);}else{k.moveTo(-L*.12,-h*.42);k.quadraticCurveTo(-L*.02,-h*.95,L*.1,-h*.45);}k.fill();
+ k.beginPath();k.moveTo(-L*.2,h*.4);k.quadraticCurveTo(-L*.12,h*.85,-L*.02,h*.42);k.fill();k.strokeStyle='rgba(0,0,0,.25)';k.lineWidth=.6;for(let i=0;i<5;i++){k.beginPath();k.moveTo(-L*.5+L*.02,-h*.4+i*h*.2+sw);k.lineTo(-L*.38,-h*.08+i*h*.04);k.stroke();}
+ const corpo=()=>{k.beginPath();k.moveTo(L*.5,cat?h*.1:0);k.bezierCurveTo(L*.45,-h*(cat?.7:1.05),-L*.15,-h*1.05,-L*.37,-h*.12);k.lineTo(-L*.37,h*.12);k.bezierCurveTo(-L*.15,h*1.05,L*.45,h*(cat?.9:1.05),L*.5,cat?h*.1:0);k.closePath();};
+ corpo();k.fillStyle=cinza?lg(k,0,-h,0,h,['#7d8589','#a9b0b3','#c3c8ca']):lg(k,0,-h,0,h,[C[0],C[1],C[2]]);k.fill();
+ k.save();corpo();k.clip();
+ if(sp==='tambaqui'){k.fillStyle=cinza?'rgba(60,60,60,.3)':'rgba(30,30,25,.75)';k.beginPath();k.moveTo(L*.5,h*.1);k.quadraticCurveTo(0,h*.1,-L*.4,h*.05);k.lineTo(-L*.4,h);k.lineTo(L*.5,h);k.fill();}
+ if(sp==='tucunare'&&!cinza){k.fillStyle='rgba(40,45,20,.55)';for(const bx of [.2,0,-.2])k.fillRect(L*bx-L*.03,-h,L*.06,h*1.4);}
+ if(!cat){k.strokeStyle='rgba(255,255,255,.16)';k.lineWidth=.6;for(let i=0;i<14;i++)for(let j=-3;j<=3;j++){k.beginPath();k.arc(-L*.3+i*L*.05,j*h*.28,L*.03,-1.2,1.2);k.stroke();}k.strokeStyle='rgba(40,40,40,.25)';k.lineWidth=1;k.beginPath();k.moveTo(L*.3,-h*.15);k.quadraticCurveTo(0,-h*.3,-L*.36,-h*.02);k.stroke();}
+ else{k.fillStyle='rgba(30,35,40,.25)';for(let i=0;i<10;i++){k.beginPath();k.arc(-L*.3+i*L*.07,-h*.3+(i%2)*h*.25,L*.012,0,7);k.fill();}}
+ k.fillStyle='rgba(255,255,255,.25)';k.beginPath();k.ellipse(L*.05,-h*.45,L*.25,h*.12,0,0,7);k.fill();k.restore();
+ if(sp==='tucunare'){k.fillStyle=cinza?'#555':'#111';k.beginPath();k.arc(-L*.34,-h*.02,h*.16,0,7);k.fill();k.strokeStyle=cinza?'#999':'#f0c419';k.lineWidth=2;k.beginPath();k.arc(-L*.34,-h*.02,h*.2,0,7);k.stroke();}
+ k.strokeStyle='rgba(30,30,30,.4)';k.lineWidth=1;k.beginPath();k.arc(L*.3,0,h*.55,-.9,.9);k.stroke();
+ k.fillStyle='#e9e4cf';k.beginPath();k.arc(L*.4,-h*(cat?.2:.3),Math.max(1.6,L*.026),0,7);k.fill();k.fillStyle='#111';k.beginPath();k.arc(L*.405,-h*(cat?.2:.3),Math.max(1,L*.016),0,7);k.fill();k.fillStyle='rgba(255,255,255,.8)';k.beginPath();k.arc(L*.4,-h*(cat?.22:.32),Math.max(.6,L*.006),0,7);k.fill();
+ if(sp==='piranha'){k.fillStyle='#fff';for(let i=0;i<4;i++){k.beginPath();k.moveTo(L*.42+i*L*.02,h*.16);k.lineTo(L*.43+i*L*.02,h*.05);k.lineTo(L*.44+i*L*.02,h*.16);k.fill();}k.strokeStyle='#333';k.beginPath();k.moveTo(L*.36,h*.2);k.lineTo(L*.5,h*.1);k.stroke();}
+ if(cat){k.strokeStyle='#3c4246';k.lineWidth=1.2;for(const [a,l] of [[.3,.5],[.6,.45],[-.2,.35]]){k.beginPath();k.moveTo(L*.48,h*.1);k.quadraticCurveTo(L*.6,h*(.3+a*.3),L*(.48+l*.5),h*(.6+a));k.stroke();}}
+ k.restore();}
+function canoaR(k,x,y,s,puxa,t){k.save();k.translate(x,y);k.scale(s,s);
+ k.fillStyle=lg(k,0,-8,0,10,['#8a5a32','#5e3b1f']);k.beginPath();k.moveTo(-70,-8);k.lineTo(70,-8);k.quadraticCurveTo(66,8,52,10);k.lineTo(-52,10);k.quadraticCurveTo(-66,8,-70,-8);k.fill();k.fillStyle='#a8784a';k.fillRect(-70,-10,140,3);
+ const lean=puxa?-.15:Math.sin(t*1.2)*.03;k.save();k.translate(0,-8);k.rotate(lean);
+ k.fillStyle=lg(k,-14,0,14,0,['#2f6f8f','#3f8fb2','#2a6382']);k.beginPath();k.moveTo(-13,0);k.quadraticCurveTo(-15,-26,-11,-40);k.lineTo(11,-40);k.quadraticCurveTo(15,-26,13,0);k.fill();
+ k.fillStyle=lg(k,-6,0,6,0,['#8a5634','#c98d62','#a8714a']);k.fillRect(-4,-48,8,8);k.beginPath();k.ellipse(0,-56,9,10,0,0,7);k.fill();k.fillStyle='#2b1a0e';k.beginPath();k.arc(-3,-57,1,0,7);k.arc(3,-57,1,0,7);k.fill();
+ k.fillStyle=lg(k,-22,0,22,0,['#a8834a','#e3c787','#d4b06a']);k.beginPath();k.ellipse(0,-64,20,5,0,0,7);k.fill();k.beginPath();k.moveTo(-9,-64);k.bezierCurveTo(-10,-75,10,-75,9,-64);k.fill();
+ k.strokeStyle='#b67b52';k.lineWidth=5;k.lineCap='round';k.beginPath();k.moveTo(10,-34);k.lineTo(24,-30+(puxa?-12:0));k.stroke();k.restore();k.restore();}
+const G={titulo:'Peixe Seguro',get rotulo(){return ['Peixes seguros','Porções de 100 g','Peixes seguros','Pratos certos'][S?S.f:0];},get vidas(){return S&&(S.f===0||S.f===2||S.f===3)?3:0;},
+ resumo:'Na Amazônia, o mercúrio do garimpo vai para o rio e entra na cadeia alimentar. Peixes que comem outros peixes acumulam mais. Você pesca para a família e decide o que vai para o prato com o analisador.',
+ como:[['Pescar','Arraste o dedo na água: o anzol vai junto. Encoste no focinho de um peixe para fisgar.'],['Analisar','O peixe vai para o analisador, que mostra espécie, peso e mercúrio em µg/g.'],['Decidir','Leve para o prato ou devolva ao rio. Errar com peixe contaminado custa pontos e vidas.']],
+ get dica(){return ['Leve só peixes com menos de 0,5 µg/g de mercúrio.','Junte 28 porções sem passar de 3 vezes a dose de referência.','Pesque longe do garimpo: perto dele o mercúrio é maior.','Prato da criança: menos de 0,2 µg/g. Prato do adulto: menos de 0,5 µg/g.'][S?S.f:0];},
+ dicaErro:'Veja a guilda e o mercúrio no analisador antes de levar o peixe.',
+ FASES:[{nome:'Quem acumula mais',dur:75,meta:7,metaTxt:'levar 7 peixes abaixo de 0,5 µg/g em 75 s.',txt:'Pesque, leia o analisador e decida. Leve só peixe com menos de 0,5 µg/g de mercúrio. Devolva os outros ao rio.',fato:'Num estudo em 17 cidades da Amazônia, os peixes carnívoros tinham em média 0,603 µg/g de mercúrio e os não carnívoros 0,092 µg/g. No total, 21,3% dos peixes tinham 0,5 µg/g ou mais.'},
+  {nome:'A semana da família',dur:90,meta:28,metaTxt:'juntar 28 porções de 100 g em 90 s sem passar de 3 vezes a dose.',txt:'Uma família de 4 pessoas come 100 g de peixe por pessoa por dia: 28 porções na semana. Peixe grande enche a cesta, mas pode trazer muito mercúrio. O medidor compara com a dose de referência.',fato:'O estudo usou a dose de referência da agência ambiental dos Estados Unidos: 0,1 µg de mercúrio por quilo de peso por dia. Em todas as cidades estudadas, a ingestão estimada passou dessa dose.'},
+  {nome:'Rio abaixo do garimpo',dur:80,meta:7,metaTxt:'levar 7 peixes abaixo de 0,5 µg/g em 80 s.',txt:'Rio acima tem uma balsa de garimpo. O ouro é separado com mercúrio e a mistura é queimada. Perto do garimpo os peixes têm mais mercúrio. Escolha onde pescar.',fato:'No garimpo, o mercúrio se junta ao ouro e a mistura é aquecida. O mercúrio vira vapor, se transforma no ar e volta com a chuva. Na água, vira metilmercúrio e se acumula na cadeia alimentar.'},
+  {nome:'O prato da criança',dur:90,meta:6,metaTxt:'montar 6 pratos certos em 90 s.',txt:'Criança e gestante são mais sensíveis ao mercúrio. O prato delas pede peixe com menos de 0,2 µg/g. O prato do adulto aceita até 0,5 µg/g.',fato:'No estudo, mulheres em idade fértil podiam ingerir até 9 vezes a dose de referência de mercúrio, e crianças de 2 a 4 anos até 31 vezes.'}],
+ init(g){g.n=0;g.vidas=3;g.ps=[];g.prox=0;g.hk={x:W*.5,y:H*.5};g.cx=W*.5;g.fis=null;g.card=null;g.part=[];g.lb=[];g.hg=0;g.porc=0;g.crianca=0;g.adulto=0;g.resp=0;},
+ meta(g){return [g.n,FASES[S.f].meta];},cedo(g){return g.n>=FASES[S.f].meta;},
+ update(g,dt){PS.update(g,dt);},draw(g){PS.draw(g);},botoes(){return FS.botao();},ligar(){FS.ligar();},reajusta(g){g.ps=[];},
+ capa(k,w,h){const o=cx,oW=W,oH=H;cx=k;W=w;H=h;PS.cena(k,w,h);peixeR(k,w*.3,h*.62,110,'pacu',1,0);peixeR(k,w*.7,h*.66,120,'tucunare',-1,1);canoaR(k,w*.5,h*.26,1,0,0);
+  for(const [x,t,c] of [[w*.3,'0,08 µg/g','#2e7d32'],[w*.7,'0,71 µg/g','#c62828']]){k.font='bold 15px system-ui';const tw=k.measureText(t).width+16;rrk(k,x-tw/2,h*.4,tw,24,12,'rgba(255,255,255,.95)');k.fillStyle=c;k.textAlign='center';k.fillText(t,x,h*.4+17);}vinheta(k,w,h);cx=o;W=oW;H=oH;}
 };
 const FASES=G.FASES;
+PS.cena=function(k,w,h){const f=S?S.f:0,ys=h*.26,fb=h*.92;const R=rng(4);k.fillStyle=lg(k,0,0,0,ys,['#d6ecf5','#f3f7ef']);k.fillRect(0,0,w,ys);
+ for(let l=0;l<2;l++){k.fillStyle=l?'#6f9a62':'#9cbf8c';k.beginPath();k.moveTo(0,ys);for(let x=0;x<=w;x+=8)k.lineTo(x,ys-h*(.07+l*-.02)-Math.abs(Math.sin(x*.02+l*3)+Math.sin(x*.053))*h*.035-R()*3);k.lineTo(w,ys);k.fill();}
+ for(let i=0;i<6;i++){const x=w*(.08+i*.17)+R()*20,bh=h*(.1+R()*.05);k.strokeStyle='#7b6a52';k.lineWidth=2.5;k.beginPath();k.moveTo(x,ys-h*.04);k.lineTo(x+2,ys-h*.04-bh);k.stroke();for(let j=0;j<8;j++){const a=-Math.PI/2+(j-3.5)*.38;k.strokeStyle='#5d8a4e';k.lineWidth=1.4;k.beginPath();k.moveTo(x+2,ys-h*.04-bh);k.quadraticCurveTo(x+2+Math.cos(a)*14,ys-h*.04-bh+Math.sin(a)*10-4,x+2+Math.cos(a)*24,ys-h*.04-bh+Math.sin(a)*14+8);k.stroke();}}
+ k.fillStyle=lg(k,0,ys,0,fb,['#a9dbd6','#7cc0be','#5aa3a6']);k.fillRect(0,ys,w,fb-ys);k.save();k.globalAlpha=.1;k.fillStyle='#fffbe6';for(let i=0;i<5;i++){const x=R()*w;k.beginPath();k.moveTo(x,ys);k.lineTo(x+30,ys);k.lineTo(x+90,fb);k.lineTo(x+40,fb);k.fill();}k.restore();
+ k.fillStyle=lg(k,0,fb-6,0,h,['#d9c497','#c2a873']);k.beginPath();k.moveTo(0,h);k.lineTo(0,fb);for(let x=0;x<=w;x+=16)k.lineTo(x,fb-3+Math.sin(x*.03)*3);k.lineTo(w,h);k.fill();for(let i=0;i<14;i++){k.fillStyle=['#9e9a8c','#b5ae9a','#8c8676'][i%3];k.beginPath();k.ellipse(R()*w,fb+R()*(h-fb)*.6,4+R()*8,3+R()*4,0,0,7);k.fill();}
+ for(let i=0;i<8;i++){const x=R()*w;k.strokeStyle='rgba(60,110,60,.5)';k.lineWidth=2;for(let j=0;j<4;j++){k.beginPath();k.moveTo(x+j*3,fb);k.quadraticCurveTo(x+j*3+8,fb-20,x+j*3-2,fb-30-R()*20);k.stroke();}}
+ if(f===2){const bx=w*.1;k.fillStyle='#8d8f94';k.fillRect(bx-40,ys-14,80,16);k.fillStyle='#b0453a';k.fillRect(bx-28,ys-34,40,20);k.fillStyle='#5d5f64';k.fillRect(bx+14,ys-44,6,30);k.strokeStyle='#4e5055';k.lineWidth=5;k.beginPath();k.moveTo(bx+30,ys-6);k.lineTo(bx+50,fb-10);k.stroke();k.fillStyle='#fff';k.font='bold 11px system-ui';k.textAlign='center';k.fillText('garimpo',bx,ys-38);}};
+PS.ger=function(g,dir){const f=S.f;const ks=Object.keys(PS.ESP);let sp=ks[Math.floor(Math.random()*ks.length)];const E=PS.ESP[sp];const s=PS.s();
+ const u=Math.random(),kg=+(E.kg[0]+u*(E.kg[1]-E.kg[0])).toFixed(1),L=(E.L[0]+u*(E.L[1]-E.L[0]))*s*(H>W*1.4?1.15:.8);const z=E.zy[0]+Math.random()*(E.zy[1]-E.zy[0]);const y=PS.ys()+(PS.fundo()-PS.ys())*z;
+ const ruido=Math.exp((Math.random()+Math.random()+Math.random()-1.5)*.9);let hg=(E.car?.603:.092)*ruido*(E.car?(.7+u*.6):1);
+ return {sp,E,kg,L,y0:y,y,x:dir>0?-L:W+L,dir,v:(E.car?55:40)*s*(.8+Math.random()*.5),f:Math.random()*6,hg,ph:Math.random()*6};};
+PS.mult=x=>S.f===2?1+1.4*Math.max(0,1-(x/W)/.75):1;
+PS.update=function(g,dt){const s=PS.s(),ys=PS.ys(),fb=PS.fundo(),f=S.f;g.lb=g.lb.filter(l=>(l.t-=dt)>0);for(const p of g.part){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=300*dt;p.t-=dt;}g.part=g.part.filter(p=>p.t>0);
+ g.prox-=dt;if(g.prox<=0&&g.ps.length<(MOB()?6:8)){g.ps.push(PS.ger(g,Math.random()<.5?1:-1));g.prox=.7+Math.random()*.8;}
+ for(const p of g.ps){if(p===g.fis)continue;p.f+=dt*6;p.x+=p.dir*p.v*dt;p.y=p.y0+Math.sin(g.t*1.2+p.ph)*8*s;}
+ g.ps=g.ps.filter(p=>p===g.fis||(p.x>-p.L*1.2&&p.x<W+p.L*1.2));
+ if(g.card){PS.cartao(g);return;}
+ if(g.fis){const p=g.fis;const tx=g.cx+24*s,ty=ys-20*s;g.hk.x+=(tx-g.hk.x)*Math.min(1,dt*4);g.hk.y+=(ty-g.hk.y)*Math.min(1,dt*4);p.x=g.hk.x-p.dir*p.L*.45;p.y=g.hk.y+6;p.f+=dt*20;
+  if(Math.abs(g.hk.y-ty)<8){g.card={p,t:0};g.ps=g.ps.filter(q=>q!==p);for(let i=0;i<10;i++)g.part.push({x:g.hk.x,y:ys,vx:(Math.random()-.5)*90,vy:-80-Math.random()*60,t:.5,c:'rgba(230,245,250,.9)'});}return;}
+ if(inp.down&&inp.x!==null){const tx=inp.x,ty=Math.max(ys+10,Math.min(fb-6,inp.y));const dx=tx-g.hk.x,dy=ty-g.hk.y,d=Math.hypot(dx,dy),v=Math.min(d*7,420*s);if(d>1){g.hk.x+=dx/d*v*dt;g.hk.y+=dy/d*v*dt;}}
+ g.cx+=(Math.max(70*s,Math.min(W-70*s,g.hk.x-24*s))-g.cx)*Math.min(1,dt*1.6);
+ for(const p of g.ps){const mx=p.x+p.dir*p.L*.48,my=p.y;if(Math.hypot(mx-g.hk.x,my-g.hk.y)<12*s+p.L*.06){g.fis=p;p.hg=+(p.hg*PS.mult(p.x)).toFixed(3);msg('Fisgou! Puxando para o analisador...');break;}}};
+PS.botoesCard=function(){const m=MOB(),f=S.f;const cw=Math.min(W-24,m?340:420),ch=m?250:230,x0=W/2-cw/2,y0=PS.ys()+(m?20:16);const n=f===3?3:2,bw=(cw-24-(n-1)*10)/n,by=y0+ch-56;
+ const L=f===3?[['CRIANÇA','#00897b','cr'],['ADULTO','#1e88e5','ad'],['DEVOLVER','#8d6e63','dv']]:[['LEVAR','#2e7d32','lv'],['DEVOLVER','#8d6e63','dv']];return {x0,y0,cw,ch,bts:L.map((b,i)=>({x:x0+12+i*(bw+10),y:by,w:bw,h:44,t:b[0],c:b[1],id:b[2]}))};};
+PS.cartao=function(g){const B=PS.botoesCard();g.card.t+=1/60;if(!inp.tap||g.card.t<.35)return;const bt=B.bts.find(b=>inp.tap.x>b.x&&inp.tap.x<b.x+b.w&&inp.tap.y>b.y&&inp.tap.y<b.y+b.h);if(!bt)return;PS.decide(g,g.card.p,bt.id);g.card=null;g.fis=null;};
+PS.decide=function(g,p,id){const f=S.f,hg=p.hg,x=W/2,y=PS.ys()+60;const ok5=hg<.5;
+ if(f===0||f===2){if(id==='lv'){if(ok5){g.n++;ganha(10,x,y);msg(p.E.n+' com '+fmtHg(hg)+': seguro para o prato.');}else{g.vidas--;ganha(-10,x,y);msg(p.E.n+' acima do limite! '+(p.E.car?'Carnívoro acumula mais.':'Perto do garimpo até herbívoro passa.'));}}
+  else{if(!ok5){ganha(5,x,y);msg('Boa! Devolvido: estava acima de 0,5 µg/g.');}else{msg('Esse estava seguro, mas tudo bem devolver.');}}}
+ if(f===1){if(id==='lv'){const por=Math.min(28-g.porc,Math.max(1,Math.round(p.kg*2.5)));g.porc+=por;g.hg+=hg*por*100;g.n=g.porc;ganha(Math.max(1,Math.round(por/2)),x,y);const r=g.hg/(4*60*.1*7);
+   msg(por+' porções de '+p.E.n+'. A família está em '+fmtX(r)+' a dose.');if(r>3){g.lb.push({x:W/2,y:H*.5,t:3,tx:'passou de 3 vezes a dose de referência',c:'#c62828'});msg('Mercúrio demais na semana: '+fmtX(r)+' a dose de referência.');g.t=FASES[1].dur;}}
+  else msg('Devolvido.');}
+ if(f===3){if(id==='cr'){if(hg<.2){g.n++;g.crianca++;ganha(15,x,y);msg('Prato da criança: '+p.E.n+' com '+fmtHg(hg)+'.');}else{g.vidas--;ganha(-10,x,y);msg('Para a criança precisa ser menos de 0,2 µg/g.');}}
+  else if(id==='ad'){if(hg<.5){g.n++;g.adulto++;ganha(10,x,y);msg('Prato do adulto: '+p.E.n+'.');}else{g.vidas--;ganha(-10,x,y);msg('Acima de 0,5 µg/g: nem para o adulto.');}}
+  else{if(hg>=.5)ganha(5,x,y);msg('Devolvido ao rio.');}}};
+function fmtHg(v){return v.toFixed(2).replace('.',',')+' µg/g';}function fmtX(v){return v.toFixed(1).replace('.',',')+' vezes';}
+PS.draw=function(g){const s=PS.s(),ys=PS.ys(),fb=PS.fundo(),f=S.f,m=MOB();cx.drawImage(cache('ps2_'+f+'_'+W+'x'+H,W,H,PS.cena),0,0);
+ if(f===2){const bx=W*.1;for(let i=0;i<5;i++){const k=((g.t*.25+i/5)%1);cx.fillStyle='rgba(140,140,140,'+(.45*(1-k))+')';cx.beginPath();cx.arc(bx+16+k*60,ys-44-k*70,8+k*16,0,7);cx.fill();}
+  const gr=cx.createLinearGradient(0,0,W*.8,0);gr.addColorStop(0,'rgba(150,110,60,.45)');gr.addColorStop(1,'rgba(150,110,60,0)');cx.fillStyle=gr;cx.beginPath();cx.moveTo(bx+40,fb-10);for(let x=bx+40;x<=W*.85;x+=20)cx.lineTo(x,fb-10-(x-bx)*.25-Math.sin(x*.03+g.t)*6);cx.lineTo(W*.85,fb);cx.lineTo(bx+40,fb);cx.fill();
+  cx.font='bold 11px system-ui';const tl='mais perto do garimpo, mais mercúrio';const tw=cx.measureText(tl).width+14;rrk(cx,W*.22,ys+8,tw,20,10,'rgba(255,255,255,.92)');cx.fillStyle='#8d4f1f';cx.textAlign='left';cx.fillText(tl,W*.22+7,ys+22);}
+ for(const p of g.ps){if(p===g.fis)continue;peixeR(cx,p.x,p.y,p.L,p.sp,p.dir,p.f);}
+ canoaR(cx,g.cx,ys,.9*s,!!g.fis,g.t);const rx=g.cx+24*s*0.9,ry=ys-38*s;cx.strokeStyle='#6d4c41';cx.lineWidth=3;cx.beginPath();cx.moveTo(g.cx+8*s,ys-30*s);cx.lineTo(rx+20*s,ry-20*s);cx.stroke();
+ cx.strokeStyle='rgba(40,40,40,.7)';cx.lineWidth=1;cx.beginPath();cx.moveTo(rx+20*s,ry-20*s);cx.quadraticCurveTo((rx+g.hk.x)/2+10,(ry+g.hk.y)/2,g.hk.x,g.hk.y);cx.stroke();
+ if(g.fis){peixeR(cx,g.fis.x,g.fis.y,g.fis.L,g.fis.sp,g.fis.dir,g.fis.f);}
+ cx.strokeStyle='#90a4ae';cx.lineWidth=2;cx.beginPath();cx.moveTo(g.hk.x,g.hk.y-8);cx.lineTo(g.hk.x,g.hk.y+4);cx.arc(g.hk.x-4,g.hk.y+4,4,0,Math.PI);cx.stroke();cx.fillStyle='#c62828';cx.beginPath();cx.ellipse(g.hk.x-6,g.hk.y+2,3,2,0,0,7);cx.fill();
+ for(const p of g.part){cx.globalAlpha=Math.min(1,p.t*2);cx.fillStyle=p.c;cx.beginPath();cx.arc(p.x,p.y,2,0,7);cx.fill();cx.globalAlpha=1;}
+ /* painéis */const bw=m?160:200,px=W-bw-10,py=H*.06+44;
+ if(f===1){const r=g.hg/(4*60*.1*7);rrk(cx,px,py,bw,58,12,'rgba(255,255,255,.95)');cx.fillStyle='#0d3c6e';cx.font='bold 11px system-ui';cx.textAlign='left';cx.fillText('Porções: '+g.porc+'/28',px+10,py+15);rrk(cx,px+10,py+20,bw-20,8,4,'#eee');rrk(cx,px+10,py+20,(bw-20)*g.porc/28,8,4,'#43a047');
+  cx.fillText('Mercúrio: '+fmtX(r)+' a dose',px+10,py+42);rrk(cx,px+10,py+46,bw-20,8,4,'#eee');rrk(cx,px+10,py+46,(bw-20)*Math.min(1,r/3),8,4,r>2.4?'#e53935':'#fb8c00');}
+ if(f===3){rrk(cx,px,py,bw,40,12,'rgba(255,255,255,.95)');cx.fillStyle='#0d3c6e';cx.font='bold 11px system-ui';cx.textAlign='left';cx.fillText('Prato da criança: '+g.crianca,px+10,py+16);cx.fillText('Prato do adulto: '+g.adulto,px+10,py+32);}
+ for(const l of g.lb){cx.font='bold 12px system-ui';const w=cx.measureText(l.tx).width+14;rrk(cx,l.x-w/2,l.y-14,w,22,11,'rgba(255,255,255,.95)');cx.fillStyle=l.c;cx.textAlign='center';cx.fillText(l.tx,l.x,l.y+2);}
+ if(g.card)PS.cartaoD(g);
+ let t=g.card?'Leia o analisador e decida.':g.fis?'Puxando o peixe...':(m?'Arraste o anzol até o focinho de um peixe.':'Arraste o dedo na água para levar o anzol até o focinho de um peixe.');
+ if(S.g.msgT<=0){cx.font='bold '+(m?12:14)+'px system-ui';const w=Math.min(W-16,cx.measureText(t).width+28);rrk(cx,W/2-w/2,10,w,30,15,'rgba(255,255,255,.96)');cx.strokeStyle='#00838f';cx.lineWidth=2;cx.beginPath();cx.roundRect(W/2-w/2,10,w,30,15);cx.stroke();cx.fillStyle='#004d55';cx.textAlign='center';cx.fillText(t,W/2,30);}
+ FS.hud(g,'#004d55');vinheta(cx,W,H);};
+PS.cartaoD=function(g){const B=PS.botoesCard(),p=g.card.p,f=S.f,m=MOB();const {x0,y0,cw,ch}=B;const k=Math.min(1,g.card.t*4);cx.globalAlpha=k;
+ cx.fillStyle='rgba(255,255,255,.97)';cx.beginPath();cx.roundRect(x0,y0,cw,ch,16);cx.fill();cx.strokeStyle='#00838f';cx.lineWidth=2;cx.stroke();
+ cx.fillStyle='#004d55';cx.font='bold 14px system-ui';cx.textAlign='left';cx.fillText('Analisador de mercúrio',x0+14,y0+22);
+ peixeR(cx,x0+cw*.2,y0+72,Math.min(cw*.26,110),p.sp,1,g.t*3,p.hg>=.5);
+ const tx=x0+cw*.44;cx.font='bold 15px system-ui';cx.fillStyle='#10212b';cx.fillText(p.E.n,tx,y0+50);cx.font='12px system-ui';cx.fillStyle='#4d6370';cx.fillText(p.E.gu+' · '+p.kg.toFixed(1).replace('.',',')+' kg',tx,y0+68);if(f===2)cx.fillText(PS.mult(p.x)>1.3?'pescado perto do garimpo':'pescado longe do garimpo',tx,y0+84);
+ const c=p.hg<.2?'#2e7d32':p.hg<.5?'#f9a825':'#c62828';cx.font='bold 22px system-ui';cx.fillStyle=c;cx.fillText(fmtHg(p.hg),tx,y0+(f===2?110:100));
+ const bx=x0+14,by=y0+ch-90,bw=cw-28,mx=1.5;rrk(cx,bx,by,bw,12,6,'#eceff1');const gr=cx.createLinearGradient(bx,0,bx+bw,0);gr.addColorStop(0,'#66bb6a');gr.addColorStop(.33,'#fdd835');gr.addColorStop(.66,'#ef5350');gr.addColorStop(1,'#b71c1c');cx.fillStyle=gr;cx.globalAlpha=k*.35;cx.fillRect(bx,by,bw,12);cx.globalAlpha=k;
+ const lim=[[.5,'0,5'],[1,'1,0']];if(f===3)lim.unshift([.2,'0,2']);cx.font='10px system-ui';cx.textAlign='center';for(const [v,t] of lim){const x=bx+bw*v/mx;cx.fillStyle='#37474f';cx.fillRect(x-1,by-4,2,20);cx.fillText(t,x,by+28);}
+ const xm=bx+bw*Math.min(1,p.hg/mx);cx.fillStyle=c;cx.beginPath();cx.moveTo(xm,by-2);cx.lineTo(xm-6,by-10);cx.lineTo(xm+6,by-10);cx.fill();
+ for(const b of B.bts){rrk(cx,b.x,b.y,b.w,b.h,12,b.c);cx.fillStyle='#fff';cx.font='bold '+(m?13:14)+'px system-ui';cx.textAlign='center';cx.fillText(b.t,b.x+b.w/2,b.y+27);}cx.globalAlpha=1;};
 const PERG=[
- {q:'Qual destes peixes costuma acumular MENOS mercúrio?',o:['Pacu, que come frutos e plantas','Tucunaré, que caça outros peixes','Piraíba, um grande predador']},
- {q:'Por que peixes predadores acumulam mais mercúrio?',o:['O mercúrio se acumula a cada nível da cadeia alimentar','Eles nadam mais perto do garimpo','Eles bebem mais água do que os outros']},
- {q:'Qual é o limite da ANVISA de mercúrio em peixes predadores?',o:['1,0 mg/kg','0,1 mg/kg','10 mg/kg']}
+ {q:'Que peixes acumulam mais mercúrio?',o:['Os que comem outros peixes','Os que comem frutos e sementes','Os que comem lodo do fundo']},
+ {q:'Em média, quantos peixes vendidos nas cidades da Amazônia passaram do limite de mercúrio no estudo?',o:['Cerca de 1 em cada 5','Cerca de 1 em cada 50','Quase todos os peixes']},
+ {q:'Como o mercúrio do garimpo chega ao ar?',o:['A mistura com ouro é queimada','O ouro solta mercúrio ao sol','Os peixes soltam mercúrio na água']},
+ {q:'Quem é mais sensível ao mercúrio da comida?',o:['Crianças e gestantes','Pescadores adultos','Pessoas idosas']}
 ];
 function pergunta(){
  const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
@@ -192,11 +351,11 @@ function pergunta(){
   $('bn').onclick=()=>{S.tot+=S.fp;S.fp=0;if(S.f===FASES.length-1)final(true);else{S.f++;fase();}};});
 }
 function final(tudo){
- S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
- $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Pescador consciente':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
+ S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?FASES.length+' fases':'Fase '+(S.f+1);
+ $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Pescador consciente!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
  <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
- <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: ANVISA, RDC nº 42/2013: limite de mercúrio de 0,5 mg/kg em peixes não predadores e 1,0 mg/kg em predadores (citado por estudos da UFOPA e pela WWF-Brasil); UFOPA, trabalho sobre mercúrio no pescado do Tapajós: o mercúrio sofre metilação por microrganismos e se acumula no pescado; revisão publicada na revista ACBio (UFTM): o teor de mercúrio nos peixes aumenta com a biomagnificação. Velocidades, gotas e pontos são regras do jogo.</div></div>`;
+ <div class="small" style="margin-top:12px;text-align:left">Fontes: Basta et al. (2023), Análise regional dos níveis de mercúrio em peixes consumidos pela população da Amazônia brasileira, nota técnica Ensp/Fiocruz, UFOPA, Greenpeace Brasil, Iepé, ISA e WWF-Brasil (médias de 0,603 µg/g em carnívoros e 0,092 µg/g em não carnívoros; 21,3% dos peixes com 0,5 µg/g ou mais; 100 g de peixe por pessoa por dia; dose de referência da EPA de 0,1 µg/kg por dia; mulheres em idade fértil até 9 vezes e crianças de 2 a 4 anos até 31 vezes a dose); Medeiros Filho (2022), Impactos da contaminação por mercúrio dos garimpos, IHU Unisinos; WWF-Brasil, nota técnica Dinâmica do mercúrio e avaliação dos seus riscos; ANVISA, RDC nº 42/2013 (0,5 mg/kg em não predadores e 1,0 mg/kg em predadores). O mercúrio de cada peixe é sorteado em torno das médias do estudo. Família de 4 pessoas de 60 kg, 2,5 porções de 100 g por quilo de peixe, limite de 0,2 µg/g para o prato da criança, efeito do garimpo por distância, tempos e pontos são regras do jogo.</div></div>`;
  $('bS').onclick=()=>salvar(nivel);
 }
 const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
@@ -205,7 +364,7 @@ const GAME_ID="mercurio-na-rede";let db=null,fs=null,salvo=false;
 async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
 async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
  $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
-window.__a={get S(){return S},update,parar,G,inp};
+window.__a={get S(){return S},update,parar,G,inp,tec};
 inicio();
 </script>
 </body>
