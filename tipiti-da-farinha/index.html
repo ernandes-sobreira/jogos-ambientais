@@ -266,10 +266,14 @@ const G={titulo:'Tipiti da Farinha',get rotulo(){return ['Raízes raladas','Tipi
  novaForn(g){g.f3={cel:Array.from({length:12},()=>({p:0,pt:0,q:0})),fogo:.6,rodo:null,last:null,peneira:0,estado:'peneira',sh:0,lastDir:0};},
  /* ---------- fase 4 ---------- */
  novoTuc(g){g.f4={dec:0,nivel:1,goma:.28,tilt:0,derr:0,estado:'dec',temp:.2,fogo:.4,ferv:0,transb:0};},
- update(g,dt){const f=S.f;for(const p of g.part){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=500*dt;p.t-=dt;}g.part=g.part.filter(p=>p.t>0);
+ update(g,dt){const f=S.f;for(const p of g.part){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=500*dt;p.t-=dt;}if(TF.colide)TF.colide(g);g.part=g.part.filter(p=>p.t>0);
   if(f===0){const r=g.r,Gr=G.geoRaiz();if(r.anim>0){r.anim+=dt;if(r.anim>1){g.n++;ganha(10,W*.5,H*.3);G.novaRaiz(g);}return;}r.dano=Math.max(0,r.dano-dt);
-   if(inp.down&&inp.x!==null){const x=inp.x,y=inp.y;if(Math.abs(y-Gr.y)<Gr.th*1.6){if(x<Gr.x0+Gr.th*.3&&x>Gr.mx-50&&r.dano<=0){r.dano=1.2;ganha(-10,x,y-30);msg('Cuidado! A faca chegou perto da mão.');for(let i=0;i<6;i++)g.part.push({x,y,vx:(Math.random()-.5)*120,vy:-80,t:.5,c:'#e53935'});}
-     else if(x>=Gr.x0&&x<=Gr.x1){const i=Math.floor((x-Gr.x0)/(Gr.x1-Gr.x0)*14);if(i>=0&&i<14&&!r.peel[i]){r.peel[i]=1;for(let j=0;j<3;j++)g.part.push({x,y:y-Gr.th*.5,vx:(Math.random()-.5)*80,vy:-60-Math.random()*60,t:.7,c:'#7a5233',casca:1});}}}}
+   if(inp.down&&inp.x!==null&&r.dano<.5){const x=inp.x,y=inp.y,vel=r.lx!=null?Math.abs(x-r.lx)/Math.max(dt,1e-3):0;r.lx=x;const zc=Gr.x0+Gr.th*.35,zw=Gr.x0+Gr.th*1.3;
+    if(Math.abs(y-Gr.y)<Gr.th*1.6){const escorrega=x<zw&&x>=zc&&vel>650&&Math.random()<.35;
+     if((x<zc&&x>Gr.mx-60)||escorrega){r.dano=1.6;r.corte=(r.corte||0)+1;r.cx=Math.min(x,zc-4);ganha(-10,x,y-30);S.g.tremor=.4;msg(escorrega?'A faca escorregou e cortou o dedo! Devagar perto da mão.':'Cortou a mão! Mantenha a faca longe dos dedos.');
+      for(let i=0;i<10;i++)g.part.push({x:r.cx,y:Gr.y,vx:(Math.random()-.5)*90,vy:-40-Math.random()*80,t:.9,c:'#c62828',sangue:1});}
+     else if(x>=zc&&x<=Gr.x1){const i=Math.floor((x-Gr.x0)/(Gr.x1-Gr.x0)*14);if(i>=0&&i<14&&!r.peel[i]){r.peel[i]=1;for(let j=0;j<3;j++)g.part.push({x,y:y-Gr.th*.5,vx:(Math.random()-.5)*80,vy:-60-Math.random()*60,t:.7,c:'#7a5233',casca:1});}}}}
+   else r.lx=null;
    if(r.peel.every(v=>v)){r.anim=.01;msg('Raiz limpa. Para o ralador!');}return;}
   if(f===1){const T=g.t2;if(T.estado==='enche'){if(inp.tap){T.enche++;for(let i=0;i<5;i++)g.part.push({x:W*.5,y:H*.2,vx:(Math.random()-.5)*40,vy:20,t:.4,c:'#f1e6c8'});if(T.enche>=4){T.estado='bacia';msg('Tipiti cheio. Agora ponha a bacia embaixo dele.');}}return;}
    const tx=W*.5,ty=H*.14+G.tipL(T)+12;
@@ -292,7 +296,7 @@ const G={titulo:'Tipiti da Farinha',get rotulo(){return ['Raízes raladas','Tipi
    return;}
   if(f===3){const T=g.f4;if(T.estado==='dec'){T.dec=Math.min(1,T.dec+dt/4);const b=TF.bt('desp');if(inp.down&&inp.x!==null&&TF.hit(b,{x:inp.x,y:inp.y})){if(T.dec<1&&!T.avd){T.avd=1;ganha(-5,W/2,H*.3);msg('A goma ainda não assentou. Espere o caldo ficar limpo.');}}if(T.dec>=1){T.estado='desp';msg('A goma assentou no fundo. Segure DESPEJAR.');}return;}
    if(T.estado==='desp'){const b=TF.bt('desp');const seg=(inp.down&&inp.x!==null&&TF.hit(b,{x:inp.x,y:inp.y}))||tec[' '];T.tilt+=((seg?1:0)-T.tilt)*Math.min(1,dt*4);
-    if(T.tilt>.4){const q=dt*.22*T.tilt;if(T.nivel>T.goma+.02){T.nivel=Math.max(T.goma,T.nivel-q);if(Math.random()<.6)g.part.push({x:W*.42,y:H*.5,vx:60,vy:20,t:.6,c:'#f2c94c',gota:1});}else{T.derr+=q;if(Math.random()<.6)g.part.push({x:W*.42,y:H*.5,vx:60,vy:20,t:.6,c:'#fafafa',gota:1});if(T.derr>.04&&!T.avg){T.avg=1;ganha(-5,W/2,H*.3);msg('Foi goma junto! Solte antes de a goma chegar na borda.');}}}
+    T.fluxo=null;if(T.tilt>.4){const q=dt*.22*T.tilt;if(T.nivel>T.goma+.02){T.nivel=Math.max(T.goma,T.nivel-q);T.fluxo='caldo';}else{T.derr+=q;T.fluxo='goma';if(T.derr>.04&&!T.avg){T.avg=1;ganha(-5,W/2,H*.3);msg('Foi goma junto! Solte antes de a goma chegar na borda.');}}}
     if(!seg&&T.nivel<=T.goma+.05){T.estado='ferve';msg('Caldo na panela. Agora mantenha a fervura.');}return;}
    if(T.estado==='ferve'){T.fogo=Math.max(0,T.fogo-dt*.08);if(inp.tap&&TF.hit(TF.bt('lenha'),inp.tap))T.fogo=Math.min(1,T.fogo+.25);T.temp+=((T.fogo*1.15)-T.temp)*Math.min(1,dt*.7);
     if(T.temp>=.55&&T.temp<=.85)T.ferv+=dt;if(T.temp>.92&&T.transb<=0){T.transb=2;ganha(-5,W*.6,H*.4);msg('Fogo demais: o tucupi derramou.');T.temp=.7;T.fogo=.5;}T.transb-=dt;
@@ -451,8 +455,8 @@ G.draw=function(g){const f=S.f,m=MOB();cx.drawImage(cache('tf3'+W+'x'+H,W,H,TF.c
   if(r.anim>0){const k=r.anim;const tx2=cxr,ty2=cyr-14*s;raizMandioca(cx,Gr.x0+(tx2-Gr.x0)*k,Gr.x1+(tx2-Gr.x1)*k,Gr.y+(ty2-Gr.y)*k,Gr.th*(1-k*.75),r.peel);}
   else{cx.fillStyle=lg(cx,0,Gr.y-Gr.th*.45,0,Gr.y+Gr.th*.45,['#8a5e3a','#6d4728','#4a2e17']);cx.beginPath();cx.roundRect(Gr.mx-34,Gr.y-Gr.th*.42,Gr.x0-Gr.mx+40,Gr.th*.84,Gr.th*.4);cx.fill();
    raizMandioca(cx,Gr.x0,Gr.x1,Gr.y,Gr.th,r.peel);
-   maoSegura(cx,Gr.mx-8,Gr.y,Gr.th*.42,Gr.mx-80,Gr.y-H*.3,'#3f6b8a');
-   cx.strokeStyle='rgba(229,57,53,'+(r.dano>0?.9:.45)+')';cx.setLineDash([5,4]);cx.lineWidth=2;cx.strokeRect(Gr.mx-50,Gr.y-Gr.th*1.6,Gr.x0+Gr.th*.3-(Gr.mx-50),Gr.th*3.2);cx.setLineDash([]);cx.fillStyle='#c62828';cx.font='bold 10px system-ui';cx.textAlign='left';cx.fillText('mão',Gr.mx-46,Gr.y-Gr.th*1.6-4);
+   TF.maoRaiz(r,Gr);
+   TF.zonaMao(r,Gr);
    if(inp.down&&inp.x!==null)faca(cx,inp.x-8,inp.y-Gr.th*.2,-.5,m?.8:1);}
   const pe=r.peel.filter(v=>v).length;TF.barra(10,H-46,m?160:200,'Casca tirada',pe/14,'#8bc34a');t=r.anim?'Raiz limpa indo para o caititu...':(m?'Passe a faca na raiz, longe da mão.':'Passe a faca por toda a raiz para tirar a casca. Não corte perto da mão.');}
  if(f===1){const T=g.t2,tx=W*.5,L=G.tipL(T),wd=(m?46:56)*(.6+.4*T.um);
@@ -471,11 +475,11 @@ G.draw=function(g){const f=S.f,m=MOB();cx.drawImage(cache('tf3'+W+'x'+H,W,H,TF.c
  if(f===3){const T=g.f4;const px=W*.66,py=H*.6,pw=m?96:120;
   if(T.estado!=='ferve'){const bx=W*.3,by=H*.5,bw=W*(m?.32:.24),bh=H*.18;cx.save();cx.translate(bx,by);cx.rotate(T.tilt*.6);
     const corpo=()=>{cx.beginPath();cx.moveTo(-bw/2,-bh/2);cx.lineTo(bw/2,-bh/2);cx.bezierCurveTo(bw/2,bh*.2,bw*.38,bh/2,0,bh/2);cx.bezierCurveTo(-bw*.38,bh/2,-bw/2,bh*.2,-bw/2,-bh/2);cx.closePath();};
-    corpo();cx.fillStyle='#e9edf0';cx.fill();cx.save();corpo();cx.clip();
-    const topo=bh/2-bh*T.nivel;cx.fillStyle='rgba(242,201,76,'+(.45+.5*T.dec)+')';cx.fillRect(-bw,topo,bw*2,bh);
-    const gh=bh*T.goma*T.dec;cx.fillStyle=lg(cx,0,bh/2-gh,0,bh/2,['#fdfdfb','#ecebe4']);cx.fillRect(-bw,bh/2-gh,bw*2,gh);
+    corpo();cx.fillStyle='#e9edf0';cx.fill();cx.save();corpo();cx.clip();cx.rotate(-T.tilt*.6);
+    const topo=bh/2-bh*T.nivel;cx.fillStyle='rgba(242,201,76,'+(.45+.5*T.dec)+')';cx.fillRect(-bw*1.5,topo,bw*3,bh*2);
+    const gh=bh*T.goma*T.dec;cx.fillStyle=lg(cx,0,bh/2-gh,0,bh/2,['#fdfdfb','#ecebe4']);cx.fillRect(-bw*1.5,bh/2-gh,bw*3,gh+bh);
     if(T.dec<1){const R=rng(Math.floor(g.t*10));cx.fillStyle='rgba(255,255,255,.85)';for(let i=0;i<50;i++)cx.fillRect(-bw/2+R()*bw,topo+R()*bh*T.nivel*(1-T.dec*.7),2,2);}
-    cx.fillStyle='rgba(255,255,255,.4)';cx.fillRect(-bw/2,topo,bw,2);cx.restore();
+    cx.fillStyle='rgba(255,255,255,.45)';cx.fillRect(-bw*1.5,topo,bw*3,2);cx.restore();
     corpo();cx.lineWidth=5;cx.strokeStyle=lg(cx,-bw/2,0,bw/2,0,['#6f7a83','#e3e8ec','#9aa5ad','#5d6870']);cx.stroke();cx.fillStyle='#cfd6db';cx.fillRect(-bw/2-6,-bh/2-4,bw+12,5);cx.restore();
    cx.fillStyle='#4b2c20';cx.font='bold 11px system-ui';cx.textAlign='center';cx.fillText('manipueira (bacia vista em corte)',bx,by+bh/2+24);if(T.dec>=.5)cx.fillText('goma no fundo',bx,by+bh/2+38);
    TF.barra(10,H*.2,m?150:190,'Goma assentando',T.dec,'#bdbdbd');TF.btDraw(TF.bt('desp'),T.estado==='desp');t=T.estado==='dec'?'Espere a goma assentar no fundo da bacia.':(m?'Segure DESPEJAR e solte antes da goma.':'Segure DESPEJAR e solte quando o caldo acabar, antes de a goma branca sair.');}
@@ -545,6 +549,36 @@ TF.torra=function(g,m){const F3=g.f3,fx0=W*.14,fx1=W*.86,cw=(fx1-fx0)/12,fy=H*.5
  const prog=F3.cel.reduce((a,c)=>a+(c.q?1:Math.min(1,c.p)),0)/12;TF.barra(10,H*.2,m?150:190,'Torra da farinha',prog,'#c08b3c');TF.barra(10,H*.2+40,m?150:190,'Fogo',F3.fogo,F3.fogo>.75?'#e53935':'#ff9800',[.35,.75]);
  TF.btDraw(TF.bt('lenha'));
  return F3.fogo<.2?'Fogo fraco! Toque em LENHA.':F3.fogo>.75?'Fogo forte demais: mexa mais rápido.':(m?'Passe o rodo por toda a chapa.':'Passe o rodo por toda a chapa. Bolinha vermelha embaixo quer dizer farinha parada, que vai queimar.');};
+/* Corte na mão, gotas que param na bacia, poças no chão e fio de caldo entre bacia e panela. */
+TF.maoRaiz=function(r,Gr){const fw=Math.max(5,Gr.th*.42*.55),zc=Gr.x0+Gr.th*.35;const rec=r.dano>0?Math.sin(Math.min(1,(1.6-r.dano)/.5)*Math.PI/2)*Math.min(1,r.dano/.6):0;
+ const hx=zc-fw*2.9-rec*22,hy=Gr.y-rec*16;
+ maoSegura(cx,hx,hy,Gr.th*.42,Gr.mx-80-rec*10,Gr.y-H*.3,'#3f6b8a');
+ if(r.corte){const fx=hx-fw*1.1+3*fw*1.02,fy=hy;
+  if(r.dano>0){cx.strokeStyle='#8e0000';cx.lineWidth=2.2;cx.beginPath();cx.moveTo(fx-fw*.5,fy-2);cx.lineTo(fx+fw*.5,fy+3);cx.stroke();cx.fillStyle='rgba(198,40,40,.9)';cx.beginPath();cx.moveTo(fx-2,fy+2);cx.quadraticCurveTo(fx,fy+Gr.th*.5+6*(1-r.dano/1.6),fx+2,fy+2);cx.fill();cx.beginPath();cx.arc(fx,fy+Gr.th*.5+7*(1-r.dano/1.6),2.4,0,7);cx.fill();}
+  else{cx.fillStyle=lg(cx,0,fy-5,0,fy+5,['#f3dcc0','#dcc0a0']);cx.save();cx.translate(fx-fw*.5,fy);cx.rotate(.12);cx.beginPath();cx.roundRect(-fw*.7,-4.5,fw*2.2,9,2);cx.fill();cx.fillStyle='rgba(150,110,80,.5)';for(let i=0;i<6;i++)cx.fillRect(-fw*.5+i*fw*.35,-2,1.2,1.2);cx.fillStyle='rgba(180,40,40,.35)';cx.fillRect(fw*.2,-1.5,fw*.5,3);cx.restore();}}};
+TF.zonaMao=function(r,Gr){const zc=Gr.x0+Gr.th*.35,zw=Gr.x0+Gr.th*1.3,x0=Gr.mx-60;const perto=inp.down&&inp.x!==null&&Math.abs(inp.y-Gr.y)<Gr.th*1.6&&inp.x<zw;
+ cx.fillStyle='rgba(229,57,53,'+(r.dano>0?.18:perto?.12:.06)+')';cx.fillRect(x0,Gr.y-Gr.th*1.5,zc-x0,Gr.th*3);
+ if(perto&&inp.x>=zc){cx.fillStyle='rgba(251,140,0,.12)';cx.fillRect(zc,Gr.y-Gr.th*1.5,zw-zc,Gr.th*3);rrk(cx,zc-8,Gr.y-Gr.th*1.5-24,88,20,10,'#fb8c00');cx.fillStyle='#fff';cx.font='bold 11px system-ui';cx.textAlign='left';cx.fillText('devagar aqui',zc-1,Gr.y-Gr.th*1.5-10);}
+ const ty=Gr.y+Gr.th*1.15;for(const m of (r.manchas||[])){cx.fillStyle='rgba(150,20,20,.75)';cx.beginPath();cx.ellipse(m.x,ty+1,m.w,1.8,0,0,7);cx.fill();}};
+TF.colide=function(g){const f=S.f;
+ if(f===0&&g.r){const Gr=G.geoRaiz(),ty=Gr.y+Gr.th*1.15;for(const p of g.part)if(p.sangue&&p.vy>0&&p.y>=ty){p.t=0;(g.r.manchas=g.r.manchas||[]).push({x:p.x,w:1.5+Math.random()*2.5});}}
+ if(f===1&&g.t2){const T=g.t2,sy=H*.86;T.rip=T.rip||[];T.poca=T.poca||[];for(const p of g.part){if(!p.gota)continue;if(p.ok&&p.y>=sy-2){p.t=0;T.rip.push({x:p.x,t:0});}else if(!p.ok&&p.y>=H*.9){p.t=0;const q=T.poca.find(q=>Math.abs(q.x-p.x)<14);if(q)q.r=Math.min(26,q.r+1.2);else if(T.poca.length<12)T.poca.push({x:p.x,r:4});}}}};
+const _drawTF=G.draw;
+G.draw=function(g){const dt=Math.min(.05,Math.max(0,g.t-(g._lt||g.t)));g._lt=g.t;g.tremor=Math.max(0,(g.tremor||0)-dt);
+ cx.save();if(g.tremor>0){cx.translate((Math.random()-.5)*12*g.tremor,(Math.random()-.5)*12*g.tremor);}
+ const pg=g.part;if(S.f===1)g.part=pg.filter(p=>!p.gota);_drawTF(g);g.part=pg;const f=S.f;
+ if(f===1){const T=g.t2,tx=W*.5,B=T.bacia,sy=H*.86,ty0=H*.15+G.tipL(T)+18;
+  for(const q of (T.poca||[])){cx.fillStyle='rgba(150,120,40,.35)';cx.beginPath();cx.ellipse(q.x,H*.915,q.r*1.6,q.r*.35,0,0,7);cx.fill();cx.fillStyle='rgba(255,255,255,.25)';cx.beginPath();cx.ellipse(q.x-q.r*.4,H*.912,q.r*.5,q.r*.08,0,0,7);cx.fill();}
+  const fl=T.estado==='aperta'?Math.max(0,T.pole-.3)*T.um:0,ok=Math.abs(B.x-tx)<34,ye=ok?sy:H*.915;
+  if(fl>.05){const w=1+fl*5;cx.strokeStyle='rgba(236,215,110,.85)';cx.lineWidth=w;cx.lineCap='round';cx.beginPath();cx.moveTo(tx,ty0);for(let y=ty0;y<=ye;y+=6)cx.lineTo(tx+Math.sin(y*.08+g.t*20)*.8,y);cx.stroke();cx.strokeStyle='rgba(255,255,255,.5)';cx.lineWidth=Math.max(.6,w*.3);cx.beginPath();cx.moveTo(tx-w*.2,ty0+4);cx.lineTo(tx-w*.2,ye-4);cx.stroke();
+   if(!ok){for(let i=0;i<3;i++){cx.fillStyle='rgba(236,215,110,.8)';cx.beginPath();cx.arc(tx+(Math.random()-.5)*16,ye-Math.random()*6,1.5,0,7);cx.fill();}}}
+  for(const p of pg)if(p.gota){cx.fillStyle='rgba(236,215,110,.95)';cx.beginPath();cx.moveTo(p.x,p.y-5);cx.quadraticCurveTo(p.x+2.6,p.y,p.x,p.y+2.6);cx.quadraticCurveTo(p.x-2.6,p.y,p.x,p.y-5);cx.fill();}
+  T.rip=(T.rip||[]).filter(r=>(r.t+=dt)<.6);for(const r of T.rip){cx.strokeStyle='rgba(255,255,255,'+(.8*(1-r.t/.6))+')';cx.lineWidth=1.2;cx.beginPath();cx.ellipse(r.x,sy+2,3+r.t*30,1+r.t*5,0,0,7);cx.stroke();}}
+ if(f===3){const T=g.f4;if(T.fluxo&&T.estado==='desp'){const m=MOB(),bx=W*.3,by=H*.5,bw=W*(m?.32:.24),bh=H*.18,a=T.tilt*.6;const lx=bx+Math.cos(a)*(bw/2+4)-Math.sin(a)*(-bh/2),ly=by+Math.sin(a)*(bw/2+4)+Math.cos(a)*(-bh/2);
+   const pw=m?96:120,px=W*.66-pw*.15,py=H*.6-H*.02;const w=2+T.tilt*5,cor=T.fluxo==='goma'?'#f4f4f0':'#f2c94c';
+   cx.strokeStyle=cor;cx.lineWidth=w;cx.lineCap='round';cx.beginPath();cx.moveTo(lx,ly);cx.quadraticCurveTo(lx+(px-lx)*.55,ly-14,px,py);cx.stroke();cx.strokeStyle='rgba(255,255,255,.55)';cx.lineWidth=w*.3;cx.beginPath();cx.moveTo(lx,ly-w*.2);cx.quadraticCurveTo(lx+(px-lx)*.55,ly-14-w*.2,px,py-w*.2);cx.stroke();
+   cx.strokeStyle='rgba(255,255,255,.7)';cx.lineWidth=1.2;const k=(g.t*3)%1;cx.beginPath();cx.ellipse(px,py+2,4+k*14,1.5+k*3,0,0,7);cx.stroke();}}
+ cx.restore();};
 function pergunta(){
  const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
  $('tela').innerHTML=`<div class="card"><h2>Pergunta da fase</h2><p style="margin:6px 0 4px">${P.q}</p><p class="small">Acerto +20, erro −10.</p><div class="ops">${ops.map((o,i)=>`<button data-i="${i}">${o.t}</button>`).join('')}</div><div id="pf"></div></div>`;
