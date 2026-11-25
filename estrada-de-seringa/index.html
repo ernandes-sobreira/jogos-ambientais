@@ -43,7 +43,7 @@ canvas{width:100%;max-width:760px;margin:0 auto;display:block;border:2px solid v
 <a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
 <header>
   <h1>Estrada de Seringa</h1>
-  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
 </header>
 <main id="tela"></main>
 <div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
@@ -117,7 +117,7 @@ let S,cv,cx,raf=null,last=0,W=720,H=460,inp={x:null,y:null,down:false,tap:null},
 const MOB=()=>W<520;
 function rrect(x,y,w,h,r,cor){cx.fillStyle=cor;cx.beginPath();cx.roundRect(x,y,w,h,r);cx.fill();}
 function sombra(x,y,rx,ry){cx.fillStyle='rgba(0,0,0,.12)';cx.beginPath();cx.ellipse(x,y,rx,ry,0,0,7);cx.fill();}
-function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/'+G.FASES.length;$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
  if(g&&!g.fim){const [a,m]=G.meta(g);$('hR').textContent=G.rotulo+' '+a+'/'+m;$('hV').textContent=G.vidas?'Vidas '+'●'.repeat(Math.max(0,g.vidas)):'';$('hT').textContent=G.semTempo?'':Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s';}
  ['hR','hV','hT'].forEach(k=>$(k).style.display=$(k).textContent?'':'none');}
 function inicio(){parar();$('hud').style.display='none';$('rankBox').style.display='block';
@@ -151,39 +151,102 @@ function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=G.FAS
  <p class="small" style="margin-top:6px">${ok?G.FASES[S.f].fato:G.dicaErro}</p>
  <div class="row" style="justify-content:center;margin-top:14px">${ok?'<button class="btn grande" id="bq">Pergunta rápida</button>':'<button class="btn grande" id="br">Jogar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
  if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}}
-/* Os seringueiros entram na mata antes do sol nascer e percorrem a estrada de seringa duas vezes, primeiro cortando e depois coletando o látex (PT, reportagem na Resex Chico Mendes). No inverno amazônico as árvores não são cortadas pelo risco de água no látex (Rev. Bras. Geografia, IBGE). A Resex Chico Mendes foi criada em 12/03/1990 (IHU). Árvores, chuva e pontos são regras do jogo. */
-function seringueira(k,x,y,h,corte,cheia){k.fillStyle='#8d6e63';k.fillRect(x-10,y-h,20,h);k.fillStyle='#558b2f';k.beginPath();k.ellipse(x,y-h,46,30,0,0,7);k.fill();k.fillStyle='#7cb342';k.beginPath();k.ellipse(x-14,y-h-8,24,16,0,0,7);k.fill();if(corte){k.strokeStyle='#fff8e1';k.lineWidth=3;k.beginPath();k.moveTo(x-9,y-h*.55);k.lineTo(x+9,y-h*.45);k.stroke();k.fillStyle='#9e9e9e';k.fillRect(x+6,y-h*.42,10,8);if(cheia){k.fillStyle='#fafafa';k.fillRect(x+7,y-h*.42,8,5);}}}
-function seringueiro(k,x,y,s,f){k.save();k.translate(x,y);k.scale(s,s);k.fillStyle='#ffcc80';k.beginPath();k.arc(0,-50,8,0,7);k.fill();k.fillStyle='#6d4c41';k.fillRect(-11,-60,22,5);rrectK2(k,-10,-42,20,26,7,'#2e7d32');k.strokeStyle='#4e342e';k.lineWidth=5;k.lineCap='round';const p=Math.sin(f*10)*8;k.beginPath();k.moveTo(-4,-16);k.lineTo(-4-p,0);k.moveTo(4,-16);k.lineTo(4+p,0);k.stroke();k.fillStyle='#ffe082';k.beginPath();k.arc(0,-62,4,0,7);k.fill();k.restore();}
-function rrectK2(k,x,y,w,h,r,c){k.fillStyle=c;k.beginPath();k.roundRect(x,y,w,h,r);k.fill();}
+/* ---------- arte vetorial compartilhada ---------- */
+beep=function(){};
+function rng(s){s=s%2147483647;if(s<=0)s+=2147483646;return()=>{s=s*16807%2147483647;return(s-1)/2147483646;};}
+function lg(k,x0,y0,x1,y1,st){const g=k.createLinearGradient(x0,y0,x1,y1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+function rg(k,x,y,r0,r1,st){const g=k.createRadialGradient(x,y,r0,x,y,r1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+const CACHE={};
+function cache(key,w,h,fn){const id=key+'_'+w+'x'+h;if(!CACHE[id]){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);CACHE[id]=c;}return CACHE[id];}
+function ceu(k,w,h,cs){k.fillStyle=lg(k,0,0,0,h,cs);k.fillRect(0,0,w,h);}
+function sol(k,x,y,r,c){k.fillStyle=rg(k,x,y,0,r*4,[c,'rgba(255,255,255,0)']);k.fillRect(x-r*4,y-r*4,r*8,r*8);k.fillStyle=c;k.beginPath();k.arc(x,y,r,0,7);k.fill();}
+function nuvem(k,x,y,s,a){k.fillStyle='rgba(255,255,255,'+(a||.8)+')';for(const [dx,dy,r] of [[0,0,1],[1.1,.15,.8],[-1,.2,.75],[.5,-.45,.7],[-.4,-.35,.6]]){k.beginPath();k.arc(x+dx*s,y+dy*s,r*s,0,7);k.fill();}k.fillRect(x-1.7*s,y+.2*s,3.6*s,.8*s);}
+function serra(k,w,y,amp,cor,seed){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,y+amp*2);let x=0;k.lineTo(0,y);while(x<w+40){x+=30+r()*50;k.lineTo(x,y-r()*amp);}k.lineTo(w,y+amp*4);k.lineTo(0,y+amp*4);k.fill();}
+function matas(k,w,y,amp,cor,seed,base){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,base);k.lineTo(0,y);let x=0;while(x<w+30){const rr=8+r()*amp;k.arc(x+rr,y-r()*amp*.6,rr,Math.PI,0);x+=rr*1.6;}k.lineTo(w,base);k.closePath();k.fill();}
+function capim(k,x0,y0,w,h,cor,seed,n){const r=rng(seed);k.strokeStyle=cor;k.lineCap='round';for(let i=0;i<n;i++){const x=x0+r()*w,y=y0+r()*h,l=4+r()*10;k.lineWidth=1+r()*1.2;for(let j=-1;j<=1;j++){k.beginPath();k.moveTo(x,y);k.quadraticCurveTo(x+j*3,y-l*.6,x+j*5+r()*2,y-l);k.stroke();}}}
+function copa(k,x,y,r,cs,seed){const R=rng(seed);const pts=[];for(let i=0;i<9;i++){const a=R()*Math.PI*2,d=R()*r*.55;pts.push([x+Math.cos(a)*d,y+Math.sin(a)*d*.7,r*(.35+R()*.3)]);}
+ k.fillStyle=cs[0];for(const [a,b,c] of pts){k.beginPath();k.arc(a+c*.12,b+c*.18,c,0,7);k.fill();}
+ k.fillStyle=cs[1];for(const [a,b,c] of pts){k.beginPath();k.arc(a,b,c*.92,0,7);k.fill();}
+ k.fillStyle=cs[2];for(const [a,b,c] of pts){k.beginPath();k.arc(a-c*.25,b-c*.3,c*.5,0,7);k.fill();}}
+function tronco(k,x,y0,y1,w0,w1,c1,c2){k.fillStyle=lg(k,x-w0,0,x+w0,0,[c2,c1,c1,c2]);k.beginPath();k.moveTo(x-w0,y0);k.lineTo(x-w1,y1);k.lineTo(x+w1,y1);k.lineTo(x+w0,y0);k.fill();k.strokeStyle='rgba(0,0,0,.12)';k.lineWidth=1;for(let y=y1+8;y<y0;y+=11){const t=(y-y1)/(y0-y1),ww=w1+(w0-w1)*t;k.beginPath();k.moveTo(x-ww*.6,y);k.quadraticCurveTo(x,y+3,x+ww*.5,y-1);k.stroke();}}
+function palmeira(k,x,y,h,lean,cfr,ctr,seed,nf){const R=rng(seed);const tx=x+lean,ty=y-h;k.strokeStyle=ctr;k.lineCap='round';for(let i=0;i<14;i++){const t0=i/14,t1=(i+1)/14;k.lineWidth=h*.05*(1-t0*.35);const xa=x+lean*t0*t0,ya=y-h*t0,xb=x+lean*t1*t1,yb=y-h*t1;k.beginPath();k.moveTo(xa,ya);k.lineTo(xb,yb);k.stroke();}
+ k.strokeStyle='rgba(0,0,0,.15)';k.lineWidth=1;for(let i=1;i<14;i++){const t=i/14,xa=x+lean*t*t,ya=y-h*t;k.beginPath();k.moveTo(xa-h*.022,ya);k.lineTo(xa+h*.022,ya);k.stroke();}
+ nf=nf||9;for(let f=0;f<nf;f++){const a=-Math.PI/2+(f-(nf-1)/2)*(2.6/nf)+(R()-.5)*.2,L=h*(.38+R()*.12),dr=.55+R()*.25;const ex=tx+Math.cos(a)*L,ey=ty+Math.sin(a)*L*.55+L*dr*.5;const mx=tx+Math.cos(a)*L*.5,my=ty+Math.sin(a)*L*.5-L*.12;
+  k.strokeStyle=cfr[0];k.lineWidth=2;k.beginPath();k.moveTo(tx,ty);k.quadraticCurveTo(mx,my,ex,ey);k.stroke();
+  for(let j=1;j<16;j++){const t=j/16,px=(1-t)*(1-t)*tx+2*(1-t)*t*mx+t*t*ex,py=(1-t)*(1-t)*ty+2*(1-t)*t*my+t*t*ey;const ll=L*.16*(1-t*.5);k.strokeStyle=cfr[j%2];k.lineWidth=1.6;k.beginPath();k.moveTo(px,py);k.lineTo(px+Math.cos(a+1.6)*ll*.5,py+ll);k.moveTo(px,py);k.lineTo(px+Math.cos(a-1.6)*ll*.5,py+ll*.9);k.stroke();}}}
+function sombraE(k,x,y,rx,ry,a){k.fillStyle='rgba(20,30,20,'+(a||.18)+')';k.beginPath();k.ellipse(x,y,rx,ry,0,0,7);k.fill();}
+function vinheta(k,w,h){k.fillStyle=rg(k,w/2,h/2,Math.min(w,h)*.45,Math.max(w,h)*.8,['rgba(0,0,0,0)','rgba(0,0,0,.18)']);k.fillRect(0,0,w,h);}
+function rrk(k,x,y,w,h,r,c){k.fillStyle=c;k.beginPath();k.roundRect(x,y,w,h,r);k.fill();}
+/* figura humana: o={pele,camisa,calca,chapeu,passo,bracoE,bracoD} ângulos em rad a partir de baixo */
+function pessoa(k,x,y,s,o){o=o||{};const p=o.passo||0;k.save();k.translate(x,y);k.scale(s*(o.dir||1),s);k.lineCap='round';k.lineJoin='round';
+ const pl=Math.sin(p)*.35;k.strokeStyle=o.calca||'#37474f';k.lineWidth=7;k.beginPath();k.moveTo(-3,-38);k.lineTo(-3+Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18,0);k.stroke();k.beginPath();k.moveTo(3,-38);k.lineTo(3-Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(3-Math.sin(pl)*20-Math.sin(pl*.5)*18,0);k.stroke();
+ k.fillStyle='#3e2723';k.beginPath();k.ellipse(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.ellipse(3-Math.sin(pl)*20-Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.fill();
+ k.fillStyle=o.camisa||'#1e88e5';k.beginPath();k.moveTo(-9,-40);k.lineTo(-10,-68);k.quadraticCurveTo(0,-74,10,-68);k.lineTo(9,-40);k.closePath();k.fill();k.fillStyle='rgba(0,0,0,.12)';k.fillRect(2,-68,7,28);
+ const be=o.bracoE!==undefined?o.bracoE:-pl*.8,bd=o.bracoD!==undefined?o.bracoD:pl*.8;k.strokeStyle=o.camisa||'#1e88e5';k.lineWidth=6;
+ for(const [sx,a] of [[-8,be],[8,bd]]){k.beginPath();k.moveTo(sx,-66);const ex=sx+Math.sin(a)*14,ey=-66+Math.cos(a)*14;k.lineTo(ex,ey);k.stroke();k.strokeStyle=o.pele||'#c68b59';k.beginPath();k.moveTo(ex,ey);k.lineTo(ex+Math.sin(a*1.15)*13,ey+Math.cos(a*1.15)*13);k.stroke();k.strokeStyle=o.camisa||'#1e88e5';}
+ k.fillStyle=o.pele||'#c68b59';k.fillRect(-3,-76,6,6);k.beginPath();k.ellipse(0,-83,7.5,8.5,0,0,7);k.fill();
+ if(o.chapeu!==false){k.fillStyle=o.chapeu||'#795548';k.beginPath();k.ellipse(0,-88,15,3.5,0,0,7);k.fill();k.beginPath();k.moveTo(-8,-88);k.quadraticCurveTo(-7,-99,0,-99);k.quadraticCurveTo(7,-99,8,-88);k.fill();k.fillStyle='rgba(0,0,0,.25)';k.fillRect(-8,-91,16,2.5);}
+ k.restore();}
+/* boi nelore em perfil, olhando para +x */
+function boi(k,x,y,s,dir,cor,p){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#ece6da';p=p||0;
+ const pern=[[-26,0],[-18,Math.PI],[18,Math.PI],[26,0]];
+ for(let i=0;i<4;i++){const [lx,ph]=pern[i];const a=Math.sin(p+ph)*.3;k.strokeStyle=i==1||i==2?shade(c,-.12):c;k.lineCap='round';k.lineWidth=6.5;k.beginPath();k.moveTo(lx,-24);k.lineTo(lx+Math.sin(a)*9,-10);k.lineTo(lx+Math.sin(a)*7,2);k.stroke();k.fillStyle='#3e2723';k.fillRect(lx+Math.sin(a)*7-3.5,1,7,3);}
+ k.fillStyle=c;k.beginPath();k.moveTo(-34,-40);k.quadraticCurveTo(-38,-24,-30,-20);k.quadraticCurveTo(0,-14,26,-20);k.quadraticCurveTo(34,-26,32,-40);k.quadraticCurveTo(28,-50,20,-54);k.quadraticCurveTo(12,-56,8,-48);k.quadraticCurveTo(-10,-46,-28,-48);k.quadraticCurveTo(-34,-46,-34,-40);k.fill();
+ k.fillStyle=lg(k,0,-50,0,-18,['rgba(255,255,255,.18)','rgba(0,0,0,0)','rgba(60,40,20,.22)']);k.fill();
+ k.fillStyle=c;k.beginPath();k.moveTo(26,-44);k.quadraticCurveTo(38,-44,44,-38);k.lineTo(54,-24);k.quadraticCurveTo(56,-18,51,-17);k.quadraticCurveTo(46,-18,42,-24);k.quadraticCurveTo(34,-26,28,-22);k.fill();
+ k.beginPath();k.moveTo(28,-26);k.quadraticCurveTo(34,-14,30,-12);k.quadraticCurveTo(24,-16,22,-24);k.fill();
+ k.fillStyle=shade(c,-.35);k.beginPath();k.ellipse(52,-19,3.4,2.6,.4,0,7);k.fill();k.fillStyle='#1b1b1b';k.beginPath();k.arc(44,-34,1.8,0,7);k.fill();
+ k.fillStyle=shade(c,-.08);k.beginPath();k.ellipse(38,-41,8,2.8,.5,0,7);k.fill();k.strokeStyle='#cfc4b0';k.lineWidth=2.4;k.lineCap='round';k.beginPath();k.moveTo(41,-44);k.quadraticCurveTo(44,-49,42,-52);k.stroke();
+ k.strokeStyle=c;k.lineWidth=2.2;k.beginPath();k.moveTo(-34,-42);k.quadraticCurveTo(-40,-28,-37,-14);k.stroke();k.fillStyle='#4e342e';k.beginPath();k.ellipse(-37,-13,2.2,4.5,0,0,7);k.fill();
+ k.restore();}
+function shade(hex,f){let n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;const t=f<0?0:255,p=Math.abs(f);r=Math.round((t-r)*p+r);g=Math.round((t-g)*p+g);b=Math.round((t-b)*p+b);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+function cavalo(k,x,y,s,dir,p,cor){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#8d5a3b';k.strokeStyle=c;k.lineCap='round';k.lineWidth=6;
+ for(const [lx,ph] of [[-20,0],[-12,Math.PI],[18,Math.PI],[26,0]]){const a=Math.sin(p+ph)*.45;k.beginPath();k.moveTo(lx,-22);k.lineTo(lx+Math.sin(a)*10,-8);k.lineTo(lx+Math.sin(a)*8,4);k.stroke();}
+ k.fillStyle=c;k.beginPath();k.ellipse(3,-30,28,12,0,0,7);k.fill();k.beginPath();k.moveTo(22,-36);k.quadraticCurveTo(30,-56,40,-58);k.lineTo(50,-48);k.quadraticCurveTo(44,-44,38,-46);k.lineTo(30,-26);k.fill();
+ k.fillStyle='#3e2723';k.beginPath();k.moveTo(24,-40);k.quadraticCurveTo(30,-60,40,-60);k.lineTo(36,-56);k.quadraticCurveTo(30,-52,28,-36);k.fill();k.beginPath();k.moveTo(-24,-34);k.quadraticCurveTo(-38,-26,-34,-6);k.quadraticCurveTo(-30,-22,-22,-28);k.fill();
+ k.fillStyle='rgba(0,0,0,.15)';k.beginPath();k.ellipse(3,-23,24,4,0,0,7);k.fill();k.fillStyle='#5d4037';k.fillRect(-8,-44,22,6);k.restore();}
+function cavaleiro(k,x,y,s,dir,p,o){cavalo(k,x,y,s,dir,p,o&&o.cor);k.save();k.translate(x,y);k.scale(s*dir,s);pessoa(k,2,-30,.62,Object.assign({passo:0,bracoE:.9,bracoD:1.3,calca:'#4e342e'},o||{}));k.restore();}
+/* Seringa: entram na mata antes do sol nascer e percorrem a estrada de seringa duas vezes, cortando e depois coletando (reportagem na Resex Chico Mendes, PT); no inverno as árvores não são cortadas por risco de água no látex; corte em bandeira (Revista Brasileira de Geografia, IBGE); Resex Chico Mendes criada em 12/03/1990 (IHU); Chico Mendes assassinado em 1988 em Xapuri (Revista Ruris/core). Distâncias, chuva, escuridão e pontos são regras do jogo. */
+const SR={};
+SR.fundo=function(k,w,h){ceu(k,w,h,['#cfe7d6','#e9f3e3']);const R=rng(3);for(let i=0;i<22;i++){const x=R()*w,y=h*(.3+R()*.2);k.strokeStyle='rgba(90,120,90,.35)';k.lineWidth=6+R()*8;k.beginPath();k.moveTo(x,h*.8);k.lineTo(x,y);k.stroke();copa(k,x,y,30+R()*30,['#9bb99a','#a9c6a6','#bdd6b8'],i);}};
+SR.meio=function(k,w,h){const R=rng(8);k.globalAlpha=.55;for(let i=0;i<9;i++){const x=R()*w;tronco(k,x,h*.8,h*.1,7,5,'#8f9c88','#74826e');copa(k,x,h*.12,50+R()*30,['#7f9f78','#8fae86','#a6c29c'],i+20);}k.globalAlpha=1;
+ k.fillStyle=lg(k,0,h*.7,0,h,['#6e8f52','#56763f']);k.fillRect(0,h*.74,w,h*.26);capim(k,0,h*.72,w,h*.06,'rgba(60,100,40,.6)',2,Math.floor(w/5));
+ k.fillStyle='#b39a74';k.beginPath();k.moveTo(0,h*.8);k.quadraticCurveTo(w*.5,h*.78,w,h*.8);k.lineTo(w,h*.88);k.quadraticCurveTo(w*.5,h*.9,0,h*.88);k.fill();k.fillStyle='rgba(120,90,60,.3)';for(let i=0;i<30;i++)k.fillRect(R()*w,h*(.81+R()*.06),6,2);};
+function seringueira(k,x,y,h,c,cheia,estr){tronco(k,x,y,y-h,15,11,'#cbbca5','#9a8a72');k.strokeStyle='rgba(60,40,20,.2)';k.lineWidth=1;for(let i=0;i<4;i++){k.beginPath();k.moveTo(x-10,y-h*.2-i*10);k.lineTo(x+10,y-h*.25-i*10);k.stroke();}
+ copa(k,x,y-h,h*.3,['#3f6e35','#538a46','#76ad5e'],x|0);
+ if(c){k.strokeStyle='#fffbea';k.lineWidth=2.5;for(let i=0;i<3;i++){k.beginPath();k.moveTo(x-11,y-h*.5-i*7);k.lineTo(x+9,y-h*.45-i*7);k.stroke();}k.strokeStyle='#fffbea';k.lineWidth=1.5;k.beginPath();k.moveTo(x+8,y-h*.45);k.lineTo(x+10,y-h*.37);k.stroke();
+  k.fillStyle='#8d8d8d';k.beginPath();k.moveTo(x+3,y-h*.37);k.lineTo(x+19,y-h*.37);k.lineTo(x+16,y-h*.31);k.lineTo(x+6,y-h*.31);k.fill();if(cheia){k.fillStyle=estr?'#b0c4d0':'#fdfdf6';k.fillRect(x+5,y-h*.37,12,3.5);}}}
 const G={titulo:'Estrada de Seringa',rotulo:'Tigelas de látex',vidas:1,
- resumo:'No Acre, o seringueiro sai antes do sol nascer e anda a estrada de seringa duas vezes. Na ida corta as seringueiras. Na volta recolhe o látex das tigelas.',
- como:[['Ida','Quando a seringueira passar pelo círculo, toque para fazer o corte.'],['Volta','Na volta, toque nas mesmas árvores para recolher a tigela cheia.'],['Chuva','Na fase 3, não corte durante a chuva: a água estraga o látex.']],
+ resumo:'No Acre, o seringueiro sai de madrugada e anda a estrada de seringa duas vezes. Na ida faz o corte nas seringueiras. Na volta recolhe o látex que escorreu para as tigelas.',
+ como:[['Ida','Quando a seringueira passar pelo círculo, toque para cortar.'],['Volta','Na volta, toque de novo nas mesmas árvores para recolher a tigela.'],['Tempo','Na chuva o seringueiro para e espera. Corte na chuva estraga o látex.']],
  dica:'Toque quando a árvore estiver dentro do círculo.',dicaErro:'Corte todas na ida. Árvore sem corte não dá látex na volta.',
- FASES:[{nome:'Madrugada',dur:44,meta:5,n:7,vel:110,chuva:0,metaTxt:'recolher 5 tigelas de látex em 44 s.',txt:'Lanterna na cabeça e faca na mão. Ida para cortar, volta para colher.',fato:'Os seringueiros entram na mata bem antes do sol nascer e só saem no meio da tarde.'},
-  {nome:'Estrada comprida',dur:50,meta:8,n:10,vel:140,chuva:0,metaTxt:'recolher 8 tigelas em 50 s.',txt:'Mais seringueiras pelo caminho e passo mais rápido.',fato:'Na ida o seringueiro corta as árvores. Na volta pela mesma estrada ele recolhe o látex.'},
-  {nome:'Tempo de chuva',dur:66,meta:7,n:12,vel:140,chuva:1,metaTxt:'recolher 7 tigelas em 66 s, sem cortar na chuva.',txt:'O céu fecha de vez em quando. Na chuva o seringueiro espera. Corte só depois que parar.',fato:'No inverno amazônico, época das chuvas, as seringueiras não são cortadas porque a água entra no látex e estraga a produção.'}],
- init(g){const F=FASES[S.f];g.vidas=3;g.n=0;g.vol=false;g.d=0;g.arv=[];for(let i=0;i<F.n;i++)g.arv.push({x:W*.3+120+i*(230+Math.random()*40),c:false,col:false});g.fim0=g.arv[g.arv.length-1].x+120;g.ch=0;g.chT=3;},
+ FASES:[{nome:'Primeira estrada',dur:46,meta:5,n:7,vel:110,metaTxt:'recolher 5 tigelas de látex em 46 s.',txt:'Faca na mão. Ida para cortar, volta para colher.',fato:'O seringueiro percorre a estrada de seringa duas vezes. Na ida corta as árvores e na volta recolhe o látex.'},
+  {nome:'Estrada comprida',dur:52,meta:8,n:10,vel:140,metaTxt:'recolher 8 tigelas em 52 s.',txt:'Mais seringueiras pelo caminho e passo mais rápido.',fato:'Os seringueiros entram na mata bem antes do sol nascer e só saem no meio da tarde.'},
+  {nome:'Tempo de chuva',dur:68,meta:7,n:12,vel:140,chuva:1,metaTxt:'recolher 7 tigelas em 68 s, sem cortar na chuva.',txt:'O céu fecha de vez em quando. Na chuva o seringueiro espera. Corte só depois que parar.',fato:'Na época das chuvas as seringueiras não são cortadas, porque a água entra no látex e estraga a produção.'},
+  {nome:'Neblina da madrugada',dur:56,meta:8,n:11,vel:130,escuro:1,metaTxt:'recolher 8 tigelas em 56 s, na neblina.',txt:'O dia nem clareou e a neblina cobre a mata. Só dá para ver perto. Fique atento ao círculo.',fato:'A Reserva Extrativista Chico Mendes foi criada no Acre em 1990, depois do assassinato do líder seringueiro em Xapuri, em 1988.'}],
+ init(g){const F=FASES[S.f];g.vidas=3;g.n=0;g.vol=false;g.d=0;g.arv=[];for(let i=0;i<F.n;i++)g.arv.push({x:W*.3+130+i*(230+Math.random()*40),c:false,col:false});g.fim0=g.arv[g.arv.length-1].x+120;g.ch=0;g.chT=3;g.pas=0;},
  meta(g){return [g.n,FASES[S.f].meta];},cedo(g){return g.vol&&g.d<=0;},
- update(g,dt){const F=FASES[S.f];const v=g.ch?0:F.vel*dt;if(!g.vol){g.d+=v;if(g.d>=g.fim0){g.vol=true;msg('Hora de voltar e recolher o látex.');}}else g.d-=v;
+ update(g,dt){const F=FASES[S.f];const v=g.ch?0:F.vel*dt;g.pas+=v;if(!g.vol){g.d+=v;if(g.d>=g.fim0){g.vol=true;msg('Hora de voltar e recolher o látex.');}}else g.d-=v;
   if(F.chuva){g.chT-=dt;if(g.chT<=0){g.ch=g.ch?0:1;g.chT=g.ch?2.2:4+Math.random()*2;}}
   const zx=W*.3;if(inp.tap||tec[' ']){tec[' ']=0;const a=g.arv.find(a=>Math.abs(a.x-g.d-zx)<44);
-   if(a){if(!g.vol){if(a.c)return;if(g.ch){g.vidas--;a.c=true;a.estr=true;ganha(-10,zx,H*.3);msg('Corte na chuva estragou o látex.');}else{a.c=true;ganha(5,zx,H*.3);beep(700,.05,.04);}}
-    else if(a.c&&!a.col){a.col=true;if(!a.estr){g.n++;ganha(10,zx,H*.3);beep(880,.08,.05);}else msg('Essa tigela encheu de água.');}}}},
- draw(g){const gr=cx.createLinearGradient(0,0,0,H);gr.addColorStop(0,g.ch?'#cfd8dc':(g.vol?'#fff8e1':'#e3f2fd'));gr.addColorStop(1,'#e8f5e9');cx.fillStyle=gr;cx.fillRect(0,0,W,H);
-  cx.fillStyle='#a5d6a7';for(let i=0;i<10;i++){const x=((i*131-g.d*.3)%(W+100)+W+100)%(W+100)-50;cx.beginPath();cx.arc(x,H*.45,50,0,7);cx.fill();}
-  cx.fillStyle='#d7ccc8';cx.fillRect(0,H*.78,W,H*.08);const y0=H*.8;
-  for(const a of g.arv){const x=a.x-g.d+W*0;if(x>-60&&x<W+60)seringueira(cx,x,y0,H*.42,a.c,g.vol&&a.c&&!a.col&&!a.estr);}
-  const zx=W*.3;cx.strokeStyle='#ff8f00';cx.lineWidth=4;cx.setLineDash([8,6]);cx.beginPath();cx.arc(zx,y0-H*.2,44,0,7);cx.stroke();cx.setLineDash([]);
-  seringueiro(cx,zx-50,y0+6,MOB()?.9:1,g.d/60);
-  if(g.ch){cx.strokeStyle='rgba(41,121,255,.55)';cx.lineWidth=2;for(let i=0;i<60;i++){const x=(i*53+g.t*300)%W,y=(i*97+g.t*600)%H;cx.beginPath();cx.moveTo(x,y);cx.lineTo(x-4,y+12);cx.stroke();}}
-  cx.fillStyle='#37474f';cx.font='bold 15px system-ui';cx.textAlign='right';cx.fillText(g.vol?'VOLTA: recolher':'IDA: cortar',W-14,H*.95);},
- capa(k,w,h){k.fillStyle='#e3f2fd';k.fillRect(0,0,w,h);k.fillStyle='#d7ccc8';k.fillRect(0,190,w,20);for(const x of [120,300,480])seringueira(k,x,195,120,true,true);seringueiro(k,220,200,1.3,0);}
+   if(a){if(!g.vol){if(a.c)return;if(g.ch){g.vidas--;a.c=true;a.estr=true;ganha(-10,zx,H*.3);msg('Corte na chuva estragou o látex.');}else{a.c=true;ganha(5,zx,H*.3);}}
+    else if(a.c&&!a.col){a.col=true;if(!a.estr){g.n++;ganha(10,zx,H*.3);}else msg('Essa tigela encheu de água.');}}}},
+ draw(g){const F=FASES[S.f];const fa=cache('srf',W,H,SR.fundo),me=cache('srm',W*2,H,SR.meio);const o1=(g.d*.3)%W,o2=g.d%(W*2);
+  cx.drawImage(fa,-o1,0);cx.drawImage(fa,W-o1,0);cx.drawImage(me,-o2,0);cx.drawImage(me,W*2-o2,0);const y0=H*.84;
+  for(const a of g.arv){const x=a.x-g.d;if(x>-80&&x<W+80)seringueira(cx,x,y0,H*.5,a.c,g.vol&&a.c&&!a.col,a.estr);}
+  const zx=W*.3;cx.strokeStyle='#ff9800';cx.lineWidth=3;cx.setLineDash([8,6]);cx.beginPath();cx.arc(zx,y0-H*.24,40,0,7);cx.stroke();cx.setLineDash([]);
+  const s=H/460;pessoa(cx,zx-48*s,y0+4,1.05*s,{camisa:'#ef6c00',calca:'#3e4a52',passo:g.ch?0:g.pas*.06,dir:g.vol?-1:1,chapeu:'#6d4c41'});
+  if(F.escuro){cx.save();cx.fillStyle=rg(cx,zx-20,y0-H*.24,70,Math.max(W,H)*.36,['rgba(245,248,250,0)','rgba(245,248,250,.96)']);cx.fillRect(0,0,W,H);cx.restore();}
+  if(g.ch){cx.fillStyle='rgba(60,80,110,.25)';cx.fillRect(0,0,W,H);cx.strokeStyle='rgba(200,220,255,.6)';cx.lineWidth=1.5;for(let i=0;i<80;i++){const x=(i*53+g.t*260)%W,y=(i*97+g.t*700)%H;cx.beginPath();cx.moveTo(x,y);cx.lineTo(x-4,y+12);cx.stroke();}cx.fillStyle='#fff';cx.font='bold 15px system-ui';cx.textAlign='center';cx.fillText('Chuva: espere passar',W/2,H*.12);}
+  cx.fillStyle='#263238';cx.font='bold 15px system-ui';cx.textAlign='right';cx.fillText(g.vol?'VOLTA: recolher':'IDA: cortar',W-14,H*.96);vinheta(cx,W,H);},
+ capa(k,w,h){const o=cx,oW=W,oH=H;cx=k;W=w;H=h;k.drawImage(cache('srf',w,h,SR.fundo),0,0);k.drawImage(cache('srm',w*2,h,SR.meio),0,0);for(const x of [.42,.66,.9])seringueira(k,w*x,h*.84,h*.6,true,true);pessoa(k,w*.2,h*.86,h/300,{camisa:'#ef6c00',passo:.6});vinheta(k,w,h);cx=o;W=oW;H=oH;}
 };
 const FASES=G.FASES;
 const PERG=[
  {q:'Por que o seringueiro percorre a estrada de seringa duas vezes?',o:['Na ida corta as árvores e na volta recolhe o látex','Na ida procura caça e na volta procura frutas do mato','Para medir a altura de todas as seringueiras']},
+ {q:'A que horas o seringueiro costuma entrar na mata?',o:['Antes do sol nascer','Depois do almoço','Só à noite, depois das dez']},
  {q:'Por que as seringueiras não são cortadas na época de chuvas?',o:['A água entra no látex e estraga','A árvore fica dura demais para a faca','Os seringueiros fazem festa nesse período']},
- {q:'A Reserva Extrativista Chico Mendes fica em qual estado?',o:['Acre','Amapá','Roraima']}
+ {q:'Em que estado fica a Reserva Extrativista Chico Mendes?',o:['Acre','Amapá','Roraima']}
 ];
 function pergunta(){
  const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
@@ -194,11 +257,11 @@ function pergunta(){
   $('bn').onclick=()=>{S.tot+=S.fp;S.fp=0;if(S.f===FASES.length-1)final(true);else{S.f++;fase();}};});
 }
 function final(tudo){
- S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
+ S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?FASES.length+' fases':'Fase '+(S.f+1);
  $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Seringueiro da Resex!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
  <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
- <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Fontes: PT, A vida dos seringueiros 30 anos após a morte de Chico Mendes; Revista Brasileira de Geografia, IBGE, artigo sobre o trabalho do seringueiro e o corte no inverno; IHU Unisinos (04/07/2018), Resex Chico Mendes. Distância, chuva e pontos são regras do jogo.</div></div>`;
+ <div class="small" style="margin-top:12px;text-align:left">Fontes: PT, A vida dos seringueiros 30 anos após a morte de Chico Mendes; Revista Brasileira de Geografia, IBGE, artigo sobre o trabalho do seringueiro (corte em bandeira e pausa no inverno); IHU Unisinos (04/07/2018), Resex Chico Mendes; The Chico Mendes Extractive Reserve, Revista Ruris (criação em 1990 e assassinato em 1988). Distância, chuva, escuridão e pontos são regras do jogo.</div></div>`;
  $('bS').onclick=()=>salvar(nivel);
 }
 const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};

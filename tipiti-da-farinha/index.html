@@ -43,7 +43,7 @@ canvas{width:100%;max-width:760px;margin:0 auto;display:block;border:2px solid v
 <a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
 <header>
   <h1>Tipiti da Farinha</h1>
-  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
 </header>
 <main id="tela"></main>
 <div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
@@ -117,7 +117,7 @@ let S,cv,cx,raf=null,last=0,W=720,H=460,inp={x:null,y:null,down:false,tap:null},
 const MOB=()=>W<520;
 function rrect(x,y,w,h,r,cor){cx.fillStyle=cor;cx.beginPath();cx.roundRect(x,y,w,h,r);cx.fill();}
 function sombra(x,y,rx,ry){cx.fillStyle='rgba(0,0,0,.12)';cx.beginPath();cx.ellipse(x,y,rx,ry,0,0,7);cx.fill();}
-function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/'+G.FASES.length;$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
  if(g&&!g.fim){const [a,m]=G.meta(g);$('hR').textContent=G.rotulo+' '+a+'/'+m;$('hV').textContent=G.vidas?'Vidas '+'●'.repeat(Math.max(0,g.vidas)):'';$('hT').textContent=G.semTempo?'':Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s';}
  ['hR','hV','hT'].forEach(k=>$(k).style.display=$(k).textContent?'':'none');}
 function inicio(){parar();$('hud').style.display='none';$('rankBox').style.display='block';
@@ -151,41 +151,114 @@ function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=G.FAS
  <p class="small" style="margin-top:6px">${ok?G.FASES[S.f].fato:G.dicaErro}</p>
  <div class="row" style="justify-content:center;margin-top:14px">${ok?'<button class="btn grande" id="bq">Pergunta rápida</button>':'<button class="btn grande" id="br">Jogar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
  if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}}
-/* Mandioca brava tem mais de 100 mg de HCN por kg de raiz fresca. Farinha e tucupi feitos dela reduzem a toxidez se as etapas forem feitas corretamente (Embrapa Amazônia Oriental, Doc. 290, 2007). As raízes trituradas são prensadas para tirar a manipueira, e a massa prensada vai para torração (Embrapa, 2019). No Pará mais de 90% da raiz vira farinha de mesa (Modesto Júnior e Alves, Embrapa, 2019). Esteira, tempo e pontos são regras do jogo. */
-const ET=[{n:'Ralar',c:'#fb8c00'},{n:'Prensar',c:'#8e24aa'},{n:'Torrar',c:'#d84315'}];
-function item(k,x,y,e){if(e===0){k.fillStyle='#f5f0e1';k.beginPath();k.ellipse(x,y,30,11,.2,0,7);k.fill();k.strokeStyle='#a1887f';k.lineWidth=2;k.stroke();}
- else if(e===1){k.fillStyle='#fffde7';k.beginPath();k.arc(x,y,20,0,7);k.fill();k.fillStyle='#fff59d';for(let i=0;i<6;i++){k.beginPath();k.arc(x-12+i*5,y-4+(i%2)*6,4,0,7);k.fill();}}
- else if(e===2){k.strokeStyle='#bcaaa4';k.lineWidth=3;k.fillStyle='#fff8e1';k.beginPath();k.roundRect(x-18,y-24,36,48,8);k.fill();for(let i=-2;i<=2;i++){k.beginPath();k.moveTo(x-18,y+i*10);k.lineTo(x+18,y+i*10+6);k.stroke();}}
- else{k.fillStyle='#ffe082';k.beginPath();k.ellipse(x,y+6,26,10,0,0,7);k.fill();k.fillStyle='#ffca28';for(let i=0;i<10;i++){k.fillRect(x-18+(i*7)%36,y+(i*3)%10,3,3);}}}
-const G={titulo:'Tipiti da Farinha',rotulo:'Farinha pronta',vidas:1,
- resumo:'Na região Norte, a mandioca brava vira farinha e tucupi. Crua ela tem veneno. Ralar, prensar no tipiti e torrar, nessa ordem, é o que deixa a farinha segura.',
- como:[['Veja','Cada item chega na esteira. Raiz inteira, massa ralada ou massa prensada.'],['Escolha','Quando o item entrar na casa de farinha, toque no passo certo: Ralar, Prensar ou Torrar.'],['Ordem','Passo errado tira uma vida. A ordem é que tira o veneno.']],
- dica:'Raiz vai para Ralar. Massa ralada vai para Prensar. Massa prensada vai para Torrar.',dicaErro:'Siga a ordem: ralar, prensar no tipiti e só depois torrar.',
- botoes(){return '<div class="row" style="justify-content:center;gap:8px;margin-top:8px">'+ET.map((e,i)=>'<button class="btn" style="background:'+e.c+';min-width:96px" onclick="G.passo('+i+')">'+e.n+'</button>').join('')+'</div>';},
- FASES:[{nome:'Raízes da roça',dur:40,meta:4,vel:70,metaTxt:'fazer 4 porções de farinha em 40 s.',txt:'As raízes chegam devagar. Pense no passo certo.',fato:'A mandioca brava tem mais de 100 mg de ácido cianídrico por quilo de raiz fresca. Por isso não se come crua.'},
-  {nome:'Casa de farinha',dur:45,meta:6,vel:95,metaTxt:'fazer 6 porções de farinha em 45 s.',txt:'A família toda trabalha. A esteira anda mais rápido.',fato:'No tipiti a massa ralada é prensada e solta a manipueira. Fermentado e fervido, esse caldo vira o tucupi.'},
-  {nome:'Farinhada',dur:50,meta:8,vel:120,metaTxt:'fazer 8 porções de farinha em 50 s.',txt:'Dia de farinhada grande. Ritmo forte e sem erro.',fato:'No Pará, mais de 90% da raiz de mandioca vira farinha de mesa.'}],
+/* ---------- arte vetorial compartilhada ---------- */
+beep=function(){};
+function rng(s){s=s%2147483647;if(s<=0)s+=2147483646;return()=>{s=s*16807%2147483647;return(s-1)/2147483646;};}
+function lg(k,x0,y0,x1,y1,st){const g=k.createLinearGradient(x0,y0,x1,y1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+function rg(k,x,y,r0,r1,st){const g=k.createRadialGradient(x,y,r0,x,y,r1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+const CACHE={};
+function cache(key,w,h,fn){const id=key+'_'+w+'x'+h;if(!CACHE[id]){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);CACHE[id]=c;}return CACHE[id];}
+function ceu(k,w,h,cs){k.fillStyle=lg(k,0,0,0,h,cs);k.fillRect(0,0,w,h);}
+function sol(k,x,y,r,c){k.fillStyle=rg(k,x,y,0,r*4,[c,'rgba(255,255,255,0)']);k.fillRect(x-r*4,y-r*4,r*8,r*8);k.fillStyle=c;k.beginPath();k.arc(x,y,r,0,7);k.fill();}
+function nuvem(k,x,y,s,a){k.fillStyle='rgba(255,255,255,'+(a||.8)+')';for(const [dx,dy,r] of [[0,0,1],[1.1,.15,.8],[-1,.2,.75],[.5,-.45,.7],[-.4,-.35,.6]]){k.beginPath();k.arc(x+dx*s,y+dy*s,r*s,0,7);k.fill();}k.fillRect(x-1.7*s,y+.2*s,3.6*s,.8*s);}
+function serra(k,w,y,amp,cor,seed){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,y+amp*2);let x=0;k.lineTo(0,y);while(x<w+40){x+=30+r()*50;k.lineTo(x,y-r()*amp);}k.lineTo(w,y+amp*4);k.lineTo(0,y+amp*4);k.fill();}
+function matas(k,w,y,amp,cor,seed,base){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,base);k.lineTo(0,y);let x=0;while(x<w+30){const rr=8+r()*amp;k.arc(x+rr,y-r()*amp*.6,rr,Math.PI,0);x+=rr*1.6;}k.lineTo(w,base);k.closePath();k.fill();}
+function capim(k,x0,y0,w,h,cor,seed,n){const r=rng(seed);k.strokeStyle=cor;k.lineCap='round';for(let i=0;i<n;i++){const x=x0+r()*w,y=y0+r()*h,l=4+r()*10;k.lineWidth=1+r()*1.2;for(let j=-1;j<=1;j++){k.beginPath();k.moveTo(x,y);k.quadraticCurveTo(x+j*3,y-l*.6,x+j*5+r()*2,y-l);k.stroke();}}}
+function copa(k,x,y,r,cs,seed){const R=rng(seed);const pts=[];for(let i=0;i<9;i++){const a=R()*Math.PI*2,d=R()*r*.55;pts.push([x+Math.cos(a)*d,y+Math.sin(a)*d*.7,r*(.35+R()*.3)]);}
+ k.fillStyle=cs[0];for(const [a,b,c] of pts){k.beginPath();k.arc(a+c*.12,b+c*.18,c,0,7);k.fill();}
+ k.fillStyle=cs[1];for(const [a,b,c] of pts){k.beginPath();k.arc(a,b,c*.92,0,7);k.fill();}
+ k.fillStyle=cs[2];for(const [a,b,c] of pts){k.beginPath();k.arc(a-c*.25,b-c*.3,c*.5,0,7);k.fill();}}
+function tronco(k,x,y0,y1,w0,w1,c1,c2){k.fillStyle=lg(k,x-w0,0,x+w0,0,[c2,c1,c1,c2]);k.beginPath();k.moveTo(x-w0,y0);k.lineTo(x-w1,y1);k.lineTo(x+w1,y1);k.lineTo(x+w0,y0);k.fill();k.strokeStyle='rgba(0,0,0,.12)';k.lineWidth=1;for(let y=y1+8;y<y0;y+=11){const t=(y-y1)/(y0-y1),ww=w1+(w0-w1)*t;k.beginPath();k.moveTo(x-ww*.6,y);k.quadraticCurveTo(x,y+3,x+ww*.5,y-1);k.stroke();}}
+function palmeira(k,x,y,h,lean,cfr,ctr,seed,nf){const R=rng(seed);const tx=x+lean,ty=y-h;k.strokeStyle=ctr;k.lineCap='round';for(let i=0;i<14;i++){const t0=i/14,t1=(i+1)/14;k.lineWidth=h*.05*(1-t0*.35);const xa=x+lean*t0*t0,ya=y-h*t0,xb=x+lean*t1*t1,yb=y-h*t1;k.beginPath();k.moveTo(xa,ya);k.lineTo(xb,yb);k.stroke();}
+ k.strokeStyle='rgba(0,0,0,.15)';k.lineWidth=1;for(let i=1;i<14;i++){const t=i/14,xa=x+lean*t*t,ya=y-h*t;k.beginPath();k.moveTo(xa-h*.022,ya);k.lineTo(xa+h*.022,ya);k.stroke();}
+ nf=nf||9;for(let f=0;f<nf;f++){const a=-Math.PI/2+(f-(nf-1)/2)*(2.6/nf)+(R()-.5)*.2,L=h*(.38+R()*.12),dr=.55+R()*.25;const ex=tx+Math.cos(a)*L,ey=ty+Math.sin(a)*L*.55+L*dr*.5;const mx=tx+Math.cos(a)*L*.5,my=ty+Math.sin(a)*L*.5-L*.12;
+  k.strokeStyle=cfr[0];k.lineWidth=2;k.beginPath();k.moveTo(tx,ty);k.quadraticCurveTo(mx,my,ex,ey);k.stroke();
+  for(let j=1;j<16;j++){const t=j/16,px=(1-t)*(1-t)*tx+2*(1-t)*t*mx+t*t*ex,py=(1-t)*(1-t)*ty+2*(1-t)*t*my+t*t*ey;const ll=L*.16*(1-t*.5);k.strokeStyle=cfr[j%2];k.lineWidth=1.6;k.beginPath();k.moveTo(px,py);k.lineTo(px+Math.cos(a+1.6)*ll*.5,py+ll);k.moveTo(px,py);k.lineTo(px+Math.cos(a-1.6)*ll*.5,py+ll*.9);k.stroke();}}}
+function sombraE(k,x,y,rx,ry,a){k.fillStyle='rgba(20,30,20,'+(a||.18)+')';k.beginPath();k.ellipse(x,y,rx,ry,0,0,7);k.fill();}
+function vinheta(k,w,h){k.fillStyle=rg(k,w/2,h/2,Math.min(w,h)*.45,Math.max(w,h)*.8,['rgba(0,0,0,0)','rgba(0,0,0,.18)']);k.fillRect(0,0,w,h);}
+function rrk(k,x,y,w,h,r,c){k.fillStyle=c;k.beginPath();k.roundRect(x,y,w,h,r);k.fill();}
+/* figura humana: o={pele,camisa,calca,chapeu,passo,bracoE,bracoD} ângulos em rad a partir de baixo */
+function pessoa(k,x,y,s,o){o=o||{};const p=o.passo||0;k.save();k.translate(x,y);k.scale(s*(o.dir||1),s);k.lineCap='round';k.lineJoin='round';
+ const pl=Math.sin(p)*.35;k.strokeStyle=o.calca||'#37474f';k.lineWidth=7;k.beginPath();k.moveTo(-3,-38);k.lineTo(-3+Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18,0);k.stroke();k.beginPath();k.moveTo(3,-38);k.lineTo(3-Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(3-Math.sin(pl)*20-Math.sin(pl*.5)*18,0);k.stroke();
+ k.fillStyle='#3e2723';k.beginPath();k.ellipse(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.ellipse(3-Math.sin(pl)*20-Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.fill();
+ k.fillStyle=o.camisa||'#1e88e5';k.beginPath();k.moveTo(-9,-40);k.lineTo(-10,-68);k.quadraticCurveTo(0,-74,10,-68);k.lineTo(9,-40);k.closePath();k.fill();k.fillStyle='rgba(0,0,0,.12)';k.fillRect(2,-68,7,28);
+ const be=o.bracoE!==undefined?o.bracoE:-pl*.8,bd=o.bracoD!==undefined?o.bracoD:pl*.8;k.strokeStyle=o.camisa||'#1e88e5';k.lineWidth=6;
+ for(const [sx,a] of [[-8,be],[8,bd]]){k.beginPath();k.moveTo(sx,-66);const ex=sx+Math.sin(a)*14,ey=-66+Math.cos(a)*14;k.lineTo(ex,ey);k.stroke();k.strokeStyle=o.pele||'#c68b59';k.beginPath();k.moveTo(ex,ey);k.lineTo(ex+Math.sin(a*1.15)*13,ey+Math.cos(a*1.15)*13);k.stroke();k.strokeStyle=o.camisa||'#1e88e5';}
+ k.fillStyle=o.pele||'#c68b59';k.fillRect(-3,-76,6,6);k.beginPath();k.ellipse(0,-83,7.5,8.5,0,0,7);k.fill();
+ if(o.chapeu!==false){k.fillStyle=o.chapeu||'#795548';k.beginPath();k.ellipse(0,-88,15,3.5,0,0,7);k.fill();k.beginPath();k.moveTo(-8,-88);k.quadraticCurveTo(-7,-99,0,-99);k.quadraticCurveTo(7,-99,8,-88);k.fill();k.fillStyle='rgba(0,0,0,.25)';k.fillRect(-8,-91,16,2.5);}
+ k.restore();}
+/* boi nelore em perfil, olhando para +x */
+function boi(k,x,y,s,dir,cor,p){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#ece6da';p=p||0;
+ const pern=[[-26,0],[-18,Math.PI],[18,Math.PI],[26,0]];
+ for(let i=0;i<4;i++){const [lx,ph]=pern[i];const a=Math.sin(p+ph)*.3;k.strokeStyle=i==1||i==2?shade(c,-.12):c;k.lineCap='round';k.lineWidth=6.5;k.beginPath();k.moveTo(lx,-24);k.lineTo(lx+Math.sin(a)*9,-10);k.lineTo(lx+Math.sin(a)*7,2);k.stroke();k.fillStyle='#3e2723';k.fillRect(lx+Math.sin(a)*7-3.5,1,7,3);}
+ k.fillStyle=c;k.beginPath();k.moveTo(-34,-40);k.quadraticCurveTo(-38,-24,-30,-20);k.quadraticCurveTo(0,-14,26,-20);k.quadraticCurveTo(34,-26,32,-40);k.quadraticCurveTo(28,-50,20,-54);k.quadraticCurveTo(12,-56,8,-48);k.quadraticCurveTo(-10,-46,-28,-48);k.quadraticCurveTo(-34,-46,-34,-40);k.fill();
+ k.fillStyle=lg(k,0,-50,0,-18,['rgba(255,255,255,.18)','rgba(0,0,0,0)','rgba(60,40,20,.22)']);k.fill();
+ k.fillStyle=c;k.beginPath();k.moveTo(26,-44);k.quadraticCurveTo(38,-44,44,-38);k.lineTo(54,-24);k.quadraticCurveTo(56,-18,51,-17);k.quadraticCurveTo(46,-18,42,-24);k.quadraticCurveTo(34,-26,28,-22);k.fill();
+ k.beginPath();k.moveTo(28,-26);k.quadraticCurveTo(34,-14,30,-12);k.quadraticCurveTo(24,-16,22,-24);k.fill();
+ k.fillStyle=shade(c,-.35);k.beginPath();k.ellipse(52,-19,3.4,2.6,.4,0,7);k.fill();k.fillStyle='#1b1b1b';k.beginPath();k.arc(44,-34,1.8,0,7);k.fill();
+ k.fillStyle=shade(c,-.08);k.beginPath();k.ellipse(38,-41,8,2.8,.5,0,7);k.fill();k.strokeStyle='#cfc4b0';k.lineWidth=2.4;k.lineCap='round';k.beginPath();k.moveTo(41,-44);k.quadraticCurveTo(44,-49,42,-52);k.stroke();
+ k.strokeStyle=c;k.lineWidth=2.2;k.beginPath();k.moveTo(-34,-42);k.quadraticCurveTo(-40,-28,-37,-14);k.stroke();k.fillStyle='#4e342e';k.beginPath();k.ellipse(-37,-13,2.2,4.5,0,0,7);k.fill();
+ k.restore();}
+function shade(hex,f){let n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;const t=f<0?0:255,p=Math.abs(f);r=Math.round((t-r)*p+r);g=Math.round((t-g)*p+g);b=Math.round((t-b)*p+b);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+function cavalo(k,x,y,s,dir,p,cor){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#8d5a3b';k.strokeStyle=c;k.lineCap='round';k.lineWidth=6;
+ for(const [lx,ph] of [[-20,0],[-12,Math.PI],[18,Math.PI],[26,0]]){const a=Math.sin(p+ph)*.45;k.beginPath();k.moveTo(lx,-22);k.lineTo(lx+Math.sin(a)*10,-8);k.lineTo(lx+Math.sin(a)*8,4);k.stroke();}
+ k.fillStyle=c;k.beginPath();k.ellipse(3,-30,28,12,0,0,7);k.fill();k.beginPath();k.moveTo(22,-36);k.quadraticCurveTo(30,-56,40,-58);k.lineTo(50,-48);k.quadraticCurveTo(44,-44,38,-46);k.lineTo(30,-26);k.fill();
+ k.fillStyle='#3e2723';k.beginPath();k.moveTo(24,-40);k.quadraticCurveTo(30,-60,40,-60);k.lineTo(36,-56);k.quadraticCurveTo(30,-52,28,-36);k.fill();k.beginPath();k.moveTo(-24,-34);k.quadraticCurveTo(-38,-26,-34,-6);k.quadraticCurveTo(-30,-22,-22,-28);k.fill();
+ k.fillStyle='rgba(0,0,0,.15)';k.beginPath();k.ellipse(3,-23,24,4,0,0,7);k.fill();k.fillStyle='#5d4037';k.fillRect(-8,-44,22,6);k.restore();}
+function cavaleiro(k,x,y,s,dir,p,o){cavalo(k,x,y,s,dir,p,o&&o.cor);k.save();k.translate(x,y);k.scale(s*dir,s);pessoa(k,2,-30,.62,Object.assign({passo:0,bracoE:.9,bracoD:1.3,calca:'#4e342e'},o||{}));k.restore();}
+/* Mandioca brava acima de 100 mg HCN/kg; farinha e tucupi reduzem a toxidez se as etapas forem corretas (Embrapa Amazônia Oriental, Doc. 290, 2007); raízes trituradas prensadas tiram a manipueira, massa prensada vai à torração; da manipueira se faz o tucupi (Embrapa, 2019); tipiti como prensa artesanal (Campos, UFPA, 2016); tucupi fermentado e cozido (Rev. Inst. Adolfo Lutz, 2011); no Pará mais de 90% da raiz vira farinha (Embrapa, 2019). Esteira, tempo e pontos são regras do jogo. */
+const ET=[{n:'Ralar',c:'#ef6c00'},{n:'Prensar',c:'#7b1fa2'},{n:'Torrar',c:'#c62828'},{n:'Ferver',c:'#f9a825'}];
+const TF={};
+TF.cena=function(k,w,h){k.fillStyle=lg(k,0,0,0,h,['#f7ead2','#ecd7b2']);k.fillRect(0,0,w,h);
+ k.fillStyle='#b08a4e';k.beginPath();k.moveTo(0,0);k.lineTo(w,0);k.lineTo(w,h*.08);k.lineTo(0,h*.14);k.fill();k.strokeStyle='rgba(90,60,20,.35)';k.lineWidth=1;for(let x=0;x<w;x+=8){k.beginPath();k.moveTo(x,0);k.lineTo(x+4,h*.12);k.stroke();}
+ k.fillStyle='#7a5533';for(const x of [w*.02,w*.96])k.fillRect(x,0,w*.025,h);k.fillRect(0,h*.13,w,h*.02);
+ const fx=w*.74,fy=h*.36;k.fillStyle=lg(k,0,fy-30,0,fy+60,['#c27a4a','#9a5a33']);k.beginPath();k.roundRect(fx-w*.15,fy-20,w*.3,h*.13,10);k.fill();k.fillStyle=rg(k,fx,fy+h*.06,4,40,['#ffd180','#ff6d00','rgba(255,109,0,0)']);k.beginPath();k.ellipse(fx,fy+h*.06,w*.06,h*.03,0,0,7);k.fill();
+ k.fillStyle=lg(k,0,fy-30,0,fy-10,['#7f8c8d','#4f5b5c']);k.beginPath();k.ellipse(fx,fy-20,w*.15,h*.04,0,0,7);k.fill();k.fillStyle='#e8c97a';k.beginPath();k.ellipse(fx,fy-22,w*.12,h*.026,0,0,7);k.fill();
+ k.strokeStyle='#6d4c2e';k.lineWidth=5;k.beginPath();k.moveTo(w*.16,h*.15);k.lineTo(w*.16,h*.24);k.stroke();k.fillStyle='#c9a66b';k.beginPath();k.moveTo(w*.14,h*.24);k.lineTo(w*.18,h*.24);k.lineTo(w*.175,h*.4);k.lineTo(w*.145,h*.4);k.fill();k.strokeStyle='rgba(110,80,30,.6)';k.lineWidth=1.2;for(let y=h*.25;y<h*.4;y+=7){k.beginPath();k.moveTo(w*.142,y);k.lineTo(w*.178,y+5);k.moveTo(w*.178,y);k.lineTo(w*.142,y+5);k.stroke();}
+ k.strokeStyle='#6d4c2e';k.lineWidth=6;k.beginPath();k.moveTo(w*.16,h*.4);k.lineTo(w*.16,h*.44);k.moveTo(w*.06,h*.46);k.lineTo(w*.34,h*.42);k.stroke();k.fillStyle='#4e342e';k.font='bold 11px system-ui';k.textAlign='center';k.fillText('tipiti',w*.21,h*.3);k.fillText('forno',fx,fy+h*.15);
+ k.fillStyle=lg(k,0,h*.6,0,h*.72,['#9c7346','#7d5a35']);k.fillRect(0,h*.62,w,h*.08);k.fillStyle='rgba(0,0,0,.12)';k.fillRect(0,h*.7,w,6);
+ k.fillStyle=lg(k,0,h*.72,0,h,['#d9bf93','#c7a978']);k.fillRect(0,h*.72,w,h*.28);};
+function item(k,x,y,e,s){k.save();k.translate(x,y);k.scale(s,s);
+ if(e===0){for(const [dx,dy,r] of [[-6,4,.2],[6,-4,-.2]]){k.save();k.translate(dx,dy);k.rotate(r);k.fillStyle=lg(k,0,-8,0,8,['#9b6a3f','#6d4528']);k.beginPath();k.moveTo(-34,0);k.quadraticCurveTo(-20,-10,10,-9);k.quadraticCurveTo(30,-7,36,0);k.quadraticCurveTo(30,7,10,9);k.quadraticCurveTo(-20,10,-34,0);k.fill();k.fillStyle='#fbf6ea';k.beginPath();k.ellipse(36,0,3,6.5,0,0,7);k.fill();k.restore();}}
+ else if(e===1){k.fillStyle='#8d6e63';k.beginPath();k.ellipse(0,8,30,10,0,0,7);k.fill();k.fillStyle='#fffdf2';k.beginPath();k.ellipse(0,0,24,14,0,Math.PI,0);k.fill();k.fillStyle='#f3ecd6';for(let i=0;i<7;i++){k.beginPath();k.arc(-15+i*5,-3-(i%2)*4,3,0,7);k.fill();}}
+ else if(e===2){k.fillStyle='#f4efdd';k.beginPath();k.roundRect(-16,-20,32,40,6);k.fill();k.strokeStyle='rgba(160,130,80,.5)';k.lineWidth=1;for(let y=-16;y<20;y+=6){k.beginPath();k.moveTo(-16,y);k.lineTo(16,y+3);k.stroke();}}
+ else if(e===3){k.fillStyle='#9c7a3c';k.beginPath();k.moveTo(-26,-6);k.lineTo(26,-6);k.lineTo(20,14);k.lineTo(-20,14);k.fill();k.fillStyle='#f0c24b';k.beginPath();k.ellipse(0,-6,25,8,0,0,7);k.fill();k.fillStyle='#e2a92b';for(let i=0;i<12;i++)k.fillRect(-18+(i*7)%36,-9+(i*3)%6,2,2);}
+ else if(e===4){k.fillStyle='#a1684a';k.beginPath();k.ellipse(0,4,18,16,0,0,7);k.fill();k.fillStyle='#8a5538';k.fillRect(-10,-16,20,8);k.fillStyle='#f3e7a8';k.beginPath();k.ellipse(0,-12,9,3,0,0,7);k.fill();}
+ else{k.fillStyle='rgba(255,255,255,.6)';k.beginPath();k.roundRect(-9,-22,18,40,5);k.fill();k.fillStyle='#f6b81a';k.beginPath();k.roundRect(-8,-8,16,25,4);k.fill();k.fillStyle='#7a5a2a';k.fillRect(-4,-28,8,7);}
+ k.restore();}
+const NX=[[0,1],[1,2],[2,3],[4,5]];
+const G={titulo:'Tipiti da Farinha',rotulo:'Produtos prontos',vidas:1,
+ resumo:'Na região Norte, a mandioca brava vira farinha e tucupi. Crua ela é venenosa. Ralar, prensar no tipiti, torrar no forno e ferver o caldo, cada coisa na hora certa, é o que deixa o alimento seguro.',
+ como:[['Veja','Cada item chega na tábua: raiz, massa ralada, massa prensada ou caldo.'],['Escolha','Quando ele entrar na faixa clara, toque no passo certo.'],['Ordem','Passo errado tira uma vida. A ordem é o que tira o veneno.']],
+ dica:'Raiz: ralar. Massa ralada: prensar. Massa prensada: torrar. Caldo: ferver.',dicaErro:'Siga a ordem: ralar, prensar no tipiti, torrar. O caldo da prensa vai para o fogo.',
+ botoes(){const F=FASES[S.f];return '<div class="row" style="justify-content:center;gap:8px;margin-top:8px">'+ET.slice(0,F.bt).map((e,i)=>'<button class="btn" style="background:'+e.c+';border-color:'+e.c+';min-width:84px" onclick="G.passo('+i+')">'+e.n+'</button>').join('')+'</div>';},
+ FASES:[{nome:'Ralar e prensar',dur:40,meta:5,vel:65,bt:2,itens:[0,1],metaTxt:'deixar 5 massas prensadas em 40 s.',txt:'Primeiro a raiz é ralada. Depois a massa vai para o tipiti.',fato:'A mandioca brava tem mais de 100 mg de ácido cianídrico por quilo de raiz fresca. Por isso nunca se come crua.'},
+  {nome:'Casa de farinha',dur:45,meta:5,vel:80,bt:3,itens:[0,1,2],metaTxt:'fazer 5 porções de farinha em 45 s.',txt:'Agora a massa prensada vai para o forno. Raiz, ralar, prensar, torrar.',fato:'No tipiti, a massa ralada é prensada e solta um caldo chamado manipueira. A massa prensada segue para a torração.'},
+  {nome:'Farinhada',dur:50,meta:8,vel:110,bt:3,itens:[0,1,2],metaTxt:'fazer 8 porções de farinha em 50 s.',txt:'Dia de farinhada grande. A tábua anda mais rápido.',fato:'No Pará, mais de 90% da raiz de mandioca vira farinha de mesa.'},
+  {nome:'Tucupi',dur:55,meta:8,vel:100,bt:4,itens:[0,1,2,4],metaTxt:'fazer 8 produtos, farinha ou tucupi, em 55 s.',txt:'O caldo da prensa não é jogado fora. Fervido, ele vira tucupi.',fato:'Da manipueira, depois de fermentada e fervida, se faz o tucupi. Feito do jeito certo, o processo reduz o veneno da mandioca brava.'}],
  init(g){g.vidas=3;g.n=0;g.it=[];g.q=0;},meta(g){return [g.n,FASES[S.f].meta];},cedo(g){return g.n>=FASES[S.f].meta;},
- zona(){return [W*.55,W*.85];},
- passo(i){const g=S.g;if(!g||g.fim)return;const [a,b]=G.zona();const it=g.it.find(o=>o.x>a&&o.x<b&&o.e<3);if(!it){msg('Espere o item entrar na casa de farinha.');return;}
-  if(it.e===i){it.e++;it.x=W*.1;beep(400+i*150,.07,.05);if(it.e===3){g.n++;ganha(10,W*.7,H*.3);it.done=1.2;}}else{g.vidas--;ganha(-10,W*.7,H*.3);msg(it.e===0?'Raiz inteira precisa ser ralada primeiro.':it.e===1?'Massa ralada vai para o tipiti.':'Massa prensada já pode torrar.');it.x=W+50;}},
- update(g,dt){const F=FASES[S.f];g.q-=dt;if(g.q<=0&&g.it.filter(o=>!o.done).length<3){g.it.push({x:-40,e:0});g.q=2.2;}
-  for(const o of g.it){if(o.done){o.done-=dt;continue;}o.x+=F.vel*dt;if(o.x>W+40&&o.e<3){o.perd=1;}}
-  const perd=g.it.filter(o=>o.perd&&!o.cnt);for(const o of perd){o.cnt=1;msg('Um item passou sem trabalho.');}
-  g.it=g.it.filter(o=>!(o.perd)&&!(o.done!==undefined&&o.done<=0));
-  if(tec['1']){G.passo(0);tec['1']=0;}if(tec['2']){G.passo(1);tec['2']=0;}if(tec['3']){G.passo(2);tec['3']=0;}},
- draw(g){cx.fillStyle='#fffaf0';cx.fillRect(0,0,W,H);const [a,b]=G.zona();
-  cx.fillStyle='#8d6e63';cx.beginPath();cx.moveTo(a-20,H*.15);cx.lineTo((a+b)/2,H*.02);cx.lineTo(b+20,H*.15);cx.fill();rrect(a,H*.15,b-a,H*.58,8,'rgba(255,224,178,.7)');cx.fillStyle='#6d4c41';cx.font='bold 14px system-ui';cx.textAlign='center';cx.fillText('casa de farinha',(a+b)/2,H*.22);
-  cx.fillStyle='#bdbdbd';cx.fillRect(0,H*.55,W,14);cx.fillStyle='#9e9e9e';for(let i=0;i<W;i+=30)cx.fillRect((i+g.t*FASES[S.f].vel)%W,H*.55,4,14);
-  for(const o of g.it){if(o.done){item(cx,W*.7,H*.45-(1.2-o.done)*40,3);continue;}item(cx,o.x,H*.5,o.e);}
-  const ys=H*.85;ET.forEach((e,i)=>{const x=W*(.2+i*.3);cx.fillStyle=e.c;cx.font='bold 13px system-ui';cx.textAlign='center';cx.fillText((i+1)+'. '+e.n,x,ys);});
-  cx.fillStyle='#795548';cx.font='13px system-ui';cx.fillText('raiz → ralar → prensar no tipiti → torrar',W/2,H*.95);},
- capa(k,w,h){k.fillStyle='#fffaf0';k.fillRect(0,0,w,h);item(k,120,110,0);item(k,250,110,1);item(k,380,110,2);item(k,510,115,3);k.fillStyle='#795548';k.font='bold 22px system-ui';for(const x of [185,315,445]){k.fillText('→',x-10,118);}}
+ zona(){return [W*.46,W*.66];},
+ fim(e){return S.f===0?e===2:(e===3||e===5);},
+ passo(i){const g=S.g;if(!g||g.fim)return;const [a,b]=G.zona();const it=g.it.find(o=>o.x>a&&o.x<b&&!o.done);if(!it){msg('Espere o item entrar na faixa clara.');return;}
+  const REQ={0:0,1:1,2:2,4:3},NXT={0:1,1:2,2:3,4:5};if(i===REQ[it.e]){it.e=NXT[it.e];it.x=a-W*.12;if(G.fim(it.e)){g.n++;ganha(10,(a+b)/2,H*.35);it.done=1.2;}}
+  else{g.vidas--;ganha(-10,(a+b)/2,H*.35);msg(it.e===0?'Raiz inteira precisa ser ralada primeiro.':it.e===1?'Massa ralada vai para o tipiti.':it.e===2?'Massa prensada vai para o forno.':'O caldo da prensa vai para o fogo.');it.x=W+60;}},
+ update(g,dt){const F=FASES[S.f];g.q-=dt;if(g.q<=0&&g.it.filter(o=>!o.done).length<3){const e=F.itens[Math.floor(Math.random()*F.itens.length)];g.it.push({x:-40,e});g.q=2.3;}
+  for(const o of g.it){if(o.done){o.done-=dt;continue;}o.x+=F.vel*dt;if(o.x>W+40&&!o.cnt){o.cnt=1;msg('Um item passou sem trabalho.');}}
+  g.it=g.it.filter(o=>!(o.x>W+40)&&!(o.done!==undefined&&o.done<=0));
+  for(let i=0;i<F.bt;i++)if(tec[''+(i+1)]){G.passo(i);tec[''+(i+1)]=0;}},
+ draw(g){const F=FASES[S.f];cx.drawImage(cache('tf',W,H,TF.cena),0,0);const [a,b]=G.zona();const s=Math.min(W,H)/440;
+  cx.fillStyle='rgba(255,255,255,.35)';cx.fillRect(a,H*.56,b-a,H*.16);cx.strokeStyle='rgba(255,255,255,.9)';cx.lineWidth=2;cx.setLineDash([6,5]);cx.strokeRect(a,H*.56,b-a,H*.16);cx.setLineDash([]);
+  for(const o of g.it){if(o.done){item(cx,(a+b)/2,H*.5-(1.2-o.done)*50,o.e,s*1.1);continue;}item(cx,o.x,H*.6,o.e,s);}
+  const ys=H*.82;cx.font='bold 13px system-ui';cx.textAlign='center';const lab=['raiz','ralada','prensada','farinha','caldo','tucupi'];
+  const leg=S.f===3?[0,1,2,4]:S.f===0?[0,1]:[0,1,2];leg.forEach((e,i)=>{const x=W*(.14+i*(.72/(leg.length-1||1)));item(cx,x,ys,e,s*.6);cx.fillStyle='#4e342e';cx.font='bold '+(MOB()?11:13)+'px system-ui';cx.fillText(lab[e],x,ys+28*s);cx.fillStyle=ET[e===4?3:e].c;cx.fillText(ET[e===4?3:e].n.toLowerCase(),x,ys+28*s+14);});
+  vinheta(cx,W,H);},
+ capa(k,w,h){const o=cx,oW=W,oH=H;cx=k;W=w;H=h;TF.cena(k,w,h);item(k,w*.36,h*.6,0,1);item(k,w*.5,h*.6,1,1);item(k,w*.62,h*.6,2,1);item(k,w*.8,h*.86,3,1.1);item(k,w*.92,h*.86,5,1);vinheta(k,w,h);cx=o;W=oW;H=oH;}
 };
 const FASES=G.FASES;
 const PERG=[
  {q:'Por que a mandioca brava não pode ser comida crua?',o:['Ela libera ácido cianídrico, que é tóxico','Ela é dura demais para mastigar sem cozinhar antes','Ela tem espinhos por dentro']},
- {q:'Para que serve o tipiti na casa de farinha?',o:['Prensar a massa ralada e tirar o líquido','Torrar a farinha no forno de barro da casa','Guardar a farinha pronta']},
+ {q:'Para que serve o tipiti na casa de farinha?',o:['Prensar a massa ralada e tirar o caldo','Torrar a farinha no forno de barro da casa','Guardar a farinha pronta']},
+ {q:'No Pará, qual é o principal destino da raiz de mandioca?',o:['Farinha de mesa','Ração para o gado','Álcool para carro']},
  {q:'O que é feito com a manipueira que sai do tipiti?',o:['Ela é fermentada e fervida e vira tucupi','Ela é jogada no rio sem nenhum tratamento','Ela vira o polvilho doce direto']}
 ];
 function pergunta(){
@@ -197,11 +270,11 @@ function pergunta(){
   $('bn').onclick=()=>{S.tot+=S.fp;S.fp=0;if(S.f===FASES.length-1)final(true);else{S.f++;fase();}};});
 }
 function final(tudo){
- S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
+ S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?FASES.length+' fases':'Fase '+(S.f+1);
  $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Mestre da farinhada!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
  <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
- <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Fontes: Embrapa Amazônia Oriental (2007), Documentos 290, compostos cianogênicos em raízes e farinha de mandioca; Alves e Modesto Júnior (eds.) (2019), Mandioca: agregação de valor e rentabilidade de negócios, Embrapa Amazônia Oriental, cap. 3. Esteira, tempo e pontos são regras do jogo.</div></div>`;
+ <div class="small" style="margin-top:12px;text-align:left">Fontes: Embrapa Amazônia Oriental (2007), Documentos 290, compostos cianogênicos em raízes e farinha de mandioca; Alves e Modesto Júnior (eds.) (2019), Mandioca: agregação de valor e rentabilidade de negócios, Embrapa Amazônia Oriental; Campos (2016), dissertação PPGCTA-UFPA sobre processamento do tucupi; Revista do Instituto Adolfo Lutz (2011), Teor de cianeto total e livre nas etapas de processamento do tucupi. Esteira, tempo e pontos são regras do jogo.</div></div>`;
  $('bS').onclick=()=>salvar(nivel);
 }
 const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};

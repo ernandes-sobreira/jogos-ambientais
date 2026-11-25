@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Comitiva Pantaneira</title>
 <style>
-:root{--main:#558b2f;--deep:#33691e;--soft:#f1f8e9;--line:#dcedc8;--ink:#10212b;--mut:#4d6370}
+:root{--main:#6d8b2f;--deep:#46601a;--soft:#f3f7e6;--line:#dde8c2;--ink:#10212b;--mut:#4d6370}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
 .wrap{max-width:780px;margin:0 auto;padding:12px 14px 40px}
@@ -43,7 +43,7 @@ canvas{width:100%;max-width:760px;margin:0 auto;display:block;border:2px solid v
 <a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
 <header>
   <h1>Comitiva Pantaneira</h1>
-  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
 </header>
 <main id="tela"></main>
 <div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
@@ -117,7 +117,7 @@ let S,cv,cx,raf=null,last=0,W=720,H=460,inp={x:null,y:null,down:false,tap:null},
 const MOB=()=>W<520;
 function rrect(x,y,w,h,r,cor){cx.fillStyle=cor;cx.beginPath();cx.roundRect(x,y,w,h,r);cx.fill();}
 function sombra(x,y,rx,ry){cx.fillStyle='rgba(0,0,0,.12)';cx.beginPath();cx.ellipse(x,y,rx,ry,0,0,7);cx.fill();}
-function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/'+G.FASES.length;$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
  if(g&&!g.fim){const [a,m]=G.meta(g);$('hR').textContent=G.rotulo+' '+a+'/'+m;$('hV').textContent=G.vidas?'Vidas '+'●'.repeat(Math.max(0,g.vidas)):'';$('hT').textContent=G.semTempo?'':Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s';}
  ['hR','hV','hT'].forEach(k=>$(k).style.display=$(k).textContent?'':'none');}
 function inicio(){parar();$('hud').style.display='none';$('rankBox').style.display='block';
@@ -151,44 +151,121 @@ function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=G.FAS
  <p class="small" style="margin-top:6px">${ok?G.FASES[S.f].fato:G.dicaErro}</p>
  <div class="row" style="justify-content:center;margin-top:14px">${ok?'<button class="btn grande" id="bq">Pergunta rápida</button>':'<button class="btn grande" id="br">Jogar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
  if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}}
-/* O ponteiro vai à frente tocando o berrante para atrair, estimular a marcha ou acalmar o gado (Compre Rural). As comitivas pantaneiras existem há pelo menos 200 anos (Brum, UFMS). Bois, água e pontos são regras do jogo. */
-function boi(k,x,y,s,dir,cor){k.save();k.translate(x,y);k.scale(dir*s,s);k.fillStyle=cor;k.beginPath();k.ellipse(0,0,20,12,0,0,7);k.fill();k.beginPath();k.ellipse(20,-6,9,7,0,0,7);k.fill();k.strokeStyle='#efe6d2';k.lineWidth=3;k.beginPath();k.moveTo(22,-12);k.quadraticCurveTo(30,-20,34,-14);k.stroke();k.fillStyle='#5d4037';for(const lx of [-12,-4,8,14])k.fillRect(lx,8,4,10);k.restore();}
-function peao(k,x,y,s,berra){k.save();k.translate(x,y);k.scale(s,s);k.fillStyle='#8d6e63';k.beginPath();k.ellipse(0,6,24,13,0,0,7);k.fill();k.beginPath();k.ellipse(24,-4,9,8,0,0,7);k.fill();k.fillStyle='#3e2723';for(const lx of [-16,-6,8,16])k.fillRect(lx,14,4,12);rrectK(k,-8,-26,16,22,6,'#1565c0');k.fillStyle='#ffcc80';k.beginPath();k.arc(0,-32,7,0,7);k.fill();k.fillStyle='#6d4c41';k.fillRect(-12,-40,24,4);k.fillRect(-6,-46,12,7);k.strokeStyle=berra?'#ffb300':'#d7ccc8';k.lineWidth=5;k.beginPath();k.moveTo(6,-30);k.quadraticCurveTo(22,-36,28,-48);k.stroke();k.restore();}
-function rrectK(k,x,y,w,h,r,c){k.fillStyle=c;k.beginPath();k.roundRect(x,y,w,h,r);k.fill();}
+/* ---------- arte vetorial compartilhada ---------- */
+beep=function(){};
+function rng(s){s=s%2147483647;if(s<=0)s+=2147483646;return()=>{s=s*16807%2147483647;return(s-1)/2147483646;};}
+function lg(k,x0,y0,x1,y1,st){const g=k.createLinearGradient(x0,y0,x1,y1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+function rg(k,x,y,r0,r1,st){const g=k.createRadialGradient(x,y,r0,x,y,r1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+const CACHE={};
+function cache(key,w,h,fn){const id=key+'_'+w+'x'+h;if(!CACHE[id]){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);CACHE[id]=c;}return CACHE[id];}
+function ceu(k,w,h,cs){k.fillStyle=lg(k,0,0,0,h,cs);k.fillRect(0,0,w,h);}
+function sol(k,x,y,r,c){k.fillStyle=rg(k,x,y,0,r*4,[c,'rgba(255,255,255,0)']);k.fillRect(x-r*4,y-r*4,r*8,r*8);k.fillStyle=c;k.beginPath();k.arc(x,y,r,0,7);k.fill();}
+function nuvem(k,x,y,s,a){k.fillStyle='rgba(255,255,255,'+(a||.8)+')';for(const [dx,dy,r] of [[0,0,1],[1.1,.15,.8],[-1,.2,.75],[.5,-.45,.7],[-.4,-.35,.6]]){k.beginPath();k.arc(x+dx*s,y+dy*s,r*s,0,7);k.fill();}k.fillRect(x-1.7*s,y+.2*s,3.6*s,.8*s);}
+function serra(k,w,y,amp,cor,seed){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,y+amp*2);let x=0;k.lineTo(0,y);while(x<w+40){x+=30+r()*50;k.lineTo(x,y-r()*amp);}k.lineTo(w,y+amp*4);k.lineTo(0,y+amp*4);k.fill();}
+function matas(k,w,y,amp,cor,seed,base){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,base);k.lineTo(0,y);let x=0;while(x<w+30){const rr=8+r()*amp;k.arc(x+rr,y-r()*amp*.6,rr,Math.PI,0);x+=rr*1.6;}k.lineTo(w,base);k.closePath();k.fill();}
+function capim(k,x0,y0,w,h,cor,seed,n){const r=rng(seed);k.strokeStyle=cor;k.lineCap='round';for(let i=0;i<n;i++){const x=x0+r()*w,y=y0+r()*h,l=4+r()*10;k.lineWidth=1+r()*1.2;for(let j=-1;j<=1;j++){k.beginPath();k.moveTo(x,y);k.quadraticCurveTo(x+j*3,y-l*.6,x+j*5+r()*2,y-l);k.stroke();}}}
+function copa(k,x,y,r,cs,seed){const R=rng(seed);const pts=[];for(let i=0;i<9;i++){const a=R()*Math.PI*2,d=R()*r*.55;pts.push([x+Math.cos(a)*d,y+Math.sin(a)*d*.7,r*(.35+R()*.3)]);}
+ k.fillStyle=cs[0];for(const [a,b,c] of pts){k.beginPath();k.arc(a+c*.12,b+c*.18,c,0,7);k.fill();}
+ k.fillStyle=cs[1];for(const [a,b,c] of pts){k.beginPath();k.arc(a,b,c*.92,0,7);k.fill();}
+ k.fillStyle=cs[2];for(const [a,b,c] of pts){k.beginPath();k.arc(a-c*.25,b-c*.3,c*.5,0,7);k.fill();}}
+function tronco(k,x,y0,y1,w0,w1,c1,c2){k.fillStyle=lg(k,x-w0,0,x+w0,0,[c2,c1,c1,c2]);k.beginPath();k.moveTo(x-w0,y0);k.lineTo(x-w1,y1);k.lineTo(x+w1,y1);k.lineTo(x+w0,y0);k.fill();k.strokeStyle='rgba(0,0,0,.12)';k.lineWidth=1;for(let y=y1+8;y<y0;y+=11){const t=(y-y1)/(y0-y1),ww=w1+(w0-w1)*t;k.beginPath();k.moveTo(x-ww*.6,y);k.quadraticCurveTo(x,y+3,x+ww*.5,y-1);k.stroke();}}
+function palmeira(k,x,y,h,lean,cfr,ctr,seed,nf){const R=rng(seed);const tx=x+lean,ty=y-h;k.strokeStyle=ctr;k.lineCap='round';for(let i=0;i<14;i++){const t0=i/14,t1=(i+1)/14;k.lineWidth=h*.05*(1-t0*.35);const xa=x+lean*t0*t0,ya=y-h*t0,xb=x+lean*t1*t1,yb=y-h*t1;k.beginPath();k.moveTo(xa,ya);k.lineTo(xb,yb);k.stroke();}
+ k.strokeStyle='rgba(0,0,0,.15)';k.lineWidth=1;for(let i=1;i<14;i++){const t=i/14,xa=x+lean*t*t,ya=y-h*t;k.beginPath();k.moveTo(xa-h*.022,ya);k.lineTo(xa+h*.022,ya);k.stroke();}
+ nf=nf||9;for(let f=0;f<nf;f++){const a=-Math.PI/2+(f-(nf-1)/2)*(2.6/nf)+(R()-.5)*.2,L=h*(.38+R()*.12),dr=.55+R()*.25;const ex=tx+Math.cos(a)*L,ey=ty+Math.sin(a)*L*.55+L*dr*.5;const mx=tx+Math.cos(a)*L*.5,my=ty+Math.sin(a)*L*.5-L*.12;
+  k.strokeStyle=cfr[0];k.lineWidth=2;k.beginPath();k.moveTo(tx,ty);k.quadraticCurveTo(mx,my,ex,ey);k.stroke();
+  for(let j=1;j<16;j++){const t=j/16,px=(1-t)*(1-t)*tx+2*(1-t)*t*mx+t*t*ex,py=(1-t)*(1-t)*ty+2*(1-t)*t*my+t*t*ey;const ll=L*.16*(1-t*.5);k.strokeStyle=cfr[j%2];k.lineWidth=1.6;k.beginPath();k.moveTo(px,py);k.lineTo(px+Math.cos(a+1.6)*ll*.5,py+ll);k.moveTo(px,py);k.lineTo(px+Math.cos(a-1.6)*ll*.5,py+ll*.9);k.stroke();}}}
+function sombraE(k,x,y,rx,ry,a){k.fillStyle='rgba(20,30,20,'+(a||.18)+')';k.beginPath();k.ellipse(x,y,rx,ry,0,0,7);k.fill();}
+function vinheta(k,w,h){k.fillStyle=rg(k,w/2,h/2,Math.min(w,h)*.45,Math.max(w,h)*.8,['rgba(0,0,0,0)','rgba(0,0,0,.18)']);k.fillRect(0,0,w,h);}
+function rrk(k,x,y,w,h,r,c){k.fillStyle=c;k.beginPath();k.roundRect(x,y,w,h,r);k.fill();}
+/* figura humana: o={pele,camisa,calca,chapeu,passo,bracoE,bracoD} ângulos em rad a partir de baixo */
+function pessoa(k,x,y,s,o){o=o||{};const p=o.passo||0;k.save();k.translate(x,y);k.scale(s*(o.dir||1),s);k.lineCap='round';k.lineJoin='round';
+ const pl=Math.sin(p)*.35;k.strokeStyle=o.calca||'#37474f';k.lineWidth=7;k.beginPath();k.moveTo(-3,-38);k.lineTo(-3+Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18,0);k.stroke();k.beginPath();k.moveTo(3,-38);k.lineTo(3-Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(3-Math.sin(pl)*20-Math.sin(pl*.5)*18,0);k.stroke();
+ k.fillStyle='#3e2723';k.beginPath();k.ellipse(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.ellipse(3-Math.sin(pl)*20-Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.fill();
+ k.fillStyle=o.camisa||'#1e88e5';k.beginPath();k.moveTo(-9,-40);k.lineTo(-10,-68);k.quadraticCurveTo(0,-74,10,-68);k.lineTo(9,-40);k.closePath();k.fill();k.fillStyle='rgba(0,0,0,.12)';k.fillRect(2,-68,7,28);
+ const be=o.bracoE!==undefined?o.bracoE:-pl*.8,bd=o.bracoD!==undefined?o.bracoD:pl*.8;k.strokeStyle=o.camisa||'#1e88e5';k.lineWidth=6;
+ for(const [sx,a] of [[-8,be],[8,bd]]){k.beginPath();k.moveTo(sx,-66);const ex=sx+Math.sin(a)*14,ey=-66+Math.cos(a)*14;k.lineTo(ex,ey);k.stroke();k.strokeStyle=o.pele||'#c68b59';k.beginPath();k.moveTo(ex,ey);k.lineTo(ex+Math.sin(a*1.15)*13,ey+Math.cos(a*1.15)*13);k.stroke();k.strokeStyle=o.camisa||'#1e88e5';}
+ k.fillStyle=o.pele||'#c68b59';k.fillRect(-3,-76,6,6);k.beginPath();k.ellipse(0,-83,7.5,8.5,0,0,7);k.fill();
+ if(o.chapeu!==false){k.fillStyle=o.chapeu||'#795548';k.beginPath();k.ellipse(0,-88,15,3.5,0,0,7);k.fill();k.beginPath();k.moveTo(-8,-88);k.quadraticCurveTo(-7,-99,0,-99);k.quadraticCurveTo(7,-99,8,-88);k.fill();k.fillStyle='rgba(0,0,0,.25)';k.fillRect(-8,-91,16,2.5);}
+ k.restore();}
+/* boi nelore em perfil, olhando para +x */
+function boi(k,x,y,s,dir,cor,p){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#ece6da';p=p||0;
+ const pern=[[-26,0],[-18,Math.PI],[18,Math.PI],[26,0]];
+ for(let i=0;i<4;i++){const [lx,ph]=pern[i];const a=Math.sin(p+ph)*.3;k.strokeStyle=i==1||i==2?shade(c,-.12):c;k.lineCap='round';k.lineWidth=6.5;k.beginPath();k.moveTo(lx,-24);k.lineTo(lx+Math.sin(a)*9,-10);k.lineTo(lx+Math.sin(a)*7,2);k.stroke();k.fillStyle='#3e2723';k.fillRect(lx+Math.sin(a)*7-3.5,1,7,3);}
+ k.fillStyle=c;k.beginPath();k.moveTo(-34,-40);k.quadraticCurveTo(-38,-24,-30,-20);k.quadraticCurveTo(0,-14,26,-20);k.quadraticCurveTo(34,-26,32,-40);k.quadraticCurveTo(28,-50,20,-54);k.quadraticCurveTo(12,-56,8,-48);k.quadraticCurveTo(-10,-46,-28,-48);k.quadraticCurveTo(-34,-46,-34,-40);k.fill();
+ k.fillStyle=lg(k,0,-50,0,-18,['rgba(255,255,255,.18)','rgba(0,0,0,0)','rgba(60,40,20,.22)']);k.fill();
+ k.fillStyle=c;k.beginPath();k.moveTo(26,-44);k.quadraticCurveTo(38,-44,44,-38);k.lineTo(54,-24);k.quadraticCurveTo(56,-18,51,-17);k.quadraticCurveTo(46,-18,42,-24);k.quadraticCurveTo(34,-26,28,-22);k.fill();
+ k.beginPath();k.moveTo(28,-26);k.quadraticCurveTo(34,-14,30,-12);k.quadraticCurveTo(24,-16,22,-24);k.fill();
+ k.fillStyle=shade(c,-.35);k.beginPath();k.ellipse(52,-19,3.4,2.6,.4,0,7);k.fill();k.fillStyle='#1b1b1b';k.beginPath();k.arc(44,-34,1.8,0,7);k.fill();
+ k.fillStyle=shade(c,-.08);k.beginPath();k.ellipse(38,-41,8,2.8,.5,0,7);k.fill();k.strokeStyle='#cfc4b0';k.lineWidth=2.4;k.lineCap='round';k.beginPath();k.moveTo(41,-44);k.quadraticCurveTo(44,-49,42,-52);k.stroke();
+ k.strokeStyle=c;k.lineWidth=2.2;k.beginPath();k.moveTo(-34,-42);k.quadraticCurveTo(-40,-28,-37,-14);k.stroke();k.fillStyle='#4e342e';k.beginPath();k.ellipse(-37,-13,2.2,4.5,0,0,7);k.fill();
+ k.restore();}
+function shade(hex,f){let n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;const t=f<0?0:255,p=Math.abs(f);r=Math.round((t-r)*p+r);g=Math.round((t-g)*p+g);b=Math.round((t-b)*p+b);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+function cavalo(k,x,y,s,dir,p,cor){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#8d5a3b';k.strokeStyle=c;k.lineCap='round';k.lineWidth=6;
+ for(const [lx,ph] of [[-20,0],[-12,Math.PI],[18,Math.PI],[26,0]]){const a=Math.sin(p+ph)*.45;k.beginPath();k.moveTo(lx,-22);k.lineTo(lx+Math.sin(a)*10,-8);k.lineTo(lx+Math.sin(a)*8,4);k.stroke();}
+ k.fillStyle=c;k.beginPath();k.ellipse(3,-30,28,12,0,0,7);k.fill();k.beginPath();k.moveTo(22,-36);k.quadraticCurveTo(30,-56,40,-58);k.lineTo(50,-48);k.quadraticCurveTo(44,-44,38,-46);k.lineTo(30,-26);k.fill();
+ k.fillStyle='#3e2723';k.beginPath();k.moveTo(24,-40);k.quadraticCurveTo(30,-60,40,-60);k.lineTo(36,-56);k.quadraticCurveTo(30,-52,28,-36);k.fill();k.beginPath();k.moveTo(-24,-34);k.quadraticCurveTo(-38,-26,-34,-6);k.quadraticCurveTo(-30,-22,-22,-28);k.fill();
+ k.fillStyle='rgba(0,0,0,.15)';k.beginPath();k.ellipse(3,-23,24,4,0,0,7);k.fill();k.fillStyle='#5d4037';k.fillRect(-8,-44,22,6);k.restore();}
+function cavaleiro(k,x,y,s,dir,p,o){cavalo(k,x,y,s,dir,p,o&&o.cor);k.save();k.translate(x,y);k.scale(s*dir,s);pessoa(k,2,-30,.62,Object.assign({passo:0,bracoE:.9,bracoD:1.3,calca:'#4e342e'},o||{}));k.restore();}
+/* Comitiva: ponteiro, capataz, peões e cozinheiro (Compre Rural); em áreas sem estrada, só a cavalo ou a pé (Compre Rural, comitiva de Pantaleão Flores); seca e cheia (Brum, UFMS); comitivas há pelo menos 200 anos (Brum, UFMS); caminhada nas horas frescas (Compre Rural). Bois, água, correnteza e pontos são regras do jogo. */
+const CM={};
+CM.cenario=function(k,w,h,f){const dusk=f===3;ceu(k,w,h*.24,dusk?['#f6b98a','#fbe3c2']:['#a8d8f0','#e6f4ef']);if(dusk)sol(k,w*.78,h*.2,18,'#ffdca8');else{nuvem(k,w*.2,h*.08,14,.8);nuvem(k,w*.65,h*.06,10,.7);}
+ serra(k,w,h*.2,14,dusk?'#d7b8a6':'#b9d3cb',3);matas(k,w,h*.22,14,dusk?'#a5937a':'#88ad8c',4,h*.26);
+ k.fillStyle=lg(k,0,h*.22,0,h,dusk?['#c9c08a','#a9a564']:['#cfe0a0','#a8c46e']);k.fillRect(0,h*.22,w,h*.78);
+ const R=rng(8+f);for(let i=0;i<7;i++){const x=R()*w*.85,y=h*.3+R()*h*.6;k.fillStyle='rgba(120,150,70,.18)';k.beginPath();k.ellipse(x,y,40+R()*60,10+R()*14,0,0,7);k.fill();}
+ capim(k,0,h*.26,w,h*.74,dusk?'rgba(110,110,50,.3)':'rgba(90,130,40,.28)',3+f,Math.floor(w*h/2600));
+ for(const [x,y,s] of [[w*.06,h*.29,.2],[w*.2,h*.265,.14],[w*.52,h*.255,.11],[w*.72,h*.265,.16]]){palmeira(k,x,y,h*s,4,dusk?['#6a6a3a','#7f7d48']:['#4f7d36','#6c9a48'],'#9b8a6a',11+x|0,10);}
+ if(f>=1)for(const a of CM.agua(w,h,f)){k.fillStyle=lg(k,0,a.y-a.ry,0,a.y+a.ry,['#7cc2d8','#4ea3c4']);k.beginPath();k.ellipse(a.x,a.y,a.rx,a.ry,0,0,7);k.fill();k.strokeStyle='rgba(255,255,255,.45)';k.lineWidth=1.5;for(let j=0;j<4;j++){k.beginPath();k.moveTo(a.x-a.rx*.5+j*12,a.y-a.ry*.3+j*7);k.lineTo(a.x-a.rx*.2+j*12,a.y-a.ry*.3+j*7);k.stroke();}k.strokeStyle='rgba(60,110,60,.35)';k.lineWidth=3;k.beginPath();k.ellipse(a.x,a.y,a.rx,a.ry,0,0,7);k.stroke();}
+ if(f===2){const [x0,x1]=CM.rio(w);k.fillStyle=lg(k,x0,0,x1,0,['#5aa9c9','#3d8db3','#5aa9c9']);k.fillRect(x0,h*.24,x1-x0,h*.76);k.fillStyle='#d9c79a';const v=CM.vau(h);k.fillRect(x0,v[0],x1-x0,v[1]-v[0]);k.fillStyle='rgba(120,180,200,.55)';k.fillRect(x0,v[0],x1-x0,v[1]-v[0]);
+  k.strokeStyle='rgba(255,255,255,.5)';k.lineWidth=1.5;for(let y=h*.28;y<h;y+=22){if(y>v[0]-6&&y<v[1]+6)continue;k.beginPath();k.moveTo(x0+8,y);k.quadraticCurveTo((x0+x1)/2,y+8,x1-8,y+2);k.stroke();}
+  k.fillStyle='#fff';k.font='bold 12px system-ui';k.textAlign='center';k.fillText('vau',(x0+x1)/2,v[0]-6);}
+ const fx=CM.cerca(w),g=CM.porteira(h);k.fillStyle='rgba(170,135,80,.35)';k.fillRect(fx,h*.3,w-fx,h*.64);k.fillStyle=rg(k,fx-30,(g[0]+g[1])/2,10,h*.22,['rgba(190,160,100,.55)','rgba(190,160,100,0)']);k.fillRect(fx-h*.25,g[0]-h*.2,h*.3,g[1]-g[0]+h*.4);
+ k.strokeStyle='#6d4c2e';k.lineWidth=3;for(const yy of [0,8]){k.beginPath();k.moveTo(fx,h*.3+yy);k.lineTo(w,h*.3+yy);k.moveTo(fx,h*.94+yy-8);k.lineTo(w,h*.94+yy-8);k.moveTo(fx,h*.3+yy);k.lineTo(fx,g[0]+yy);k.moveTo(fx,g[1]+yy);k.lineTo(fx,h*.94+yy);k.stroke();}
+ k.fillStyle='#5d3f22';for(let y=h*.3;y<=h*.94;y+=h*.08){if(y>g[0]&&y<g[1])continue;k.fillRect(fx-3,y-14,6,22);}k.fillRect(fx-4,g[0]-18,8,26);k.fillRect(fx-4,g[1]-18,8,26);
+ k.fillStyle='#5d3f22';k.font='bold 13px system-ui';k.textAlign='center';k.fillText('curral',fx+(w-fx)/2,h*.28);k.font='bold 11px system-ui';k.fillText('porteira',fx-28,g[0]-6);
+ if(dusk){k.fillStyle='rgba(255,140,60,.12)';k.fillRect(0,0,w,h);}};
+CM.cerca=w=>w*.84;CM.porteira=h=>[h*.5,h*.7];CM.rio=w=>[w*.44,w*.56];CM.vau=h=>[h*.56,h*.68];
+CM.agua=(w,h,f)=>f===1?[{x:w*.36,y:h*.42,rx:w*.11,ry:h*.08},{x:w*.6,y:h*.82,rx:w*.12,ry:h*.08}]:f===3?[{x:w*.66,y:h*.38,rx:w*.08,ry:h*.06}]:[];
+CM.naAgua=(x,y,f)=>CM.agua(W,H,f).some(a=>((x-a.x)/a.rx)**2+((y-a.y)/a.ry)**2<1);
 const G={titulo:'Comitiva Pantaneira',rotulo:'Bois no curral',vidas:0,
- resumo:'No Pantanal, a comitiva leva o gado a cavalo por campos e áreas alagadas. O ponteiro vai na frente e toca o berrante para chamar a boiada.',
- como:[['Arraste','Arraste o dedo para levar o ponteiro a cavalo pelo campo.'],['Berrante','Toque rápido na tela: o berrante soa e os bois perto vêm atrás de você.'],['Curral','Leve os bois até o curral da direita. Bois na água funda andam devagar.']],
- dica:'Arraste para andar e toque para soar o berrante.',dicaErro:'Toque o berrante perto dos bois e ande devagar até o curral.',
- FASES:[{nome:'Campo seco',dur:50,meta:6,bois:8,agua:0,metaTxt:'levar 6 bois ao curral em 50 s.',txt:'Campo aberto e seco. Chame os bois e siga para o curral.',fato:'O ponteiro vai à frente da comitiva e toca o berrante para atrair o gado, fazer a boiada andar ou acalmá-la.'},
-  {nome:'Começo da cheia',dur:55,meta:8,bois:11,agua:2,metaTxt:'levar 8 bois ao curral em 55 s.',txt:'A água começou a subir. Contorne as baías para não atrasar.',fato:'Em partes do Pantanal não passa caminhão. O gado só atravessa a cavalo ou a pé, com a comitiva.'},
-  {nome:'Travessia longa',dur:60,meta:11,bois:14,agua:3,metaTxt:'levar 11 bois ao curral em 60 s.',txt:'Muitos bois espalhados e muita água. Junte a boiada antes de seguir.',fato:'As comitivas pantaneiras existem há pelo menos 200 anos e herdaram a tradição dos tropeiros.'}],
- init(g){const F=FASES[S.f];g.n=0;g.p={x:W*.12,y:H*.5};g.b=0;g.bois=[];for(let i=0;i<F.bois;i++)g.bois.push({x:W*(.08+Math.random()*.55),y:H*(.18+Math.random()*.72),vx:0,vy:0,ch:0,cor:['#f5f0e6','#a1887f','#d7ccc8','#6d4c41'][i%4],in:false});
-  g.ag=[];for(let i=0;i<F.agua;i++)g.ag.push({x:W*(.3+i*.18),y:H*(.25+(i%2)*.45),r:Math.min(W,H)*.13});},
- meta(g){return [g.n,FASES[S.f].meta];},cedo(g){return g.n>=FASES[S.f].meta;},
- naAgua(g,x,y){return g.ag.some(a=>Math.hypot(x-a.x,(y-a.y)*1.4)<a.r);},
- update(g,dt){const p=g.p;if(inp.down&&inp.x!==null){const dx=inp.x-p.x,dy=inp.y-p.y,d=Math.hypot(dx,dy);if(d>4){const v=Math.min(d,170*dt*(G.naAgua(g,p.x,p.y)?.6:1));p.x=Math.max(20,Math.min(W-20,p.x+dx/d*v));p.y=Math.max(H*.14,Math.min(H-20,p.y+dy/d*v));}}
-  if(inp.tap||tec[' ']){tec[' ']=0;g.b=.9;beep(196,.35,.07);for(const o of g.bois)if(!o.in&&Math.hypot(o.x-p.x,o.y-p.y)<Math.max(W,H)*.28)o.ch=2.6;}
-  g.b=Math.max(0,g.b-dt);const cx0=W*.9;
-  for(const o of g.bois){if(o.in)continue;o.ch-=dt;let ax=0,ay=0;if(o.ch>0){const dx=p.x-o.x,dy=p.y-o.y,d=Math.hypot(dx,dy);if(d>50){ax=dx/d;ay=dy/d;}}else{ax=(Math.random()-.5)*.6;ay=(Math.random()-.5)*.6;}
-   const sp=(o.ch>0?90:18)*(G.naAgua(g,o.x,o.y)?.4:1);o.vx+=(ax*sp-o.vx)*dt*3;o.vy+=(ay*sp-o.vy)*dt*3;
-   for(const q of g.bois)if(q!==o&&!q.in){const d=Math.hypot(o.x-q.x,o.y-q.y);if(d<26&&d>0){o.vx+=(o.x-q.x)/d*20;o.vy+=(o.y-q.y)/d*20;}}
-   o.x=Math.max(16,Math.min(W-16,o.x+o.vx*dt));o.y=Math.max(H*.14,Math.min(H-16,o.y+o.vy*dt));
-   if(o.x>cx0-W*.08&&o.y>H*.3&&o.y<H*.75){o.in=true;o.x=cx0-W*.03+Math.random()*W*.06;o.y=H*.35+Math.random()*H*.35;g.n++;ganha(10,o.x,o.y-20);}}},
- draw(g){cx.fillStyle='#dcedc8';cx.fillRect(0,0,W,H);cx.fillStyle='#c5e1a5';for(let i=0;i<40;i++){cx.fillRect((i*97)%W,(i*53)%H,3,8);}
-  cx.fillStyle='#b3e5fc';cx.fillRect(0,0,W,H*.1);
-  for(const a of g.ag){cx.fillStyle='#81d4fa';cx.beginPath();cx.ellipse(a.x,a.y,a.r,a.r/1.4,0,0,7);cx.fill();cx.fillStyle='#4fc3f7';cx.beginPath();cx.ellipse(a.x,a.y,a.r*.6,a.r/2.4,0,0,7);cx.fill();}
-  const x0=W*.84;cx.fillStyle='#fff8e1';cx.fillRect(x0,H*.28,W*.15,H*.5);cx.strokeStyle='#795548';cx.lineWidth=5;cx.strokeRect(x0,H*.28,W*.15,H*.5);cx.fillStyle='#795548';cx.font='bold 14px system-ui';cx.textAlign='center';cx.fillText('CURRAL',x0+W*.075,H*.26);
-  cx.fillStyle='#fff8e1';cx.fillRect(x0-6,H*.32,12,H*.42);
-  for(const o of g.bois)boi(cx,o.x,o.y,MOB()?.8:.9,o.vx<0?-1:1,o.cor);
-  if(g.b>0){cx.strokeStyle='rgba(255,179,0,'+g.b+')';cx.lineWidth=4;cx.beginPath();cx.arc(g.p.x,g.p.y,Math.max(W,H)*.28*(1-g.b+.15),0,7);cx.stroke();}
-  peao(cx,g.p.x,g.p.y,MOB()?.85:1,g.b>0);},
- capa(k,w,h){k.fillStyle='#dcedc8';k.fillRect(0,0,w,h);k.fillStyle='#81d4fa';k.beginPath();k.ellipse(470,170,120,30,0,0,7);k.fill();const o=cx;cx=k;for(let i=0;i<6;i++)boi(k,120+i*55,110+(i%2)*40,1,-1,['#f5f0e6','#a1887f','#6d4c41'][i%3]);peao(k,80,120,1.2,true);cx=o;}
+ resumo:'No Pantanal, a comitiva leva o gado a cavalo por campos, baías e corixos. Você é o peão. O boi se afasta do cavalo, e é assim que se conduz a boiada até o curral.',
+ como:[['Arraste','Arraste o dedo e o cavalo vai até lá.'],['Conduza','O boi foge do cavalo. Fique atrás da boiada, do lado oposto da porteira.'],['Curral','Boi só entra pela porteira. Na fase do corixo, atravesse pelo vau.']],
+ dica:'Fique atrás da boiada e empurre em direção à porteira.',dicaErro:'Não vá para cima dos bois. Fique atrás deles e ande devagar.',
+ FASES:[{nome:'Campo aberto',dur:60,meta:6,bois:8,metaTxt:'pôr 6 bois no curral em 60 s.',txt:'Manhã fresca no campo seco. Junte a boiada e leve até a porteira.',fato:'A comitiva tem ponteiro, que vai na frente, capataz, peões e cozinheiro. Cada um tem uma função na condução do gado.'},
+  {nome:'Baías da cheia',dur:65,meta:8,bois:10,metaTxt:'pôr 8 bois no curral em 65 s.',txt:'A água subiu. Boi na baía anda devagar. Contorne as lagoas.',fato:'O Pantanal tem duas estações bem marcadas, a seca e a cheia. Na cheia o campo fica cheio de baías.'},
+  {nome:'Travessia do corixo',dur:70,meta:8,bois:11,metaTxt:'pôr 8 bois no curral em 70 s. Boi fora do vau é levado pela correnteza.',txt:'O corixo corta o caminho. Só o vau é raso. Fora dele a correnteza leva o boi.',fato:'Em várias áreas do Pantanal não passa caminhão. O gado só atravessa a cavalo ou a pé, com a comitiva.'},
+  {nome:'Fim de tarde',dur:75,meta:12,bois:15,metaTxt:'pôr 12 bois no curral em 75 s.',txt:'O sol está baixando e a boiada quer pastar. Muitos bois, pouca paciência.',fato:'As comitivas pantaneiras existem há pelo menos 200 anos. Elas herdaram a tradição dos tropeiros.'}],
+ init(g){const F=FASES[S.f];g.n=0;g.perd=0;g.p={x:W*.08,y:H*.6,d:1,ph:0};g.bois=[];const cores=['#f1ece2','#e4dccd','#cbbba4','#b39c83','#f6f2ea','#8f7a66'];
+  for(let i=0;i<F.bois;i++)g.bois.push({x:W*(.14+Math.random()*.24),y:H*(.32+Math.random()*.58),vx:0,vy:0,ph:Math.random()*6,d:1,cor:cores[i%cores.length],in:false,pasto:Math.random()*3});},
+ meta(g){return [g.n,FASES[S.f].meta];},cedo(g){return g.n>=FASES[S.f].meta||(g.bois.filter(o=>!o.in&&!o.lost).length+g.n<FASES[S.f].meta);},
+ update(g,dt){const F=FASES[S.f],p=g.p,fx=CM.cerca(W),gt=CM.porteira(H),R=Math.max(W,H)*.24;
+  if(inp.down&&inp.x!==null){const dx=inp.x-p.x,dy=inp.y-p.y,d=Math.hypot(dx,dy);if(d>6){const v=Math.min(d,200*dt);p.x=Math.max(20,Math.min(fx-20,p.x+dx/d*v));p.y=Math.max(H*.3,Math.min(H-12,p.y+dy/d*v));p.d=dx<0?-1:1;p.ph+=v*.08;}}
+  const liv=g.bois.filter(o=>!o.in&&!o.lost);let mx=0,my=0;for(const o of liv){mx+=o.x;my+=o.y;}if(liv.length){mx/=liv.length;my/=liv.length;}
+  for(const o of liv){let ax=0,ay=0;const dx=o.x-p.x,dy=o.y-p.y,d=Math.hypot(dx,dy);
+   if(d<R){const f=(R-d)/R;ax+=dx/d*f*2.4;ay+=dy/d*f*2.4;o.pasto=1+Math.random()*2;}
+   else{o.pasto-=dt;if(o.pasto<0){ax+=(Math.random()-.5)*(S.f===3?1.4:.7);ay+=(Math.random()-.5)*(S.f===3?1.4:.7);if(o.pasto<-.6)o.pasto=1+Math.random()*3;}ax+=(mx-o.x)/W*(S.f===3?.6:1.2);ay+=(my-o.y)/H*(S.f===3?.6:1.2);}
+   for(const q of liv)if(q!==o){const ex=o.x-q.x,ey=o.y-q.y,e=Math.hypot(ex,ey);if(e<30&&e>0){ax+=ex/e*.8;ay+=ey/e*.8;}}
+   if(o.x<50)ax+=1.2;if(o.y<H*.36)ay+=1.2;if(o.y>H-30&&!o.molh)ay-=1.2;if(o.x>CM.cerca(W)-40&&(o.y<CM.porteira(H)[0]||o.y>CM.porteira(H)[1]))ax-=.6;let sp=70*(CM.naAgua(o.x,o.y,S.f)?.45:1);o.vx+=(ax*sp-o.vx)*Math.min(1,dt*3);o.vy+=(ay*sp-o.vy)*Math.min(1,dt*3);
+   if(S.f===2){const [x0,x1]=CM.rio(W),v=CM.vau(H);if(o.x>x0&&o.x<x1&&(o.y<v[0]||o.y>v[1])){o.vy+=40*dt;o.vx*=.97;o.molh=1;}else o.molh=0;}
+   o.x+=o.vx*dt;o.y+=o.vy*dt;o.ph+=Math.hypot(o.vx,o.vy)*dt*.09;if(Math.abs(o.vx)>4)o.d=o.vx<0?-1:1;
+   if(o.y<H*.3){o.y=H*.3;o.vy=0;}if(o.x<14){o.x=14;o.vx=0;}
+   if(o.y>H+10){o.lost=1;g.perd++;msg('A correnteza levou um boi.');continue;}if(o.y>H-8&&!o.molh){o.y=H-8;o.vy=0;}
+   if(o.x>fx-6&&o.x<fx+6&&(o.y<gt[0]+6||o.y>gt[1]-6)){o.x=fx-6;o.vx=-Math.abs(o.vx)*.3;}
+   if(o.x>fx+14){o.in=true;g.n++;ganha(10,o.x,o.y-50);o.tx=fx+20+Math.random()*(W-fx-40);o.ty=H*.36+Math.random()*H*.5;}}
+  for(const o of g.bois)if(o.in){o.x+=(o.tx-o.x)*dt;o.y+=(o.ty-o.y)*dt;o.ph+=dt*2;}},
+ draw(g){cx.drawImage(cache('cm'+S.f,W,H,(k,w,h)=>CM.cenario(k,w,h,S.f)),0,0);const s=MOB()?.62:.72;
+  const L=g.bois.filter(o=>!o.lost).map(o=>({y:o.y,f:()=>{sombraE(cx,o.x,o.y+2,22*s*1.4,4,o.molh?.05:.16);if(o.molh){cx.save();cx.beginPath();cx.rect(o.x-60,o.y-60,120,46);cx.clip();boi(cx,o.x,o.y,s,o.d,o.cor,o.ph);cx.restore();cx.strokeStyle='rgba(255,255,255,.6)';cx.lineWidth=2;cx.beginPath();cx.ellipse(o.x,o.y-14,26*s*1.3,4,0,0,7);cx.stroke();}else boi(cx,o.x,o.y,s,o.d,o.cor,o.ph);}}));
+  L.push({y:g.p.y,f:()=>{sombraE(cx,g.p.x,g.p.y+2,26,5);cavaleiro(cx,g.p.x,g.p.y,MOB()?.72:.8,g.p.d,g.p.ph,{camisa:'#c62828',chapeu:'#5d4037'});}});
+  L.sort((a,b)=>a.y-b.y).forEach(e=>e.f());
+  if(g.perd){cx.fillStyle='#b71c1c';cx.font='bold 13px system-ui';cx.textAlign='left';cx.fillText('Perdidos: '+g.perd,12,H-12);}
+  vinheta(cx,W,H);},
+ capa(k,w,h){const o=cx,oW=W,oH=H;cx=k;W=w;H=h;CM.cenario(k,w,h,0);const c=['#f1ece2','#cbbba4','#e4dccd','#8f7a66','#b39c83'];for(let i=0;i<7;i++){const x=w*.3+i*w*.07,y=h*.55+(i%3)*h*.13;sombraE(k,x,y+2,28,5);boi(k,x,y,.75,1,c[i%5],i);}sombraE(k,w*.16,h*.82,28,5);cavaleiro(k,w*.16,h*.8,.85,1,1,{camisa:'#c62828'});vinheta(k,w,h);cx=o;W=oW;H=oH;}
 };
 const FASES=G.FASES;
 const PERG=[
- {q:'Qual é a função do ponteiro na comitiva pantaneira?',o:['Ir à frente tocando o berrante','Cozinhar para os peões no acampamento da comitiva','Contar os bois um por um na chegada ao curral']},
- {q:'Por que muitas comitivas ainda atravessam o Pantanal a cavalo?',o:['Em várias áreas não passa caminhão','O gado tem medo de estrada','A lei proíbe transporte de gado em caminhão']},
- {q:'O Pantanal tem duas estações bem marcadas. Quais são?',o:['Seca e cheia','Inverno e neve','Primavera e monção']}
+ {q:'Quem vai na frente da comitiva pantaneira?',o:['O ponteiro','O cozinheiro','O dono da fazenda']},
+ {q:'Quais são as duas estações bem marcadas do Pantanal?',o:['Seca e cheia','Inverno com neve e verão','Monção e primavera']},
+ {q:'Por que muitas boiadas do Pantanal ainda viajam a cavalo?',o:['Em várias áreas não passa caminhão','O boi tem medo de motor','Uma lei proíbe o transporte por caminhão']},
+ {q:'De que tradição as comitivas pantaneiras são herdeiras?',o:['Dos tropeiros','Dos bandeirantes do ouro','Dos jangadeiros do mar']}
 ];
 function pergunta(){
  const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
@@ -199,11 +276,11 @@ function pergunta(){
   $('bn').onclick=()=>{S.tot+=S.fp;S.fp=0;if(S.f===FASES.length-1)final(true);else{S.f++;fase();}};});
 }
 function final(tudo){
- S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
- $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Ponteiro da comitiva!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
+ S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?FASES.length+' fases':'Fase '+(S.f+1);
+ $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Peão de comitiva!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
  <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
- <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Fontes: Compre Rural, composição da comitiva e uso do berrante pelo ponteiro; Compre Rural, comitiva de Pantaleão Flores entre Aquidauana e Corumbá; Brum, artigo sobre as comitivas pantaneiras, periódicos UFMS. Bois, água e pontos são regras do jogo.</div></div>`;
+ <div class="small" style="margin-top:12px;text-align:left">Fontes: Compre Rural, composição da comitiva (ponteiro, capataz, peões e cozinheiro); Compre Rural, comitiva de Pantaleão Flores entre Aquidauana e Corumbá (áreas sem passagem de caminhão, caminhada nas horas frescas); Brum, artigo sobre as comitivas pantaneiras, periódicos UFMS (seca e cheia, pelo menos 200 anos, herdeiras dos tropeiros). Bois, baías, correnteza e pontos são regras do jogo.</div></div>`;
  $('bS').onclick=()=>salvar(nivel);
 }
 const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};

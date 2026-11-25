@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Pequi do Chão</title>
 <style>
-:root{--main:#f9a825;--deep:#c17900;--soft:#fff8e1;--line:#ffe9a8;--ink:#10212b;--mut:#4d6370}
+:root{--main:#c98a00;--deep:#8f6200;--soft:#fff8e1;--line:#ffe9a8;--ink:#10212b;--mut:#4d6370}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
 .wrap{max-width:780px;margin:0 auto;padding:12px 14px 40px}
@@ -43,7 +43,7 @@ canvas{width:100%;max-width:760px;margin:0 auto;display:block;border:2px solid v
 <a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
 <header>
   <h1>Pequi do Chão</h1>
-  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
 </header>
 <main id="tela"></main>
 <div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
@@ -117,7 +117,7 @@ let S,cv,cx,raf=null,last=0,W=720,H=460,inp={x:null,y:null,down:false,tap:null},
 const MOB=()=>W<520;
 function rrect(x,y,w,h,r,cor){cx.fillStyle=cor;cx.beginPath();cx.roundRect(x,y,w,h,r);cx.fill();}
 function sombra(x,y,rx,ry){cx.fillStyle='rgba(0,0,0,.12)';cx.beginPath();cx.ellipse(x,y,rx,ry,0,0,7);cx.fill();}
-function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/'+G.FASES.length;$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
  if(g&&!g.fim){const [a,m]=G.meta(g);$('hR').textContent=G.rotulo+' '+a+'/'+m;$('hV').textContent=G.vidas?'Vidas '+'●'.repeat(Math.max(0,g.vidas)):'';$('hT').textContent=G.semTempo?'':Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s';}
  ['hR','hV','hT'].forEach(k=>$(k).style.display=$(k).textContent?'':'none');}
 function inicio(){parar();$('hud').style.display='none';$('rankBox').style.display='block';
@@ -151,40 +151,115 @@ function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=G.FAS
  <p class="small" style="margin-top:6px">${ok?G.FASES[S.f].fato:G.dicaErro}</p>
  <div class="row" style="justify-content:center;margin-top:14px">${ok?'<button class="btn grande" id="bq">Pergunta rápida</button>':'<button class="btn grande" id="br">Jogar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
  if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}}
-/* O pequi não se tira do pé: o fruto cai e se abre, com caroços mais amarelos e polpa mais grossa (Cartilha Pequi, Instituto Sustentar, 2016). A coleta do chão é a forma usada por 90% dos entrevistados em Barreiras-BA (SEB, 2013). Maritacas preferem um tipo de pequi de polpa mais doce (Rev. Bras. Biociências, 2007). Quantidades e pontos são regras do jogo. */
-function pequi(k,x,y,r,maduro){k.fillStyle=maduro?'#9ccc65':'#558b2f';k.beginPath();k.arc(x,y,r,0,7);k.fill();if(maduro){k.fillStyle='#ffca28';k.beginPath();k.arc(x-r*.2,y-r*.1,r*.55,0,7);k.fill();k.fillStyle='#ffb300';k.beginPath();k.arc(x+r*.35,y+r*.2,r*.4,0,7);k.fill();}else{k.fillStyle='rgba(255,255,255,.35)';k.beginPath();k.arc(x-r*.35,y-r*.35,r*.25,0,7);k.fill();}}
-function maritaca(k,x,y,s,d){k.save();k.translate(x,y);k.scale(d*s,s);k.fillStyle='#43a047';k.beginPath();k.ellipse(0,0,16,9,0,0,7);k.fill();k.beginPath();k.arc(14,-5,7,0,7);k.fill();k.fillStyle='#ffee58';k.beginPath();k.moveTo(20,-6);k.lineTo(26,-3);k.lineTo(20,-1);k.fill();k.fillStyle='#2e7d32';k.beginPath();k.moveTo(-14,0);k.lineTo(-30,6);k.lineTo(-14,5);k.fill();k.restore();}
-const G={titulo:'Pequi do Chão',rotulo:'Pequis coletados',vidas:1,
- resumo:'Em Goiás, no norte de Minas e em Mato Grosso, quem conhece o Cerrado sabe: pequi não se tira do pé. O fruto bom é o que cai sozinho e se abre no chão.',
- como:[['Toque','Toque nos pequis que já caíram no chão para coletar.'],['Não puxe','Toque num pequi ainda no galho tira uma vida. Fruto do pé é ruim.'],['Rapidez','Na última fase, as maritacas também querem o pequi caído.']],
- dica:'Colete só o que está no chão.',dicaErro:'Espere o pequi cair. Só o fruto do chão vale ponto.',
- FASES:[{nome:'Começo da safra',dur:40,meta:10,queda:1.2,mar:0,metaTxt:'coletar 10 pequis caídos em 40 s.',txt:'Os primeiros frutos estão caindo. Junte só os do chão.',fato:'O pequi maduro cai sozinho. No chão ele se abre e mostra caroços mais amarelos e polpa mais grossa.'},
-  {nome:'Pequizeiro carregado',dur:45,meta:14,queda:.8,mar:0,metaTxt:'coletar 14 pequis caídos em 45 s.',txt:'A árvore está cheia. Não caia na tentação de puxar do galho.',fato:'Em uma comunidade de Barreiras, na Bahia, 90% das pessoas ouvidas disseram coletar o pequi do chão, depois da queda.'},
-  {nome:'Visita das maritacas',dur:45,meta:14,queda:.7,mar:1,metaTxt:'coletar 14 pequis caídos em 45 s, antes das maritacas.',txt:'As maritacas chegaram. Elas comem o pequi caído se você demorar.',fato:'Moradores contam que as maritacas preferem um tipo de pequi de polpa mais doce. Dentro do caroço há espinhos, por isso o pequi é roído com cuidado.'}],
- init(g){g.vidas=3;g.n=0;g.pe=[];g.ch=[];g.q=.5;g.m=[];for(let i=0;i<12;i++)g.pe.push(G.novoGalho());},
- novoGalho(){const a=Math.random()*Math.PI*2,r=Math.random();return {x:W*.5+Math.cos(a)*W*.3*r,y:H*.28+Math.sin(a)*H*.14*r,m:Math.random()*3};},
+/* ---------- arte vetorial compartilhada ---------- */
+beep=function(){};
+function rng(s){s=s%2147483647;if(s<=0)s+=2147483646;return()=>{s=s*16807%2147483647;return(s-1)/2147483646;};}
+function lg(k,x0,y0,x1,y1,st){const g=k.createLinearGradient(x0,y0,x1,y1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+function rg(k,x,y,r0,r1,st){const g=k.createRadialGradient(x,y,r0,x,y,r1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+const CACHE={};
+function cache(key,w,h,fn){const id=key+'_'+w+'x'+h;if(!CACHE[id]){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);CACHE[id]=c;}return CACHE[id];}
+function ceu(k,w,h,cs){k.fillStyle=lg(k,0,0,0,h,cs);k.fillRect(0,0,w,h);}
+function sol(k,x,y,r,c){k.fillStyle=rg(k,x,y,0,r*4,[c,'rgba(255,255,255,0)']);k.fillRect(x-r*4,y-r*4,r*8,r*8);k.fillStyle=c;k.beginPath();k.arc(x,y,r,0,7);k.fill();}
+function nuvem(k,x,y,s,a){k.fillStyle='rgba(255,255,255,'+(a||.8)+')';for(const [dx,dy,r] of [[0,0,1],[1.1,.15,.8],[-1,.2,.75],[.5,-.45,.7],[-.4,-.35,.6]]){k.beginPath();k.arc(x+dx*s,y+dy*s,r*s,0,7);k.fill();}k.fillRect(x-1.7*s,y+.2*s,3.6*s,.8*s);}
+function serra(k,w,y,amp,cor,seed){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,y+amp*2);let x=0;k.lineTo(0,y);while(x<w+40){x+=30+r()*50;k.lineTo(x,y-r()*amp);}k.lineTo(w,y+amp*4);k.lineTo(0,y+amp*4);k.fill();}
+function matas(k,w,y,amp,cor,seed,base){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,base);k.lineTo(0,y);let x=0;while(x<w+30){const rr=8+r()*amp;k.arc(x+rr,y-r()*amp*.6,rr,Math.PI,0);x+=rr*1.6;}k.lineTo(w,base);k.closePath();k.fill();}
+function capim(k,x0,y0,w,h,cor,seed,n){const r=rng(seed);k.strokeStyle=cor;k.lineCap='round';for(let i=0;i<n;i++){const x=x0+r()*w,y=y0+r()*h,l=4+r()*10;k.lineWidth=1+r()*1.2;for(let j=-1;j<=1;j++){k.beginPath();k.moveTo(x,y);k.quadraticCurveTo(x+j*3,y-l*.6,x+j*5+r()*2,y-l);k.stroke();}}}
+function copa(k,x,y,r,cs,seed){const R=rng(seed);const pts=[];for(let i=0;i<9;i++){const a=R()*Math.PI*2,d=R()*r*.55;pts.push([x+Math.cos(a)*d,y+Math.sin(a)*d*.7,r*(.35+R()*.3)]);}
+ k.fillStyle=cs[0];for(const [a,b,c] of pts){k.beginPath();k.arc(a+c*.12,b+c*.18,c,0,7);k.fill();}
+ k.fillStyle=cs[1];for(const [a,b,c] of pts){k.beginPath();k.arc(a,b,c*.92,0,7);k.fill();}
+ k.fillStyle=cs[2];for(const [a,b,c] of pts){k.beginPath();k.arc(a-c*.25,b-c*.3,c*.5,0,7);k.fill();}}
+function tronco(k,x,y0,y1,w0,w1,c1,c2){k.fillStyle=lg(k,x-w0,0,x+w0,0,[c2,c1,c1,c2]);k.beginPath();k.moveTo(x-w0,y0);k.lineTo(x-w1,y1);k.lineTo(x+w1,y1);k.lineTo(x+w0,y0);k.fill();k.strokeStyle='rgba(0,0,0,.12)';k.lineWidth=1;for(let y=y1+8;y<y0;y+=11){const t=(y-y1)/(y0-y1),ww=w1+(w0-w1)*t;k.beginPath();k.moveTo(x-ww*.6,y);k.quadraticCurveTo(x,y+3,x+ww*.5,y-1);k.stroke();}}
+function palmeira(k,x,y,h,lean,cfr,ctr,seed,nf){const R=rng(seed);const tx=x+lean,ty=y-h;k.strokeStyle=ctr;k.lineCap='round';for(let i=0;i<14;i++){const t0=i/14,t1=(i+1)/14;k.lineWidth=h*.05*(1-t0*.35);const xa=x+lean*t0*t0,ya=y-h*t0,xb=x+lean*t1*t1,yb=y-h*t1;k.beginPath();k.moveTo(xa,ya);k.lineTo(xb,yb);k.stroke();}
+ k.strokeStyle='rgba(0,0,0,.15)';k.lineWidth=1;for(let i=1;i<14;i++){const t=i/14,xa=x+lean*t*t,ya=y-h*t;k.beginPath();k.moveTo(xa-h*.022,ya);k.lineTo(xa+h*.022,ya);k.stroke();}
+ nf=nf||9;for(let f=0;f<nf;f++){const a=-Math.PI/2+(f-(nf-1)/2)*(2.6/nf)+(R()-.5)*.2,L=h*(.38+R()*.12),dr=.55+R()*.25;const ex=tx+Math.cos(a)*L,ey=ty+Math.sin(a)*L*.55+L*dr*.5;const mx=tx+Math.cos(a)*L*.5,my=ty+Math.sin(a)*L*.5-L*.12;
+  k.strokeStyle=cfr[0];k.lineWidth=2;k.beginPath();k.moveTo(tx,ty);k.quadraticCurveTo(mx,my,ex,ey);k.stroke();
+  for(let j=1;j<16;j++){const t=j/16,px=(1-t)*(1-t)*tx+2*(1-t)*t*mx+t*t*ex,py=(1-t)*(1-t)*ty+2*(1-t)*t*my+t*t*ey;const ll=L*.16*(1-t*.5);k.strokeStyle=cfr[j%2];k.lineWidth=1.6;k.beginPath();k.moveTo(px,py);k.lineTo(px+Math.cos(a+1.6)*ll*.5,py+ll);k.moveTo(px,py);k.lineTo(px+Math.cos(a-1.6)*ll*.5,py+ll*.9);k.stroke();}}}
+function sombraE(k,x,y,rx,ry,a){k.fillStyle='rgba(20,30,20,'+(a||.18)+')';k.beginPath();k.ellipse(x,y,rx,ry,0,0,7);k.fill();}
+function vinheta(k,w,h){k.fillStyle=rg(k,w/2,h/2,Math.min(w,h)*.45,Math.max(w,h)*.8,['rgba(0,0,0,0)','rgba(0,0,0,.18)']);k.fillRect(0,0,w,h);}
+function rrk(k,x,y,w,h,r,c){k.fillStyle=c;k.beginPath();k.roundRect(x,y,w,h,r);k.fill();}
+/* figura humana: o={pele,camisa,calca,chapeu,passo,bracoE,bracoD} ângulos em rad a partir de baixo */
+function pessoa(k,x,y,s,o){o=o||{};const p=o.passo||0;k.save();k.translate(x,y);k.scale(s*(o.dir||1),s);k.lineCap='round';k.lineJoin='round';
+ const pl=Math.sin(p)*.35;k.strokeStyle=o.calca||'#37474f';k.lineWidth=7;k.beginPath();k.moveTo(-3,-38);k.lineTo(-3+Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18,0);k.stroke();k.beginPath();k.moveTo(3,-38);k.lineTo(3-Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(3-Math.sin(pl)*20-Math.sin(pl*.5)*18,0);k.stroke();
+ k.fillStyle='#3e2723';k.beginPath();k.ellipse(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.ellipse(3-Math.sin(pl)*20-Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.fill();
+ k.fillStyle=o.camisa||'#1e88e5';k.beginPath();k.moveTo(-9,-40);k.lineTo(-10,-68);k.quadraticCurveTo(0,-74,10,-68);k.lineTo(9,-40);k.closePath();k.fill();k.fillStyle='rgba(0,0,0,.12)';k.fillRect(2,-68,7,28);
+ const be=o.bracoE!==undefined?o.bracoE:-pl*.8,bd=o.bracoD!==undefined?o.bracoD:pl*.8;k.strokeStyle=o.camisa||'#1e88e5';k.lineWidth=6;
+ for(const [sx,a] of [[-8,be],[8,bd]]){k.beginPath();k.moveTo(sx,-66);const ex=sx+Math.sin(a)*14,ey=-66+Math.cos(a)*14;k.lineTo(ex,ey);k.stroke();k.strokeStyle=o.pele||'#c68b59';k.beginPath();k.moveTo(ex,ey);k.lineTo(ex+Math.sin(a*1.15)*13,ey+Math.cos(a*1.15)*13);k.stroke();k.strokeStyle=o.camisa||'#1e88e5';}
+ k.fillStyle=o.pele||'#c68b59';k.fillRect(-3,-76,6,6);k.beginPath();k.ellipse(0,-83,7.5,8.5,0,0,7);k.fill();
+ if(o.chapeu!==false){k.fillStyle=o.chapeu||'#795548';k.beginPath();k.ellipse(0,-88,15,3.5,0,0,7);k.fill();k.beginPath();k.moveTo(-8,-88);k.quadraticCurveTo(-7,-99,0,-99);k.quadraticCurveTo(7,-99,8,-88);k.fill();k.fillStyle='rgba(0,0,0,.25)';k.fillRect(-8,-91,16,2.5);}
+ k.restore();}
+/* boi nelore em perfil, olhando para +x */
+function boi(k,x,y,s,dir,cor,p){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#ece6da';p=p||0;
+ const pern=[[-26,0],[-18,Math.PI],[18,Math.PI],[26,0]];
+ for(let i=0;i<4;i++){const [lx,ph]=pern[i];const a=Math.sin(p+ph)*.3;k.strokeStyle=i==1||i==2?shade(c,-.12):c;k.lineCap='round';k.lineWidth=6.5;k.beginPath();k.moveTo(lx,-24);k.lineTo(lx+Math.sin(a)*9,-10);k.lineTo(lx+Math.sin(a)*7,2);k.stroke();k.fillStyle='#3e2723';k.fillRect(lx+Math.sin(a)*7-3.5,1,7,3);}
+ k.fillStyle=c;k.beginPath();k.moveTo(-34,-40);k.quadraticCurveTo(-38,-24,-30,-20);k.quadraticCurveTo(0,-14,26,-20);k.quadraticCurveTo(34,-26,32,-40);k.quadraticCurveTo(28,-50,20,-54);k.quadraticCurveTo(12,-56,8,-48);k.quadraticCurveTo(-10,-46,-28,-48);k.quadraticCurveTo(-34,-46,-34,-40);k.fill();
+ k.fillStyle=lg(k,0,-50,0,-18,['rgba(255,255,255,.18)','rgba(0,0,0,0)','rgba(60,40,20,.22)']);k.fill();
+ k.fillStyle=c;k.beginPath();k.moveTo(26,-44);k.quadraticCurveTo(38,-44,44,-38);k.lineTo(54,-24);k.quadraticCurveTo(56,-18,51,-17);k.quadraticCurveTo(46,-18,42,-24);k.quadraticCurveTo(34,-26,28,-22);k.fill();
+ k.beginPath();k.moveTo(28,-26);k.quadraticCurveTo(34,-14,30,-12);k.quadraticCurveTo(24,-16,22,-24);k.fill();
+ k.fillStyle=shade(c,-.35);k.beginPath();k.ellipse(52,-19,3.4,2.6,.4,0,7);k.fill();k.fillStyle='#1b1b1b';k.beginPath();k.arc(44,-34,1.8,0,7);k.fill();
+ k.fillStyle=shade(c,-.08);k.beginPath();k.ellipse(38,-41,8,2.8,.5,0,7);k.fill();k.strokeStyle='#cfc4b0';k.lineWidth=2.4;k.lineCap='round';k.beginPath();k.moveTo(41,-44);k.quadraticCurveTo(44,-49,42,-52);k.stroke();
+ k.strokeStyle=c;k.lineWidth=2.2;k.beginPath();k.moveTo(-34,-42);k.quadraticCurveTo(-40,-28,-37,-14);k.stroke();k.fillStyle='#4e342e';k.beginPath();k.ellipse(-37,-13,2.2,4.5,0,0,7);k.fill();
+ k.restore();}
+function shade(hex,f){let n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;const t=f<0?0:255,p=Math.abs(f);r=Math.round((t-r)*p+r);g=Math.round((t-g)*p+g);b=Math.round((t-b)*p+b);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+function cavalo(k,x,y,s,dir,p,cor){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#8d5a3b';k.strokeStyle=c;k.lineCap='round';k.lineWidth=6;
+ for(const [lx,ph] of [[-20,0],[-12,Math.PI],[18,Math.PI],[26,0]]){const a=Math.sin(p+ph)*.45;k.beginPath();k.moveTo(lx,-22);k.lineTo(lx+Math.sin(a)*10,-8);k.lineTo(lx+Math.sin(a)*8,4);k.stroke();}
+ k.fillStyle=c;k.beginPath();k.ellipse(3,-30,28,12,0,0,7);k.fill();k.beginPath();k.moveTo(22,-36);k.quadraticCurveTo(30,-56,40,-58);k.lineTo(50,-48);k.quadraticCurveTo(44,-44,38,-46);k.lineTo(30,-26);k.fill();
+ k.fillStyle='#3e2723';k.beginPath();k.moveTo(24,-40);k.quadraticCurveTo(30,-60,40,-60);k.lineTo(36,-56);k.quadraticCurveTo(30,-52,28,-36);k.fill();k.beginPath();k.moveTo(-24,-34);k.quadraticCurveTo(-38,-26,-34,-6);k.quadraticCurveTo(-30,-22,-22,-28);k.fill();
+ k.fillStyle='rgba(0,0,0,.15)';k.beginPath();k.ellipse(3,-23,24,4,0,0,7);k.fill();k.fillStyle='#5d4037';k.fillRect(-8,-44,22,6);k.restore();}
+function cavaleiro(k,x,y,s,dir,p,o){cavalo(k,x,y,s,dir,p,o&&o.cor);k.save();k.translate(x,y);k.scale(s*dir,s);pessoa(k,2,-30,.62,Object.assign({passo:0,bracoE:.9,bracoD:1.3,calca:'#4e342e'},o||{}));k.restore();}
+/* Pequi: não se tira do pé, o fruto cai e se abre com caroços amarelos (Cartilha Pequi, Instituto Sustentar, 2016); coleta do chão por 90% dos entrevistados (Anais XI CEB, 2013); maritacas preferem pequi de polpa mais doce (Rev. Bras. Biociências, 2007); boas práticas (Oliveira e Scariot, Embrapa, 2010). Tempos, maritacas, frutos passados e pontos são regras do jogo. */
+const PQ={};
+function galhoTorto(k,x,y,len,ang,w,d,R){if(d<=0||w<1.5)return;const ex=x+Math.cos(ang)*len,ey=y+Math.sin(ang)*len;const mx=(x+ex)/2+(R()-.5)*len*.4,my=(y+ey)/2+(R()-.5)*len*.3;k.strokeStyle='#4a3627';k.lineWidth=w;k.lineCap='round';k.beginPath();k.moveTo(x,y);k.quadraticCurveTo(mx,my,ex,ey);k.stroke();k.strokeStyle='rgba(255,230,200,.12)';k.lineWidth=w*.35;k.beginPath();k.moveTo(x-w*.2,y);k.quadraticCurveTo(mx-w*.2,my,ex-w*.2,ey);k.stroke();
+ const n=d>2?2:2;for(let i=0;i<n;i++)galhoTorto(k,ex,ey,len*(.62+R()*.2),ang+(i?-.55:.5)+(R()-.5)*.4,w*.62,d-1,R);}
+PQ.arvore=function(k,w,h){const R=rng(77);const bx=w*.5,by=h*.8,s=h/460;galhoTorto(k,bx,by,h*.2,-Math.PI/2-.15,24*s,4,R);
+ for(const [x,y,r,sd] of [[.5,.27,.17,1],[.3,.33,.12,2],[.7,.31,.13,3],[.42,.2,.11,4],[.6,.2,.11,5],[.2,.4,.08,6],[.8,.38,.08,7]])copa(k,w*x,h*y,w*r*(w>h?.8:1.2),['#4d6b2a','#6b8a36','#97b257'],sd);};
+PQ.cena=function(k,w,h,f){const fim=f===3;ceu(k,w,h*.6,fim?['#f8c79a','#fbe6c8']:['#bfe0f0','#f1f4e4']);if(!fim){nuvem(k,w*.16,h*.1,14,.8);nuvem(k,w*.82,h*.14,11,.7);}else sol(k,w*.2,h*.3,22,'#ffe0b2');
+ k.fillStyle=fim?'#cfa98e':'#c7b59a';k.beginPath();k.moveTo(0,h*.5);k.lineTo(w*.08,h*.5);k.lineTo(w*.12,h*.4);k.lineTo(w*.42,h*.39);k.lineTo(w*.46,h*.5);k.lineTo(w*.6,h*.5);k.lineTo(w*.64,h*.43);k.lineTo(w*.92,h*.42);k.lineTo(w*.96,h*.5);k.lineTo(w,h*.5);k.lineTo(w,h*.6);k.lineTo(0,h*.6);k.fill();
+ k.fillStyle=lg(k,0,h*.48,0,h*.62,['#b9c08a','#a7ab73']);k.fillRect(0,h*.5,w,h*.14);
+ const R=rng(9);for(let i=0;i<10;i++){const x=R()*w,y=h*(.5+R()*.08),s=.3+R()*.3;k.strokeStyle='#5a4535';k.lineWidth=3*s;k.beginPath();k.moveTo(x,y);k.quadraticCurveTo(x+8,y-20*s,x+2,y-40*s);k.stroke();copa(k,x+2,y-44*s,22*s,['#6c7f45','#86985a','#a8b878'],i+50);}
+ k.fillStyle=lg(k,0,h*.62,0,h,['#d8c08b','#c49f63']);k.fillRect(0,h*.62,w,h*.38);capim(k,0,h*.6,w,h*.4,'rgba(170,140,60,.55)',4,Math.floor(w*h/1800));
+ const R2=rng(12);for(let i=0;i<40;i++){k.fillStyle='rgba(140,100,50,.25)';k.beginPath();k.ellipse(R2()*w,h*.65+R2()*h*.35,3+R2()*4,1.5,0,0,7);k.fill();}
+ sombraE(k,w*.5,h*.81,w*.26,h*.03,.2);PQ.arvore(k,w,h);if(fim){k.fillStyle='rgba(255,150,70,.12)';k.fillRect(0,0,w,h);}};
+function pequi(k,x,y,r,est){if(est==='pe'){k.fillStyle='#b5c454';k.strokeStyle='#3d5218';k.lineWidth=1.5;k.beginPath();k.arc(x,y,r,0,7);k.fill();k.stroke();k.fillStyle='rgba(255,255,255,.25)';k.beginPath();k.arc(x-r*.35,y-r*.35,r*.3,0,7);k.fill();return;}
+ const old=est==='velho';k.fillStyle=old?'#5a4b2e':'#6e8f36';k.beginPath();k.arc(x-r*.55,y,r*.8,Math.PI*.35,Math.PI*1.65);k.fill();k.beginPath();k.arc(x+r*.55,y,r*.8,-Math.PI*.65,Math.PI*.65);k.fill();
+ k.fillStyle=old?'#8a6d2a':'#ffc21a';for(const [dx,dy,s] of [[0,-r*.25,.42],[-r*.15,r*.3,.36],[r*.25,r*.25,.34]]){k.beginPath();k.arc(x+dx,y+dy,r*s,0,7);k.fill();}if(!old){k.fillStyle='rgba(255,255,255,.4)';k.beginPath();k.arc(x-r*.12,y-r*.38,r*.12,0,7);k.fill();}}
+function maritaca(k,x,y,s,d,ab){k.save();k.translate(x,y);k.scale(d*s,s);k.fillStyle='#3f9a3a';k.beginPath();k.ellipse(0,0,15,8,-.15,0,7);k.fill();k.fillStyle='#2e7d32';k.beginPath();k.moveTo(-12,1);k.lineTo(-30,8);k.lineTo(-27,3);k.lineTo(-12,-2);k.fill();
+ k.fillStyle='#4caf50';k.beginPath();k.arc(12,-5,6.5,0,7);k.fill();k.fillStyle='#f1e7c9';k.beginPath();k.moveTo(17,-6);k.quadraticCurveTo(23,-4,19,0);k.lineTo(16,-2);k.fill();k.fillStyle='#fff';k.beginPath();k.arc(13,-7,2,0,7);k.fill();k.fillStyle='#111';k.beginPath();k.arc(13.4,-7,1,0,7);k.fill();
+ k.fillStyle='#2e7d32';k.beginPath();if(ab){k.moveTo(-4,-4);k.lineTo(-10,-20);k.lineTo(6,-6);}else{k.ellipse(-2,-1,10,5,-.2,0,7);}k.fill();k.restore();}
+const G={titulo:'Pequi do Chão',rotulo:'Pequis bons',vidas:1,
+ resumo:'No Cerrado de Goiás, de Minas e de Mato Grosso, quem conhece o pequi sabe: ele não se tira do pé. O fruto bom é o que cai sozinho e se abre no chão, mostrando os caroços amarelos.',
+ como:[['Toque','Toque no pequi caído para pôr no balaio.'],['Não puxe','Tocar em fruto ainda no galho tira uma vida.'],['Atenção','Maritacas chegam na fase 3. Na fase 4, pequi passado também tira vida.']],
+ dica:'Colete só o que está no chão.',dicaErro:'Espere o pequi cair. Fruto do pé não presta.',
+ FASES:[{nome:'Começo da safra',dur:40,meta:10,queda:1.15,metaTxt:'juntar 10 pequis caídos em 40 s.',txt:'Os primeiros frutos estão caindo. Junte só os do chão.',fato:'O pequi maduro cai sozinho. No chão ele se abre e mostra os caroços mais amarelos e a polpa mais grossa.'},
+  {nome:'Pé carregado',dur:45,meta:14,queda:.85,carga:1,metaTxt:'juntar 14 pequis caídos em 45 s.',txt:'A árvore está cheia de fruto. Não caia na tentação de puxar do galho.',fato:'Numa comunidade de Barreiras, na Bahia, 90% das pessoas ouvidas disseram coletar o pequi do chão, depois da queda.'},
+  {nome:'Visita das maritacas',dur:45,meta:14,queda:.75,mar:1,metaTxt:'juntar 14 pequis em 45 s, antes das maritacas.',txt:'As maritacas chegaram. Pequi que demora no chão vira comida delas.',fato:'Moradores do norte de Minas contam que as maritacas preferem um tipo de pequi de polpa mais doce.'},
+  {nome:'Fim de tarde',dur:50,meta:16,queda:.7,mar:1,velho:1,metaTxt:'juntar 16 pequis bons em 50 s. Pequi passado tira vida.',txt:'Muito fruto no chão, mas o que caiu há tempo já passou do ponto. Pegue o fresco.',fato:'Nem todo pequi tem gosto bom. Por isso quem coleta escolhe o fruto com cuidado. Dentro do caroço há espinhos, então ele é roído sem morder.'}],
+ init(g){g.vidas=3;g.n=0;g.pe=[];g.ch=[];g.q=.4;g.m=[];const nn=FASES[S.f].carga?20:13;for(let i=0;i<nn;i++)g.pe.push(G.ponto());if(FASES[S.f].velho)for(let i=0;i<5;i++)g.ch.push({x:W*(.1+Math.random()*.8),y:H*(.7+Math.random()*.24),chao:true,t:6+Math.random()*3,vy:0});},
+ ponto(){const C=[[.5,.27,.17],[.3,.33,.12],[.7,.31,.13],[.42,.2,.11],[.6,.2,.11]];const c=C[Math.floor(Math.random()*C.length)];const a=Math.random()*6.28,r=Math.random()*.8;return {x:W*c[0]+Math.cos(a)*W*c[2]*r*(W>H?.8:1.2),y:H*c[1]+Math.sin(a)*H*.08*r,sw:Math.random()*6};},
  meta(g){return [g.n,FASES[S.f].meta];},cedo(g){return g.n>=FASES[S.f].meta;},
- update(g,dt){const F=FASES[S.f];g.q-=dt;if(g.q<=0){g.q=F.queda*(.6+Math.random()*.8);const i=Math.floor(Math.random()*g.pe.length);const p=g.pe[i];g.ch.push({x:p.x,y:p.y,vy:0,chao:false,t:0});g.pe[i]=G.novoGalho();}
-  const gy=H*.86;for(const c of g.ch){if(!c.chao){c.vy+=600*dt;c.y+=c.vy*dt;if(c.y>=gy){c.y=gy-Math.random()*H*.06;c.chao=true;beep(240,.05,.03);}}else c.t+=dt;}
-  if(F.mar&&Math.random()<dt*.35&&g.m.length<2){const d=Math.random()<.5?1:-1;g.m.push({x:d>0?-30:W+30,y:H*.6,d,alvo:null});}
-  for(const m of g.m){if(!m.alvo||!g.ch.includes(m.alvo)){m.alvo=g.ch.filter(c=>c.chao&&c.t>1.2)[0]||null;}if(m.alvo){const dx=m.alvo.x-m.x,dy=m.alvo.y-12-m.y,d=Math.hypot(dx,dy);m.d=dx<0?-1:1;if(d<10){g.ch.splice(g.ch.indexOf(m.alvo),1);m.alvo=null;m.sai=1;msg('Uma maritaca levou o pequi!');}else{m.x+=dx/d*110*dt;m.y+=dy/d*110*dt;}}else{m.x+=m.d*90*dt;m.y-=30*dt;}}
+ update(g,dt){const F=FASES[S.f];g.q-=dt;if(g.q<=0){g.q=F.queda*(.6+Math.random()*.8);const i=Math.floor(Math.random()*g.pe.length),p=g.pe[i];g.ch.push({x:p.x,y:p.y,vy:0,vx:(Math.random()-.5)*40,chao:false,t:0,gy:H*(.68+Math.random()*.26)});g.pe[i]=G.ponto();}
+  for(const c of g.ch){if(!c.chao){c.vy+=700*dt;c.y+=c.vy*dt;c.x+=c.vx*dt;if(c.y>=c.gy){c.y=c.gy;c.chao=true;c.ro=c.vx*.6;}}else{c.t+=dt;if(c.ro){c.x+=c.ro*dt;c.ro*=.9;}}}
+  if(F.mar&&Math.random()<dt*.4&&g.m.length<2){const d=Math.random()<.5?1:-1;g.m.push({x:d>0?-30:W+30,y:H*.35,d,alvo:null,t:0});}
+  for(const m of g.m){m.t+=dt;if(!m.alvo||!g.ch.includes(m.alvo))m.alvo=g.ch.filter(c=>c.chao&&c.t>1.3&&!(F.velho&&c.t>5))[0]||null;
+   if(m.alvo){const dx=m.alvo.x-m.x,dy=m.alvo.y-10-m.y,d=Math.hypot(dx,dy);m.d=dx<0?-1:1;if(d<10){g.ch.splice(g.ch.indexOf(m.alvo),1);m.alvo=null;msg('Uma maritaca levou o pequi.');}else{m.x+=dx/d*120*dt;m.y+=dy/d*120*dt;}}else{m.x+=m.d*100*dt;m.y-=40*dt;}}
   g.m=g.m.filter(m=>m.x>-60&&m.x<W+60&&m.y>-40);
   if(inp.tap){const t=inp.tap;let ok=null;for(const c of g.ch)if(c.chao&&Math.hypot(c.x-t.x,c.y-t.y)<30)ok=c;
-   if(ok){g.ch.splice(g.ch.indexOf(ok),1);g.n++;ganha(10,ok.x,ok.y-20);}else{for(const p of g.pe)if(Math.hypot(p.x-t.x,p.y-t.y)<24){g.vidas--;ganha(-10,p.x,p.y-20);msg('Pequi do pé ainda não está bom.');break;}}}},
- draw(g){const gr=cx.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#fff8e1');gr.addColorStop(1,'#ffe082');cx.fillStyle=gr;cx.fillRect(0,0,W,H);
-  cx.fillStyle='#d7b26b';cx.fillRect(0,H*.8,W,H*.2);cx.fillStyle='#c49a4f';for(let i=0;i<30;i++)cx.fillRect((i*71)%W,H*.82+(i*13)%(H*.15),10,3);
-  cx.strokeStyle='#6d4c41';cx.lineWidth=18;cx.lineCap='round';cx.beginPath();cx.moveTo(W*.5,H*.82);cx.quadraticCurveTo(W*.46,H*.55,W*.5,H*.35);cx.stroke();cx.lineWidth=8;cx.beginPath();cx.moveTo(W*.49,H*.5);cx.lineTo(W*.32,H*.32);cx.moveTo(W*.5,H*.45);cx.lineTo(W*.7,H*.3);cx.stroke();
-  cx.fillStyle='#7cb342';for(const [a,b,r] of [[.5,.25,.22],[.3,.3,.14],[.7,.28,.14],[.42,.18,.12],[.6,.18,.12]]){cx.beginPath();cx.ellipse(W*a,H*b,W*r,H*r*.9,0,0,7);cx.fill();}
-  for(const p of g.pe)pequi(cx,p.x,p.y,10,false);
-  for(const c of g.ch){if(c.chao){sombra(c.x,c.y+12,14,4);}pequi(cx,c.x,c.y,13,c.chao);}
-  for(const m of g.m)maritaca(cx,m.x,m.y,1,m.d);},
- capa(k,w,h){k.fillStyle='#fff8e1';k.fillRect(0,0,w,h);k.fillStyle='#d7b26b';k.fillRect(0,170,w,50);k.fillStyle='#6d4c41';k.fillRect(310,70,20,110);k.fillStyle='#7cb342';k.beginPath();k.ellipse(320,60,170,60,0,0,7);k.fill();for(const [x,y] of [[260,50],[350,70],[400,40]])pequi(k,x,y,11,false);for(const [x,y] of [[200,185],[420,190],[470,180]])pequi(k,x,y,15,true);maritaca(k,540,110,1.4,-1);}
+   if(ok){g.ch.splice(g.ch.indexOf(ok),1);if(F.velho&&ok.t>5){g.vidas--;ganha(-10,ok.x,ok.y-20);msg('Esse pequi já tinha passado.');}else{g.n++;ganha(10,ok.x,ok.y-20);}}
+   else for(const p of g.pe)if(Math.hypot(p.x-t.x,p.y-t.y)<22){g.vidas--;ganha(-10,p.x,p.y-20);msg('Pequi do pé ainda não presta.');break;}}},
+ draw(g){const F=FASES[S.f];cx.drawImage(cache('pq'+(F.velho?3:0),W,H,(k,w,h)=>PQ.cena(k,w,h,F.velho?3:0)),0,0);const r=Math.min(W,H)*.027;
+  for(const p of g.pe){p.sw+=.02;pequi(cx,p.x+Math.sin(p.sw)*1.2,p.y,r*.8,'pe');}
+  for(const c of g.ch){if(c.chao)sombraE(cx,c.x,c.y+r*.9,r*1.2,r*.35,.25);pequi(cx,c.x,c.y,r*1.15,!c.chao?'pe':(F.velho&&c.t>5?'velho':'ok'));}
+  for(const m of g.m)maritaca(cx,m.x,m.y,MOB()?.9:1,m.d,Math.sin(m.t*20)>0);
+  const bx=W*.88,by=H*.9;cx.fillStyle=lg(cx,bx-30,0,bx+30,0,['#a1773f','#c69a5a','#a1773f']);cx.beginPath();cx.moveTo(bx-30,by-24);cx.lineTo(bx+30,by-24);cx.lineTo(bx+22,by+10);cx.lineTo(bx-22,by+10);cx.fill();cx.strokeStyle='rgba(80,50,20,.4)';for(let i=-2;i<=2;i++){cx.beginPath();cx.moveTo(bx+i*11,by-24);cx.lineTo(bx+i*8,by+10);cx.stroke();}
+  for(let i=0;i<Math.min(6,g.n);i++)pequi(cx,bx-18+i*7,by-26-(i%2)*4,r*.7,'ok');
+  vinheta(cx,W,H);},
+ capa(k,w,h){const o=cx,oW=W,oH=H;cx=k;W=w;H=h;PQ.cena(k,w,h,0);const r=h*.03;for(const [x,y] of [[.3,.85],[.42,.9],[.62,.86],[.7,.92]])pequi(k,w*x,h*y,r,'ok');for(const [x,y] of [[.45,.27],[.55,.22],[.36,.33]])pequi(k,w*x,h*y,r*.8,'pe');maritaca(k,w*.8,h*.6,1.4,-1,true);vinheta(k,w,h);cx=o;W=oW;H=oH;}
 };
 const FASES=G.FASES;
 const PERG=[
- {q:'Qual é a forma tradicional e recomendada de coletar pequi?',o:['Esperar cair e juntar do chão','Balançar o pequizeiro até tudo cair','Puxar do galho com uma vara longa']},
- {q:'Por que o pequi se rói com cuidado, sem morder com força?',o:['O caroço tem espinhos por dentro','A casca verde é venenosa para as pessoas','A polpa amarela queima a boca']},
- {q:'Em que bioma o pequizeiro é típico?',o:['Cerrado','Pampa','Mata de Araucária']}
+ {q:'Qual é a forma tradicional de coletar pequi?',o:['Esperar cair e juntar do chão','Balançar o pequizeiro até tudo cair','Puxar do galho com uma vara longa']},
+ {q:'O que acontece com o pequi maduro quando cai?',o:['Ele se abre e mostra os caroços amarelos','Ele fica vermelho e murcha na hora','Ele brota no mesmo dia']},
+ {q:'Que ave disputa o pequi caído com as pessoas no norte de Minas?',o:['A maritaca','A gaivota','O pinguim']},
+ {q:'Por que o pequi é roído com cuidado?',o:['O caroço tem espinhos por dentro','A casca verde é venenosa para as pessoas','A polpa amarela queima a boca']}
 ];
 function pergunta(){
  const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
@@ -195,11 +270,11 @@ function pergunta(){
   $('bn').onclick=()=>{S.tot+=S.fp;S.fp=0;if(S.f===FASES.length-1)final(true);else{S.f++;fase();}};});
 }
 function final(tudo){
- S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
+ S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?FASES.length+' fases':'Fase '+(S.f+1);
  $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Catador de pequi!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
  <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
- <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Fontes: Drumond et al. (2016), Pequi: saboreando o ouro do Cerrado, Instituto Sustentar; Oliveira e Scariot (2010), Boas práticas de manejo para o extrativismo sustentável do pequi, Embrapa Recursos Genéticos e Biotecnologia; Anais do XI Congresso de Ecologia do Brasil (2013), extrativismo do pequi em Barreiras-BA; Revista Brasileira de Biociências 5 supl. 1 (2007), p. 477-479. Quantidade de frutos, maritacas e pontos são regras do jogo.</div></div>`;
+ <div class="small" style="margin-top:12px;text-align:left">Fontes: Drumond et al. (2016), Pequi: saboreando o ouro do Cerrado, Instituto Sustentar; Oliveira e Scariot (2010), Boas práticas de manejo para o extrativismo sustentável do pequi, Embrapa Recursos Genéticos e Biotecnologia; Anais do XI Congresso de Ecologia do Brasil (2013), extrativismo do pequi em Barreiras-BA; Revista Brasileira de Biociências 5, supl. 1 (2007), p. 477-479. Quantidade de frutos, maritacas, frutos passados e pontos são regras do jogo.</div></div>`;
  $('bS').onclick=()=>salvar(nivel);
 }
 const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};

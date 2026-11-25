@@ -43,7 +43,7 @@ canvas{width:100%;max-width:760px;margin:0 auto;display:block;border:2px solid v
 <a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
 <header>
   <h1>Contador de Pirarucu</h1>
-  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
 </header>
 <main id="tela"></main>
 <div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
@@ -117,7 +117,7 @@ let S,cv,cx,raf=null,last=0,W=720,H=460,inp={x:null,y:null,down:false,tap:null},
 const MOB=()=>W<520;
 function rrect(x,y,w,h,r,cor){cx.fillStyle=cor;cx.beginPath();cx.roundRect(x,y,w,h,r);cx.fill();}
 function sombra(x,y,rx,ry){cx.fillStyle='rgba(0,0,0,.12)';cx.beginPath();cx.ellipse(x,y,rx,ry,0,0,7);cx.fill();}
-function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/'+G.FASES.length;$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
  if(g&&!g.fim){const [a,m]=G.meta(g);$('hR').textContent=G.rotulo+' '+a+'/'+m;$('hV').textContent=G.vidas?'Vidas '+'●'.repeat(Math.max(0,g.vidas)):'';$('hT').textContent=G.semTempo?'':Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s';}
  ['hR','hV','hT'].forEach(k=>$(k).style.display=$(k).textContent?'':'none');}
 function inicio(){parar();$('hud').style.display='none';$('rankBox').style.display='block';
@@ -151,33 +151,107 @@ function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=G.FAS
  <p class="small" style="margin-top:6px">${ok?G.FASES[S.f].fato:G.dicaErro}</p>
  <div class="row" style="justify-content:center;margin-top:14px">${ok?'<button class="btn grande" id="bq">Pergunta rápida</button>':'<button class="btn grande" id="br">Jogar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
  if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}}
-/* O pirarucu tem respiração aérea obrigatória e sobe à superfície a cada 5 a 15 minutos, a "boiada" (Cartilha Contagem de Pirarucu, Mamirauá). O método de contagem foi publicado em 2004 (Castello, 2004). As contagens devem ser silenciosas (Portal Amazônia). O manejo passou de 4 comunidades em 1999 para mais de 100 em 2006 (Arantes et al., 2007). Tempos e pontos são regras do jogo. */
-function boiada(k,x,y,t,tipo){const a=Math.sin(Math.min(1,t)*Math.PI);k.strokeStyle='rgba(255,255,255,'+(.8*a)+')';k.lineWidth=3;for(const r of [18,30,42]){k.beginPath();k.ellipse(x,y,r*(.6+t*.6),r*(.25+t*.25),0,0,7);k.stroke();}
- if(tipo==='pira'){k.fillStyle='rgba(84,110,122,'+a+')';k.beginPath();k.ellipse(x,y-4*a,40,9*a+2,0,Math.PI,0);k.fill();k.fillStyle='rgba(198,40,40,'+a+')';k.beginPath();k.moveTo(x+34,y-2);k.lineTo(x+52,y-14*a);k.lineTo(x+52,y+2);k.fill();}
- else if(tipo==='boto'){k.fillStyle='rgba(244,143,177,'+a+')';k.beginPath();k.ellipse(x,y-6*a,26,10*a+2,0,Math.PI,0);k.fill();k.beginPath();k.moveTo(x-4,y-14*a);k.lineTo(x+6,y-24*a);k.lineTo(x+10,y-12*a);k.fill();}
- else{k.fillStyle='rgba(85,107,47,'+a+')';k.beginPath();k.ellipse(x,y-2,30,5*a+1,0,Math.PI,0);k.fill();k.fillStyle='rgba(255,235,59,'+a+')';k.beginPath();k.arc(x+18,y-6*a,3,0,7);k.arc(x+26,y-6*a,3,0,7);k.fill();}}
+/* ---------- arte vetorial compartilhada ---------- */
+beep=function(){};
+function rng(s){s=s%2147483647;if(s<=0)s+=2147483646;return()=>{s=s*16807%2147483647;return(s-1)/2147483646;};}
+function lg(k,x0,y0,x1,y1,st){const g=k.createLinearGradient(x0,y0,x1,y1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+function rg(k,x,y,r0,r1,st){const g=k.createRadialGradient(x,y,r0,x,y,r1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+const CACHE={};
+function cache(key,w,h,fn){const id=key+'_'+w+'x'+h;if(!CACHE[id]){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);CACHE[id]=c;}return CACHE[id];}
+function ceu(k,w,h,cs){k.fillStyle=lg(k,0,0,0,h,cs);k.fillRect(0,0,w,h);}
+function sol(k,x,y,r,c){k.fillStyle=rg(k,x,y,0,r*4,[c,'rgba(255,255,255,0)']);k.fillRect(x-r*4,y-r*4,r*8,r*8);k.fillStyle=c;k.beginPath();k.arc(x,y,r,0,7);k.fill();}
+function nuvem(k,x,y,s,a){k.fillStyle='rgba(255,255,255,'+(a||.8)+')';for(const [dx,dy,r] of [[0,0,1],[1.1,.15,.8],[-1,.2,.75],[.5,-.45,.7],[-.4,-.35,.6]]){k.beginPath();k.arc(x+dx*s,y+dy*s,r*s,0,7);k.fill();}k.fillRect(x-1.7*s,y+.2*s,3.6*s,.8*s);}
+function serra(k,w,y,amp,cor,seed){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,y+amp*2);let x=0;k.lineTo(0,y);while(x<w+40){x+=30+r()*50;k.lineTo(x,y-r()*amp);}k.lineTo(w,y+amp*4);k.lineTo(0,y+amp*4);k.fill();}
+function matas(k,w,y,amp,cor,seed,base){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,base);k.lineTo(0,y);let x=0;while(x<w+30){const rr=8+r()*amp;k.arc(x+rr,y-r()*amp*.6,rr,Math.PI,0);x+=rr*1.6;}k.lineTo(w,base);k.closePath();k.fill();}
+function capim(k,x0,y0,w,h,cor,seed,n){const r=rng(seed);k.strokeStyle=cor;k.lineCap='round';for(let i=0;i<n;i++){const x=x0+r()*w,y=y0+r()*h,l=4+r()*10;k.lineWidth=1+r()*1.2;for(let j=-1;j<=1;j++){k.beginPath();k.moveTo(x,y);k.quadraticCurveTo(x+j*3,y-l*.6,x+j*5+r()*2,y-l);k.stroke();}}}
+function copa(k,x,y,r,cs,seed){const R=rng(seed);const pts=[];for(let i=0;i<9;i++){const a=R()*Math.PI*2,d=R()*r*.55;pts.push([x+Math.cos(a)*d,y+Math.sin(a)*d*.7,r*(.35+R()*.3)]);}
+ k.fillStyle=cs[0];for(const [a,b,c] of pts){k.beginPath();k.arc(a+c*.12,b+c*.18,c,0,7);k.fill();}
+ k.fillStyle=cs[1];for(const [a,b,c] of pts){k.beginPath();k.arc(a,b,c*.92,0,7);k.fill();}
+ k.fillStyle=cs[2];for(const [a,b,c] of pts){k.beginPath();k.arc(a-c*.25,b-c*.3,c*.5,0,7);k.fill();}}
+function tronco(k,x,y0,y1,w0,w1,c1,c2){k.fillStyle=lg(k,x-w0,0,x+w0,0,[c2,c1,c1,c2]);k.beginPath();k.moveTo(x-w0,y0);k.lineTo(x-w1,y1);k.lineTo(x+w1,y1);k.lineTo(x+w0,y0);k.fill();k.strokeStyle='rgba(0,0,0,.12)';k.lineWidth=1;for(let y=y1+8;y<y0;y+=11){const t=(y-y1)/(y0-y1),ww=w1+(w0-w1)*t;k.beginPath();k.moveTo(x-ww*.6,y);k.quadraticCurveTo(x,y+3,x+ww*.5,y-1);k.stroke();}}
+function palmeira(k,x,y,h,lean,cfr,ctr,seed,nf){const R=rng(seed);const tx=x+lean,ty=y-h;k.strokeStyle=ctr;k.lineCap='round';for(let i=0;i<14;i++){const t0=i/14,t1=(i+1)/14;k.lineWidth=h*.05*(1-t0*.35);const xa=x+lean*t0*t0,ya=y-h*t0,xb=x+lean*t1*t1,yb=y-h*t1;k.beginPath();k.moveTo(xa,ya);k.lineTo(xb,yb);k.stroke();}
+ k.strokeStyle='rgba(0,0,0,.15)';k.lineWidth=1;for(let i=1;i<14;i++){const t=i/14,xa=x+lean*t*t,ya=y-h*t;k.beginPath();k.moveTo(xa-h*.022,ya);k.lineTo(xa+h*.022,ya);k.stroke();}
+ nf=nf||9;for(let f=0;f<nf;f++){const a=-Math.PI/2+(f-(nf-1)/2)*(2.6/nf)+(R()-.5)*.2,L=h*(.38+R()*.12),dr=.55+R()*.25;const ex=tx+Math.cos(a)*L,ey=ty+Math.sin(a)*L*.55+L*dr*.5;const mx=tx+Math.cos(a)*L*.5,my=ty+Math.sin(a)*L*.5-L*.12;
+  k.strokeStyle=cfr[0];k.lineWidth=2;k.beginPath();k.moveTo(tx,ty);k.quadraticCurveTo(mx,my,ex,ey);k.stroke();
+  for(let j=1;j<16;j++){const t=j/16,px=(1-t)*(1-t)*tx+2*(1-t)*t*mx+t*t*ex,py=(1-t)*(1-t)*ty+2*(1-t)*t*my+t*t*ey;const ll=L*.16*(1-t*.5);k.strokeStyle=cfr[j%2];k.lineWidth=1.6;k.beginPath();k.moveTo(px,py);k.lineTo(px+Math.cos(a+1.6)*ll*.5,py+ll);k.moveTo(px,py);k.lineTo(px+Math.cos(a-1.6)*ll*.5,py+ll*.9);k.stroke();}}}
+function sombraE(k,x,y,rx,ry,a){k.fillStyle='rgba(20,30,20,'+(a||.18)+')';k.beginPath();k.ellipse(x,y,rx,ry,0,0,7);k.fill();}
+function vinheta(k,w,h){k.fillStyle=rg(k,w/2,h/2,Math.min(w,h)*.45,Math.max(w,h)*.8,['rgba(0,0,0,0)','rgba(0,0,0,.18)']);k.fillRect(0,0,w,h);}
+function rrk(k,x,y,w,h,r,c){k.fillStyle=c;k.beginPath();k.roundRect(x,y,w,h,r);k.fill();}
+/* figura humana: o={pele,camisa,calca,chapeu,passo,bracoE,bracoD} ângulos em rad a partir de baixo */
+function pessoa(k,x,y,s,o){o=o||{};const p=o.passo||0;k.save();k.translate(x,y);k.scale(s*(o.dir||1),s);k.lineCap='round';k.lineJoin='round';
+ const pl=Math.sin(p)*.35;k.strokeStyle=o.calca||'#37474f';k.lineWidth=7;k.beginPath();k.moveTo(-3,-38);k.lineTo(-3+Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18,0);k.stroke();k.beginPath();k.moveTo(3,-38);k.lineTo(3-Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(3-Math.sin(pl)*20-Math.sin(pl*.5)*18,0);k.stroke();
+ k.fillStyle='#3e2723';k.beginPath();k.ellipse(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.ellipse(3-Math.sin(pl)*20-Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.fill();
+ k.fillStyle=o.camisa||'#1e88e5';k.beginPath();k.moveTo(-9,-40);k.lineTo(-10,-68);k.quadraticCurveTo(0,-74,10,-68);k.lineTo(9,-40);k.closePath();k.fill();k.fillStyle='rgba(0,0,0,.12)';k.fillRect(2,-68,7,28);
+ const be=o.bracoE!==undefined?o.bracoE:-pl*.8,bd=o.bracoD!==undefined?o.bracoD:pl*.8;k.strokeStyle=o.camisa||'#1e88e5';k.lineWidth=6;
+ for(const [sx,a] of [[-8,be],[8,bd]]){k.beginPath();k.moveTo(sx,-66);const ex=sx+Math.sin(a)*14,ey=-66+Math.cos(a)*14;k.lineTo(ex,ey);k.stroke();k.strokeStyle=o.pele||'#c68b59';k.beginPath();k.moveTo(ex,ey);k.lineTo(ex+Math.sin(a*1.15)*13,ey+Math.cos(a*1.15)*13);k.stroke();k.strokeStyle=o.camisa||'#1e88e5';}
+ k.fillStyle=o.pele||'#c68b59';k.fillRect(-3,-76,6,6);k.beginPath();k.ellipse(0,-83,7.5,8.5,0,0,7);k.fill();
+ if(o.chapeu!==false){k.fillStyle=o.chapeu||'#795548';k.beginPath();k.ellipse(0,-88,15,3.5,0,0,7);k.fill();k.beginPath();k.moveTo(-8,-88);k.quadraticCurveTo(-7,-99,0,-99);k.quadraticCurveTo(7,-99,8,-88);k.fill();k.fillStyle='rgba(0,0,0,.25)';k.fillRect(-8,-91,16,2.5);}
+ k.restore();}
+/* boi nelore em perfil, olhando para +x */
+function boi(k,x,y,s,dir,cor,p){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#ece6da';p=p||0;
+ const pern=[[-26,0],[-18,Math.PI],[18,Math.PI],[26,0]];
+ for(let i=0;i<4;i++){const [lx,ph]=pern[i];const a=Math.sin(p+ph)*.3;k.strokeStyle=i==1||i==2?shade(c,-.12):c;k.lineCap='round';k.lineWidth=6.5;k.beginPath();k.moveTo(lx,-24);k.lineTo(lx+Math.sin(a)*9,-10);k.lineTo(lx+Math.sin(a)*7,2);k.stroke();k.fillStyle='#3e2723';k.fillRect(lx+Math.sin(a)*7-3.5,1,7,3);}
+ k.fillStyle=c;k.beginPath();k.moveTo(-34,-40);k.quadraticCurveTo(-38,-24,-30,-20);k.quadraticCurveTo(0,-14,26,-20);k.quadraticCurveTo(34,-26,32,-40);k.quadraticCurveTo(28,-50,20,-54);k.quadraticCurveTo(12,-56,8,-48);k.quadraticCurveTo(-10,-46,-28,-48);k.quadraticCurveTo(-34,-46,-34,-40);k.fill();
+ k.fillStyle=lg(k,0,-50,0,-18,['rgba(255,255,255,.18)','rgba(0,0,0,0)','rgba(60,40,20,.22)']);k.fill();
+ k.fillStyle=c;k.beginPath();k.moveTo(26,-44);k.quadraticCurveTo(38,-44,44,-38);k.lineTo(54,-24);k.quadraticCurveTo(56,-18,51,-17);k.quadraticCurveTo(46,-18,42,-24);k.quadraticCurveTo(34,-26,28,-22);k.fill();
+ k.beginPath();k.moveTo(28,-26);k.quadraticCurveTo(34,-14,30,-12);k.quadraticCurveTo(24,-16,22,-24);k.fill();
+ k.fillStyle=shade(c,-.35);k.beginPath();k.ellipse(52,-19,3.4,2.6,.4,0,7);k.fill();k.fillStyle='#1b1b1b';k.beginPath();k.arc(44,-34,1.8,0,7);k.fill();
+ k.fillStyle=shade(c,-.08);k.beginPath();k.ellipse(38,-41,8,2.8,.5,0,7);k.fill();k.strokeStyle='#cfc4b0';k.lineWidth=2.4;k.lineCap='round';k.beginPath();k.moveTo(41,-44);k.quadraticCurveTo(44,-49,42,-52);k.stroke();
+ k.strokeStyle=c;k.lineWidth=2.2;k.beginPath();k.moveTo(-34,-42);k.quadraticCurveTo(-40,-28,-37,-14);k.stroke();k.fillStyle='#4e342e';k.beginPath();k.ellipse(-37,-13,2.2,4.5,0,0,7);k.fill();
+ k.restore();}
+function shade(hex,f){let n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;const t=f<0?0:255,p=Math.abs(f);r=Math.round((t-r)*p+r);g=Math.round((t-g)*p+g);b=Math.round((t-b)*p+b);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+function cavalo(k,x,y,s,dir,p,cor){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#8d5a3b';k.strokeStyle=c;k.lineCap='round';k.lineWidth=6;
+ for(const [lx,ph] of [[-20,0],[-12,Math.PI],[18,Math.PI],[26,0]]){const a=Math.sin(p+ph)*.45;k.beginPath();k.moveTo(lx,-22);k.lineTo(lx+Math.sin(a)*10,-8);k.lineTo(lx+Math.sin(a)*8,4);k.stroke();}
+ k.fillStyle=c;k.beginPath();k.ellipse(3,-30,28,12,0,0,7);k.fill();k.beginPath();k.moveTo(22,-36);k.quadraticCurveTo(30,-56,40,-58);k.lineTo(50,-48);k.quadraticCurveTo(44,-44,38,-46);k.lineTo(30,-26);k.fill();
+ k.fillStyle='#3e2723';k.beginPath();k.moveTo(24,-40);k.quadraticCurveTo(30,-60,40,-60);k.lineTo(36,-56);k.quadraticCurveTo(30,-52,28,-36);k.fill();k.beginPath();k.moveTo(-24,-34);k.quadraticCurveTo(-38,-26,-34,-6);k.quadraticCurveTo(-30,-22,-22,-28);k.fill();
+ k.fillStyle='rgba(0,0,0,.15)';k.beginPath();k.ellipse(3,-23,24,4,0,0,7);k.fill();k.fillStyle='#5d4037';k.fillRect(-8,-44,22,6);k.restore();}
+function cavaleiro(k,x,y,s,dir,p,o){cavalo(k,x,y,s,dir,p,o&&o.cor);k.save();k.translate(x,y);k.scale(s*dir,s);pessoa(k,2,-30,.62,Object.assign({passo:0,bracoE:.9,bracoD:1.3,calca:'#4e342e'},o||{}));k.restore();}
+/* Pirarucu: respiração aérea obrigatória, boiada a cada 5 a 15 minutos (Cartilha Contagem de Pirarucu, Instituto Mamirauá e FBB); método definido no Mamirauá e publicado em 2004 (idem); contagem silenciosa (Portal Amazônia); de 4 comunidades em 1999 para mais de 100 em 2006 (Arantes, Castello e Garcez, 2007). Intervalos, botos, jacarés, repetições e pontos são regras do jogo. */
+const PR={};
+PR.cena=function(k,w,h){ceu(k,w,h*.3,['#bfe3f2','#eef6ef']);nuvem(k,w*.2,h*.08,14,.85);nuvem(k,w*.72,h*.12,11,.7);
+ const R=rng(6);for(let i=0;i<12;i++){const x=R()*w,y=h*.27;k.strokeStyle='#6b7d5c';k.lineWidth=3;k.beginPath();k.moveTo(x,y+4);k.lineTo(x,y-20-R()*30);k.stroke();}
+ matas(k,w,h*.22,22,'#5f8d5a',3,h*.3);matas(k,w,h*.25,16,'#4b7a48',9,h*.31);
+ k.fillStyle=lg(k,0,h*.3,0,h,['#8ac6c4','#5aa4a6','#3f8c90']);k.fillRect(0,h*.3,w,h*.7);
+ k.globalAlpha=.25;k.save();k.translate(0,h*.6);k.scale(1,-1);matas(k,w,h*.3,16,'#2f6b55',9,h*.32);k.restore();k.globalAlpha=1;
+ k.strokeStyle='rgba(255,255,255,.25)';k.lineWidth=1.5;for(let i=0;i<40;i++){const x=R()*w,y=h*(.34+R()*.62);k.beginPath();k.moveTo(x,y);k.lineTo(x+20+R()*30,y);k.stroke();}
+ const cx0=w*(w>h?.13:.2),cy0=h*.92;k.fillStyle='#6d4c2e';k.beginPath();k.moveTo(cx0-70,cy0-8);k.quadraticCurveTo(cx0,cy0+14,cx0+70,cy0-8);k.lineTo(cx0+60,cy0);k.quadraticCurveTo(cx0,cy0+18,cx0-60,cy0);k.fill();
+ pessoa(k,cx0,cy0-4,h/560,{camisa:'#00838f',calca:'#37474f',bracoE:-.3,bracoD:2.4,chapeu:'#795548'});};
+function boiada(k,x,y,t,tipo,s){const a=Math.sin(Math.min(1,t)*Math.PI);k.strokeStyle='rgba(255,255,255,'+(.75*a)+')';k.lineWidth=2;for(const r of [16,28,40]){k.beginPath();k.ellipse(x,y,r*(.6+t*.7)*s,r*(.22+t*.25)*s,0,0,7);k.stroke();}
+ k.save();k.translate(x,y);k.scale(s,s);k.beginPath();k.rect(-80,-60,160,60);k.clip();const up=a*14;
+ if(tipo==='pira'){k.fillStyle=lg(k,0,-up-12,0,0,['#4c5b52','#6d7c68']);k.beginPath();k.moveTo(-46,6);k.quadraticCurveTo(-10,-up-14,30,-up*.5);k.lineTo(36,6);k.fill();
+  k.fillStyle='rgba(170,60,40,.85)';for(let i=0;i<5;i++){k.beginPath();k.arc(8+i*6,-up*.6+i*2,3.2,0,7);k.fill();}k.fillStyle='#b23a2a';k.beginPath();k.moveTo(32,-up*.4);k.quadraticCurveTo(46,-up*.9-6,52,-up-8);k.quadraticCurveTo(48,-up*.4,52,4);k.lineTo(36,6);k.fill();
+  k.strokeStyle='rgba(255,255,255,.18)';k.lineWidth=1;for(let i=0;i<6;i++){k.beginPath();k.arc(-30+i*10,-up*.7+2,5,Math.PI,0);k.stroke();}}
+ else if(tipo==='boto'){k.fillStyle=lg(k,0,-up-14,0,0,['#f2a6b8','#e48aa2']);k.beginPath();k.moveTo(-34,6);k.quadraticCurveTo(-4,-up-14,26,-up*.3);k.quadraticCurveTo(40,-up*.2,50,-up*.1+2);k.lineTo(50,6);k.fill();k.fillStyle='#d77892';k.beginPath();k.moveTo(-6,-up-6);k.quadraticCurveTo(2,-up-14,8,-up-8);k.lineTo(10,-up*.8);k.fill();}
+ else{k.fillStyle='#4f5b2e';k.beginPath();k.moveTo(-40,4);k.quadraticCurveTo(-10,-up*.35-3,40,-up*.2);k.lineTo(40,4);k.fill();k.fillStyle='#e6c54a';k.beginPath();k.arc(-8,-up*.35-3,3.2,0,7);k.arc(2,-up*.35-3,3.2,0,7);k.fill();k.fillStyle='#111';k.fillRect(-9,-up*.35-5,2,4);k.fillRect(1,-up*.35-5,2,4);}
+ k.restore();}
 const G={titulo:'Contador de Pirarucu',rotulo:'Pirarucus contados',vidas:1,
- resumo:'Em Mamirauá, no Amazonas, pescadores contam os pirarucus de um lago pela "boiada": o peixe precisa subir para respirar. A contagem ajuda a decidir quanto se pode pescar.',
- como:[['Olhe','O lago fica calmo. Quando um pirarucu boiar, aparece o dorso cinza com a cauda vermelha.'],['Toque','Toque na boiada do pirarucu para contar. Boto e jacaré não contam.'],['Silêncio','Errar tira uma vida. Contagem boa é calma e atenta.']],
- dica:'Toque só no pirarucu: dorso cinza e cauda vermelha.',dicaErro:'Boto é rosado e tem nadadeira alta. Jacaré mostra os olhos amarelos.',
- FASES:[{nome:'Lago calmo',dur:40,meta:10,intv:1.3,out:.15,metaTxt:'contar 10 pirarucus em 40 s.',txt:'Lago pequeno na vazante. Fique atento às boiadas.',fato:'O pirarucu tem respiração aérea obrigatória. Ele sobe à superfície a cada 5 a 15 minutos, a chamada boiada.'},
-  {nome:'Visita do boto',dur:45,meta:14,intv:1.05,out:.3,metaTxt:'contar 14 pirarucus em 45 s.',txt:'Botos e jacarés também aparecem. Conte só o pirarucu.',fato:'A contagem deve ser feita em silêncio, para não mudar o comportamento dos peixes.'},
-  {nome:'Lago cheio',dur:45,meta:18,intv:.8,out:.35,metaTxt:'contar 18 pirarucus em 45 s.',txt:'Muitas boiadas ao mesmo tempo. Conte rápido e sem errar.',fato:'O manejo com contagem passou de 4 comunidades em 1999 para mais de 100 em 2006. Os próprios pescadores fazem o censo.'}],
- init(g){g.vidas=3;g.n=0;g.b=[];g.q=.6;},meta(g){return [g.n,FASES[S.f].meta];},cedo(g){return g.n>=FASES[S.f].meta;},
- update(g,dt){const F=FASES[S.f];g.q-=dt;if(g.q<=0){g.q=F.intv*(.6+Math.random()*.8);const r=Math.random();g.b.push({x:W*(.12+Math.random()*.76),y:H*(.3+Math.random()*.55),t:0,tipo:r<F.out?(Math.random()<.6?'boto':'jac'):'pira'});}
-  for(const b of g.b)b.t+=dt/1.5;g.b=g.b.filter(b=>b.t<1&&!b.ok);
-  if(inp.tap){const t=inp.tap;const b=g.b.find(b=>Math.hypot(b.x-t.x,(b.y-t.y)*1.5)<52&&b.t>.12&&b.t<.9);if(b){b.ok=1;if(b.tipo==='pira'){g.n++;ganha(10,b.x,b.y-30);beep(520,.08,.05);}else{g.vidas--;ganha(-10,b.x,b.y-30);msg(b.tipo==='boto'?'Era um boto, não conta.':'Era um jacaré, não conta.');}}}},
- draw(g){cx.fillStyle='#e8f5e9';cx.fillRect(0,0,W,H*.22);cx.fillStyle='#66bb6a';for(let i=0;i<12;i++){cx.beginPath();cx.arc((i*67)%W,H*.2,36,0,7);cx.fill();}
-  const gr=cx.createLinearGradient(0,H*.2,0,H);gr.addColorStop(0,'#80cbc4');gr.addColorStop(1,'#4db6ac');cx.fillStyle=gr;cx.fillRect(0,H*.2,W,H*.8);
-  cx.strokeStyle='rgba(255,255,255,.25)';cx.lineWidth=2;for(let i=0;i<14;i++){const y=H*.28+i*H*.05,x=(i*89+g.t*20)%W;cx.beginPath();cx.moveTo(x,y);cx.lineTo(x+40,y);cx.stroke();}
-  for(const b of g.b)boiada(cx,b.x,b.y,b.t,b.tipo);
-  rrect(W*.04,H*.88,W*.26,H*.08,10,'#8d6e63');cx.fillStyle='#ffcc80';cx.beginPath();cx.arc(W*.15,H*.86,8,0,7);cx.fill();},
- capa(k,w,h){k.fillStyle='#80cbc4';k.fillRect(0,0,w,h);k.fillStyle='#66bb6a';k.fillRect(0,0,w,40);boiada(k,220,130,.5,'pira');boiada(k,430,100,.45,'boto');boiada(k,500,170,.5,'pira');}
+ resumo:'No Mamirauá, no Amazonas, pescadores contam os pirarucus de um lago pela boiada: o peixe precisa subir para respirar. A contagem decide quanto se pode pescar no ano seguinte.',
+ como:[['Olhe','Pirarucu mostra o dorso escuro e a cauda vermelha quando boia.'],['Toque','Toque na boiada do pirarucu. Boto e jacaré não contam.'],['Não repita','Na fase 4, o peixe que você já contou volta a boiar no mesmo lugar. Não conte de novo.']],
+ dica:'Toque só no pirarucu: dorso escuro e cauda vermelha.',dicaErro:'Boto é rosado e jacaré mostra os olhos. Peixe já contado deixa um círculo claro.',
+ FASES:[{nome:'Lago calmo',dur:40,meta:10,intv:1.3,out:0,metaTxt:'contar 10 pirarucus em 40 s.',txt:'Lago pequeno na vazante. Canoa parada, silêncio e atenção.',fato:'O pirarucu tem respiração aérea obrigatória. Ele sobe à superfície a cada 5 a 15 minutos, na chamada boiada.'},
+  {nome:'Boto e jacaré',dur:45,meta:13,intv:1.05,out:.32,metaTxt:'contar 13 pirarucus em 45 s.',txt:'Outros bichos também sobem. Conte só o pirarucu.',fato:'A contagem é feita em silêncio, para não mudar o comportamento dos peixes.'},
+  {nome:'Lago cheio',dur:45,meta:17,intv:.8,out:.35,metaTxt:'contar 17 pirarucus em 45 s.',txt:'Muitas boiadas ao mesmo tempo. Conte rápido e sem errar.',fato:'O método de contagem foi definido por um pesquisador do Instituto Mamirauá a partir do saber dos pescadores. Ele foi publicado em 2004.'},
+  {nome:'Sem contar duas vezes',dur:50,meta:15,intv:.9,out:.25,rep:1,metaTxt:'contar 15 pirarucus diferentes em 50 s.',txt:'O peixe que você já contou deixa um círculo claro e volta a boiar ali perto. Ele não conta de novo.',fato:'O manejo com contagem passou de 4 comunidades em 1999 para mais de 100 em 2006. São os próprios pescadores que fazem o censo.'}],
+ init(g){g.vidas=3;g.n=0;g.b=[];g.q=.6;g.mk=[];},meta(g){return [g.n,FASES[S.f].meta];},cedo(g){return g.n>=FASES[S.f].meta;},
+ update(g,dt){const F=FASES[S.f];g.q-=dt;if(g.q<=0){g.q=F.intv*(.6+Math.random()*.8);const r=Math.random();let nb;
+   if(F.rep&&g.mk.length&&Math.random()<.4){const m=g.mk[Math.floor(Math.random()*g.mk.length)];nb={x:m.x+(Math.random()-.5)*30,y:m.y+(Math.random()-.5)*16,t:0,tipo:'pira',rep:1};}
+   else nb={x:W*(.1+Math.random()*.8),y:H*(.4+Math.random()*.42),t:0,tipo:r<F.out?(Math.random()<.6?'boto':'jac'):'pira'};g.b.push(nb);}
+  for(const b of g.b)b.t+=dt/1.6;g.b=g.b.filter(b=>b.t<1&&!b.ok);for(const m of g.mk)m.t-=dt;g.mk=g.mk.filter(m=>m.t>0);
+  if(inp.tap){const t=inp.tap;const b=g.b.find(b=>Math.hypot(b.x-t.x,(b.y-t.y)*1.5)<56&&b.t>.12&&b.t<.9);if(b){b.ok=1;
+   if(b.tipo==='pira'&&!b.rep){g.n++;ganha(10,b.x,b.y-36);if(F.rep)g.mk.push({x:b.x,y:b.y,t:6});}
+   else{g.vidas--;ganha(-10,b.x,b.y-36);msg(b.rep?'Esse pirarucu já tinha sido contado.':b.tipo==='boto'?'Era um boto, não conta.':'Era um jacaré, não conta.');}}}},
+ draw(g){cx.drawImage(cache('pr',W,H,PR.cena),0,0);const s=Math.min(W,H)/460;
+  for(const m of g.mk){cx.strokeStyle='rgba(255,255,255,'+Math.min(.8,m.t/3)+')';cx.lineWidth=2.5;cx.setLineDash([5,4]);cx.beginPath();cx.ellipse(m.x,m.y,44*s,14*s,0,0,7);cx.stroke();cx.setLineDash([]);}
+  [...g.b].sort((a,b)=>a.y-b.y).forEach(b=>boiada(cx,b.x,b.y,b.t,b.tipo,s*(.75+(b.y/H-.4)*.8)));
+  const fx=W-(W>H?150:118),fy=10;rrk(cx,fx,fy+28,W>H?136:108,48,8,'rgba(255,253,245,.95)');cx.strokeStyle='#5d4037';cx.lineWidth=2;for(let i=0;i<g.n;i++){const gx=fx+10+Math.floor(i/5)*24,col=i%5;if(gx>fx+(W>H?126:98))break;cx.beginPath();if(col<4){cx.moveTo(gx+col*4,fy+38);cx.lineTo(gx+col*4,fy+64);}else{cx.moveTo(gx-3,fy+60);cx.lineTo(gx+17,fy+42);}cx.stroke();}
+  vinheta(cx,W,H);},
+ capa(k,w,h){const o=cx,oW=W,oH=H;cx=k;W=w;H=h;PR.cena(k,w,h);boiada(k,w*.5,h*.6,.5,'pira',1.4);boiada(k,w*.78,h*.5,.45,'boto',1.1);vinheta(k,w,h);cx=o;W=oW;H=oH;}
 };
 const FASES=G.FASES;
 const PERG=[
- {q:'Por que é possível contar pirarucus olhando o lago?',o:['Ele precisa subir à superfície para respirar','Ele brilha no escuro quando nada debaixo da água','Ele nada sempre em fila na beira do lago']},
- {q:'Como os pescadores chamam o momento em que o pirarucu sobe para respirar?',o:['Boiada','Piracema','Arribação']},
+ {q:'Por que dá para contar pirarucus olhando o lago?',o:['Ele precisa subir para respirar','Ele brilha no escuro quando nada debaixo da água','Ele nada sempre em fila na beira do lago']},
+ {q:'Por que a contagem é feita em silêncio?',o:['Para não mudar o comportamento dos peixes','Para ouvir o canto dos pássaros','Porque é proibido falar dentro da reserva']},
+ {q:'Como os pescadores chamam a subida do pirarucu para respirar?',o:['Boiada','Piracema','Arribação']},
  {q:'Para que serve a contagem de pirarucus no manejo?',o:['Para saber quanto se pode pescar sem esgotar o lago','Para escolher o peixe mais bonito para a festa da comunidade','Para saber a idade exata de cada peixe']}
 ];
 function pergunta(){
@@ -189,11 +263,11 @@ function pergunta(){
   $('bn').onclick=()=>{S.tot+=S.fp;S.fp=0;if(S.f===FASES.length-1)final(true);else{S.f++;fase();}};});
 }
 function final(tudo){
- S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
+ S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?FASES.length+' fases':'Fase '+(S.f+1);
  $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Contador certificado!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
  <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
- <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Fontes: Instituto Mamirauá e Fundação Banco do Brasil, cartilha Contagem de Pirarucu; Arantes, Castello e Garcez (2007), Pan-American Journal of Aquatic Sciences 2: 263-269; Portal Amazônia, método de contagem em Costa do Tapará. Intervalos das boiadas, botos, jacarés e pontos são regras do jogo.</div></div>`;
+ <div class="small" style="margin-top:12px;text-align:left">Fontes: Instituto Mamirauá e Fundação Banco do Brasil, cartilha Contagem de Pirarucu; Arantes, Castello e Garcez (2007), Pan-American Journal of Aquatic Sciences 2: 263-269; Portal Amazônia, método de contagem em Costa do Tapará; Portal Amazônia, Saber antigo de contar pirarucu é aliado ao manejo sustentável. Intervalos das boiadas, botos, jacarés, repetições e pontos são regras do jogo.</div></div>`;
  $('bS').onclick=()=>salvar(nivel);
 }
 const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};

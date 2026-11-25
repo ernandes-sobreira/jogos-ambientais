@@ -43,7 +43,7 @@ canvas{width:100%;max-width:760px;margin:0 auto;display:block;border:2px solid v
 <a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
 <header>
   <h1>Isqueiro do Pantanal</h1>
-  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
 </header>
 <main id="tela"></main>
 <div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
@@ -117,7 +117,7 @@ let S,cv,cx,raf=null,last=0,W=720,H=460,inp={x:null,y:null,down:false,tap:null},
 const MOB=()=>W<520;
 function rrect(x,y,w,h,r,cor){cx.fillStyle=cor;cx.beginPath();cx.roundRect(x,y,w,h,r);cx.fill();}
 function sombra(x,y,rx,ry){cx.fillStyle='rgba(0,0,0,.12)';cx.beginPath();cx.ellipse(x,y,rx,ry,0,0,7);cx.fill();}
-function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/'+G.FASES.length;$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
  if(g&&!g.fim){const [a,m]=G.meta(g);$('hR').textContent=G.rotulo+' '+a+'/'+m;$('hV').textContent=G.vidas?'Vidas '+'●'.repeat(Math.max(0,g.vidas)):'';$('hT').textContent=G.semTempo?'':Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s';}
  ['hR','hV','hT'].forEach(k=>$(k).style.display=$(k).textContent?'':'none');}
 function inicio(){parar();$('hud').style.display='none';$('rankBox').style.display='block';
@@ -151,41 +151,110 @@ function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=G.FAS
  <p class="small" style="margin-top:6px">${ok?G.FASES[S.f].fato:G.dicaErro}</p>
  <div class="row" style="justify-content:center;margin-top:14px">${ok?'<button class="btn grande" id="bq">Pergunta rápida</button>':'<button class="btn grande" id="br">Jogar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
  if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}}
-/* Em Corumbá as iscas vivas mais usadas são tuvira, pirambóia, cascudo, jejum, muçum e um caranguejo, e a tuvira responde por metade da captura (Moraes e Espinoza, Embrapa Pantanal, 2001). No Porto da Manga, em 2007, a tuvira foi 73,6% das iscas (Embrapa Pantanal). Boas práticas reduziram a mortalidade das iscas (Embrapa, ECOA, IBAMA, 2010). Baías e corixos são explorados pelos isqueiros (ECOA). Balde, tempo e pontos são regras do jogo. */
-function tuvira(k,x,y,d,f){k.save();k.translate(x,y);k.scale(d,1);k.fillStyle='#6d5a3e';k.beginPath();k.moveTo(-26,0);for(let i=0;i<=10;i++){const xx=-26+i*5.2;k.lineTo(xx,-4+Math.sin(f*8+i)*1.5);}k.lineTo(26,0);for(let i=10;i>=0;i--){const xx=-26+i*5.2;k.lineTo(xx,4+Math.sin(f*8+i)*1.5);}k.fill();k.strokeStyle='#4e3b24';k.lineWidth=1.5;for(let i=0;i<5;i++){k.beginPath();k.moveTo(-16+i*7,-3);k.lineTo(-19+i*7,3);k.stroke();}k.fillStyle='#212121';k.beginPath();k.arc(22,-1,1.6,0,7);k.fill();k.restore();}
-function piranha(k,x,y,d){k.save();k.translate(x,y);k.scale(d,1);k.fillStyle='#90a4ae';k.beginPath();k.ellipse(0,0,18,12,0,0,7);k.fill();k.fillStyle='#e53935';k.beginPath();k.ellipse(6,6,9,5,0,0,7);k.fill();k.fillStyle='#78909c';k.beginPath();k.moveTo(-16,0);k.lineTo(-26,-8);k.lineTo(-26,8);k.fill();k.fillStyle='#212121';k.beginPath();k.arc(12,-3,2,0,7);k.fill();k.restore();}
-const G={titulo:'Isqueiro do Pantanal',rotulo:'Tuviras vivas',vidas:1,
- resumo:'Em Corumbá e na Estrada Parque, famílias de isqueiros pegam tuviras nas baías e corixos. A isca precisa chegar viva ao pescador.',
- como:[['Arraste','Arraste a peneira pela água. Tuvira que encostar nela vai para o balde.'],['Balde','A água do balde perde oxigênio. Toque no balde para trocar a água.'],['Cuidado','Piranha rasga a peneira e espanta as tuviras.']],
- dica:'Arraste a peneira e troque a água do balde.',dicaErro:'Troque a água antes da barra do balde zerar e desvie das piranhas.',
- FASES:[{nome:'Baía rasa',dur:40,meta:10,oxi:.06,pir:0,metaTxt:'ter 10 tuviras vivas no balde em 40 s.',txt:'Água rasa na beira da baía. Passe a peneira devagar.',fato:'Em Corumbá, a tuvira é a isca viva mais procurada e responde por metade da captura de iscas.'},
-  {nome:'Corixo',dur:45,meta:14,oxi:.09,pir:1,metaTxt:'ter 14 tuviras vivas em 45 s.',txt:'Com mais tuviras no balde, a água cansa mais rápido. Fique de olho.',fato:'Estudos feitos com os isqueiros definiram boas práticas de coleta e reduziram a mortalidade das tuviras.'},
-  {nome:'Temporada de pesca',dur:50,meta:18,oxi:.11,pir:2,metaTxt:'ter 18 tuviras vivas em 50 s.',txt:'Muita procura de isca na temporada. Trabalho rápido e com cuidado.',fato:'O comércio de iscas vivas tem grande importância social e econômica para os ribeirinhos do Pantanal.'}],
- init(g){g.vidas=3;g.n=0;g.o2=1;g.p={x:W*.5,y:H*.6};g.tv=[];g.pr=[];for(let i=0;i<4;i++)g.tv.push(G.nova());g.esp=0;for(let i=0;i<FASES[S.f].pir;i++)g.pr.push({x:Math.random()*W,y:H*(.45+Math.random()*.4),vx:(Math.random()<.5?-1:1)*90});g.rasg=0;},
- nova(){return {x:Math.random()*W,y:H*(.42+Math.random()*.45),vx:(Math.random()<.5?-1:1)*(30+Math.random()*30),f:Math.random()*6};},
+/* ---------- arte vetorial compartilhada ---------- */
+beep=function(){};
+function rng(s){s=s%2147483647;if(s<=0)s+=2147483646;return()=>{s=s*16807%2147483647;return(s-1)/2147483646;};}
+function lg(k,x0,y0,x1,y1,st){const g=k.createLinearGradient(x0,y0,x1,y1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+function rg(k,x,y,r0,r1,st){const g=k.createRadialGradient(x,y,r0,x,y,r1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+const CACHE={};
+function cache(key,w,h,fn){const id=key+'_'+w+'x'+h;if(!CACHE[id]){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);CACHE[id]=c;}return CACHE[id];}
+function ceu(k,w,h,cs){k.fillStyle=lg(k,0,0,0,h,cs);k.fillRect(0,0,w,h);}
+function sol(k,x,y,r,c){k.fillStyle=rg(k,x,y,0,r*4,[c,'rgba(255,255,255,0)']);k.fillRect(x-r*4,y-r*4,r*8,r*8);k.fillStyle=c;k.beginPath();k.arc(x,y,r,0,7);k.fill();}
+function nuvem(k,x,y,s,a){k.fillStyle='rgba(255,255,255,'+(a||.8)+')';for(const [dx,dy,r] of [[0,0,1],[1.1,.15,.8],[-1,.2,.75],[.5,-.45,.7],[-.4,-.35,.6]]){k.beginPath();k.arc(x+dx*s,y+dy*s,r*s,0,7);k.fill();}k.fillRect(x-1.7*s,y+.2*s,3.6*s,.8*s);}
+function serra(k,w,y,amp,cor,seed){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,y+amp*2);let x=0;k.lineTo(0,y);while(x<w+40){x+=30+r()*50;k.lineTo(x,y-r()*amp);}k.lineTo(w,y+amp*4);k.lineTo(0,y+amp*4);k.fill();}
+function matas(k,w,y,amp,cor,seed,base){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,base);k.lineTo(0,y);let x=0;while(x<w+30){const rr=8+r()*amp;k.arc(x+rr,y-r()*amp*.6,rr,Math.PI,0);x+=rr*1.6;}k.lineTo(w,base);k.closePath();k.fill();}
+function capim(k,x0,y0,w,h,cor,seed,n){const r=rng(seed);k.strokeStyle=cor;k.lineCap='round';for(let i=0;i<n;i++){const x=x0+r()*w,y=y0+r()*h,l=4+r()*10;k.lineWidth=1+r()*1.2;for(let j=-1;j<=1;j++){k.beginPath();k.moveTo(x,y);k.quadraticCurveTo(x+j*3,y-l*.6,x+j*5+r()*2,y-l);k.stroke();}}}
+function copa(k,x,y,r,cs,seed){const R=rng(seed);const pts=[];for(let i=0;i<9;i++){const a=R()*Math.PI*2,d=R()*r*.55;pts.push([x+Math.cos(a)*d,y+Math.sin(a)*d*.7,r*(.35+R()*.3)]);}
+ k.fillStyle=cs[0];for(const [a,b,c] of pts){k.beginPath();k.arc(a+c*.12,b+c*.18,c,0,7);k.fill();}
+ k.fillStyle=cs[1];for(const [a,b,c] of pts){k.beginPath();k.arc(a,b,c*.92,0,7);k.fill();}
+ k.fillStyle=cs[2];for(const [a,b,c] of pts){k.beginPath();k.arc(a-c*.25,b-c*.3,c*.5,0,7);k.fill();}}
+function tronco(k,x,y0,y1,w0,w1,c1,c2){k.fillStyle=lg(k,x-w0,0,x+w0,0,[c2,c1,c1,c2]);k.beginPath();k.moveTo(x-w0,y0);k.lineTo(x-w1,y1);k.lineTo(x+w1,y1);k.lineTo(x+w0,y0);k.fill();k.strokeStyle='rgba(0,0,0,.12)';k.lineWidth=1;for(let y=y1+8;y<y0;y+=11){const t=(y-y1)/(y0-y1),ww=w1+(w0-w1)*t;k.beginPath();k.moveTo(x-ww*.6,y);k.quadraticCurveTo(x,y+3,x+ww*.5,y-1);k.stroke();}}
+function palmeira(k,x,y,h,lean,cfr,ctr,seed,nf){const R=rng(seed);const tx=x+lean,ty=y-h;k.strokeStyle=ctr;k.lineCap='round';for(let i=0;i<14;i++){const t0=i/14,t1=(i+1)/14;k.lineWidth=h*.05*(1-t0*.35);const xa=x+lean*t0*t0,ya=y-h*t0,xb=x+lean*t1*t1,yb=y-h*t1;k.beginPath();k.moveTo(xa,ya);k.lineTo(xb,yb);k.stroke();}
+ k.strokeStyle='rgba(0,0,0,.15)';k.lineWidth=1;for(let i=1;i<14;i++){const t=i/14,xa=x+lean*t*t,ya=y-h*t;k.beginPath();k.moveTo(xa-h*.022,ya);k.lineTo(xa+h*.022,ya);k.stroke();}
+ nf=nf||9;for(let f=0;f<nf;f++){const a=-Math.PI/2+(f-(nf-1)/2)*(2.6/nf)+(R()-.5)*.2,L=h*(.38+R()*.12),dr=.55+R()*.25;const ex=tx+Math.cos(a)*L,ey=ty+Math.sin(a)*L*.55+L*dr*.5;const mx=tx+Math.cos(a)*L*.5,my=ty+Math.sin(a)*L*.5-L*.12;
+  k.strokeStyle=cfr[0];k.lineWidth=2;k.beginPath();k.moveTo(tx,ty);k.quadraticCurveTo(mx,my,ex,ey);k.stroke();
+  for(let j=1;j<16;j++){const t=j/16,px=(1-t)*(1-t)*tx+2*(1-t)*t*mx+t*t*ex,py=(1-t)*(1-t)*ty+2*(1-t)*t*my+t*t*ey;const ll=L*.16*(1-t*.5);k.strokeStyle=cfr[j%2];k.lineWidth=1.6;k.beginPath();k.moveTo(px,py);k.lineTo(px+Math.cos(a+1.6)*ll*.5,py+ll);k.moveTo(px,py);k.lineTo(px+Math.cos(a-1.6)*ll*.5,py+ll*.9);k.stroke();}}}
+function sombraE(k,x,y,rx,ry,a){k.fillStyle='rgba(20,30,20,'+(a||.18)+')';k.beginPath();k.ellipse(x,y,rx,ry,0,0,7);k.fill();}
+function vinheta(k,w,h){k.fillStyle=rg(k,w/2,h/2,Math.min(w,h)*.45,Math.max(w,h)*.8,['rgba(0,0,0,0)','rgba(0,0,0,.18)']);k.fillRect(0,0,w,h);}
+function rrk(k,x,y,w,h,r,c){k.fillStyle=c;k.beginPath();k.roundRect(x,y,w,h,r);k.fill();}
+/* figura humana: o={pele,camisa,calca,chapeu,passo,bracoE,bracoD} ângulos em rad a partir de baixo */
+function pessoa(k,x,y,s,o){o=o||{};const p=o.passo||0;k.save();k.translate(x,y);k.scale(s*(o.dir||1),s);k.lineCap='round';k.lineJoin='round';
+ const pl=Math.sin(p)*.35;k.strokeStyle=o.calca||'#37474f';k.lineWidth=7;k.beginPath();k.moveTo(-3,-38);k.lineTo(-3+Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18,0);k.stroke();k.beginPath();k.moveTo(3,-38);k.lineTo(3-Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(3-Math.sin(pl)*20-Math.sin(pl*.5)*18,0);k.stroke();
+ k.fillStyle='#3e2723';k.beginPath();k.ellipse(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.ellipse(3-Math.sin(pl)*20-Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.fill();
+ k.fillStyle=o.camisa||'#1e88e5';k.beginPath();k.moveTo(-9,-40);k.lineTo(-10,-68);k.quadraticCurveTo(0,-74,10,-68);k.lineTo(9,-40);k.closePath();k.fill();k.fillStyle='rgba(0,0,0,.12)';k.fillRect(2,-68,7,28);
+ const be=o.bracoE!==undefined?o.bracoE:-pl*.8,bd=o.bracoD!==undefined?o.bracoD:pl*.8;k.strokeStyle=o.camisa||'#1e88e5';k.lineWidth=6;
+ for(const [sx,a] of [[-8,be],[8,bd]]){k.beginPath();k.moveTo(sx,-66);const ex=sx+Math.sin(a)*14,ey=-66+Math.cos(a)*14;k.lineTo(ex,ey);k.stroke();k.strokeStyle=o.pele||'#c68b59';k.beginPath();k.moveTo(ex,ey);k.lineTo(ex+Math.sin(a*1.15)*13,ey+Math.cos(a*1.15)*13);k.stroke();k.strokeStyle=o.camisa||'#1e88e5';}
+ k.fillStyle=o.pele||'#c68b59';k.fillRect(-3,-76,6,6);k.beginPath();k.ellipse(0,-83,7.5,8.5,0,0,7);k.fill();
+ if(o.chapeu!==false){k.fillStyle=o.chapeu||'#795548';k.beginPath();k.ellipse(0,-88,15,3.5,0,0,7);k.fill();k.beginPath();k.moveTo(-8,-88);k.quadraticCurveTo(-7,-99,0,-99);k.quadraticCurveTo(7,-99,8,-88);k.fill();k.fillStyle='rgba(0,0,0,.25)';k.fillRect(-8,-91,16,2.5);}
+ k.restore();}
+/* boi nelore em perfil, olhando para +x */
+function boi(k,x,y,s,dir,cor,p){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#ece6da';p=p||0;
+ const pern=[[-26,0],[-18,Math.PI],[18,Math.PI],[26,0]];
+ for(let i=0;i<4;i++){const [lx,ph]=pern[i];const a=Math.sin(p+ph)*.3;k.strokeStyle=i==1||i==2?shade(c,-.12):c;k.lineCap='round';k.lineWidth=6.5;k.beginPath();k.moveTo(lx,-24);k.lineTo(lx+Math.sin(a)*9,-10);k.lineTo(lx+Math.sin(a)*7,2);k.stroke();k.fillStyle='#3e2723';k.fillRect(lx+Math.sin(a)*7-3.5,1,7,3);}
+ k.fillStyle=c;k.beginPath();k.moveTo(-34,-40);k.quadraticCurveTo(-38,-24,-30,-20);k.quadraticCurveTo(0,-14,26,-20);k.quadraticCurveTo(34,-26,32,-40);k.quadraticCurveTo(28,-50,20,-54);k.quadraticCurveTo(12,-56,8,-48);k.quadraticCurveTo(-10,-46,-28,-48);k.quadraticCurveTo(-34,-46,-34,-40);k.fill();
+ k.fillStyle=lg(k,0,-50,0,-18,['rgba(255,255,255,.18)','rgba(0,0,0,0)','rgba(60,40,20,.22)']);k.fill();
+ k.fillStyle=c;k.beginPath();k.moveTo(26,-44);k.quadraticCurveTo(38,-44,44,-38);k.lineTo(54,-24);k.quadraticCurveTo(56,-18,51,-17);k.quadraticCurveTo(46,-18,42,-24);k.quadraticCurveTo(34,-26,28,-22);k.fill();
+ k.beginPath();k.moveTo(28,-26);k.quadraticCurveTo(34,-14,30,-12);k.quadraticCurveTo(24,-16,22,-24);k.fill();
+ k.fillStyle=shade(c,-.35);k.beginPath();k.ellipse(52,-19,3.4,2.6,.4,0,7);k.fill();k.fillStyle='#1b1b1b';k.beginPath();k.arc(44,-34,1.8,0,7);k.fill();
+ k.fillStyle=shade(c,-.08);k.beginPath();k.ellipse(38,-41,8,2.8,.5,0,7);k.fill();k.strokeStyle='#cfc4b0';k.lineWidth=2.4;k.lineCap='round';k.beginPath();k.moveTo(41,-44);k.quadraticCurveTo(44,-49,42,-52);k.stroke();
+ k.strokeStyle=c;k.lineWidth=2.2;k.beginPath();k.moveTo(-34,-42);k.quadraticCurveTo(-40,-28,-37,-14);k.stroke();k.fillStyle='#4e342e';k.beginPath();k.ellipse(-37,-13,2.2,4.5,0,0,7);k.fill();
+ k.restore();}
+function shade(hex,f){let n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;const t=f<0?0:255,p=Math.abs(f);r=Math.round((t-r)*p+r);g=Math.round((t-g)*p+g);b=Math.round((t-b)*p+b);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+function cavalo(k,x,y,s,dir,p,cor){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#8d5a3b';k.strokeStyle=c;k.lineCap='round';k.lineWidth=6;
+ for(const [lx,ph] of [[-20,0],[-12,Math.PI],[18,Math.PI],[26,0]]){const a=Math.sin(p+ph)*.45;k.beginPath();k.moveTo(lx,-22);k.lineTo(lx+Math.sin(a)*10,-8);k.lineTo(lx+Math.sin(a)*8,4);k.stroke();}
+ k.fillStyle=c;k.beginPath();k.ellipse(3,-30,28,12,0,0,7);k.fill();k.beginPath();k.moveTo(22,-36);k.quadraticCurveTo(30,-56,40,-58);k.lineTo(50,-48);k.quadraticCurveTo(44,-44,38,-46);k.lineTo(30,-26);k.fill();
+ k.fillStyle='#3e2723';k.beginPath();k.moveTo(24,-40);k.quadraticCurveTo(30,-60,40,-60);k.lineTo(36,-56);k.quadraticCurveTo(30,-52,28,-36);k.fill();k.beginPath();k.moveTo(-24,-34);k.quadraticCurveTo(-38,-26,-34,-6);k.quadraticCurveTo(-30,-22,-22,-28);k.fill();
+ k.fillStyle='rgba(0,0,0,.15)';k.beginPath();k.ellipse(3,-23,24,4,0,0,7);k.fill();k.fillStyle='#5d4037';k.fillRect(-8,-44,22,6);k.restore();}
+function cavaleiro(k,x,y,s,dir,p,o){cavalo(k,x,y,s,dir,p,o&&o.cor);k.save();k.translate(x,y);k.scale(s*dir,s);pessoa(k,2,-30,.62,Object.assign({passo:0,bracoE:.9,bracoD:1.3,calca:'#4e342e'},o||{}));k.restore();}
+/* Iscas vivas: tuvira, pirambóia, cascudo, jejum, muçum e caranguejo; tuvira metade da captura em Corumbá (Moraes e Espinoza, Embrapa Pantanal, 2001); tuvira 73,6% e caranguejo 13,7% no Porto da Manga em 2007 (Embrapa Pantanal); boas práticas reduziram a mortalidade das iscas (Embrapa, ECOA, IBAMA, 2010); baías e corixos explorados pelos isqueiros (ECOA); importância social e econômica do comércio de iscas (Embrapa Pantanal, BP 132, 2017). Balde, piranhas e pontos são regras do jogo. */
+const IS={};
+IS.cena=function(k,w,h){ceu(k,w,h*.32,['#bfe1f1','#eef7f0']);nuvem(k,w*.75,h*.08,13,.8);matas(k,w,h*.26,14,'#8fb58a',2,h*.33);
+ const R=rng(4);for(const x of [w*.1,w*.3,w*.62,w*.86])palmeira(k,x,h*.3,h*.13,3,['#5e8c4a','#79a85f'],'#a29576',x|0,9);
+ k.fillStyle=lg(k,0,h*.32,0,h,['#b4dcd5','#7fbfb6','#5ea79f']);k.fillRect(0,h*.32,w,h*.68);
+ k.strokeStyle='rgba(255,255,255,.3)';k.lineWidth=1.4;for(let i=0;i<30;i++){const x=R()*w,y=h*(.4+R()*.58);k.beginPath();k.moveTo(x,y);k.lineTo(x+18+R()*26,y);k.stroke();}
+ for(let i=0;i<Math.ceil(w/64);i++){const x=i*64+R()*20,y=h*.37+R()*h*.03;k.strokeStyle='rgba(70,50,35,.35)';k.lineWidth=1.3;for(let j=-3;j<=3;j++){k.beginPath();k.moveTo(x+j*4,y+6);k.quadraticCurveTo(x+j*6,y+40,x+j*5+R()*6,y+70+R()*40);k.stroke();}
+  for(const [dx,dy,r] of [[-14,0,13],[10,-2,14],[0,-8,12],[22,4,10]]){k.fillStyle='#3f8a3e';k.beginPath();k.ellipse(x+dx,y+dy,r,r*.7,0,0,7);k.fill();k.fillStyle='#5aa653';k.beginPath();k.ellipse(x+dx-3,y+dy-3,r*.6,r*.4,0,0,7);k.fill();}
+  if(i%2==0){k.fillStyle='#b39ddb';k.beginPath();k.ellipse(x+2,y-16,4,6,0,0,7);k.fill();k.fillStyle='#ce93d8';k.beginPath();k.ellipse(x+6,y-20,4,5,.4,0,7);k.fill();}}};
+function tuvira(k,x,y,d,f,s){k.save();k.translate(x,y);k.scale(d*s,s);const g=lg(k,0,-5,0,5,['#7a6648','#5b4a32']);k.fillStyle=g;k.beginPath();k.moveTo(-28,0);for(let i=0;i<=12;i++){const xx=-28+i*4.8;k.lineTo(xx,-4.5+Math.sin(f*8+i*.7)*1.3+(i<2?2:0));}k.lineTo(31,0);for(let i=12;i>=0;i--){const xx=-28+i*4.8;k.lineTo(xx,4.5+Math.sin(f*8+i*.7)*1.3-(i<2?2:0));}k.fill();
+ k.strokeStyle='rgba(40,30,15,.55)';k.lineWidth=1.4;for(let i=0;i<7;i++){k.beginPath();k.moveTo(-20+i*6.5,-4);k.lineTo(-23+i*6.5,4);k.stroke();}k.fillStyle='#e6d9b8';k.beginPath();k.moveTo(-18,4);k.lineTo(26,4);k.lineTo(22,6);k.lineTo(-16,6);k.fill();k.fillStyle='#111';k.beginPath();k.arc(26,-1.2,1.4,0,7);k.fill();k.restore();}
+function caranguejo(k,x,y,s,f){k.save();k.translate(x,y);k.scale(s,s);k.strokeStyle='#8d5a3b';k.lineWidth=2;for(let i=0;i<3;i++)for(const d of [-1,1]){k.beginPath();k.moveTo(d*8,2+i*3);k.lineTo(d*16,6+i*4+Math.sin(f*10+i)*2);k.stroke();}
+ k.fillStyle='#a8673f';k.beginPath();k.ellipse(0,0,12,9,0,0,7);k.fill();k.fillStyle='#c27d4f';for(const d of [-1,1]){k.beginPath();k.ellipse(d*15,-8,5,4,d*.5,0,7);k.fill();}k.fillStyle='#111';k.beginPath();k.arc(-3,-7,1.4,0,7);k.arc(3,-7,1.4,0,7);k.fill();k.restore();}
+function piranha(k,x,y,d,s){k.save();k.translate(x,y);k.scale(d*s,s);k.fillStyle=lg(k,0,-12,0,12,['#9eb0b8','#7f939c']);k.beginPath();k.ellipse(0,0,19,13,0,0,7);k.fill();k.fillStyle='#e0473c';k.beginPath();k.ellipse(5,7,11,5,0,0,7);k.fill();k.fillStyle='#7f939c';k.beginPath();k.moveTo(-17,0);k.lineTo(-28,-9);k.lineTo(-25,0);k.lineTo(-28,9);k.fill();k.fillStyle='#fff';k.beginPath();k.moveTo(14,3);k.lineTo(19,2);k.lineTo(16,6);k.fill();k.fillStyle='#111';k.beginPath();k.arc(11,-4,2,0,7);k.fill();k.restore();}
+const G={titulo:'Isqueiro do Pantanal',rotulo:'Iscas vivas',vidas:1,
+ resumo:'Em Corumbá e no Porto da Manga, famílias de isqueiros pegam tuviras nas baías e corixos para vender aos pescadores. A isca só tem valor se chegar viva.',
+ como:[['Arraste','Arraste a peneira pela água. A isca que encostar nela vai para o balde.'],['Balde','A água do balde perde oxigênio. Toque no balde para trocar a água.'],['Cuidado','Piranha rasga a peneira. Na fase 4 o caranguejo também vale como isca.']],
+ dica:'Arraste a peneira e troque a água do balde.',dicaErro:'Troque a água antes da barra zerar e desvie das piranhas.',
+ FASES:[{nome:'Baía rasa',dur:40,meta:14,oxi:.06,pir:0,carg:0,metaTxt:'ter 14 iscas vivas no balde em 40 s.',txt:'Água rasa na beira da baía. Passe a peneira devagar perto do aguapé.',fato:'Em Corumbá, a tuvira é a isca viva mais procurada. Ela responde por metade de toda a captura de iscas.'},
+  {nome:'Balde cheio',dur:45,meta:18,oxi:.09,pir:0,carg:0,metaTxt:'ter 18 iscas vivas em 45 s.',txt:'Quanto mais isca no balde, mais rápido a água cansa. Fique de olho na barra.',fato:'Estudos feitos com os isqueiros definiram boas práticas de coleta e reduziram a mortalidade das tuviras.'},
+  {nome:'Corixo das piranhas',dur:50,meta:20,oxi:.1,pir:2,carg:0,metaTxt:'ter 20 iscas vivas em 50 s.',txt:'No corixo tem piranha. Se ela encostar na peneira, a peneira rasga por um tempo.',fato:'Os isqueiros exploram as baías, que são lagoas, e os corixos, pequenos rios da planície pantaneira.'},
+  {nome:'Temporada de pesca',dur:55,meta:24,oxi:.11,pir:2,carg:1,metaTxt:'ter 24 iscas vivas em 55 s, tuvira ou caranguejo.',txt:'Na temporada a procura por isca cresce. O caranguejo também é vendido como isca.',fato:'No Porto da Manga, em 2007, a tuvira foi 73,6% das iscas vendidas e o caranguejo, 13,7%. O comércio de iscas tem grande importância para os ribeirinhos.'}],
+ init(g){const F=FASES[S.f];g.vidas=3;g.n=0;g.o2=1;g.p={x:W*.5,y:H*.66};g.tv=[];g.esp=0;for(let i=0;i<4;i++)g.tv.push(G.nova());g.pr=[];for(let i=0;i<F.pir;i++)g.pr.push({x:Math.random()*W,y:H*(.5+Math.random()*.4),vx:(Math.random()<.5?-1:1)*90});g.rasg=0;},
+ nova(){const F=FASES[S.f];const c=F.carg&&Math.random()<.3;return {x:Math.random()*W,y:H*(.46+Math.random()*.48),vx:(Math.random()<.5?-1:1)*(c?20:30+Math.random()*30),f:Math.random()*6,c};},
  meta(g){return [g.n,FASES[S.f].meta];},cedo(g){return g.n>=FASES[S.f].meta;},
- balde(){return {x:W*.86,y:H*.15,w:W*.11,h:H*.17};},
+ balde(){return {x:W*.85,y:H*.04,w:W*.12,h:H*.2};},
  update(g,dt){const F=FASES[S.f],B=G.balde();
-  if(inp.tap&&inp.tap.x>B.x-10&&inp.tap.y<B.y+B.h+10){g.o2=1;beep(300,.15,.05);msg('Água nova no balde.');}
-  else if(inp.down&&inp.x!==null&&inp.y>H*.35){g.p.x+=(inp.x-g.p.x)*Math.min(1,dt*10);g.p.y+=(inp.y-g.p.y)*Math.min(1,dt*10);}
-  g.rasg=Math.max(0,g.rasg-dt);
-  g.o2-=dt*F.oxi*(1+g.n/10);if(g.o2<=0){g.o2=1;const m=Math.min(g.n,3);g.n-=m;g.vidas--;ganha(-10,B.x,B.y+B.h+20);msg('A água do balde acabou e '+m+' tuviras morreram.');}
-  for(const t of g.tv){t.f+=dt;t.x+=t.vx*dt;if(t.x<-30||t.x>W+30)t.vx*=-1;if(!g.rasg&&Math.hypot(t.x-g.p.x,t.y-g.p.y)<30){t.pega=1;g.n++;ganha(5,g.p.x,g.p.y-30);}}
-  g.tv=g.tv.filter(t=>!t.pega);g.esp-=dt;if(g.tv.length<4&&g.esp<=0){g.tv.push(G.nova());g.esp=1.4;}
-  for(const p of g.pr){p.x+=p.vx*dt;if(p.x<-30||p.x>W+30){p.vx*=-1;p.y=H*(.45+Math.random()*.4);}if(!g.rasg&&Math.hypot(p.x-g.p.x,p.y-g.p.y)<34){g.rasg=1.6;msg('Piranha! A peneira rasgou.');beep(140,.2,.06);}}},
- draw(g){const B=G.balde();cx.fillStyle='#e1f5fe';cx.fillRect(0,0,W,H*.35);cx.fillStyle='#aed581';cx.fillRect(0,H*.3,W,H*.07);
-  const gr=cx.createLinearGradient(0,H*.36,0,H);gr.addColorStop(0,'#b2dfdb');gr.addColorStop(1,'#80cbc4');cx.fillStyle=gr;cx.fillRect(0,H*.36,W,H*.64);
-  for(let i=0;i<9;i++){const x=(i*97)%W;cx.fillStyle='#43a047';cx.beginPath();cx.ellipse(x,H*.38,26,9,0,0,7);cx.fill();cx.fillStyle='#ba68c8';cx.beginPath();cx.arc(x+6,H*.35,5,0,7);cx.fill();cx.strokeStyle='rgba(62,39,35,.35)';cx.lineWidth=1.5;for(let j=-2;j<=2;j++){cx.beginPath();cx.moveTo(x+j*6,H*.39);cx.lineTo(x+j*7,H*.5);cx.stroke();}}
-  for(const t of g.tv)tuvira(cx,t.x,t.y,t.vx<0?-1:1,t.f);for(const p of g.pr)piranha(cx,p.x,p.y,p.vx<0?-1:1);
-  cx.strokeStyle=g.rasg?'#e53935':'#8d6e63';cx.lineWidth=4;cx.beginPath();cx.arc(g.p.x,g.p.y,34,0,7);cx.stroke();cx.strokeStyle='rgba(141,110,99,.5)';cx.lineWidth=1;for(let i=-3;i<=3;i++){cx.beginPath();cx.moveTo(g.p.x+i*9,g.p.y-32);cx.lineTo(g.p.x+i*9,g.p.y+32);cx.stroke();}cx.strokeStyle='#6d4c41';cx.lineWidth=5;cx.beginPath();cx.moveTo(g.p.x+24,g.p.y-24);cx.lineTo(g.p.x+60,g.p.y-80);cx.stroke();
-  rrect(B.x,B.y,B.w,B.h,10,'#1e88e5');rrect(B.x+4,B.y+4+(B.h-8)*(1-g.o2),B.w-8,(B.h-8)*g.o2,6,g.o2<.3?'#ef5350':'#81d4fa');cx.fillStyle='#0d47a1';cx.font='bold 12px system-ui';cx.textAlign='center';cx.fillText('balde',B.x+B.w/2,B.y-6);},
- capa(k,w,h){k.fillStyle='#b2dfdb';k.fillRect(0,0,w,h);k.fillStyle='#43a047';for(let i=0;i<7;i++){k.beginPath();k.ellipse(i*100+30,20,40,12,0,0,7);k.fill();}for(let i=0;i<5;i++)tuvira(k,120+i*90,110+(i%2)*40,i%2?1:-1,i);piranha(k,560,160,-1);}
+  if(inp.tap&&inp.tap.x>B.x-14&&inp.tap.y<B.y+B.h+14){g.o2=1;msg('Água nova no balde.');}
+  else if(inp.down&&inp.x!==null&&inp.y>H*.36){g.p.x+=(inp.x-g.p.x)*Math.min(1,dt*10);g.p.y+=(inp.y-g.p.y)*Math.min(1,dt*10);}
+  g.rasg=Math.max(0,g.rasg-dt);g.o2-=dt*F.oxi*(1+g.n/10);if(g.o2<=0){g.o2=1;const m=Math.min(g.n,3);g.n-=m;g.vidas--;ganha(-10,B.x,B.y+B.h+20);msg('A água do balde acabou e '+m+' iscas morreram.');}
+  for(const t of g.tv){t.f+=dt;t.x+=t.vx*dt;if(t.x<-30||t.x>W+30)t.vx*=-1;if(!g.rasg&&Math.hypot(t.x-g.p.x,t.y-g.p.y)<32){t.pega=1;g.n++;ganha(5,g.p.x,g.p.y-34);}}
+  g.tv=g.tv.filter(t=>!t.pega);g.esp-=dt;if(g.tv.length<4&&g.esp<=0){g.tv.push(G.nova());g.esp=1.3;}
+  for(const p of g.pr){p.x+=p.vx*dt;if(p.x<-30||p.x>W+30){p.vx*=-1;p.y=H*(.5+Math.random()*.4);}if(!g.rasg&&Math.hypot(p.x-g.p.x,p.y-g.p.y)<34){g.rasg=1.6;msg('Piranha! A peneira rasgou.');}}},
+ draw(g){const B=G.balde();cx.drawImage(cache('is',W,H,IS.cena),0,0);const s=Math.min(W,H)/440;
+  for(const t of g.tv){cx.globalAlpha=.9;if(t.c)caranguejo(cx,t.x,t.y,s*1.1,t.f);else tuvira(cx,t.x,t.y,t.vx<0?-1:1,t.f,s*1.1);cx.globalAlpha=1;}
+  for(const p of g.pr)piranha(cx,p.x,p.y,p.vx<0?-1:1,s*1.1);
+  const px=g.p.x,py=g.p.y;cx.strokeStyle='#6d4c41';cx.lineWidth=5;cx.lineCap='round';cx.beginPath();cx.moveTo(px+26,py-26);cx.lineTo(px+70,py-96);cx.stroke();
+  cx.fillStyle='rgba(255,255,255,.18)';cx.beginPath();cx.arc(px,py,34,0,7);cx.fill();cx.save();cx.beginPath();cx.arc(px,py,34,0,7);cx.clip();cx.strokeStyle=g.rasg?'rgba(229,57,53,.6)':'rgba(93,64,55,.55)';cx.lineWidth=1;for(let i=-34;i<=34;i+=6){cx.beginPath();cx.moveTo(px+i,py-34);cx.lineTo(px+i,py+34);cx.moveTo(px-34,py+i);cx.lineTo(px+34,py+i);cx.stroke();}cx.restore();cx.strokeStyle=g.rasg?'#e53935':'#8d6e63';cx.lineWidth=4;cx.beginPath();cx.arc(px,py,34,0,7);cx.stroke();
+  cx.fillStyle=lg(cx,B.x,0,B.x+B.w,0,['#1565c0','#42a5f5','#1565c0']);cx.beginPath();cx.moveTo(B.x,B.y);cx.lineTo(B.x+B.w,B.y);cx.lineTo(B.x+B.w*.9,B.y+B.h);cx.lineTo(B.x+B.w*.1,B.y+B.h);cx.fill();
+  rrk(cx,B.x+6,B.y+8+(B.h-16)*(1-g.o2),B.w-12,(B.h-16)*g.o2,5,g.o2<.3?'#ef5350':'#b3e5fc');cx.fillStyle='#fff';cx.font='bold 11px system-ui';cx.textAlign='center';cx.fillText('balde',B.x+B.w/2,B.y+B.h+14);
+  vinheta(cx,W,H);},
+ capa(k,w,h){const o=cx,oW=W,oH=H;cx=k;W=w;H=h;IS.cena(k,w,h);for(let i=0;i<5;i++)tuvira(k,w*(.2+i*.14),h*(.6+(i%2)*.15),i%2?1:-1,i,1.2);caranguejo(k,w*.85,h*.8,1.3,0);piranha(k,w*.1,h*.85,1,1.2);vinheta(k,w,h);cx=o;W=oW;H=oH;}
 };
 const FASES=G.FASES;
 const PERG=[
  {q:'Qual é a isca viva mais capturada pelos isqueiros de Corumbá?',o:['Tuvira','Lambari','Minhoca']},
- {q:'Onde os isqueiros costumam coletar tuviras no Pantanal?',o:['Em baías e corixos da planície','No mar, perto dos recifes','Em poços artesianos das fazendas']},
- {q:'Por que trocar a água do balde ajuda o isqueiro?',o:['Isca viva precisa chegar viva','A tuvira fica mais pesada no balde','A água nova deixa a tuvira mais colorida']}
+ {q:'Por que a água do balde precisa ser cuidada?',o:['Isca viva precisa chegar viva','A tuvira fica mais pesada no balde','A água nova deixa a tuvira mais colorida']},
+ {q:'O que são baías e corixos no Pantanal?',o:['Lagoas e pequenos rios da planície','Morros e serras de pedra','Fazendas e currais de gado']},
+ {q:'Além da tuvira, que outra isca aparece bastante no Porto da Manga?',o:['O caranguejo','O camarão do mar','A sardinha']}
 ];
 function pergunta(){
  const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
@@ -196,11 +265,11 @@ function pergunta(){
   $('bn').onclick=()=>{S.tot+=S.fp;S.fp=0;if(S.f===FASES.length-1)final(true);else{S.f++;fase();}};});
 }
 function final(tudo){
- S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
+ S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?FASES.length+' fases':'Fase '+(S.f+1);
  $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Isqueiro de primeira!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
  <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
- <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Fontes: Moraes e Espinoza (2001), Captura e comercialização de iscas vivas em Corumbá, MS, Embrapa Pantanal, Boletim de Pesquisa 21; Embrapa Pantanal, publicação técnica sobre iscas no Porto da Manga em 2007; Embrapa Pantanal, ECOA e IBAMA (2010), Boas práticas para coleta de tuviras; Embrapa Pantanal, Boletim de Pesquisa 132 (2017); ECOA, iscas vivas. Balde, piranhas e pontos são regras do jogo.</div></div>`;
+ <div class="small" style="margin-top:12px;text-align:left">Fontes: Moraes e Espinoza (2001), Captura e comercialização de iscas vivas em Corumbá, MS, Embrapa Pantanal, Boletim de Pesquisa 21; Embrapa Pantanal, publicação técnica sobre iscas no Porto da Manga em 2007; Embrapa Pantanal, ECOA e IBAMA (2010), Boas práticas para coleta de tuviras; Embrapa Pantanal, Boletim de Pesquisa 132 (2017); ECOA, iscas vivas. Balde, piranhas e pontos são regras do jogo.</div></div>`;
  $('bS').onclick=()=>salvar(nivel);
 }
 const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};

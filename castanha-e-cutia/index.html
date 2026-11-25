@@ -43,7 +43,7 @@ canvas{width:100%;max-width:760px;margin:0 auto;display:block;border:2px solid v
 <a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
 <header>
   <h1>Castanha e Cutia</h1>
-  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
 </header>
 <main id="tela"></main>
 <div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
@@ -117,7 +117,7 @@ let S,cv,cx,raf=null,last=0,W=720,H=460,inp={x:null,y:null,down:false,tap:null},
 const MOB=()=>W<520;
 function rrect(x,y,w,h,r,cor){cx.fillStyle=cor;cx.beginPath();cx.roundRect(x,y,w,h,r);cx.fill();}
 function sombra(x,y,rx,ry){cx.fillStyle='rgba(0,0,0,.12)';cx.beginPath();cx.ellipse(x,y,rx,ry,0,0,7);cx.fill();}
-function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/'+G.FASES.length;$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
  if(g&&!g.fim){const [a,m]=G.meta(g);$('hR').textContent=G.rotulo+' '+a+'/'+m;$('hV').textContent=G.vidas?'Vidas '+'●'.repeat(Math.max(0,g.vidas)):'';$('hT').textContent=G.semTempo?'':Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s';}
  ['hR','hV','hT'].forEach(k=>$(k).style.display=$(k).textContent?'':'none');}
 function inicio(){parar();$('hud').style.display='none';$('rankBox').style.display='block';
@@ -151,43 +151,123 @@ function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=G.FAS
  <p class="small" style="margin-top:6px">${ok?G.FASES[S.f].fato:G.dicaErro}</p>
  <div class="row" style="justify-content:center;margin-top:14px">${ok?'<button class="btn grande" id="bq">Pergunta rápida</button>':'<button class="btn grande" id="br">Jogar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
  if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}}
-/* A cutia é o principal dispersor da castanha-do-pará: rói o ouriço, come parte das sementes e enterra outras, e as esquecidas germinam (Revista Pesquisa FAPESP; Agência FAPESP; Embrapa Acre). Castanheiras não raro têm 400 anos (Pesquisa FAPESP). Tempos e pontos são regras do jogo. */
-function cutia(k,x,y,s,d,boca){k.save();k.translate(x,y);k.scale(d*s,s);k.fillStyle='#c77d3a';k.beginPath();k.ellipse(0,0,24,15,0,0,7);k.fill();k.beginPath();k.ellipse(22,-6,11,9,.2,0,7);k.fill();k.fillStyle='#8d4e1c';k.beginPath();k.ellipse(18,-14,4,6,0,0,7);k.fill();k.fillStyle='#212121';k.beginPath();k.arc(26,-8,2,0,7);k.fill();k.strokeStyle='#6d3b12';k.lineWidth=4;k.lineCap='round';for(const lx of [-14,-4,10,16]){k.beginPath();k.moveTo(lx,10);k.lineTo(lx,22);k.stroke();}if(boca){k.fillStyle='#8d6e63';k.beginPath();k.arc(34,-2,5,0,7);k.fill();}k.restore();}
-function ourico(k,x,y,r,ab){k.fillStyle='#6d4c41';k.beginPath();k.arc(x,y,r,0,7);k.fill();k.fillStyle='#8d6e63';k.beginPath();k.arc(x-r*.3,y-r*.3,r*.4,0,7);k.fill();if(ab){k.fillStyle='#3e2723';k.beginPath();k.arc(x,y,r*.5,0,7);k.fill();}}
+/* ---------- arte vetorial compartilhada ---------- */
+beep=function(){};
+function rng(s){s=s%2147483647;if(s<=0)s+=2147483646;return()=>{s=s*16807%2147483647;return(s-1)/2147483646;};}
+function lg(k,x0,y0,x1,y1,st){const g=k.createLinearGradient(x0,y0,x1,y1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+function rg(k,x,y,r0,r1,st){const g=k.createRadialGradient(x,y,r0,x,y,r1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+const CACHE={};
+function cache(key,w,h,fn){const id=key+'_'+w+'x'+h;if(!CACHE[id]){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);CACHE[id]=c;}return CACHE[id];}
+function ceu(k,w,h,cs){k.fillStyle=lg(k,0,0,0,h,cs);k.fillRect(0,0,w,h);}
+function sol(k,x,y,r,c){k.fillStyle=rg(k,x,y,0,r*4,[c,'rgba(255,255,255,0)']);k.fillRect(x-r*4,y-r*4,r*8,r*8);k.fillStyle=c;k.beginPath();k.arc(x,y,r,0,7);k.fill();}
+function nuvem(k,x,y,s,a){k.fillStyle='rgba(255,255,255,'+(a||.8)+')';for(const [dx,dy,r] of [[0,0,1],[1.1,.15,.8],[-1,.2,.75],[.5,-.45,.7],[-.4,-.35,.6]]){k.beginPath();k.arc(x+dx*s,y+dy*s,r*s,0,7);k.fill();}k.fillRect(x-1.7*s,y+.2*s,3.6*s,.8*s);}
+function serra(k,w,y,amp,cor,seed){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,y+amp*2);let x=0;k.lineTo(0,y);while(x<w+40){x+=30+r()*50;k.lineTo(x,y-r()*amp);}k.lineTo(w,y+amp*4);k.lineTo(0,y+amp*4);k.fill();}
+function matas(k,w,y,amp,cor,seed,base){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,base);k.lineTo(0,y);let x=0;while(x<w+30){const rr=8+r()*amp;k.arc(x+rr,y-r()*amp*.6,rr,Math.PI,0);x+=rr*1.6;}k.lineTo(w,base);k.closePath();k.fill();}
+function capim(k,x0,y0,w,h,cor,seed,n){const r=rng(seed);k.strokeStyle=cor;k.lineCap='round';for(let i=0;i<n;i++){const x=x0+r()*w,y=y0+r()*h,l=4+r()*10;k.lineWidth=1+r()*1.2;for(let j=-1;j<=1;j++){k.beginPath();k.moveTo(x,y);k.quadraticCurveTo(x+j*3,y-l*.6,x+j*5+r()*2,y-l);k.stroke();}}}
+function copa(k,x,y,r,cs,seed){const R=rng(seed);const pts=[];for(let i=0;i<9;i++){const a=R()*Math.PI*2,d=R()*r*.55;pts.push([x+Math.cos(a)*d,y+Math.sin(a)*d*.7,r*(.35+R()*.3)]);}
+ k.fillStyle=cs[0];for(const [a,b,c] of pts){k.beginPath();k.arc(a+c*.12,b+c*.18,c,0,7);k.fill();}
+ k.fillStyle=cs[1];for(const [a,b,c] of pts){k.beginPath();k.arc(a,b,c*.92,0,7);k.fill();}
+ k.fillStyle=cs[2];for(const [a,b,c] of pts){k.beginPath();k.arc(a-c*.25,b-c*.3,c*.5,0,7);k.fill();}}
+function tronco(k,x,y0,y1,w0,w1,c1,c2){k.fillStyle=lg(k,x-w0,0,x+w0,0,[c2,c1,c1,c2]);k.beginPath();k.moveTo(x-w0,y0);k.lineTo(x-w1,y1);k.lineTo(x+w1,y1);k.lineTo(x+w0,y0);k.fill();k.strokeStyle='rgba(0,0,0,.12)';k.lineWidth=1;for(let y=y1+8;y<y0;y+=11){const t=(y-y1)/(y0-y1),ww=w1+(w0-w1)*t;k.beginPath();k.moveTo(x-ww*.6,y);k.quadraticCurveTo(x,y+3,x+ww*.5,y-1);k.stroke();}}
+function palmeira(k,x,y,h,lean,cfr,ctr,seed,nf){const R=rng(seed);const tx=x+lean,ty=y-h;k.strokeStyle=ctr;k.lineCap='round';for(let i=0;i<14;i++){const t0=i/14,t1=(i+1)/14;k.lineWidth=h*.05*(1-t0*.35);const xa=x+lean*t0*t0,ya=y-h*t0,xb=x+lean*t1*t1,yb=y-h*t1;k.beginPath();k.moveTo(xa,ya);k.lineTo(xb,yb);k.stroke();}
+ k.strokeStyle='rgba(0,0,0,.15)';k.lineWidth=1;for(let i=1;i<14;i++){const t=i/14,xa=x+lean*t*t,ya=y-h*t;k.beginPath();k.moveTo(xa-h*.022,ya);k.lineTo(xa+h*.022,ya);k.stroke();}
+ nf=nf||9;for(let f=0;f<nf;f++){const a=-Math.PI/2+(f-(nf-1)/2)*(2.6/nf)+(R()-.5)*.2,L=h*(.38+R()*.12),dr=.55+R()*.25;const ex=tx+Math.cos(a)*L,ey=ty+Math.sin(a)*L*.55+L*dr*.5;const mx=tx+Math.cos(a)*L*.5,my=ty+Math.sin(a)*L*.5-L*.12;
+  k.strokeStyle=cfr[0];k.lineWidth=2;k.beginPath();k.moveTo(tx,ty);k.quadraticCurveTo(mx,my,ex,ey);k.stroke();
+  for(let j=1;j<16;j++){const t=j/16,px=(1-t)*(1-t)*tx+2*(1-t)*t*mx+t*t*ex,py=(1-t)*(1-t)*ty+2*(1-t)*t*my+t*t*ey;const ll=L*.16*(1-t*.5);k.strokeStyle=cfr[j%2];k.lineWidth=1.6;k.beginPath();k.moveTo(px,py);k.lineTo(px+Math.cos(a+1.6)*ll*.5,py+ll);k.moveTo(px,py);k.lineTo(px+Math.cos(a-1.6)*ll*.5,py+ll*.9);k.stroke();}}}
+function sombraE(k,x,y,rx,ry,a){k.fillStyle='rgba(20,30,20,'+(a||.18)+')';k.beginPath();k.ellipse(x,y,rx,ry,0,0,7);k.fill();}
+function vinheta(k,w,h){k.fillStyle=rg(k,w/2,h/2,Math.min(w,h)*.45,Math.max(w,h)*.8,['rgba(0,0,0,0)','rgba(0,0,0,.18)']);k.fillRect(0,0,w,h);}
+function rrk(k,x,y,w,h,r,c){k.fillStyle=c;k.beginPath();k.roundRect(x,y,w,h,r);k.fill();}
+/* figura humana: o={pele,camisa,calca,chapeu,passo,bracoE,bracoD} ângulos em rad a partir de baixo */
+function pessoa(k,x,y,s,o){o=o||{};const p=o.passo||0;k.save();k.translate(x,y);k.scale(s*(o.dir||1),s);k.lineCap='round';k.lineJoin='round';
+ const pl=Math.sin(p)*.35;k.strokeStyle=o.calca||'#37474f';k.lineWidth=7;k.beginPath();k.moveTo(-3,-38);k.lineTo(-3+Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18,0);k.stroke();k.beginPath();k.moveTo(3,-38);k.lineTo(3-Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(3-Math.sin(pl)*20-Math.sin(pl*.5)*18,0);k.stroke();
+ k.fillStyle='#3e2723';k.beginPath();k.ellipse(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.ellipse(3-Math.sin(pl)*20-Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.fill();
+ k.fillStyle=o.camisa||'#1e88e5';k.beginPath();k.moveTo(-9,-40);k.lineTo(-10,-68);k.quadraticCurveTo(0,-74,10,-68);k.lineTo(9,-40);k.closePath();k.fill();k.fillStyle='rgba(0,0,0,.12)';k.fillRect(2,-68,7,28);
+ const be=o.bracoE!==undefined?o.bracoE:-pl*.8,bd=o.bracoD!==undefined?o.bracoD:pl*.8;k.strokeStyle=o.camisa||'#1e88e5';k.lineWidth=6;
+ for(const [sx,a] of [[-8,be],[8,bd]]){k.beginPath();k.moveTo(sx,-66);const ex=sx+Math.sin(a)*14,ey=-66+Math.cos(a)*14;k.lineTo(ex,ey);k.stroke();k.strokeStyle=o.pele||'#c68b59';k.beginPath();k.moveTo(ex,ey);k.lineTo(ex+Math.sin(a*1.15)*13,ey+Math.cos(a*1.15)*13);k.stroke();k.strokeStyle=o.camisa||'#1e88e5';}
+ k.fillStyle=o.pele||'#c68b59';k.fillRect(-3,-76,6,6);k.beginPath();k.ellipse(0,-83,7.5,8.5,0,0,7);k.fill();
+ if(o.chapeu!==false){k.fillStyle=o.chapeu||'#795548';k.beginPath();k.ellipse(0,-88,15,3.5,0,0,7);k.fill();k.beginPath();k.moveTo(-8,-88);k.quadraticCurveTo(-7,-99,0,-99);k.quadraticCurveTo(7,-99,8,-88);k.fill();k.fillStyle='rgba(0,0,0,.25)';k.fillRect(-8,-91,16,2.5);}
+ k.restore();}
+/* boi nelore em perfil, olhando para +x */
+function boi(k,x,y,s,dir,cor,p){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#ece6da';p=p||0;
+ const pern=[[-26,0],[-18,Math.PI],[18,Math.PI],[26,0]];
+ for(let i=0;i<4;i++){const [lx,ph]=pern[i];const a=Math.sin(p+ph)*.3;k.strokeStyle=i==1||i==2?shade(c,-.12):c;k.lineCap='round';k.lineWidth=6.5;k.beginPath();k.moveTo(lx,-24);k.lineTo(lx+Math.sin(a)*9,-10);k.lineTo(lx+Math.sin(a)*7,2);k.stroke();k.fillStyle='#3e2723';k.fillRect(lx+Math.sin(a)*7-3.5,1,7,3);}
+ k.fillStyle=c;k.beginPath();k.moveTo(-34,-40);k.quadraticCurveTo(-38,-24,-30,-20);k.quadraticCurveTo(0,-14,26,-20);k.quadraticCurveTo(34,-26,32,-40);k.quadraticCurveTo(28,-50,20,-54);k.quadraticCurveTo(12,-56,8,-48);k.quadraticCurveTo(-10,-46,-28,-48);k.quadraticCurveTo(-34,-46,-34,-40);k.fill();
+ k.fillStyle=lg(k,0,-50,0,-18,['rgba(255,255,255,.18)','rgba(0,0,0,0)','rgba(60,40,20,.22)']);k.fill();
+ k.fillStyle=c;k.beginPath();k.moveTo(26,-44);k.quadraticCurveTo(38,-44,44,-38);k.lineTo(54,-24);k.quadraticCurveTo(56,-18,51,-17);k.quadraticCurveTo(46,-18,42,-24);k.quadraticCurveTo(34,-26,28,-22);k.fill();
+ k.beginPath();k.moveTo(28,-26);k.quadraticCurveTo(34,-14,30,-12);k.quadraticCurveTo(24,-16,22,-24);k.fill();
+ k.fillStyle=shade(c,-.35);k.beginPath();k.ellipse(52,-19,3.4,2.6,.4,0,7);k.fill();k.fillStyle='#1b1b1b';k.beginPath();k.arc(44,-34,1.8,0,7);k.fill();
+ k.fillStyle=shade(c,-.08);k.beginPath();k.ellipse(38,-41,8,2.8,.5,0,7);k.fill();k.strokeStyle='#cfc4b0';k.lineWidth=2.4;k.lineCap='round';k.beginPath();k.moveTo(41,-44);k.quadraticCurveTo(44,-49,42,-52);k.stroke();
+ k.strokeStyle=c;k.lineWidth=2.2;k.beginPath();k.moveTo(-34,-42);k.quadraticCurveTo(-40,-28,-37,-14);k.stroke();k.fillStyle='#4e342e';k.beginPath();k.ellipse(-37,-13,2.2,4.5,0,0,7);k.fill();
+ k.restore();}
+function shade(hex,f){let n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;const t=f<0?0:255,p=Math.abs(f);r=Math.round((t-r)*p+r);g=Math.round((t-g)*p+g);b=Math.round((t-b)*p+b);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+function cavalo(k,x,y,s,dir,p,cor){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#8d5a3b';k.strokeStyle=c;k.lineCap='round';k.lineWidth=6;
+ for(const [lx,ph] of [[-20,0],[-12,Math.PI],[18,Math.PI],[26,0]]){const a=Math.sin(p+ph)*.45;k.beginPath();k.moveTo(lx,-22);k.lineTo(lx+Math.sin(a)*10,-8);k.lineTo(lx+Math.sin(a)*8,4);k.stroke();}
+ k.fillStyle=c;k.beginPath();k.ellipse(3,-30,28,12,0,0,7);k.fill();k.beginPath();k.moveTo(22,-36);k.quadraticCurveTo(30,-56,40,-58);k.lineTo(50,-48);k.quadraticCurveTo(44,-44,38,-46);k.lineTo(30,-26);k.fill();
+ k.fillStyle='#3e2723';k.beginPath();k.moveTo(24,-40);k.quadraticCurveTo(30,-60,40,-60);k.lineTo(36,-56);k.quadraticCurveTo(30,-52,28,-36);k.fill();k.beginPath();k.moveTo(-24,-34);k.quadraticCurveTo(-38,-26,-34,-6);k.quadraticCurveTo(-30,-22,-22,-28);k.fill();
+ k.fillStyle='rgba(0,0,0,.15)';k.beginPath();k.ellipse(3,-23,24,4,0,0,7);k.fill();k.fillStyle='#5d4037';k.fillRect(-8,-44,22,6);k.restore();}
+function cavaleiro(k,x,y,s,dir,p,o){cavalo(k,x,y,s,dir,p,o&&o.cor);k.save();k.translate(x,y);k.scale(s*dir,s);pessoa(k,2,-30,.62,Object.assign({passo:0,bracoE:.9,bracoD:1.3,calca:'#4e342e'},o||{}));k.restore();}
+/* Cutia e castanheira: a cutia rói o ouriço, come parte e enterra o resto; esquece algumas, que germinam; se for predada por felinos a semente fica (Revista Pesquisa FAPESP, Sem bichos a floresta morre); perto da árvore-mãe, mais sementes são comidas por roedores e porcos-do-mato (idem); só um dispersor, a cutia (Agência FAPESP); castanheiras de 400 anos (Revista Pesquisa FAPESP n. 198); ouriço duro como madeira (EduCAPES). Tempos, porcos, jaguatirica e pontos são regras do jogo. */
+const CT={};
+CT.cena=function(k,w,h){k.fillStyle=lg(k,0,0,0,h*.55,['#c9dfbd','#a7c497','#8fae80']);k.fillRect(0,0,w,h);
+ const R=rng(4);for(let i=0;i<16;i++){const x=R()*w,ww=8+R()*16;k.fillStyle='rgba(70,95,60,'+(.14+R()*.16)+')';k.fillRect(x,0,ww,h*.52);}
+ for(let i=0;i<5;i++){k.fillStyle='rgba(255,255,225,.16)';k.beginPath();const x=R()*w;k.moveTo(x,0);k.lineTo(x+30,0);k.lineTo(x+120,h*.55);k.lineTo(x+50,h*.55);k.fill();}
+ k.fillStyle='#3f6a39';k.beginPath();k.moveTo(0,0);k.lineTo(w,0);k.lineTo(w,h*.06);for(let x=w;x>=0;x-=30)k.lineTo(x,h*.06+Math.sin(x*.05)*10+R()*12);k.fill();
+ k.strokeStyle='#4d6b3a';k.lineWidth=2;for(let i=0;i<7;i++){const x=R()*w;k.beginPath();k.moveTo(x,0);k.bezierCurveTo(x+20,h*.15,x-20,h*.3,x+6,h*.42*R()+h*.1);k.stroke();}
+ k.fillStyle=lg(k,0,h*.5,0,h,['#8a6a4a','#6f5236']);k.fillRect(0,h*.5,w,h*.5);
+ const R2=rng(21);for(let i=0;i<Math.floor(w*h/1600);i++){const x=R2()*w,y=h*.52+R2()*h*.48;k.fillStyle=['#a5753e','#8e6232','#b88a4c','#6d4a28','#9a7a3e'][i%5];k.save();k.translate(x,y);k.rotate(R2()*6);k.globalAlpha=.75;k.beginPath();k.ellipse(0,0,4+R2()*3,1.8,0,0,7);k.fill();k.restore();}k.globalAlpha=1;
+ const tx=w*.5,bw=Math.min(w,h)*.09;k.fillStyle=lg(k,tx-bw,0,tx+bw,0,['#5a4636','#8a7258','#6e5844']);k.beginPath();k.moveTo(tx-bw,0);k.lineTo(tx+bw,0);k.lineTo(tx+bw*1.1,h*.42);k.quadraticCurveTo(tx+bw*1.5,h*.5,tx+bw*3,h*.58);k.lineTo(tx+bw*1.4,h*.57);k.lineTo(tx+bw*.6,h*.55);k.lineTo(tx-bw*.6,h*.55);k.lineTo(tx-bw*1.4,h*.57);k.lineTo(tx-bw*3,h*.58);k.quadraticCurveTo(tx-bw*1.5,h*.5,tx-bw*1.1,h*.42);k.closePath();k.fill();
+ k.strokeStyle='rgba(40,25,15,.25)';k.lineWidth=2;for(let i=-3;i<=3;i++){k.beginPath();k.moveTo(tx+i*bw*.28,0);k.bezierCurveTo(tx+i*bw*.3+4,h*.15,tx+i*bw*.28-4,h*.3,tx+i*bw*.32,h*.54);k.stroke();}
+ k.fillStyle='#5d4632';k.beginPath();k.roundRect(w*.02,h*.8,w*.17,h*.08,14);k.fill();k.fillStyle='#21160d';k.beginPath();k.ellipse(w*.17,h*.84,h*.035,h*.03,0,0,7);k.fill();
+ k.fillStyle='rgba(255,255,255,.85)';k.font='bold 12px system-ui';k.textAlign='center';k.fillText('toca',w*.1,h*.78);};
+CT.toca=()=>({x:W*.17,y:H*.84});
+function cutia(k,x,y,s,d,boca,ph){k.save();k.translate(x,y);k.scale(d*s,s);ph=ph||0;k.strokeStyle='#5a3214';k.lineCap='round';k.lineWidth=3;
+ for(const [lx,o] of [[-14,0],[-8,Math.PI],[10,Math.PI],[15,0]]){const a=Math.sin(ph+o)*.4;k.beginPath();k.moveTo(lx,-6);k.lineTo(lx+Math.sin(a)*8,8);k.stroke();}
+ k.fillStyle=lg(k,0,-24,0,0,['#7a4a1e','#c47a35','#d99a55']);k.beginPath();k.moveTo(-22,-6);k.quadraticCurveTo(-26,-26,-6,-26);k.quadraticCurveTo(14,-24,22,-14);k.quadraticCurveTo(28,-10,32,-8);k.quadraticCurveTo(30,-2,22,-2);k.quadraticCurveTo(0,2,-22,-6);k.fill();
+ k.fillStyle='#b06a2c';k.beginPath();k.ellipse(18,-15,6,4,-.4,0,7);k.fill();k.fillStyle='#6d3b12';k.beginPath();k.ellipse(19,-22,3,4.5,.2,0,7);k.fill();k.fillStyle='#111';k.beginPath();k.arc(25,-12,1.6,0,7);k.fill();k.fillStyle='#3a1f0a';k.beginPath();k.arc(32,-8,1.6,0,7);k.fill();
+ if(boca){k.fillStyle='#6b4a2c';k.beginPath();k.ellipse(33,-3,4,5.5,.4,0,7);k.fill();}k.restore();}
+function ourico(k,x,y,r,ab){k.fillStyle=rg(k,x-r*.3,y-r*.3,r*.1,r,['#8a6a48','#5a4028']);k.beginPath();k.arc(x,y,r,0,7);k.fill();k.fillStyle='#3e2a17';k.beginPath();k.arc(x,y-r*.85,r*.18,0,7);k.fill();if(ab){k.fillStyle='#2a1a0c';k.beginPath();k.arc(x+r*.2,y-r*.1,r*.45,0,7);k.fill();}}
+function porco(k,x,y,s,d,ph){k.save();k.translate(x,y);k.scale(d*s,s);k.strokeStyle='#2b2620';k.lineWidth=4;k.lineCap='round';for(const [lx,o] of [[-14,0],[-8,Math.PI],[10,Math.PI],[15,0]]){const a=Math.sin(ph+o)*.4;k.beginPath();k.moveTo(lx,-6);k.lineTo(lx+Math.sin(a)*6,8);k.stroke();}
+ k.fillStyle='#3a332b';k.beginPath();k.ellipse(0,-14,22,12,0,0,7);k.fill();k.beginPath();k.moveTo(16,-22);k.lineTo(34,-12);k.lineTo(32,-6);k.lineTo(14,-6);k.fill();k.fillStyle='#e8e2d4';k.beginPath();k.moveTo(18,-8);k.lineTo(28,-10);k.lineTo(28,-6);k.lineTo(18,-5);k.fill();k.fillStyle='#2b2620';k.fillRect(-6,-28,22,4);k.restore();}
+function jaguatirica(k,x,y,s,d,ph){k.save();k.translate(x,y);k.scale(d*s,s);k.strokeStyle='#c08a3c';k.lineWidth=5;k.lineCap='round';for(const [lx,o] of [[-18,0],[-12,Math.PI],[14,Math.PI],[20,0]]){const a=Math.sin(ph+o)*.5;k.beginPath();k.moveTo(lx,-12);k.lineTo(lx+Math.sin(a)*10,8);k.stroke();}
+ k.fillStyle='#d6a052';k.beginPath();k.ellipse(0,-18,28,11,0,0,7);k.fill();k.beginPath();k.ellipse(30,-24,9,8,0,0,7);k.fill();k.beginPath();k.moveTo(25,-31);k.lineTo(27,-38);k.lineTo(31,-31);k.fill();k.beginPath();k.moveTo(-26,-20);k.quadraticCurveTo(-42,-20,-44,-8);k.lineWidth=4;k.strokeStyle='#d6a052';k.stroke();
+ k.fillStyle='#4e3416';const R=rng(5);for(let i=0;i<16;i++){k.beginPath();k.ellipse(-22+R()*44,-24+R()*12,2.6,1.8,R()*3,0,7);k.fill();}k.fillStyle='#111';k.beginPath();k.arc(33,-26,1.6,0,7);k.fill();k.restore();}
 const G={titulo:'Castanha e Cutia',rotulo:'Castanhas plantadas',vidas:0,
- resumo:'No Acre e no Pará, a castanheira é árvore de muitos séculos. Quem planta a castanha nova é a cutia: ela rói o ouriço, come um pouco e enterra o resto para depois.',
- como:[['Arraste','Leve a cutia até um ouriço caído e fique perto dele um instante para roer.'],['Enterre','Com castanha na boca, toque em cima da cutia para enterrar ali.'],['Floresta','Castanha enterrada e esquecida vira muda de castanheira.']],
- dica:'Roa o ouriço e toque na cutia para enterrar.',dicaErro:'Fique parada perto do ouriço até ele abrir e depois enterre longe da árvore.',
- FASES:[{nome:'Chão do castanhal',dur:45,meta:6,metaTxt:'enterrar 6 castanhas em 45 s.',txt:'Os ouriços caíram. Roa, pegue e enterre.',fato:'A cutia come algumas castanhas e enterra outras para comer em outra época. As que ela esquece germinam.'},
-  {nome:'Longe da mãe',dur:50,meta:9,longe:1,metaTxt:'enterrar 9 castanhas longe da castanheira em 50 s.',txt:'Agora só vale enterrar longe da árvore-mãe, onde a muda cresce melhor.',fato:'Perto da árvore-mãe, a semente tem mais chance de ser comida por outros roedores e porcos-do-mato.'},
-  {nome:'Safra grande',dur:55,meta:12,longe:1,metaTxt:'enterrar 12 castanhas longe da castanheira em 55 s.',txt:'Muitos ouriços no chão. Trabalhe rápido, cutia.',fato:'Pesquisadores dizem que a castanha-do-pará só tem um dispersor: a cutia. Sem ela, os castanhais quase não se renovam.'}],
- init(g){g.n=0;g.c={x:W*.15,y:H*.75,d:1};g.boca=0;g.ou=[];g.roe=0;g.mud=[];g.q=0;for(let i=0;i<3;i++)G.cai(g);},
- cai(g){g.ou.push({x:W*(.32+Math.random()*.36),y:H*(.68+Math.random()*.22),ab:false});},
- meta(g){return [g.n,FASES[S.f].meta];},cedo(g){return g.n>=FASES[S.f].meta;},
- update(g,dt){const F=FASES[S.f],c=g.c;g.q-=dt;if(g.q<=0&&g.ou.length<4){G.cai(g);g.q=4;}
-  if(inp.down&&inp.x!==null&&!inp.tap){const dx=inp.x-c.x,dy=inp.y-c.y,d=Math.hypot(dx,dy);if(d>6){const v=Math.min(d,200*dt);c.x+=dx/d*v;c.y=Math.max(H*.58,Math.min(H-20,c.y+dy/d*v));c.d=dx<0?-1:1;}}
-  if(tec.ArrowLeft){c.x-=200*dt;c.d=-1;}if(tec.ArrowRight){c.x+=200*dt;c.d=1;}if(tec.ArrowUp)c.y=Math.max(H*.58,c.y-150*dt);if(tec.ArrowDown)c.y=Math.min(H-20,c.y+150*dt);c.x=Math.max(20,Math.min(W-20,c.x));
-  const o=g.ou.find(o=>Math.hypot(o.x-c.x,o.y-c.y)<40);if(o&&g.boca===0){g.roe+=dt;if(g.roe>1.5){g.ou.splice(g.ou.indexOf(o),1);g.boca=2;g.roe=0;beep(500,.1,.05);msg('Ouriço aberto! Agora enterre.');}}else g.roe=0;
-  const perto=inp.tap&&Math.hypot(inp.tap.x-c.x,inp.tap.y-c.y)<80;const enterra=perto||tec[' '];tec[' ']=0;if(enterra&&g.boca>0){const t={x:c.x+c.d*30,y:c.y+14};const longe=Math.abs(t.x-W*.5)>W*.22;if(t.y>H*.58&&(!F.longe||longe)){g.boca--;g.n++;g.mud.push({x:t.x,y:t.y,t:0});ganha(10,t.x,t.y-20);}else if(t.y>H*.58)msg('Muito perto da árvore-mãe. Enterre mais longe.');}
-  for(const m of g.mud)m.t+=dt;},
- draw(g){const gr=cx.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#e8f5e9');gr.addColorStop(1,'#c8e6c9');cx.fillStyle=gr;cx.fillRect(0,0,W,H);
-  cx.fillStyle='#a5d6a7';for(let i=0;i<6;i++){cx.beginPath();cx.arc((i*157)%W,H*.3,60,0,7);cx.fill();}
-  cx.fillStyle='#8d6e63';cx.fillRect(W*.47,H*.05,W*.06,H*.55);cx.fillStyle='#66bb6a';cx.beginPath();cx.ellipse(W*.5,H*.1,W*.3,H*.12,0,0,7);cx.fill();
-  cx.fillStyle='#a1887f';cx.fillRect(0,H*.58,W,H*.42);
-  if(FASES[S.f].longe){cx.fillStyle='rgba(255,255,255,.35)';cx.fillRect(W*.28,H*.58,W*.44,H*.42);cx.fillStyle='#5d4037';cx.font='bold 13px system-ui';cx.textAlign='center';cx.fillText('perto da mãe',W*.5,H*.64);}
-  cx.fillStyle='#6d4c41';for(let i=0;i<24;i++)cx.fillRect((i*83)%W,H*.62+(i*29)%(H*.35),12,4);
-  for(const m of g.mud){const h=Math.min(1,m.t/3);cx.strokeStyle='#2e7d32';cx.lineWidth=3;cx.beginPath();cx.moveTo(m.x,m.y);cx.lineTo(m.x,m.y-14*h-4);cx.stroke();cx.fillStyle='#43a047';cx.beginPath();cx.ellipse(m.x-5,m.y-12*h-4,6*h+2,3,-.5,0,7);cx.ellipse(m.x+5,m.y-14*h-4,6*h+2,3,.5,0,7);cx.fill();}
-  for(const o of g.ou)ourico(cx,o.x,o.y,15,false);
-  if(g.roe>0){rrect(g.c.x-25,g.c.y-46,50,8,4,'#fff');rrect(g.c.x-25,g.c.y-46,50*g.roe/1.5,8,4,'#ff8f00');}
-  cutia(cx,g.c.x,g.c.y,MOB()?.9:1,g.c.d,g.boca>0);
-  cx.fillStyle='#4e342e';cx.font='bold 14px system-ui';cx.textAlign='left';cx.fillText('Na boca: '+g.boca,12,H*.55);},
- capa(k,w,h){k.fillStyle='#e8f5e9';k.fillRect(0,0,w,h);k.fillStyle='#8d6e63';k.fillRect(300,0,40,160);k.fillStyle='#66bb6a';k.beginPath();k.ellipse(320,20,220,50,0,0,7);k.fill();k.fillStyle='#a1887f';k.fillRect(0,150,w,70);ourico(k,380,175,18,true);ourico(k,180,190,15,false);cutia(k,250,170,1.4,1,true);}
+ resumo:'No Acre e no Pará, a castanheira pode viver séculos. Quem planta a castanha nova é a cutia: ela rói o ouriço, come um pouco e enterra o resto para depois. A que ela esquece vira árvore.',
+ como:[['Arraste','Leve a cutia até um ouriço e fique encostada nele até abrir.'],['Enterre','Com castanha na boca, toque na cutia para enterrar ali.'],['Cuidado','Porcos-do-mato tomam a castanha. Quando a jaguatirica aparecer, corra para a toca.']],
+ dica:'Roa, carregue e toque na cutia para enterrar.',dicaErro:'Fique encostada no ouriço até ele abrir e enterre longe da árvore-mãe.',
+ FASES:[{nome:'Chão do castanhal',dur:45,meta:6,metaTxt:'enterrar 6 castanhas em 45 s.',txt:'Os ouriços caíram. Roa, pegue as castanhas e enterre.',fato:'A cutia come algumas castanhas e enterra outras para comer em outra época. As que ela esquece germinam.'},
+  {nome:'Longe da mãe',dur:50,meta:8,longe:1,metaTxt:'enterrar 8 castanhas longe da castanheira em 50 s.',txt:'Agora só vale enterrar fora da sombra da árvore-mãe.',fato:'Perto da árvore-mãe, mais sementes são comidas por outros roedores e por porcos-do-mato.'},
+  {nome:'Bando de porcos',dur:55,meta:9,longe:1,porc:2,metaTxt:'enterrar 9 castanhas longe da árvore em 55 s.',txt:'Um bando de porcos-do-mato passa por aqui. Se encostar neles, a cutia larga a castanha.',fato:'A castanha-do-pará tem um só dispersor, a cutia. Sem ela os castanhais quase não se renovam.'},
+  {nome:'Olho da jaguatirica',dur:60,meta:10,longe:1,porc:1,jag:1,metaTxt:'enterrar 10 castanhas em 60 s sem ser pega.',txt:'Uma jaguatirica ronda o castanhal. Quando ela aparecer, leve a cutia para a toca.',fato:'Quando uma cutia é pega por um felino, as castanhas que ela enterrou ficam no chão e podem germinar. Castanheiras com 400 anos não são raras.'}],
+ init(g){const F=FASES[S.f];g.n=0;g.c={x:W*.25,y:H*.78,d:1,ph:0};g.boca=0;g.ou=[];g.roe=0;g.mud=[];g.q=0;g.st=0;for(let i=0;i<3;i++)G.cai(g);g.pc=[];for(let i=0;i<(F.porc||0);i++)g.pc.push({x:W*(.4+i*.2),y:H*.75,vx:(i?-1:1)*45,ph:0});g.jt=7;g.jag=null;g.pega=0;},
+ cai(g){g.ou.push({x:W*(.32+Math.random()*.36),y:H*(.62+Math.random()*.32)});},
+ meta(g){return [g.n,FASES[S.f].meta];},cedo(g){return g.n>=FASES[S.f].meta||g.pega>=1;},
+ update(g,dt){const F=FASES[S.f],c=g.c;g.q-=dt;if(g.q<=0&&g.ou.length<3){G.cai(g);g.q=3;}g.st=Math.max(0,g.st-dt);
+  if(g.st<=0&&inp.down&&inp.x!==null&&!(inp.tap&&Math.hypot(inp.tap.x-c.x,inp.tap.y-c.y)<70)){const dx=inp.x-c.x,dy=inp.y-c.y,d=Math.hypot(dx,dy);if(d>6){const v=Math.min(d,(g.jag?260:210)*dt);c.x=Math.max(20,Math.min(W-20,c.x+dx/d*v));c.y=Math.max(H*.58,Math.min(H-14,c.y+dy/d*v));c.d=dx<0?-1:1;c.ph+=v*.15;}}
+  const o=g.ou.find(o=>Math.hypot(o.x-c.x,o.y-c.y)<42);if(o&&g.boca===0){g.roe+=dt;if(g.roe>1.5){g.ou.splice(g.ou.indexOf(o),1);g.boca=2;g.roe=0;msg('Ouriço aberto. Agora enterre.');}}else g.roe=0;
+  const perto=inp.tap&&Math.hypot(inp.tap.x-c.x,inp.tap.y-c.y)<70;if((perto||tec[' '])&&g.boca>0){tec[' ']=0;const tx=c.x+c.d*26,ty=c.y+6;const longe=Math.abs(tx-W*.5)>W*.2;if(!F.longe||longe){g.boca--;g.n++;g.mud.push({x:tx,y:ty,t:0});ganha(10,tx,ty-24);}else msg('Muito perto da árvore-mãe. Enterre mais longe.');}
+  for(const m of g.mud)m.t+=dt;
+  for(const p of g.pc){p.ph+=dt*8;p.x+=p.vx*dt;if(p.x<W*.3||p.x>W*.72)p.vx*=-1;p.y+=Math.sin(g.t*.8+p.x*.01)*20*dt;p.y=Math.max(H*.62,Math.min(H-16,p.y));if(Math.hypot(p.x-c.x,p.y-c.y)<40&&g.st<=0){g.st=.6;if(g.boca>0){g.boca=0;msg('O porco-do-mato tomou a castanha.');ganha(-5,c.x,c.y-30);}}}
+  if(F.jag){g.jt-=dt;if(!g.jag&&g.jt<=0){g.jag={x:W+40,y:H*.76,t:0,ph:0};msg('Jaguatirica! Corra para a toca.');}
+   if(g.jag){const j=g.jag;j.t+=dt;j.ph+=dt*10;const T=CT.toca();const na=Math.hypot(c.x-T.x,c.y-T.y)<40;if(j.t>1.6){const dx=c.x-j.x,dy=c.y-j.y,d=Math.hypot(dx,dy);j.x+=dx/d*240*dt;j.y+=dy/d*240*dt;j.d=dx<0?-1:1;if(na){j.x+=0;}if(d<26&&!na){g.pega++;msg('A jaguatirica pegou a cutia.');}}else j.x-=60*dt;if(j.t>4.2||(na&&j.t>2.4)){g.jag=null;g.jt=6+Math.random()*3;if(na)msg('A jaguatirica foi embora.');}}}},
+ draw(g){const F=FASES[S.f];cx.drawImage(cache('ct',W,H,CT.cena),0,0);const s=H/400;
+  if(F.longe){cx.fillStyle='rgba(30,20,10,.22)';cx.beginPath();cx.ellipse(W*.5,H*.76,W*.2,H*.2,0,0,7);cx.fill();cx.fillStyle='rgba(255,255,255,.85)';cx.font='bold 12px system-ui';cx.textAlign='center';cx.fillText('sombra da árvore-mãe',W*.5,H*.98);}
+  for(const m of g.mud){const hh=Math.min(1,m.t/3);cx.fillStyle='#4b3620';cx.beginPath();cx.ellipse(m.x,m.y,7,3,0,0,7);cx.fill();cx.strokeStyle='#2e7d32';cx.lineWidth=2.5;cx.beginPath();cx.moveTo(m.x,m.y);cx.lineTo(m.x,m.y-16*hh-3);cx.stroke();cx.fillStyle='#4caf50';cx.beginPath();cx.ellipse(m.x-5,m.y-14*hh-3,6*hh+2,3,-.5,0,7);cx.ellipse(m.x+5,m.y-16*hh-3,6*hh+2,3,.5,0,7);cx.fill();}
+  const L=[];for(const o of g.ou)L.push({y:o.y,f:()=>{sombraE(cx,o.x,o.y+14,16,4);ourico(cx,o.x,o.y,15*s,false);}});
+  for(const p of g.pc)L.push({y:p.y,f:()=>{sombraE(cx,p.x,p.y+6,24,5);porco(cx,p.x,p.y,s,p.vx<0?-1:1,p.ph);}});
+  L.push({y:g.c.y,f:()=>{sombraE(cx,g.c.x,g.c.y+6,24,5);cutia(cx,g.c.x,g.c.y,s*1.05,g.c.d,g.boca>0,g.c.ph);if(g.st>0){cx.fillStyle='#fff';cx.font='bold 14px system-ui';cx.fillText('!',g.c.x,g.c.y-40);}}});
+  if(g.jag)L.push({y:g.jag.y,f:()=>{sombraE(cx,g.jag.x,g.jag.y+6,30,5);jaguatirica(cx,g.jag.x,g.jag.y,s*1.1,g.jag.d||-1,g.jag.ph);}});
+  L.sort((a,b)=>a.y-b.y).forEach(e=>e.f());
+  if(g.roe>0){rrk(cx,g.c.x-25,g.c.y-50,50,8,4,'#fff');rrk(cx,g.c.x-25,g.c.y-50,50*g.roe/1.5,8,4,'#ff8f00');}
+  cx.fillStyle='rgba(255,255,255,.9)';cx.font='bold 13px system-ui';cx.textAlign='left';cx.fillText('Castanhas na boca: '+g.boca,12,H*.54);vinheta(cx,W,H);},
+ capa(k,w,h){const o=cx,oW=W,oH=H;cx=k;W=w;H=h;CT.cena(k,w,h);ourico(k,w*.68,h*.8,18,true);ourico(k,w*.78,h*.88,15,false);cutia(k,w*.36,h*.86,1.7,1,true,1);vinheta(k,w,h);cx=o;W=oW;H=oH;}
 };
 const FASES=G.FASES;
 const PERG=[
  {q:'Que animal abre o ouriço e planta a castanha-do-pará?',o:['A cutia','O macaco-prego','A arara-azul']},
- {q:'Por que uma castanha enterrada pela cutia pode virar árvore?',o:['A cutia esquece algumas que enterrou','A cutia rega as sementes enterradas todo dia','A cutia só enterra castanhas podres']},
- {q:'Por que é bom a semente ficar longe da árvore-mãe?',o:['Perto dela mais bichos comem as sementes','Longe dela chove mais e o solo é mais fofo','A árvore-mãe solta veneno no chão']}
+ {q:'Por que é melhor a semente ficar longe da árvore-mãe?',o:['Perto dela mais bichos comem as sementes','Longe dela chove mais e o solo é mais fofo','A árvore-mãe solta veneno no chão']},
+ {q:'Quantos dispersores conhecidos tem a castanha-do-pará?',o:['Um só, a cutia','Dezenas de aves e peixes','Nenhum, ela cai e brota sozinha']},
+ {q:'Por que a castanha enterrada pela cutia pode virar árvore?',o:['A cutia esquece algumas que enterrou','A cutia rega as sementes enterradas todo dia','A cutia só enterra castanhas podres']}
 ];
 function pergunta(){
  const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
@@ -198,11 +278,11 @@ function pergunta(){
   $('bn').onclick=()=>{S.tot+=S.fp;S.fp=0;if(S.f===FASES.length-1)final(true);else{S.f++;fase();}};});
 }
 function final(tudo){
- S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
+ S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?FASES.length+' fases':'Fase '+(S.f+1);
  $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Plantadora de castanhais!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
  <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
- <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Fontes: Revista Pesquisa FAPESP, Sem bichos, a floresta morre (2001); Revista Pesquisa FAPESP n. 198, castanheiras; Agência FAPESP, Declínio de animais dispersores de sementes dificulta combate às mudanças climáticas; Embrapa Acre, remoção de sementes de castanheira no Seringal Filipinas, Resex Chico Mendes. Tempos, ouriços e pontos são regras do jogo.</div></div>`;
+ <div class="small" style="margin-top:12px;text-align:left">Fontes: Revista Pesquisa FAPESP (2001), Sem bichos, a floresta morre; Revista Pesquisa FAPESP n. 198, castanheiras; Agência FAPESP, Declínio de animais dispersores de sementes dificulta combate às mudanças climáticas; EduCAPES, Ciclo de vida da castanheira; Embrapa Acre, remoção de sementes de castanheira na Resex Chico Mendes. Tempos, porcos-do-mato, jaguatirica e pontos são regras do jogo.</div></div>`;
  $('bS').onclick=()=>salvar(nivel);
 }
 const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};

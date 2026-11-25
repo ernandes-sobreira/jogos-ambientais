@@ -43,7 +43,7 @@ canvas{width:100%;max-width:760px;margin:0 auto;display:block;border:2px solid v
 <a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
 <header>
   <h1>Quebra do Babaçu</h1>
-  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
 </header>
 <main id="tela"></main>
 <div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
@@ -117,7 +117,7 @@ let S,cv,cx,raf=null,last=0,W=720,H=460,inp={x:null,y:null,down:false,tap:null},
 const MOB=()=>W<520;
 function rrect(x,y,w,h,r,cor){cx.fillStyle=cor;cx.beginPath();cx.roundRect(x,y,w,h,r);cx.fill();}
 function sombra(x,y,rx,ry){cx.fillStyle='rgba(0,0,0,.12)';cx.beginPath();cx.ellipse(x,y,rx,ry,0,0,7);cx.fill();}
-function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/'+G.FASES.length;$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
  if(g&&!g.fim){const [a,m]=G.meta(g);$('hR').textContent=G.rotulo+' '+a+'/'+m;$('hV').textContent=G.vidas?'Vidas '+'●'.repeat(Math.max(0,g.vidas)):'';$('hT').textContent=G.semTempo?'':Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s';}
  ['hR','hV','hT'].forEach(k=>$(k).style.display=$(k).textContent?'':'none');}
 function inicio(){parar();$('hud').style.display='none';$('rankBox').style.display='block';
@@ -151,33 +151,122 @@ function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=G.FAS
  <p class="small" style="margin-top:6px">${ok?G.FASES[S.f].fato:G.dicaErro}</p>
  <div class="row" style="justify-content:center;margin-top:14px">${ok?'<button class="btn grande" id="bq">Pergunta rápida</button>':'<button class="btn grande" id="br">Jogar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
  if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}}
-/* As quebradeiras prendem o machado entre as pernas e golpeiam o coco com um porrete (Sesc SP, 2006; CartaCapital). A primeira Lei do Babaçu Livre foi aprovada em Lago do Junco-MA em 1997 (Sesc SP; IHU). Ela proíbe a derrubada das palmeiras e o uso de agrotóxicos e garante acesso aos babaçuais (IBGE; MPF). Barra, tempo e pontos são regras do jogo. */
-function coco(k,x,y,r,ab){k.fillStyle='#8d6e63';k.beginPath();k.ellipse(x,y,r*.75,r,0,0,7);k.fill();k.strokeStyle='#5d4037';k.lineWidth=2;for(let i=-1;i<=1;i++){k.beginPath();k.moveTo(x+i*r*.3,y-r*.9);k.lineTo(x+i*r*.35,y+r*.9);k.stroke();}if(ab){k.fillStyle='#fff8e1';for(let i=0;i<3;i++){k.beginPath();k.ellipse(x-r+i*r,y-r*1.3,r*.25,r*.45,.3,0,7);k.fill();}}}
-const G={titulo:'Quebra do Babaçu',rotulo:'Cocos abertos',vidas:0,
- resumo:'No Maranhão, no Tocantins, no Piauí e no Pará, as quebradeiras de coco babaçu tiram as amêndoas com um machado preso entre as pernas e um porrete de madeira.',
- como:[['Mira','O porrete sobe e desce sem parar. A faixa verde é o golpe certo.'],['Toque','Toque quando o marcador estiver na faixa verde: o coco abre.'],['Fora','Fora da faixa o coco escorrega e você perde tempo.']],
- dica:'Toque quando o marcador passar pela faixa verde.',dicaErro:'Espere o marcador entrar no verde antes de tocar.',
- FASES:[{nome:'Primeiro cesto',dur:35,meta:8,vel:1,larg:.22,metaTxt:'abrir 8 cocos em 35 s.',txt:'Sente, ajeite o machado e acerte o ritmo.',fato:'Sentadas no chão, as quebradeiras prendem o machado entre as pernas, apoiam o coco na lâmina e batem com um porrete.'},
-  {nome:'Roda de quebradeiras',dur:40,meta:11,vel:1.35,larg:.18,metaTxt:'abrir 11 cocos em 40 s.',txt:'As companheiras chegaram e o trabalho rende mais rápido.',fato:'As quebradeiras se organizaram no MIQCB, um movimento presente no Maranhão, no Pará, no Piauí e no Tocantins.'},
-  {nome:'Babaçu Livre',dur:45,meta:14,vel:1.7,larg:.14,metaTxt:'abrir 14 cocos em 45 s.',txt:'Com o babaçual de pé, tem coco para todo mundo. Ritmo forte!',fato:'A primeira Lei do Babaçu Livre nasceu em Lago do Junco, no Maranhão, em 1997. Ela proíbe derrubar as palmeiras e usar agrotóxicos nos babaçuais.'}],
- init(g){g.n=0;g.f=0;g.dir=1;g.anim=0;g.ok=false;g.alvo=.5+(Math.random()-.5)*.4;},meta(g){return [g.n,FASES[S.f].meta];},cedo(g){return g.n>=FASES[S.f].meta;},
- update(g,dt){const F=FASES[S.f];g.anim=Math.max(0,g.anim-dt);if(g.anim>0)return;g.f+=g.dir*dt*F.vel;if(g.f>1){g.f=1;g.dir=-1;}if(g.f<0){g.f=0;g.dir=1;}
-  if(inp.tap||tec[' ']){tec[' ']=0;const ok=Math.abs(g.f-g.alvo)<F.larg/2;g.ok=ok;g.anim=.45;if(ok){g.n++;ganha(10,W*.5,H*.35);beep(330,.08,.08);g.alvo=.5+(Math.random()-.5)*.5;}else{beep(150,.12,.04);msg('O coco escorregou. Mire no verde.');}}},
- draw(g){const F=FASES[S.f];cx.fillStyle='#fff3e0';cx.fillRect(0,0,W,H);
-  for(let i=0;i<5;i++){const x=W*(.08+i*.22);cx.strokeStyle='#8d6e63';cx.lineWidth=8;cx.beginPath();cx.moveTo(x,H*.62);cx.lineTo(x+8,H*.12);cx.stroke();cx.strokeStyle='#66bb6a';cx.lineWidth=4;for(let j=0;j<7;j++){const a=-Math.PI/2+(j-3)*.45;cx.beginPath();cx.moveTo(x+8,H*.12);cx.quadraticCurveTo(x+8+Math.cos(a)*40,H*.12+Math.sin(a)*30,x+8+Math.cos(a)*70,H*.12+Math.sin(a)*20+30);cx.stroke();}}
-  cx.fillStyle='#e0c097';cx.fillRect(0,H*.62,W,H*.38);
-  const bx=W*.5,by=H*.72;cx.fillStyle='#455a64';cx.beginPath();cx.moveTo(bx-6,by+40);cx.lineTo(bx-2,by-10);cx.lineTo(bx+2,by-10);cx.lineTo(bx+6,by+40);cx.fill();cx.fillStyle='#795548';cx.fillRect(bx-40,by+34,80,12);
-  coco(cx,bx,by-30,20,g.anim>0&&g.ok);
-  const py=by-90+(g.anim>0?50*(g.anim/.45):0);cx.save();cx.translate(bx+60,py);cx.rotate(-.5);rrect(-8,-10,90,20,10,'#a1887f');cx.restore();
-  const mx=W*.12,mw=W*.76,my=H*.9;rrect(mx,my-12,mw,24,12,'#ffe0b2');rrect(mx+mw*(g.alvo-F.larg/2),my-12,mw*F.larg,24,12,'#66bb6a');cx.fillStyle='#bf360c';cx.beginPath();cx.arc(mx+mw*g.f,my,14,0,7);cx.fill();
-  cx.fillStyle='#6d4c41';cx.font='bold 14px system-ui';cx.textAlign='left';cx.fillText('Amêndoas: '+g.n*3,W*.04,H*.58);},
- capa(k,w,h){k.fillStyle='#fff3e0';k.fillRect(0,0,w,h);k.fillStyle='#e0c097';k.fillRect(0,150,w,70);for(let i=0;i<4;i++){k.strokeStyle='#8d6e63';k.lineWidth=7;k.beginPath();k.moveTo(60+i*150,150);k.lineTo(66+i*150,30);k.stroke();k.strokeStyle='#66bb6a';k.lineWidth=4;for(let j=0;j<5;j++){k.beginPath();k.moveTo(66+i*150,30);k.lineTo(66+i*150+(j-2)*30,60);k.stroke();}}coco(k,320,150,26,true);coco(k,250,185,16,false);coco(k,390,185,16,false);}
+/* ---------- arte vetorial compartilhada ---------- */
+beep=function(){};
+function rng(s){s=s%2147483647;if(s<=0)s+=2147483646;return()=>{s=s*16807%2147483647;return(s-1)/2147483646;};}
+function lg(k,x0,y0,x1,y1,st){const g=k.createLinearGradient(x0,y0,x1,y1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+function rg(k,x,y,r0,r1,st){const g=k.createRadialGradient(x,y,r0,x,y,r1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+const CACHE={};
+function cache(key,w,h,fn){const id=key+'_'+w+'x'+h;if(!CACHE[id]){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);CACHE[id]=c;}return CACHE[id];}
+function ceu(k,w,h,cs){k.fillStyle=lg(k,0,0,0,h,cs);k.fillRect(0,0,w,h);}
+function sol(k,x,y,r,c){k.fillStyle=rg(k,x,y,0,r*4,[c,'rgba(255,255,255,0)']);k.fillRect(x-r*4,y-r*4,r*8,r*8);k.fillStyle=c;k.beginPath();k.arc(x,y,r,0,7);k.fill();}
+function nuvem(k,x,y,s,a){k.fillStyle='rgba(255,255,255,'+(a||.8)+')';for(const [dx,dy,r] of [[0,0,1],[1.1,.15,.8],[-1,.2,.75],[.5,-.45,.7],[-.4,-.35,.6]]){k.beginPath();k.arc(x+dx*s,y+dy*s,r*s,0,7);k.fill();}k.fillRect(x-1.7*s,y+.2*s,3.6*s,.8*s);}
+function serra(k,w,y,amp,cor,seed){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,y+amp*2);let x=0;k.lineTo(0,y);while(x<w+40){x+=30+r()*50;k.lineTo(x,y-r()*amp);}k.lineTo(w,y+amp*4);k.lineTo(0,y+amp*4);k.fill();}
+function matas(k,w,y,amp,cor,seed,base){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,base);k.lineTo(0,y);let x=0;while(x<w+30){const rr=8+r()*amp;k.arc(x+rr,y-r()*amp*.6,rr,Math.PI,0);x+=rr*1.6;}k.lineTo(w,base);k.closePath();k.fill();}
+function capim(k,x0,y0,w,h,cor,seed,n){const r=rng(seed);k.strokeStyle=cor;k.lineCap='round';for(let i=0;i<n;i++){const x=x0+r()*w,y=y0+r()*h,l=4+r()*10;k.lineWidth=1+r()*1.2;for(let j=-1;j<=1;j++){k.beginPath();k.moveTo(x,y);k.quadraticCurveTo(x+j*3,y-l*.6,x+j*5+r()*2,y-l);k.stroke();}}}
+function copa(k,x,y,r,cs,seed){const R=rng(seed);const pts=[];for(let i=0;i<9;i++){const a=R()*Math.PI*2,d=R()*r*.55;pts.push([x+Math.cos(a)*d,y+Math.sin(a)*d*.7,r*(.35+R()*.3)]);}
+ k.fillStyle=cs[0];for(const [a,b,c] of pts){k.beginPath();k.arc(a+c*.12,b+c*.18,c,0,7);k.fill();}
+ k.fillStyle=cs[1];for(const [a,b,c] of pts){k.beginPath();k.arc(a,b,c*.92,0,7);k.fill();}
+ k.fillStyle=cs[2];for(const [a,b,c] of pts){k.beginPath();k.arc(a-c*.25,b-c*.3,c*.5,0,7);k.fill();}}
+function tronco(k,x,y0,y1,w0,w1,c1,c2){k.fillStyle=lg(k,x-w0,0,x+w0,0,[c2,c1,c1,c2]);k.beginPath();k.moveTo(x-w0,y0);k.lineTo(x-w1,y1);k.lineTo(x+w1,y1);k.lineTo(x+w0,y0);k.fill();k.strokeStyle='rgba(0,0,0,.12)';k.lineWidth=1;for(let y=y1+8;y<y0;y+=11){const t=(y-y1)/(y0-y1),ww=w1+(w0-w1)*t;k.beginPath();k.moveTo(x-ww*.6,y);k.quadraticCurveTo(x,y+3,x+ww*.5,y-1);k.stroke();}}
+function palmeira(k,x,y,h,lean,cfr,ctr,seed,nf){const R=rng(seed);const tx=x+lean,ty=y-h;k.strokeStyle=ctr;k.lineCap='round';for(let i=0;i<14;i++){const t0=i/14,t1=(i+1)/14;k.lineWidth=h*.05*(1-t0*.35);const xa=x+lean*t0*t0,ya=y-h*t0,xb=x+lean*t1*t1,yb=y-h*t1;k.beginPath();k.moveTo(xa,ya);k.lineTo(xb,yb);k.stroke();}
+ k.strokeStyle='rgba(0,0,0,.15)';k.lineWidth=1;for(let i=1;i<14;i++){const t=i/14,xa=x+lean*t*t,ya=y-h*t;k.beginPath();k.moveTo(xa-h*.022,ya);k.lineTo(xa+h*.022,ya);k.stroke();}
+ nf=nf||9;for(let f=0;f<nf;f++){const a=-Math.PI/2+(f-(nf-1)/2)*(2.6/nf)+(R()-.5)*.2,L=h*(.38+R()*.12),dr=.55+R()*.25;const ex=tx+Math.cos(a)*L,ey=ty+Math.sin(a)*L*.55+L*dr*.5;const mx=tx+Math.cos(a)*L*.5,my=ty+Math.sin(a)*L*.5-L*.12;
+  k.strokeStyle=cfr[0];k.lineWidth=2;k.beginPath();k.moveTo(tx,ty);k.quadraticCurveTo(mx,my,ex,ey);k.stroke();
+  for(let j=1;j<16;j++){const t=j/16,px=(1-t)*(1-t)*tx+2*(1-t)*t*mx+t*t*ex,py=(1-t)*(1-t)*ty+2*(1-t)*t*my+t*t*ey;const ll=L*.16*(1-t*.5);k.strokeStyle=cfr[j%2];k.lineWidth=1.6;k.beginPath();k.moveTo(px,py);k.lineTo(px+Math.cos(a+1.6)*ll*.5,py+ll);k.moveTo(px,py);k.lineTo(px+Math.cos(a-1.6)*ll*.5,py+ll*.9);k.stroke();}}}
+function sombraE(k,x,y,rx,ry,a){k.fillStyle='rgba(20,30,20,'+(a||.18)+')';k.beginPath();k.ellipse(x,y,rx,ry,0,0,7);k.fill();}
+function vinheta(k,w,h){k.fillStyle=rg(k,w/2,h/2,Math.min(w,h)*.45,Math.max(w,h)*.8,['rgba(0,0,0,0)','rgba(0,0,0,.18)']);k.fillRect(0,0,w,h);}
+function rrk(k,x,y,w,h,r,c){k.fillStyle=c;k.beginPath();k.roundRect(x,y,w,h,r);k.fill();}
+/* figura humana: o={pele,camisa,calca,chapeu,passo,bracoE,bracoD} ângulos em rad a partir de baixo */
+function pessoa(k,x,y,s,o){o=o||{};const p=o.passo||0;k.save();k.translate(x,y);k.scale(s*(o.dir||1),s);k.lineCap='round';k.lineJoin='round';
+ const pl=Math.sin(p)*.35;k.strokeStyle=o.calca||'#37474f';k.lineWidth=7;k.beginPath();k.moveTo(-3,-38);k.lineTo(-3+Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18,0);k.stroke();k.beginPath();k.moveTo(3,-38);k.lineTo(3-Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(3-Math.sin(pl)*20-Math.sin(pl*.5)*18,0);k.stroke();
+ k.fillStyle='#3e2723';k.beginPath();k.ellipse(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.ellipse(3-Math.sin(pl)*20-Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.fill();
+ k.fillStyle=o.camisa||'#1e88e5';k.beginPath();k.moveTo(-9,-40);k.lineTo(-10,-68);k.quadraticCurveTo(0,-74,10,-68);k.lineTo(9,-40);k.closePath();k.fill();k.fillStyle='rgba(0,0,0,.12)';k.fillRect(2,-68,7,28);
+ const be=o.bracoE!==undefined?o.bracoE:-pl*.8,bd=o.bracoD!==undefined?o.bracoD:pl*.8;k.strokeStyle=o.camisa||'#1e88e5';k.lineWidth=6;
+ for(const [sx,a] of [[-8,be],[8,bd]]){k.beginPath();k.moveTo(sx,-66);const ex=sx+Math.sin(a)*14,ey=-66+Math.cos(a)*14;k.lineTo(ex,ey);k.stroke();k.strokeStyle=o.pele||'#c68b59';k.beginPath();k.moveTo(ex,ey);k.lineTo(ex+Math.sin(a*1.15)*13,ey+Math.cos(a*1.15)*13);k.stroke();k.strokeStyle=o.camisa||'#1e88e5';}
+ k.fillStyle=o.pele||'#c68b59';k.fillRect(-3,-76,6,6);k.beginPath();k.ellipse(0,-83,7.5,8.5,0,0,7);k.fill();
+ if(o.chapeu!==false){k.fillStyle=o.chapeu||'#795548';k.beginPath();k.ellipse(0,-88,15,3.5,0,0,7);k.fill();k.beginPath();k.moveTo(-8,-88);k.quadraticCurveTo(-7,-99,0,-99);k.quadraticCurveTo(7,-99,8,-88);k.fill();k.fillStyle='rgba(0,0,0,.25)';k.fillRect(-8,-91,16,2.5);}
+ k.restore();}
+/* boi nelore em perfil, olhando para +x */
+function boi(k,x,y,s,dir,cor,p){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#ece6da';p=p||0;
+ const pern=[[-26,0],[-18,Math.PI],[18,Math.PI],[26,0]];
+ for(let i=0;i<4;i++){const [lx,ph]=pern[i];const a=Math.sin(p+ph)*.3;k.strokeStyle=i==1||i==2?shade(c,-.12):c;k.lineCap='round';k.lineWidth=6.5;k.beginPath();k.moveTo(lx,-24);k.lineTo(lx+Math.sin(a)*9,-10);k.lineTo(lx+Math.sin(a)*7,2);k.stroke();k.fillStyle='#3e2723';k.fillRect(lx+Math.sin(a)*7-3.5,1,7,3);}
+ k.fillStyle=c;k.beginPath();k.moveTo(-34,-40);k.quadraticCurveTo(-38,-24,-30,-20);k.quadraticCurveTo(0,-14,26,-20);k.quadraticCurveTo(34,-26,32,-40);k.quadraticCurveTo(28,-50,20,-54);k.quadraticCurveTo(12,-56,8,-48);k.quadraticCurveTo(-10,-46,-28,-48);k.quadraticCurveTo(-34,-46,-34,-40);k.fill();
+ k.fillStyle=lg(k,0,-50,0,-18,['rgba(255,255,255,.18)','rgba(0,0,0,0)','rgba(60,40,20,.22)']);k.fill();
+ k.fillStyle=c;k.beginPath();k.moveTo(26,-44);k.quadraticCurveTo(38,-44,44,-38);k.lineTo(54,-24);k.quadraticCurveTo(56,-18,51,-17);k.quadraticCurveTo(46,-18,42,-24);k.quadraticCurveTo(34,-26,28,-22);k.fill();
+ k.beginPath();k.moveTo(28,-26);k.quadraticCurveTo(34,-14,30,-12);k.quadraticCurveTo(24,-16,22,-24);k.fill();
+ k.fillStyle=shade(c,-.35);k.beginPath();k.ellipse(52,-19,3.4,2.6,.4,0,7);k.fill();k.fillStyle='#1b1b1b';k.beginPath();k.arc(44,-34,1.8,0,7);k.fill();
+ k.fillStyle=shade(c,-.08);k.beginPath();k.ellipse(38,-41,8,2.8,.5,0,7);k.fill();k.strokeStyle='#cfc4b0';k.lineWidth=2.4;k.lineCap='round';k.beginPath();k.moveTo(41,-44);k.quadraticCurveTo(44,-49,42,-52);k.stroke();
+ k.strokeStyle=c;k.lineWidth=2.2;k.beginPath();k.moveTo(-34,-42);k.quadraticCurveTo(-40,-28,-37,-14);k.stroke();k.fillStyle='#4e342e';k.beginPath();k.ellipse(-37,-13,2.2,4.5,0,0,7);k.fill();
+ k.restore();}
+function shade(hex,f){let n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;const t=f<0?0:255,p=Math.abs(f);r=Math.round((t-r)*p+r);g=Math.round((t-g)*p+g);b=Math.round((t-b)*p+b);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+function cavalo(k,x,y,s,dir,p,cor){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#8d5a3b';k.strokeStyle=c;k.lineCap='round';k.lineWidth=6;
+ for(const [lx,ph] of [[-20,0],[-12,Math.PI],[18,Math.PI],[26,0]]){const a=Math.sin(p+ph)*.45;k.beginPath();k.moveTo(lx,-22);k.lineTo(lx+Math.sin(a)*10,-8);k.lineTo(lx+Math.sin(a)*8,4);k.stroke();}
+ k.fillStyle=c;k.beginPath();k.ellipse(3,-30,28,12,0,0,7);k.fill();k.beginPath();k.moveTo(22,-36);k.quadraticCurveTo(30,-56,40,-58);k.lineTo(50,-48);k.quadraticCurveTo(44,-44,38,-46);k.lineTo(30,-26);k.fill();
+ k.fillStyle='#3e2723';k.beginPath();k.moveTo(24,-40);k.quadraticCurveTo(30,-60,40,-60);k.lineTo(36,-56);k.quadraticCurveTo(30,-52,28,-36);k.fill();k.beginPath();k.moveTo(-24,-34);k.quadraticCurveTo(-38,-26,-34,-6);k.quadraticCurveTo(-30,-22,-22,-28);k.fill();
+ k.fillStyle='rgba(0,0,0,.15)';k.beginPath();k.ellipse(3,-23,24,4,0,0,7);k.fill();k.fillStyle='#5d4037';k.fillRect(-8,-44,22,6);k.restore();}
+function cavaleiro(k,x,y,s,dir,p,o){cavalo(k,x,y,s,dir,p,o&&o.cor);k.save();k.translate(x,y);k.scale(s*dir,s);pessoa(k,2,-30,.62,Object.assign({passo:0,bracoE:.9,bracoD:1.3,calca:'#4e342e'},o||{}));k.restore();}
+/* Babaçu: machado preso entre as pernas e porrete (Sesc SP, 2006; CartaCapital); quebra feita quase só por mulheres (Sustentabilidade em Debate, UnB); MIQCB no MA, PA, PI e TO (Sesc SP); Lei do Babaçu Livre em Lago do Junco-MA, 1997 (Sesc SP; IHU), proíbe derrubar palmeiras e usar agrotóxicos e garante acesso (IBGE; MPF). Golpes, faixas e pontos são regras do jogo. */
+const BB={};
+function babacu(k,x,y,h,seed,cor){const R=rng(seed);k.strokeStyle=cor?cor[2]:'#8d7a62';k.lineCap='round';k.lineWidth=h*.06;k.beginPath();k.moveTo(x,y);k.lineTo(x+(R()-.5)*8,y-h);k.stroke();k.strokeStyle='rgba(0,0,0,.12)';k.lineWidth=1;for(let i=1;i<12;i++){k.beginPath();k.moveTo(x-h*.03,y-h*i/12);k.lineTo(x+h*.03,y-h*i/12);k.stroke();}
+ const tx=x,ty=y-h;for(let f=0;f<9;f++){const a=-Math.PI/2+(f-4)*.24,L=h*(.5+R()*.12);const ex=tx+Math.cos(a)*L,ey=ty+Math.sin(a)*L*.9+L*.12;k.strokeStyle=cor?cor[0]:'#5d8a3a';k.lineWidth=2;k.beginPath();k.moveTo(tx,ty);k.quadraticCurveTo(tx+Math.cos(a)*L*.5,ty+Math.sin(a)*L*.6,ex,ey);k.stroke();
+  for(let j=2;j<16;j++){const t=j/16,px=tx+(ex-tx)*t,py=ty+(ey-ty)*t-Math.sin(t*Math.PI)*L*.08;k.strokeStyle=j%2?(cor?cor[1]:'#6f9c48'):(cor?cor[0]:'#5d8a3a');k.lineWidth=1.4;k.beginPath();k.moveTo(px,py);k.lineTo(px+Math.cos(a+1.3)*L*.12,py+L*.09);k.moveTo(px,py);k.lineTo(px+Math.cos(a-1.3)*L*.12,py+L*.09);k.stroke();}}
+ k.fillStyle='#7b5a35';for(let i=0;i<6;i++){k.beginPath();k.ellipse(tx-8+i*3,ty+10+(i%2)*6,3.5,5,0,0,7);k.fill();}}
+BB.cena=function(k,w,h,f){ceu(k,w,h*.7,['#f9d9a8','#fdf0dc']);sol(k,w*.8,h*.16,20,'#fff2cf');
+ matas(k,w,h*.56,20,'#b9c49a',5,h*.7);const R=rng(3);for(let i=0;i<8;i++)babacu(k,R()*w,h*.66,h*(.3+R()*.2),i+10,['#8fa77a','#a2b78d','#a39a86']);
+ k.fillStyle=lg(k,0,h*.62,0,h,['#c9a57a','#b58a5e']);k.fillRect(0,h*.62,w,h*.38);capim(k,0,h*.64,w,h*.36,'rgba(120,90,50,.3)',7,Math.floor(w*h/3000));
+ for(let i=0;i<3;i++)babacu(k,w*(.08+i*.42),h*.7,h*(.5+i*.05),30+i);
+ if(f===0)return;const s=h/460;for(const [x,d] of [[w*.12,1],[w*.88,-1]]){k.save();k.translate(x,h*.66);k.scale(.6*s*d,.6*s);quebradeira(k,0,0,0,'#7b1fa2','#ffb74d');k.restore();}};
+function quebradeira(k,x,y,golpe,blusa,lenco){k.save();k.translate(x,y);const pele='#8d5a3b';
+ k.fillStyle='rgba(60,40,20,.25)';k.beginPath();k.ellipse(0,0,52,9,0,0,7);k.fill();
+ k.fillStyle=shade(blusa,-.25);k.beginPath();k.moveTo(-40,-2);k.quadraticCurveTo(-44,-24,-22,-30);k.lineTo(34,-22);k.quadraticCurveTo(46,-14,40,-2);k.closePath();k.fill();
+ k.fillStyle=pele;k.beginPath();k.ellipse(40,-6,7,5,0,0,7);k.fill();
+ k.fillStyle=blusa;k.beginPath();k.moveTo(-28,-28);k.quadraticCurveTo(-30,-66,-12,-86);k.quadraticCurveTo(2,-90,8,-80);k.quadraticCurveTo(10,-54,4,-28);k.closePath();k.fill();
+ k.fillStyle=shade(blusa,-.12);k.beginPath();k.moveTo(-6,-84);k.quadraticCurveTo(8,-60,4,-28);k.lineTo(-4,-28);k.quadraticCurveTo(0,-60,-12,-84);k.fill();
+ k.fillStyle=pele;k.fillRect(-6,-96,8,10);k.beginPath();k.ellipse(0,-106,10,11.5,0,0,7);k.fill();k.fillStyle='#2b1a10';k.beginPath();k.arc(5,-107,1.4,0,7);k.fill();
+ k.fillStyle=lenco;k.beginPath();k.arc(-1,-110,11.5,Math.PI*.95,Math.PI*2.05);k.lineTo(10,-106);k.lineTo(-12,-106);k.fill();k.beginPath();k.moveTo(-11,-108);k.quadraticCurveTo(-22,-104,-20,-92);k.lineTo(-12,-102);k.fill();
+ k.strokeStyle=pele;k.lineCap='round';k.lineWidth=6;k.beginPath();k.moveTo(2,-78);k.quadraticCurveTo(22,-58,36,-40);k.stroke();
+ const t=golpe,hx=-4+(14+4)*t,hy=-126+(-66+126)*t,an=-1.95+(.15+1.95)*t;const sx=-2,sy=-80;const ex=(sx+hx)/2-10*(1-t),ey=(sy+hy)/2+6;
+ k.beginPath();k.moveTo(sx,sy);k.quadraticCurveTo(ex,ey,hx,hy);k.stroke();
+ k.save();k.translate(hx,hy);k.rotate(an);k.fillStyle=lg(k,0,-5,0,5,['#5d4037','#a1887f','#5d4037']);k.beginPath();k.roundRect(-6,-4.5,40,9,4);k.fill();k.beginPath();k.roundRect(22,-6.5,18,13,5);k.fill();k.restore();
+ k.restore();}
+function cocoB(k,x,y,r,abr,racha){k.save();k.translate(x,y);if(abr>0){for(const d of [-1,1]){k.save();k.translate(d*abr*r*.9,abr*r*.4);k.rotate(d*abr*.5);k.fillStyle='#7b5a35';k.beginPath();k.ellipse(d*r*.25,0,r*.42,r*.95,0,0,7);k.fill();k.fillStyle='#d7b98a';k.beginPath();k.ellipse(d*r*.05,0,r*.16,r*.75,0,0,7);k.fill();k.restore();}
+  k.fillStyle='#fff8e1';for(let i=0;i<3;i++){k.save();k.translate((i-1)*r*.35,-abr*r*1.4-i%2*r*.2);k.rotate(i*.6);k.beginPath();k.ellipse(0,0,r*.14,r*.4,0,0,7);k.fill();k.restore();}k.restore();return;}
+ k.fillStyle=lg(k,-r,0,r,0,['#5d4027','#8a6440','#6b4a2c']);k.beginPath();k.ellipse(0,0,r*.68,r,0,0,7);k.fill();k.strokeStyle='rgba(40,20,5,.35)';k.lineWidth=1.2;for(let i=-2;i<=2;i++){k.beginPath();k.moveTo(i*r*.22,-r*.92);k.quadraticCurveTo(i*r*.3,0,i*r*.22,r*.92);k.stroke();}
+ k.fillStyle='#3e2a17';k.beginPath();k.ellipse(0,-r*.95,r*.18,r*.1,0,0,7);k.fill();if(racha){k.strokeStyle='#2a1a0c';k.lineWidth=2;k.beginPath();k.moveTo(0,-r*.8);k.lineTo(r*.1,-r*.2);k.lineTo(-r*.05,r*.3);k.lineTo(r*.05,r*.8);k.stroke();}k.restore();}
+const G={titulo:'Quebra do Babaçu',rotulo:'Progresso',vidas:0,
+ resumo:'No Maranhão, no Tocantins, no Piauí e no Pará, as quebradeiras de coco babaçu tiram a amêndoa com um machado preso entre as pernas e um porrete de madeira. É um saber passado de mãe para filha.',
+ como:[['Juntar','Na fase 1, toque nos cocos caídos no babaçual para encher o cofo.'],['Golpe','O marcador corre na barra. Toque quando ele estiver na faixa verde.'],['Abrir','Cada coco pede dois golpes certos: o primeiro racha, o segundo abre.']],
+ dica:'Acerte o golpe na faixa verde.',dicaErro:'Espere o marcador entrar no verde. Golpe fora da faixa faz o coco escorregar.',
+ FASES:[{nome:'Juntar o coco',dur:35,meta:25,tipo:'col',metaTxt:'juntar 25 cocos no cofo em 35 s.',txt:'Cedo, o trabalho começa no babaçual. Junte os cocos caídos.',fato:'As quebradeiras se organizaram no MIQCB, movimento presente no Maranhão, no Pará, no Piauí e no Tocantins.'},
+  {nome:'Primeiro cesto',dur:45,meta:6,tipo:'q',vel:.9,larg:.2,metaTxt:'abrir 6 cocos em 45 s.',txt:'Sente, prenda o machado e acerte o ritmo do porrete.',fato:'Sentada no chão, a quebradeira prende o machado entre as pernas, apoia o coco na lâmina e bate com o porrete.'},
+  {nome:'Roda de quebradeiras',dur:50,meta:9,tipo:'q',vel:1.25,larg:.16,metaTxt:'abrir 9 cocos em 50 s.',txt:'As companheiras chegaram. O ritmo fica mais rápido e a faixa menor.',fato:'A quebra do coco babaçu é feita quase só por mulheres. São elas que tiram as amêndoas.'},
+  {nome:'Babaçu Livre',dur:55,meta:11,tipo:'q',vel:1.5,larg:.13,var:1,metaTxt:'abrir 11 cocos em 55 s. Coco pequeno tem faixa menor.',txt:'Com o babaçual de pé, tem coco de todo tamanho. Coco menor pede golpe mais preciso.',fato:'A Lei do Babaçu Livre nasceu em Lago do Junco, no Maranhão, em 1997. Ela proíbe derrubar as palmeiras e usar agrotóxicos e garante o acesso das quebradeiras aos babaçuais.'}],
+ init(g){const F=FASES[S.f];g.n=0;if(F.tipo==='col'){g.cc=[];for(let i=0;i<9;i++)g.cc.push(G.novoC());g.q=0;}else{G.novoQ(g);g.f=0;g.dir=1;g.anim=0;g.am=0;}},
+ novoC(){return {x:W*(.06+Math.random()*.88),y:H*(.7+Math.random()*.25),r:.8+Math.random()*.4};},
+ novoQ(g){const F=FASES[S.f];g.hits=0;g.sz=F.var?(.7+Math.random()*.5):1;g.alvo=.25+Math.random()*.5;g.larg=F.larg*g.sz;g.abre=0;},
+ meta(g){return [g.n,FASES[S.f].meta];},cedo(g){return g.n>=FASES[S.f].meta;},
+ update(g,dt){const F=FASES[S.f];if(F.tipo==='col'){if(inp.tap){const c=g.cc.find(c=>Math.hypot(c.x-inp.tap.x,c.y-inp.tap.y)<28);if(c){g.cc.splice(g.cc.indexOf(c),1);g.n++;ganha(5,c.x,c.y-20);}}g.q-=dt;if(g.q<=0&&g.cc.length<9){g.cc.push(G.novoC());g.q=.5;}return;}
+  g.anim=Math.max(0,g.anim-dt);if(g.abre>0){g.abre+=dt*2;if(g.abre>1.6){G.novoQ(g);}return;}
+  g.f+=g.dir*dt*F.vel;if(g.f>1){g.f=1;g.dir=-1;}if(g.f<0){g.f=0;g.dir=1;}
+  if((inp.tap||tec[' '])&&g.anim<=0){tec[' ']=0;g.anim=.35;if(Math.abs(g.f-g.alvo)<g.larg/2){g.hits++;if(g.hits>=2){g.n++;g.abre=.01;g.am+=3;ganha(10,W*.5,H*.3);}else{g.alvo=.2+Math.random()*.6;}}else msg('O coco escorregou. Mire no verde.');}},
+ draw(g){const F=FASES[S.f];cx.drawImage(cache('bb'+(F.tipo==='col'?0:1),W,H,(k,w,h)=>BB.cena(k,w,h,F.tipo==='col'?0:1)),0,0);const s=H/460;
+  if(F.tipo==='col'){for(const c of g.cc){sombraE(cx,c.x,c.y+12*s,12*s,3*s,.2);cocoB(cx,c.x,c.y,13*s*c.r,0);}
+   const bx=W*.5,by=H*.94;cx.fillStyle=lg(cx,bx-40,0,bx+40,0,['#9c7a3c','#c9a35e','#9c7a3c']);cx.beginPath();cx.moveTo(bx-40*s,by-34*s);cx.lineTo(bx+40*s,by-34*s);cx.lineTo(bx+30*s,by);cx.lineTo(bx-30*s,by);cx.fill();cx.strokeStyle='rgba(90,60,20,.4)';for(let i=-3;i<=3;i++){cx.beginPath();cx.moveTo(bx+i*11*s,by-34*s);cx.lineTo(bx+i*8*s,by);cx.stroke();}cx.fillStyle='#4e342e';cx.font='bold 12px system-ui';cx.textAlign='center';cx.fillText('cofo',bx,by+14);vinheta(cx,W,H);return;}
+  const qx=W*.5,qy=H*.78;cx.save();cx.translate(qx-62*s,qy);cx.scale(1.4*s,1.4*s);quebradeira(cx,0,0,g.anim>0?1-g.anim/.35:0,'#c2185b','#26a69a');cx.restore();
+  cx.fillStyle='#6d4c41';cx.fillRect(qx-4*s,qy-30*s,8*s,26*s);cx.fillStyle=lg(cx,qx-9*s,0,qx+9*s,0,['#607d8b','#eceff1','#607d8b']);cx.beginPath();cx.moveTo(qx-10*s,qy-30*s);cx.lineTo(qx-1*s,qy-50*s);cx.lineTo(qx+1*s,qy-50*s);cx.lineTo(qx+10*s,qy-30*s);cx.fill();
+  cocoB(cx,qx,qy-68*s,20*s*g.sz,g.abre>0?Math.min(1,g.abre):0,g.hits===1);
+  const bxx=W*.82,byy=H*.86;cx.fillStyle=lg(cx,bxx-34,0,bxx+34,0,['#9c7a3c','#c9a35e','#9c7a3c']);cx.beginPath();cx.ellipse(bxx,byy,34*s,12*s,0,0,7);cx.fill();cx.fillStyle='#fff3d6';for(let i=0;i<Math.min(20,g.am);i++){cx.beginPath();cx.ellipse(bxx-20*s+(i*7%40)*s,byy-3*s-(i%3)*2,3*s,6*s,i,0,7);cx.fill();}
+  const mx=W*.12,mw=W*.76,my=H*.94;rrk(cx,mx,my-11,mw,22,11,'rgba(255,255,255,.75)');rrk(cx,mx+mw*(g.alvo-g.larg/2),my-11,mw*g.larg,22,11,'#43a047');cx.fillStyle='#bf360c';cx.beginPath();cx.arc(mx+mw*g.f,my,13,0,7);cx.fill();cx.strokeStyle='#fff';cx.lineWidth=3;cx.stroke();
+  cx.fillStyle='#4e342e';cx.font='bold 13px system-ui';cx.textAlign='left';cx.fillText('Golpes neste coco: '+g.hits+'/2',W*.12,H*.94-20);vinheta(cx,W,H);},
+ capa(k,w,h){const o=cx,oW=W,oH=H;cx=k;W=w;H=h;BB.cena(k,w,h,1);const s=h/460;k.save();k.translate(w*.45,h*.86);k.scale(1.3*s,1.3*s);quebradeira(k,0,0,.5,'#c2185b','#26a69a');k.restore();cocoB(k,w*.45+62*s*1.3,h*.86-70*s,18*s,.8);vinheta(k,w,h);cx=o;W=oW;H=oH;}
 };
 const FASES=G.FASES;
 const PERG=[
- {q:'Quais ferramentas as quebradeiras usam para abrir o coco babaçu?',o:['Machado e porrete','Facão, serrote e martelo','Pilão e peneira']},
- {q:'O que a Lei do Babaçu Livre garante?',o:['Proíbe derrubar as palmeiras e dá acesso livre aos babaçuais','Proíbe a venda do óleo de babaçu para fora do estado do Maranhão','Obriga o plantio de babaçu em todas as fazendas']},
- {q:'Em que município maranhense nasceu a primeira Lei do Babaçu Livre?',o:['Lago do Junco','São Luís','Barra do Corda']}
+ {q:'Em quais estados atua o movimento das quebradeiras de coco babaçu?',o:['Maranhão, Pará, Piauí e Tocantins','Rio Grande do Sul e Santa Catarina','Amazonas, Acre e Roraima']},
+ {q:'Quais ferramentas as quebradeiras usam para abrir o coco?',o:['Machado e porrete','Facão, serrote e martelo','Pilão e peneira']},
+ {q:'Quem faz quase toda a quebra do coco babaçu?',o:['As mulheres','Os vaqueiros','Máquinas das fábricas de óleo']},
+ {q:'O que a Lei do Babaçu Livre proíbe?',o:['Derrubar as palmeiras e usar agrotóxicos nos babaçuais','Vender o óleo de babaçu para fora do estado','Plantar babaçu perto de rios']}
 ];
 function pergunta(){
  const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
@@ -188,11 +277,11 @@ function pergunta(){
   $('bn').onclick=()=>{S.tot+=S.fp;S.fp=0;if(S.f===FASES.length-1)final(true);else{S.f++;fase();}};});
 }
 function final(tudo){
- S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
+ S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?FASES.length+' fases':'Fase '+(S.f+1);
  $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Quebradeira de coco!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
  <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
- <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Fontes: Sesc SP (2006), A saga do babaçu; CartaCapital, reportagem sobre as quebradeiras; IBGE, Revista Retratos, Quebradeiras de coco babaçu preservam tradição no interior do Maranhão; MPF, Legado da terra; IHU Unisinos (2018). Barra de golpe, tempo e pontos são regras do jogo.</div></div>`;
+ <div class="small" style="margin-top:12px;text-align:left">Fontes: Sesc SP (2006), A saga do babaçu; CartaCapital, reportagem sobre as quebradeiras; Revista Sustentabilidade em Debate, UnB, quebradeiras de coco babaçu; IBGE, Revista Retratos, Quebradeiras de coco babaçu preservam tradição no interior do Maranhão; MPF, Legado da terra; IHU Unisinos (2018). Golpes, faixas e pontos são regras do jogo.</div></div>`;
  $('bS').onclick=()=>salvar(nivel);
 }
 const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
