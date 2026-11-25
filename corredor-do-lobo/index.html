@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Corredor do Lobo</title>
+<title>Travessia do Lobo</title>
 <style>
-:root{--main:#9a4f1c;--deep:#6d3712;--soft:#faf0e6;--line:#efdcc6;--ink:#26190f;--mut:#6d5a4a}
+:root{--main:#d35400;--deep:#a04000;--soft:#fdf0e6;--line:#f6dcc6;--ink:#2b190c;--mut:#6d5848}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
 .wrap{max-width:780px;margin:0 auto;padding:12px 14px 40px}
@@ -36,14 +36,14 @@ canvas{width:100%;max-width:760px;margin:0 auto;display:block;border:2px solid v
 .ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
 .savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
-.pill{font-variant-numeric:tabular-nums}.card h2{letter-spacing:-.01em}.tab td:first-child{font-weight:600;white-space:nowrap;color:var(--deep);width:1%}input[type=range]{width:100%;accent-color:var(--main)}.kv{font-variant-numeric:tabular-nums}</style>
+.pill{font-variant-numeric:tabular-nums}.card h2{letter-spacing:-.01em}.tab td:first-child{font-weight:600;white-space:nowrap;color:var(--deep);width:1%}input[type=range]{width:100%;accent-color:var(--main)}.kv{font-variant-numeric:tabular-nums}.capa canvas{width:100%;height:auto;border-radius:14px;display:block}.como{display:grid;gap:8px;margin-top:10px}.como div{display:flex;gap:10px;align-items:baseline;background:var(--soft);border-radius:12px;padding:10px 12px}.como b{color:var(--deep);min-width:72px}.btn.grande{font-size:1.1rem;padding:14px 30px}.selo{display:inline-block;padding:8px 18px;border-radius:999px;font-weight:800;font-size:1.2rem;margin-bottom:6px}.selo.ok{background:#e8f5e9;color:#2e7d32}.selo.no{background:#fff3e0;color:#e65100}</style>
 </head>
 <body>
 <div class="wrap">
 <a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
 <header>
-  <h1>Corredor do Lobo</h1>
-  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1 de 3</span><span class="pill" id="hP">0 pontos</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
+  <h1>Travessia do Lobo</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
 </header>
 <main id="tela"></main>
 <div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
@@ -112,94 +112,81 @@ function loboSil(c,x,y,s,dir,p){c.save();c.translate(x,y);c.scale(s*(dir||1),s);
  c.fillStyle='#c0662b';c.beginPath();c.ellipse(-2,-4,22,9,0,0,7);c.fill();c.beginPath();c.moveTo(14,-8);c.quadraticCurveTo(22,-22,28,-20);c.lineTo(36,-16);c.lineTo(28,-12);c.quadraticCurveTo(22,-6,16,-2);c.fill();
  c.fillStyle='#1d1a17';c.beginPath();c.moveTo(14,-10);c.quadraticCurveTo(10,-18,4,-12);c.lineTo(12,-6);c.fill();c.beginPath();c.moveTo(24,-20);c.lineTo(22,-30);c.lineTo(28,-21);c.fill();
  c.fillStyle='#eee5d6';c.beginPath();c.moveTo(-24,-6);c.quadraticCurveTo(-34,-2,-36,6);c.quadraticCurveTo(-30,0,-24,0);c.fill();c.restore();}
-/* Geografia: área de vida do lobo-guará de 25,23 a 80,18 km² em média (revisão em dissertação da UFMG) e 54,72 ± 29,04 km² na Serra da Canastra (Olarte Jimenez, UFMG, 2012).
-   Corredores ecológicos ligam fragmentos de Cerrado (Andrade, UnB, 2020). Mapa, custos e orçamento são regras do jogo. */
-const FASES=[
- {nome:'Dois fragmentos',meta:55,orc:13,frag:2,estrada:0,txt:'Dois fragmentos de Cerrado estão separados por pasto e lavoura. Restaure células para ligar os dois e chegar a pelo menos 55 km² de área contínua, perto da área de vida média de um lobo-guará na Serra da Canastra.'},
- {nome:'A estrada no caminho',meta:55,orc:15,frag:2,estrada:1,txt:'Agora uma estrada corta a paisagem. O lobo só atravessa com segurança por uma passagem de fauna. Sem ela, o corredor vira armadilha.'},
- {nome:'Três unidades de conservação',meta:80,orc:28,frag:3,estrada:1,txt:'Ligue três fragmentos numa única área contínua de pelo menos 80 km², o maior valor médio de área de vida citado para a espécie.'}
-];
-const PERG=[
- {q:'Segundo estudo com nove lobos-guará monitorados por colar na Serra da Canastra, qual era a área de vida média?',o:['Cerca de 55 km²','Cerca de 5 km²','Cerca de 550 km²']},
- {q:'Para que serve um corredor ecológico entre fragmentos de Cerrado?',o:['Permitir que os animais se desloquem entre fragmentos','Aumentar a área disponível para lavoura','Impedir que os animais saiam de uma reserva']},
- {q:'Numa estrada que corta um corredor, o que reduz os atropelamentos de fauna?',o:['Passagens de fauna, por baixo ou por cima da pista','Aumentar o limite de velocidade da via','Retirar toda a vegetação das margens']}
-];
-const T={LAV:0,PAS:1,NAT:2,EST:3,PASS:4,RES:5};
-let S,cv,cx,raf=null,last=0,W=760,H=470;
-function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+' de 3';$('hP').textContent=(S.tot+S.fp)+' pontos';
- if(S.g){$('hR').textContent='Área contínua '+S.g.area+' km²';$('hV').textContent='Custo '+S.g.custo+'/'+FASES[S.f].orc;$('hT').textContent='Meta '+FASES[S.f].meta+' km²';}}
+/* ---------- motor arcade simples ---------- */
+let S,cv,cx,raf=null,last=0,W=720,H=460,inp={x:null,y:null,down:false,tap:null},tec={};
+const MOB=()=>W<520;
+function rrect(x,y,w,h,r,cor){cx.fillStyle=cor;cx.beginPath();cx.roundRect(x,y,w,h,r);cx.fill();}
+function sombra(x,y,rx,ry){cx.fillStyle='rgba(0,0,0,.12)';cx.beginPath();cx.ellipse(x,y,rx,ry,0,0,7);cx.fill();}
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
+ if(g&&!g.fim){const [a,m]=G.meta(g);$('hR').textContent=G.rotulo+' '+a+'/'+m;$('hV').textContent=G.vidas?'Vidas '+'●'.repeat(Math.max(0,g.vidas)):'';$('hT').textContent=G.semTempo?'':Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s';}
+ ['hR','hV','hT'].forEach(k=>$(k).style.display=$(k).textContent?'':'none');}
 function inicio(){parar();$('hud').style.display='none';$('rankBox').style.display='block';
- $('tela').innerHTML=`<div class="card"><h2>Um corredor para o lobo-guará</h2>
- <p>O lobo-guará vive no Cerrado e precisa de áreas grandes. Quando o Cerrado vira lavoura e pasto, os fragmentos ficam isolados. Corredores restaurados religam esses pedaços.</p>
- <table class="tab"><tr><td>Mapa</td><td>Cada célula tem 1 km². Toque numa célula para restaurar ou desfazer.</td></tr>
- <tr><td>Custos</td><td>Pasto custa 1. Lavoura custa 2. Passagem de fauna na estrada custa 3.</td></tr>
- <tr><td>Meta</td><td>Ligar os fragmentos marcados numa só área contínua do tamanho da meta, sem estourar o orçamento.</td></tr></table>
- <p class="small" style="margin-top:8px">Células só contam como ligadas pelos lados, não pela diagonal. Mapa e custos são regras do jogo.</p>
- <div class="row" style="margin-top:12px"><button class="btn" onclick="novo()">Começar</button></div></div>`;}
+ $('tela').innerHTML=`<div class="card"><div class="capa"><canvas id="cp" width="640" height="220"></canvas></div><h2 style="margin-top:12px">${G.titulo}</h2><p>${G.resumo}</p>
+ <div class="como">${G.como.map(c=>`<div><b>${c[0]}</b><span>${c[1]}</span></div>`).join('')}</div>
+ <div class="row" style="margin-top:14px"><button class="btn grande" onclick="novo()">Jogar</button></div></div>`;
+ const c=$('cp');if(c&&G.capa){const k=c.getContext('2d');G.capa(k,640,220);}}
 function novo(){S={f:0,tot:0,fp:0};salvo=false;$('rankBox').style.display='none';fase();}
-function fase(){const F=FASES[S.f];S.fp=0;S.g=null;hud();
- $('tela').innerHTML=`<div class="card"><h2>Fase ${S.f+1}: ${F.nome}</h2><p>${F.txt}</p><div class="row" style="margin-top:12px"><button class="btn" id="bg">Abrir o mapa</button></div></div>`;$('bg').onclick=jogar;}
-function jogar(){$('tela').innerHTML=`<div class="card"><canvas id="cv"></canvas><div class="row" style="justify-content:center;margin-top:10px"><button class="btn ghost" id="bz">Desfazer tudo</button><button class="btn" id="bk">Concluir o corredor</button></div></div>`;
- cv=$('cv');const mob=cv.clientWidth<520;S.cols=mob?12:20;S.rows=mob?17:12;S.cel=mob?34:36;W=S.cols*S.cel;H=S.rows*S.cel+(mob?70:0);cv.width=W;cv.height=H;cx=cv.getContext('2d');
- cv.onpointerdown=e=>{const r=cv.getBoundingClientRect();clicar((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height);};
- $('bz').onclick=()=>{const g=S.g;for(let i=0;i<g.m.length;i++)if(g.m[i]===T.RES)g.m[i]=g.orig[i];else if(g.m[i]===T.PASS)g.m[i]=T.EST;recalc();};$('bk').onclick=concluir;
- S.g={fim:false,msg:'',msgT:0,t:0,anim:null};gerar();recalc();hud();last=performance.now();parar();raf=requestAnimationFrame(loop);}
-const id=(c,r)=>r*S.cols+c;
-function gerar(){const g=S.g,F=FASES[S.f],C=S.cols,R=S.rows,mob=C<15;g.m=new Array(C*R).fill(0).map(()=>Math.random()<.55?T.PAS:T.LAV);g.frag=[];
- const sementes=F.frag===2?(mob?[[6,3],[6,13]]:[[4,6],[15,6]]):(mob?[[3,3],[8,8],[3,14]]:[[3,3],[16,4],[9,10]]);
- const alvo=F.frag===2?23:22;
- sementes.forEach(([c0,r0],k)=>{const set=new Set([id(c0,r0)]);let tries=0;while(set.size<alvo&&tries<4000){tries++;const a=[...set][Math.floor(Math.random()*set.size)];const c=a%C,r=Math.floor(a/C);const d=[[1,0],[-1,0],[0,1],[0,-1]][Math.floor(Math.random()*4)];const nc=c+d[0],nr=r+d[1];
-  if(nc<0||nr<0||nc>=C||nr>=R)continue;if(Math.abs(nc-c0)>(mob?4:4)||Math.abs(nr-r0)>(mob?3:4))continue;set.add(id(nc,nr));}
-  for(const i of set)g.m[i]=T.NAT;g.frag.push({c:c0,r:r0,nome:['A','B','C'][k]});});
- if(F.estrada){if(mob){const r=9;for(let c=0;c<C;c++)if(g.m[id(c,r)]!==T.NAT||true)g.m[id(c,r)]=T.EST;}else{const c=10;for(let r=0;r<R;r++)g.m[id(c,r)]=T.EST;}
-  if(F.frag===3&&!mob){const r=7;for(let c=0;c<10;c++)g.m[id(c,r)]=T.EST;}}
- g.orig=g.m.slice();}
-function msg(t){S.g.msg=t;S.g.msgT=3;}
-function custoCel(o){return o===T.PAS?1:o===T.LAV?2:o===T.EST?3:0;}
-function clicar(x,y){const g=S.g;if(!g||g.fim||g.anim)return;const c=Math.floor(x/S.cel),r=Math.floor(y/S.cel);if(c<0||r<0||c>=S.cols||r>=S.rows)return;const i=id(c,r);
- const o=g.orig[i];if(o===T.NAT){msg('Esta célula já é Cerrado nativo.');return;}
- if(g.m[i]===T.RES||g.m[i]===T.PASS){g.m[i]=o;}else{const k=custoCel(o);if(g.custo+k>FASES[S.f].orc){msg('Orçamento insuficiente para esta célula.');return;}g.m[i]=o===T.EST?T.PASS:T.RES;}
- beep(600,.03,.02);recalc();}
-function comp(start){const g=S.g,C=S.cols,R=S.rows,vis=new Set([start]),fila=[start];while(fila.length){const a=fila.shift();const c=a%C,r=Math.floor(a/C);
- for(const [dc,dr] of [[1,0],[-1,0],[0,1],[0,-1]]){const nc=c+dc,nr=r+dr;if(nc<0||nr<0||nc>=C||nr>=R)continue;const b=id(nc,nr);if(vis.has(b))continue;const t=g.m[b];if(t===T.NAT||t===T.RES||t===T.PASS){vis.add(b);fila.push(b);}}}return vis;}
-function recalc(){const g=S.g;g.custo=0;for(let i=0;i<g.m.length;i++){if(g.m[i]===T.RES||g.m[i]===T.PASS)g.custo+=custoCel(g.orig[i]);}
- const a=comp(id(g.frag[0].c,g.frag[0].r));g.comp=a;g.area=[...a].filter(i=>g.m[i]!==T.PASS).length;g.lig=g.frag.every(f=>a.has(id(f.c,f.r)));hud();}
-function caminho(){const g=S.g,C=S.cols,R=S.rows;const s=id(g.frag[0].c,g.frag[0].r),alvos=g.frag.slice(1).map(f=>id(f.c,f.r));let rota=[];let cur=s;
- for(const t of alvos){const prev=new Map([[cur,-1]]),fila=[cur];while(fila.length){const a=fila.shift();if(a===t)break;const c=a%C,r=Math.floor(a/C);for(const [dc,dr] of [[1,0],[-1,0],[0,1],[0,-1]]){const nc=c+dc,nr=r+dr;if(nc<0||nr<0||nc>=C||nr>=R)continue;const b=id(nc,nr);if(prev.has(b))continue;const tt=g.m[b];if(tt===T.NAT||tt===T.RES||tt===T.PASS){prev.set(b,a);fila.push(b);}}}
-  const seg=[];let k=t;while(k!==-1&&k!==undefined){seg.unshift(k);k=prev.get(k);}rota=rota.concat(seg);cur=t;}return rota;}
-function concluir(){const g=S.g,F=FASES[S.f];if(!g||g.fim||g.anim)return;
- if(!g.lig){msg('Os fragmentos ainda não estão ligados pelos lados das células.');beep(170,.2);return;}
- g.anim={rota:caminho(),t:0};}
-function update(dt){const g=S.g;if(!g||g.fim)return;g.msgT-=dt;g.t+=dt;if(g.anim){g.anim.t+=dt*5;if(g.anim.t>=g.anim.rota.length-1){g.anim=null;terminar();}}}
-function celula(c,r,t,o){const x=c*S.cel,y=r*S.cel,s=S.cel;const h=(c*928371+r*1237)%97/97;
- if(t===T.NAT){cx.fillStyle='#b9c98f';cx.fillRect(x,y,s,s);cx.fillStyle='#6f8a4a';for(let k=0;k<3;k++){cx.beginPath();cx.arc(x+6+((h*97+k*13)%(s-12)),y+6+((h*53+k*17)%(s-12)),3.2,0,7);cx.fill();}cx.fillStyle='rgba(120,100,60,.25)';cx.fillRect(x+((h*31)%(s-6)),y+s-8,3,6);}
- else if(t===T.RES){cx.fillStyle='#d3dfb0';cx.fillRect(x,y,s,s);cx.fillStyle='#7f9a55';for(let k=0;k<4;k++){cx.beginPath();cx.arc(x+7+k*7,y+s/2+((k%2)?5:-4),2,0,7);cx.fill();}}
- else if(t===T.PAS){cx.fillStyle='#eae6c6';cx.fillRect(x,y,s,s);cx.strokeStyle='rgba(150,140,90,.25)';cx.beginPath();cx.moveTo(x+4,y+s*.3);cx.lineTo(x+s-4,y+s*.3);cx.moveTo(x+4,y+s*.7);cx.lineTo(x+s-4,y+s*.7);cx.stroke();}
- else if(t===T.LAV){cx.fillStyle='#e6cf8a';cx.fillRect(x,y,s,s);cx.strokeStyle='rgba(160,120,40,.35)';cx.beginPath();for(let k=4;k<s;k+=6){cx.moveTo(x+k,y+2);cx.lineTo(x+k,y+s-2);}cx.stroke();}
- else if(t===T.EST||t===T.PASS){cx.fillStyle='#b8b6ae';cx.fillRect(x,y,s,s);cx.strokeStyle='#f4f2ea';cx.setLineDash([4,4]);cx.beginPath();const vert=S.g.orig[id(c,r+1)]===T.EST||S.g.orig[id(c,r-1)]===T.EST;if(vert){cx.moveTo(x+s/2,y);cx.lineTo(x+s/2,y+s);}else{cx.moveTo(x,y+s/2);cx.lineTo(x+s,y+s/2);}cx.stroke();cx.setLineDash([]);
-  if(t===T.PASS){cx.fillStyle='rgba(111,138,74,.85)';if(vert)cx.fillRect(x,y+s*.3,s,s*.4);else cx.fillRect(x+s*.3,y,s*.4,s);txt(cx,'PF',x+s/2,y+s/2+4,{a:'center',s:10,b:1,c:'#fff'});}}}
-function desenha(){const g=S.g;if(!g||!cx)return;cx.clearRect(0,0,W,H);papel(cx,W,H);
- for(let r=0;r<S.rows;r++)for(let c=0;c<S.cols;c++)celula(c,r,g.m[id(c,r)],g.orig[id(c,r)]);
- cx.strokeStyle='rgba(43,42,38,.10)';cx.lineWidth=1;cx.beginPath();for(let c=0;c<=S.cols;c++){cx.moveTo(c*S.cel,0);cx.lineTo(c*S.cel,S.rows*S.cel);}for(let r=0;r<=S.rows;r++){cx.moveTo(0,r*S.cel);cx.lineTo(S.cols*S.cel,r*S.cel);}cx.stroke();
- // contorno da área conectada
- cx.strokeStyle='rgba(31,78,121,.75)';cx.lineWidth=2;for(const i of g.comp){const c=i%S.cols,r=Math.floor(i/S.cols),x=c*S.cel,y=r*S.cel,s=S.cel;
-  for(const [dc,dr,x1,y1,x2,y2] of [[1,0,s,0,s,s],[-1,0,0,0,0,s],[0,1,0,s,s,s],[0,-1,0,0,s,0]]){const nc=c+dc,nr=r+dr;if(nc<0||nr<0||nc>=S.cols||nr>=S.rows||!g.comp.has(id(nc,nr))){cx.beginPath();cx.moveTo(x+x1,y+y1);cx.lineTo(x+x2,y+y2);cx.stroke();}}}
- for(const f of g.frag){const x=f.c*S.cel+S.cel/2,y=f.r*S.cel+S.cel/2;cx.fillStyle='rgba(255,255,255,.92)';cx.beginPath();cx.arc(x,y,12,0,7);cx.fill();cx.strokeStyle=TINTA;cx.lineWidth=1.5;cx.stroke();txt(cx,f.nome,x,y+4,{a:'center',s:12,b:1});}
- if(g.anim){const rt=g.anim.rota,k=Math.floor(g.anim.t),u=g.anim.t-k;const a=rt[k],b=rt[Math.min(k+1,rt.length-1)];const ax=(a%S.cols+.5)*S.cel,ay=(Math.floor(a/S.cols)+.5)*S.cel,bx=(b%S.cols+.5)*S.cel,by=(Math.floor(b/S.cols)+.5)*S.cel;
-  cx.strokeStyle='rgba(192,102,43,.6)';cx.setLineDash([3,4]);cx.beginPath();rt.slice(0,k+1).forEach((q,i)=>{const qx=(q%S.cols+.5)*S.cel,qy=(Math.floor(q/S.cols)+.5)*S.cel;i?cx.lineTo(qx,qy):cx.moveTo(qx,qy);});cx.stroke();cx.setLineDash([]);
-  loboSil(cx,ax+(bx-ax)*u,ay+(by-ay)*u-8,.55,bx>=ax?1:-1,g.t*12);}
- const py=S.cols<15?S.rows*S.cel+4:H-64,px=S.cols<15?4:W-206;painel(cx,px,py,S.cols<15?W-8:198,58,'Paisagem');
- txt(cx,'Área contínua: '+g.area+' km²  (meta '+FASES[S.f].meta+')',px+8,py+36,{s:12,b:1,c:g.area>=FASES[S.f].meta?'#1b5e20':TINTA});
- txt(cx,(g.lig?'Fragmentos ligados':'Fragmentos separados')+' · custo '+g.custo+'/'+FASES[S.f].orc,px+8,py+52,{s:11,c:g.lig?'#1b5e20':'#8e1b1b'});
- aviso(cx,W,S.rows*S.cel,g.msgT>0?g.msg:'');}
-function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);desenha();if(S.g&&!S.g.fim)raf=requestAnimationFrame(loop);}
+function fase(){const F=G.FASES[S.f];S.fp=0;S.g=null;hud();
+ $('tela').innerHTML=`<div class="card"><h2>Fase ${S.f+1}: ${F.nome}</h2><p>${F.txt}</p><p class="small" style="margin-top:8px"><b>Meta:</b> ${F.metaTxt}</p><div class="row" style="margin-top:14px"><button class="btn grande" id="bg">Começar</button></div></div>`;$('bg').onclick=jogar;}
+function jogar(){$('tela').innerHTML=`<div class="card"><canvas id="cv" style="touch-action:none"></canvas>${G.botoes?G.botoes():''}<p class="small" style="margin-top:8px;text-align:center">${G.dica}</p></div>`;
+ cv=$('cv');if(cv.clientWidth<520){W=420;H=560;}else{W=720;H=460;}cv.width=W;cv.height=H;cx=cv.getContext('2d');
+ const pos=e=>{const r=cv.getBoundingClientRect();return [(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height];};
+ cv.onpointerdown=e=>{cv.setPointerCapture(e.pointerId);[inp.x,inp.y]=pos(e);inp.down=true;inp.tap={x:inp.x,y:inp.y};e.preventDefault();};
+ cv.onpointermove=e=>{if(inp.down)[inp.x,inp.y]=pos(e);};cv.onpointerup=()=>{inp.down=false;};cv.onpointercancel=()=>{inp.down=false;};
+ inp.x=null;inp.down=false;inp.tap=null;S.g={t:0,vidas:3,fim:false,msg:'',msgT:0,pops:[]};G.init(S.g);if(G.ligar)G.ligar();hud();last=performance.now();parar();raf=requestAnimationFrame(loop);}
+document.addEventListener('keydown',e=>{tec[e.key]=1;if(S&&S.g&&!S.g.fim&&(e.key.startsWith('Arrow')||e.key===' '))e.preventDefault();});document.addEventListener('keyup',e=>{tec[e.key]=0;});
+function msg(t){S.g.msg=t;S.g.msgT=2.2;}
+function pop(x,y,t,cor){S.g.pops.push({x,y,t,cor:cor||'#2e7d32',v:0});}
+function ganha(n,x,y){S.fp+=n;if(x!==undefined)pop(x,y,(n>0?'+':'')+n,n>0?'#2e7d32':'#c62828');beep(n>0?880:170,n>0?.07:.18);}
+function update(dt){const g=S.g;if(!g||g.fim)return;g.t+=dt;g.msgT-=dt;G.update(g,dt);inp.tap=null;
+ for(const p of g.pops){p.v+=dt;p.y-=dt*40;}g.pops=g.pops.filter(p=>p.v<1);
+ const F=G.FASES[S.f];if(g.fim)return;if((G.vidas&&g.vidas<=0)||g.t>=F.dur||(G.cedo&&G.cedo(g)))terminar();}
+function desenha(){const g=S.g;if(!g||!cx)return;cx.clearRect(0,0,W,H);G.draw(g);
+ for(const p of g.pops){cx.globalAlpha=1-p.v;cx.font='bold 20px system-ui';cx.textAlign='center';cx.lineWidth=4;cx.strokeStyle='#fff';cx.strokeText(p.t,p.x,p.y);cx.fillStyle=p.cor;cx.fillText(p.t,p.x,p.y);cx.globalAlpha=1;}
+ if(g.msgT>0){cx.font='bold 15px system-ui';const w=Math.min(W-16,cx.measureText(g.msg).width+30);rrect(W/2-w/2,12,w,32,16,'rgba(255,255,255,.95)');cx.fillStyle='#263238';cx.textAlign='center';cx.fillText(g.msg,W/2,33);}}
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);desenha();if(S.g&&!S.g.fim){hud();raf=requestAnimationFrame(loop);}}
 function parar(){if(raf)cancelAnimationFrame(raf);raf=null;}
-function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=FASES[S.f];const atrav=g.m.some((t,i)=>g.orig[i]===T.EST&&false);const ok=g.lig&&g.area>=F.meta&&g.custo<=F.orc;const sobra=F.orc-g.custo;
- if(ok){S.fp+=40+5*sobra;beep(880,.2);}hud();
- $('tela').innerHTML=`<div class="card"><h2>${ok?'Corredor funcionando':'O corredor não basta'}</h2><p>Área contínua: <b>${g.area} km²</b> (meta ${F.meta}). Custo: <b>${g.custo}</b> de ${F.orc}.</p>
- ${ok?`<div class="fb good">Meta cumprida. +40 e +${5*sobra} pelo orçamento que sobrou.</div>`:'<div class="fb bad">Meta não cumprida. Os fragmentos estão ligados, mas a área contínua ainda é menor que a meta. Restaure mais células junto aos fragmentos.</div>'}
- <div class="row" style="margin-top:12px">${ok?'<button class="btn" id="bq">Pergunta da fase</button>':'<button class="btn" id="br">Tentar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
+function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=G.FASES[S.f];const [a,m]=G.meta(g);const ok=a>=m&&(!G.vidas||g.vidas>0);if(ok){S.fp+=30;beep(880,.25);}hud();
+ $('tela').innerHTML=`<div class="card" style="text-align:center"><div class="selo ${ok?'ok':'no'}">${ok?'Muito bem!':'Quase!'}</div><h2>${ok?'Fase concluída':'Tente de novo'}</h2><p style="font-size:1.1rem">${G.rotulo}: <b>${a}</b> de ${m}</p>
+ <p class="small" style="margin-top:6px">${ok?G.FASES[S.f].fato:G.dicaErro}</p>
+ <div class="row" style="justify-content:center;margin-top:14px">${ok?'<button class="btn grande" id="bq">Pergunta rápida</button>':'<button class="btn grande" id="br">Jogar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
  if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}}
+/* Corredores ecológicos e passagens de fauna ajudam o lobo-guará a se mover entre fragmentos de Cerrado (Andrade, UnB, 2020; Physis Terrae). Pistas, veículos e pontos são regras do jogo. */
+const G={titulo:'Travessia do Lobo',rotulo:'Travessias',vidas:1,
+ resumo:'O lobo-guará vive no Cerrado e anda muito para achar comida. Entre um pedaço de mata e outro, ele precisa atravessar lavouras e estradas.',
+ como:[['Toque','Na parte de cima da tela o lobo pula para frente. Nos lados, pula para a esquerda ou a direita. Setas também funcionam.'],['Cuidado','Carros e máquinas tiram uma vida.'],['Passagem','O túnel verde embaixo da estrada é uma passagem de fauna: ali o lobo atravessa seguro.']],
+ dica:'Toque em cima para avançar, nos lados para desviar.',dicaErro:'Espere o carro passar ou use a passagem de fauna verde.',
+ FASES:[{nome:'Uma estrada',dur:60,meta:3,linhas:['cer','pas','est','pas','lav','cer'],v:1,metaTxt:'chegar 3 vezes ao Cerrado do outro lado em 60 s.',txt:'Atravesse o pasto, a estrada e a lavoura até a mata do outro lado.',fato:'Corredores de vegetação ligam pedaços de Cerrado e deixam o lobo-guará andar entre eles com mais segurança.'},
+  {nome:'Rodovia movimentada',dur:60,meta:3,linhas:['cer','pas','est','est','lav','pas','cer'],v:1.35,metaTxt:'chegar 3 vezes ao outro lado em 60 s.',txt:'Agora são duas pistas e os carros são mais rápidos. Procure a passagem de fauna.',fato:'Passagens de fauna, por baixo ou por cima da pista, reduzem os atropelamentos de animais.'},
+  {nome:'Paisagem fragmentada',dur:70,meta:3,linhas:['cer','lav','est','pas','est','lav','est','cer'],v:1.6,metaTxt:'chegar 3 vezes ao outro lado em 70 s.',txt:'Três estradas e colheitadeiras na lavoura. Vá com calma.',fato:'O lobo-guará é endêmico do Cerrado e está quase ameaçado: proteger os corredores ajuda a espécie.'}],
+ init(g){const F=FASES[S.f];g.vidas=3;g.L=F.linhas;g.nl=g.L.length;g.lh=H/g.nl;g.cols=MOB()?7:11;g.cw=W/g.cols;g.c=Math.floor(g.cols/2);g.r=g.nl-1;g.trav=0;g.inv=0;g.objs=[];g.pass={};g.p=0;
+  g.L.forEach((t,i)=>{if(t==='est'){g.pass[i]=Math.floor(rr(1,g.cols-1));const dir=i%2?1:-1;for(let k=0;k<3;k++)g.objs.push({r:i,x:k*W/3+rr(0,80),dir,v:rr(110,160)*F.v,w:g.cw*1.3,tipo:'carro',cor:['#e53935','#1e88e5','#fdd835','#8e24aa'][k%4]});}
+   if(t==='lav'){const dir=i%2?-1:1;g.objs.push({r:i,x:rr(0,W),dir,v:60*F.v,w:g.cw*1.8,tipo:'maquina',cor:'#43a047'});}});},
+ meta(g){return [g.trav,FASES[S.f].meta];},cedo(g){return g.trav>=FASES[S.f].meta;},
+ mover(g,dc,dr){g.c=Math.max(0,Math.min(g.cols-1,g.c+dc));g.r=Math.max(0,Math.min(g.nl-1,g.r+dr));g.p=1;beep(500,.03,.02);
+  if(g.r===0){g.trav++;ganha(20,(g.c+.5)*g.cw,g.lh*.5);msg('Chegou ao Cerrado! Agora volte ao início.');g.r=g.nl-1;}},
+ update(g,dt){g.inv-=dt;g.p=Math.max(0,g.p-dt*5);
+  if(inp.tap){const t=inp.tap;if(t.y<H*.5&&Math.abs(t.x-W/2)<W*.3)G.mover(g,0,-1);else if(t.y>=H*.5&&Math.abs(t.x-W/2)<W*.3)G.mover(g,0,1);else G.mover(g,t.x<W/2?-1:1,0);}
+  if(tec.ArrowUp){G.mover(g,0,-1);tec.ArrowUp=0;}if(tec.ArrowDown){G.mover(g,0,1);tec.ArrowDown=0;}if(tec.ArrowLeft){G.mover(g,-1,0);tec.ArrowLeft=0;}if(tec.ArrowRight){G.mover(g,1,0);tec.ArrowRight=0;}
+  for(const o of g.objs){o.x+=o.dir*o.v*dt;if(o.dir>0&&o.x>W+o.w)o.x=-o.w;if(o.dir<0&&o.x<-o.w)o.x=W+o.w;}
+  const lx=(g.c+.5)*g.cw;if(g.inv<=0){for(const o of g.objs){if(o.r!==g.r)continue;if(g.L[g.r]==='est'&&g.pass[g.r]===g.c)continue;if(Math.abs(o.x-lx)<o.w/2+g.cw*.3){g.vidas--;g.inv=1.5;beep(150,.3,.07);msg(o.tipo==='carro'?'Atropelado! Use a passagem de fauna.':'A máquina da lavoura!');g.r=g.nl-1;break;}}}},
+ draw(g){const cores={cer:'#b5cf8a',pas:'#e8e3b3',est:'#9e9e9e',lav:'#f3d27a'};
+  g.L.forEach((t,i)=>{const y=i*g.lh;cx.fillStyle=cores[t];cx.fillRect(0,y,W,g.lh);
+   if(t==='cer'){for(let x=10;x<W;x+=46){cx.fillStyle='#7a9a55';cx.beginPath();cx.arc(x+(i*13)%20,y+g.lh*.5,14,0,7);cx.fill();cx.fillStyle='#6d5a43';cx.fillRect(x+(i*13)%20-2,y+g.lh*.5+8,4,10);}cx.fillStyle='rgba(255,255,255,.85)';cx.font='bold 13px system-ui';cx.textAlign='left';cx.fillText(i===0?'Cerrado: chegada':'Cerrado: início',8,y+16);}
+   if(t==='est'){cx.strokeStyle='#fff';cx.lineWidth=3;cx.setLineDash([18,14]);cx.beginPath();cx.moveTo(0,y+g.lh/2);cx.lineTo(W,y+g.lh/2);cx.stroke();cx.setLineDash([]);const px=g.pass[i]*g.cw;rrect(px+4,y+4,g.cw-8,g.lh-8,10,'rgba(76,175,80,.85)');cx.fillStyle='#fff';cx.font='bold 11px system-ui';cx.textAlign='center';cx.fillText('passagem',px+g.cw/2,y+g.lh/2+4);}
+   if(t==='lav'){cx.strokeStyle='rgba(160,120,40,.35)';cx.lineWidth=2;for(let x=0;x<W;x+=12){cx.beginPath();cx.moveTo(x,y+4);cx.lineTo(x,y+g.lh-4);cx.stroke();}}
+   if(t==='pas'){cx.fillStyle='rgba(120,140,60,.25)';for(let x=0;x<W;x+=22)cx.fillRect(x+(i*7)%10,y+g.lh*.6,2,8);}});
+  for(const o of g.objs){const y=o.r*g.lh+g.lh/2;if(o.tipo==='carro'){rrect(o.x-o.w/2,y-g.lh*.3,o.w,g.lh*.6,10,o.cor);rrect(o.x-o.w*.2+o.dir*o.w*.1,y-g.lh*.22,o.w*.3,g.lh*.44,6,'rgba(255,255,255,.7)');}
+   else{rrect(o.x-o.w/2,y-g.lh*.34,o.w,g.lh*.68,8,o.cor);cx.fillStyle='#fbc02d';cx.fillRect(o.x+o.dir*o.w*.45-4,y-g.lh*.34,8,g.lh*.68);}}
+  const lx=(g.c+.5)*g.cw,ly=g.r*g.lh+g.lh/2-g.p*8;if(!(g.inv>0&&Math.floor(g.t*10)%2)){sombra(lx,ly+g.lh*.32,20,5);loboSil(cx,lx,ly+4,Math.min(1.4,g.lh/48),1,g.t*10);}},
+ capa(k,w,h){const o=cx;cx=k;k.fillStyle='#b5cf8a';k.fillRect(0,0,w,70);k.fillStyle='#9e9e9e';k.fillRect(0,70,w,70);k.fillStyle='#e8e3b3';k.fillRect(0,140,w,80);rrect.call(null,250,74,90,62,10,'rgba(76,175,80,.85)');cx.fillStyle='#e53935';cx.beginPath();cx.roundRect(80,85,90,40,10);cx.fill();loboSil(k,300,185,1.4,1,0);cx=o;}
+};
+const FASES=G.FASES;
+const PERG=[
+ {q:'Para que serve uma passagem de fauna numa estrada?',o:['Deixar os animais atravessarem sem serem atropelados','Guardar as máquinas da lavoura','Servir de abrigo para os carros']},
+ {q:'O que é um corredor ecológico?',o:['Uma faixa de vegetação que liga dois pedaços de mata','Uma estrada larga para os animais correrem','Um muro que separa a mata da lavoura']},
+ {q:'Em qual bioma vive o lobo-guará?',o:['Cerrado','Pampa','Mata dos Cocais']}
+];
 function pergunta(){
  const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
  $('tela').innerHTML=`<div class="card"><h2>Pergunta da fase</h2><p style="margin:6px 0 4px">${P.q}</p><p class="small">Acerto +20, erro −10.</p><div class="ops">${ops.map((o,i)=>`<button data-i="${i}">${o.t}</button>`).join('')}</div><div id="pf"></div></div>`;
@@ -210,10 +197,10 @@ function pergunta(){
 }
 function final(tudo){
  S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
- $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Três corredores abertos':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
+ $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Lobo em segurança':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
  <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
- <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Olarte Jimenez, K. M. (2012), Relação entre área de vida e recurso alimentar do lobo-guará na Serra da Canastra, dissertação UFMG: área de vida de 54,72 ± 29,04 km² em nove lobos com colar (Kernel 95%); dissertação UFMG sobre lobo-guará: área de vida média de 25,23 a 80,18 km² nos estudos revisados; Andrade, B. R. (2020), Conectando a Estação Ecológica de Águas Emendadas: proposta de corredores ecológicos para o lobo-guará, dissertação UnB; Physis Terrae, proposta de corredores para o lobo-guará no Distrito Federal: espécie endêmica do Cerrado e quase ameaçada. Mapa, custos e orçamentos são regras do jogo.</div></div>`;
+ <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Andrade, B. R. (2020), Conectando a Estação Ecológica de Águas Emendadas: proposta de corredores ecológicos para o lobo-guará, dissertação UnB; Physis Terrae, proposta de corredores para o lobo-guará no Distrito Federal: espécie endêmica do Cerrado e quase ameaçada; Olarte Jimenez (2012), dissertação UFMG: área de vida de 54,72 ± 29,04 km² em lobos-guará da Serra da Canastra. Pistas, veículos e pontos são regras do jogo.</div></div>`;
  $('bS').onclick=()=>salvar(nivel);
 }
 const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
@@ -222,7 +209,7 @@ const GAME_ID="corredor-do-lobo";let db=null,fs=null,salvo=false;
 async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
 async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
  $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
-window.__lb={get S(){return S},update,parar,clicar,concluir,FASES,T,recalc};
+window.__a={get S(){return S},update,parar,G,inp};
 inicio();
 </script>
 </body>

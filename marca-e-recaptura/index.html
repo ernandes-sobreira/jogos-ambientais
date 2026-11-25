@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Marca e Recaptura</title>
+<title>Quantos Peixes?</title>
 <style>
-:root{--main:#2f6b5e;--deep:#1f4d43;--soft:#edf5f2;--line:#d3e6df;--ink:#1b2622;--mut:#56655f}
+:root{--main:#00897b;--deep:#00695c;--soft:#e6f5f3;--line:#cde9e5;--ink:#14261f;--mut:#4f6660}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
 .wrap{max-width:780px;margin:0 auto;padding:12px 14px 40px}
@@ -36,14 +36,14 @@ canvas{width:100%;max-width:760px;margin:0 auto;display:block;border:2px solid v
 .ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
 .savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
-.pill{font-variant-numeric:tabular-nums}.card h2{letter-spacing:-.01em}.tab td:first-child{font-weight:600;white-space:nowrap;color:var(--deep);width:1%}input[type=range]{width:100%;accent-color:var(--main)}.kv{font-variant-numeric:tabular-nums}</style>
+.pill{font-variant-numeric:tabular-nums}.card h2{letter-spacing:-.01em}.tab td:first-child{font-weight:600;white-space:nowrap;color:var(--deep);width:1%}input[type=range]{width:100%;accent-color:var(--main)}.kv{font-variant-numeric:tabular-nums}.capa canvas{width:100%;height:auto;border-radius:14px;display:block}.como{display:grid;gap:8px;margin-top:10px}.como div{display:flex;gap:10px;align-items:baseline;background:var(--soft);border-radius:12px;padding:10px 12px}.como b{color:var(--deep);min-width:72px}.btn.grande{font-size:1.1rem;padding:14px 30px}.selo{display:inline-block;padding:8px 18px;border-radius:999px;font-weight:800;font-size:1.2rem;margin-bottom:6px}.selo.ok{background:#e8f5e9;color:#2e7d32}.selo.no{background:#fff3e0;color:#e65100}</style>
 </head>
 <body>
 <div class="wrap">
 <a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
 <header>
-  <h1>Marca e Recaptura</h1>
-  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1 de 3</span><span class="pill" id="hP">0 pontos</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
+  <h1>Quantos Peixes?</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
 </header>
 <main id="tela"></main>
 <div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
@@ -112,102 +112,80 @@ function loboSil(c,x,y,s,dir,p){c.save();c.translate(x,y);c.scale(s*(dir||1),s);
  c.fillStyle='#c0662b';c.beginPath();c.ellipse(-2,-4,22,9,0,0,7);c.fill();c.beginPath();c.moveTo(14,-8);c.quadraticCurveTo(22,-22,28,-20);c.lineTo(36,-16);c.lineTo(28,-12);c.quadraticCurveTo(22,-6,16,-2);c.fill();
  c.fillStyle='#1d1a17';c.beginPath();c.moveTo(14,-10);c.quadraticCurveTo(10,-18,4,-12);c.lineTo(12,-6);c.fill();c.beginPath();c.moveTo(24,-20);c.lineTo(22,-30);c.lineTo(28,-21);c.fill();
  c.fillStyle='#eee5d6';c.beginPath();c.moveTo(-24,-6);c.quadraticCurveTo(-34,-2,-36,6);c.quadraticCurveTo(-30,0,-24,0);c.fill();c.restore();}
-/* Matemática: estimador de Lincoln-Petersen, N = M·C/R (Odum e Barrett, citado em anais da UFPel; Krebs, Ecological Methodology, cap. 2).
-   Pressuposto: tempo suficiente para os marcados se misturarem (EBSCO Research Starters). Tamanhos reais das populações são sorteados pelo jogo. */
-const FASES=[
- {nome:'Primeira estimativa',lagos:2,lances:5,esforco:0,mistura:0,txt:'Lance a rede 5 vezes, marque todos os peixes capturados e solte. Depois de uma semana, lance a rede mais 5 vezes. Calcule N = M·C/R.'},
- {nome:'Esforço de amostragem',lagos:2,lances:0,esforco:1,mistura:0,txt:'Agora você escolhe quantos lances fazer em cada captura. Mais lances dão mais recapturas e uma estimativa mais precisa, mas gastam mais tempo de campo.'},
- {nome:'Esperar ou não esperar',lagos:2,lances:5,esforco:0,mistura:1,txt:'Você decide quanto tempo esperar antes da recaptura. Se os peixes marcados não tiverem tempo de se espalhar pela baía, a estimativa sai torta.'}
-];
-const PERG=[
- {q:'Foram marcados 40 peixes. Na segunda captura vieram 50 peixes, e 10 deles tinham marca. Qual é a estimativa de Lincoln-Petersen?',o:['200 peixes','90 peixes','500 peixes']},
- {q:'Por que o pesquisador espera alguns dias entre a marcação e a recaptura?',o:['Para os marcados se misturarem aos não marcados','Para as marcas ficarem mais visíveis na água','Para os peixes marcados ganharem peso e tamanho']},
- {q:'Se muitas marcas caírem dos peixes entre as duas capturas, o que acontece com a estimativa?',o:['Fica maior que a população real','Fica menor que a população real','Não muda, porque a fórmula corrige isso']}
-];
-let S,cv,cx,raf=null,last=0,W=760,H=460;
-function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+' de 3';$('hP').textContent=(S.tot+S.fp)+' pontos';
- if(S.g){$('hR').textContent='Baía '+Math.min(S.g.lago+1,FASES[S.f].lagos)+'/'+FASES[S.f].lagos;$('hV').textContent='Cálculos certos '+S.g.calc;$('hT').textContent='Dias de campo '+S.g.dias;}}
+/* ---------- motor arcade simples ---------- */
+let S,cv,cx,raf=null,last=0,W=720,H=460,inp={x:null,y:null,down:false,tap:null},tec={};
+const MOB=()=>W<520;
+function rrect(x,y,w,h,r,cor){cx.fillStyle=cor;cx.beginPath();cx.roundRect(x,y,w,h,r);cx.fill();}
+function sombra(x,y,rx,ry){cx.fillStyle='rgba(0,0,0,.12)';cx.beginPath();cx.ellipse(x,y,rx,ry,0,0,7);cx.fill();}
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
+ if(g&&!g.fim){const [a,m]=G.meta(g);$('hR').textContent=G.rotulo+' '+a+'/'+m;$('hV').textContent=G.vidas?'Vidas '+'●'.repeat(Math.max(0,g.vidas)):'';$('hT').textContent=G.semTempo?'':Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s';}
+ ['hR','hV','hT'].forEach(k=>$(k).style.display=$(k).textContent?'':'none');}
 function inicio(){parar();$('hud').style.display='none';$('rankBox').style.display='block';
- $('tela').innerHTML=`<div class="card"><h2>Quantos peixes há na baía?</h2>
- <p>Ninguém consegue contar todos os peixes de uma baía do Pantanal. O método de captura, marcação e recaptura estima o total a partir de duas amostras.</p>
- <table class="tab"><tr><td>M</td><td>Peixes capturados e marcados na primeira captura.</td></tr>
- <tr><td>C</td><td>Total de peixes na segunda captura.</td></tr><tr><td>R</td><td>Quantos da segunda captura já estavam marcados.</td></tr>
- <tr><td>N</td><td>Estimativa: N = M·C/R. A ideia é que a proporção de marcados na amostra (R/C) seja igual à da baía inteira (M/N).</td></tr></table>
- <p class="small" style="margin-top:8px">Toque na água para lançar a rede. Cálculo certo +15. Estimativa até 10% do valor real +15, até 25% +8.</p>
- <div class="row" style="margin-top:12px"><button class="btn" onclick="novo()">Começar</button></div></div>`;}
+ $('tela').innerHTML=`<div class="card"><div class="capa"><canvas id="cp" width="640" height="220"></canvas></div><h2 style="margin-top:12px">${G.titulo}</h2><p>${G.resumo}</p>
+ <div class="como">${G.como.map(c=>`<div><b>${c[0]}</b><span>${c[1]}</span></div>`).join('')}</div>
+ <div class="row" style="margin-top:14px"><button class="btn grande" onclick="novo()">Jogar</button></div></div>`;
+ const c=$('cp');if(c&&G.capa){const k=c.getContext('2d');G.capa(k,640,220);}}
 function novo(){S={f:0,tot:0,fp:0};salvo=false;$('rankBox').style.display='none';fase();}
-function fase(){const F=FASES[S.f];S.fp=0;S.g=null;hud();
- $('tela').innerHTML=`<div class="card"><h2>Fase ${S.f+1}: ${F.nome}</h2><p>${F.txt}</p><p class="small" style="margin-top:6px">Meta: acertar o cálculo nas 2 baías e ter erro médio de até 25%.</p><div class="row" style="margin-top:12px"><button class="btn" id="bg">Ir a campo</button></div></div>`;$('bg').onclick=jogar;}
-function noLago(x,y){const cxl=W/2,cyl=H*.47,rx=W*.44,ry=H*.38;return ((x-cxl)/rx)**2+((y-cyl)/ry)**2<1;}
-function jogar(){$('tela').innerHTML=`<div class="card"><canvas id="cv"></canvas><div id="ctl" style="margin-top:10px"></div></div>`;
- cv=$('cv');if(cv.clientWidth<520){W=440;H=480;}else{W=760;H=440;}cv.width=W;cv.height=H;cx=cv.getContext('2d');
- cv.onpointerdown=e=>{const r=cv.getBoundingClientRect();lancar((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height);};
- S.g={lago:0,calc:0,erros:[],dias:0,fim:false,msg:'',msgT:0,t:0};novoLago();hud();last=performance.now();parar();raf=requestAnimationFrame(loop);}
-function novoLago(){const g=S.g,F=FASES[S.f];const N=Math.round(S.f===0?rr(70,130):rr(140,240));g.N=N;g.p=[];
- for(let i=0;i<N;i++){let x,y;do{x=rr(0,W);y=rr(0,H);}while(!noLago(x,y));g.p.push({x,y,hx:x,hy:y,a:rr(0,7),v:rr(8,18),m:0,esp:Math.random()<.5?0:1});}
- g.etapa=F.esforco?'esf1':'cap1';g.lances=0;g.maxL=F.lances||5;g.M=0;g.C=0;g.R=0;g.redes=[];g.mist=1;g.zona=null;ctl();}
-function ctl(){const g=S.g,F=FASES[S.f],c=$('ctl');if(!c)return;
- if(g.etapa==='esf1'||g.etapa==='esf2')c.innerHTML=`<p class="small">Quantos lances na ${g.etapa==='esf1'?'primeira':'segunda'} captura? Cada lance custa meio dia de campo.</p><div class="ops" style="grid-template-columns:repeat(3,1fr)"><button data-n="2">2 lances</button><button data-n="4">4 lances</button><button data-n="6">6 lances</button></div>`;
- else if(g.etapa==='espera')c.innerHTML=`<p class="small">Quanto tempo esperar antes da recaptura?</p><div class="ops" style="grid-template-columns:1fr 1fr"><button data-d="1">1 dia</button><button data-d="7">7 dias</button></div>`;
- else if(g.etapa==='calc')c.innerHTML=`<p class="small">Calcule N = M·C/R com os dados da ficha e arredonde para o inteiro mais próximo.</p><div class="savebox"><input id="ni" type="number" inputmode="numeric" placeholder="Estimativa de N"><button class="btn" id="bc">Conferir</button></div>`;
- else if(g.etapa==='res')c.innerHTML=`<div class="row" style="justify-content:center"><button class="btn" id="bn">${g.lago+1<F.lagos?'Próxima baía':'Ver resultado da fase'}</button></div>`;
- else c.innerHTML=`<p class="small" style="text-align:center">${g.etapa==='cap1'?'Primeira captura: toque na água para lançar a rede':'Segunda captura: toque na água para lançar a rede'} (${g.lances}/${g.maxL}).</p>`;
- c.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{g.maxL=+b.dataset.n;g.dias+=Math.ceil(g.maxL/2);g.etapa=g.etapa==='esf1'?'cap1':'cap2';g.lances=0;ctl();hud();});
- c.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{const d=+b.dataset.d;g.dias+=d;g.mist=d>=7?1:.12;soltar();ctl();hud();});
- if($('bc'))$('bc').onclick=conferir;if($('bn'))$('bn').onclick=()=>{g.lago++;if(g.lago>=F.lagos)terminar();else{novoLago();hud();}};}
-function msg(t){S.g.msg=t;S.g.msgT=3;}
-function lancar(x,y){const g=S.g;if(!g||g.fim||!(g.etapa==='cap1'||g.etapa==='cap2'))return;if(!noLago(x,y)){msg('Lance a rede dentro da água.');return;}if(g.lances>=g.maxL)return;
- const r=W<520?56:74;g.redes.push({x,y,r,t:0});g.lances++;beep(300,.08,.04);
- const pegos=g.p.filter(p=>!p.preso&&Math.hypot(p.x-x,p.y-y)<r);
- if(g.etapa==='cap1'){for(const p of pegos){p.preso=1;g.M++;}}
- else{for(const p of pegos){p.preso=1;g.C++;if(p.m)g.R++;}}
- if(g.lances>=g.maxL){if(g.etapa==='cap1'){g.etapa=FASES[S.f].mistura?'espera':'marcando';g.tm=1.2;g.zona=g.redes.map(n=>({x:n.x,y:n.y}));if(!FASES[S.f].mistura){g.dias+=7;g.mist=1;setTimeout(()=>{soltar();ctl();},1200);}}
-  else{g.etapa='calc';}}
- ctl();hud();}
-function soltar(){const g=S.g;for(const p of g.p){if(p.preso){p.preso=0;p.m=1;}}
- for(const p of g.p){if(Math.random()<g.mist||!p.m){let x,y;do{x=rr(0,W);y=rr(0,H);}while(!noLago(x,y));p.hx=x;p.hy=y;}else{p.hx=p.x;p.hy=p.y;}}
- g.redes=[];g.etapa=FASES[S.f].esforco?'esf2':'cap2';g.lances=0;if(!FASES[S.f].esforco)g.maxL=FASES[S.f].lances||5;msg(g.mist>=1?'Uma semana depois: os marcados se espalharam pela baía.':'Só um dia depois: os marcados ainda estão perto de onde foram soltos.');}
-function conferir(){const g=S.g;const v=Math.round(+$('ni').value);if(!v){msg('Digite um número.');return;}
- if(g.R===0){g.etapa='res';msg('Nenhum peixe marcado foi recapturado: R = 0 e a fórmula não funciona. Faltou esforço de captura.');ctl();return;}
- const ex=Math.round(g.M*g.C/g.R),ok=Math.abs(v-ex)<=1;if(ok){g.calc++;S.fp+=15;beep(900,.1);}else{S.fp-=5;beep(170,.2);}
- const err=Math.abs(ex-g.N)/g.N;g.erros.push(err);if(err<=.1)S.fp+=15;else if(err<=.25)S.fp+=8;
- g.res={v,ex,ok,err};g.etapa='res';ctl();hud();}
-function update(dt){const g=S.g;if(!g||g.fim)return;g.msgT-=dt;g.t+=dt;for(const n of g.redes)n.t+=dt;
- for(const p of g.p){if(p.preso)continue;const dx=p.hx-p.x,dy=p.hy-p.y,d=Math.hypot(dx,dy);
-  if(d>4){p.a=Math.atan2(dy,dx);const v=Math.min(d,90*dt);p.x+=dx/d*v;p.y+=dy/d*v;}
-  else{if(Math.random()<dt*.8)p.a+=rr(-1,1);const nx=p.x+Math.cos(p.a)*p.v*dt,ny=p.y+Math.sin(p.a)*p.v*dt;if(noLago(nx,ny)&&Math.hypot(nx-p.hx,ny-p.hy)<60){p.x=nx;p.y=ny;}else p.a+=Math.PI*.7;}}}
-function peixeCima(x,y,a,L,cor,tag,f){cx.save();cx.translate(x,y);cx.rotate(a);const o=Math.sin(f)*1.5;
- cx.fillStyle=cor;cx.beginPath();cx.moveTo(L*.5,0);cx.quadraticCurveTo(L*.2,-L*.16,-L*.3,-L*.05);cx.lineTo(-L*.5,-L*.16+o);cx.lineTo(-L*.42,o*.5);cx.lineTo(-L*.5,L*.16+o);cx.lineTo(-L*.3,L*.05);cx.quadraticCurveTo(L*.2,L*.16,L*.5,0);cx.fill();
- cx.fillStyle='rgba(255,255,255,.25)';cx.beginPath();cx.ellipse(L*.1,0,L*.25,L*.04,0,0,7);cx.fill();
- if(tag){cx.fillStyle='#e8701a';cx.beginPath();cx.arc(0,0,L*.17,0,7);cx.fill();cx.strokeStyle='#fff';cx.lineWidth=1;cx.stroke();}cx.restore();}
-function desenha(){const g=S.g;if(!g||!cx)return;cx.clearRect(0,0,W,H);papel(cx,W,H,'#f4f1e7');
- // margem e vegetação
- cx.fillStyle='#dfe6cf';cx.beginPath();cx.ellipse(W/2,H*.47,W*.49,H*.45,0,0,7);cx.fill();
- const gr=cx.createRadialGradient(W/2,H*.47,10,W/2,H*.47,W*.45);gr.addColorStop(0,'#9cc3c9');gr.addColorStop(1,'#bcd6d4');cx.fillStyle=gr;cx.beginPath();cx.ellipse(W/2,H*.47,W*.44,H*.38,0,0,7);cx.fill();
- cx.fillStyle='rgba(98,130,72,.55)';for(let i=0;i<26;i++){const a=i*.24,x=W/2+Math.cos(a)*W*.43,y=H*.47+Math.sin(a)*H*.37;cx.beginPath();cx.arc(x,y,9+(i%3)*3,0,7);cx.fill();}
- cx.strokeStyle='rgba(255,255,255,.35)';cx.lineWidth=1;for(let i=0;i<12;i++){const x=W/2+Math.cos(i*2.1+g.t*.1)*W*.25,y=H*.47+Math.sin(i*1.7)*H*.2;cx.beginPath();cx.moveTo(x-10,y);cx.quadraticCurveTo(x,y-3,x+10,y);cx.stroke();}
- const L=W<520?11:14;for(const p of g.p){if(p.preso)continue;peixeCima(p.x,p.y,p.a,L,p.esp?'rgba(70,80,82,.75)':'rgba(110,105,80,.7)',p.m,g.t*8+p.x);}
- for(const n of g.redes){cx.strokeStyle=`rgba(60,50,40,${Math.max(.25,1-n.t)})`;cx.lineWidth=1;cx.beginPath();cx.arc(n.x,n.y,n.r,0,7);cx.stroke();
-  cx.save();cx.beginPath();cx.arc(n.x,n.y,n.r,0,7);cx.clip();cx.strokeStyle='rgba(60,50,40,.18)';for(let k=-n.r;k<=n.r;k+=7){cx.beginPath();cx.moveTo(n.x+k,n.y-n.r);cx.lineTo(n.x+k,n.y+n.r);cx.moveTo(n.x-n.r,n.y+k);cx.lineTo(n.x+n.r,n.y+k);cx.stroke();}cx.restore();}
- // ficha de campo
- const fw=W<520?150:176,fx=W-fw-8;painel(cx,fx,8,fw,108,'Ficha de campo');
- txt(cx,'M (marcados)',fx+8,42,{s:12});txt(cx,String(g.M),fx+fw-10,42,{a:'right',s:13,b:1});
- txt(cx,'C (2ª captura)',fx+8,62,{s:12});txt(cx,g.etapa==='cap2'||g.etapa==='calc'||g.etapa==='res'?String(g.C):'–',fx+fw-10,62,{a:'right',s:13,b:1});
- txt(cx,'R (recapturados)',fx+8,82,{s:12});txt(cx,g.etapa==='cap2'||g.etapa==='calc'||g.etapa==='res'?String(g.R):'–',fx+fw-10,82,{a:'right',s:13,b:1,c:'#c45a10'});
- txt(cx,'N = M·C/R',fx+8,104,{s:11,c:'rgba(43,42,38,.65)'});
- if(g.etapa==='res'&&g.res){const r=g.res;painel(cx,8,8,W<520?W-fw-24:300,108,'Resultado');
-  txt(cx,'Sua conta: '+r.v+(r.ok?'  (certo)':'  (o certo é '+r.ex+')'),16,42,{s:12,b:1,c:r.ok?'#1b5e20':'#8e1b1b'});
-  txt(cx,'População real: '+g.N,16,62,{s:12});txt(cx,'Erro da estimativa: '+Math.round(r.err*100)+'%',16,82,{s:12,b:1});
-  txt(cx,r.err<=.1?'Ótima amostragem. +15':r.err<=.25?'Estimativa razoável. +8':'Amostra pequena ou mal misturada.',16,102,{s:11,c:'rgba(43,42,38,.7)'});}
- if(g.etapa==='res'&&!g.res){}
- aviso(cx,W,H,g.msgT>0?g.msg:'');}
-function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);desenha();if(S.g&&!S.g.fim){raf=requestAnimationFrame(loop);}}
+function fase(){const F=G.FASES[S.f];S.fp=0;S.g=null;hud();
+ $('tela').innerHTML=`<div class="card"><h2>Fase ${S.f+1}: ${F.nome}</h2><p>${F.txt}</p><p class="small" style="margin-top:8px"><b>Meta:</b> ${F.metaTxt}</p><div class="row" style="margin-top:14px"><button class="btn grande" id="bg">Começar</button></div></div>`;$('bg').onclick=jogar;}
+function jogar(){$('tela').innerHTML=`<div class="card"><canvas id="cv" style="touch-action:none"></canvas>${G.botoes?G.botoes():''}<p class="small" style="margin-top:8px;text-align:center">${G.dica}</p></div>`;
+ cv=$('cv');if(cv.clientWidth<520){W=420;H=560;}else{W=720;H=460;}cv.width=W;cv.height=H;cx=cv.getContext('2d');
+ const pos=e=>{const r=cv.getBoundingClientRect();return [(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height];};
+ cv.onpointerdown=e=>{cv.setPointerCapture(e.pointerId);[inp.x,inp.y]=pos(e);inp.down=true;inp.tap={x:inp.x,y:inp.y};e.preventDefault();};
+ cv.onpointermove=e=>{if(inp.down)[inp.x,inp.y]=pos(e);};cv.onpointerup=()=>{inp.down=false;};cv.onpointercancel=()=>{inp.down=false;};
+ inp.x=null;inp.down=false;inp.tap=null;S.g={t:0,vidas:3,fim:false,msg:'',msgT:0,pops:[]};G.init(S.g);if(G.ligar)G.ligar();hud();last=performance.now();parar();raf=requestAnimationFrame(loop);}
+document.addEventListener('keydown',e=>{tec[e.key]=1;if(S&&S.g&&!S.g.fim&&(e.key.startsWith('Arrow')||e.key===' '))e.preventDefault();});document.addEventListener('keyup',e=>{tec[e.key]=0;});
+function msg(t){S.g.msg=t;S.g.msgT=2.2;}
+function pop(x,y,t,cor){S.g.pops.push({x,y,t,cor:cor||'#2e7d32',v:0});}
+function ganha(n,x,y){S.fp+=n;if(x!==undefined)pop(x,y,(n>0?'+':'')+n,n>0?'#2e7d32':'#c62828');beep(n>0?880:170,n>0?.07:.18);}
+function update(dt){const g=S.g;if(!g||g.fim)return;g.t+=dt;g.msgT-=dt;G.update(g,dt);inp.tap=null;
+ for(const p of g.pops){p.v+=dt;p.y-=dt*40;}g.pops=g.pops.filter(p=>p.v<1);
+ const F=G.FASES[S.f];if(g.fim)return;if((G.vidas&&g.vidas<=0)||g.t>=F.dur||(G.cedo&&G.cedo(g)))terminar();}
+function desenha(){const g=S.g;if(!g||!cx)return;cx.clearRect(0,0,W,H);G.draw(g);
+ for(const p of g.pops){cx.globalAlpha=1-p.v;cx.font='bold 20px system-ui';cx.textAlign='center';cx.lineWidth=4;cx.strokeStyle='#fff';cx.strokeText(p.t,p.x,p.y);cx.fillStyle=p.cor;cx.fillText(p.t,p.x,p.y);cx.globalAlpha=1;}
+ if(g.msgT>0){cx.font='bold 15px system-ui';const w=Math.min(W-16,cx.measureText(g.msg).width+30);rrect(W/2-w/2,12,w,32,16,'rgba(255,255,255,.95)');cx.fillStyle='#263238';cx.textAlign='center';cx.fillText(g.msg,W/2,33);}}
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);desenha();if(S.g&&!S.g.fim){hud();raf=requestAnimationFrame(loop);}}
 function parar(){if(raf)cancelAnimationFrame(raf);raf=null;}
-function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=FASES[S.f];const em=g.erros.length?g.erros.reduce((a,b)=>a+b,0)/g.erros.length:1;const ok=g.calc>=F.lagos&&em<=.25;if(ok){S.fp+=30;beep(880,.2);}hud();
- $('tela').innerHTML=`<div class="card"><h2>${ok?'Estimativas confiáveis':'Estimativas a melhorar'}</h2><p>Cálculos certos: <b>${g.calc}</b> de ${F.lagos}. Erro médio das estimativas: <b>${Math.round(em*100)}%</b>. Dias de campo: <b>${g.dias}</b>.</p>
- ${ok?'<div class="fb good">Meta cumprida. +30.</div>':'<div class="fb bad">Meta não cumprida. Confira a conta M·C/R e lembre que poucas recapturas deixam a estimativa instável.</div>'}
- <div class="row" style="margin-top:12px">${ok?'<button class="btn" id="bq">Pergunta da fase</button>':'<button class="btn" id="br">Tentar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
+function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=G.FASES[S.f];const [a,m]=G.meta(g);const ok=a>=m&&(!G.vidas||g.vidas>0);if(ok){S.fp+=30;beep(880,.25);}hud();
+ $('tela').innerHTML=`<div class="card" style="text-align:center"><div class="selo ${ok?'ok':'no'}">${ok?'Muito bem!':'Quase!'}</div><h2>${ok?'Fase concluída':'Tente de novo'}</h2><p style="font-size:1.1rem">${G.rotulo}: <b>${a}</b> de ${m}</p>
+ <p class="small" style="margin-top:6px">${ok?G.FASES[S.f].fato:G.dicaErro}</p>
+ <div class="row" style="justify-content:center;margin-top:14px">${ok?'<button class="btn grande" id="bq">Pergunta rápida</button>':'<button class="btn grande" id="br">Jogar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
  if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}}
+/* Estimador de Lincoln-Petersen, N = M·C/R (anais UFPel, a partir de Odum e Barrett). Tamanhos das populações são sorteados pelo jogo. */
+const G={titulo:'Quantos Peixes?',rotulo:'Acertos',vidas:0,semTempo:1,
+ resumo:'Ninguém consegue contar todos os peixes de uma baía. Os cientistas marcam alguns, soltam e depois pescam de novo para estimar o total.',
+ como:[['1. Marcar','Toque nos peixes para colocar uma marca laranja.'],['2. Pescar','Uma semana depois, toque nos peixes de novo. O jogo conta quantos já tinham marca.'],['3. Calcular','Escolha a estimativa certa: marcados × pescados ÷ recapturados.']],
+ dica:'Toque nos peixes.',dicaErro:'Total = marcados × pescados na 2ª vez ÷ marcados que reapareceram.',
+ FASES:[{nome:'Baía pequena',dur:99,meta:1,N:[40,60],metaTxt:'acertar a estimativa da baía.',txt:'Marque peixes por 12 segundos. Depois pesque por 12 segundos e faça a conta.',fato:'Se 1 em cada 4 peixes pescados tem marca, a baía tem cerca de 4 vezes mais peixes do que os marcados.'},
+  {nome:'Baía média',dur:99,meta:1,N:[60,90],metaTxt:'acertar a estimativa da baía.',txt:'Mais peixes nadando. Marque o máximo que conseguir.',fato:'Quanto mais peixes marcados e recapturados, mais confiável fica a estimativa.'},
+  {nome:'Baía grande',dur:99,meta:1,N:[90,130],metaTxt:'acertar a estimativa da baía.',txt:'Agora a baía é grande e os peixes são mais rápidos.',fato:'Esse método se chama Lincoln-Petersen e é usado há mais de cem anos.'}],
+ init(g){const F=FASES[S.f];const N=Math.round(rr(...F.N));g.N=N;g.ps=[];for(let i=0;i<N;i++)g.ps.push({x:rr(40,W-40),y:rr(70,H-40),a:rr(0,7),m:0,f:rr(0,6)});g.et='marcar';g.te=12;g.M=0;g.C=0;g.R=0;g.ac=0;g.ops=null;g.pegos=new Set();},
+ meta(g){return [g.ac,1];},cedo(g){return g.et==='fim';},
+ update(g,dt){const v=40+S.f*20;for(const p of g.ps){p.f+=dt*8;if(Math.random()<dt)p.a+=rr(-1.5,1.5);p.x+=Math.cos(p.a)*v*dt;p.y+=Math.sin(p.a)*v*dt;if(p.x<30||p.x>W-30)p.a=Math.PI-p.a;if(p.y<70||p.y>H-30)p.a=-p.a;p.x=Math.max(30,Math.min(W-30,p.x));p.y=Math.max(70,Math.min(H-30,p.y));}
+  if(g.et==='marcar'||g.et==='pescar'){g.te-=dt;if(inp.tap){let a=null,md=34;for(const p of g.ps){const d=Math.hypot(p.x-inp.tap.x,p.y-inp.tap.y);if(d<md&&!(g.et==='pescar'&&g.pegos.has(p))&&!(g.et==='marcar'&&p.m)){md=d;a=p;}}
+    if(a){if(g.et==='marcar'){a.m=1;g.M++;beep(700,.04);pop(a.x,a.y,'marcado','#e65100');}else{g.pegos.add(a);g.C++;if(a.m){g.R++;pop(a.x,a.y,'tinha marca!','#e65100');beep(1000,.06);}else{pop(a.x,a.y,'sem marca','#1565c0');beep(600,.04);}}}}
+   if(g.te<=0){if(g.et==='marcar'){g.et='mistura';g.te=1.8;msg('Uma semana depois... os peixes se misturaram.');}else{g.et='calc';const ex=g.R?Math.round(g.M*g.C/g.R):0;
+     if(!g.R){g.et='fim';msg('Nenhum peixe marcado reapareceu. Marque mais peixes!');return;}
+     const ops=shuf([ex,Math.round(ex*rr(1.6,2.2)),Math.max(1,Math.round(ex*rr(.35,.6)))]);g.ops=ops;g.ex=ex;}}}
+  else if(g.et==='mistura'){g.te-=dt;if(g.te<=0){g.et='pescar';g.te=12;}}
+  else if(g.et==='calc'&&inp.tap){const bw=Math.min(180,(W-60)/3);g.ops.forEach((v,i)=>{const bx=W/2+(i-1)*(bw+12)-bw/2,by=H*.62;if(inp.tap.x>bx&&inp.tap.x<bx+bw&&inp.tap.y>by&&inp.tap.y<by+56){if(v===g.ex){g.ac=1;ganha(20,W/2,H*.55);msg('Certo! Na verdade havia '+g.N+' peixes.');}else{ganha(-10,W/2,H*.55);msg('A conta certa dava '+g.ex+'. Havia '+g.N+' peixes.');}g.et='fim2';g.te=2.2;}});}
+  else if(g.et==='fim2'){g.te-=dt;if(g.te<=0)g.et='fim';}},
+ draw(g){const gr=cx.createRadialGradient(W/2,H/2,20,W/2,H/2,W*.7);gr.addColorStop(0,'#9ed9ea');gr.addColorStop(1,'#5fb4d3');cx.fillStyle=gr;cx.fillRect(0,0,W,H);
+  cx.fillStyle='#86b85e';for(let x=0;x<W;x+=34){cx.beginPath();cx.arc(x,0,26,0,Math.PI);cx.fill();cx.beginPath();cx.arc(x+17,H,22,Math.PI,0);cx.fill();}
+  for(const p of g.ps){if(g.pegos.has(p)&&g.et!=='pescar'){} cx.save();cx.translate(p.x,p.y);cx.rotate(p.a);cx.fillStyle=g.pegos.has(p)?'rgba(255,255,255,.55)':'#5d7480';cx.beginPath();cx.ellipse(0,0,13,6,0,0,7);cx.fill();cx.beginPath();cx.moveTo(-11,0);cx.lineTo(-19,-6+Math.sin(p.f)*2);cx.lineTo(-19,6+Math.sin(p.f)*2);cx.fill();
+   if(p.m&&(g.et!=='pescar'||g.pegos.has(p))){cx.fillStyle='#ff7a00';cx.beginPath();cx.arc(2,0,5,0,7);cx.fill();}cx.restore();}
+  const lab=g.et==='marcar'?'MARQUE: '+Math.ceil(g.te)+' s':g.et==='pescar'?'PESQUE: '+Math.ceil(g.te)+' s':'';
+  rrect(10,10,MOB()?W-20:330,46,12,'rgba(255,255,255,.95)');cx.fillStyle='#263238';cx.textAlign='left';cx.font='bold 15px system-ui';cx.fillText(lab||'Ficha de campo',22,30);cx.font='13px system-ui';cx.fillText('Marcados: '+g.M+'   Pescados: '+(g.et==='marcar'?'-':g.C)+'   Com marca: '+(g.et==='marcar'?'-':g.R),22,48);
+  if(g.et==='calc'||g.et==='fim2'){cx.fillStyle='rgba(255,255,255,.9)';cx.fillRect(0,H*.32,W,H*.5);cx.fillStyle='#263238';cx.textAlign='center';cx.font='bold 17px system-ui';cx.fillText(g.M+' × '+g.C+' ÷ '+g.R+' = ?',W/2,H*.43);cx.font='14px system-ui';cx.fillText('Quantos peixes há na baía?',W/2,H*.5);
+   const bw=Math.min(180,(W-60)/3);g.ops.forEach((v,i)=>{const bx=W/2+(i-1)*(bw+12)-bw/2;rrect(bx,H*.62,bw,56,14,'#1e88e5');cx.fillStyle='#fff';cx.font='bold 22px system-ui';cx.fillText(v+' peixes',bx+bw/2,H*.62+36);});}},
+ capa(k,w,h){k.fillStyle='#8fd0e6';k.fillRect(0,0,w,h);for(let i=0;i<22;i++){const x=40+(i*67)%560,y=40+(i*41)%150;k.fillStyle='#5d7480';k.beginPath();k.ellipse(x,y,14,6,0,0,7);k.fill();if(i%3==0){k.fillStyle='#ff7a00';k.beginPath();k.arc(x+2,y,5,0,7);k.fill();}}}
+};
+const FASES=G.FASES;
+const PERG=[
+ {q:'Foram marcados 20 peixes. Depois, pescaram 30, e 6 tinham marca. Quantos peixes há na baía?',o:['100 peixes','56 peixes','600 peixes']},
+ {q:'Por que é preciso esperar alguns dias antes de pescar de novo?',o:['Para os peixes marcados se misturarem com os outros','Para a marca crescer junto com o peixe','Para os peixes esquecerem a rede']},
+ {q:'Se nenhum peixe marcado aparecer na segunda pesca, o que fazer?',o:['Marcar e pescar mais peixes','Dizer que a baía não tem peixes','Dividir por zero e seguir em frente']}
+];
 function pergunta(){
  const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
  $('tela').innerHTML=`<div class="card"><h2>Pergunta da fase</h2><p style="margin:6px 0 4px">${P.q}</p><p class="small">Acerto +20, erro −10.</p><div class="ops">${ops.map((o,i)=>`<button data-i="${i}">${o.t}</button>`).join('')}</div><div id="pf"></div></div>`;
@@ -218,10 +196,10 @@ function pergunta(){
 }
 function final(tudo){
  S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
- $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Três baías estimadas':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
+ $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Contador de peixes':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
  <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
- <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Anais do SIIEPE/UFPel, prática de estimativa de tamanho populacional: fórmula de Lincoln-Petersen N = M·C/R, adaptada de Odum e Barrett; Krebs, C. J., Ecological Methodology, capítulo 2: primeiro uso ecológico da marcação e recaptura por C. G. J. Petersen em 1896; Wikipedia, Mark and recapture (com base em Southwood): é preciso dar tempo para os marcados se redistribuírem na população. Os tamanhos reais das populações são sorteados pelo jogo.</div></div>`;
+ <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Anais do SIIEPE/UFPel, prática de estimativa de tamanho populacional: fórmula de Lincoln-Petersen N = M·C/R, adaptada de Odum e Barrett; Krebs, C. J., Ecological Methodology, cap. 2: primeiro uso por C. G. J. Petersen em 1896; Wikipedia, Mark and recapture: é preciso dar tempo para os marcados se misturarem. Os tamanhos das populações são sorteados pelo jogo.</div></div>`;
  $('bS').onclick=()=>salvar(nivel);
 }
 const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
@@ -230,7 +208,7 @@ const GAME_ID="marca-e-recaptura";let db=null,fs=null,salvo=false;
 async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
 async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
  $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
-window.__mr={get S(){return S},update,parar,lancar,FASES,noLago,conferir};
+window.__a={get S(){return S},update,parar,G,inp};
 inicio();
 </script>
 </body>
