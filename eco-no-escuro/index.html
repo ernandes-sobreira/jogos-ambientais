@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Morcego Caçador</title>
 <style>
-:root{--main:#5e4b8b;--deep:#3f3163;--soft:#f1edfa;--line:#e0d8f3;--ink:#1f1a2b;--mut:#5f5873}
+:root{--main:#5e35b1;--deep:#311b92;--soft:#ede7f6;--line:#d1c4e9;--ink:#10212b;--mut:#4d6370}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
 .wrap{max-width:780px;margin:0 auto;padding:12px 14px 40px}
@@ -43,7 +43,7 @@ canvas{width:100%;max-width:760px;margin:0 auto;display:block;border:2px solid v
 <a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
 <header>
   <h1>Morcego Caçador</h1>
-  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
 </header>
 <main id="tela"></main>
 <div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
@@ -117,7 +117,7 @@ let S,cv,cx,raf=null,last=0,W=720,H=460,inp={x:null,y:null,down:false,tap:null},
 const MOB=()=>W<520;
 function rrect(x,y,w,h,r,cor){cx.fillStyle=cor;cx.beginPath();cx.roundRect(x,y,w,h,r);cx.fill();}
 function sombra(x,y,rx,ry){cx.fillStyle='rgba(0,0,0,.12)';cx.beginPath();cx.ellipse(x,y,rx,ry,0,0,7);cx.fill();}
-function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/'+G.FASES.length;$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
  if(g&&!g.fim){const [a,m]=G.meta(g);$('hR').textContent=G.rotulo+' '+a+'/'+m;$('hV').textContent=G.vidas?'Vidas '+'●'.repeat(Math.max(0,g.vidas)):'';$('hT').textContent=G.semTempo?'':Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s';}
  ['hR','hV','hT'].forEach(k=>$(k).style.display=$(k).textContent?'':'none');}
 function inicio(){parar();$('hud').style.display='none';$('rankBox').style.display='block';
@@ -151,41 +151,193 @@ function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=G.FAS
  <p class="small" style="margin-top:6px">${ok?G.FASES[S.f].fato:G.dicaErro}</p>
  <div class="row" style="justify-content:center;margin-top:14px">${ok?'<button class="btn grande" id="bq">Pergunta rápida</button>':'<button class="btn grande" id="br">Jogar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
  if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}}
-/* Morcegos emitem ultrassom que volta como eco e revela a posição da presa (UFRGS Ciência; Guimarães, dissertação UnB). Velocidades e pontos são regras do jogo. */
-const G={titulo:'Morcego Caçador',rotulo:'Mariposas',vidas:0,
- resumo:'À noite o morcego quase não enxerga. Ele grita em ultrassom e escuta o eco: o eco mostra onde está a mariposa.',
- como:[['Arraste','O morcego segue o seu dedo.'],['Toque','Solta um grito de ultrassom. As mariposas que o som tocar aparecem por um instante.'],['Pegue','Encoste nas mariposas visíveis: +10.']],
- dica:'Toque para gritar. Arraste para voar.',dicaErro:'Grite perto das árvores, onde as mariposas se escondem, e voe rápido até elas.',
- FASES:[{nome:'Primeira noite',dur:45,meta:8,n:5,v:40,metaTxt:'pegar 8 mariposas em 45 s.',txt:'As mariposas voam devagar. Grite, veja onde elas estão e vá buscar.',fato:'O som vai até a mariposa e volta. Quanto mais longe ela está, mais o eco demora.'},
-  {nome:'Mariposas rápidas',dur:45,meta:10,n:6,v:70,metaTxt:'pegar 10 mariposas em 45 s.',txt:'Agora elas voam mais rápido. O brilho dura pouco: seja ligeiro.',fato:'Morcegos usam sons de cerca de 8 kHz até acima de 200 kHz, muito agudos para o ouvido humano.'},
-  {nome:'Noite cheia',dur:50,meta:12,n:7,v:95,metaTxt:'pegar 12 mariposas em 50 s.',txt:'Muitas mariposas e pouco tempo. Grite sempre que perder a pista.',fato:'Cada grito dura de 1 a 100 milésimos de segundo, e o eco volta em frações de segundo.'}],
- init(g){const F=FASES[S.f];g.x=W/2;g.y=H/2;g.bat=0;g.ondas=[];g.cd=0;g.n=0;g.ms=[];for(let i=0;i<F.n;i++)g.ms.push(G.nova());},
- nova(){const F=FASES[S.f],a=rr(0,7);return {x:rr(40,W-40),y:rr(40,H*.7),vx:Math.cos(a)*F.v,vy:Math.sin(a)*F.v,vis:0,f:rr(0,6)};},
- meta(g){return [g.n,FASES[S.f].meta];},
- update(g,dt){g.bat+=dt*14;g.cd-=dt;
-  if(inp.down&&inp.x!=null){g.x+=(inp.x-g.x)*Math.min(1,dt*8);g.y+=(inp.y-g.y)*Math.min(1,dt*8);}
-  const kx=(tec.ArrowRight?1:0)-(tec.ArrowLeft?1:0),ky=(tec.ArrowDown?1:0)-(tec.ArrowUp?1:0);g.x=Math.max(20,Math.min(W-20,g.x+kx*260*dt));g.y=Math.max(20,Math.min(H-20,g.y+ky*260*dt));
-  if((inp.tap||tec[' '])&&g.cd<=0){g.ondas.push({x:g.x,y:g.y,r:0});g.cd=.5;beep(2600,.05,.03);tec[' ']=0;}
-  for(const o of g.ondas){o.r+=dt*420;for(const m of g.ms)if(Math.abs(Math.hypot(m.x-o.x,m.y-o.y)-o.r)<14)m.vis=1.4;}g.ondas=g.ondas.filter(o=>o.r<Math.max(W,H));
-  for(const m of g.ms){m.f+=dt*14;m.vis-=dt;if(Math.random()<dt){const a=rr(0,7),v=FASES[S.f].v;m.vx=Math.cos(a)*v;m.vy=Math.sin(a)*v;}m.x+=m.vx*dt;m.y+=m.vy*dt;if(m.x<20||m.x>W-20)m.vx*=-1;if(m.y<20||m.y>H*.78)m.vy*=-1;
-   if(Math.hypot(m.x-g.x,m.y-g.y)<30){m.pego=1;g.n++;ganha(10,m.x,m.y);}}
-  g.ms=g.ms.filter(m=>!m.pego);while(g.ms.length<FASES[S.f].n)g.ms.push(G.nova());},
- cedo(g){return g.n>=FASES[S.f].meta;},
- draw(g){const gr=cx.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#c9c3ec');gr.addColorStop(1,'#f4eefb');cx.fillStyle=gr;cx.fillRect(0,0,W,H);
-  cx.fillStyle='#fffbe6';cx.beginPath();cx.arc(W*.85,H*.14,26,0,7);cx.fill();
-  for(let i=0;i<6;i++){const x=(i+.5)*W/6,h=H*(.35+(i%3)*.08);cx.fillStyle='#8f86c4';cx.fillRect(x-6,H-h*.5,12,h*.5);for(let j=0;j<4;j++){cx.beginPath();cx.arc(x+Math.cos(j*1.6)*22,H-h*.5-10+Math.sin(j*1.6)*14,30,0,7);cx.fill();}}
-  cx.fillStyle='#7a70b5';cx.fillRect(0,H-26,W,26);
-  for(const o of g.ondas){cx.strokeStyle=`rgba(255,255,255,${Math.max(0,.9-o.r/600)})`;cx.lineWidth=4;cx.beginPath();cx.arc(o.x,o.y,o.r,0,7);cx.stroke();}
-  for(const m of g.ms){cx.globalAlpha=m.vis>0?1:.08;if(m.vis>0){cx.fillStyle='rgba(255,236,120,.5)';cx.beginPath();cx.arc(m.x,m.y,20,0,7);cx.fill();}mariposa(cx,m.x,m.y,1.3,m.f);cx.globalAlpha=1;}
-  morcego(cx,g.x,g.y,1.25,g.bat,'#4b3b5c');},
- capa(k,w,h){const gr=k.createLinearGradient(0,0,0,h);gr.addColorStop(0,'#c9c3ec');gr.addColorStop(1,'#f4eefb');k.fillStyle=gr;k.fillRect(0,0,w,h);k.strokeStyle='rgba(255,255,255,.9)';k.lineWidth=4;for(const r of [40,80,120]){k.beginPath();k.arc(200,110,r,-.6,.6);k.stroke();}
-  const o=cx;cx=k;morcego(k,170,110,2,1,'#4b3b5c');k.fillStyle='rgba(255,236,120,.6)';k.beginPath();k.arc(430,100,26,0,7);k.fill();mariposa(k,430,100,2,1);cx=o;}
+/* ---------- arte vetorial compartilhada ---------- */
+beep=function(){};
+function rng(s){s=s%2147483647;if(s<=0)s+=2147483646;return()=>{s=s*16807%2147483647;return(s-1)/2147483646;};}
+function lg(k,x0,y0,x1,y1,st){const g=k.createLinearGradient(x0,y0,x1,y1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+function rg(k,x,y,r0,r1,st){const g=k.createRadialGradient(x,y,r0,x,y,r1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+const CACHE={};
+function cache(key,w,h,fn){const id=key+'_'+w+'x'+h;if(!CACHE[id]){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);CACHE[id]=c;}return CACHE[id];}
+function ceu(k,w,h,cs){k.fillStyle=lg(k,0,0,0,h,cs);k.fillRect(0,0,w,h);}
+function sol(k,x,y,r,c){k.fillStyle=rg(k,x,y,0,r*4,[c,'rgba(255,255,255,0)']);k.fillRect(x-r*4,y-r*4,r*8,r*8);k.fillStyle=c;k.beginPath();k.arc(x,y,r,0,7);k.fill();}
+function nuvem(k,x,y,s,a){k.fillStyle='rgba(255,255,255,'+(a||.8)+')';for(const [dx,dy,r] of [[0,0,1],[1.1,.15,.8],[-1,.2,.75],[.5,-.45,.7],[-.4,-.35,.6]]){k.beginPath();k.arc(x+dx*s,y+dy*s,r*s,0,7);k.fill();}k.fillRect(x-1.7*s,y+.2*s,3.6*s,.8*s);}
+function serra(k,w,y,amp,cor,seed){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,y+amp*2);let x=0;k.lineTo(0,y);while(x<w+40){x+=30+r()*50;k.lineTo(x,y-r()*amp);}k.lineTo(w,y+amp*4);k.lineTo(0,y+amp*4);k.fill();}
+function matas(k,w,y,amp,cor,seed,base){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,base);k.lineTo(0,y);let x=0;while(x<w+30){const rr=8+r()*amp;k.arc(x+rr,y-r()*amp*.6,rr,Math.PI,0);x+=rr*1.6;}k.lineTo(w,base);k.closePath();k.fill();}
+function capim(k,x0,y0,w,h,cor,seed,n){const r=rng(seed);k.strokeStyle=cor;k.lineCap='round';for(let i=0;i<n;i++){const x=x0+r()*w,y=y0+r()*h,l=4+r()*10;k.lineWidth=1+r()*1.2;for(let j=-1;j<=1;j++){k.beginPath();k.moveTo(x,y);k.quadraticCurveTo(x+j*3,y-l*.6,x+j*5+r()*2,y-l);k.stroke();}}}
+function copa(k,x,y,r,cs,seed){const R=rng(seed);const pts=[];for(let i=0;i<9;i++){const a=R()*Math.PI*2,d=R()*r*.55;pts.push([x+Math.cos(a)*d,y+Math.sin(a)*d*.7,r*(.35+R()*.3)]);}
+ k.fillStyle=cs[0];for(const [a,b,c] of pts){k.beginPath();k.arc(a+c*.12,b+c*.18,c,0,7);k.fill();}
+ k.fillStyle=cs[1];for(const [a,b,c] of pts){k.beginPath();k.arc(a,b,c*.92,0,7);k.fill();}
+ k.fillStyle=cs[2];for(const [a,b,c] of pts){k.beginPath();k.arc(a-c*.25,b-c*.3,c*.5,0,7);k.fill();}}
+function tronco(k,x,y0,y1,w0,w1,c1,c2){k.fillStyle=lg(k,x-w0,0,x+w0,0,[c2,c1,c1,c2]);k.beginPath();k.moveTo(x-w0,y0);k.lineTo(x-w1,y1);k.lineTo(x+w1,y1);k.lineTo(x+w0,y0);k.fill();k.strokeStyle='rgba(0,0,0,.12)';k.lineWidth=1;for(let y=y1+8;y<y0;y+=11){const t=(y-y1)/(y0-y1),ww=w1+(w0-w1)*t;k.beginPath();k.moveTo(x-ww*.6,y);k.quadraticCurveTo(x,y+3,x+ww*.5,y-1);k.stroke();}}
+function palmeira(k,x,y,h,lean,cfr,ctr,seed,nf){const R=rng(seed);const tx=x+lean,ty=y-h;k.strokeStyle=ctr;k.lineCap='round';for(let i=0;i<14;i++){const t0=i/14,t1=(i+1)/14;k.lineWidth=h*.05*(1-t0*.35);const xa=x+lean*t0*t0,ya=y-h*t0,xb=x+lean*t1*t1,yb=y-h*t1;k.beginPath();k.moveTo(xa,ya);k.lineTo(xb,yb);k.stroke();}
+ k.strokeStyle='rgba(0,0,0,.15)';k.lineWidth=1;for(let i=1;i<14;i++){const t=i/14,xa=x+lean*t*t,ya=y-h*t;k.beginPath();k.moveTo(xa-h*.022,ya);k.lineTo(xa+h*.022,ya);k.stroke();}
+ nf=nf||9;for(let f=0;f<nf;f++){const a=-Math.PI/2+(f-(nf-1)/2)*(2.6/nf)+(R()-.5)*.2,L=h*(.38+R()*.12),dr=.55+R()*.25;const ex=tx+Math.cos(a)*L,ey=ty+Math.sin(a)*L*.55+L*dr*.5;const mx=tx+Math.cos(a)*L*.5,my=ty+Math.sin(a)*L*.5-L*.12;
+  k.strokeStyle=cfr[0];k.lineWidth=2;k.beginPath();k.moveTo(tx,ty);k.quadraticCurveTo(mx,my,ex,ey);k.stroke();
+  for(let j=1;j<16;j++){const t=j/16,px=(1-t)*(1-t)*tx+2*(1-t)*t*mx+t*t*ex,py=(1-t)*(1-t)*ty+2*(1-t)*t*my+t*t*ey;const ll=L*.16*(1-t*.5);k.strokeStyle=cfr[j%2];k.lineWidth=1.6;k.beginPath();k.moveTo(px,py);k.lineTo(px+Math.cos(a+1.6)*ll*.5,py+ll);k.moveTo(px,py);k.lineTo(px+Math.cos(a-1.6)*ll*.5,py+ll*.9);k.stroke();}}}
+function sombraE(k,x,y,rx,ry,a){k.fillStyle='rgba(20,30,20,'+(a||.18)+')';k.beginPath();k.ellipse(x,y,rx,ry,0,0,7);k.fill();}
+function vinheta(k,w,h){k.fillStyle=rg(k,w/2,h/2,Math.min(w,h)*.45,Math.max(w,h)*.8,['rgba(0,0,0,0)','rgba(0,0,0,.18)']);k.fillRect(0,0,w,h);}
+function rrk(k,x,y,w,h,r,c){k.fillStyle=c;k.beginPath();k.roundRect(x,y,w,h,r);k.fill();}
+/* figura humana: o={pele,camisa,calca,chapeu,passo,bracoE,bracoD} ângulos em rad a partir de baixo */
+function pessoa(k,x,y,s,o){o=o||{};const p=o.passo||0;k.save();k.translate(x,y);k.scale(s*(o.dir||1),s);k.lineCap='round';k.lineJoin='round';
+ const pl=Math.sin(p)*.35;k.strokeStyle=o.calca||'#37474f';k.lineWidth=7;k.beginPath();k.moveTo(-3,-38);k.lineTo(-3+Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18,0);k.stroke();k.beginPath();k.moveTo(3,-38);k.lineTo(3-Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(3-Math.sin(pl)*20-Math.sin(pl*.5)*18,0);k.stroke();
+ k.fillStyle='#3e2723';k.beginPath();k.ellipse(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.ellipse(3-Math.sin(pl)*20-Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.fill();
+ k.fillStyle=o.camisa||'#1e88e5';k.beginPath();k.moveTo(-9,-40);k.lineTo(-10,-68);k.quadraticCurveTo(0,-74,10,-68);k.lineTo(9,-40);k.closePath();k.fill();k.fillStyle='rgba(0,0,0,.12)';k.fillRect(2,-68,7,28);
+ const be=o.bracoE!==undefined?o.bracoE:-pl*.8,bd=o.bracoD!==undefined?o.bracoD:pl*.8;k.strokeStyle=o.camisa||'#1e88e5';k.lineWidth=6;
+ for(const [sx,a] of [[-8,be],[8,bd]]){k.beginPath();k.moveTo(sx,-66);const ex=sx+Math.sin(a)*14,ey=-66+Math.cos(a)*14;k.lineTo(ex,ey);k.stroke();k.strokeStyle=o.pele||'#c68b59';k.beginPath();k.moveTo(ex,ey);k.lineTo(ex+Math.sin(a*1.15)*13,ey+Math.cos(a*1.15)*13);k.stroke();k.strokeStyle=o.camisa||'#1e88e5';}
+ k.fillStyle=o.pele||'#c68b59';k.fillRect(-3,-76,6,6);k.beginPath();k.ellipse(0,-83,7.5,8.5,0,0,7);k.fill();
+ if(o.chapeu!==false){k.fillStyle=o.chapeu||'#795548';k.beginPath();k.ellipse(0,-88,15,3.5,0,0,7);k.fill();k.beginPath();k.moveTo(-8,-88);k.quadraticCurveTo(-7,-99,0,-99);k.quadraticCurveTo(7,-99,8,-88);k.fill();k.fillStyle='rgba(0,0,0,.25)';k.fillRect(-8,-91,16,2.5);}
+ k.restore();}
+/* boi nelore em perfil, olhando para +x */
+function boi(k,x,y,s,dir,cor,p){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#ece6da';p=p||0;
+ const pern=[[-26,0],[-18,Math.PI],[18,Math.PI],[26,0]];
+ for(let i=0;i<4;i++){const [lx,ph]=pern[i];const a=Math.sin(p+ph)*.3;k.strokeStyle=i==1||i==2?shade(c,-.12):c;k.lineCap='round';k.lineWidth=6.5;k.beginPath();k.moveTo(lx,-24);k.lineTo(lx+Math.sin(a)*9,-10);k.lineTo(lx+Math.sin(a)*7,2);k.stroke();k.fillStyle='#3e2723';k.fillRect(lx+Math.sin(a)*7-3.5,1,7,3);}
+ k.fillStyle=c;k.beginPath();k.moveTo(-34,-40);k.quadraticCurveTo(-38,-24,-30,-20);k.quadraticCurveTo(0,-14,26,-20);k.quadraticCurveTo(34,-26,32,-40);k.quadraticCurveTo(28,-50,20,-54);k.quadraticCurveTo(12,-56,8,-48);k.quadraticCurveTo(-10,-46,-28,-48);k.quadraticCurveTo(-34,-46,-34,-40);k.fill();
+ k.fillStyle=lg(k,0,-50,0,-18,['rgba(255,255,255,.18)','rgba(0,0,0,0)','rgba(60,40,20,.22)']);k.fill();
+ k.fillStyle=c;k.beginPath();k.moveTo(26,-44);k.quadraticCurveTo(38,-44,44,-38);k.lineTo(54,-24);k.quadraticCurveTo(56,-18,51,-17);k.quadraticCurveTo(46,-18,42,-24);k.quadraticCurveTo(34,-26,28,-22);k.fill();
+ k.beginPath();k.moveTo(28,-26);k.quadraticCurveTo(34,-14,30,-12);k.quadraticCurveTo(24,-16,22,-24);k.fill();
+ k.fillStyle=shade(c,-.35);k.beginPath();k.ellipse(52,-19,3.4,2.6,.4,0,7);k.fill();k.fillStyle='#1b1b1b';k.beginPath();k.arc(44,-34,1.8,0,7);k.fill();
+ k.fillStyle=shade(c,-.08);k.beginPath();k.ellipse(38,-41,8,2.8,.5,0,7);k.fill();k.strokeStyle='#cfc4b0';k.lineWidth=2.4;k.lineCap='round';k.beginPath();k.moveTo(41,-44);k.quadraticCurveTo(44,-49,42,-52);k.stroke();
+ k.strokeStyle=c;k.lineWidth=2.2;k.beginPath();k.moveTo(-34,-42);k.quadraticCurveTo(-40,-28,-37,-14);k.stroke();k.fillStyle='#4e342e';k.beginPath();k.ellipse(-37,-13,2.2,4.5,0,0,7);k.fill();
+ k.restore();}
+function shade(hex,f){let n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;const t=f<0?0:255,p=Math.abs(f);r=Math.round((t-r)*p+r);g=Math.round((t-g)*p+g);b=Math.round((t-b)*p+b);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+function cavalo(k,x,y,s,dir,p,cor){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#8d5a3b';k.strokeStyle=c;k.lineCap='round';k.lineWidth=6;
+ for(const [lx,ph] of [[-20,0],[-12,Math.PI],[18,Math.PI],[26,0]]){const a=Math.sin(p+ph)*.45;k.beginPath();k.moveTo(lx,-22);k.lineTo(lx+Math.sin(a)*10,-8);k.lineTo(lx+Math.sin(a)*8,4);k.stroke();}
+ k.fillStyle=c;k.beginPath();k.ellipse(3,-30,28,12,0,0,7);k.fill();k.beginPath();k.moveTo(22,-36);k.quadraticCurveTo(30,-56,40,-58);k.lineTo(50,-48);k.quadraticCurveTo(44,-44,38,-46);k.lineTo(30,-26);k.fill();
+ k.fillStyle='#3e2723';k.beginPath();k.moveTo(24,-40);k.quadraticCurveTo(30,-60,40,-60);k.lineTo(36,-56);k.quadraticCurveTo(30,-52,28,-36);k.fill();k.beginPath();k.moveTo(-24,-34);k.quadraticCurveTo(-38,-26,-34,-6);k.quadraticCurveTo(-30,-22,-22,-28);k.fill();
+ k.fillStyle='rgba(0,0,0,.15)';k.beginPath();k.ellipse(3,-23,24,4,0,0,7);k.fill();k.fillStyle='#5d4037';k.fillRect(-8,-44,22,6);k.restore();}
+function cavaleiro(k,x,y,s,dir,p,o){cavalo(k,x,y,s,dir,p,o&&o.cor);k.save();k.translate(x,y);k.scale(s*dir,s);pessoa(k,2,-30,.62,Object.assign({passo:0,bracoE:.9,bracoD:1.3,calca:'#4e342e'},o||{}));k.restore();}
+/* tela cheia genérica para os jogos do motor arcade */
+const FS={on:false};
+(function(){const st=document.createElement('style');st.textContent='.fsmode{position:fixed!important;inset:0!important;z-index:9999!important;background:#fff!important;margin:0!important;padding:0!important;border-radius:0!important;max-width:none!important;width:100vw!important;height:100dvh!important;border:0!important}.fsmode canvas{width:100vw!important;height:100dvh!important;max-width:none!important;border:0!important;border-radius:0!important}.fsmode p.small{display:none}.fsmode .fsrow{position:fixed;top:48px;right:8px;z-index:10000;margin:0!important}.fsmode .fsrow .btn{padding:6px 14px;font-size:13px}';document.head.appendChild(st);
+ document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&FS.on)FS.set(false);});addEventListener('resize',()=>{if(FS.on)setTimeout(FS.ajusta,50);});})();
+FS.ajusta=function(){const c=$('cv');if(!c)return;if(FS.on){W=Math.round(innerWidth);H=Math.round(innerHeight);}else{if(c.clientWidth<520){W=420;H=560;}else{W=720;H=460;}}c.width=W;c.height=H;cx=c.getContext('2d');if(G.reajusta)G.reajusta(S.g);};
+FS.set=function(on){const c=$('cv');if(!c)return;const card=c.parentNode;FS.on=on;const b=$('btfs');if(b)b.textContent=on?'Sair':'Tela cheia';
+ if(on){card.classList.add('fsmode');try{const r=document.documentElement.requestFullscreen;if(r)r.call(document.documentElement).catch(()=>{});}catch(e){}}
+ else{card.classList.remove('fsmode');try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}}
+ setTimeout(FS.ajusta,80);};
+FS.botao=()=>'<div class="row fsrow" style="justify-content:center;margin-top:8px"><button class="btn ghost" id="btfs" onclick="FS.set(!FS.on)">Tela cheia</button></div>';
+FS.ligar=()=>{if(FS.on){const c=$('cv');c.parentNode.classList.add('fsmode');const b=$('btfs');if(b)b.textContent='Sair';FS.ajusta();}};
+FS.hud=(g,cor)=>{if(!FS.on||!g)return;const [a,m2]=G.meta(g);const t='Fase '+(S.f+1)+'/'+G.FASES.length+'  ·  '+(S.tot+S.fp)+' pts  ·  '+G.rotulo+' '+a+'/'+m2+(G.semTempo?'':'  ·  '+Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s');cx.font='bold 13px system-ui';const w=cx.measureText(t).width+24;rrk(cx,10,48,w,26,13,'rgba(255,255,255,.95)');cx.fillStyle=cor||'#37474f';cx.textAlign='left';cx.fillText(t,22,66);};
+/* Morcego Caçador, versão 2.
+Fontes: Revista Pesquisa FAPESP, "Morcegos evitam florestas deterioradas" (ecolocalização calcula a distância dos objetos pelo eco do grito agudo; morcegos de 10 g comem insetos equivalentes ao próprio peso numa noite, segundo P. Bobrowiec, Inpa);
+Revista Pesquisa FAPESP, "Saindo para jantar fora" (insetívoros evitam perda de US$ 391 milhões por safra de milho no Brasil, UnB e ITV);
+National Geographic Brasil (2018): algumas mariposas têm tímpanos no abdômen que detectam a ecolocalização dos morcegos;
+Barber et al. (2022), PNAS 119(25): e2117485119: 52 de 252 gêneros de mariposas produzem ultrassom ao ouvir morcegos, em geral para avisar gosto ruim;
+Guimarães, dissertação UnB: sinais de 8 kHz até acima de 200 kHz. Velocidade do som no ar a 20 °C: 343 m/s.
+Largura da tela igual a 20 m, velocidade do som desenhada em câmera lenta, número de insetos, tempos e pontos são regras do jogo. */
+const EC={};
+EC.s=()=>Math.max(.8,Math.min(1.5,Math.min(W,H)/440));
+EC.chao=()=>H*.9;
+EC.bt=()=>{const m=MOB(),w=m?112:130,h=46;return {x:W-w-12,y:H-h-12,w,h};};
+EC.hit=(b,p)=>p&&p.x>b.x&&p.x<b.x+b.w&&p.y>b.y&&p.y<b.y+b.h;
+EC.cena=function(k,w,h){const f=S?S.f:0,ch=h*.9;const gr=k.createLinearGradient(0,0,0,h);gr.addColorStop(0,'#c9cbe6');gr.addColorStop(.6,'#e3e1f0');gr.addColorStop(1,'#efe9f2');k.fillStyle=gr;k.fillRect(0,0,w,h);
+ const mx=w*.16,my=h*.14,mr=Math.min(w,h)*.045;const g2=k.createRadialGradient(mx,my,mr*.4,mx,my,mr*4);g2.addColorStop(0,'rgba(255,255,240,.9)');g2.addColorStop(1,'rgba(255,255,240,0)');k.fillStyle=g2;k.fillRect(0,0,w,h*.5);k.fillStyle='#fdfbef';k.beginPath();k.arc(mx,my,mr,0,7);k.fill();k.fillStyle='rgba(200,195,180,.35)';k.beginPath();k.arc(mx-mr*.3,my-mr*.2,mr*.22,0,7);k.arc(mx+mr*.25,my+mr*.3,mr*.15,0,7);k.fill();
+ const R=rng(7);k.fillStyle='rgba(255,255,255,.7)';for(let i=0;i<40;i++)k.fillRect(R()*w,R()*h*.5,1.2,1.2);
+ for(let l=0;l<3;l++){k.fillStyle=['#b9b6d3','#a6a2c4','#928db4'][l];k.beginPath();k.moveTo(0,ch);for(let x=0;x<=w;x+=10){k.lineTo(x,ch-h*(.12+l*-.03)-Math.abs(Math.sin(x*.011+l*2)+Math.sin(x*.031+l))*h*.05-R()*4);}k.lineTo(w,ch);k.fill();}
+ if(f===3){k.fillStyle='#8d8f6e';k.fillRect(0,ch-h*.05,w,h*.15);for(let r=0;r<3;r++){const y=ch-h*.02+r*h*.035;for(let x=(r%2)*9;x<w;x+=18){k.strokeStyle=['#6f7a4e','#7f8a5a','#5f6a44'][r];k.lineWidth=2;k.beginPath();k.moveTo(x,y);k.lineTo(x+1,y-h*(.08-r*.01));k.stroke();for(let j=0;j<4;j++){const yy=y-h*.02-j*h*.016;k.beginPath();k.moveTo(x,yy);k.quadraticCurveTo(x+(j%2?10:-10),yy-6,x+(j%2?16:-16),yy+2);k.stroke();}k.fillStyle='#c4b46a';k.fillRect(x-1,y-h*(.085-r*.01),3,6);}}}
+ else{k.fillStyle=lg(k,0,ch,0,h,['#8f8aaa','#7b7698']);k.fillRect(0,ch,w,h-ch);}
+ for(const [x0,d] of [[0,1],[w,-1]]){const tw=Math.min(w,h)*.05;k.fillStyle=lg(k,x0,0,x0+d*tw*2,0,['#6f6b8c','#88849f','#6a6688']);k.beginPath();k.moveTo(x0,ch);k.lineTo(x0+d*tw*1.6,ch);k.quadraticCurveTo(x0+d*tw*1.2,h*.5,x0+d*tw*1.4,h*.28);k.lineTo(x0+d*tw*.6,h*.26);k.quadraticCurveTo(x0+d*tw*.4,h*.55,x0,ch-h*.1);k.fill();
+  k.strokeStyle='#76728f';k.lineCap='round';for(const [bx,by,ex,ey,lw] of [[1.3,.42,3.2,.3,5],[1.1,.33,2.6,.18,4],[1.4,.5,2.8,.46,3]]){k.lineWidth=lw;k.beginPath();k.moveTo(x0+d*tw*bx,h*by);k.quadraticCurveTo(x0+d*tw*(bx+ex)/2,h*(by+ey)/2-h*.04,x0+d*tw*ex,h*ey);k.stroke();}
+  for(let i=0;i<70;i++){const cx0=x0+d*(tw*(.2+R()*3.6)),cy0=h*(.04+R()*.4),r=Math.min(w,h)*(.012+R()*.022);const tone=R();k.fillStyle=tone<.33?'#7d7a9a':tone<.66?'#8f8cab':'#9aa3ad';k.beginPath();k.ellipse(cx0,cy0,r*1.3,r,R()*3,0,7);k.fill();k.fillStyle='rgba(60,55,85,.18)';k.beginPath();k.ellipse(cx0+r*.2,cy0+r*.4,r,r*.5,0,0,7);k.fill();}}};
+function morcegoR(k,x,y,s,fl,ang,cor){k.save();k.translate(x,y);k.rotate(ang||0);k.scale(s,s);const a=Math.sin(fl);const sp=.55+.45*a;
+ for(const d of [-1,1]){k.save();k.scale(d,1);const wx=8,wy=-2;const elx=wx+16*sp,ely=wy-8-6*a;const wr={x:elx+12*sp,y:ely-2-8*a};
+  const tips=[{x:wr.x+30*sp,y:wr.y-14*a-2},{x:wr.x+26*sp,y:wr.y+8},{x:wr.x+16*sp,y:wr.y+18},{x:wr.x+6*sp,y:wr.y+20}];
+  k.fillStyle=cor||'#5a4652';k.beginPath();k.moveTo(wx,wy);k.lineTo(elx,ely);k.lineTo(wr.x,wr.y);k.lineTo(tips[0].x,tips[0].y);k.quadraticCurveTo((tips[0].x+tips[1].x)/2-4,(tips[0].y+tips[1].y)/2,tips[1].x,tips[1].y);k.quadraticCurveTo((tips[1].x+tips[2].x)/2-5,(tips[1].y+tips[2].y)/2-3,tips[2].x,tips[2].y);k.quadraticCurveTo((tips[2].x+tips[3].x)/2-3,(tips[2].y+tips[3].y)/2-4,tips[3].x,tips[3].y);k.quadraticCurveTo(wr.x-4,wr.y+18,5,14);k.closePath();k.fill();
+  k.strokeStyle='#2f2430';k.lineWidth=1.6;k.beginPath();k.moveTo(wx,wy);k.lineTo(elx,ely);k.lineTo(wr.x,wr.y);k.stroke();k.lineWidth=.9;for(const t of tips){k.beginPath();k.moveTo(wr.x,wr.y);k.lineTo(t.x,t.y);k.stroke();}
+  k.fillStyle='rgba(255,255,255,.08)';k.beginPath();k.moveTo(wr.x,wr.y);k.lineTo(tips[1].x,tips[1].y);k.lineTo(tips[2].x,tips[2].y);k.fill();k.fillStyle='#2f2430';k.beginPath();k.arc(wr.x,wr.y,1.6,0,7);k.fill();k.restore();}
+ k.fillStyle=lg(k,0,-10,0,16,['#7a5a46','#5b4234']);k.beginPath();k.ellipse(0,3,7,12,0,0,7);k.fill();k.strokeStyle='rgba(40,25,20,.4)';k.lineWidth=.6;for(let i=0;i<8;i++){k.beginPath();k.moveTo(-5+i*1.4,-2+i%2);k.lineTo(-5.6+i*1.4,3+i%2);k.stroke();}
+ k.fillStyle='#4a3630';k.beginPath();k.ellipse(0,-11,6,5.5,0,0,7);k.fill();for(const d of [-1,1]){k.fillStyle='#4a3630';k.beginPath();k.moveTo(d*2,-14);k.lineTo(d*7,-24);k.lineTo(d*6,-13);k.fill();k.fillStyle='#b88a8a';k.beginPath();k.moveTo(d*3,-15);k.lineTo(d*6.2,-21.5);k.lineTo(d*5.4,-14);k.fill();}
+ k.fillStyle='#111';k.beginPath();k.arc(-2.2,-11.5,.9,0,7);k.arc(2.2,-11.5,.9,0,7);k.fill();k.fillStyle='#8a6a60';k.beginPath();k.ellipse(0,-7.5,2,1.4,0,0,7);k.fill();k.restore();}
+function mariposaR(k,x,y,s,fl,tipo,ang){k.save();k.translate(x,y);k.rotate(ang||0);k.scale(s,s);const a=.55+.45*Math.abs(Math.sin(fl));
+ const C={m:['#8a7458','#a58e6e','#5e4d3a'],ouve:['#9a8a70','#bcae90','#6b5d47'],estala:['#f4efe2','#e9e1cf','#1f1f1f'],praga:['#8b8172','#a89d8c','#5b5246'],outro:['#7f8f74','#9fae92','#55624b']}[tipo]||['#8a7458','#a58e6e','#5e4d3a'];
+ for(const d of [-1,1]){k.save();k.scale(d*a,1);k.fillStyle=C[2];k.beginPath();k.moveTo(1,2);k.quadraticCurveTo(10,6,12,14);k.quadraticCurveTo(5,13,1,6);k.fill();
+  k.fillStyle=lg(k,0,-8,16,4,[C[0],C[1]]);k.beginPath();k.moveTo(1,-6);k.lineTo(17,-2);k.quadraticCurveTo(16,6,11,8);k.lineTo(1,4);k.closePath();k.fill();
+  if(tipo==='estala'){k.fillStyle='#1f1f1f';for(const [px,py] of [[6,-3],[11,0],[8,4],[14,3]]){k.beginPath();k.arc(px,py,1.3,0,7);k.fill();}k.fillStyle='#e8762b';k.fillRect(1,4,9,2.5);}
+  else if(tipo==='praga'){k.fillStyle='rgba(235,228,210,.85)';k.beginPath();k.ellipse(9,-1,2.2,1.4,.4,0,7);k.fill();k.fillStyle='rgba(60,50,40,.7)';k.fillRect(12,-2,4,1.4);}
+  else{k.strokeStyle='rgba(50,40,30,.6)';k.lineWidth=.7;k.beginPath();k.moveTo(4,-4);k.quadraticCurveTo(9,-1,7,5);k.moveTo(9,-3);k.quadraticCurveTo(13,0,12,6);k.stroke();}
+  k.strokeStyle='#5b4a3a';k.lineWidth=.7;k.beginPath();k.moveTo(1,-8);k.quadraticCurveTo(4,-14,7,-16);k.stroke();for(let i=0;i<4;i++){k.beginPath();k.moveTo(2+i*1.3,-9-i*1.6);k.lineTo(3.5+i*1.3,-8.5-i*1.6);k.stroke();}k.restore();}
+ k.fillStyle=tipo==='estala'?'#e8762b':C[2];k.beginPath();k.ellipse(0,1,2.4,8,0,0,7);k.fill();k.fillStyle=C[0];k.beginPath();k.ellipse(0,-6,2.8,2.6,0,0,7);k.fill();k.restore();}
+const G={titulo:'Morcego Caçador',get rotulo(){return ['Insetos','Mariposas','Insetos','Pragas comidas'][S?S.f:0];},vidas:0,
+ resumo:'No escuro, o morcego insetívoro grita em ultrassom e escuta o eco. Pelo tempo que o eco leva para voltar, ele sabe a distância do inseto. Mariposas, galhos e lavouras mudam o jogo a cada fase.',
+ como:[['Voar','Arraste o dedo pela tela e o morcego segue.'],['Gritar','Toque em GRITAR. O som sai em círculo, bate nos insetos e o eco volta. Só o que deu eco aparece.'],['Pegar','Voe até o inseto que apareceu. Perto dele o morcego faz o zumbido final e não perde a presa.']],
+ get dica(){return ['Grite, espere o eco voltar e voe até o inseto que apareceu.','Grite de longe: mariposa com ouvido foge se o grito vier de perto. Evite a branca e laranja.','Grite antes de voar: o eco também mostra os galhos.','Coma as mariposas da lagarta-do-cartucho antes do amanhecer e cuide da energia.'][S?S.f:0];},
+ dicaErro:'Grite, espere o eco e só então voe até o inseto.',
+ FASES:[{nome:'Eco e distância',dur:60,meta:10,metaTxt:'pegar 10 insetos em 60 s.',txt:'O som sai do morcego, bate no inseto e volta. Quando o eco chega, o inseto aparece com a distância calculada. Voe até ele antes que suma.',fato:'O morcego emite um grito agudo e calcula a distância pelo eco. Quanto mais longe o inseto, mais o eco demora para voltar: o som faz o caminho de ida e de volta.'},
+  {nome:'Mariposas que escutam',dur:75,meta:10,metaTxt:'pegar 10 mariposas boas em 75 s.',txt:'Algumas mariposas escutam o ultrassom. Se o grito vem de perto, elas mergulham e somem. A branca e laranja estala de volta: tem gosto ruim, não pegue.',fato:'Algumas mariposas têm ouvidos no abdômen e percebem o ultrassom dos morcegos. Num estudo com 252 gêneros de mariposas, 52 produziam ultrassom ao ouvir um morcego, na maioria para avisar que têm gosto ruim.'},
+  {nome:'Mata fechada',dur:80,meta:10,metaTxt:'pegar 10 insetos em 80 s, desviando dos galhos.',txt:'Entre as árvores há galhos que você não vê. O grito também mostra os galhos. Bater num galho tira pontos e deixa o morcego tonto.',fato:'Pelo eco, o morcego calcula a distância de qualquer objeto, não só da presa. Por isso consegue voar entre galhos no escuro.'},
+  {nome:'Lavoura de milho',dur:90,meta:12,metaTxt:'comer 12 mariposas-praga antes do amanhecer (90 s).',txt:'Sobre o milharal voam as mariposas da lagarta-do-cartucho. Cada uma comida evita ovos de lagarta na lavoura. Grite pouco: gritar gasta energia.',fato:'Um morcego de 10 gramas come numa noite insetos equivalentes ao próprio peso. Comendo a mariposa da lagarta-do-cartucho, os morcegos evitam perdas estimadas em US$ 391 milhões por safra de milho no Brasil.'}],
+ init(g){const s=EC.s();g.n=0;g.b={x:W*.5,y:H*.4,vx:0,vy:0,fl:0,ang:0};g.ondas=[];g.ecos=[];g.ins=[];g.cd=0;g.part=[];g.zz=0;g.tonto=0;g.en=1;g.lb=[];g.galhos=S.f===2?EC.galhos():[];for(let i=0;i<EC.nIns();i++)g.ins.push(EC.novo(g));},
+ meta(g){return [g.n,FASES[S.f].meta];},cedo(g){return g.n>=FASES[S.f].meta;},
+ update(g,dt){EC.update(g,dt);},draw(g){EC.draw(g);},botoes(){return FS.botao();},ligar(){FS.ligar();},reajusta(g){g.galhos=S.f===2?EC.galhos():[];g.b.x=Math.min(g.b.x,W-20);g.b.y=Math.min(g.b.y,H-20);},
+ capa(k,w,h){const o=cx,oW=W,oH=H;cx=k;W=w;H=h;EC.cena(k,w,h);k.strokeStyle='rgba(255,255,255,.85)';k.lineWidth=3;for(const r of [40,70,100]){k.beginPath();k.arc(w*.38,h*.42,r,-.5,.5);k.stroke();}morcegoR(k,w*.34,h*.45,1.5,1.2,1.57);k.strokeStyle='rgba(255,220,120,.8)';k.lineWidth=2;k.beginPath();k.arc(w*.68,h*.36,24,0,7);k.stroke();mariposaR(k,w*.68,h*.36,2,1,'praga');vinheta(k,w,h);cx=o;W=oW;H=oH;}
 };
 const FASES=G.FASES;
+EC.nIns=()=>[4,5,5,6][S.f];
+EC.novo=function(g){const f=S.f,ch=EC.chao(),s=EC.s();let tipo='m';const r=Math.random();if(f===1)tipo=r<.45?'ouve':r<.7?'estala':'m';if(f===3)tipo=r<.65?'praga':'outro';
+ let x,y;for(let k=0;k<20;k++){x=W*(.1+Math.random()*.8);y=H*(.1+Math.random()*.7);if(Math.hypot(x-g.b.x,y-g.b.y)>140*s)break;}if(f===3)y=ch-H*(.08+Math.random()*.35);
+ const a=Math.random()*7,v=(45+f*12)*s;return {x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,vis:0,fl:Math.random()*6,tipo,foge:0,ecoT:0};};
+EC.galhos=function(){const s=EC.s(),L=[],R=rng(3);const ch=EC.chao();for(let i=0;i<6;i++){const esq=i%2===0,x0=esq?W*.05:W*.95,y0=H*(.18+i*.11),len=W*(.28+R()*.2);const d=esq?1:-1;const pts=[{x:x0,y:y0}];let x=x0,y=y0;for(let j=0;j<4;j++){x+=d*len/4;y+=(R()-.45)*H*.06;pts.push({x,y});}
+  L.push({pts,vis:0,folhas:pts.slice(1).map(p=>({x:p.x+(R()-.5)*20,y:p.y-6-R()*10}))});}
+ L.push({pts:[{x:W*.42,y:ch},{x:W*.44,y:ch-H*.28},{x:W*.5,y:ch-H*.4}],vis:0,folhas:[{x:W*.5,y:ch-H*.42}]});return L;};
+EC.dSeg=(p,a,b)=>{const dx=b.x-a.x,dy=b.y-a.y,l=dx*dx+dy*dy||1;let t=((p.x-a.x)*dx+(p.y-a.y)*dy)/l;t=Math.max(0,Math.min(1,t));return Math.hypot(p.x-(a.x+t*dx),p.y-(a.y+t*dy));};
+EC.dGalho=(p,G2)=>{let m=1e9;for(let i=1;i<G2.pts.length;i++)m=Math.min(m,EC.dSeg(p,G2.pts[i-1],G2.pts[i]));return m;};
+EC.vw=()=>Math.max(W,H)*.75;/* velocidade do som desenhada em câmera lenta */
+EC.alc=()=>Math.max(W,H)*.5;
+EC.m=px=>px*20/W;/* metros: tela com 20 m de largura */
+EC.grito=function(g){const s=EC.s();if(g.cd>0||g.tonto>0)return;g.cd=.6;g.ondas.push({x:g.b.x,y:g.b.y,r:0,hit:new Set()});if(S.f===3){g.en=Math.max(0,g.en-.05);}};
+EC.update=function(g,dt){const s=EC.s(),f=S.f,b=g.b,bt=EC.bt();g.cd-=dt;g.mast=Math.max(0,(g.mast||0)-dt);g.esp=(g.esp||0)-dt;b.fl+=dt*(g.zz>0?22:13);g.tonto=Math.max(0,g.tonto-dt);g.zz=Math.max(0,g.zz-dt);
+ for(const p of g.part){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=200*dt;p.t-=dt;}g.part=g.part.filter(p=>p.t>0);g.lb=g.lb.filter(l=>(l.t-=dt)>0);
+ if((inp.tap&&EC.hit(bt,inp.tap))||tec[' ']){EC.grito(g);tec[' ']=0;}
+ let tx=null,ty=null;if(inp.down&&inp.x!==null&&!EC.hit(bt,{x:inp.x,y:inp.y})){tx=inp.x;ty=inp.y;}const kx=(tec.ArrowRight?1:0)-(tec.ArrowLeft?1:0),ky=(tec.ArrowDown?1:0)-(tec.ArrowUp?1:0);
+ const vmax=(g.tonto>0?60:190)*s*(g.mast>0?.5:1)*(f===3&&g.en<.15?.5:1);if(tx!==null){const dx=tx-b.x,dy=ty-b.y,d=Math.hypot(dx,dy);const v=Math.min(vmax,d*5);b.vx+=((d>1?dx/d*v:0)-b.vx)*Math.min(1,dt*6);b.vy+=((d>1?dy/d*v:0)-b.vy)*Math.min(1,dt*6);}else if(kx||ky){b.vx+=(kx*vmax-b.vx)*Math.min(1,dt*6);b.vy+=(ky*vmax-b.vy)*Math.min(1,dt*6);}else{b.vx*=Math.pow(.2,dt);b.vy*=Math.pow(.2,dt);}
+ b.x=Math.max(16,Math.min(W-16,b.x+b.vx*dt));b.y=Math.max(30,Math.min(EC.chao()-20,b.y+b.vy*dt));b.ang+=((Math.atan2(b.vy,b.vx)+Math.PI/2)*(Math.hypot(b.vx,b.vy)>30?1:0)-b.ang)*Math.min(1,dt*5);
+ if(f===3){g.en=Math.max(0,g.en-dt*.01);if(g.en<=0&&!g.avE){g.avE=1;msg('Sem energia: o morcego voa devagar. Coma para recuperar.');}if(g.en>.1)g.avE=0;}
+ /* ondas de ida */const vw=EC.vw(),alc=EC.alc();
+ for(const o of g.ondas){o.r+=vw*dt;for(const i of g.ins){if(o.hit.has(i))continue;const d=Math.hypot(i.x-o.x,i.y-o.y);if(o.r>=d){o.hit.add(i);if(d>alc){continue;}
+   if(i.tipo==='ouve'&&Math.hypot(i.x-b.x,i.y-b.y)<190*s&&!i.foge){i.foge=1.8;i.vis=0;i.vy=200*s;i.vx*=.3;g.lb.push({x:i.x,y:i.y-18*s,t:1.2,tx:'ouviu e mergulhou!',c:'#6a1b9a'});continue;}
+   g.ecos.push({x:i.x,y:i.y,r:0,alvo:i,d0:d,o:{x:o.x,y:o.y}});if(i.tipo==='estala')i.click=1.2;}}
+  for(const G2 of g.galhos){if(o.hit.has(G2))continue;const d=EC.dGalho(o,G2);if(o.r>=d){o.hit.add(G2);if(d<alc)g.ecos.push({x:o.x,y:o.y,r:0,galho:G2,d0:d,o:{x:o.x,y:o.y}});}}}
+ g.ondas=g.ondas.filter(o=>o.r<alc*1.1);
+ /* ecos voltando */for(const e of g.ecos){e.r+=vw*dt;const db=e.galho?e.d0:Math.hypot(b.x-e.x,b.y-e.y);if(!e.ok&&e.r>=db){e.ok=1;if(e.galho){e.galho.vis=2.8;}else{const i=e.alvo;i.vis=Math.max(i.vis,i.foge>0?0:1.1);const dm=EC.m(e.d0);g.lb=g.lb.filter(l=>l.al!==i);g.lb.push({al:i,x:i.x,y:i.y-20*s,t:1.1,tx:fmt1(dm)+' m · '+Math.round(2*dm/343*1000)+' ms',c:'#283593'});}}}
+ g.ecos=g.ecos.filter(e=>!e.ok||e.r<(e.d0+40));
+ for(const G2 of g.galhos)G2.vis=Math.max(0,G2.vis-dt);
+ /* insetos */for(const i of g.ins){i.fl+=dt*18;i.vis=Math.max(0,i.vis-dt);i.click=Math.max(0,(i.click||0)-dt);if(i.foge>0){i.foge-=dt;i.vy=Math.min(i.vy+300*s*dt,260*s);}
+  else if(Math.random()<dt*1.2){const a=Math.random()*7,v=(45+f*12)*s;i.vx=Math.cos(a)*v;i.vy=Math.sin(a)*v;}
+  i.x+=i.vx*dt;i.y+=i.vy*dt;if(i.x<20||i.x>W-20)i.vx*=-1;if(i.y<30)i.vy=Math.abs(i.vy);if(i.y>EC.chao()-14){if(i.foge>0){i.vy=-40*s;}else i.vy=-Math.abs(i.vy);i.y=Math.min(i.y,EC.chao()-14);}
+  for(const G2 of g.galhos)if(EC.dGalho(i,G2)<12*s){i.vx*=-1;i.vy*=-1;}
+  const d=Math.hypot(i.x-b.x,i.y-b.y);if(i.vis>0&&d<70*s&&i.foge<=0){g.zz=.15;i.vis=Math.max(i.vis,.3);}
+  if(d<18*s&&i.vis>0&&g.tonto<=0&&!(g.mast>0)){i.pego=1;g.mast=.7;if(i.tipo==='estala'){ganha(-8,i.x,i.y);msg('Gosto ruim! A mariposa que estala avisava.');g.tonto=.6;}else{const pts=i.tipo==='praga'?10:i.tipo==='outro'?4:10;const conta=f===3?i.tipo==='praga':true;if(conta)g.n++;ganha(pts,i.x,i.y);if(f===3)g.en=Math.min(1,g.en+.12);for(let k=0;k<6;k++)g.part.push({x:i.x,y:i.y,vx:(Math.random()-.5)*80,vy:-Math.random()*60,t:.6,c:'rgba(200,180,140,.9)'});}}}
+ g.ins=g.ins.filter(i=>!i.pego&&i.y<H+20);if(g.ins.length<EC.nIns()&&g.esp<=0){g.ins.push(EC.novo(g));g.esp=1.5;}
+ if(g.zz>0&&Math.random()<dt*18)g.ondas.push({x:b.x,y:b.y,r:0,hit:new Set(),mini:1});
+ /* galhos */if(g.tonto<=0)for(const G2 of g.galhos)if(EC.dGalho(b,G2)<10*s){g.tonto=1.1;ganha(-8,b.x,b.y-20);msg('Bateu no galho! Grite antes de voar entre as árvores.');G2.vis=2;b.vx*=-1.2;b.vy*=-1.2;for(let k=0;k<8;k++)g.part.push({x:b.x,y:b.y,vx:(Math.random()-.5)*120,vy:-Math.random()*80,t:.6,c:'rgba(120,110,90,.9)'});break;}};
+function fmt1(v){return v.toFixed(1).replace('.',',');}
+EC.draw=function(g){const s=EC.s(),f=S.f,b=g.b,ch=EC.chao(),m=MOB();cx.drawImage(cache('ec2_'+f+'_'+W+'x'+H,W,H,EC.cena),0,0);
+ if(f===3){const k=Math.min(1,g.t/FASES[3].dur);cx.fillStyle='rgba(255,200,140,'+(k*.35)+')';cx.fillRect(0,0,W,H*.6);}
+ for(const G2 of g.galhos){const a=.07+.85*Math.min(1,G2.vis/1.2);cx.strokeStyle='rgba(70,55,45,'+a+')';cx.lineCap='round';cx.lineJoin='round';cx.lineWidth=7*s;cx.beginPath();G2.pts.forEach((p,i)=>i?cx.lineTo(p.x,p.y):cx.moveTo(p.x,p.y));cx.stroke();cx.lineWidth=3*s;cx.strokeStyle='rgba(90,72,58,'+a+')';cx.stroke();
+  for(const fo of G2.folhas){cx.fillStyle='rgba(95,120,80,'+a*.9+')';for(let j=0;j<5;j++){cx.beginPath();cx.ellipse(fo.x+Math.cos(j*1.3)*9*s,fo.y+Math.sin(j*1.3)*6*s,7*s,3.5*s,j,0,7);cx.fill();}}}
+ for(const o of g.ondas){const a=Math.max(0,1-o.r/EC.alc());cx.strokeStyle=o.mini?'rgba(255,255,255,'+(.5*a)+')':'rgba(255,255,255,'+(.85*a)+')';cx.lineWidth=o.mini?1.5:3;cx.beginPath();cx.arc(o.x,o.y,o.r,0,7);cx.stroke();if(!o.mini){cx.strokeStyle='rgba(120,110,200,'+(.35*a)+')';cx.lineWidth=7;cx.beginPath();cx.arc(o.x,o.y,Math.max(0,o.r-6),0,7);cx.stroke();}}
+ for(const e of g.ecos){if(e.ok||e.galho)continue;const an=Math.atan2(b.y-e.y,b.x-e.x);cx.strokeStyle='rgba(255,196,60,.85)';cx.lineWidth=2.5;cx.beginPath();cx.arc(e.x,e.y,e.r,an-.35,an+.35);cx.stroke();cx.lineWidth=1.2;cx.beginPath();cx.arc(e.x,e.y,Math.max(0,e.r-6),an-.25,an+.25);cx.stroke();}
+ for(const i of g.ins){const v=i.vis>0?1:0;const ang=Math.atan2(i.vy,i.vx)+Math.PI/2;
+  if(v){cx.strokeStyle=i.tipo==='estala'?'rgba(230,110,30,.9)':'rgba(255,200,60,.9)';cx.lineWidth=2;cx.beginPath();cx.arc(i.x,i.y,16*s,0,7);cx.stroke();cx.globalAlpha=Math.min(1,i.vis*1.5);mariposaR(cx,i.x,i.y,.95*s,i.fl,i.tipo,ang);cx.globalAlpha=1;}
+  else{cx.globalAlpha=.06;mariposaR(cx,i.x,i.y,.95*s,i.fl,i.tipo,ang);cx.globalAlpha=1;}
+  if(i.click>0){cx.strokeStyle='rgba(230,110,30,'+i.click+')';cx.lineWidth=1.5;for(let j=0;j<3;j++){const r=(10+j*7+(1.2-i.click)*30)*s;cx.beginPath();cx.arc(i.x,i.y,r,-.6+j,.6+j);cx.stroke();}}}
+ morcegoR(cx,b.x,b.y,1.35*s,b.fl,b.ang,g.tonto>0?'#7a5a6a':'#5a4652');
+ if(g.tonto>0){for(let j=0;j<3;j++){const a=g.t*6+j*2.1;cx.fillStyle='#ffd54f';cx.beginPath();cx.arc(b.x+Math.cos(a)*14*s,b.y-22*s+Math.sin(a)*4*s,2.5*s,0,7);cx.fill();}}
+ if(g.zz>0){rrk(cx,b.x-44,b.y+22*s,88,18,9,'rgba(255,255,255,.9)');cx.fillStyle='#4a148c';cx.font='bold 10px system-ui';cx.textAlign='center';cx.fillText('zumbido final',b.x,b.y+22*s+13);}
+ for(const l of g.lb){cx.globalAlpha=Math.min(1,l.t*2);cx.font='bold 11px system-ui';const w=cx.measureText(l.tx).width+12;rrk(cx,l.x-w/2,l.y-14,w,18,9,'rgba(255,255,255,.95)');cx.fillStyle=l.c;cx.textAlign='center';cx.fillText(l.tx,l.x,l.y-1);cx.globalAlpha=1;}
+ for(const p of g.part){cx.globalAlpha=Math.min(1,p.t*2);cx.fillStyle=p.c;cx.beginPath();cx.arc(p.x,p.y,2,0,7);cx.fill();cx.globalAlpha=1;}
+ const bt=EC.bt();rrk(cx,bt.x,bt.y,bt.w,bt.h,14,g.cd>0?'#9575cd':'#5e35b1');cx.fillStyle='#fff';cx.font='bold 15px system-ui';cx.textAlign='center';cx.fillText('GRITAR',bt.x+bt.w/2,bt.y+bt.h/2+5);
+ if(f===3){const bw=m?150:190,x=W-bw-10,y=H*.14;rrk(cx,x,y,bw,34,12,'rgba(255,255,255,.95)');cx.fillStyle='#311b92';cx.font='bold 11px system-ui';cx.textAlign='left';cx.fillText('Energia do morcego',x+10,y+13);rrk(cx,x+10,y+18,bw-20,9,4,'#eee');rrk(cx,x+10,y+18,(bw-20)*g.en,9,4,g.en<.25?'#e53935':'#7e57c2');
+  const k=Math.max(0,FASES[3].dur-g.t);cx.fillStyle='#311b92';cx.font='bold 11px system-ui';cx.fillText('amanhece em '+Math.ceil(k)+' s',x+10,y+48);}
+ let t=g.tonto>0?'Tonto! Espere um instante.':g.zz>0?'Zumbido final: o morcego não perde a presa de vista.':['Toque em GRITAR, espere o eco voltar e voe até o inseto.','Grite de longe. A mariposa branca e laranja tem gosto ruim.','Grite para ver os galhos antes de voar.','Coma as mariposas da lagarta-do-cartucho. Gritar gasta energia.'][f];
+ if(m)t=g.tonto>0?'Tonto! Espere.':g.zz>0?'Zumbido final!':['Grite e voe até o inseto que aparecer.','Grite de longe. Evite a branca e laranja.','Grite para ver os galhos.','Coma as pragas. Gritar gasta energia.'][f];
+ if(S.g.msgT<=0){cx.font='bold '+(m?12:14)+'px system-ui';const w=Math.min(W-16,cx.measureText(t).width+28);rrk(cx,W/2-w/2,10,w,30,15,'rgba(255,255,255,.96)');cx.strokeStyle='#5e35b1';cx.lineWidth=2;cx.beginPath();cx.roundRect(W/2-w/2,10,w,30,15);cx.stroke();cx.fillStyle='#311b92';cx.textAlign='center';cx.fillText(t,W/2,30);}
+ FS.hud(g,'#311b92');vinheta(cx,W,H);};
 const PERG=[
- {q:'Como o morcego descobre onde está a mariposa no escuro?',o:['Escutando o eco do som que ele mesmo emite','Sentindo o cheiro das asas da mariposa','Vendo a luz que a mariposa produz']},
- {q:'Se a mariposa está mais longe, o que acontece com o eco?',o:['Demora mais para voltar','Volta mais rápido','Volta igual, sem diferença']},
- {q:'Por que nós não ouvimos o ultrassom dos morcegos?',o:['O som é agudo demais para o ouvido humano','O som é grave demais para o ouvido humano','O som só existe dentro da água']}
+ {q:'Como o morcego sabe a distância do inseto no escuro?',o:['Pelo tempo que o eco leva para voltar','Pelo cheiro que o inseto solta no ar','Pela luz da lua refletida no inseto']},
+ {q:'O que algumas mariposas fazem ao ouvir o ultrassom do morcego de perto?',o:['Mergulham e mudam de rumo para fugir','Ficam paradas no ar sem bater as asas','Acendem uma luz para assustar o morcego']},
+ {q:'Para que serve o eco quando o morcego voa entre árvores?',o:['Mostra onde estão os galhos','Deixa as folhas mais claras','Espanta os pássaros da mata']},
+ {q:'Como o morcego ajuda as lavouras de milho?',o:['Comendo a mariposa da praga','Polinizando as flores do milho','Espalhando sementes de milho pelo campo']}
 ];
 function pergunta(){
  const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
@@ -196,11 +348,11 @@ function pergunta(){
   $('bn').onclick=()=>{S.tot+=S.fp;S.fp=0;if(S.f===FASES.length-1)final(true);else{S.f++;fase();}};});
 }
 function final(tudo){
- S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
- $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Caçador da noite':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
+ S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?FASES.length+' fases':'Fase '+(S.f+1);
+ $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Caçador da noite!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
  <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
- <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: UFRGS Ciência, referência de sinais sonoros de morcegos brasileiros: morcegos emitem ondas ultrassônicas que refletem no alvo e voltam como eco, indicando posição e distância; Guimarães, L. C., dissertação de mestrado na UnB: sinais de ecolocalização de 8 kHz até acima de 200 kHz, com 1 a 100 ms de duração. Velocidades e pontos são regras do jogo.</div></div>`;
+ <div class="small" style="margin-top:12px;text-align:left">Fontes: Revista Pesquisa FAPESP, Morcegos evitam florestas deterioradas (ecolocalização e consumo de insetos por morcegos de 10 g, segundo P. Bobrowiec, Inpa); Revista Pesquisa FAPESP, Saindo para jantar fora (morcegos insetívoros evitam perda de US$ 391 milhões por safra de milho, UnB e Instituto Tecnológico Vale); National Geographic Brasil (2018), mariposas com tímpanos no abdômen que detectam a ecolocalização; Barber et al. (2022), Anti-bat ultrasound production in moths is globally and phylogenetically widespread, PNAS 119(25): e2117485119; Guimarães, dissertação de mestrado, UnB (sinais de 8 kHz a mais de 200 kHz). Velocidade do som no ar a 20 °C: 343 m/s. Largura da tela igual a 20 m, som em câmera lenta, número de insetos, tempos e pontos são regras do jogo.</div></div>`;
  $('bS').onclick=()=>salvar(nivel);
 }
 const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
@@ -209,7 +361,7 @@ const GAME_ID="eco-no-escuro";let db=null,fs=null,salvo=false;
 async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
 async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
  $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
-window.__a={get S(){return S},update,parar,G,inp};
+window.__a={get S(){return S},update,parar,G,inp,tec};
 inicio();
 </script>
 </body>
