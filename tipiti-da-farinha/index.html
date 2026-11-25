@@ -263,7 +263,7 @@ const G={titulo:'Tipiti da Farinha',get rotulo(){return ['Raízes raladas','Tipi
  /* ---------- fase 2 ---------- */
  novoTip(g){g.t2={enche:0,bacia:{x:W*.2,y:H*.86,drag:0},pole:0,ap:0,um:1,manip:0,perd:0,estado:'enche',last:0};},
  /* ---------- fase 3 ---------- */
- novaForn(g){g.f3={cel:Array.from({length:12},()=>({p:0,pt:0,q:0})),fogo:.55,rodo:null,last:null,peneira:0,estado:'peneira',sh:0,lastDir:0};},
+ novaForn(g){g.f3={cel:Array.from({length:12},()=>({p:0,pt:0,q:0})),fogo:.6,rodo:null,last:null,peneira:0,estado:'peneira',sh:0,lastDir:0};},
  /* ---------- fase 4 ---------- */
  novoTuc(g){g.f4={dec:0,nivel:1,goma:.28,tilt:0,derr:0,estado:'dec',temp:.2,fogo:.4,ferv:0,transb:0};},
  update(g,dt){const f=S.f;for(const p of g.part){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=500*dt;p.t-=dt;}g.part=g.part.filter(p=>p.t>0);
@@ -283,10 +283,10 @@ const G={titulo:'Tipiti da Farinha',get rotulo(){return ['Raízes raladas','Tipi
    return;}
   if(f===2){const F3=g.f3;if(F3.estado==='peneira'){if(inp.down&&inp.x!==null){const d=Math.sign(inp.x-(F3.px||inp.x));if(d&&d!==F3.lastDir&&Math.abs(inp.x-(F3.px||inp.x))>3){F3.lastDir=d;F3.sh++;for(let i=0;i<8;i++)g.part.push({x:inp.x+(Math.random()-.5)*80,y:H*.42,vx:0,vy:80,t:.6,c:'#efe2c0'});}F3.px=inp.x;}
     if(F3.sh>=10){F3.estado='torra';msg('Massa peneirada. Agora torre e mexa sem parar!');}return;}
-   F3.fogo=Math.max(0,F3.fogo-dt*.07);if(inp.tap&&TF.hit(TF.bt('lenha'),inp.tap)){F3.fogo=Math.min(1,F3.fogo+.28);for(let i=0;i<6;i++)g.part.push({x:W*.5+(Math.random()-.5)*W*.4,y:H*.74,vx:0,vy:-100,t:.5,c:'#ff9800'});}
+   F3.fogo=Math.max(0,F3.fogo-dt*.045);if(inp.tap&&TF.hit(TF.bt('lenha'),inp.tap)){F3.fogo=Math.min(1,F3.fogo+.28);for(let i=0;i<6;i++)g.part.push({x:W*.5+(Math.random()-.5)*W*.4,y:H*.74,vx:0,vy:-100,t:.5,c:'#ff9800'});}
    const fx0=W*.14,fx1=W*.86,cw=(fx1-fx0)/12;let vel=0;if(inp.down&&inp.x!==null&&inp.y<H*.8&&!TF.hit(TF.bt('lenha'),{x:inp.x,y:inp.y})){vel=F3.last!==null?Math.abs(inp.x-F3.last)/dt:0;F3.last=inp.x;F3.rodo=inp.x;}else F3.last=null;
-   const lim=TF.lim(F3.fogo);let soma=0;F3.cel.forEach((c,i)=>{const cxp=fx0+cw*(i+.5);if(F3.rodo!==null&&inp.down&&Math.abs(F3.rodo-cxp)<cw*.9&&vel>40)c.pt=0;else c.pt+=dt;
-    if(!c.q){c.p=Math.min(1.2,c.p+F3.fogo*dt*.085*(c.pt<1.2?1:.4));if(c.pt>lim&&F3.fogo>.15){c.q=1;ganha(-5,cxp,H*.5);msg('Parou de mexer e a farinha queimou ali.');}}soma+=Math.min(1,c.p);});
+   const lim=TF.lim(F3.fogo);let soma=0;F3.cel.forEach((c,i)=>{const cxp=fx0+cw*(i+.5);if(F3.rodo!==null&&inp.down&&Math.abs(F3.rodo-cxp)<cw*1.2&&vel>40)c.pt=0;else c.pt+=dt;
+    if(!c.q){c.p=Math.min(1.2,c.p+F3.fogo*dt*.085*(c.pt<1.2?1:.4));if(c.pt>lim&&F3.fogo>.15){c.q=1;ganha(-5,cxp,H*.5);msg('Parou de mexer e a farinha queimou ali.');}}soma+=c.q?1:Math.min(1,c.p);});
    if(F3.fogo<.12&&!F3.avf){F3.avf=1;msg('O fogo está quase apagando. Ponha lenha.');}if(F3.fogo>.2)F3.avf=0;
    if(soma/12>=.98){const q=F3.cel.filter(c=>c.q).length;if(q<=2){g.n++;ganha(15,W/2,H*.3);msg(q?'Fornada boa, com '+q+' pontinho queimado.':'Fornada perfeita, farinha dourada!');}else{ganha(-10,W/2,H*.3);msg('Farinha queimada em '+q+' lugares. Essa fornada não presta.');}G.novaForn(g);}
    return;}
@@ -530,6 +530,7 @@ TF.torra=function(g,m){const F3=g.f3,fx0=W*.14,fx1=W*.86,cw=(fx1-fx0)/12,fy=H*.5
  F3.cel.forEach((c,i)=>{const x=fx0+cw*(i+.5);if(c.q){for(let j=0;j<3;j++){const k2=(g.t*.6+j/3+i*.13)%1;cx.fillStyle='rgba(70,60,55,'+(.35*(1-k2))+')';cx.beginPath();cx.arc(x+Math.sin(g.t*2+j)*6,fy-k2*60,5+k2*10,0,7);cx.fill();}return;}
   const k2=(g.t*.5+i*.17)%1;cx.fillStyle='rgba(255,255,255,'+(.25*(1-k2)*Math.min(1,c.p))+')';cx.beginPath();cx.arc(x,fy-k2*40,4+k2*8,0,7);cx.fill();
   const fr=Math.min(1,c.pt/lim),ry=fy+38;cx.fillStyle='rgba(255,255,255,.95)';cx.beginPath();cx.arc(x,ry,m?6:7,0,7);cx.fill();cx.fillStyle=fr<.5?'#7cb342':fr<.8?'#fb8c00':'#e53935';cx.beginPath();cx.moveTo(x,ry);cx.arc(x,ry,m?6:7,-Math.PI/2,-Math.PI/2+fr*Math.PI*2);cx.fill();cx.strokeStyle='rgba(0,0,0,.35)';cx.lineWidth=1;cx.beginPath();cx.arc(x,ry,m?6:7,0,7);cx.stroke();});
+ {let u=-1,um=.6;F3.cel.forEach((c,i)=>{if(!c.q&&c.pt/lim>um){um=c.pt/lim;u=i;}});if(u>=0){const x=fx0+cw*(u+.5),pul=.5+.5*Math.sin(g.t*12);cx.strokeStyle='rgba(229,57,53,'+(.5+.5*pul)+')';cx.lineWidth=3;cx.beginPath();cx.ellipse(x,fy+6,cw*.8,15,0,0,7);cx.stroke();rrk(cx,x-38,fy-44,76,20,10,'#e53935');cx.fillStyle='#fff';cx.font='bold 12px system-ui';cx.textAlign='center';cx.fillText('mexa aqui!',x,fy-30);cx.fillStyle='#e53935';cx.beginPath();cx.moveTo(x-6,fy-24);cx.lineTo(x+6,fy-24);cx.lineTo(x,fy-16);cx.fill();}}
  cx.fillStyle='#fff';cx.font='bold 10px system-ui';cx.textAlign='left';cx.fillText('calor parado em cada parte da chapa',fx0-24,fy+60);
  /* rodo, braços e mãos */const bx=F3.rv,by=fy+5;const sg=F3.pX>=bx?1:-1;const tx=F3.pX+sg*34*s,ty=fy-84*s;
  cx.strokeStyle=lg(cx,bx,by,tx,ty,['#7a5733','#a5825a','#6b4a2e']);cx.lineWidth=5*s;cx.lineCap='round';cx.beginPath();cx.moveTo(bx,by-4);cx.lineTo(tx,ty);cx.stroke();cx.fillStyle=lg(cx,0,by-10,0,by,['#a5825a','#6b4a2e']);cx.beginPath();cx.roundRect(bx-24*s,by-10,48*s,9,2);cx.fill();
@@ -541,7 +542,7 @@ TF.torra=function(g,m){const F3=g.f3,fx0=W*.14,fx1=W*.86,cw=(fx1-fx0)/12,fy=H*.5
    cx.fillStyle=lg(cx,a.hx-6*s,a.hy-6*s,a.hx+6*s,a.hy+6*s,PELE);cx.beginPath();cx.ellipse(a.hx,a.hy,6.5*s,5.5*s,Math.atan2(ty-by,tx-bx),0,7);cx.fill();cx.strokeStyle='rgba(90,50,25,.35)';cx.lineWidth=1;cx.beginPath();cx.moveTo(a.hx-3*s,a.hy-4*s);cx.lineTo(a.hx-3*s,a.hy+4*s);cx.moveTo(a.hx,a.hy-4.5*s);cx.lineTo(a.hx,a.hy+4.5*s);cx.stroke();});}
  if(F3.mexeu<1.2){const ay=fy+8,a=Math.sin(g.t*4)*20;cx.save();cx.globalAlpha=.9;cx.strokeStyle='#f9a825';cx.fillStyle='#f9a825';cx.lineWidth=5;cx.beginPath();cx.moveTo(W/2-90+a,ay);cx.lineTo(W/2+90+a,ay);cx.stroke();for(const d of [-1,1]){cx.beginPath();cx.moveTo(W/2+d*104+a,ay);cx.lineTo(W/2+d*86+a,ay-11);cx.lineTo(W/2+d*86+a,ay+11);cx.fill();}
   rrk(cx,W/2-70,ay+18,140,24,12,'rgba(255,255,255,.95)');cx.fillStyle='#e65100';cx.font='bold 13px system-ui';cx.textAlign='center';cx.fillText('arraste o rodo',W/2,ay+35);cx.restore();}
- const prog=F3.cel.reduce((a,c)=>a+Math.min(1,c.p),0)/12;TF.barra(10,H*.2,m?150:190,'Torra da farinha',prog,'#c08b3c');TF.barra(10,H*.2+40,m?150:190,'Fogo',F3.fogo,F3.fogo>.75?'#e53935':'#ff9800',[.35,.75]);
+ const prog=F3.cel.reduce((a,c)=>a+(c.q?1:Math.min(1,c.p)),0)/12;TF.barra(10,H*.2,m?150:190,'Torra da farinha',prog,'#c08b3c');TF.barra(10,H*.2+40,m?150:190,'Fogo',F3.fogo,F3.fogo>.75?'#e53935':'#ff9800',[.35,.75]);
  TF.btDraw(TF.bt('lenha'));
  return F3.fogo<.2?'Fogo fraco! Toque em LENHA.':F3.fogo>.75?'Fogo forte demais: mexa mais rápido.':(m?'Passe o rodo por toda a chapa.':'Passe o rodo por toda a chapa. Bolinha vermelha embaixo quer dizer farinha parada, que vai queimar.');};
 function pergunta(){
