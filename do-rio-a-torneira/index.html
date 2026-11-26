@@ -213,7 +213,7 @@ const FASES=[
  {nome:'Olhe a água do rio',ic:'🔎',obj:'Achar com a lupa as 4 coisas misturadas na água do rio.',passos:[['✋','Arraste a lupa pelo copo'],['🔎','Pare em cima do que achar'],['📒','Veja como separar cada uma']],ini:()=>f1()},
  {nome:'Deixe descansar',ic:'⏳',obj:'Achar o menor tempo para a areia e a terra irem para o fundo do copo.',passos:[['⏳','Toque num tempo'],['👀','Veja o que desce'],['✅','Ache o menor tempo com tudo no fundo']],ini:()=>f2()},
  {nome:'Coagulante na medida',ic:'🧪',obj:'Deixar a água com turbidez até 10 sem passar do limite de alumínio que pode ficar na água.',passos:[['🧪','Escolha a dose de coagulante'],['🌀','Os flocos juntam a sujeira'],['⚖️','Pouco não limpa, muito deixa alumínio']],ini:()=>f3()},
- {nome:'Transparente é segura?',ic:'🔮',obj:'Prever se a água limpinha pode ter micróbios, e achar a dose de cloro que chega até a última casa.',passos:[['🔮','Faça a previsão'],['🧫','Veja no microscópio'],['🧴','Escolha a dose de cloro']],ini:()=>f4()},
+ {nome:'Transparente é segura?',ic:'🔮',obj:'Prever se a água limpinha pode ter micróbios, e achar a dose de cloro que chega até a última casa.',passos:[['🔮','Faça a previsão'],['💧','Pipete água e cloro no microscópio'],['🧴','Escolha a dose de cloro']],ini:()=>f4()},
  {nome:'Monte a estação',ic:'🏭',obj:'Colocar as 5 etapas da estação de tratamento na ordem certa e levar água limpa às casas.',passos:[['👆','Toque nas etapas na ordem'],['▶','Ligue a estação'],['🚰','Veja a água chegar']],ini:()=>f5()}
 ];
 function intro(){parar();G=null;cx=null;hud();const F=FASES[S.f];$('rankBox').style.display='none';
@@ -294,23 +294,53 @@ function f3(){G={t:0,d:0,tent:0,an:0,fl:[]};telaJogo('🧪 Coagulante','');
    else acao(`${a?'✅':'❌'} turbidez ${Math.round(T)} · ${b?'✅':'❌'} alumínio ${A.toFixed(2).replace('.',',')} mg/L`);};};};
  ctrl();acao('Escolha a dose e aperte <b>▶ Misturar e esperar</b>.');rodar();}
 /* ---------- FASE 4 ---------- */
-function f4(){G={t:0,dose:.5,fase:0,mic:[],cl:null};telaJogo('🔮 Transparente é segura?','previsão');for(let i=0;i<14;i++){const ang=rr(0,6.283),rad=Math.sqrt(Math.random())*66;G.mic.push({x:580+Math.cos(ang)*rad,y:170+Math.sin(ang)*rad,k:i%2,v:1});}
+function f4(){G={t:0,dose:.5,fase:0,mic:[],cl:null,fx:350,fy:100,pip:null,lam:0,drag:false};telaJogo('🔮 Transparente é segura?','previsão');
+ const VX=650,VY=150,VR=92;for(let i=0;i<13;i++){const ang=rr(0,6.283),rad=Math.sqrt(Math.random())*60;G.mic.push({x:VX+Math.cos(ang)*rad,y:VY+Math.sin(ang)*rad,k:i%3===0?1:0,v:1,a:rr(0,6)});}
  const casas=[160,280,400,520,640];
+ const tip=()=>[G.fx,G.fy+80];
+ const alvo=()=>G.fase!==1?null:G.pip==='agua'||G.pip==='cloro'?[470,262]:G.lam===0?[125,215]:G.lam===1?[290,250]:null;
+ const coco=(c,x,y,t)=>{c.save();c.translate(x,y);c.rotate(Math.sin(t+x)*.4);c.fillStyle='#8e24aa';c.strokeStyle='#4a148c';c.lineWidth=1;[[0,0],[9,2],[18,1],[4,9]].forEach(([a,b])=>{c.beginPath();c.arc(a,b,4.6,0,7);c.fill();c.stroke();});c.restore();};
+ const pipeta=c=>{const x=G.fx,y=G.fy;c.save();c.fillStyle='rgba(0,0,0,.08)';c.beginPath();c.ellipse(x+6,y+86,8,3,0,0,7);c.fill();
+  c.beginPath();c.moveTo(x-6,y+12);c.lineTo(x+6,y+12);c.lineTo(x+6,y+60);c.lineTo(x+1.6,y+80);c.lineTo(x-1.6,y+80);c.lineTo(x-6,y+60);c.closePath();c.fillStyle='rgba(255,255,255,.9)';c.fill();
+  if(G.pip){c.save();c.clip();c.fillStyle=G.pip==='agua'?'#4fc3f7':'#c0ca33';c.fillRect(x-7,y+36,14,46);c.restore();}
+  c.strokeStyle='#607d8b';c.lineWidth=1.6;c.stroke();c.strokeStyle='rgba(96,125,139,.6)';c.lineWidth=1;for(let k=0;k<4;k++){c.beginPath();c.moveTo(x-6,y+22+k*9);c.lineTo(x-1,y+22+k*9);c.stroke();}
+  const g=c.createRadialGradient(x-4,y-6,2,x,y,17);g.addColorStop(0,'#ffb74d');g.addColorStop(1,'#e65100');c.fillStyle=g;c.beginPath();c.ellipse(x,y,11,16,0,0,7);c.fill();c.fillStyle='#bf360c';c.fillRect(x-8,y+10,16,5);c.restore();};
+ const lab=c=>{bequer(c,40,90,170,200,1.5);c.fillStyle='#263238';c.font='800 14px system-ui';c.textAlign='center';c.fillText('água filtrada, transparente',125,322);
+  c.fillStyle='rgba(0,0,0,.1)';c.beginPath();c.ellipse(290,292,34,6,0,0,7);c.fill();c.fillStyle='#fffde7';c.beginPath();c.roundRect(262,200,56,90,10);c.fill();c.fillStyle='rgba(205,220,57,.55)';c.beginPath();c.roundRect(266,222,48,64,8);c.fill();c.strokeStyle='#9e9d24';c.lineWidth=2;c.beginPath();c.roundRect(262,200,56,90,10);c.stroke();c.fillStyle='#fffde7';c.fillRect(277,182,26,20);c.strokeRect(277,182,26,20);
+  c.fillStyle='#fff';c.beginPath();c.roundRect(270,240,40,22,4);c.fill();c.fillStyle='#827717';c.font='800 11px system-ui';c.fillText('CLORO',290,255);c.fillStyle='#263238';c.font='800 14px system-ui';c.fillText('🧴 cloro',290,322);
+  c.fillStyle='rgba(0,0,0,.1)';c.beginPath();c.ellipse(470,318,70,6,0,0,7);c.fill();c.fillStyle='#455a64';c.beginPath();c.roundRect(410,298,124,18,7);c.fill();
+  c.strokeStyle='#546e7a';c.lineWidth=16;c.lineCap='round';c.beginPath();c.moveTo(512,300);c.quadraticCurveTo(548,210,500,128);c.stroke();c.lineCap='butt';
+  c.fillStyle='#37474f';c.fillRect(412,268,116,9);c.fillStyle='rgba(255,255,255,.95)';c.fillRect(428,261,84,7);c.strokeStyle='#90a4ae';c.lineWidth=1;c.strokeRect(428,261,84,7);
+  if(G.lam){c.fillStyle=G.lam===1?'#4fc3f7':'#aed581';c.beginPath();c.ellipse(470,260,13,4,0,0,7);c.fill();}
+  c.fillStyle='#607d8b';c.beginPath();c.roundRect(455,124,32,92,6);c.fill();c.fillStyle='#37474f';c.beginPath();c.roundRect(462,214,18,30,4);c.fill();c.fillStyle='#455a64';c.beginPath();c.roundRect(449,98,44,30,6);c.fill();c.fillStyle='#263238';c.fillRect(456,92,30,8);
+  c.fillStyle='#78909c';c.beginPath();c.arc(522,236,11,0,7);c.fill();c.fillStyle='#263238';c.font='800 14px system-ui';c.fillText('🔬 microscópio',470,342);
+  c.setLineDash([5,5]);c.strokeStyle='#90a4ae';c.lineWidth=2;c.beginPath();c.moveTo(493,108);c.lineTo(VX-VR-6,VY-20);c.stroke();c.setLineDash([]);
+  c.fillStyle='#fff';c.beginPath();c.arc(VX,VY,VR+8,0,7);c.fill();c.strokeStyle='#546e7a';c.lineWidth=6;c.stroke();c.fillStyle=G.lam?'#e1f5fe':'#eceff1';c.beginPath();c.arc(VX,VY,VR,0,7);c.fill();
+  if(G.lam){c.save();c.beginPath();c.arc(VX,VY,VR,0,7);c.clip();G.mic.forEach(m=>{if(m.v>0){c.globalAlpha=m.v;if(m.k)coco(c,m.x,m.y,G.t*m.v);else microbio(c,m.x,m.y,2,0,G.t*m.v+m.a);c.globalAlpha=1;}});c.restore();}
+  else{c.fillStyle='#78909c';c.font='700 13px system-ui';c.fillText('lâmina vazia',VX,VY+5);}
+  c.fillStyle='#263238';c.font='800 13px system-ui';c.fillText('o que a lente mostra',VX,VY+VR+26);
+  const a=alvo();if(a){c.strokeStyle=`rgba(2,136,209,${.35+.3*Math.sin(G.t*4)})`;c.lineWidth=3;c.beginPath();c.arc(a[0],a[1],20,0,7);c.stroke();}
+  pipeta(c);if(G.fase===1&&!G.mexeu){c.fillStyle='#0288d1';c.font='800 13px system-ui';c.textAlign='center';c.fillText('arraste a pipeta ☝️',G.fx,G.fy-26);}};
  G.desenha=c=>{c.fillStyle='#f3f8fb';c.fillRect(0,0,W,H);
-  if(G.fase<2){bequer(c,80,50,220,250,1.5);c.fillStyle='#263238';c.font='800 14px system-ui';c.textAlign='center';c.fillText('água filtrada, transparente',190,330);
-   c.fillStyle='#fff';c.beginPath();c.arc(580,170,110,0,7);c.fill();c.strokeStyle='#546e7a';c.lineWidth=6;c.stroke();c.fillStyle='#e3f2fd';c.beginPath();c.arc(580,170,104,0,7);c.fill();
-   if(G.fase>=1){c.save();c.beginPath();c.arc(580,170,104,0,7);c.clip();G.mic.forEach(m=>{if(m.v>0){c.globalAlpha=m.v;microbio(c,m.x,m.y,2,m.k,G.t);c.globalAlpha=1;}});c.restore();}c.fillStyle='#263238';c.font='800 13px system-ui';c.fillText('🔬 microscópio',580,300);}
+  if(G.fase<2)lab(c);
   else{c.fillStyle='#e8f5e9';c.fillRect(0,0,W,H);c.fillStyle='#90a4ae';c.fillRect(60,200,660,12);c.fillStyle='#0288d1';c.beginPath();c.roundRect(20,150,80,110,10);c.fill();c.fillStyle='#fff';c.font='800 12px system-ui';c.textAlign='center';c.fillText('ESTAÇÃO',60,205);
    const res=G.dose-1.0;casas.forEach((x,i)=>{const r=Math.max(0,G.dose-(i+1)*.2);c.fillStyle='#ffe0b2';c.fillRect(x-24,150,48,40);c.fillStyle='#c62828';c.beginPath();c.moveTo(x-30,150);c.lineTo(x,126);c.lineTo(x+30,150);c.fill();
     if(G.cl!=null&&G.cl>=i){c.fillStyle=r>=.2?'#2e7d32':'#c62828';c.beginPath();c.roundRect(x-34,226,68,24,8);c.fill();c.fillStyle='#fff';c.font='800 12px system-ui';c.fillText(r.toFixed(1).replace('.',',')+' mg/L',x,242);}});
    if(G.cl!=null){const px=60+Math.min(G.cl+1,5)*120;c.fillStyle='rgba(2,136,209,.35)';c.fillRect(60,200,Math.min(660,px-60),12);}
    painel(c,120,20,520,80);c.fillStyle='#263238';c.font='800 17px system-ui';c.textAlign='left';c.fillText(`🧴 Dose de cloro: ${G.dose.toFixed(1).replace('.',',')} mg/L`,140,48);c.font='600 13px system-ui';c.fillText('O cloro vai sendo gasto no caminho. A lei pede pelo menos 0,2 mg/L em toda a rede.',140,72);
    c.fillText('Cloro demais deixa gosto e cheiro fortes.',140,90);}};
- G.upd=dt=>{if(G.fase===1&&G.matar){G.mic.forEach(m=>m.v=Math.max(0,m.v-dt*.6));}if(G.cl!=null&&G.cl<4){G.cl+=dt*1.5;if(G.cl>=4){G.cl=4;G.cb&&G.cb();}}};
+ G.upd=dt=>{if(G.fase===1&&G.matar){G.mic.forEach(m=>m.v=Math.max(0,m.v-dt*.45));}if(G.cl!=null&&G.cl<4){G.cl+=dt*1.5;if(G.cl>=4){G.cl=4;G.cb&&G.cb();}}};
  const Q1=[['sim','Pode ter micróbios, mesmo transparente'],['nao','Não, se está transparente está limpa']];
  $('ctrl').innerHTML=`<div style="width:100%"><b>A água saiu do filtro transparente. Ela pode ter micróbios?</b><div style="display:grid;gap:6px;margin-top:6px">${Q1.map(([k,t])=>`<button class="tool" style="text-align:left" data-p="${k}">${t}</button>`).join('')}</div></div>`;
- document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{G.p1=b.dataset.p==='sim'?80:0;G.fase=1;acao(G.p1?'Isso: micróbios são pequenos demais para o filtro de areia segurar todos.':'Olhe no microscópio: tem micróbios. Eles passam pelo filtro.');
-  $('ctrl').innerHTML=`<button class="btn sm" id="bC">🧴 Pôr cloro</button>`;$('bC').onclick=()=>{G.matar=1;$('ctrl').innerHTML='';setTimeout(()=>{G.fase=2;acao('O cloro mata os micróbios. Agora: quanto cloro pôr para que ainda sobre cloro na última casa?');ctrl2();},1800);};});
+ document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{G.p1=b.dataset.p==='sim'?80:0;G.fase=1;$('ctrl').innerHTML='';$('info').textContent='pipeta';
+  acao((G.p1?'Boa previsão. ':'')+'Vamos conferir. Arraste a pipeta até o copo para pegar um pouco de água.');});
+ const naLam=(x,y)=>x>420&&x<520&&y>238&&y<278;
+ const mover=(x,y)=>{G.fx=clamp(x,24,736);G.fy=clamp(y,24,286);G.mexeu=1;if(G.fase!==1)return;const[tx,ty]=tip();
+  if(tx>48&&tx<202&&ty>118&&ty<286){if(G.lam===0&&G.pip!=='agua'){G.pip='agua';acao('Pipeta com água. Leve até a lâmina, embaixo da lente do microscópio.');}}
+  else if(tx>264&&tx<316&&ty>205&&ty<290){if(G.lam===0){if(!G.avisoC){G.avisoC=1;acao('Calma: primeiro leve a água ao microscópio para ver o que tem nela.');}}else if(G.lam===1&&G.pip!=='cloro'){G.pip='cloro';acao('Pipeta com cloro. Pingue na lâmina, em cima da gota de água.');}}
+  else if(naLam(tx,ty)){if(G.pip==='agua'&&G.lam===0){G.pip=null;G.lam=1;$('info').textContent='olhe a lente';acao('Olhe o círculo: bactérias! A água transparente não estava limpa. Agora pegue cloro no frasco com a pipeta.');}
+   else if(G.pip==='cloro'&&G.lam===1){G.pip=null;G.lam=2;G.matar=1;G.drag=false;acao('Veja as bactérias perdendo a cor: o cloro está matando todas.');setTimeout(()=>{G.fase=2;$('info').textContent='dose';acao('O cloro mata os micróbios. Agora: quanto cloro pôr para que ainda sobre cloro na última casa?');ctrl2();},3000);}}};
+ ptr((x,y)=>{if(G.fase===1&&Math.abs(x-G.fx)<55&&y>G.fy-45&&y<G.fy+100){G.drag=true;G.dx=G.fx-x;G.dy=G.fy-y;}},'pointerdown');ptr((x,y)=>{if(G.drag)mover(x+G.dx,y+G.dy);});ptr(()=>G.drag=false,'pointerup');
  const ctrl2=()=>{$('ctrl').innerHTML=`<div style="width:100%;display:grid;gap:6px"><div class="row top"><b>🧴 Dose de cloro</b><span class="pill">${G.dose.toFixed(1).replace('.',',')} mg/L</span></div><input type="range" id="rc" min="0.5" max="3" step="0.5" value="${G.dose}"></div><button class="btn sm" id="bR">▶ Mandar a água</button>`;
   $('rc').oninput=e=>{G.dose=+e.target.value;G.cl=null;$('ctrl').querySelector('.pill').textContent=G.dose.toFixed(1).replace('.',',')+' mg/L';};
   $('bR').onclick=()=>{G.cl=0;G.tent=(G.tent||0)+1;G.cb=()=>{G.cb=null;const ult=Math.max(0,G.dose-1.0);if(ult<.2-1e-9)acao(`Na última casa chegou ${ult.toFixed(1).replace('.',',')} mg/L. Falta cloro no fim da rede.`);else if(G.dose>1.5)acao('Chegou cloro em todas, mas com sobra demais. Tente uma dose menor.');
