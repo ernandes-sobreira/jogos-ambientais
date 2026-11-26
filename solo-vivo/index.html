@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Solo Vivo</title>
+<style>
+:root{--main:#6d4c41;--deep:#3e2723;--soft:#efebe9;--line:#d7ccc8;--ink:#10212b;--mut:#4d6370;--co2:#e53935;--ch4:#ef6c00;--ok:#2e7d32;--bad:#c62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:820px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep);letter-spacing:-.01em}
+h2{font-size:1.2rem;color:var(--deep);margin-bottom:6px;letter-spacing:-.01em}
+h3{font-size:1rem;color:var(--deep);margin:14px 0 6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 12px;font-weight:700;font-size:.86rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.card{border:2px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:var(--deep)}.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.btn.sm{padding:9px 14px;font-size:.92rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas.cena{width:100%;height:auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff;margin-top:10px}
+.top{justify-content:space-between}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--main);color:#fff;border-radius:14px;padding:8px 14px;font-weight:800;font-size:1.05rem}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.tool{border:2px solid var(--line);background:#fff;color:var(--deep);border-radius:12px;padding:9px 12px;font-weight:700;font-family:inherit;font-size:.92rem;cursor:pointer;touch-action:manipulation}
+.tool.on{border-color:var(--main);background:var(--soft)}
+.tool:disabled{opacity:.4}
+.mets{display:grid;gap:8px;margin-top:10px}
+.met{display:grid;grid-template-columns:92px 1fr 52px;gap:8px;align-items:center;font-weight:700;font-size:.9rem}
+.met .bar{position:relative;height:18px;background:#f1f4f5;border-radius:99px;overflow:hidden}
+.met .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;transition:width .15s}
+.met .alvo{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--ink);border-radius:2px}
+.met .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--mut)}
+.met.co2 .fill{background:var(--co2)}.met.ch4 .fill{background:var(--ch4)}
+.saldo .bar{background:linear-gradient(90deg,#e8f5e9 50%,#ffebee 50%)}
+.saldo .zero{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:var(--ink)}
+.saldo .fill{border-radius:0}
+.obj{display:flex;gap:10px;align-items:flex-start;background:#fff8e1;border:2px solid #ffe082;border-radius:14px;padding:10px 12px;margin-top:10px;font-size:.95rem}
+.obj b{color:#8d6e00;white-space:nowrap}
+.acao{display:flex;gap:10px;align-items:center;background:var(--soft);border-left:5px solid var(--main);border-radius:0 12px 12px 0;padding:9px 12px;margin-top:8px;font-weight:600;font-size:.95rem;min-height:64px}@media(max-width:640px){.acao{min-height:5.4em}}
+.acao .dedo{font-size:1.25rem;animation:pulo 1s ease-in-out infinite}
+@keyframes pulo{50%{transform:translateX(4px)}}
+.help{width:34px;height:34px;border-radius:50%;border:2px solid var(--main);background:#fff;color:var(--deep);font-weight:800;font-size:1rem;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(16,33,43,.35);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal .card{max-width:460px;width:100%}
+.intro{text-align:center;padding:26px 18px}
+.intro .ic{font-size:3rem;line-height:1}
+.intro .n{color:var(--mut);font-weight:700;font-size:.85rem;margin-top:8px}
+.passos{display:grid;gap:8px;margin:16px auto;max-width:420px;text-align:left}
+.passos div{display:flex;gap:12px;align-items:center;background:var(--soft);border-radius:12px;padding:10px 14px;font-weight:600}
+.passos b{font-size:1.3rem;min-width:1.6em;text-align:center}
+.res{text-align:center}
+.res .big{font-size:2.6rem;font-weight:800;color:var(--deep);line-height:1.1}
+.res .ok{color:var(--ok);font-weight:800}.res .no{color:var(--bad);font-weight:800}
+.pensa{background:var(--soft);border-radius:14px;padding:12px 14px;margin:14px auto;max-width:520px;text-align:left}
+.pensa b{color:var(--deep)}
+.boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.box{border:2px dashed var(--line);border-radius:14px;padding:10px;min-height:110px;cursor:pointer}
+.box h4{font-size:.92rem;color:var(--deep);margin-bottom:6px}
+.box.alvo{border-color:var(--main);background:var(--soft)}
+.cards{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;min-height:48px}
+.ct{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 11px;font-weight:700;font-size:.9rem;cursor:pointer;box-shadow:0 2px 0 var(--line);font-family:inherit;color:var(--ink);transition:transform .5s}
+.ct.sel{border-color:var(--main);background:var(--soft);transform:translateY(-2px)}
+.ct.certo{border-color:var(--ok);background:#e8f5e9}.ct.errado{border-color:var(--bad);background:#ffebee}
+.ct.movido{animation:voa .8s ease}
+@keyframes voa{0%{transform:translateY(-30px) scale(1.1);opacity:.3}100%{transform:none;opacity:1}}
+.capa{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+.capa canvas{width:100%;height:auto;display:block;border-radius:16px;background:var(--soft)}
+.opts{display:grid;gap:8px;margin-top:6px}
+.opts .l{font-size:.8rem;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.sw{display:flex;gap:6px;flex-wrap:wrap}
+.sw button{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--line);cursor:pointer}
+.sw button.on{box-shadow:0 0 0 3px var(--deep)}
+.sw .tx{width:auto;height:auto;border-radius:10px;padding:6px 10px;font-weight:700;font-size:.85rem;background:#fff;color:var(--deep);font-family:inherit;border:0}
+input.nome{border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit;width:100%}
+input[type=range]{width:100%;accent-color:var(--main)}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:6px}
+.tab th{text-align:left;background:var(--soft);color:var(--deep);padding:7px 6px}
+.tab td{border-bottom:1px solid var(--line);padding:7px 6px;vertical-align:top}
+.guia p,.guia li{font-size:.95rem;margin-bottom:6px}
+.guia ul,.guia ol{padding-left:20px}
+.hab{border-left:5px solid var(--main);background:var(--soft);padding:10px 14px;border-radius:0 12px 12px 0;font-size:.95rem}
+.ref li{font-size:.86rem;color:var(--mut)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+.rel{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center}
+.rel canvas{width:120px;height:120px;border-radius:50%;background:var(--soft)}
+.mini{width:100%;max-width:420px;height:auto;display:block;margin:10px auto 0}
+@media (max-width:620px){.wrap{padding:10px 8px 30px}.card{padding:12px;border-radius:16px}.capa{grid-template-columns:1fr}.met{grid-template-columns:70px 1fr 44px;font-size:.82rem}.chip{font-size:.95rem}.rel{grid-template-columns:80px 1fr}.rel canvas{width:80px;height:80px}}
+@media print{a.hub,header .hud,.ranking,.noprint{display:none!important}.card{border:1px solid #ccc;break-inside:avoid}body{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>Solo Vivo</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF"></span><span class="pill" id="hP"></span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const W=760,H=372;
+function hex(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mix(a,b,t){const A=hex(a),B=hex(b);return`rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`;}
+
+/* ================= AVATAR ================= */
+const PELES=['#f6d3b8','#e3b18b','#c68a5e','#94603e','#5d3b26'];
+const CABS=['#1b1b1b','#4e342e','#8d6e63','#d4a85a','#b5532f'];
+const CAMISAS=['#00838f','#2e7d32','#f9a825','#c62828','#6a1b9a','#37474f'];
+const ESTILOS=[['curto','Curto'],['cacheado','Cacheado'],['longo','Longo'],['coque','Coque'],['raspado','Raspado']];
+const CHAPEUS=[['nenhum','Sem'],['bone','Boné'],['campo','Chapéu']];
+let A={pele:2,cab:0,estilo:'cacheado',camisa:0,chapeu:'campo',nome:''};
+try{const s=JSON.parse(localStorage.getItem('bc_avatar')||'null');if(s)A=Object.assign(A,s);}catch(e){}
+function salvaA(){try{localStorage.setItem('bc_avatar',JSON.stringify(A));}catch(e){}}
+function avatar(c,x,y,s,a,prancheta){
+ c.save();c.translate(x,y);c.scale(s,s);
+ const pele=PELES[a.pele],cab=CABS[a.cab],cam=CAMISAS[a.camisa];
+ if(a.estilo==='longo'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-39,12.5,15,0,0,7);c.fill();c.fillRect(-12.5,-40,25,22);}
+ if(a.estilo==='cacheado'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-40,15,14.5,0,0,7);c.fill();}
+ c.fillStyle=cam;c.beginPath();c.moveTo(-16,0);c.quadraticCurveTo(-17,-21,-6,-25);c.lineTo(6,-25);c.quadraticCurveTo(17,-21,16,0);c.closePath();c.fill();
+ c.fillStyle='rgba(0,0,0,.12)';c.fillRect(-1,-24,2,24);
+ c.fillStyle=pele;c.fillRect(-3.5,-29,7,6);
+ if(prancheta){c.fillStyle='#8d6e63';c.fillRect(4,-19,13,16);c.fillStyle='#fff';c.fillRect(5.5,-17,10,12);c.strokeStyle='#90a4ae';c.lineWidth=.8;for(let i=0;i<4;i++){c.beginPath();c.moveTo(7,-14+i*2.6);c.lineTo(14,-14+i*2.6);c.stroke();}}
+ c.strokeStyle=cam;c.lineWidth=6;c.lineCap='round';c.beginPath();c.moveTo(-11,-20);c.lineTo(-4,-9);c.stroke();
+ c.fillStyle=pele;c.beginPath();c.arc(-3,-8,3,0,7);c.fill();
+ c.fillStyle=pele;c.beginPath();c.ellipse(0,-39,9.5,11,0,0,7);c.fill();
+ c.beginPath();c.arc(-9.4,-38,2.3,0,7);c.arc(9.4,-38,2.3,0,7);c.fill();
+ c.fillStyle=cab;
+ if(a.estilo==='curto'){c.beginPath();c.ellipse(0,-44.5,10,6.8,0,Math.PI,0);c.fill();c.fillRect(-10,-46,2.8,7);c.fillRect(7.2,-46,2.8,7);}
+ if(a.estilo==='cacheado'){for(let i=0;i<13;i++){const an=Math.PI*(.8+i*1.4/12);c.beginPath();c.arc(Math.cos(an)*12,-41+Math.sin(an)*11.5,4.2,0,7);c.fill();}}
+ if(a.estilo==='longo'){c.beginPath();c.ellipse(0,-44.5,10.6,7.2,0,Math.PI,0);c.fill();}
+ if(a.estilo==='coque'){c.beginPath();c.ellipse(0,-44.5,10,6.4,0,Math.PI,0);c.fill();c.beginPath();c.arc(0,-53,5.2,0,7);c.fill();}
+ if(a.estilo==='raspado'){c.globalAlpha=.5;c.beginPath();c.ellipse(0,-44,9.8,6.2,0,Math.PI,0);c.fill();c.globalAlpha=1;}
+ c.fillStyle='#2b2a26';c.beginPath();c.arc(-3.4,-39,1.25,0,7);c.arc(3.4,-39,1.25,0,7);c.fill();
+ c.strokeStyle='#2b2a26';c.lineWidth=1;c.beginPath();c.arc(0,-35.6,2.6,.25,Math.PI-.25);c.stroke();
+ if(a.chapeu==='bone'){c.fillStyle=cam;c.beginPath();c.ellipse(0,-46,10.6,5.8,0,Math.PI,0);c.fill();c.fillRect(-10.6,-47,21.2,2.6);c.beginPath();c.ellipse(8.5,-46.2,8,2.2,0,0,7);c.fill();}
+ if(a.chapeu==='campo'){c.fillStyle='#d7c49e';c.beginPath();c.ellipse(0,-46,16.5,3.6,0,0,7);c.fill();c.beginPath();c.ellipse(0,-48,9.2,6.4,0,Math.PI,0);c.fill();c.fillStyle='#8d6e63';c.fillRect(-9.2,-49,18.4,1.9);}
+ c.restore();
+}
+function pernas(c,x,y,s,a){c.save();c.translate(x,y);c.scale(s,s);c.fillStyle='#455a64';c.fillRect(-11,0,9,20);c.fillRect(2,0,9,20);c.fillStyle='#3e2723';c.fillRect(-12,18,11,4);c.fillRect(1,18,11,4);c.restore();}
+
+/* ================= CENA ================= */
+const CORES={main:'#6d4c41',deep:'#3e2723'};
+function sr(n){const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+function syncMol(){}function partic(){}
+/* ===== SOLO ===== */
+function ceu(c,h){const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,'#bfe6fb');g.addColorStop(1,'#f4fbff');c.fillStyle=g;c.fillRect(0,0,W,h);}
+function sol(c,x,y){c.fillStyle='rgba(255,213,79,.35)';c.beginPath();c.arc(x,y,30,0,7);c.fill();c.fillStyle='#ffd54f';c.beginPath();c.arc(x,y,18,0,7);c.fill();}
+function nuvem(c,x,y,s,cor){c.fillStyle=cor||'#fff';c.beginPath();c.arc(x,y,16*s,0,7);c.arc(x+20*s,y-8*s,20*s,0,7);c.arc(x+42*s,y,16*s,0,7);c.rect(x,y,42*s,16*s);c.fill();}
+function pintas(c,x,y,w,h,seed,n){for(let i=0;i<n;i++){c.fillStyle=i%3?'rgba(0,0,0,.13)':'rgba(255,255,255,.14)';c.beginPath();c.arc(x+sr(i+seed)*w,y+sr(i*1.7+seed)*h,.8+sr(i+seed+3)*1.8,0,7);c.fill();}}
+function tufo(c,x,y,s,cor){c.strokeStyle=cor||'#558b2f';c.lineWidth=2;c.lineCap='round';for(let k=-2;k<=2;k++){c.beginPath();c.moveTo(x+k*2,y);c.quadraticCurveTo(x+k*3.5,y-6*s,x+k*5.5,y-(11-Math.abs(k)*2)*s);c.stroke();}c.lineCap='butt';}
+function palhas(c,x0,y0,x1,y1,seed){c.lineWidth=2.2;c.lineCap='round';const n=Math.hypot(x1-x0,y1-y0)/4;for(let i=0;i<n;i++){const u=sr(i+seed),a=x0+(x1-x0)*u,b=y0+(y1-y0)*u-1+sr(i+seed+5)*3,r=sr(i+seed+9)*.9-.45;c.strokeStyle=i%3?'#d4a72c':'#b8860b';c.beginPath();c.moveTo(a-6*Math.cos(r),b-6*Math.sin(r));c.lineTo(a+6*Math.cos(r),b+6*Math.sin(r));c.stroke();}c.lineCap='butt';}
+function muda(c,x,y,s,cor){c.strokeStyle='#33691e';c.lineWidth=2;c.beginPath();c.moveTo(x,y);c.lineTo(x,y-14*s);c.stroke();c.fillStyle=cor||'#7cb342';c.beginPath();c.ellipse(x-5*s,y-12*s,6*s,3*s,-.5,0,7);c.fill();c.beginPath();c.ellipse(x+5*s,y-15*s,6*s,3*s,.5,0,7);c.fill();}
+function arvore(c,x,y,s){c.fillStyle='#6d4c41';c.fillRect(x-3*s,y-22*s,6*s,22*s);c.fillStyle='#2e7d32';c.beginPath();c.arc(x,y-30*s,14*s,0,7);c.arc(x-10*s,y-22*s,10*s,0,7);c.arc(x+10*s,y-22*s,10*s,0,7);c.fill();c.fillStyle='rgba(255,255,255,.15)';c.beginPath();c.arc(x-4*s,y-35*s,5*s,0,7);c.fill();}
+function gota(c,x,y,cor){c.fillStyle=cor||'#4fc3f7';c.beginPath();c.moveTo(x,y-6);c.quadraticCurveTo(x+4,y,x,y+3);c.quadraticCurveTo(x-4,y,x,y-6);c.fill();}
+function regador(c,x,y){c.save();c.translate(x,y);c.fillStyle='rgba(0,0,0,.1)';c.beginPath();c.ellipse(4,52,30,5,0,0,7);c.fill();
+ c.strokeStyle='#2e7d32';c.lineWidth=7;c.beginPath();c.moveTo(-14,14);c.quadraticCurveTo(-2,-10,14,14);c.stroke();
+ c.strokeStyle='#43a047';c.lineWidth=8;c.lineCap='round';c.beginPath();c.moveTo(-22,38);c.lineTo(-54,22);c.stroke();c.lineCap='butt';
+ c.fillStyle='#2e7d32';c.save();c.translate(-58,22);c.rotate(-.5);c.beginPath();c.ellipse(0,0,5,10,0,0,7);c.fill();c.fillStyle='#a5d6a7';for(let k=-1;k<=1;k++){c.beginPath();c.arc(-1,k*4.5,1.2,0,7);c.fill();}c.restore();
+ const g=c.createLinearGradient(-26,0,24,0);g.addColorStop(0,'#66bb6a');g.addColorStop(1,'#388e3c');c.fillStyle=g;c.beginPath();c.roundRect(-26,12,50,38,9);c.fill();c.fillStyle='rgba(255,255,255,.25)';c.fillRect(-20,18,6,26);c.restore();}
+function minhoca(c,pts,cor){for(let i=pts.length-1;i>=0;i--){const[x,y]=pts[i];const r=8-i*.35;c.fillStyle=i===3||i===4?'#c06c66':(cor||'#e0928a');c.beginPath();c.arc(x,y,Math.max(3,r),0,7);c.fill();}
+ const[hx,hy]=pts[0];c.fillStyle='rgba(255,255,255,.35)';c.beginPath();c.arc(hx-2,hy-3,2.5,0,7);c.fill();}
+function folhaSeca(c,x,y,a,cor){c.save();c.translate(x,y);c.rotate(a);c.fillStyle=cor||'#d17a22';c.beginPath();c.ellipse(0,0,9,4.5,0,0,7);c.fill();c.strokeStyle='rgba(90,40,10,.6)';c.lineWidth=1;c.beginPath();c.moveTo(-8,0);c.lineTo(8,0);c.stroke();c.restore();}
+function chuva(c,t,x0,x1,y0,y1,n){c.strokeStyle='rgba(79,195,247,.75)';c.lineWidth=2;for(let i=0;i<n;i++){const x=x0+sr(i)*(x1-x0),y=y0+((t*320+sr(i+4)*(y1-y0))%(y1-y0));c.beginPath();c.moveTo(x,y);c.lineTo(x-3,y+10);c.stroke();}}
+function drawCena(c,G){if(G.desenha)G.desenha(c);}
+/* ================= TELA / LOOP ================= */
+let G=null,S=null,raf=0,ultimo=0,cx=null;
+function laco(ts){const dt=Math.min(.05,(ts-ultimo)/1000||0);ultimo=ts;if(G){G.t+=dt;if(G.upd)G.upd(dt);syncMol(G,dt);partic(G,dt);if(cx)drawCena(cx,G);if(G.extra)G.extra(cx);}raf=requestAnimationFrame(laco);}
+function parar(){cancelAnimationFrame(raf);raf=0;}
+function rodar(){parar();ultimo=performance.now();raf=requestAnimationFrame(laco);}
+function hud(){$('hud').style.display='flex';$('hF').textContent=`Fase ${S.f+1} de ${FASES.length}`;$('hP').textContent=`${Math.max(0,S.tot+S.fp)} pts`;}
+function telaJogo(chip,info){
+ const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><span class="chip" id="chip">${chip}</span><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="acao"><span class="dedo">👉</span><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});
+}
+function acao(t){const e=$('acao');if(e&&e.innerHTML!==t)e.innerHTML=t;}
+function ajuda(){const F=FASES[S.f],d=document.createElement('div');d.className='modal';
+ d.innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn">Entendi</button></div>`;
+ d.onclick=e=>{if(e.target===d||e.target.tagName==='BUTTON')d.remove();};document.body.appendChild(d);}
+function medidor(id,rot,cls,max,alvo){const a=alvo!=null?`<span class="alvo" style="left:${alvo/max*100}%"></span>`:'';return`<div class="met ${cls}" id="${id}" data-max="${max}"><span>${rot}</span><div class="bar"><span class="fill"></span>${a}</div><span class="v"></span></div>`;}
+function poeMed(id,v){const e=$(id);if(!e)return;const m=+e.dataset.max;e.querySelector('.fill').style.width=clamp(v/m*100,0,100)+'%';e.querySelector('.v').textContent=Math.round(v);}
+function poeSaldo(v,max){const e=$('mSaldo');if(!e)return;const f=e.querySelector('.fill'),p=clamp(Math.abs(v)/max*50,0,50);if(v<0){f.style.left=(50-p)+'%';f.style.width=p+'%';f.style.background='#43a047';}else{f.style.left='50%';f.style.width=p+'%';f.style.background='#e53935';}e.querySelector('.v').textContent=(v>0?'+':'')+Math.round(v);}
+
+/* ================= FASES ================= */
+const FASES=[
+ {nome:'Chuva nas bandejas',ic:'🌧️',obj:'Regar as 3 bandejas de terra e descobrir qual cobertura segura melhor o solo.',passos:[['✋','Arraste o regador'],['🌧️','Regue cada bandeja até encher o pote'],['👀','Compare a água que saiu']],ini:()=>f1()},
+ {nome:'Minhoca engenheira',ic:'🪱',obj:'Cavar galerias até as 3 raízes e comer 6 restos de folhas em 60 segundos.',passos:[['☝️','Arraste o dedo: a minhoca vai atrás'],['🍂','Coma restos de folhas'],['🌱','Chegue às pontas das raízes']],ini:()=>f2()},
+ {nome:'Barreiras no morro',ic:'⛰️',obj:'Colocar 3 barreiras de capim no morro e deixar no máximo 12 baldes de terra chegarem ao rio.',passos:[['🌿','Toque num trecho do morro'],['🌧️','Com 3 barreiras, a chuva cai sozinha'],['🔁','Toque de novo para tirar e mudar']],ini:()=>f3()},
+ {nome:'Composteira',ic:'🪣',obj:'Prever o que acontece só com restos de comida e cuidar da composteira por 5 dias.',passos:[['🔮','Faça a previsão'],['🍌','Restos úmidos e plástico: cada um no seu lugar'],['🍂','Um punhado seco para cada resto úmido e revire']],ini:()=>f4()},
+ {nome:'Planeje o sítio',ic:'🗺️',obj:'Escolher o uso de cada área do sítio: produzir pelo menos 12, erosão até 8 e mata nas áreas protegidas.',passos:[['👆','Toque numa área para trocar o uso'],['🪙','Cada uso gasta fichas'],['✅','O jogo confere sozinho']],ini:()=>f5()}
+];
+function intro(){parar();G=null;cx=null;hud();const F=FASES[S.f];$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><div class="n">FASE ${S.f+1} DE ${FASES.length}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left;max-width:420px;margin:12px auto 0"><b>🎯 Objetivo</b><span>${F.obj}</span></div>
+ <div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn" id="bGo">Começar</button></div>`;
+ $('bGo').onclick=()=>{S.fp=0;F.ini();};}
+function fimFase(pts,ok,oque,pergunta,extraHtml){
+ parar();pts=Math.max(0,Math.round(pts));S.fp=0;S.tot+=pts;S.res[S.f]={pts,ok,oque};hud();
+ $('tela').innerHTML=`<div class="card res"><div class="small">${FASES[S.f].ic} ${FASES[S.f].nome}</div><div class="big">+${pts}</div>
+ <p class="${ok?'ok':'no'}">${ok?'Meta cumprida':'Meta não cumprida'}</p>${extraHtml||''}
+ <div class="pensa"><b>O que aconteceu:</b> ${oque}</div><div class="pensa"><b>Pergunta para a turma:</b> ${pergunta}</div>
+ <div class="row" style="justify-content:center"><button class="btn" id="bNx">${S.f<FASES.length-1?'Próxima fase':'Ver relatório'}</button></div></div>`;
+ $('bNx').onclick=()=>{S.f++;if(S.f<FASES.length)intro();else relatorio();};
+}
+function ptr(fn,ev){const cv=$('cv');cv.style.touchAction='none';cv.addEventListener(ev||'pointermove',e=>{const r=cv.getBoundingClientRect();fn((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height,e);});}
+function painel(c,x,y,w,h){c.fillStyle='rgba(255,255,255,.95)';c.beginPath();c.roundRect(x,y,w,h,10);c.fill();}
+function pulso(c,x,y,r){c.strokeStyle=`rgba(239,108,0,${.4+.35*Math.sin(G.t*5)})`;c.lineWidth=3;c.beginPath();c.arc(x,y,r,0,7);c.stroke();}
+function opcoes(perg,ops,cb){$('ctrl').innerHTML=`<div style="width:100%"><b>${perg}</b><div style="display:grid;gap:6px;margin-top:6px">${ops.map((t,i)=>`<button class="tool" style="text-align:left" data-o="${i}">${t}</button>`).join('')}</div></div>`;
+ document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-o]').forEach(x=>x.classList.toggle('on',x===b));cb(+b.dataset.o,b);});}
+
+/* ---------- FASE 1 ---------- */
+const BAN=[{n:'Solo nu',turb:85,vol:.95},{n:'Palhada',turb:38,vol:.62},{n:'Grama',turb:10,vol:.42}];
+function f1(){G={t:0,ag:[0,0,0],fx:690,fy:46,drag:false,pour:-1,gotas:[],resp:0,tent:0};telaJogo('🌧️ Chuva nas bandejas','0 de 3');
+ const BX=[130,380,630],sup=(i,u)=>[BX[i]-95+170*u,150+28*u],tip=()=>[G.fx-60,G.fy+26];
+ const jarra=(c,i)=>{const x=BX[i]+75,y0=232,h=86,a=G.ag[i]*BAN[i].vol,lv=a*(h-8);
+  c.fillStyle='rgba(0,0,0,.08)';c.beginPath();c.ellipse(x,y0+h+2,30,4,0,0,7);c.fill();
+  c.save();c.beginPath();c.roundRect(x-26,y0,52,h,[4,4,10,10]);c.clip();c.fillStyle='rgba(255,255,255,.7)';c.fillRect(x-26,y0,52,h);
+  if(lv>0){c.fillStyle=mix('#a8dcf2','#7b5230',G.ag[i]>0?BAN[i].turb/90:0);c.fillRect(x-26,y0+h-lv-4,52,lv+4);c.fillStyle='rgba(91,58,30,.55)';c.fillRect(x-26,y0+h-4-a*BAN[i].turb/90*14,52,a*BAN[i].turb/90*14);}
+  c.restore();c.strokeStyle='#90a4ae';c.lineWidth=2;c.beginPath();c.roundRect(x-26,y0,52,h,[4,4,10,10]);c.stroke();c.fillStyle='rgba(255,255,255,.5)';c.fillRect(x-20,y0+8,5,h-20);
+  for(let k=1;k<4;k++){c.beginPath();c.moveTo(x+16,y0+k*20);c.lineTo(x+26,y0+k*20);c.stroke();}};
+ const bandeja=(c,i)=>{const x=BX[i],[ax,ay]=sup(i,0),[bx,by]=sup(i,1);
+  c.fillStyle='#8d6e63';c.fillRect(x-86,190,8,130);c.fillRect(x+44,206,8,114);
+  c.beginPath();c.moveTo(ax,ay);c.lineTo(bx,by);c.lineTo(bx,by+30);c.lineTo(ax,ay+30);c.closePath();c.save();c.clip();
+  const g=c.createLinearGradient(0,ay,0,by+30);g.addColorStop(0,'#795548');g.addColorStop(1,'#5d4037');c.fillStyle=g;c.fillRect(ax,ay-5,180,70);pintas(c,ax,ay,170,58,i*13,70);c.restore();
+  c.strokeStyle='rgba(144,164,174,.9)';c.lineWidth=2.5;c.beginPath();c.moveTo(ax,ay-12);c.lineTo(ax,ay+30);c.lineTo(bx,by+30);c.lineTo(bx,by-12);c.stroke();
+  c.fillStyle='#90a4ae';c.beginPath();c.moveTo(bx,by+18);c.lineTo(bx+18,by+24);c.lineTo(bx+18,by+30);c.lineTo(bx,by+28);c.fill();
+  if(i===0){c.strokeStyle='rgba(62,39,35,.6)';c.lineWidth=1;for(let k=0;k<6;k++){const u=.1+k*.15,[px,py]=sup(i,u);c.beginPath();c.moveTo(px,py+2);c.lineTo(px+6,py+9);c.lineTo(px+3,py+14);c.stroke();}}
+  if(i===1)palhas(c,ax+4,ay-1,bx-4,by-1,7);
+  if(i===2){c.save();c.strokeStyle='#33691e';c.lineWidth=1.3;for(let k=0;k<26;k++){const[px,py]=sup(i,.03+k*.037);c.beginPath();c.moveTo(px,py+2);c.lineTo(px+1,py+10+sr(k)*6);c.stroke();}c.restore();for(let k=0;k<13;k++){const[px,py]=sup(i,.04+k*.075);tufo(c,px,py+1,1,k%2?'#689f38':'#7cb342');}}
+  if(G.pour===i&&G.ag[i]<1||G.flu&&G.flu[i]>0){const s=mix('#a8dcf2','#7b5230',BAN[i].turb/90);c.strokeStyle=s;c.lineWidth=3;c.beginPath();c.moveTo(bx+18,by+28);c.quadraticCurveTo(bx+22,by+40,bx+20,232+86-G.ag[i]*BAN[i].vol*78);c.stroke();}
+  if(i===0&&G.pour===0){c.fillStyle='#6d4c41';for(let k=0;k<6;k++){const u=sr(k+Math.floor(G.t*8)),[px,py]=sup(0,u);c.beginPath();c.arc(px+rr(-4,4),py-4-sr(k+3)*10,1.8,0,7);c.fill();}}
+  c.fillStyle='#3e2723';c.font='800 15px system-ui';c.textAlign='center';c.fillText(BAN[i].n,x+20,350);
+  if(G.ag[i]>=1){c.fillStyle='#2e7d32';c.font='800 14px system-ui';c.fillText('✓ cheio',x+75,226);}};
+ G.desenha=c=>{ceu(c,H);c.fillStyle='#d7ccc8';c.fillRect(0,318,W,H-318);c.fillStyle='#a1887f';c.fillRect(0,318,W,6);
+  BAN.forEach((b,i)=>{bandeja(c,i);jarra(c,i);if(G.ag[i]<1&&G.resp===0){const[px,py]=sup(i,.5);pulso(c,px,py-18,18);}});
+  G.gotas.forEach(d=>gota(c,d.x,d.y));regador(c,G.fx,G.fy);
+  if(!G.mexeu){c.fillStyle='#e65100';c.font='800 13px system-ui';c.textAlign='center';c.fillText('arraste o regador ☝️',G.fx-10,G.fy+76);}};
+ G.upd=dt=>{const[tx,ty]=tip();G.pour=-1;if(G.drag)BX.forEach((x,i)=>{if(tx>x-95&&tx<x+75)G.pour=i;});
+  if(G.pour>=0){const i=G.pour;G.ag[i]=Math.min(1,G.ag[i]+dt*.34);if(Math.random()<dt*40)G.gotas.push({x:tx+rr(-5,5),y:ty,i});}
+  G.gotas.forEach(d=>{d.y+=dt*300;});G.gotas=G.gotas.filter(d=>d.y<150+28*((d.x-(BX[d.i]-95))/170));
+  const n=G.ag.filter(a=>a>=1).length;if($('info'))$('info').textContent=`${n} de 3`;
+  if(n===3&&G.resp===0){G.resp=1;G.drag=false;acao('Os 3 potes encheram. Compare a cor e a quantidade de água em cada pote.');
+   opcoes('Qual cobertura segurou melhor a terra no lugar?',['Solo nu','Palhada','Grama'],(o)=>{G.tent++;
+    if(o===2){acao('Isso: o pote da grama saiu quase limpo. A terra ficou na bandeja.');setTimeout(p2,900);}
+    else if(o===1)acao('A palha ajudou, mas compare: a água do pote da grama saiu mais limpa.');
+    else acao('Olhe o pote do solo nu: a água saiu marrom, cheia de terra.');});}};
+ const p2=()=>{G.resp=2;let t2=0;opcoes('E por que o pote da grama encheu menos?',['A água da grama evaporou','Mais água entrou no solo','A grama bebeu tudo na hora'],(o)=>{t2++;
+  if(o===1){const pts=100+(G.tent===1?40:15)+(t2===1?40:15);acao('Isso: raízes e cobertura deixam a água entrar no solo em vez de escorrer.');$('ctrl').innerHTML='';
+   setTimeout(()=>fimFase(pts,true,'Sem cobertura, a gota de chuva bate direto na terra, solta os grãos e a água que escorre leva o solo embora. Palha e plantas amortecem a chuva, seguram a terra e deixam mais água entrar no solo. Por isso o pote da grama recebeu menos água e mais limpa.','Onde, perto da escola, você já viu terra sendo levada pela chuva?'),1300);}
+  else if(o===0)acao('A chuva caiu igual nas três. Pense para onde foi a água que não chegou ao pote.');else acao('As plantas não bebem a chuva toda de uma vez. Para onde mais a água pode ir?');});};
+ const mover=(x,y)=>{G.fx=clamp(x,80,740);G.fy=clamp(y,28,108);G.mexeu=1;};
+ ptr((x,y)=>{if(G.resp===0&&Math.abs(x-G.fx+10)<75&&y>G.fy-30&&y<G.fy+65){G.drag=true;G.dx=G.fx-x;G.dy=G.fy-y;}},'pointerdown');
+ ptr((x,y)=>{if(G.drag)mover(x+G.dx,y+G.dy);});ptr(()=>G.drag=false,'pointerup');
+ acao('Arraste o regador por cima de cada bandeja. Regue até o pote de baixo encher.');rodar();}
+
+/* ---------- FASE 2 ---------- */
+function f2(){const SUP=74,RZ=[[160,250],[400,300],[628,226]],PL=[160,400,628];
+ G={t:0,tempo:60,seg:[],trail:[[380,SUP],[380,96]],raiz:[0,0,0],fol:[],hum:[],com:0,fim:0,chuva:-1,drag:false,tx:380,ty:96};telaJogo('🪱 Minhoca engenheira','60 s');
+ for(let i=0;i<12;i++)G.seg.push([380,96-i*0]);
+ for(let i=0;i<11;i++){let x,y;do{x=rr(40,720);y=rr(112,300);}while(Math.hypot(x-380,y-96)<60);G.fol.push({x,y,a:rr(0,6),ok:1,c:['#d17a22','#b5651d','#c9893a'][i%3]});}
+ const raizes=c=>{PL.forEach((x,i)=>{const[tx,ty]=RZ[i];c.strokeStyle='#f3e5ab';c.lineWidth=3;c.lineCap='round';c.beginPath();c.moveTo(x,SUP);c.bezierCurveTo(x+6,SUP+50,tx-14,ty-60,tx,ty);c.stroke();
+  c.lineWidth=1.6;for(let k=1;k<5;k++){const u=k/5,px=x+(tx-x)*u+Math.sin(k*2)*6,py=SUP+(ty-SUP)*u;c.beginPath();c.moveTo(px,py);c.lineTo(px+(k%2?18:-18),py+16);c.stroke();}c.lineCap='butt';
+  if(G.raiz[i]){c.fillStyle='#2e7d32';c.beginPath();c.arc(tx,ty,11,0,7);c.fill();c.fillStyle='#fff';c.font='800 12px system-ui';c.textAlign='center';c.fillText('✓',tx,ty+4);}else pulso(c,tx,ty,16);
+  c.strokeStyle='#558b2f';c.lineWidth=3;c.beginPath();c.moveTo(x,SUP);c.lineTo(x,SUP-34);c.stroke();[[-1,-14],[1,-22],[-1,-30]].forEach(([s,dy])=>{c.fillStyle='#7cb342';c.beginPath();c.ellipse(x+s*10,SUP+dy,11,5,s*.5,0,7);c.fill();});});};
+ G.desenha=c=>{ceu(c,SUP);sol(c,690,30);if(G.chuva>=0){nuvem(c,120,30,1.2,'#cfd8dc');nuvem(c,420,24,1.4,'#cfd8dc');chuva(c,G.t,0,W,40,SUP,50);}
+  const g=c.createLinearGradient(0,SUP,0,H);g.addColorStop(0,'#5d4037');g.addColorStop(.35,'#6d4c41');g.addColorStop(1,'#a1887f');c.fillStyle=g;c.fillRect(0,SUP,W,H-SUP);pintas(c,0,SUP,W,H-SUP,3,320);
+  c.fillStyle='#7cb342';c.fillRect(0,SUP-6,W,8);for(let x=6;x<W;x+=14)tufo(c,x,SUP-2,.8,x%28?'#689f38':'#8bc34a');
+  [[90,330,10],[300,200,7],[520,300,12],[700,330,8],[250,345,6]].forEach(([x,y,r])=>{c.fillStyle='#9e9e9e';c.beginPath();c.ellipse(x,y,r*1.4,r,0,0,7);c.fill();c.fillStyle='rgba(255,255,255,.2)';c.beginPath();c.ellipse(x-r*.4,y-r*.4,r*.5,r*.3,0,0,7);c.fill();});
+  raizes(c);
+  c.lineJoin='round';c.lineCap='round';c.strokeStyle='rgba(30,18,12,.55)';c.lineWidth=17;c.beginPath();G.trail.forEach(([x,y],k)=>k?c.lineTo(x,y):c.moveTo(x,y));c.stroke();
+  c.strokeStyle='rgba(62,39,35,.75)';c.lineWidth=11;c.stroke();
+  if(G.chuva>=0){const n=Math.floor(clamp(G.chuva,0,1)*G.trail.length);c.strokeStyle='rgba(79,195,247,.9)';c.lineWidth=7;c.beginPath();G.trail.slice(0,n).forEach(([x,y],k)=>k?c.lineTo(x,y):c.moveTo(x,y));c.stroke();}
+  c.lineJoin='miter';c.lineCap='butt';
+  G.hum.forEach(([x,y])=>{c.fillStyle='#21140e';c.beginPath();c.arc(x,y,2.6,0,7);c.fill();});
+  G.fol.forEach(f=>{if(f.ok)folhaSeca(c,f.x,f.y,f.a,f.c);});
+  minhoca(c,G.seg);
+  if(G.drag&&G.chuva<0){c.strokeStyle='rgba(255,255,255,.8)';c.lineWidth=2;c.setLineDash([4,4]);c.beginPath();c.arc(G.tx,G.ty,12,0,7);c.stroke();c.setLineDash([]);}
+  if(!G.mexeu){c.fillStyle='#fff';c.font='800 13px system-ui';c.textAlign='center';c.fillText('arraste o dedo na terra ☝️',380,150);}};
+ G.upd=dt=>{if(G.fim)return;
+  if(G.chuva>=0){G.chuva+=dt*.35;if(G.chuva>=1.35){G.fim=1;const pts=120+Math.min(10,G.com)*10+Math.floor(G.tempo);
+   fimFase(pts,true,'As galerias das minhocas são caminhos por onde a água e o ar entram no solo e chegam às raízes. Ao comer restos de folhas, a minhoca devolve ao solo um material escuro e rico, o húmus. Um solo cheio de vida é um solo que funciona.','O que acontece com a água da chuva num solo muito pisado, sem galerias?');}return;}
+  G.tempo-=dt;const[hx,hy]=G.seg[0];const d=Math.hypot(G.tx-hx,G.ty-hy);
+  if(d>3){const v=Math.min(d,150*dt);G.seg[0]=[hx+(G.tx-hx)/d*v,clamp(hy+(G.ty-hy)/d*v,SUP+12,362)];}
+  for(let k=1;k<G.seg.length;k++){const[a,b]=G.seg[k-1],[x,y]=G.seg[k],e=Math.hypot(a-x,b-y);if(e>7)G.seg[k]=[a+(x-a)/e*7,b+(y-b)/e*7];}
+  const[nx,ny]=G.seg[0],[lx,ly]=G.trail[G.trail.length-1];if(Math.hypot(nx-lx,ny-ly)>6)G.trail.push([nx,ny]);
+  G.fol.forEach(f=>{if(f.ok&&Math.hypot(f.x-nx,f.y-ny)<20){f.ok=0;G.com++;for(let k=0;k<3;k++)G.hum.push([f.x+rr(-8,8),f.y+rr(-6,6)]);acao(G.com<6?`🍂 ${G.com} de 6 restos de folhas. Na saída, a minhoca deixa húmus, os pontinhos escuros.`:'6 restos de folhas! Agora chegue a todas as pontas de raízes.');}});
+  RZ.forEach(([x,y],i)=>{if(!G.raiz[i]&&Math.hypot(x-nx,y-ny)<24){G.raiz[i]=1;acao(`🌱 Galeria chegou à raiz ${G.raiz.filter(r=>r).length} de 3.`);}});
+  const rz=G.raiz.filter(r=>r).length;$('info').textContent=`${Math.ceil(G.tempo)} s · 🍂 ${G.com} · 🌱 ${rz}/3`;
+  if(rz===3&&G.com>=6){G.chuva=0;G.drag=false;acao('Choveu! Veja a água descendo pelas galerias até as raízes.');}
+  else if(G.tempo<=0){G.fim=1;fimFase(30+G.com*8+rz*20,false,'As galerias das minhocas são caminhos por onde a água e o ar entram no solo e chegam às raízes. Ao comer restos de folhas, a minhoca devolve ao solo um material escuro e rico, o húmus.','O que acontece com a água da chuva num solo muito pisado, sem galerias?');}};
+ const alvo=(x,y)=>{G.tx=clamp(x,10,750);G.ty=clamp(y-50,SUP+12,330);G.mexeu=1;};
+ ptr((x,y)=>{if(G.chuva<0){G.drag=true;alvo(x,y);}},'pointerdown');ptr((x,y)=>{if(G.drag)alvo(x,y);});ptr(()=>G.drag=false,'pointerup');
+ acao('Arraste o dedo pela terra: a minhoca vai até o círculo acima do dedo. Coma 6 restos de folhas 🍂 e chegue às 3 pontas de raízes que piscam.');rodar();}
+
+/* ---------- FASE 3 ---------- */
+function f3(){G={t:0,bar:[0,0,0,0,0,0],run:-1,tent:0,perda:0,fim:0};telaJogo('⛰️ Barreiras no morro','🌿 0 de 3');
+ const P=u=>[60+580*u,110+190*u],perda=b=>{let L=0,s=0;for(let j=0;j<6;j++){L++;s+=L*L;if(b[j])L=0;}return s;},MAX=perda([0,0,0,0,0,0]),META=12;
+ G.desenha=c=>{ceu(c,H);sol(c,700,40);if(G.run>=0&&G.run<1){nuvem(c,140,40,1.3,'#cfd8dc');nuvem(c,400,30,1.5,'#cfd8dc');chuva(c,G.t,40,700,60,300,70);}
+  c.fillStyle='#4fc3f7';c.beginPath();c.moveTo(620,306);c.quadraticCurveTo(690,298,760,304);c.lineTo(760,372);c.lineTo(600,372);c.fill();
+  const sed=G.run>=0?G.perda*Math.min(1,G.run)/MAX:0;if(sed>0){c.fillStyle='#8d6e4e';c.beginPath();c.moveTo(630,372);c.quadraticCurveTo(690,372-sed*70,760,372-sed*40);c.lineTo(760,372);c.fill();}
+  c.fillStyle='#455a64';c.font='800 12px system-ui';c.textAlign='center';c.fillText('🐟 rio',700,345);
+  const g=c.createLinearGradient(0,100,0,H);g.addColorStop(0,'#8d6e63');g.addColorStop(1,'#6d4c41');c.fillStyle=g;c.beginPath();c.moveTo(0,110);c.lineTo(60,110);c.lineTo(640,300);c.quadraticCurveTo(660,308,640,372);c.lineTo(0,372);c.fill();pintas(c,0,130,600,240,5,150);
+  c.fillStyle='#7cb342';c.beginPath();c.moveTo(0,104);c.lineTo(60,104);c.lineTo(60,112);c.lineTo(0,112);c.fill();arvore(c,30,108,.9);
+  for(let j=0;j<6;j++){const[ax,ay]=P(j/6),[bx,by]=P((j+1)/6);
+   for(let k=1;k<6;k++){const u=(j+k/6)/6,[px,py]=P(u);muda(c,px,py,.8,'#9ccc65');}
+   if(G.bar[j]){const[mx,my]=P((j+.93)/6);c.fillStyle='#5d4037';c.beginPath();c.moveTo(mx-26,my-8);c.lineTo(mx+14,my+5);c.lineTo(mx+14,my-10);c.quadraticCurveTo(mx-6,my-18,mx-26,my-8);c.fill();for(let k=-4;k<=3;k++)tufo(c,mx+k*5,my-9+k*1.6,1.7,k%2?'#2e7d32':'#43a047');}
+   else if(G.run<0&&G.bar.filter(b=>b).length<3){const[mx,my]=P((j+.5)/6);c.strokeStyle='rgba(239,108,0,.45)';c.setLineDash([5,5]);c.lineWidth=2;c.beginPath();c.arc(mx,my-12,22,0,7);c.stroke();c.setLineDash([]);}
+  }
+  if(G.run>=0){let L=0;const fr=Math.min(1,G.run)*6;for(let j=0;j<6&&j<fr;j++){L++;const[ax,ay]=P(j/6),[bx,by]=P(Math.min(fr,j+1)/6);const w=2+L*2.2;c.strokeStyle=mix('#7fc6e8','#7b5230',Math.min(1,L/4));c.lineWidth=w;c.lineCap='round';c.beginPath();c.moveTo(ax,ay-w/2);c.lineTo(bx,by-w/2);c.stroke();c.lineCap='butt';if(G.bar[j])L=0;}}
+  painel(c,14,14,330,64);c.fillStyle='#3e2723';c.font='800 14px system-ui';c.textAlign='left';const pv=G.run>=0?Math.round(G.perda*Math.min(1,G.run)):0;c.fillText(`🟫 Baldes de terra no rio: ${pv}`,26,36);
+  c.fillStyle='#eee';c.beginPath();c.roundRect(26,46,300,14,7);c.fill();c.fillStyle=pv<=META?'#2e7d32':'#c62828';c.beginPath();c.roundRect(26,46,Math.max(4,300*pv/MAX),14,7);c.fill();c.fillStyle='#3e2723';c.fillRect(26+300*META/MAX,42,3,22);c.font='700 11px system-ui';c.fillText('meta',20+300*META/MAX,72);};
+ G.upd=dt=>{if(G.run>=0&&G.run<1.2){G.run+=dt*.4;if(G.run>=1.2&&!G.fim){if(G.perda<=META){G.fim=1;acao(`Só ${G.perda} baldes chegaram ao rio. As barreiras quebraram a enxurrada.`);setTimeout(()=>fimFase(Math.max(60,170-25*(G.tent-1)),true,'Num morro sem barreiras, a água que escorre desce ganhando força e leva cada vez mais terra. Barreiras em nível, como cordões de capim e terraços, quebram a descida em trechos curtos e a terra fica no lugar. Por isso espalhar as barreiras pelo morro funciona melhor do que juntar todas num canto. A terra que sai do morro vai parar no rio e deixa o rio mais raso.','Por que a terra que sai da lavoura pode prejudicar os peixes do rio?'),1500);}
+   else acao(`${G.perda} baldes de terra foram para o rio. A meta é até ${META}. Veja onde a enxurrada ficou mais grossa, toque numa barreira para tirar e coloque em outro trecho.`);}}};
+ G.tap=(x,y)=>{if(G.fim||(G.run>=0&&G.run<1.2))return;for(let j=0;j<6;j++){const[ax,ay]=P(j/6),[bx,by]=P((j+1)/6);const u=clamp((x-ax)/(bx-ax),0,1),sy=ay+(by-ay)*u;if(x>=ax-6&&x<=bx+6&&Math.abs(y-sy)<70){
+   const n=G.bar.filter(b=>b).length;if(G.bar[j])G.bar[j]=0;else if(n<3)G.bar[j]=1;else{acao('Você já usou as 3 barreiras. Toque numa delas para tirar.');return;}
+   G.run=-1;const m=G.bar.filter(b=>b).length;$('info').textContent=`🌿 ${m} de 3`;
+   if(m===3){G.tent++;G.perda=perda(G.bar);G.run=0;acao('Três barreiras no lugar. Lá vem a chuva!');}else acao(`Barreira ${m} de 3. Escolha outro trecho do morro.`);return;}}};
+ acao('Toque em 3 trechos do morro para plantar barreiras de capim. Quando a terceira estiver no lugar, vai chover.');rodar();}
+
+/* ---------- FASE 4 ---------- */
+const DIAS=[['ban','cafe'],['leg','plas','fru'],['cafe','leg','ban'],['fru','lata'],['ban','leg','cafe']];
+const ITEM={ban:['🍌','casca de banana','v'],cafe:['☕','borra de café','v'],leg:['🥕','cascas de legumes','v'],fru:['🍎','restos de frutas','v'],plas:['🧴','frasco de plástico','x'],lata:['🥫','lata','x']};
+function f4(){G={t:0,fase:0,dia:0,mesa:[],v:0,s:0,ar:2,bons:0,carry:null,mov:0,erros:0,mos:[],hist:[],fim:0};telaJogo('🪣 Composteira','previsão');
+ const CB=[150,170,240,170],LX=[470,200,120,150],SACO=[640,190,96,120],slot=k=>[60+k*92,62];
+ const cheio=()=>Math.min(1,(G.hist.length*2+G.v+G.s)/22);
+ G.desenha=c=>{c.fillStyle='#f1f8e9';c.fillRect(0,0,W,H);c.fillStyle='#c5e1a5';c.fillRect(0,330,W,42);
+  c.fillStyle='#bcaaa4';c.beginPath();c.roundRect(20,24,330,80,10);c.fill();c.fillStyle='#8d6e63';c.fillRect(20,96,330,8);c.fillStyle='#4e342e';c.font='800 12px system-ui';c.textAlign='left';c.fillText('🧺 restos da cozinha do dia',30,40);
+  const[x,y,w,h]=CB;c.fillStyle='rgba(0,0,0,.1)';c.beginPath();c.ellipse(x+w/2,y+h+4,w*.55,7,0,0,7);c.fill();
+  c.fillStyle='#efebe9';c.fillRect(x,y,w,h);const lv=cheio()*(h-24);c.save();c.beginPath();c.rect(x+6,y+h-6-lv,w-12,lv);c.clip();c.fillStyle=G.fase>=2&&G.fim?'#3e2723':'#5d4037';c.fillRect(x,y,w,h);
+  G.hist.concat([[G.v,G.s]]).forEach(([v,s],k)=>{const yy=y+h-6-k*(h-24)/11-6;c.fillStyle='rgba(139,195,74,.7)';for(let q=0;q<v*5;q++){c.beginPath();c.arc(x+12+sr(q+k*7)*(w-24),yy-sr(q+k)*12,3,0,7);c.fill();}c.fillStyle='rgba(212,167,44,.8)';for(let q=0;q<s*5;q++){c.fillRect(x+12+sr(q*3+k)*(w-24),yy-sr(q+k*3)*12,7,2);}});c.restore();
+  c.fillStyle='rgba(161,136,127,.45)';for(let k=0;k<5;k++)c.fillRect(x,y+k*(h/5),w,h/5-8);
+  c.strokeStyle='#6d4c41';c.lineWidth=3;c.strokeRect(x,y,w,h);c.fillStyle='#8d6e63';c.fillRect(x-6,y-6,w+12,8);
+  c.fillStyle='#3e2723';c.font='800 14px system-ui';c.textAlign='center';c.fillText('🪣 composteira',x+w/2,y+h+24);
+  G.mos.forEach(m=>{c.fillStyle='#263238';c.beginPath();c.arc(m.x+Math.sin(G.t*9+m.p)*8,m.y+Math.cos(G.t*7+m.p)*5,2.2,0,7);c.fill();});
+  const[lx,ly,lw,lh]=LX;c.fillStyle='#1565c0';c.beginPath();c.roundRect(lx,ly,lw,lh,[6,6,12,12]);c.fill();c.fillStyle='#0d47a1';c.fillRect(lx-6,ly-10,lw+12,14);c.fillStyle='#fff';c.font='800 26px system-ui';c.fillText('♻️',lx+lw/2,ly+70);c.font='800 12px system-ui';c.fillText('reciclagem',lx+lw/2,ly+100);
+  const[sx,sy,sw,sh]=SACO;c.fillStyle='#d7b98e';c.beginPath();c.moveTo(sx+10,sy);c.lineTo(sx+sw-10,sy);c.quadraticCurveTo(sx+sw+6,sy+sh,sx+sw-6,sy+sh);c.lineTo(sx+6,sy+sh);c.quadraticCurveTo(sx-6,sy+sh,sx+10,sy);c.fill();palhas(c,sx+8,sy+4,sx+sw-8,sy+4,3);
+  c.fillStyle='#5d4037';c.font='800 22px system-ui';c.fillText('🍂',sx+sw/2,sy+56);c.font='800 12px system-ui';c.fillText('folhas secas',sx+sw/2,sy+80);c.fillText('e serragem',sx+sw/2,sy+96);
+  if(G.fase===1&&!G.carry){const ok=G.mesa.length===0;if(G.mesa.length)G.mesa.forEach((k,i)=>{const[px,py]=slot(i);pulso(c,px,py,28);});else if(G.s<G.v)pulso(c,sx+sw/2,sy+56,30);}
+  painel(c,380,16,366,92);c.fillStyle='#3e2723';c.textAlign='left';c.font='800 14px system-ui';c.fillText(G.fase===0?'📅 Antes de começar':`📅 Dia ${G.dia+1} de 5   ✅ dias bons: ${G.bons}`,394,38);
+  c.font='700 12px system-ui';c.fillText(`Úmidos hoje: ${'🟢'.repeat(G.v)||'0'}`,394,60);c.fillText(`Secos hoje: ${'🟡'.repeat(G.s)||'0'}`,394,80);
+  c.fillText(`Ar: ${G.ar>=2?'🌬️ bom':G.ar===1?'🌬️ acabando':'⚠️ sem ar'}`,394,100);
+  const b=G.v-G.s,est=b>=2?['encharcada','#c62828']:b<=-2?['seca demais','#ef6c00']:['no ponto','#2e7d32'];c.fillStyle=est[1];c.font='800 13px system-ui';c.fillText('● '+est[0],600,60);
+  G.mesa.forEach((k,i)=>{if(G.carry&&G.carry.i===i)return;const[px,py]=slot(i);c.fillStyle='#fff';c.beginPath();c.roundRect(px-34,py-26,68,52,10);c.fill();c.font='28px system-ui';c.textAlign='center';c.fillText(ITEM[k][0],px,py+10);});
+  if(G.carry){const{x,y,k}=G.carry;c.font='34px system-ui';c.textAlign='center';c.fillText(k==='seco'?'🍂':ITEM[k][0],x,y-48);c.fillStyle='rgba(0,0,0,.6)';c.font='700 12px system-ui';c.fillText(k==='seco'?'punhado seco':ITEM[k][1],x,y-18);}
+  if(G.garfo){c.save();c.translate(G.gx,G.gy-50);c.rotate(.3);c.fillStyle='#8d6e63';c.fillRect(-3,-46,6,40);c.fillStyle='#90a4ae';c.fillRect(-12,-8,24,5);for(let k=-1.5;k<=1.5;k++)c.fillRect(k*7-1.5,-4,3,20);c.restore();}};
+ G.upd=dt=>{G.mos.forEach(m=>m.y-=0);};
+ const novoDia=()=>{G.mesa=DIAS[G.dia].slice();G.v=0;G.s=0;G.mov=0;G.mexeu=0;render();acao(`Dia ${G.dia+1}: chegaram restos da cozinha. Leve cada um para o lugar certo.`);};
+ const render=()=>{if(G.fase!==1)return;$('ctrl').innerHTML=`<button class="btn sm ghost" id="bGa">🍴 Revirar a pilha</button><button class="btn sm" id="bDia">☀️ Terminar o dia</button>`;
+  $('bGa').onclick=()=>{G.garfo=1;G.gx=CB[0]+CB[2]/2;G.gy=CB[1]+70;G.mov=0;acao('Arraste o garfo de um lado para o outro dentro da composteira.');};
+  $('bDia').onclick=fimDia;};
+ const fimDia=()=>{if(G.mesa.length){acao('Ainda tem resto em cima da mesa. Leve tudo antes de terminar o dia.');return;}
+  const b=G.v-G.s;let ok=true,msg=[];if(Math.abs(b)>=2){ok=false;msg.push(b>0?'ficou úmida demais: faltou material seco':'ficou seca demais: muito material seco');}
+  G.ar--;if(G.ar<0){ok=false;msg.push('ficou sem ar e começou a cheirar mal: faltou revirar');G.ar=0;}
+  if(ok)G.bons++;else for(let k=0;k<4;k++)G.mos.push({x:rr(CB[0]+20,CB[0]+CB[2]-20),y:rr(CB[1]-30,CB[1]-6),p:rr(0,6)});
+  G.hist.push([G.v,G.s]);acao(ok?`Dia ${G.dia+1}: composteira no ponto. 👍`:`Dia ${G.dia+1}: a composteira ${msg.join(' e ')}.`);G.dia++;
+  if(G.dia>=5){G.fase=2;G.fim=1;$('ctrl').innerHTML='';const win=G.bons>=4;setTimeout(()=>fimFase((win?110:40)+G.bons*15+(G.p1?40:0)-G.erros*10,win,'Restos de comida são úmidos. Sozinhos, eles encharcam a pilha, falta ar e aparecem mau cheiro e moscas. Com material seco junto e a pilha revirada, os micróbios e pequenos bichos do solo transformam tudo em composto escuro, que volta para a terra como adubo. Plástico e lata não viram adubo.','Que restos da merenda da escola poderiam ir para uma composteira?'),1600);}
+  else setTimeout(novoDia,1400);};
+ const dentro=(x,y,[a,b,w,h])=>x>a&&x<a+w&&y>b-20&&y<b+h;
+ ptr((x,y)=>{if(G.fase!==1)return;if(G.garfo){G.drag=1;G.gx=x;G.gy=y;G.lx=x;return;}
+  const i=G.mesa.findIndex((k,i)=>{const[px,py]=slot(i);return Math.abs(x-px)<40&&Math.abs(y-py)<34;});
+  if(i>=0)G.carry={i,k:G.mesa[i],x,y};else if(dentro(x,y,SACO))G.carry={k:'seco',x,y};},'pointerdown');
+ ptr((x,y)=>{if(G.garfo&&G.drag){G.gx=x;G.gy=y;if(dentro(x,y-50,CB)){G.mov+=Math.abs(x-G.lx);if(G.mov>420){G.garfo=0;G.drag=0;G.ar=2;acao('Pilha revirada: entrou ar. 🌬️');}}G.lx=x;}if(G.carry){G.carry.x=x;G.carry.y=y;}});
+ ptr((x,y)=>{G.drag=0;if(!G.carry)return;const{k,i}=G.carry;G.carry=null;const px=x,py=y-48;
+  if(k==='seco'){if(dentro(px,py,CB)){G.s++;acao(G.s<G.v?'Um punhado seco. 🍂':'Úmido e seco equilibrados. Revire a pilha quando o ar acabar e termine o dia.');}return;}
+  const t=ITEM[k][2];if(dentro(px,py,CB)){if(t==='v'){G.v++;G.mesa.splice(i,1);acao(`${ITEM[k][1]} na composteira. Para cada resto úmido, um punhado seco 🍂 do saco.`);}else{G.erros++;acao(`${ITEM[k][1]} não vira adubo. Leve para a reciclagem.`);}}
+  else if(dentro(px,py,LX)){if(t==='x'){G.mesa.splice(i,1);acao(`${ITEM[k][1]} na reciclagem. ♻️`);}else{G.erros++;acao(`${ITEM[k][1]} vira adubo. Leve para a composteira.`);}}},'pointerup');
+ opcoes('Se a composteira receber só restos de comida, o que acontece?',['Vira adubo bem mais rápido e sem cheiro','Fica encharcada e com cheiro ruim','Nada muda na composteira'],(o)=>{G.p1=o===1;G.fase=1;$('info').textContent='5 dias';
+  acao(G.p1?'Boa previsão: restos de comida têm muita água. Vamos testar.':'Vamos testar: restos de comida têm muita água.');setTimeout(novoDia,1300);});
+ acao('Faça sua previsão.');rodar();}
+
+/* ---------- FASE 5 ---------- */
+const USOS=[['vazio','sem uso',0,0,0],['mata','🌳 mata',1,0,0],['pasto','🐄 pasto',1,2,1],['conv','🚜 lavoura sem cobertura',1,3,3],['direto','🌾 plantio direto na palha',2,3,1],['horta','🥬 horta com composto',2,4,1]];
+const AREAS=[{n:'Encosta muito íngreme',m:4,app:1,tipo:'ing'},{n:'Encosta suave',m:2,tipo:'sua'},{n:'Encosta suave',m:2,tipo:'sua'},{n:'Área plana',m:1,tipo:'pla'},{n:'Perto da casa',m:1,tipo:'casa'},{n:'Beira do rio',m:2,app:1,tipo:'rio'}];
+function f5(){const FICHAS=9,PMIN=12,EMAX=8;G={t:0,uso:[0,0,0,0,0,0],fim:0,tent:0};telaJogo('🗺️ Planeje o sítio',`🪙 ${FICHAS}`);
+ const R=i=>[24+(i%3)*246,96+Math.floor(i/3)*136,232,126];
+ const conta=()=>{let f=0,p=0,e=0;G.uso.forEach((u,i)=>{f+=USOS[u][2];p+=USOS[u][3];e+=USOS[u][4]*AREAS[i].m;});const app=AREAS.every((a,i)=>!a.app||G.uso[i]===1);return{f,p,e,app,todos:G.uso.every(u=>u>0)};};
+ const desenhaUso=(c,u,x,y,w,h,i)=>{const k=USOS[u][0];
+  if(k==='mata')for(let q=0;q<7;q++)arvore(c,x+22+q*30,y+h-14-(q%2)*14,.75);
+  if(k==='pasto'){for(let q=0;q<14;q++)tufo(c,x+10+q*16,y+h-14-(q%3)*12,1,'#7cb342');c.font='22px system-ui';c.textAlign='center';c.fillText('🐄',x+w*.6,y+h-24);}
+  if(k==='conv'||k==='direto'){for(let r=0;r<4;r++){const yy=y+44+r*18;if(k==='conv'){c.fillStyle='#8d6e63';c.fillRect(x+10,yy+4,w-20,6);}else palhas(c,x+10,yy+8,x+w-10,yy+8,r*5+i);for(let q=0;q<9;q++)muda(c,x+20+q*24,yy+8,.7,'#9ccc65');}}
+  if(k==='horta'){for(let r=0;r<3;r++){c.fillStyle='#4e342e';c.beginPath();c.roundRect(x+14,y+44+r*24,w-28,16,5);c.fill();for(let q=0;q<8;q++){c.fillStyle=q%2?'#66bb6a':'#43a047';c.beginPath();c.arc(x+28+q*25,y+50+r*24,6,0,7);c.fill();}}}};
+ G.desenha=c=>{c.fillStyle='#f1f8e9';c.fillRect(0,0,W,H);const s=conta();
+  AREAS.forEach((a,i)=>{const[x,y,w,h]=R(i);c.save();c.beginPath();c.roundRect(x,y,w,h,12);c.clip();
+   const base=a.tipo==='rio'?'#c8e6c9':a.tipo==='ing'?'#bcaaa4':a.tipo==='sua'?'#d7ccc8':'#dcedc8';c.fillStyle=base;c.fillRect(x,y,w,h);
+   if(a.tipo==='ing'||a.tipo==='sua'){c.strokeStyle='rgba(93,64,55,.25)';c.lineWidth=2;for(let q=0;q<(a.tipo==='ing'?9:4);q++){c.beginPath();c.moveTo(x,y+30+q*(a.tipo==='ing'?11:24));c.lineTo(x+w,y+20+q*(a.tipo==='ing'?11:24)-(a.tipo==='ing'?30:10));c.stroke();}}
+   if(a.tipo==='rio'){c.fillStyle='#4fc3f7';c.beginPath();c.moveTo(x+w-50,y);c.quadraticCurveTo(x+w-80,y+h/2,x+w-40,y+h);c.lineTo(x+w,y+h);c.lineTo(x+w,y);c.fill();}
+   if(a.tipo==='casa'){c.font='26px system-ui';c.textAlign='center';c.fillText('🏡',x+w-24,y+64);}
+   desenhaUso(c,G.uso[i],x,y,w,h,i);c.restore();
+   const u=G.uso[i],er=USOS[u][4]*a.m;c.strokeStyle=a.app&&u>0&&u!==1?'#c62828':u?'#6d4c41':'rgba(109,76,65,.35)';c.lineWidth=u?3:2;if(!u)c.setLineDash([6,5]);c.beginPath();c.roundRect(x,y,w,h,12);c.stroke();c.setLineDash([]);
+   c.fillStyle='rgba(255,255,255,.92)';c.beginPath();c.roundRect(x+8,y+6,w-16,26,8);c.fill();c.fillStyle='#3e2723';c.font='800 12px system-ui';c.textAlign='left';c.fillText((a.app?'🛡️ ':'')+a.n,x+14,y+23);
+   c.fillStyle='rgba(255,255,255,.92)';c.font='800 12px system-ui';const lb=u?USOS[u][1]:'👆 toque para escolher';const tw=c.measureText(lb).width+14;c.beginPath();c.roundRect(x+8,y+h-30,tw,22,8);c.fill();c.fillStyle='#3e2723';c.textAlign='left';c.fillText(lb,x+15,y+h-14);
+   if(u&&er>0){c.fillStyle='#8d6e4e';c.font='800 12px system-ui';c.textAlign='right';c.fillText('🟫 erosão '+er,x+w-16,y+23);}
+   if(!u&&G.uso.filter(v=>v).length<2)pulso(c,x+w/2,y+h/2+10,24);});
+  painel(c,14,8,732,78);c.textAlign='left';c.fillStyle='#3e2723';c.font='800 14px system-ui';
+  const bar=(x,y,lab,v,meta,max,bom)=>{c.fillStyle='#3e2723';c.font='800 13px system-ui';c.fillText(`${lab} ${v}`,x,y);c.fillStyle='#eee';c.beginPath();c.roundRect(x,y+6,200,12,6);c.fill();c.fillStyle=bom?'#2e7d32':'#ef6c00';c.beginPath();c.roundRect(x,y+6,Math.max(4,200*Math.min(1,v/max)),12,6);c.fill();c.fillStyle='#3e2723';c.fillRect(x+200*meta/max,y+2,3,20);};
+  bar(28,30,'🌽 Produção',s.p,PMIN,20,s.p>=PMIN);bar(268,30,'🟫 Erosão',s.e,EMAX,24,s.e<=EMAX);
+  c.font='800 13px system-ui';c.fillStyle='#3e2723';c.fillText(`🪙 Fichas: ${FICHAS-s.f} de ${FICHAS}`,508,30);c.fillStyle=s.app?'#2e7d32':'#c62828';c.fillText(s.app?'🛡️ Áreas protegidas com mata':'🛡️ Áreas protegidas sem mata',508,52);
+  c.fillStyle='#6d4c41';c.font='700 11px system-ui';c.fillText('Produção: pelo menos 12 · Erosão: até 8',28,74);};
+ G.tap=(x,y)=>{if(G.fim)return;const i=AREAS.findIndex((a,i)=>{const[rx,ry,w,h]=R(i);return x>rx&&x<rx+w&&y>ry&&y<ry+h;});if(i<0)return;
+  const gasto=conta().f-USOS[G.uso[i]][2];let u=G.uso[i];for(let k=0;k<USOS.length;k++){u=(u+1)%USOS.length;if(u===0||gasto+USOS[u][2]<=FICHAS)break;}
+  G.uso[i]=u;G.tent++;const s=conta();$('info').textContent=`🪙 ${FICHAS-s.f}`;
+  if(AREAS[i].app&&u>1)acao(`${AREAS[i].n} é área protegida por lei. Ali o lugar é de mata.`);
+  else if(u>0)acao(`${AREAS[i].n}: ${USOS[u][1]}. Gasta ${USOS[u][2]} ficha${USOS[u][2]>1?'s':''}, produz ${USOS[u][3]}, erosão ${USOS[u][4]*AREAS[i].m}.`);else acao(`${AREAS[i].n} ficou sem uso.`);
+  if(s.todos){const falta=[];if(!s.app)falta.push('mata nas áreas protegidas');if(s.p<PMIN)falta.push(`produzir mais (${s.p} de ${PMIN})`);if(s.e>EMAX)falta.push(`menos erosão (${s.e}, limite ${EMAX})`);
+   if(!falta.length){G.fim=1;acao('Sítio planejado: produz, protege o solo e cuida do rio! ✅');setTimeout(()=>fimFase(Math.max(80,220-Math.max(0,G.tent-8)*5),true,'O mesmo sítio pode perder muito ou pouco solo dependendo do uso de cada área. Em encosta, a lavoura sem cobertura perde mais terra. Plantio direto na palha e horta com composto produzem e protegem o solo. A lei brasileira manda manter vegetação na beira dos rios e nas encostas muito íngremes, que são Áreas de Preservação Permanente.','Que uso você daria para um terreno inclinado perto da sua escola, e por quê?'),1600);}
+   else acao('Todas as áreas têm uso, mas falta: '+falta.join(', ')+'.');}};
+ acao('Toque em cada área para trocar o uso. Cada uso gasta fichas 🪙. As áreas com 🛡️ são protegidas por lei.');rodar();}
+
+/* ================= INICIO / AVATAR ================= */
+function inicio(){parar();G=null;cx=null;$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><div class="capa"><canvas id="cA" width="560" height="560"></canvas>
+ <div><h2>Monte seu pesquisador</h2><div class="opts">
+ <div class="l">Pele</div><div class="sw" id="sP">${PELES.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.pele===i?'on':''}" aria-label="pele ${i+1}"></button>`).join('')}</div>
+ <div class="l">Cabelo</div><div class="sw" id="sE">${ESTILOS.map(([k,t])=>`<button class="tx ${A.estilo===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <div class="sw" id="sC">${CABS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.cab===i?'on':''}" aria-label="cor ${i+1}"></button>`).join('')}</div>
+ <div class="l">Camiseta</div><div class="sw" id="sT">${CAMISAS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.camisa===i?'on':''}" aria-label="camiseta ${i+1}"></button>`).join('')}</div>
+ <div class="l">Chapéu</div><div class="sw" id="sH">${CHAPEUS.map(([k,t])=>`<button class="tx ${A.chapeu===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <input class="nome" id="iN" maxlength="20" placeholder="Seu nome" value="${esc(A.nome)}">
+ </div></div></div>
+ <div class="row" style="margin-top:14px"><button class="btn" id="bJ">▶ Jogar as 5 fases</button><button class="btn ghost" id="bG">📘 Guia do professor</button></div>
+ <p class="small" style="margin-top:10px">Geografia e Ciências · 6º ano · BNCC EF06GE10</p></div>`;
+ const pinta=()=>{const c=$('cA').getContext('2d');c.clearRect(0,0,560,560);c.fillStyle='#efebe9';c.fillRect(0,0,560,560);c.fillStyle='#d7ccc8';c.beginPath();c.arc(280,600,260,0,7);c.fill();avatar(c,280,560,6.4,A,true);};
+ pinta();
+ const liga=(id,f)=>document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{f(b);salvaA();document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b));pinta();});
+ liga('sP',b=>A.pele=+b.dataset.i);liga('sC',b=>A.cab=+b.dataset.i);liga('sT',b=>A.camisa=+b.dataset.i);liga('sE',b=>A.estilo=b.dataset.k);liga('sH',b=>A.chapeu=b.dataset.k);
+ $('iN').oninput=e=>{A.nome=e.target.value;salvaA();};
+ $('bJ').onclick=novo;$('bG').onclick=guia;
+}
+function novo(){S={f:0,tot:0,fp:0,res:[],fichas:0};salvo=false;intro();}
+function relatorio(){parar();G=null;cx=null;$('rankBox').style.display='block';const nome=A.nome.trim()||'Pesquisador';
+ $('tela').innerHTML=`<div class="card"><div class="rel"><canvas id="cR" width="240" height="240"></canvas><div><div class="small">Relatório de campo</div><h2>${esc(nome)}</h2><div class="big" style="font-size:2rem;font-weight:800;color:var(--deep)">${S.tot} pts</div></div></div>
+ <table class="tab" style="margin-top:12px"><tr><th>Fase</th><th>Pontos</th><th>Meta</th></tr>${FASES.map((F,i)=>{const r=S.res[i]||{pts:0,ok:false};return`<tr><td>${F.ic} ${F.nome}</td><td>${r.pts}</td><td>${r.ok?'✓':'✗'}</td></tr>`;}).join('')}</table>
+ <div class="pensa"><b>Para escrever no caderno:</b> descreva uma prática que protege o solo e explique como ela segura a terra no lugar.</div>
+ <div class="savebox noprint"><input id="pName" maxlength="20" value="${esc(nome)}"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row noprint" style="margin-top:12px"><button class="btn ghost" id="bI">🖨️ Imprimir relatório</button><button class="btn ghost" id="bN">Jogar de novo</button><button class="btn ghost" id="bV">Início</button></div></div>`;
+ const c=$('cR').getContext('2d');c.fillStyle='#efebe9';c.fillRect(0,0,240,240);avatar(c,120,240,3.2,A,true);
+ $('bS').onclick=()=>salvar('5 fases');$('bI').onclick=()=>window.print();$('bN').onclick=novo;$('bV').onclick=inicio;
+}
+
+/* ================= GUIA DO PROFESSOR ================= */
+function guia(){parar();$('hud').style.display='none';$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card guia">
+ <div class="row top noprint"><button class="btn ghost sm" id="bVt">← Voltar</button><button class="btn sm" id="bPr">🖨️ Imprimir guia</button></div>
+ <h2 style="margin-top:10px">Guia do professor · Solo Vivo</h2>
+ <p class="small">Ensino Fundamental · 6º ano · Geografia e Ciências</p>
+ <h3>Habilidade da BNCC</h3>
+ <div class="hab"><b>EF06GE10.</b> Explicar as diferentes formas de uso do solo (rotação de terras, terraceamento, aterros etc.) e de apropriação dos recursos hídricos (sistema de irrigação, tratamento e redes de distribuição), bem como suas vantagens e desvantagens em diferentes épocas e lugares.</div>
+ <h3>Objetivos da aula</h3>
+ <ul><li>Relacionar a cobertura do solo com a erosão e com a entrada de água no solo.</li><li>Reconhecer o papel dos organismos do solo, como as minhocas, e da matéria orgânica.</li><li>Comparar formas de uso do solo e suas vantagens e desvantagens, incluindo práticas que seguram a terra no lugar.</li><li>Conhecer a regra das Áreas de Preservação Permanente na beira dos rios e nas encostas muito íngremes.</li></ul>
+ <h3>Roteiro de 50 minutos</h3>
+ <table class="tab"><tr><th>Tempo</th><th>O que fazer</th></tr>
+ <tr><td>5 min</td><td>Pergunte: para onde vai a terra quando chove forte numa rua sem calçamento?</td></tr>
+ <tr><td>25 min</td><td>Alunos jogam em duplas.</td></tr>
+ <tr><td>15 min</td><td>Discussão com as perguntas de cada fase.</td></tr>
+ <tr><td>5 min</td><td>Cada dupla escreve a frase do relatório de campo.</td></tr></table>
+ <h3>Fase por fase</h3>
+ <table class="tab"><tr><th>Fase</th><th>O aluno faz</th><th>Pergunta para a turma</th><th>O que explicar</th></tr>
+ <tr><td>1. Chuva nas bandejas</td><td>Rega solo nu, palhada e grama e compara a água que escorre</td><td>Onde você já viu terra sendo levada pela chuva?</td><td>Cobertura do solo, impacto da gota de chuva, escoamento e infiltração.</td></tr>
+ <tr><td>2. Minhoca engenheira</td><td>Cava galerias, come folhas e deixa húmus</td><td>O que acontece com a chuva num solo muito pisado?</td><td>Organismos do solo, galerias, entrada de água e ar, húmus.</td></tr>
+ <tr><td>3. Barreiras no morro</td><td>Espalha 3 barreiras de capim numa encosta</td><td>Por que a terra da lavoura pode prejudicar os peixes?</td><td>Comprimento da rampa, curva de nível, terraceamento e assoreamento.</td></tr>
+ <tr><td>4. Composteira</td><td>Prevê, separa restos e equilibra úmido e seco por 5 dias</td><td>Que restos da merenda poderiam virar composto?</td><td>Decomposição, matéria orgânica e destino dos resíduos.</td></tr>
+ <tr><td>5. Planeje o sítio</td><td>Escolhe o uso de cada área com fichas e metas</td><td>Que uso você daria a um terreno inclinado perto da escola?</td><td>Uso do solo, vantagens e desvantagens, Áreas de Preservação Permanente.</td></tr></table>
+ <h3>Avaliação</h3>
+ <p>Use o relatório de campo impresso e a frase escrita por cada dupla. Todos os instrumentos têm o mesmo peso. Observe se o aluno explica como uma prática protege o solo, e não apenas diz que ela protege.</p>
+ <h3>Sequência de 3 aulas</h3>
+ <ol><li><b>Aula 1.</b> Jogo completo e discussão.</li><li><b>Aula 2.</b> Experimento das três garrafas PET cortadas, com terra nua, terra com palha e terra com grama, regadas com a mesma quantidade de água.</li><li><b>Aula 3.</b> Montagem de uma composteira pequena na escola ou caminhada para observar sinais de erosão no bairro.</li></ol>
+ <h3>Cuidado ao explicar</h3>
+ <p>Os números do jogo vêm de um modelo simples e não são medidas de campo: a turbidez e o volume nos potes da fase 1, os baldes de terra da fase 3, a regra de um punhado seco para cada resto úmido da fase 4 e os pontos de produção e erosão da fase 5. O que o jogo mostra com segurança é a direção dos efeitos. A lavoura arada e sem cobertura perde solo muito mais rápido do que o solo se forma, e práticas como o plantio direto reduzem essa perda (Montgomery, 2007). Práticas de conservação podem compensar parte do aumento de erosão causado pela mudança no uso da terra (Borrelli et al., 2017). As minhocas atuam na estrutura do solo, na regulação da água e na ciclagem de nutrientes (Blouin et al., 2013). A proteção da beira dos rios e das encostas com declividade acima de 45 graus vem do artigo 4º da Lei 12.651/2012, que tem regras e larguras detalhadas que o jogo não mostra.</p>
+ <h3>Referências</h3>
+ <ul class="ref">
+ <li>Blouin M, et al. A review of earthworm impact on soil function and ecosystem services. European Journal of Soil Science, 64:161-182, 2013. doi:10.1111/ejss.12025</li>
+ <li>Borrelli P, et al. An assessment of the global impact of 21st century land use change on soil erosion. Nature Communications, 8:2013, 2017. doi:10.1038/s41467-017-02142-7</li>
+ <li>Montgomery DR. Soil erosion and agricultural sustainability. PNAS, 104(33):13268-13272, 2007. doi:10.1073/pnas.0611508104</li>
+ <li>Brasil. Lei nº 12.651, de 25 de maio de 2012. Dispõe sobre a proteção da vegetação nativa.</li></ul>
+ </div>`;
+ $('bVt').onclick=inicio;$('bPr').onclick=()=>window.print();
+}
+
+/* ================= RANKING ================= */
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="solo-vivo";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__a={get S(){return S},get G(){return G},FASES,inicio,novo,intro,guia};
+inicio();
+</script>
+</body>
+</html>
