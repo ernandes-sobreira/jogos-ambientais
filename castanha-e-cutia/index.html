@@ -53,7 +53,7 @@ const $=id=>document.getElementById(id);
 const rr=(a,b)=>a+Math.random()*(b-a);
 const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let actx=null;function beep(f,d,v){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=f;g.gain.setValueAtTime(v||.05,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+d);}catch(e){}}
+function beep(){}
 /* ---------- biblioteca visual: estilo guia de campo + painel de dados ---------- */
 const TINTA='#2b2a26',PAPEL='#fbfaf6',GRADE='rgba(43,42,38,.07)';
 function papel(c,w,h,cor){c.fillStyle=cor||PAPEL;c.fillRect(0,0,w,h);c.fillStyle='rgba(120,100,70,.035)';for(let i=0;i<260;i++){const x=(i*397)%w,y=(i*211)%h;c.fillRect(x,y,1.5,1.5);}}
@@ -253,34 +253,29 @@ function ouricoP(k,x,y,r,roido){k.save();k.translate(x,y);k.fillStyle=rg(k,-r*.3
 /* castanha: semente angulosa de casca rugosa */
 function castanhaP(k,x,y,r){k.save();k.translate(x,y);k.fillStyle=lg(k,-r,0,r,0,['#5e3b1e','#8a5a30','#5e3b1e']);k.beginPath();k.moveTo(-r,r*.5);k.lineTo(0,-r*.9);k.lineTo(r,r*.5);k.quadraticCurveTo(0,r*.9,-r,r*.5);k.fill();k.strokeStyle='rgba(30,15,5,.5)';k.lineWidth=.8;k.beginPath();k.moveTo(0,-r*.9);k.lineTo(0,r*.7);k.stroke();k.restore();}
 /* cutia com modos: corre (galope com corpo subindo), cava (cabeça baixa, patas da frente cavando), rói (cabeça mexendo) */
-function cutiaM(k,x,y,s,d,ph,boca,modo,vel,cav=0,eat=0){
-k.save();k.translate(x,y);k.scale(s*d,s);
-const run=modo==='corre'?Math.min(1,vel||0):0, dig=modo==='cava', chew=modo==='come', gnaw=modo==='roe', R=rng(843);
-function shape(path,colors){k.fillStyle=lg(k,0,-48,0,0,colors);k.fill(new Path2D(path));}
-function fur(path,n){k.save();k.clip(new Path2D(path));for(let i=0;i<n;i++){let a=-38+R()*85,b=-65+R()*68;k.strokeStyle=i%3?'rgba(247,194,119,.27)':'rgba(43,25,16,.38)';k.lineWidth=.45+R()*.65;k.beginPath();k.moveTo(a,b);k.quadraticCurveTo(a-2,b+2,a-5-R()*4,b+3+R()*3);k.stroke();}k.restore();}
-function limb(a,b,c,far){k.strokeStyle=far?'#60412b':'#9a683e';k.lineWidth=far?5:6;k.lineCap='round';k.lineJoin='round';k.beginPath();k.moveTo(...a);k.quadraticCurveTo(...b,...c);k.stroke();k.fillStyle='#4d382a';k.beginPath();k.ellipse(c[0]+2,c[1],4,1.8,0,0,7);k.fill();for(let i=0;i<3;i++){k.strokeStyle='#d5b99b';k.lineWidth=.6;k.beginPath();k.moveTo(c[0]+3,c[1]-1+i);k.lineTo(c[0]+6,c[1]+i);k.stroke();}}
-if(dig){let p=Math.min(1,(2.1-cav)/.9),cover=cav<.7?cav/.7:1;k.fillStyle=rg(k,27,0,1,19,['#21160e','#68462b','#a47b4b']);k.beginPath();k.ellipse(27,0,17*p*cover,6*p*cover,0,0,7);k.fill();if(cav<1.2&&cav>.65)castanhaP(k,27,-2,5);for(let i=0;i<15;i++){let a=R()*6.28;k.fillStyle=i%2?'#6d4728':'#b28a57';k.beginPath();k.ellipse(27+Math.cos(a)*18,Math.sin(a)*7,2+R()*2,1.5,0,0,7);k.fill();}}
-k.translate(0,-Math.abs(Math.sin(ph))*3*run);
-let a=Math.sin(ph)*11*run,b=Math.sin(ph+Math.PI)*11*run;
-let body=chew?'M-25 -4 C-38 -17 -25 -39 -9 -46 C6 -49 17 -35 16 -19 C12 -3 -9 3 -25 -4Z':dig||gnaw?'M-32 -16 C-37 -39 -18 -49 0 -39 C17 -34 22 -20 21 -13 C4 -8 -19 -6 -32 -16Z':'M-32 -18 C-36 -39 -23 -49 -7 -45 C10 -44 22 -34 23 -23 C21 -10 -15 -7 -32 -18Z';
-limb([-19,-20],[-26,-9],[-19+b,0],true);
-if(!chew)limb([14,-19],[18,-9],[19+b,0],true);
-shape(body,['#493324','#a66d3a','#bc8952','#755031']);fur(body,420);
-let ha=chew?13:dig||gnaw?23:22,hy=chew?-43:dig||gnaw?-19:-30;
-k.save();k.translate(ha,hy);k.rotate(chew?Math.sin(ph*3)*.035:dig?.25:gnaw?.15+Math.sin(ph*4)*.08:0);
-let head='M-13 -5 C-15 -17 -4 -22 7 -15 C13 -10 14 -5 22 -1 Q26 4 17 8 Q5 13 -7 7Z';
-shape(head,['#755033','#b98a58','#d1ab79','#886342']);fur(head,150);
-k.fillStyle='#694b36';k.beginPath();k.ellipse(-5,-15,5,7,-.25,0,7);k.fill();k.fillStyle='#ad8570';k.beginPath();k.ellipse(-5,-15,3,4.8,-.25,0,7);k.fill();
-k.fillStyle='#1c140f';k.beginPath();k.ellipse(6,-9,2.8,2.4,0,0,7);k.fill();k.fillStyle='#fff4db';k.beginPath();k.arc(6.8,-9.8,.8,0,7);k.fill();
-k.fillStyle='#352820';k.beginPath();k.ellipse(22,1,3,2.6,0,0,7);k.fill();
-k.strokeStyle='#533d2c';k.lineWidth=.8;k.beginPath();k.moveTo(12,6);k.quadraticCurveTo(18,8+((chew||gnaw)?Math.sin(ph*4)*2:0),22,4);k.stroke();
-for(let i=0;i<5;i++){k.strokeStyle='rgba(65,48,35,.65)';k.lineWidth=.5;k.beginPath();k.moveTo(17,3);k.lineTo(29,1+i*2);k.stroke();}
-if(boca)castanhaP(k,23,7,5);k.restore();
-limb([-17,-20],[-27,-8],[-16+a,0],false);
-if(chew){let q=Math.sin(ph*3);limb([7,-25],[18,-22],[24,-34+q],true);castanhaP(k,25,-34+q,Math.max(2.5,5*eat/1.8));limb([4,-24],[14,-20],[23,-32+q],false);}
-else if(dig){let q=Math.sin(ph*3);let reach=cav>.7?8:-5;limb([10,-15],[18,-8],[26+q*reach,-1-Math.max(0,q)*5],true);limb([13,-16],[20,-8],[26-q*reach,-1-Math.max(0,-q)*5],false);}
-else limb([13,-19],[17+a*.5,-8],[17+a, -Math.max(0,Math.cos(ph))*5*run],false);
-k.restore();}
+function cutiaM(k,x,y,s,d,ph,boca,modo,vel){k.save();k.translate(x,y);k.scale(s*d,s);const c1='#c4772f',c2='#8a4f1f',c3='#e0a25a';
+ const run=modo==='corre'?Math.min(1,vel||0):0,dig=modo==='cava',roe=modo==='roe';
+ const bob=run?-Math.abs(Math.sin(ph))*4*run:0,tiltB=dig?.32:run?Math.sin(ph)*.08*run:0;
+ const A=run?10*run+2:0;/* amplitude de passo */
+ const fr=(o)=>run?Math.sin(ph+o):0;
+ k.translate(0,bob);k.rotate(tiltB);
+ /* pernas de lá */
+ if(dig){const t=Math.sin(ph*3);pernaFina(k,[[14,-16],[20+t*6,-8],[24+t*8,-1]],3.5,2,c2);}else pernaFina(k,[[12,-16],[13+fr(Math.PI)*A*.6,-7],[14+fr(Math.PI)*A,0-Math.max(0,Math.cos(ph+Math.PI))*4*run]],3.5,2,c2);
+ pernaFina(k,[[-14,-20],[-20+fr(.6)*A*.5,-9],[-16+fr(.6)*A,0-Math.max(0,Math.cos(ph+.6))*5*run]],5,2.2,c2);
+ /* corpo */k.fillStyle=lg(k,0,-40,0,-10,[c2,c1,c3]);k.beginPath();k.moveTo(-26,-20);k.quadraticCurveTo(-30,-38,-12,-40);k.quadraticCurveTo(8,-40,18,-30);k.quadraticCurveTo(24,-24,20,-16);k.quadraticCurveTo(0,-11,-20,-14);k.closePath();k.fill();
+ k.fillStyle='rgba(60,30,10,.35)';k.beginPath();k.moveTo(-26,-22);k.quadraticCurveTo(-30,-36,-14,-39);k.quadraticCurveTo(-20,-30,-22,-20);k.fill();
+ k.strokeStyle='rgba(70,35,10,.35)';k.lineWidth=.9;for(let i=0;i<9;i++){k.beginPath();k.moveTo(-22+i*4.5,-38+Math.abs(i-4)*.6);k.lineTo(-23+i*4.5,-33);k.stroke();}
+ /* cabeça */k.save();if(roe){k.translate(20,-28);k.rotate(Math.sin(ph*4)*.12+.15);k.translate(-20,28);}if(dig){k.translate(20,-26);k.rotate(.35);k.translate(-20,26);}
+ k.fillStyle=c1;k.beginPath();k.moveTo(14,-32);k.quadraticCurveTo(22,-40,30,-34);k.quadraticCurveTo(36,-30,36,-25);k.quadraticCurveTo(30,-21,20,-22);k.closePath();k.fill();
+ k.fillStyle='#3a2414';k.beginPath();k.ellipse(35.5,-26.5,1.8,1.5,0,0,7);k.fill();
+ k.fillStyle='#d88f8f';k.beginPath();k.ellipse(19,-37,3,4.2,-.3+(run?Math.sin(ph)*.2:0),0,7);k.fill();k.strokeStyle=c2;k.lineWidth=1.3;k.stroke();
+ k.fillStyle='#120a05';k.beginPath();k.arc(27,-32,1.9,0,7);k.fill();k.fillStyle='rgba(255,255,255,.8)';k.beginPath();k.arc(27.6,-32.6,.6,0,7);k.fill();
+ k.strokeStyle='rgba(30,15,5,.6)';k.lineWidth=.6;for(const a of [-.2,0,.25]){k.beginPath();k.moveTo(34,-25);k.lineTo(42,-25+a*14);k.stroke();}
+ if(boca){k.save();k.translate(37,-22);k.rotate(.3);castanhaP(k,0,0,5.5);k.restore();}k.restore();
+ /* pernas de cá */
+ pernaFina(k,[[-12,-20],[-18+fr(0)*A*.5,-9],[-13+fr(0)*A,0-Math.max(0,Math.cos(ph))*5*run]],6,2.4,c1);
+ if(dig){const t=Math.sin(ph*3+Math.PI);pernaFina(k,[[15,-17],[21+t*6,-8],[25+t*8,-1]],4,2.2,c1);}else pernaFina(k,[[14,-17],[15+fr(Math.PI*.6)*A*.6,-7],[16+fr(Math.PI*.6)*A,0-Math.max(0,Math.cos(ph+Math.PI*.6))*4*run]],4,2.2,c1);
+ k.restore();}
 /* onça-pintada: robusta, cabeça grande, rosetas com pinta no meio */
 function oncaP(k,x,y,s,d,ph){k.save();k.translate(x,y);k.scale(s*d,s);const c='#e3a23f',c2='#c3832b',sw=Math.sin(ph),sw2=Math.sin(ph+Math.PI);const bob=-Math.abs(Math.sin(ph))*3;k.translate(0,bob);
  pernaFina(k,[[-28,-22],[-34+sw*7,-10],[-30+sw*10,0]],10,6,c2);pernaFina(k,[[26,-20],[27+sw2*7,-9],[29+sw2*9,0]],9,6,c2);
@@ -344,7 +339,7 @@ const G={titulo:'Castanha e Cutia',get rotulo(){return S&&S.g&&S.g.lapso?'Plânt
   {nome:'Onde enterrar?',jogo:60,dur:60+TL,meta:6,roe:2,fome:.026,metaTxt:'ter 6 plântulas. Agora existe um baixio alagado.',txt:'Apareceu um baixio alagado. A castanheira só cresce em terra firme. Castanha enterrada no encharcado apodrece.',fato:'No Brasil, a castanheira só ocorre na Amazônia, em terra firme. E ela se desenvolve melhor em plena luz, como em roçados e grandes clareiras.'},
   {nome:'Bando de queixadas',jogo:70,dur:70+TL,meta:7,roe:2.2,fome:.028,porc:3,metaTxt:'ter 7 plântulas. Fuja do bando de queixadas.',txt:'Bandos de queixadas atravessam o castanhal. Perto da árvore-mãe eles fuçam e comem castanha enterrada. Trombar neles faz a cutia largar a castanha.',fato:'Perto da árvore-mãe, mais sementes são comidas por roedores e porcos-do-mato. A cutia leva a semente para longe, onde ela tem mais chance.'},
   {nome:'Fuja da onça',jogo:80,dur:80+TL,meta:7,roe:2.4,fome:.03,porc:2,onca:1,metaTxt:'ter 7 plântulas sem ser pega pela onça.',txt:'Uma onça-pintada caça no castanhal. Quando a tela ficar vermelha, corra para uma toca. Enterrando, a cutia fica parada e vulnerável.',fato:'A cutia está entre as principais presas de grandes felinos em terra firme. Quando ela é caçada, as castanhas que enterrou ficam no chão e podem virar árvore.'}],
- init(g){const F=FASES[S.f];g.c={x:W*.12,y:H*.78,d:1,ph:0,v:0};g.boca=0;g.fome=.8;g.ou=[];g.cast=[];g.ent=[];g.q=0;g.st=0;g.cav=0;g.eat=0;g.part=[];g.ot=12;g.onca=null;g.fomeAv=0;g.lapso=0;g.plant=0;g.bt=F.porc?6:1e9;g.bav=null;g.pc=[];g.vidas=2;
+ init(g){const F=FASES[S.f];g.c={x:W*.12,y:H*.78,d:1,ph:0,v:0};g.boca=0;g.fome=.8;g.ou=[];g.cast=[];g.ent=[];g.q=0;g.st=0;g.cav=0;g.part=[];g.ot=12;g.onca=null;g.fomeAv=0;g.lapso=0;g.plant=0;g.bt=F.porc?6:1e9;g.bav=null;g.pc=[];g.vidas=2;
   for(let i=0;i<2;i++)G.cai(g);},
  cai(g){const s=CT.zonas().sombra;const a=Math.random()*6.28,r=Math.sqrt(Math.random())*.8;g.ou.push({x:s.x+Math.cos(a)*s.rx*r,y:Math.max(H*.63,Math.min(H-76,s.y+Math.sin(a)*s.ry*r)),roe:0});},
  boas(g){return g.ent.filter(e=>e.loc==='clar'||e.loc==='mata').length;},
@@ -358,26 +353,26 @@ const G={titulo:'Castanha e Cutia',get rotulo(){return S&&S.g&&S.g.lapso?'Plânt
   g.q-=dt;if(g.q<=0&&g.ou.length<2){G.cai(g);g.q=2.5;}g.st=Math.max(0,g.st-dt);
   g.fome=Math.max(0,g.fome-F.fome*dt);if(g.fome<=0&&g.fomeAv<=0){msg('A cutia está fraca de fome. Coma uma castanha.');g.fomeAv=5;}g.fomeAv-=dt;
   /* cavando */
-  if(g.eat>0){g.eat=Math.max(0,g.eat-dt);c.ph+=dt*9;if(Math.random()<dt*12)g.part.push({x:c.x+c.d*15,y:c.y-27,vx:c.d*25,vy:-25,t:.45,lasca:1});if(!g.eat){g.fome=Math.min(1,g.fome+.4);pop(c.x,c.y-50,'+comida','#ef6c00');}} if(g.cav>0){g.cav-=dt;c.ph+=dt*6;if(Math.random()<.6)g.part.push({x:c.x+c.d*20,y:c.y-4,vx:-c.d*(60+Math.random()*120),vy:-80-Math.random()*120,t:.6});
+  if(g.cav>0){g.cav-=dt;c.ph+=dt*6;if(Math.random()<.6)g.part.push({x:c.x+c.d*20,y:c.y-4,vx:-c.d*(60+Math.random()*120),vy:-80-Math.random()*120,t:.6});
    if(g.cav<=0){const ex=c.x+c.d*26,ey=c.y-1,loc=CT.local(ex,ey);g.ent.push({x:ex,y:ey,t:0,loc,tl:loc==='sombra'?3+Math.random()*2.5:0});
     const fr={clar:'Enterrada na clareira. Com luz, ela tem ótima chance.',mata:'Enterrada na mata fechada. Com pouca luz, pode não vingar.',sombra:'Enterrada na sombra da árvore-mãe. Outros bichos vão achar.',baixo:'Enterrada no baixio alagado. No encharcado ela apodrece.'};msg(fr[loc]);
     if(loc==='clar')ganha(5,ex,ey-26);}}
   /* botões */
-  if(inp.tap&&g.cav<=0&&!g.eat){const b=CT.btHit(inp.tap.x,inp.tap.y);if(b){
-    if(b.id==='com'){if(g.boca){g.boca=0;g.eat=1.6;}
-     else{const e=g.ent.find(e=>Math.hypot(e.x-c.x-c.d*20,e.y-c.y)<30);if(e){g.ent.splice(g.ent.indexOf(e),1);g.eat=1.8;msg('A cutia desenterrou e comeu uma castanha guardada.');}else msg('Sem castanha para comer. Pegue uma ou fique em cima de uma enterrada.');}}
-    else{if(!g.boca)msg('Primeiro pegue uma castanha.');else{const ex=c.x+c.d*26;if(CT.tocas().some(t=>Math.hypot(t.x-ex,t.y-c.y)<40))msg('Não dá para enterrar na toca.');else if(g.ent.some(e=>Math.hypot(e.x-ex,e.y-c.y)<22))msg('Já tem castanha aqui. Espalhe mais.');else{g.boca=0;g.cav=2.1;}}}}}
+  if(inp.tap&&g.cav<=0){const b=CT.btHit(inp.tap.x,inp.tap.y);if(b){
+    if(b.id==='com'){if(g.boca){g.boca=0;g.fome=Math.min(1,g.fome+.4);pop(c.x,c.y-50,'+comida','#ef6c00');}
+     else{const e=g.ent.find(e=>Math.hypot(e.x-c.x-c.d*20,e.y-c.y)<30);if(e){g.ent.splice(g.ent.indexOf(e),1);g.fome=Math.min(1,g.fome+.4);g.cav=.5;msg('A cutia desenterrou e comeu uma castanha guardada.');}else msg('Sem castanha para comer. Pegue uma ou fique em cima de uma enterrada.');}}
+    else{if(!g.boca)msg('Primeiro pegue uma castanha.');else{const ex=c.x+c.d*26;if(CT.tocas().some(t=>Math.hypot(t.x-ex,t.y-c.y)<40))msg('Não dá para enterrar na toca.');else if(g.ent.some(e=>Math.hypot(e.x-ex,e.y-c.y)<22))msg('Já tem castanha aqui. Espalhe mais.');else{g.boca=0;g.cav=1;}}}}}
   /* correr */
   const fv=(g.fome<=0?.5:1)*(g.onca&&g.onca.t>1.6?1.22:1);let vx=0,vy=0;
-  if(g.st<=0&&g.cav<=0&&!g.eat){if(inp.down&&inp.x!==null&&!CT.btHit(inp.x,inp.y)){const dx=inp.x-c.x,dy=inp.y-c.y,d=Math.hypot(dx,dy);if(d>6){const v=Math.min(d,215*fv*dt);vx=dx/d*v;vy=dy/d*v;c.d=dx<0?-1:1;}}
+  if(g.st<=0&&g.cav<=0){if(inp.down&&inp.x!==null&&!CT.btHit(inp.x,inp.y)){const dx=inp.x-c.x,dy=inp.y-c.y,d=Math.hypot(dx,dy);if(d>6){const v=Math.min(d,215*fv*dt);vx=dx/d*v;vy=dy/d*v;c.d=dx<0?-1:1;}}
    const kx=(tec.ArrowRight?1:0)-(tec.ArrowLeft?1:0),ky=(tec.ArrowDown?1:0)-(tec.ArrowUp?1:0);if(kx||ky){const n=Math.hypot(kx,ky);vx=kx/n*215*fv*dt;vy=ky/n*215*fv*dt;if(kx)c.d=kx;}}
   c.x+=vx;c.y+=vy;const sp=Math.hypot(vx,vy)/Math.max(dt,1e-4);c.v+=((sp/215)-c.v)*Math.min(1,dt*10);if(g.cav<=0)c.ph+=dt*(4+14*c.v);
   if(c.v>.6&&Math.random()<.25)g.part.push({x:c.x-c.d*18,y:c.y-2,vx:-c.d*30,vy:-20-Math.random()*30,t:.35,poeira:1});
   c.x=Math.max(20,Math.min(W-20,c.x));c.y=Math.max(H*.6,Math.min(H-66,c.y));
   /* roer */
-  g.roendo=null;const o=g.ou.find(o=>Math.hypot(o.x-c.x-c.d*24,o.y-c.y+4)<28);if(o&&!g.boca&&g.cav<=0&&!g.eat){g.roendo=o;o.roe+=dt;if(Math.random()<.3)g.part.push({x:o.x,y:o.y-6,vx:(Math.random()-.5)*80,vy:-60-Math.random()*60,t:.4,lasca:1});
+  g.roendo=null;const o=g.ou.find(o=>Math.hypot(o.x-c.x-c.d*24,o.y-c.y+4)<28);if(o&&!g.boca&&g.cav<=0){g.roendo=o;o.roe+=dt;if(Math.random()<.3)g.part.push({x:o.x,y:o.y-6,vx:(Math.random()-.5)*80,vy:-60-Math.random()*60,t:.4,lasca:1});
    if(o.roe>=F.roe){g.ou.splice(g.ou.indexOf(o),1);for(let i=0;i<4;i++)g.cast.push({x:o.x+(i-1.5)*15,y:o.y+8+(i%2)*8});msg('Ouriço aberto! Pegue uma castanha.');}}
-  if(!g.boca&&g.cav<=0&&!g.eat){const k=g.cast.find(k=>Math.hypot(k.x-c.x-c.d*24,k.y-c.y)<24);if(k){g.cast.splice(g.cast.indexOf(k),1);g.boca=1;}}
+  if(!g.boca&&g.cav<=0){const k=g.cast.find(k=>Math.hypot(k.x-c.x-c.d*24,k.y-c.y)<24);if(k){g.cast.splice(g.cast.indexOf(k),1);g.boca=1;}}
   /* sombra da mãe: outros bichos acham */
   for(const e of g.ent){e.t+=dt;if(e.loc==='sombra'&&e.t>e.tl&&!e.fora){e.fora=1;ganha(-5,e.x,e.y-20);msg('Outro bicho achou a castanha perto da árvore-mãe.');}}g.ent=g.ent.filter(e=>!e.fora);
   /* queixadas */
@@ -387,13 +382,13 @@ const G={titulo:'Castanha e Cutia',get rotulo(){return S&&S.g&&S.g.lapso?'Plânt
   for(const p of g.pc){p.ph+=dt*9;p.x+=p.d*64*dt;p.y+=Math.sin(g.t*1.4+p.ph)*10*dt;
    for(const e of g.ent)if(!e.fora&&Math.abs(e.x-W*.5)<W*.3&&Math.hypot(e.x-p.x-p.d*28,e.y-p.y)<30){e.fora=1;ganha(-5,e.x,e.y-20);msg('As queixadas fuçaram e comeram a castanha.');}
    for(const k of g.cast)if(Math.hypot(k.x-p.x-p.d*28,k.y-p.y)<26)k.fora=1;
-   if(Math.hypot(p.x-c.x,p.y-c.y)<40&&g.st<=0){g.st=.8;g.cav=0;g.eat=0;c.x+=(c.x<p.x?-34:34);ganha(-5,c.x,c.y-40);if(g.boca){g.boca=0;msg('A queixada trombou na cutia, que largou a castanha.');}else msg('A queixada trombou na cutia.');}}
+   if(Math.hypot(p.x-c.x,p.y-c.y)<40&&g.st<=0){g.st=.8;g.cav=0;c.x+=(c.x<p.x?-34:34);ganha(-5,c.x,c.y-40);if(g.boca){g.boca=0;msg('A queixada trombou na cutia, que largou a castanha.');}else msg('A queixada trombou na cutia.');}}
   g.ent=g.ent.filter(e=>!e.fora);g.cast=g.cast.filter(k=>!k.fora);
   /* onça-pintada */
   if(F.onca){g.ot-=dt;if(!g.onca&&g.ot<=0){const lado=c.x<W/2?1:-1;g.onca={x:lado>0?W+60:-60,y:H*.7+Math.random()*H*.1,t:0,ph:0,d:-lado};msg('Onça-pintada! Corra para a toca.');}
    if(g.onca){const j=g.onca;j.t+=dt;j.ph+=dt*(j.t>1.6?12:4);const na=CT.tocas().some(t=>Math.hypot(c.x-t.x,c.y-t.y)<38)&&g.cav<=0;
     if(j.t>1.6&&j.t<7){const tx=na?j.x+j.d*100:c.x,ty=na?j.y:c.y;const dx=tx-j.x,dy=ty-j.y,d=Math.hypot(dx,dy)||1;const v=(na?110:235)*dt;j.x+=dx/d*Math.min(d,v);j.y+=dy/d*Math.min(d,v);j.d=dx<0?-1:1;
-     if(!na&&Math.hypot(c.x-j.x,c.y-j.y)<32){g.vidas--;ganha(-20,c.x,c.y-50);g.boca=0;g.cav=0;g.eat=0;const T=CT.tocas()[0];c.x=T.x+30;c.y=T.y;j.t=7;msg(g.vidas>0?'A onça pegou a cutia! Ela voltou para a toca.':'A onça pegou a cutia.');}}
+     if(!na&&Math.hypot(c.x-j.x,c.y-j.y)<32){g.vidas--;ganha(-20,c.x,c.y-50);g.boca=0;g.cav=0;const T=CT.tocas()[0];c.x=T.x+30;c.y=T.y;j.t=7;msg(g.vidas>0?'A onça pegou a cutia! Ela voltou para a toca.':'A onça pegou a cutia.');}}
     else if(j.t>=7){j.x+=(j.x<W/2?-1:1)*220*dt;j.d=j.x<W/2?-1:1;if(j.x<-90||j.x>W+90){g.onca=null;g.ot=8+Math.random()*4;}}
     else{j.x+=j.d*30*dt;}}}},
  faixa(t,cor){if(S.g.msgT>0)return;cx.font='bold '+(MOB()?12:14)+'px system-ui';const w=Math.min(W-16,cx.measureText(t).width+28);rrk(cx,W/2-w/2,10,w,30,15,'rgba(255,255,255,.96)');cx.strokeStyle=cor||'#2e7d32';cx.lineWidth=2;cx.beginPath();cx.roundRect(W/2-w/2,10,w,30,15);cx.stroke();cx.fillStyle=cor||'#1b5e20';cx.textAlign='center';cx.fillText(t,W/2,30);},
@@ -412,7 +407,7 @@ const G={titulo:'Castanha e Cutia',get rotulo(){return S&&S.g&&S.g.lapso?'Plânt
   const L=[];for(const o of g.ou)L.push({y:o.y,f:()=>{sombraE(cx,o.x,o.y+14,16,4,.25);ouricoP(cx,o.x,o.y,(m?13:15),o.roe/F.roe);if(o.roe>0){rrk(cx,o.x-22,o.y-32,44,7,4,'#fff');rrk(cx,o.x-22,o.y-32,44*o.roe/F.roe,7,4,'#ff8f00');}}});
   for(const k of g.cast)L.push({y:k.y,f:()=>{cx.fillStyle='rgba(255,255,255,.35)';cx.beginPath();cx.arc(k.x,k.y,13,0,7);cx.fill();castanhaP(cx,k.x,k.y,m?8:9);}});
   for(const p of g.pc)L.push({y:p.y,f:()=>{sombraE(cx,p.x,p.y+3,30*s,5,.22);queixadaP(cx,p.x,p.y,s*.95,p.d,p.ph);}});
-  if(!g.lapso)L.push({y:g.c.y,f:()=>{const c=g.c;sombraE(cx,c.x,c.y+3,26*s,5,.22);cutiaM(cx,c.x,c.y,s,c.d,c.ph,g.boca,g.eat>0?'come':g.cav>0?'cava':g.roendo?'roe':'corre',c.v,g.cav,g.eat);if(g.st>0){cx.fillStyle='#fff';cx.font='bold 18px system-ui';cx.textAlign='center';cx.fillText('!',c.x,c.y-52*s);}
+  if(!g.lapso)L.push({y:g.c.y,f:()=>{const c=g.c;sombraE(cx,c.x,c.y+3,26*s,5,.22);cutiaM(cx,c.x,c.y,s,c.d,c.ph,g.boca,g.cav>0?'cava':g.roendo?'roe':'corre',c.v);if(g.st>0){cx.fillStyle='#fff';cx.font='bold 18px system-ui';cx.textAlign='center';cx.fillText('!',c.x,c.y-52*s);}
    if(g.boca||g.cav>0){const loc=CT.local(c.x+c.d*26,c.y);cx.font='bold 11px system-ui';cx.textAlign='center';const t=CT.NOME[loc];const w=cx.measureText(t).width+14;rrk(cx,c.x-w/2,c.y+8,w,17,8,CT.COR[loc]);cx.fillStyle='#fff';cx.fillText(t,c.x,c.y+20);}}});
   if(g.onca)L.push({y:g.onca.y,f:()=>{sombraE(cx,g.onca.x,g.onca.y+3,40*s,7,.25);oncaP(cx,g.onca.x,g.onca.y,s*1.15,g.onca.d,g.onca.ph);}});
   L.sort((a,b)=>a.y-b.y).forEach(e=>e.f());
@@ -428,7 +423,7 @@ const G={titulo:'Castanha e Cutia',get rotulo(){return S&&S.g&&S.g.lapso?'Plânt
   if(!g.lapso)for(const b of CT.bts()){const on=b.id==='ent'?g.boca:1;rrk(cx,b.x,b.y,b.w,b.h,12,on?b.c:'rgba(255,255,255,.75)');cx.fillStyle=on?'#fff':'#9e9e9e';cx.font='bold 13px system-ui';cx.textAlign='center';cx.fillText(b.t,b.x+b.w/2,b.y+b.h/2+5);}
   /* instrução */
   if(!g.lapso){let t,cor;if(g.onca&&g.onca.t<7){t='Onça-pintada! Corra para a toca.';cor='#c62828';}
-   else if(g.eat>0)t='Comendo a castanha...';else if(g.cav>0)t=g.cav>1.2?'Cavando o buraco...':g.cav>.7?'Depositando a castanha...':'Cobrindo com terra...';
+   else if(g.cav>0)t='Cavando...';
    else if(g.boca)t='Corra até um bom lugar e toque em ENTERRAR. A etiqueta mostra o lugar.';
    else if(g.cast.length)t='Encoste a cutia numa castanha para pegar.';
    else if(g.roendo)t='Roendo o ouriço...';
