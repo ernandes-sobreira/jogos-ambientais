@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Morcego do Pequi</title>
 <style>
-:root{--main:#7b8a2b;--deep:#5a661c;--soft:#f5f7e6;--line:#e4e9c8;--ink:#20230f;--mut:#5d6249}
+:root{--main:#7b8a2b;--deep:#5a661c;--soft:#f5f7e6;--line:#e4e9c8;--ink:#10212b;--mut:#4d6370}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
 .wrap{max-width:780px;margin:0 auto;padding:12px 14px 40px}
@@ -43,7 +43,7 @@ canvas{width:100%;max-width:760px;margin:0 auto;display:block;border:2px solid v
 <a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
 <header>
   <h1>Morcego do Pequi</h1>
-  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
 </header>
 <main id="tela"></main>
 <div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
@@ -117,7 +117,7 @@ let S,cv,cx,raf=null,last=0,W=720,H=460,inp={x:null,y:null,down:false,tap:null},
 const MOB=()=>W<520;
 function rrect(x,y,w,h,r,cor){cx.fillStyle=cor;cx.beginPath();cx.roundRect(x,y,w,h,r);cx.fill();}
 function sombra(x,y,rx,ry){cx.fillStyle='rgba(0,0,0,.12)';cx.beginPath();cx.ellipse(x,y,rx,ry,0,0,7);cx.fill();}
-function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/'+G.FASES.length;$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
  if(g&&!g.fim){const [a,m]=G.meta(g);$('hR').textContent=G.rotulo+' '+a+'/'+m;$('hV').textContent=G.vidas?'Vidas '+'●'.repeat(Math.max(0,g.vidas)):'';$('hT').textContent=G.semTempo?'':Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s';}
  ['hR','hV','hT'].forEach(k=>$(k).style.display=$(k).textContent?'':'none');}
 function inicio(){parar();$('hud').style.display='none';$('rankBox').style.display='block';
@@ -151,39 +151,193 @@ function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=G.FAS
  <p class="small" style="margin-top:6px">${ok?G.FASES[S.f].fato:G.dicaErro}</p>
  <div class="row" style="justify-content:center;margin-top:14px">${ok?'<button class="btn grande" id="bq">Pergunta rápida</button>':'<button class="btn grande" id="br">Jogar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
  if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}}
-/* O pequizeiro é polinizado principalmente por morcegos; poucas flores abrem a cada noite (Embrapa); perto da alvorada beija-flores e abelhas também visitam (Revista Pesquisa FAPESP). Tempos e pontos são regras do jogo. */
-const G={titulo:'Morcego do Pequi',rotulo:'Flores polinizadas',vidas:0,
- resumo:'As flores do pequizeiro abrem à noite. O morcego visita cada flor para beber néctar e leva o pólen grudado no pelo até a próxima flor. Assim nascem os pequis.',
- como:[['Arraste','O morcego segue o seu dedo.'],['Visite','Encoste numa flor amarela aberta: +10. O pólen vai junto.'],['Rápido','Cada flor fica aberta só alguns segundos.']],
- dica:'Arraste o morcego até as flores abertas.',dicaErro:'Vá direto de uma flor aberta para outra: elas fecham logo.',
- FASES:[{nome:'Primeiras flores',dur:40,meta:10,ab:3,vida:6,abelha:0,metaTxt:'polinizar 10 flores em 40 s.',txt:'Poucas flores abrem por vez. Visite cada uma antes que feche.',fato:'Segundo a Embrapa, a cada noite só 2 ou 3 flores de cada cacho do pequizeiro se abrem.'},
-  {nome:'Noite florida',dur:45,meta:14,ab:4,vida:4.5,abelha:0,metaTxt:'polinizar 14 flores em 45 s.',txt:'Mais flores e menos tempo aberto. Planeje o caminho.',fato:'O morcego abraça a flor para lamber o néctar e sai com o corpo coberto de pólen.'},
-  {nome:'Amanhecer',dur:45,meta:14,ab:4,vida:4.5,abelha:1,metaTxt:'polinizar 14 flores em 45 s.',txt:'Clareou: abelhas e beija-flores também chegam às flores. Chegue antes deles.',fato:'Perto da alvorada o néctar está no máximo, e beija-flores e abelhas também visitam as flores.'}],
- init(g){g.x=W/2;g.y=H*.4;g.bat=0;g.n=0;g.fl=[];const pos=MOB()?[[.25,.35],[.7,.3],[.3,.62],[.75,.6]]:[[.2,.4],[.5,.32],[.8,.4]];g.arv=pos.map(([a,b])=>[a*W,b*H]);
-  for(const [ax,ay] of g.arv)for(let k=0;k<6;k++){const an=k/6*7;g.fl.push({x:ax+Math.cos(an)*70,y:ay+Math.sin(an)*45,ab:0,tt:rr(0,4)});}g.ri=[];},
- meta(g){return [g.n,FASES[S.f].meta];},cedo(g){return g.n>=FASES[S.f].meta;},
- update(g,dt){const F=FASES[S.f];g.bat+=dt*14;if(inp.down&&inp.x!=null){g.x+=(inp.x-g.x)*Math.min(1,dt*7);g.y+=(inp.y-g.y)*Math.min(1,dt*7);}
-  const kx=(tec.ArrowRight?1:0)-(tec.ArrowLeft?1:0),ky=(tec.ArrowDown?1:0)-(tec.ArrowUp?1:0);g.x+=kx*250*dt;g.y+=ky*250*dt;g.x=Math.max(20,Math.min(W-20,g.x));g.y=Math.max(20,Math.min(H-20,g.y));
-  const abertas=g.fl.filter(f=>f.ab>0).length;for(const f of g.fl){if(f.ab>0){f.ab-=dt;}else{f.tt-=dt;if(f.tt<=0&&abertas<F.ab){f.ab=F.vida;f.tt=rr(1,4);}}
-   if(f.ab>0&&Math.hypot(f.x-g.x,f.y-g.y)<30){f.ab=0;f.tt=rr(1.5,4);g.n++;ganha(10,f.x,f.y);}}
-  if(F.abelha&&g.ri.length<3&&Math.random()<dt)g.ri.push({x:rr(0,W),y:-10,alvo:null});
-  for(const r of g.ri){if(!r.alvo||r.alvo.ab<=0)r.alvo=g.fl.find(f=>f.ab>0);if(r.alvo){const dx=r.alvo.x-r.x,dy=r.alvo.y-r.y,d=Math.hypot(dx,dy);if(d>5){r.x+=dx/d*90*dt;r.y+=dy/d*90*dt;}else{r.alvo.ab=0;r.alvo.tt=rr(1,3);pop(r.x,r.y,'a abelha chegou antes','#ef6c00');r.alvo=null;}}}},
- draw(g){const F=FASES[S.f];const gr=cx.createLinearGradient(0,0,0,H);gr.addColorStop(0,F.abelha?'#ffe0b2':'#cfd3f2');gr.addColorStop(1,F.abelha?'#fff8e1':'#eef0fb');cx.fillStyle=gr;cx.fillRect(0,0,W,H);
-  cx.fillStyle='#c5d89a';cx.fillRect(0,H-30,W,30);
-  for(const [ax,ay] of g.arv){cx.strokeStyle='#7b6a58';cx.lineWidth=12;cx.lineCap='round';cx.beginPath();cx.moveTo(ax,H-28);cx.quadraticCurveTo(ax-14,ay+60,ax,ay+10);cx.stroke();cx.lineWidth=6;cx.beginPath();cx.moveTo(ax,ay+20);cx.lineTo(ax-50,ay-10);cx.moveTo(ax,ay+20);cx.lineTo(ax+50,ay-12);cx.stroke();
-   for(let k=0;k<9;k++){cx.fillStyle=k%2?'#7fa35c':'#6b8f4c';cx.beginPath();cx.ellipse(ax+Math.cos(k*.8)*60,ay+Math.sin(k*.8)*36,22,14,k,0,7);cx.fill();}}
-  for(const f of g.fl){if(f.ab>0){const s=1+Math.sin(g.t*8)*.08;cx.fillStyle='rgba(255,235,59,.35)';cx.beginPath();cx.arc(f.x,f.y,22*s,0,7);cx.fill();for(let k=0;k<16;k++){const a=k/16*7;cx.strokeStyle='#fff59d';cx.lineWidth=2;cx.beginPath();cx.moveTo(f.x,f.y);cx.lineTo(f.x+Math.cos(a)*14,f.y+Math.sin(a)*14);cx.stroke();cx.fillStyle='#fbc02d';cx.beginPath();cx.arc(f.x+Math.cos(a)*14,f.y+Math.sin(a)*14,2,0,7);cx.fill();}}
-   else{cx.fillStyle='#a5b38a';cx.beginPath();cx.arc(f.x,f.y,5,0,7);cx.fill();}}
-  for(const r of g.ri){cx.fillStyle='#4e342e';cx.beginPath();cx.ellipse(r.x,r.y,8,6,0,0,7);cx.fill();cx.fillStyle='#ffca28';cx.fillRect(r.x-3,r.y-6,3,12);cx.fillStyle='rgba(255,255,255,.8)';cx.beginPath();cx.ellipse(r.x,r.y-8,7,4,0,0,7);cx.fill();}
-  morcego(cx,g.x,g.y,1.15,g.bat,'#5d4b42');cx.fillStyle='#fbc02d';for(let k=0;k<5;k++){cx.beginPath();cx.arc(g.x-6+k*3,g.y+6,1.8,0,7);cx.fill();}},
- capa(k,w,h){const o=cx;cx=k;k.fillStyle='#cfd3f2';k.fillRect(0,0,w,h);for(const [x,y] of [[250,90],[420,120]]){k.fillStyle='rgba(255,235,59,.4)';k.beginPath();k.arc(x,y,26,0,7);k.fill();for(let i=0;i<16;i++){const a=i/16*7;k.strokeStyle='#fff59d';k.lineWidth=2;k.beginPath();k.moveTo(x,y);k.lineTo(x+Math.cos(a)*18,y+Math.sin(a)*18);k.stroke();}}morcego(k,330,90,2,1,'#5d4b42');cx=o;}
-};
+/* ---------- arte vetorial compartilhada ---------- */
+beep=function(){};
+function rng(s){s=s%2147483647;if(s<=0)s+=2147483646;return()=>{s=s*16807%2147483647;return(s-1)/2147483646;};}
+function lg(k,x0,y0,x1,y1,st){const g=k.createLinearGradient(x0,y0,x1,y1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+function rg(k,x,y,r0,r1,st){const g=k.createRadialGradient(x,y,r0,x,y,r1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+const CACHE={};
+function cache(key,w,h,fn){const id=key+'_'+w+'x'+h;if(!CACHE[id]){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);CACHE[id]=c;}return CACHE[id];}
+function ceu(k,w,h,cs){k.fillStyle=lg(k,0,0,0,h,cs);k.fillRect(0,0,w,h);}
+function sol(k,x,y,r,c){k.fillStyle=rg(k,x,y,0,r*4,[c,'rgba(255,255,255,0)']);k.fillRect(x-r*4,y-r*4,r*8,r*8);k.fillStyle=c;k.beginPath();k.arc(x,y,r,0,7);k.fill();}
+function nuvem(k,x,y,s,a){k.fillStyle='rgba(255,255,255,'+(a||.8)+')';for(const [dx,dy,r] of [[0,0,1],[1.1,.15,.8],[-1,.2,.75],[.5,-.45,.7],[-.4,-.35,.6]]){k.beginPath();k.arc(x+dx*s,y+dy*s,r*s,0,7);k.fill();}k.fillRect(x-1.7*s,y+.2*s,3.6*s,.8*s);}
+function serra(k,w,y,amp,cor,seed){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,y+amp*2);let x=0;k.lineTo(0,y);while(x<w+40){x+=30+r()*50;k.lineTo(x,y-r()*amp);}k.lineTo(w,y+amp*4);k.lineTo(0,y+amp*4);k.fill();}
+function matas(k,w,y,amp,cor,seed,base){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,base);k.lineTo(0,y);let x=0;while(x<w+30){const rr=8+r()*amp;k.arc(x+rr,y-r()*amp*.6,rr,Math.PI,0);x+=rr*1.6;}k.lineTo(w,base);k.closePath();k.fill();}
+function capim(k,x0,y0,w,h,cor,seed,n){const r=rng(seed);k.strokeStyle=cor;k.lineCap='round';for(let i=0;i<n;i++){const x=x0+r()*w,y=y0+r()*h,l=4+r()*10;k.lineWidth=1+r()*1.2;for(let j=-1;j<=1;j++){k.beginPath();k.moveTo(x,y);k.quadraticCurveTo(x+j*3,y-l*.6,x+j*5+r()*2,y-l);k.stroke();}}}
+function copa(k,x,y,r,cs,seed){const R=rng(seed);const pts=[];for(let i=0;i<9;i++){const a=R()*Math.PI*2,d=R()*r*.55;pts.push([x+Math.cos(a)*d,y+Math.sin(a)*d*.7,r*(.35+R()*.3)]);}
+ k.fillStyle=cs[0];for(const [a,b,c] of pts){k.beginPath();k.arc(a+c*.12,b+c*.18,c,0,7);k.fill();}
+ k.fillStyle=cs[1];for(const [a,b,c] of pts){k.beginPath();k.arc(a,b,c*.92,0,7);k.fill();}
+ k.fillStyle=cs[2];for(const [a,b,c] of pts){k.beginPath();k.arc(a-c*.25,b-c*.3,c*.5,0,7);k.fill();}}
+function tronco(k,x,y0,y1,w0,w1,c1,c2){k.fillStyle=lg(k,x-w0,0,x+w0,0,[c2,c1,c1,c2]);k.beginPath();k.moveTo(x-w0,y0);k.lineTo(x-w1,y1);k.lineTo(x+w1,y1);k.lineTo(x+w0,y0);k.fill();k.strokeStyle='rgba(0,0,0,.12)';k.lineWidth=1;for(let y=y1+8;y<y0;y+=11){const t=(y-y1)/(y0-y1),ww=w1+(w0-w1)*t;k.beginPath();k.moveTo(x-ww*.6,y);k.quadraticCurveTo(x,y+3,x+ww*.5,y-1);k.stroke();}}
+function palmeira(k,x,y,h,lean,cfr,ctr,seed,nf){const R=rng(seed);const tx=x+lean,ty=y-h;k.strokeStyle=ctr;k.lineCap='round';for(let i=0;i<14;i++){const t0=i/14,t1=(i+1)/14;k.lineWidth=h*.05*(1-t0*.35);const xa=x+lean*t0*t0,ya=y-h*t0,xb=x+lean*t1*t1,yb=y-h*t1;k.beginPath();k.moveTo(xa,ya);k.lineTo(xb,yb);k.stroke();}
+ k.strokeStyle='rgba(0,0,0,.15)';k.lineWidth=1;for(let i=1;i<14;i++){const t=i/14,xa=x+lean*t*t,ya=y-h*t;k.beginPath();k.moveTo(xa-h*.022,ya);k.lineTo(xa+h*.022,ya);k.stroke();}
+ nf=nf||9;for(let f=0;f<nf;f++){const a=-Math.PI/2+(f-(nf-1)/2)*(2.6/nf)+(R()-.5)*.2,L=h*(.38+R()*.12),dr=.55+R()*.25;const ex=tx+Math.cos(a)*L,ey=ty+Math.sin(a)*L*.55+L*dr*.5;const mx=tx+Math.cos(a)*L*.5,my=ty+Math.sin(a)*L*.5-L*.12;
+  k.strokeStyle=cfr[0];k.lineWidth=2;k.beginPath();k.moveTo(tx,ty);k.quadraticCurveTo(mx,my,ex,ey);k.stroke();
+  for(let j=1;j<16;j++){const t=j/16,px=(1-t)*(1-t)*tx+2*(1-t)*t*mx+t*t*ex,py=(1-t)*(1-t)*ty+2*(1-t)*t*my+t*t*ey;const ll=L*.16*(1-t*.5);k.strokeStyle=cfr[j%2];k.lineWidth=1.6;k.beginPath();k.moveTo(px,py);k.lineTo(px+Math.cos(a+1.6)*ll*.5,py+ll);k.moveTo(px,py);k.lineTo(px+Math.cos(a-1.6)*ll*.5,py+ll*.9);k.stroke();}}}
+function sombraE(k,x,y,rx,ry,a){k.fillStyle='rgba(20,30,20,'+(a||.18)+')';k.beginPath();k.ellipse(x,y,rx,ry,0,0,7);k.fill();}
+function vinheta(k,w,h){k.fillStyle=rg(k,w/2,h/2,Math.min(w,h)*.45,Math.max(w,h)*.8,['rgba(0,0,0,0)','rgba(0,0,0,.18)']);k.fillRect(0,0,w,h);}
+function rrk(k,x,y,w,h,r,c){k.fillStyle=c;k.beginPath();k.roundRect(x,y,w,h,r);k.fill();}
+/* figura humana: o={pele,camisa,calca,chapeu,passo,bracoE,bracoD} ângulos em rad a partir de baixo */
+function pessoa(k,x,y,s,o){o=o||{};const p=o.passo||0;k.save();k.translate(x,y);k.scale(s*(o.dir||1),s);k.lineCap='round';k.lineJoin='round';
+ const pl=Math.sin(p)*.35;k.strokeStyle=o.calca||'#37474f';k.lineWidth=7;k.beginPath();k.moveTo(-3,-38);k.lineTo(-3+Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18,0);k.stroke();k.beginPath();k.moveTo(3,-38);k.lineTo(3-Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(3-Math.sin(pl)*20-Math.sin(pl*.5)*18,0);k.stroke();
+ k.fillStyle='#3e2723';k.beginPath();k.ellipse(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.ellipse(3-Math.sin(pl)*20-Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.fill();
+ k.fillStyle=o.camisa||'#1e88e5';k.beginPath();k.moveTo(-9,-40);k.lineTo(-10,-68);k.quadraticCurveTo(0,-74,10,-68);k.lineTo(9,-40);k.closePath();k.fill();k.fillStyle='rgba(0,0,0,.12)';k.fillRect(2,-68,7,28);
+ const be=o.bracoE!==undefined?o.bracoE:-pl*.8,bd=o.bracoD!==undefined?o.bracoD:pl*.8;k.strokeStyle=o.camisa||'#1e88e5';k.lineWidth=6;
+ for(const [sx,a] of [[-8,be],[8,bd]]){k.beginPath();k.moveTo(sx,-66);const ex=sx+Math.sin(a)*14,ey=-66+Math.cos(a)*14;k.lineTo(ex,ey);k.stroke();k.strokeStyle=o.pele||'#c68b59';k.beginPath();k.moveTo(ex,ey);k.lineTo(ex+Math.sin(a*1.15)*13,ey+Math.cos(a*1.15)*13);k.stroke();k.strokeStyle=o.camisa||'#1e88e5';}
+ k.fillStyle=o.pele||'#c68b59';k.fillRect(-3,-76,6,6);k.beginPath();k.ellipse(0,-83,7.5,8.5,0,0,7);k.fill();
+ if(o.chapeu!==false){k.fillStyle=o.chapeu||'#795548';k.beginPath();k.ellipse(0,-88,15,3.5,0,0,7);k.fill();k.beginPath();k.moveTo(-8,-88);k.quadraticCurveTo(-7,-99,0,-99);k.quadraticCurveTo(7,-99,8,-88);k.fill();k.fillStyle='rgba(0,0,0,.25)';k.fillRect(-8,-91,16,2.5);}
+ k.restore();}
+/* boi nelore em perfil, olhando para +x */
+function boi(k,x,y,s,dir,cor,p){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#ece6da';p=p||0;
+ const pern=[[-26,0],[-18,Math.PI],[18,Math.PI],[26,0]];
+ for(let i=0;i<4;i++){const [lx,ph]=pern[i];const a=Math.sin(p+ph)*.3;k.strokeStyle=i==1||i==2?shade(c,-.12):c;k.lineCap='round';k.lineWidth=6.5;k.beginPath();k.moveTo(lx,-24);k.lineTo(lx+Math.sin(a)*9,-10);k.lineTo(lx+Math.sin(a)*7,2);k.stroke();k.fillStyle='#3e2723';k.fillRect(lx+Math.sin(a)*7-3.5,1,7,3);}
+ k.fillStyle=c;k.beginPath();k.moveTo(-34,-40);k.quadraticCurveTo(-38,-24,-30,-20);k.quadraticCurveTo(0,-14,26,-20);k.quadraticCurveTo(34,-26,32,-40);k.quadraticCurveTo(28,-50,20,-54);k.quadraticCurveTo(12,-56,8,-48);k.quadraticCurveTo(-10,-46,-28,-48);k.quadraticCurveTo(-34,-46,-34,-40);k.fill();
+ k.fillStyle=lg(k,0,-50,0,-18,['rgba(255,255,255,.18)','rgba(0,0,0,0)','rgba(60,40,20,.22)']);k.fill();
+ k.fillStyle=c;k.beginPath();k.moveTo(26,-44);k.quadraticCurveTo(38,-44,44,-38);k.lineTo(54,-24);k.quadraticCurveTo(56,-18,51,-17);k.quadraticCurveTo(46,-18,42,-24);k.quadraticCurveTo(34,-26,28,-22);k.fill();
+ k.beginPath();k.moveTo(28,-26);k.quadraticCurveTo(34,-14,30,-12);k.quadraticCurveTo(24,-16,22,-24);k.fill();
+ k.fillStyle=shade(c,-.35);k.beginPath();k.ellipse(52,-19,3.4,2.6,.4,0,7);k.fill();k.fillStyle='#1b1b1b';k.beginPath();k.arc(44,-34,1.8,0,7);k.fill();
+ k.fillStyle=shade(c,-.08);k.beginPath();k.ellipse(38,-41,8,2.8,.5,0,7);k.fill();k.strokeStyle='#cfc4b0';k.lineWidth=2.4;k.lineCap='round';k.beginPath();k.moveTo(41,-44);k.quadraticCurveTo(44,-49,42,-52);k.stroke();
+ k.strokeStyle=c;k.lineWidth=2.2;k.beginPath();k.moveTo(-34,-42);k.quadraticCurveTo(-40,-28,-37,-14);k.stroke();k.fillStyle='#4e342e';k.beginPath();k.ellipse(-37,-13,2.2,4.5,0,0,7);k.fill();
+ k.restore();}
+function shade(hex,f){let n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;const t=f<0?0:255,p=Math.abs(f);r=Math.round((t-r)*p+r);g=Math.round((t-g)*p+g);b=Math.round((t-b)*p+b);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+function cavalo(k,x,y,s,dir,p,cor){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#8d5a3b';k.strokeStyle=c;k.lineCap='round';k.lineWidth=6;
+ for(const [lx,ph] of [[-20,0],[-12,Math.PI],[18,Math.PI],[26,0]]){const a=Math.sin(p+ph)*.45;k.beginPath();k.moveTo(lx,-22);k.lineTo(lx+Math.sin(a)*10,-8);k.lineTo(lx+Math.sin(a)*8,4);k.stroke();}
+ k.fillStyle=c;k.beginPath();k.ellipse(3,-30,28,12,0,0,7);k.fill();k.beginPath();k.moveTo(22,-36);k.quadraticCurveTo(30,-56,40,-58);k.lineTo(50,-48);k.quadraticCurveTo(44,-44,38,-46);k.lineTo(30,-26);k.fill();
+ k.fillStyle='#3e2723';k.beginPath();k.moveTo(24,-40);k.quadraticCurveTo(30,-60,40,-60);k.lineTo(36,-56);k.quadraticCurveTo(30,-52,28,-36);k.fill();k.beginPath();k.moveTo(-24,-34);k.quadraticCurveTo(-38,-26,-34,-6);k.quadraticCurveTo(-30,-22,-22,-28);k.fill();
+ k.fillStyle='rgba(0,0,0,.15)';k.beginPath();k.ellipse(3,-23,24,4,0,0,7);k.fill();k.fillStyle='#5d4037';k.fillRect(-8,-44,22,6);k.restore();}
+function cavaleiro(k,x,y,s,dir,p,o){cavalo(k,x,y,s,dir,p,o&&o.cor);k.save();k.translate(x,y);k.scale(s*dir,s);pessoa(k,2,-30,.62,Object.assign({passo:0,bracoE:.9,bracoD:1.3,calca:'#4e342e'},o||{}));k.restore();}
+/* tela cheia genérica para os jogos do motor arcade */
+const FS={on:false};
+(function(){const st=document.createElement('style');st.textContent='.fsmode{position:fixed!important;inset:0!important;z-index:9999!important;background:#fff!important;margin:0!important;padding:0!important;border-radius:0!important;max-width:none!important;width:100vw!important;height:100dvh!important;border:0!important}.fsmode canvas{width:100vw!important;height:100dvh!important;max-width:none!important;border:0!important;border-radius:0!important}.fsmode p.small{display:none}.fsmode .fsrow{position:fixed;top:48px;right:8px;z-index:10000;margin:0!important}.fsmode .fsrow .btn{padding:6px 14px;font-size:13px}';document.head.appendChild(st);
+ document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&FS.on)FS.set(false);});addEventListener('resize',()=>{if(FS.on)setTimeout(FS.ajusta,50);});})();
+FS.ajusta=function(){const c=$('cv');if(!c)return;if(FS.on){W=Math.round(innerWidth);H=Math.round(innerHeight);}else{if(c.clientWidth<520){W=420;H=560;}else{W=720;H=460;}}c.width=W;c.height=H;cx=c.getContext('2d');if(G.reajusta)G.reajusta(S.g);};
+FS.set=function(on){const c=$('cv');if(!c)return;const card=c.parentNode;FS.on=on;const b=$('btfs');if(b)b.textContent=on?'Sair':'Tela cheia';
+ if(on){card.classList.add('fsmode');try{const r=document.documentElement.requestFullscreen;if(r)r.call(document.documentElement).catch(()=>{});}catch(e){}}
+ else{card.classList.remove('fsmode');try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}}
+ setTimeout(FS.ajusta,80);};
+FS.botao=()=>'<div class="row fsrow" style="justify-content:center;margin-top:8px"><button class="btn ghost" id="btfs" onclick="FS.set(!FS.on)">Tela cheia</button></div>';
+FS.ligar=()=>{if(FS.on){const c=$('cv');c.parentNode.classList.add('fsmode');const b=$('btfs');if(b)b.textContent='Sair';FS.ajusta();}};
+FS.hud=(g,cor)=>{if(!FS.on||!g)return;const [a,m2]=G.meta(g);const t='Fase '+(S.f+1)+'/'+G.FASES.length+'  ·  '+(S.tot+S.fp)+' pts  ·  '+G.rotulo+' '+a+'/'+m2+(G.semTempo?'':'  ·  '+Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s');cx.font='bold 13px system-ui';const w=cx.measureText(t).width+24;rrk(cx,10,48,w,26,13,'rgba(255,255,255,.95)');cx.fillStyle=cor||'#37474f';cx.textAlign='left';cx.fillText(t,22,66);};
+/* Arte do Morcego do Pequi: morcego-beija-flor (Glossophaga soricina) em voo, pequizeiro com flores em pincel. */
+/* morcego visto de frente, levemente de cima. s = escala (envergadura ~ 120*s), fl = fase da batida, dir = olhar */
+function morcegoR(k,x,y,s,fl,dir){k.save();k.translate(x,y);k.scale(s*(dir||1),s);const a=Math.sin(fl),b=Math.cos(fl);
+ const pele='#6b5648',mem='rgba(92,70,58,.92)',osso='#3b2d24';
+ for(const sd of [-1,1]){k.save();k.scale(sd,1);
+  const ox=6,oy=-4,cot={x:24,y:-14-a*16},pul={x:40,y:-12-a*26},d3={x:60,y:-8-a*30},d4={x:58,y:8-a*20},d5={x:44,y:18-a*10},pe={x:10,y:20};
+  k.fillStyle=mem;k.beginPath();k.moveTo(ox,oy);k.lineTo(cot.x,cot.y);k.lineTo(pul.x,pul.y);k.lineTo(d3.x,d3.y);
+  k.quadraticCurveTo((d3.x+d4.x)/2-4,(d3.y+d4.y)/2,d4.x,d4.y);k.quadraticCurveTo((d4.x+d5.x)/2-5,(d4.y+d5.y)/2-2,d5.x,d5.y);k.quadraticCurveTo((d5.x+pe.x)/2,(d5.y+pe.y)/2-4,pe.x,pe.y);k.closePath();k.fill();
+  k.fillStyle='rgba(255,255,255,.06)';k.beginPath();k.moveTo(cot.x,cot.y);k.lineTo(d3.x,d3.y);k.lineTo(d4.x,d4.y);k.closePath();k.fill();
+  k.strokeStyle=osso;k.lineCap='round';k.lineWidth=2.2;k.beginPath();k.moveTo(ox,oy);k.lineTo(cot.x,cot.y);k.lineTo(pul.x,pul.y);k.stroke();
+  k.lineWidth=1.1;for(const d of [d3,d4,d5]){k.beginPath();k.moveTo(pul.x,pul.y);k.lineTo(d.x,d.y);k.stroke();}
+  k.fillStyle=osso;k.beginPath();k.arc(pul.x,pul.y,1.8,0,7);k.fill();k.beginPath();k.moveTo(pul.x,pul.y);k.lineTo(pul.x-3,pul.y-5);k.lineTo(pul.x+1,pul.y-2);k.fill();
+  k.restore();}
+ /* corpo */k.fillStyle=lg(k,0,-12,0,18,['#8a7060','#6b5648','#544238']);k.beginPath();k.ellipse(0,4,8,14,0,0,7);k.fill();
+ k.fillStyle='rgba(255,240,220,.12)';k.beginPath();k.ellipse(-2,0,4,9,0,0,7);k.fill();
+ /* cabeça com focinho comprido */k.fillStyle='#7a6252';k.beginPath();k.ellipse(0,-12,6.5,6,0,0,7);k.fill();k.beginPath();k.ellipse(0,-6,3.4,5.5,0,0,7);k.fill();
+ k.fillStyle='#5b463a';k.beginPath();k.moveTo(-1.6,-2.5);k.lineTo(0,-6.5);k.lineTo(1.6,-2.5);k.fill();
+ for(const sd of [-1,1]){k.fillStyle='#6b5648';k.beginPath();k.moveTo(sd*3,-16);k.quadraticCurveTo(sd*7,-25,sd*9,-17);k.quadraticCurveTo(sd*7,-14,sd*4,-13);k.fill();k.fillStyle='#a58b78';k.beginPath();k.moveTo(sd*4.2,-16);k.quadraticCurveTo(sd*7,-22,sd*7.8,-17);k.fill();
+  k.fillStyle='#120c08';k.beginPath();k.arc(sd*2.6,-12.5,1.2,0,7);k.fill();k.fillStyle='rgba(255,255,255,.7)';k.beginPath();k.arc(sd*2.3,-12.9,.4,0,7);k.fill();}
+ k.strokeStyle='#5b463a';k.lineWidth=1.4;for(const sd of [-1,1]){k.beginPath();k.moveTo(sd*4,16);k.lineTo(sd*9,21);k.stroke();}
+ k.restore();}
+/* flor do pequi: pincel de estames creme com pontas de antera */
+function florPequi(k,x,y,r,abre,nec){if(abre<=0){k.fillStyle='#c9c27a';k.beginPath();k.arc(x,y,r*.32,0,7);k.fill();k.fillStyle='rgba(120,110,40,.5)';k.beginPath();k.arc(x+r*.08,y+r*.08,r*.18,0,7);k.fill();return;}
+ const n=44,R=rr=>r*rr;k.lineWidth=Math.max(.8,r*.06);for(let i=0;i<n;i++){const an=i/n*6.283+(i%3)*.05,l=R(.75+((i*37)%10)/40)*abre;k.strokeStyle='rgba(245,236,200,.95)';k.beginPath();k.moveTo(x,y);k.lineTo(x+Math.cos(an)*l,y+Math.sin(an)*l);k.stroke();
+  k.fillStyle=(i%2)?'#e9c74a':'#d9a93a';k.beginPath();k.arc(x+Math.cos(an)*l,y+Math.sin(an)*l,Math.max(.8,r*.05),0,7);k.fill();}
+ k.fillStyle='#f4ecd0';k.beginPath();k.arc(x,y,r*.22,0,7);k.fill();if(nec!==undefined){k.fillStyle='rgba(120,170,220,'+(.25+nec*.6)+')';k.beginPath();k.arc(x,y,r*.16*Math.max(.3,nec),0,7);k.fill();}}
+/* pequizeiro: tronco tortuoso, casca grossa, copa de folhas trifolioladas */
+function pequizeiro(k,x,y,h,seed){const R=rng(seed||3);k.save();k.translate(x,y);
+ const tr=[[0,0]];let px=0,py=0;for(let i=1;i<=5;i++){px+=(R()-.5)*h*.12;py-=h*.09;tr.push([px,py]);}
+ k.strokeStyle='#5d4536';k.lineCap='round';k.lineJoin='round';k.lineWidth=h*.09;k.beginPath();tr.forEach(([a,b],i)=>i?k.lineTo(a,b):k.moveTo(a,b));k.stroke();
+ k.strokeStyle='#7d6150';k.lineWidth=h*.03;k.beginPath();tr.forEach(([a,b],i)=>i?k.lineTo(a-h*.015,b):k.moveTo(a-h*.015,b));k.stroke();
+ k.strokeStyle='rgba(30,20,12,.55)';k.lineWidth=1.2;for(let i=0;i<tr.length-1;i++){const [a,b]=tr[i],[c2,d]=tr[i+1];for(let j=0;j<5;j++){const t=R(),xx=a+(c2-a)*t,yy=b+(d-b)*t;k.beginPath();k.moveTo(xx-h*.03,yy);k.lineTo(xx+h*.03,yy+(R()-.5)*h*.02);k.stroke();}}
+ const ramos=[];const top=tr[tr.length-1];for(let i=0;i<5;i++){const an=-1.57+(i-2)*.62+(R()-.5)*.25,l=h*(.3+R()*.16);const ex=top[0]+Math.cos(an)*l,ey=top[1]+Math.sin(an)*l*.75;ramos.push([ex,ey]);
+  k.strokeStyle='#5d4536';k.lineWidth=h*.035;k.beginPath();k.moveTo(top[0],top[1]);k.quadraticCurveTo((top[0]+ex)/2+(R()-.5)*h*.1,(top[1]+ey)/2,ex,ey);k.stroke();}
+ k.fillStyle='rgba(52,88,36,.85)';for(const [bx,by] of ramos){k.beginPath();k.ellipse(bx,by+h*.02,h*.2,h*.12,0,0,7);k.fill();}
+ for(let j=0;j<85;j++){const [bx,by]=ramos[j%5],lx=bx+(R()-.5)*h*.36,ly=by+(R()-.5)*h*.2;const an=R()*6.283,c=R()<.5?'#4f7a33':'#5f8c3d';
+  for(let f=0;f<3;f++){const a2=an+(f-1)*.7;k.fillStyle=f===1?c:'#3f6a2a';k.save();k.translate(lx,ly);k.rotate(a2);k.beginPath();k.ellipse(h*.045,0,h*.05,h*.025,0,0,7);k.fill();k.strokeStyle='rgba(255,255,255,.18)';k.lineWidth=.8;k.beginPath();k.moveTo(0,0);k.lineTo(h*.09,0);k.stroke();k.restore();}}
+ k.restore();return ramos.map(([a,b])=>[x+a,y+b]);}
+/* Morcego do Pequi. Polinização do pequizeiro (Caryocar brasiliense) por morcegos.
+Gribel & Hay (1993, J. Trop. Ecol.): flores em pincel, polinizadas sobretudo por Glossophaga soricina e Anoura geoffroyi; autocompatível, mas forma mais frutos com pólen de outra árvore; frutificação natural de 3,1%.
+Embrapa (Espécies Arbóreas Brasileiras, vol. 3): 2 ou 3 flores por cacho abrem no início de cada noite. FAPESP: néctar máximo perto da alvorada, quando abelhas e beija-flores também visitam.
+Melo (2001, Rev. Brasil. Biol.): 13 espécies de aves visitaram as flores de dia.
+Energia, gasto de voo, néctar, distâncias e pontos são regras do jogo. */
+const PQ={};
+PQ.F=[{tipo:'nec',n:3},{tipo:'cruz',n:3},{tipo:'alva',n:4},{tipo:'iso',n:4}];
+const G={titulo:'Morcego do Pequi',get rotulo(){return ['Visitas','Pólen cruzado','Pólen cruzado','Árvore isolada'][S?S.f:0];},vidas:0,
+ resumo:'As flores do pequizeiro abrem à noite. Você é um morcego-beija-flor: bebe o néctar e leva o pólen de uma árvore para outra. Assim o pequi vira fruto.',
+ como:[['Voar','Toque ou arraste para o morcego voar até lá. Voar gasta energia.'],['Beber','Pare numa flor aberta e espere o anel encher. O néctar devolve energia.'],['Polinizar','O pólen da última árvore fica no seu pelo. Leve para uma flor de outra árvore.']],
+ get dica(){return ['Visite as flores abertas, as creme. Os botões ainda estão fechados.','Veja no painel de qual árvore é o pólen. Vá para uma árvore diferente.','Na alvorada chegam abelhas e beija-flores. Visite antes deles.','A árvore isolada fica longe. Beba bastante antes de cruzar o pasto.'][S?S.f:0];},
+ dicaErro:'Pólen da mesma árvore quase não forma fruto. Alterne as árvores.',
+ FASES:[{nome:'Flores da noite',dur:50,meta:10,metaTxt:'beber o néctar de 10 flores antes do fim da noite.',txt:'Escureceu e as flores do pequizeiro abriram. Voe até as flores creme e beba o néctar. Voar gasta energia, e o néctar devolve.',fato:'A cada noite só 2 ou 3 flores de cada cacho do pequizeiro se abrem. Elas são grandes, cor de creme e têm um pincel de estames.'},
+  {nome:'Pólen de outra árvore',dur:55,meta:8,metaTxt:'fazer 8 polinizações com pólen de outra árvore.',txt:'Ao beber, o morcego sai com pólen no pelo. Leve esse pólen para uma flor de outra árvore. Pólen da mesma árvore vale pouco.',fato:'O pequizeiro aceita o próprio pólen, mas forma muito mais frutos quando o pólen vem de outra árvore.'},
+  {nome:'Antes do sol',dur:55,meta:9,metaTxt:'fazer 9 polinizações cruzadas antes do sol nascer.',txt:'Perto da alvorada o néctar fica mais farto. Mas abelhas e beija-flores chegam e esvaziam as flores. Seja rápido.',fato:'Perto da alvorada o néctar chega ao máximo, e abelhas e beija-flores também visitam as flores. De dia, várias espécies de aves bebem esse néctar.'},
+  {nome:'Árvore isolada',dur:60,meta:3,metaTxt:'polinizar 3 flores da árvore isolada com pólen de outra árvore.',txt:'Um pequizeiro ficou sozinho no meio do pasto. Sem visita de morcego vindo de outra árvore, ele quase não dá fruto. Cruze o pasto com energia de sobra.',fato:'Mesmo com as visitas, só cerca de 3 em cada 100 flores do pequizeiro viram fruto. Árvores isoladas recebem menos pólen de outras árvores.'}],
+ init(g){g.ok=0;g.vis=0;g.lb=[];const F=PQ.F[S.f];PQ.monta(g);g.bat={x:W*.5,y:H*.2,e:.8,pol:null,fl:0,a:0};g.alvo=null;g.beb=null;g.comp=[];g.desc=0;g.tc=3;},
+ meta(g){return [g.ok,FASES[S.f].meta];},cedo(g){return g.ok>=FASES[S.f].meta;},
+ update(g,dt){PQ.up(g,dt);},draw(g){PQ.draw(g);},botoes(){return FS.botao();},ligar(){FS.ligar();},reajusta(g){if(g&&g.arv)PQ.monta(g,true);},
+ capa(k,w,h){const o=cx,oW=W,oH=H;cx=k;W=w;H=h;PQ.ceu(k,w,h,0);const P=pequizeiro(k,w*.3,h*1.02,h*.95,5);P.forEach(([x,y],i)=>florPequi(k,x,y-6,10,i%2?1:0,.6));morcegoR(k,w*.66,h*.42,1.3,.4,1);cx=o;W=oW;H=oH;}};
 const FASES=G.FASES;
+PQ.chao=()=>PQ.dock().y-4;
+PQ.dock=()=>{const m=MOB();return {x:8,y:H-(m?58:54)-8,w:W-16,h:m?58:54,m};};
+PQ.monta=function(g,mant){const F=PQ.F[S.f],n=F.n,base=PQ.chao(),m=MOB(),port=H>W*1.2,hh=Math.min(H*(port?.42:.5),W*(port?.62:.3));const xs=[];
+ if(F.tipo==='iso'){const x0=W*(m?.2:.14);xs.push(x0,x0+W*(m?.3:.2),x0+W*(m?.15:.1));xs.push(W*(m?.84:.88));}else for(let i=0;i<n;i++)xs.push(W*(i+.5)/n);
+ const old=mant?g.arv:null;if(F.tipo==='iso'&&port){xs.length=0;xs.push(W*.2,W*.62,W*.4,W*.7);}
+ g.port=port;g.arv=xs.map((x,i)=>({x,y:F.tipo==='iso'&&port&&i===3?H*.5:base-(port&&F.tipo!=='iso'?(i%2)*H*.24:(F.tipo==='iso'&&i===2?H*(port?.14:.2):(i%2)*8)),h:hh*(F.tipo==='iso'&&i===2?.85:F.tipo==='iso'&&port&&i===3?.6:1)*(.92+((i*7)%3)*.05),seed:11+i*7,id:String.fromCharCode(65+i),iso:F.tipo==='iso'&&i===3}));
+ g.fl=[];g.arv.forEach((a,i)=>{const R=rng(a.seed+3);const c=document.createElement('canvas');const ramos=pequizeiro(c.getContext('2d'),a.x,a.y,a.h,a.seed);
+  ramos.forEach(([x,y],j)=>{const abertas=2+(R()<.5?1:0);for(let q=0;q<3;q++){const an=-1.2+q*1.2+(R()-.5)*.4,d=a.h*.06;g.fl.push({x:x+Math.cos(an)*d,y:y-a.h*.03+Math.sin(an)*d*.6,arv:i,ab:q<abertas?1:0,nec:.5+R()*.4,pol:null,vis:0,t:0});}});});
+ if(old){/* mantém o estado das flores se o número bater */}};
+PQ.ceu=function(k,w,h,alva){const a=Math.max(0,Math.min(1,alva));const top=a<.5?['#d9d6ef','#ebe4f2']:['#e5dff0','#f7e5d6'];const gr=k.createLinearGradient(0,0,0,h);gr.addColorStop(0,top[0]);gr.addColorStop(.6,top[1]);gr.addColorStop(1,a>.5?'#fbe7c8':'#f3ecdc');k.fillStyle=gr;k.fillRect(0,0,w,h);
+ if(a<.7){k.globalAlpha=1-a;k.fillStyle='#fffdf2';k.beginPath();k.arc(w*.82,h*.16,Math.min(w,h)*.05,0,7);k.fill();k.fillStyle='rgba(255,253,242,.35)';k.beginPath();k.arc(w*.82,h*.16,Math.min(w,h)*.09,0,7);k.fill();k.globalAlpha=1;}
+ if(a>.4){k.globalAlpha=(a-.4)/.6;const sg=k.createRadialGradient(w*.1,h*.86,0,w*.1,h*.86,w*.5);sg.addColorStop(0,'rgba(255,200,130,.55)');sg.addColorStop(1,'rgba(255,200,130,0)');k.fillStyle=sg;k.fillRect(0,0,w,h);k.globalAlpha=1;}
+ /* horizonte com cerrado distante e chão */const R=rng(4);k.fillStyle='#b9c3a0';k.beginPath();k.moveTo(0,h*.8);for(let x=0;x<=w;x+=w/40)k.lineTo(x,h*.8-R()*h*.04-Math.sin(x*.01)*h*.015);k.lineTo(w,h);k.lineTo(0,h);k.fill();
+ const gy=(typeof S!=='undefined'&&S&&S.g)?PQ.chao():h*.86;k.fillStyle='#c9c08a';k.fillRect(0,gy-h*.04,w,h);k.fillStyle='rgba(120,110,60,.25)';for(let i=0;i<w/3;i++){const x=R()*w,y=h*.86+R()*h*.14;k.fillRect(x,y,1,-3-R()*5);}};
+PQ.fundo=function(g){const a=PQ.alva(g);return cache('pqfundo'+S.f+'_'+Math.round(a*8),W,H,k=>{PQ.ceu(k,W,H,a/1);
+ if(PQ.F[S.f].tipo==='iso'){const R=rng(9);if(g.port){k.fillStyle='#cdbf85';k.fillRect(0,H*.47,W,H);k.fillStyle='rgba(120,110,60,.2)';for(let i=0;i<W;i++)k.fillRect(R()*W,H*.47+R()*H*.5,1,-3);}else{k.fillStyle='#d2c58a';k.fillRect(W*.45,H*.86,W*.32,H*.14);}for(let i=0;i<4;i++){const x=g.port?W*(.15+R()*.7):W*(.5+R()*.22),y=g.port?H*(.55+R()*.08):H*(.88+R()*.06);k.fillStyle='#f4f1ea';k.beginPath();k.ellipse(x,y,10,5,0,0,7);k.fill();k.fillStyle='#e8e2d6';k.beginPath();k.ellipse(x+9,y-2,4,3,0,0,7);k.fill();k.fillStyle='#8d8270';k.fillRect(x-7,y+3,2,6);k.fillRect(x+5,y+3,2,6);}
+  k.font='600 12px system-ui';k.textAlign='center';k.fillStyle='rgba(255,255,255,.85)';const t='pasto';const tw=k.measureText(t).width+14;const px=g.port?W*.3:W*.6,py=g.port?H*.52:H*.83;k.fillRect(px-tw/2,py-13,tw,18);k.fillStyle='#6d6a3a';k.fillText(t,px,py);}
+ const ord=g.arv.slice().sort((p,q)=>p.y-q.y);for(const t of ord)pequizeiro(k,t.x,t.y,t.h,t.seed);});};
+PQ.alva=g=>PQ.F[S.f].tipo==='alva'?Math.min(1,Math.max(0,(g.t/FASES[S.f].dur-.35)/.6)):Math.min(.35,g.t/FASES[S.f].dur*.35);
+PQ.up=function(g,dt){const F=PQ.F[S.f],b=g.bat,sp=(MOB()?190:240)*Math.max(.8,Math.min(1.2,W/800));b.fl+=dt*(g.beb?28:14);g.lb=g.lb.filter(l=>(l.t-=dt)>0);
+ for(const f of g.fl){if(f.ab)f.nec=Math.min(1,f.nec+dt*.02*(1+PQ.alva(g)*2));if(f.pol)f.t+=dt;}
+ if(g.desc>0){g.desc-=dt;if(g.desc<=0){b.e=.5;msg('O morcego descansou. Voe de novo.');}return;}
+ if(inp.down&&inp.x!==null){g.alvo={x:inp.x,y:inp.y};g.beb=null;}else if(inp.tap){g.alvo={x:inp.tap.x,y:inp.tap.y};g.beb=null;}
+ if(g.alvo&&!g.beb){const dx=g.alvo.x-b.x,dy=g.alvo.y-b.y,d=Math.hypot(dx,dy);if(d>3){const s=Math.min(d,sp*dt);b.x+=dx/d*s;b.y+=dy/d*s;b.e-=s*(F.tipo==='iso'?.00055:.00045);b.dir=dx<0?-1:1;}else{g.alvo=null;}}
+ b.e-=dt*.006;b.y=Math.max((FS.on?84:10)+20,Math.min(PQ.dock().y-30,b.y));
+ if(b.e<=0){b.e=0;g.desc=2.5;g.alvo=null;g.beb=null;ganha(-10,b.x,b.y-20);msg('Sem energia. O morcego pousou para descansar.');return;}
+ /* beber */if(!g.beb&&!inp.down){let best=null,bd=26;for(const f of g.fl){if(!f.ab||f.vis)continue;const d=Math.hypot(f.x-b.x,f.y-b.y);if(d<bd){bd=d;best=f;}}if(best&&(!g.alvo||Math.hypot(g.alvo.x-best.x,g.alvo.y-best.y)<30)){g.beb={f:best,t:0};g.alvo=null;}}
+ if(g.beb){const f=g.beb.f;b.x+=(f.x-b.x)*Math.min(1,dt*10);b.y+=(f.y+4-b.y)*Math.min(1,dt*10);g.beb.t+=dt;if(f.vis){g.beb=null;return;}if(g.beb.t>=.7){PQ.visita(g,f);g.beb=null;}}
+ /* competidores na alvorada */if(F.tipo==='alva'&&PQ.alva(g)>.35){g.tc-=dt;if(g.tc<=0){const livres=g.fl.filter(f=>f.ab&&!f.vis&&!g.comp.some(c=>c.f===f));if(livres.length){const f=livres[Math.floor(Math.random()*livres.length)],bf=Math.random()<.5;g.comp.push({f,x:bf?-20:W+20,y:H*(.2+Math.random()*.3),bf,t:0});}g.tc=1.6-PQ.alva(g)*.8;}
+  for(const c of g.comp){const dx=c.f.x-c.x,dy=c.f.y-c.y,d=Math.hypot(dx,dy);if(d>4){const s=Math.min(d,(c.bf?160:110)*dt);c.x+=dx/d*s;c.y+=dy/d*s;}else{c.t+=dt;if(c.t>1.2&&!c.f.vis){c.f.vis=2;c.f.nec=0;c.fim=1;g.lb.push({x:c.f.x,y:c.f.y-18,tx:c.bf?'beija-flor bebeu':'abelha bebeu',t:1.4,c:'#8d6e63'});}}}
+  g.comp=g.comp.filter(c=>!c.fim);}};
+PQ.visita=function(g,f){const b=g.bat,F=PQ.F[S.f],a=g.arv[f.arv];f.vis=1;g.vis++;b.e=Math.min(1,b.e+.18+f.nec*.22);const nec=f.nec;f.nec=0;
+ if(F.tipo==='nec'){g.ok++;ganha(5+Math.round(nec*5),f.x,f.y-14);}
+ else{if(b.pol&&b.pol!==a.id){f.pol='x';ganha(15,f.x,f.y-14);if(F.tipo!=='iso'||a.iso){g.ok++;}g.lb.push({x:f.x,y:f.y-28,tx:'pólen da árvore '+b.pol,t:1.3,c:'#2e7d32'});}
+  else if(b.pol===a.id){f.pol='s';ganha(2,f.x,f.y-14);g.lb.push({x:f.x,y:f.y-28,tx:'pólen da mesma árvore',t:1.3,c:'#8d6e63'});}
+  else ganha(3,f.x,f.y-14);}
+ b.pol=a.id;};
+PQ.draw=function(g){const F=PQ.F[S.f],m=MOB(),b=g.bat,D=PQ.dock();cx.drawImage(PQ.fundo(g),0,0);
+ for(const a of g.arv){cx.font='bold 12px system-ui';cx.textAlign='center';const t=a.iso?'árvore '+a.id+' isolada':'árvore '+a.id,tw=cx.measureText(t).width+14;rrk(cx,a.x-tw/2,a.y-a.h*.3,tw,20,10,'rgba(255,255,255,.9)');cx.fillStyle='#5a661c';cx.fillText(t,a.x,a.y-a.h*.3+14);}
+ for(const f of g.fl){const r=m?7:8.5;if(!f.ab){florPequi(cx,f.x,f.y,r,0);continue;}if(f.vis===2){cx.globalAlpha=.4;florPequi(cx,f.x,f.y,r,.8);cx.globalAlpha=1;continue;}
+  if(!f.vis){const p=.5+Math.sin(g.t*3+f.x)*.5;cx.strokeStyle='rgba(255,250,215,'+(.4+p*.4)+')';cx.lineWidth=1.5;cx.beginPath();cx.arc(f.x,f.y,r*1.35,0,7);cx.stroke();}
+  florPequi(cx,f.x,f.y,r,1,f.vis?undefined:f.nec);if(f.pol){const c=f.pol==='x';cx.fillStyle=c?'#2e7d32':'#a1887f';cx.beginPath();cx.arc(f.x+r*.9,f.y-r*.9,5,0,7);cx.fill();cx.fillStyle='#fff';cx.font='bold 8px system-ui';cx.textAlign='center';cx.fillText(c?'✓':'·',f.x+r*.9,f.y-r*.9+3);
+   if(c&&f.t>1){cx.fillStyle='#7cb342';cx.beginPath();cx.arc(f.x,f.y+r*.2,3+Math.min(3,f.t),0,7);cx.fill();}}}
+ for(const c of g.comp){if(c.bf){cx.save();cx.translate(c.x,c.y);cx.fillStyle='#2e7d6b';cx.beginPath();cx.ellipse(0,0,7,3.5,0,0,7);cx.fill();cx.strokeStyle='#263238';cx.lineWidth=1.2;cx.beginPath();cx.moveTo(6,0);cx.lineTo(13,1);cx.stroke();cx.fillStyle='rgba(120,160,150,.6)';cx.beginPath();cx.ellipse(-1,-5,3,7,Math.sin(g.t*60)*.5,0,7);cx.fill();cx.restore();}
+  else{cx.fillStyle='#4e342e';cx.beginPath();cx.ellipse(c.x,c.y,4,2.6,0,0,7);cx.fill();cx.fillStyle='#fbc02d';cx.fillRect(c.x-1,c.y-2.5,1.5,5);cx.fillStyle='rgba(255,255,255,.7)';cx.beginPath();cx.ellipse(c.x,c.y-4,3,2,Math.sin(g.t*70),0,7);cx.fill();}}
+ if(g.alvo){cx.strokeStyle='rgba(90,102,28,.7)';cx.lineWidth=2;cx.beginPath();cx.arc(g.alvo.x,g.alvo.y,7,0,7);cx.stroke();}
+ if(g.desc>0){cx.save();cx.translate(b.x,b.y);cx.rotate(3.14);morcegoR(cx,0,0,m?.32:.38,0,1);cx.restore();}else morcegoR(cx,b.x,b.y,m?.42:.5,b.fl,b.dir||1);
+ if(b.pol&&!g.desc){cx.fillStyle='#e9c74a';cx.beginPath();cx.arc(b.x,b.y-14,6.5,0,7);cx.fill();cx.fillStyle='#5a661c';cx.font='bold 9px system-ui';cx.textAlign='center';cx.fillText(b.pol,b.x,b.y-10.5);}
+ if(g.beb){cx.strokeStyle='#5a661c';cx.lineWidth=3;cx.beginPath();cx.arc(g.beb.f.x,g.beb.f.y,16,-1.57,-1.57+6.283*g.beb.t/.7);cx.stroke();}
+ for(const l of g.lb){cx.font='bold 11px system-ui';const w=cx.measureText(l.tx).width+12;rrk(cx,l.x-w/2,l.y-12,w,18,9,'rgba(255,255,255,.95)');cx.fillStyle=l.c;cx.textAlign='center';cx.fillText(l.tx,l.x,l.y+1);}
+ /* painel */cx.fillStyle='rgba(0,0,0,.12)';cx.beginPath();cx.roundRect(D.x,D.y+3,D.w,D.h,16);cx.fill();rrk(cx,D.x,D.y,D.w,D.h,16,'rgba(255,255,255,.96)');
+ const ew=m?D.w*.46:220,ex=D.x+14,ey=D.y+D.h/2+2;cx.textAlign='left';cx.fillStyle='#37474f';cx.font='bold 12px system-ui';cx.fillText('Energia',ex,ey-8);rrk(cx,ex,ey-2,ew,12,6,'#eceff1');rrk(cx,ex,ey-2,Math.max(6,ew*b.e),12,6,b.e>.5?'#7b8a2b':b.e>.25?'#f9a825':'#e53935');
+ const hora=PQ.F[S.f].tipo==='alva'?(PQ.alva(g)>.75?'alvorada':PQ.alva(g)>.35?'quase amanhecendo':'madrugada'):'noite';
+ cx.textAlign='right';cx.font='bold 12px system-ui';cx.fillStyle='#37474f';cx.fillText(F.tipo==='nec'?'flores visitadas: '+g.vis:(b.pol?'pólen no pelo: árvore '+b.pol:'sem pólen no pelo'),D.x+D.w-14,ey-6);cx.font='11px system-ui';cx.fillStyle='#78909c';cx.fillText(hora,D.x+D.w-14,ey+10);
+ if(S.g.msgT<=0&&g.t<4){const t=m?'Toque numa flor creme para voar até ela.':'Toque numa flor creme para voar até ela e beber o néctar.';cx.font='bold 13px system-ui';const w=Math.min(W-16,cx.measureText(t).width+28);rrk(cx,W/2-w/2,D.y-40,w,30,15,'rgba(255,255,255,.96)');cx.strokeStyle='#7b8a2b';cx.lineWidth=2;cx.beginPath();cx.roundRect(W/2-w/2,D.y-40,w,30,15);cx.stroke();cx.fillStyle='#5a661c';cx.textAlign='center';cx.fillText(t,W/2,D.y-20);}
+ FS.hud(g,'#5a661c');};
 const PERG=[
- {q:'Quem é o principal polinizador das flores do pequizeiro?',o:['O morcego','A borboleta','O vento']},
- {q:'Como o pólen vai de uma flor para outra?',o:['Gruda no pelo do morcego enquanto ele bebe néctar','O morcego carrega o pólen na boca de propósito','A flor joga o pólen longe com força']},
- {q:'Em que hora do dia as flores do pequi se abrem?',o:['À noite','Ao meio-dia','Só de manhã cedo']}
-];
+ {q:'Quem são os principais polinizadores das flores do pequizeiro?',o:['Morcegos que bebem néctar','Borboletas diurnas','O vento da tarde']},
+ {q:'Quando o pequizeiro forma mais frutos?',o:['Com pólen de outra árvore','Com pólen da mesma flor','Sem nenhum pólen']},
+ {q:'Quem também visita as flores do pequi perto da alvorada?',o:['Abelhas e beija-flores','Só corujas','Ninguém, as flores fecham']},
+ {q:'Por que um pequizeiro isolado no pasto dá menos fruto?',o:['Recebe menos pólen de outras árvores','Tem flores maiores','Floresce de dia']}];
 function pergunta(){
  const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
  $('tela').innerHTML=`<div class="card"><h2>Pergunta da fase</h2><p style="margin:6px 0 4px">${P.q}</p><p class="small">Acerto +20, erro −10.</p><div class="ops">${ops.map((o,i)=>`<button data-i="${i}">${o.t}</button>`).join('')}</div><div id="pf"></div></div>`;
@@ -193,11 +347,11 @@ function pergunta(){
   $('bn').onclick=()=>{S.tot+=S.fp;S.fp=0;if(S.f===FASES.length-1)final(true);else{S.f++;fase();}};});
 }
 function final(tudo){
- S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
- $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Noite produtiva':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
+ S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?FASES.length+' fases':'Fase '+(S.f+1);
+ $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Polinizador do Cerrado!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
  <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
- <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Embrapa, Espécies Arbóreas Brasileiras, vol. 3, Pequizeiro: polinização essencialmente por morcegos, com 2 ou 3 flores abrindo por inflorescência a cada início de noite; Revista Pesquisa FAPESP, Pequi-anão em zona de transição do Cerrado se adapta a polinizador distinto: o morcego abraça a flor e sai com pólen no corpo, e perto da alvorada o néctar chega ao máximo, quando beija-flores e abelhas também visitam. Tempos e pontos são regras do jogo.</div></div>`;
+ <div class="small" style="margin-top:12px;text-align:left">Fontes: Gribel & Hay (1993), Pollination ecology of Caryocar brasiliense (Caryocaraceae) in Central Brazil cerrado vegetation, Journal of Tropical Ecology 9(2): 199-211 (flores grandes em pincel, polinizadas sobretudo pelos morcegos Glossophaga soricina e Anoura geoffroyi; autocompatível, mas forma mais frutos com pólen de outra árvore; frutificação natural de 3,1%); Embrapa, Espécies Arbóreas Brasileiras, vol. 3, Pequizeiro (2 ou 3 flores por cacho abrem no início de cada noite); Revista Pesquisa FAPESP, Pequi-anão em zona de transição do Cerrado (néctar máximo perto da alvorada, quando abelhas e beija-flores também visitam); Melo (2001), Diurnal bird visiting of Caryocar brasiliense in Central Brazil, Revista Brasileira de Biologia 61(2) (13 espécies de aves visitaram as flores). Energia, gasto de voo, néctar, distâncias, competidores e pontos são regras do jogo.</div></div>`;
  $('bS').onclick=()=>salvar(nivel);
 }
 const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
@@ -206,7 +360,7 @@ const GAME_ID="pequi-a-noite";let db=null,fs=null,salvo=false;
 async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
 async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
  $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
-window.__a={get S(){return S},update,parar,G,inp};
+window.__a={get S(){return S},update,parar,G,inp,tec};
 inicio();
 </script>
 </body>
