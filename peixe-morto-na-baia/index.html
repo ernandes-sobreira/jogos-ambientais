@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Peixe Morto na Baía</title>
+<style>
+:root{--main:#5e35b1;--deep:#4527a0;--soft:#ede7f6;--line:#d1c4e9;--ink:#10212b;--mut:#4d6370;--co2:#e53935;--ch4:#ef6c00;--ok:#2e7d32;--bad:#c62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:820px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep);letter-spacing:-.01em}
+h2{font-size:1.2rem;color:var(--deep);margin-bottom:6px;letter-spacing:-.01em}
+h3{font-size:1rem;color:var(--deep);margin:14px 0 6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 12px;font-weight:700;font-size:.86rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.card{border:2px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:var(--deep)}.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.btn.sm{padding:9px 14px;font-size:.92rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas.cena{width:100%;height:auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff;margin-top:10px}
+.top{justify-content:space-between}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--main);color:#fff;border-radius:14px;padding:8px 14px;font-weight:800;font-size:1.05rem}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.tool{border:2px solid var(--line);background:#fff;color:var(--deep);border-radius:12px;padding:9px 12px;font-weight:700;font-family:inherit;font-size:.92rem;cursor:pointer;touch-action:manipulation}
+.tool.on{border-color:var(--main);background:var(--soft)}
+.tool:disabled{opacity:.4}
+.mets{display:grid;gap:8px;margin-top:10px}
+.met{display:grid;grid-template-columns:92px 1fr 52px;gap:8px;align-items:center;font-weight:700;font-size:.9rem}
+.met .bar{position:relative;height:18px;background:#f1f4f5;border-radius:99px;overflow:hidden}
+.met .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;transition:width .15s}
+.met .alvo{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--ink);border-radius:2px}
+.met .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--mut)}
+.met.o2 .fill{background:#e53935}.met.alg .fill{background:#7cb342}
+.saldo .bar{background:linear-gradient(90deg,#e8f5e9 50%,#ffebee 50%)}
+.saldo .zero{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:var(--ink)}
+.saldo .fill{border-radius:0}
+.obj{display:flex;gap:10px;align-items:flex-start;background:#fff8e1;border:2px solid #ffe082;border-radius:14px;padding:10px 12px;margin-top:10px;font-size:.95rem}
+.obj b{color:#8d6e00;white-space:nowrap}
+.acao{display:flex;gap:10px;align-items:center;background:var(--soft);border-left:5px solid var(--main);border-radius:0 12px 12px 0;padding:9px 12px;margin-top:8px;font-weight:600;font-size:.95rem;min-height:42px}
+.acao .dedo{font-size:1.25rem;animation:pulo 1s ease-in-out infinite}
+@keyframes pulo{50%{transform:translateX(4px)}}
+.help{width:34px;height:34px;border-radius:50%;border:2px solid var(--main);background:#fff;color:var(--deep);font-weight:800;font-size:1rem;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(16,33,43,.35);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal .card{max-width:460px;width:100%}
+.intro{text-align:center;padding:26px 18px}
+.intro .ic{font-size:3rem;line-height:1}
+.intro .n{color:var(--mut);font-weight:700;font-size:.85rem;margin-top:8px}
+.passos{display:grid;gap:8px;margin:16px auto;max-width:420px;text-align:left}
+.passos div{display:flex;gap:12px;align-items:center;background:var(--soft);border-radius:12px;padding:10px 14px;font-weight:600}
+.passos b{font-size:1.3rem;min-width:1.6em;text-align:center}
+.res{text-align:center}
+.res .big{font-size:2.6rem;font-weight:800;color:var(--deep);line-height:1.1}
+.res .ok{color:var(--ok);font-weight:800}.res .no{color:var(--bad);font-weight:800}
+.pensa{background:var(--soft);border-radius:14px;padding:12px 14px;margin:14px auto;max-width:520px;text-align:left}
+.pensa b{color:var(--deep)}
+.boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.box{border:2px dashed var(--line);border-radius:14px;padding:10px;min-height:110px;cursor:pointer}
+.box h4{font-size:.92rem;color:var(--deep);margin-bottom:6px}
+.box.alvo{border-color:var(--main);background:var(--soft)}
+.cards{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;min-height:48px}
+.ct{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 11px;font-weight:700;font-size:.9rem;cursor:pointer;box-shadow:0 2px 0 var(--line);font-family:inherit;color:var(--ink);transition:transform .5s}
+.ct.sel{border-color:var(--main);background:var(--soft);transform:translateY(-2px)}
+.ct.certo{border-color:var(--ok);background:#e8f5e9}.ct.errado{border-color:var(--bad);background:#ffebee}
+.ct.movido{animation:voa .8s ease}
+@keyframes voa{0%{transform:translateY(-30px) scale(1.1);opacity:.3}100%{transform:none;opacity:1}}
+.capa{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+.capa canvas{width:100%;height:auto;display:block;border-radius:16px;background:var(--soft)}
+.opts{display:grid;gap:8px;margin-top:6px}
+.opts .l{font-size:.8rem;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.sw{display:flex;gap:6px;flex-wrap:wrap}
+.sw button{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--line);cursor:pointer}
+.sw button.on{box-shadow:0 0 0 3px var(--deep)}
+.sw .tx{width:auto;height:auto;border-radius:10px;padding:6px 10px;font-weight:700;font-size:.85rem;background:#fff;color:var(--deep);font-family:inherit;border:0}
+input.nome{border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit;width:100%}
+input[type=range]{width:100%;accent-color:var(--main)}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:6px}
+.tab th{text-align:left;background:var(--soft);color:var(--deep);padding:7px 6px}
+.tab td{border-bottom:1px solid var(--line);padding:7px 6px;vertical-align:top}
+.guia p,.guia li{font-size:.95rem;margin-bottom:6px}
+.guia ul,.guia ol{padding-left:20px}
+.hab{border-left:5px solid var(--main);background:var(--soft);padding:10px 14px;border-radius:0 12px 12px 0;font-size:.95rem}
+.ref li{font-size:.86rem;color:var(--mut)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+.rel{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center}
+.rel canvas{width:120px;height:120px;border-radius:50%;background:var(--soft)}
+.mini{width:100%;max-width:420px;height:auto;display:block;margin:10px auto 0}
+@media (max-width:620px){.wrap{padding:10px 8px 30px}.card{padding:12px;border-radius:16px}.capa{grid-template-columns:1fr}.met{grid-template-columns:70px 1fr 44px;font-size:.82rem}.chip{font-size:.95rem}.rel{grid-template-columns:80px 1fr}.rel canvas{width:80px;height:80px}}
+@media print{a.hub,header .hud,.ranking,.noprint{display:none!important}.card{border:1px solid #ccc;break-inside:avoid}body{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>Peixe Morto na Baía</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF"></span><span class="pill" id="hP"></span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const W=760,H=380;
+function hex(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mix(a,b,t){const A=hex(a),B=hex(b);return`rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`;}
+
+/* ================= AVATAR ================= */
+const PELES=['#f6d3b8','#e3b18b','#c68a5e','#94603e','#5d3b26'];
+const CABS=['#1b1b1b','#4e342e','#8d6e63','#d4a85a','#b5532f'];
+const CAMISAS=['#00838f','#2e7d32','#f9a825','#c62828','#6a1b9a','#37474f'];
+const ESTILOS=[['curto','Curto'],['cacheado','Cacheado'],['longo','Longo'],['coque','Coque'],['raspado','Raspado']];
+const CHAPEUS=[['nenhum','Sem'],['bone','Boné'],['campo','Chapéu']];
+let A={pele:2,cab:0,estilo:'cacheado',camisa:0,chapeu:'campo',nome:''};
+try{const s=JSON.parse(localStorage.getItem('bc_avatar')||'null');if(s)A=Object.assign(A,s);}catch(e){}
+function salvaA(){try{localStorage.setItem('bc_avatar',JSON.stringify(A));}catch(e){}}
+function avatar(c,x,y,s,a,prancheta){
+ c.save();c.translate(x,y);c.scale(s,s);
+ const pele=PELES[a.pele],cab=CABS[a.cab],cam=CAMISAS[a.camisa];
+ if(a.estilo==='longo'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-39,12.5,15,0,0,7);c.fill();c.fillRect(-12.5,-40,25,22);}
+ if(a.estilo==='cacheado'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-40,15,14.5,0,0,7);c.fill();}
+ c.fillStyle=cam;c.beginPath();c.moveTo(-16,0);c.quadraticCurveTo(-17,-21,-6,-25);c.lineTo(6,-25);c.quadraticCurveTo(17,-21,16,0);c.closePath();c.fill();
+ c.fillStyle='rgba(0,0,0,.12)';c.fillRect(-1,-24,2,24);
+ c.fillStyle=pele;c.fillRect(-3.5,-29,7,6);
+ if(prancheta){c.fillStyle='#8d6e63';c.fillRect(4,-19,13,16);c.fillStyle='#fff';c.fillRect(5.5,-17,10,12);c.strokeStyle='#90a4ae';c.lineWidth=.8;for(let i=0;i<4;i++){c.beginPath();c.moveTo(7,-14+i*2.6);c.lineTo(14,-14+i*2.6);c.stroke();}}
+ c.strokeStyle=cam;c.lineWidth=6;c.lineCap='round';c.beginPath();c.moveTo(-11,-20);c.lineTo(-4,-9);c.stroke();
+ c.fillStyle=pele;c.beginPath();c.arc(-3,-8,3,0,7);c.fill();
+ c.fillStyle=pele;c.beginPath();c.ellipse(0,-39,9.5,11,0,0,7);c.fill();
+ c.beginPath();c.arc(-9.4,-38,2.3,0,7);c.arc(9.4,-38,2.3,0,7);c.fill();
+ c.fillStyle=cab;
+ if(a.estilo==='curto'){c.beginPath();c.ellipse(0,-44.5,10,6.8,0,Math.PI,0);c.fill();c.fillRect(-10,-46,2.8,7);c.fillRect(7.2,-46,2.8,7);}
+ if(a.estilo==='cacheado'){for(let i=0;i<13;i++){const an=Math.PI*(.8+i*1.4/12);c.beginPath();c.arc(Math.cos(an)*12,-41+Math.sin(an)*11.5,4.2,0,7);c.fill();}}
+ if(a.estilo==='longo'){c.beginPath();c.ellipse(0,-44.5,10.6,7.2,0,Math.PI,0);c.fill();}
+ if(a.estilo==='coque'){c.beginPath();c.ellipse(0,-44.5,10,6.4,0,Math.PI,0);c.fill();c.beginPath();c.arc(0,-53,5.2,0,7);c.fill();}
+ if(a.estilo==='raspado'){c.globalAlpha=.5;c.beginPath();c.ellipse(0,-44,9.8,6.2,0,Math.PI,0);c.fill();c.globalAlpha=1;}
+ c.fillStyle='#2b2a26';c.beginPath();c.arc(-3.4,-39,1.25,0,7);c.arc(3.4,-39,1.25,0,7);c.fill();
+ c.strokeStyle='#2b2a26';c.lineWidth=1;c.beginPath();c.arc(0,-35.6,2.6,.25,Math.PI-.25);c.stroke();
+ if(a.chapeu==='bone'){c.fillStyle=cam;c.beginPath();c.ellipse(0,-46,10.6,5.8,0,Math.PI,0);c.fill();c.fillRect(-10.6,-47,21.2,2.6);c.beginPath();c.ellipse(8.5,-46.2,8,2.2,0,0,7);c.fill();}
+ if(a.chapeu==='campo'){c.fillStyle='#d7c49e';c.beginPath();c.ellipse(0,-46,16.5,3.6,0,0,7);c.fill();c.beginPath();c.ellipse(0,-48,9.2,6.4,0,Math.PI,0);c.fill();c.fillStyle='#8d6e63';c.fillRect(-9.2,-49,18.4,1.9);}
+ c.restore();
+}
+function pernas(c,x,y,s,a){c.save();c.translate(x,y);c.scale(s,s);c.fillStyle='#455a64';c.fillRect(-11,0,9,20);c.fillRect(2,0,9,20);c.fillStyle='#3e2723';c.fillRect(-12,18,11,4);c.fillRect(1,18,11,4);c.restore();}
+
+/* ================= CENA ================= */
+const CORES={main:'#5e35b1',deep:'#4527a0'};
+function sr(n){const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+function chao(x){
+ if(x<170)return 176+x*.12;
+ if(x<232){const t=(x-170)/62;return 196.4+(236-196.4)*(1-Math.cos(Math.PI*t))/2;}
+ if(x<600)return 236+Math.sin((x-232)/368*Math.PI)*62;
+ if(x<640){const t=(x-600)/40;return 236+(150-236)*(1-Math.cos(Math.PI*t))/2;}
+ return 150;
+}
+function sup(G){return 205-G.nivel*34;}
+const NZ=8,Z0=10,ZW=74;
+function zonaDe(x){return clamp(Math.floor((x-Z0)/ZW),0,NZ-1);}
+function zx(z){return Z0+ZW*z+ZW/2;}
+function novaCena(op){return Object.assign({t:0,nivel:1,od:Array(NZ).fill(7),mol:[],peixes:[],bub:[],cha:0,verde:0,canoa:420,sonda:null,oculto:false,medido:Array(NZ).fill(false),casas:null,ete:null,lavoura:false,marcas:[],modo:'baia'},op||{});}
+function corAgua(G){let c=mix('#a7d8f5','#5b8fb9',0);const a=hex('#9fd3f2'),ch=hex('#a07a48'),v=hex('#6fae3a');
+ const r=a.map((v0,i)=>v0+(ch[i]-v0)*(G.chaZ?0:G.cha));const r2=r.map((v0,i)=>v0+(v[i]-v0)*G.verde*(1-G.cha));return r2.map(Math.round);}
+function rgb(a,al){return`rgba(${a[0]},${a[1]},${a[2]},${al==null?1:al})`;}
+function poePeixes(G,n){const ys=sup(G);for(let i=0;i<n;i++){let x=rr(40,580);for(let k=0;k<20&&chao(x)-ys<20;k++)x=rr(240,580);const yy=rr(.3,.8);G.peixes.push({x,y:ys+10+(chao(x)-ys-18)*yy,yy,dir:Math.random()<.5?1:-1,v:rr(14,26),est:'vivo',tb:0,esp:i%3,ph:rr(0,6)});}}
+function drawCena(c,G){
+ if(G.modo==='lab'){drawLab(c,G);return;}
+ const ys=sup(G);
+ const g=c.createLinearGradient(0,0,0,200);g.addColorStop(0,'#cbeef8');g.addColorStop(1,'#f6fcfd');c.fillStyle=g;c.fillRect(0,0,W,H);
+ c.fillStyle='rgba(255,255,255,.75)';for(let i=0;i<3;i++){const x=((i*260+G.t*5)%(W+160))-80,y=30+i*18;c.beginPath();c.ellipse(x,y,44,10,0,0,7);c.ellipse(x+24,y-6,24,9,0,0,7);c.fill();}
+ c.fillStyle='#b9dcc0';for(let x=-10;x<600;x+=24){c.beginPath();c.arc(x,150-((x*37)%9),13+((x*13)%6),0,7);c.fill();}c.fillRect(0,150,600,30);
+ if(G.chart)G.chart(c);
+ /* solo */
+ c.beginPath();c.moveTo(0,H);for(let x=0;x<=W;x+=5)c.lineTo(x,chao(x));c.lineTo(W,H);c.closePath();
+ const gs=c.createLinearGradient(0,150,0,H);gs.addColorStop(0,'#9c8170');gs.addColorStop(.4,'#b99f86');gs.addColorStop(1,'#d6c2a6');c.fillStyle=gs;c.fill();
+ c.strokeStyle='rgba(78,52,46,.55)';c.lineWidth=8;c.beginPath();for(let x=0;x<=W;x+=5){const y=chao(x)+3;x?c.lineTo(x,y):c.moveTo(x,y);}c.stroke();
+ c.fillStyle='rgba(93,64,55,.18)';for(let i=0;i<60;i++){const x=(i*137)%W,y=chao(x)+14+((i*71)%120);if(y<H-4){c.beginPath();c.arc(x,y,1.5,0,7);c.fill();}}
+ /* capim do campo (seco ou submerso) */
+ for(let x=6;x<230;x+=7){const y=chao(x),sub=ys<y-2;const k=sr(x);
+  c.strokeStyle=sub?(G.cha>.2?'#8d7650':'#7f9a4a'):'#7cb342';c.lineWidth=1.5;
+  for(const d of[-2,0,2]){const h=sub?9+k*5:10+k*6,sw=sub?Math.sin(G.t*1.5+x)*2:0;c.beginPath();c.moveTo(x+d,y);c.quadraticCurveTo(x+d+sw,y-h*.6,x+d*1.8+sw*1.5,y-h);c.stroke();}}
+ if(G.lavoura){for(let x=650;x<760;x+=10){c.strokeStyle='#8bc34a';c.lineWidth=2;c.beginPath();c.moveTo(x,150);c.lineTo(x,138);c.stroke();c.fillStyle='#c0ca33';c.beginPath();c.ellipse(x,136,2.5,4,0,0,7);c.fill();}
+  c.fillStyle='#795548';c.fillRect(640,150,120,4);}
+ if(G.casas)drawCidade(c,G);
+ /* agua */
+ let xa=0,xb=640;for(let x=0;x<300;x++){if(chao(x)>ys){xa=x;break;}}for(let x=640;x>300;x--){if(chao(x)>ys){xb=x;break;}}
+ const ca=corAgua(G);c.beginPath();c.moveTo(xa,ys);c.lineTo(xb,ys);for(let x=xb;x>=xa;x-=4)c.lineTo(x,chao(x));c.closePath();
+ const ga=c.createLinearGradient(0,ys,0,320);ga.addColorStop(0,rgb(ca,.78));ga.addColorStop(1,rgb(ca.map(v=>v*.72),.92));c.fillStyle=ga;c.fill();
+ if(G.cha>0){c.save();c.clip();const gh=c.createLinearGradient(Z0,0,Z0+NZ*ZW,0);for(let z=0;z<NZ;z++){const k=G.chaZ?G.chaZ[z]:G.cha;gh.addColorStop((z+.5)/NZ,`rgba(120,82,40,${k*.55})`);}c.fillStyle=gh;c.fillRect(0,ys,W,220);c.restore();}
+ if(G.verde>0){c.fillStyle='rgba(76,140,40,.55)';const n=Math.round(G.verde*110);for(let i=0;i<n;i++){const x=xa+((i*97+G.t*6)%(xb-xa)),y=ys+3+((i*53)%40);if(y<chao(x)-2){c.beginPath();c.arc(x,y,1.3,0,7);c.fill();}}c.fillStyle='rgba(104,159,56,.6)';c.fillRect(xa,ys,xb-xa,2+G.verde*3);}
+ c.strokeStyle='rgba(255,255,255,.75)';c.lineWidth=1.4;for(let i=0;i<6;i++){const x=xa+30+i*90+Math.sin(G.t+i)*6;if(x<xb-20){c.beginPath();c.moveTo(x,ys+3);c.lineTo(x+16,ys+3);c.stroke();}}
+ /* O2 */
+ for(const m of G.mol){if(G.oculto&&!G.medido[m.z])continue;c.globalAlpha=m.a==null?1:m.a;c.fillStyle='#e53935';c.beginPath();c.arc(m.x-2.3,m.y,2.5,0,7);c.arc(m.x+2.3,m.y,2.5,0,7);c.fill();c.fillStyle='rgba(255,255,255,.7)';c.beginPath();c.arc(m.x-3,m.y-.8,.8,0,7);c.arc(m.x+1.6,m.y-.8,.8,0,7);c.fill();c.globalAlpha=1;}
+ for(const b of G.bub){c.fillStyle='rgba(255,255,255,.55)';c.strokeStyle='rgba(84,110,122,.6)';c.lineWidth=1;c.beginPath();c.arc(b.x,b.y,b.r,0,7);c.fill();c.stroke();}
+ /* peixes */
+ for(const p of G.peixes)peixe(c,p,G);
+ if(G.esgoto){const x=612,y=ys+2;c.fillStyle='#6d5d4b';c.fillRect(x-4,y-12,30,6);for(let i=0;i<8;i++){c.fillStyle=`rgba(110,85,55,${.35-i*.04})`;c.beginPath();c.arc(x-6-i*6+Math.sin(G.t*2+i)*2,y+2+i*1.5,4+i*1.2,0,7);c.fill();}}
+ if(G.chuvaAdubo){for(let i=0;i<5;i++){const t=(G.t*.6+i*.2)%1;c.fillStyle='rgba(192,202,51,.8)';c.beginPath();c.arc(640-t*40,152+t*(ys-150),2.5,0,7);c.fill();}}
+ /* pesquisador */
+ if(G.canoa!=null){const y=ys;avatar(c,G.canoa-8,y-4,.82,A,false);canoa(c,G.canoa,y);
+  if(G.sonda){const s=G.sonda;c.strokeStyle='#37474f';c.lineWidth=1.2;c.beginPath();c.moveTo(G.canoa+18,y-2);c.lineTo(G.canoa+18,y+s.d);c.stroke();c.fillStyle='#ffca28';c.strokeStyle='#5d4037';c.beginPath();c.roundRect(G.canoa+14,y+s.d,8,14,3);c.fill();c.stroke();}}
+ for(const m of G.marcas){c.font='700 12px system-ui';const w=c.measureText(m.t).width+16;c.fillStyle=m.cor||'#c62828';c.beginPath();c.roundRect(m.x-w/2,m.y-22,w,20,10);c.fill();c.fillStyle='#fff';c.textAlign='center';c.fillText(m.t,m.x,m.y-8);}
+}
+function drawCidade(c,G){
+ c.fillStyle='#cfd8dc';c.fillRect(640,147,120,4);
+ G.casas.forEach((h,i)=>{const x=h.x,y=148;c.fillStyle=['#ffe0b2','#c5e1a5','#b3e5fc','#f8bbd0','#fff59d'][i%5];c.fillRect(x-9,y-16,18,16);c.fillStyle='#8d4e3c';c.beginPath();c.moveTo(x-11,y-16);c.lineTo(x,y-26);c.lineTo(x+11,y-16);c.fill();c.fillStyle='#6d4c41';c.fillRect(x-2.5,y-8,5,8);c.fillStyle='#90caf9';c.fillRect(x+3,y-13,4,4);
+  if(h.lig){c.strokeStyle='#43a047';c.lineWidth=3;c.beginPath();c.moveTo(x,y+2);c.lineTo(x,y+8);c.stroke();c.fillStyle='#43a047';c.font='700 11px system-ui';c.textAlign='center';c.fillText('✓',x,y-30);}
+  else{c.strokeStyle='#8d6e63';c.lineWidth=2;c.setLineDash([3,2]);c.beginPath();c.moveTo(x,y+1);c.lineTo(x-4,y+10);c.stroke();c.setLineDash([]);}});
+ if(G.casas.some(h=>h.lig)){c.strokeStyle='#43a047';c.lineWidth=2.5;c.beginPath();c.moveTo(G.casas[0].x,156);c.lineTo(G.casas[G.casas.length-1].x,156);c.stroke();}
+ const ex=G.eteX||650;if(G.ete){c.fillStyle='#90a4ae';c.fillRect(ex-14,132,28,16);c.fillStyle='#4fc3f7';c.beginPath();c.ellipse(ex,132,13,4,0,0,7);c.fill();c.fillStyle='#37474f';c.font='700 8px system-ui';c.textAlign='center';c.fillText('ETE',ex,144);}
+ else if(G.loteEte){c.strokeStyle=CORES.main;c.lineWidth=2;c.setLineDash([4,3]);c.strokeRect(ex-14,128,28,20);c.setLineDash([]);c.fillStyle=CORES.main;c.font='700 9px system-ui';c.textAlign='center';c.fillText('ETE?',ex,142);}
+}
+function peixe(c,p,G){const ys=sup(G);c.save();c.translate(p.x,p.y);
+ if(p.est==='morto'){c.scale(p.dir,-1);c.globalAlpha=.85;}else c.scale(p.dir,1);
+ const L=p.esp===1?34:28,a=p.esp===1?9:6.5,o=p.est==='morto'?0:Math.sin(p.ph*8)*2;
+ const P=[['#8f989c','#e3e6e3','#5f676b'],['#5d6266','#b9b4a6','#3c3f41'],['#c7962e','#f2d98f','#a8651d']][p.esp];
+ c.fillStyle=P[2];c.beginPath();c.moveTo(-L*.45,0);c.lineTo(-L*.62,-a*.9+o);c.quadraticCurveTo(-L*.55,o,-L*.62,a*.9+o);c.closePath();c.fill();
+ const gg=c.createLinearGradient(0,-a,0,a);gg.addColorStop(0,P[0]);gg.addColorStop(.6,P[1]);gg.addColorStop(1,'#f4f4ef');c.fillStyle=gg;
+ c.beginPath();c.moveTo(L*.5,0);c.bezierCurveTo(L*.42,-a*1.1,-L*.2,-a*1.15,-L*.47,-a*.25);c.lineTo(-L*.47,a*.25);c.bezierCurveTo(-L*.2,a*1.05,L*.42,a*.9,L*.5,0);c.fill();
+ c.fillStyle=P[2];c.globalAlpha*=.8;c.beginPath();c.moveTo(0,-a*.95);c.quadraticCurveTo(-L*.12,-a*1.6,-L*.22,-a*.9);c.fill();c.globalAlpha=p.est==='morto'?.85:1;
+ c.strokeStyle='rgba(40,40,40,.25)';c.lineWidth=.8;c.beginPath();c.moveTo(L*.32,-a*.1);c.quadraticCurveTo(0,-a*.25,-L*.44,0);c.stroke();c.beginPath();c.moveTo(L*.3,-a*.65);c.quadraticCurveTo(L*.35,0,L*.3,a*.6);c.stroke();
+ if(p.est==='morto'){c.strokeStyle='#263238';c.lineWidth=1.2;c.beginPath();c.moveTo(L*.36-2,-a*.3-2);c.lineTo(L*.36+2,-a*.3+2);c.moveTo(L*.36+2,-a*.3-2);c.lineTo(L*.36-2,-a*.3+2);c.stroke();}
+ else{c.fillStyle='#111';c.beginPath();c.arc(L*.36,-a*.28,1.4,0,7);c.fill();if(p.est==='ofega'){const m=(Math.sin(G.t*10+p.ph)+1)*1.4;c.fillStyle='#3e2723';c.beginPath();c.ellipse(L*.5,0,1.2,m+.3,0,0,7);c.fill();}}
+ c.restore();}
+function canoa(c,x,y){const g=c.createLinearGradient(0,y-6,0,y+8);g.addColorStop(0,'#8d6e63');g.addColorStop(1,'#4e342e');c.fillStyle=g;c.beginPath();c.moveTo(x-40,y-6);c.quadraticCurveTo(x,y-3,x+40,y-6);c.quadraticCurveTo(x+32,y+8,x,y+8);c.quadraticCurveTo(x-32,y+8,x-40,y-6);c.fill();
+ c.fillStyle='#a1887f';c.fillRect(x-38,y-7,76,2.2);c.strokeStyle='#8d6e63';c.lineWidth=2;c.beginPath();c.moveTo(x-14,y-24);c.lineTo(x-30,y+6);c.stroke();}
+/* oxigenio e peixes */
+function syncMol(G,dt){
+ const ys=sup(G);
+ for(let z=0;z<NZ;z++){const x0=Z0+z*ZW,x1=x0+ZW;const alvo=Math.round(clamp(G.od[z],0,8)*1.1*(Math.max(0,Math.min(1,(chao(zx(z))-ys)/45))+.0001));
+  const ms=G.mol.filter(m=>m.z===z&&!m.sai);let n=ms.length,k=0;
+  while(n<alvo&&k<2){const x=rr(x0+4,x1-4);if(chao(x)-ys>10){G.mol.push({z,x,y:ys+4,ty:rr(ys+8,chao(x)-6),ph:rr(0,6),a:0});n++;}k++;}
+  while(n>alvo){const m=ms.pop();if(!m)break;m.sai=true;n--;}}
+ for(const m of G.mol){m.ph+=dt;if(m.sai){m.a-=dt*1.5;if(m.a<=0)m.morto=true;continue;}m.a=Math.min(1,(m.a||0)+dt*2);m.y+=(m.ty-m.y)*dt*1.5+Math.sin(m.ph)*4*dt;m.x+=Math.cos(m.ph*.7)*5*dt;const lim=chao(m.x)-5;if(m.y>lim)m.y=lim;if(m.y<ys+4)m.y=ys+4;}
+ G.mol=G.mol.filter(m=>!m.morto);
+}
+function partic(G,dt){
+ const ys=sup(G);
+ for(const b of G.bub){b.y-=b.v*dt;}G.bub=G.bub.filter(b=>b.y>ys);
+ for(const p of G.peixes){const od=G.od[zonaDe(p.x)],fundo=chao(p.x);
+  if(p.est==='morto'){p.y+=(ys+3-p.y)*dt*2;p.x+=6*dt*(G.corr||0);continue;}
+  p.ph+=dt;if(od<2){p.est='ofega';p.tb+=od<.9?dt:0;if(Math.random()<dt*1.2)G.bub.push({x:p.x+p.dir*12,y:p.y,r:1.6,v:30});if(p.tb>2.2){p.est='morto';G.mortos=(G.mortos||0)+1;if(G.onMorte)G.onMorte(p);continue;}}
+  else{p.est='vivo';p.tb=0;}
+  const ty=p.est==='ofega'?ys+7:ys+10+(fundo-ys-18)*p.yy;p.y+=(ty-p.y)*dt*1.8;
+  p.x+=p.dir*p.v*dt*(p.est==='ofega'?.35:1);
+  const nx=p.x+p.dir*14;if(chao(nx)-ys<12||nx<12||nx>628)p.dir*=-1;
+  if(p.y>chao(p.x)-6)p.y=chao(p.x)-6;}
+}
+function drawLab(c,G){
+ c.fillStyle='#f5f7f8';c.fillRect(0,0,W,H);c.fillStyle='#eceff1';c.fillRect(0,0,W,60);
+ c.fillStyle='#8d6e63';c.fillRect(20,318,720,14);c.fillStyle='#6d4c41';c.fillRect(20,330,720,6);
+ G.aq.forEach((q,i)=>{const x=70+i*230,y=110,w=180,h=200;
+  c.fillStyle='rgba(176,224,248,.55)';c.fillRect(x,y+24,w,h-24);
+  if(q.cha>0){c.fillStyle=`rgba(150,110,60,${q.cha*.45})`;c.fillRect(x,y+24,w,h-24);}
+  c.strokeStyle='#90a4ae';c.lineWidth=4;c.strokeRect(x,y,w,h);c.fillStyle='rgba(255,255,255,.35)';c.fillRect(x+6,y+4,8,h-8);
+  c.fillStyle='#c8b38f';c.fillRect(x+2,y+h-16,w-4,14);
+  for(let k=0;k<q.capim;k++){const cx=x+20+k*27;c.strokeStyle=q.cha>.3?'#8d7650':'#7f9a4a';c.lineWidth=2;for(const d of[-3,0,3]){c.beginPath();c.moveTo(cx+d,y+h-14);c.quadraticCurveTo(cx+d+Math.sin(G.t+k)*2,y+h-40,cx+d*2,y+h-58);c.stroke();}}
+  const n=Math.round(clamp(q.od,0,8)*3);for(let k=0;k<n;k++){const mx=x+14+sr(k*3+i)*(w-28),my=y+34+sr(k*7+i*5)*(h-70)+Math.sin(G.t+k)*3;c.fillStyle='#e53935';c.beginPath();c.arc(mx-2.8,my,3,0,7);c.arc(mx+2.8,my,3,0,7);c.fill();}
+  const lim=y+24+(h-40)*(1-2/8);c.strokeStyle='rgba(16,33,43,.5)';c.setLineDash([5,4]);c.lineWidth=1.2;c.beginPath();c.moveTo(x,lim);c.lineTo(x+w,lim);c.stroke();c.setLineDash([]);
+  const p=q.peixe;p.x=x+w/2+Math.sin(G.t*.6+i)*50;p.dir=Math.cos(G.t*.6+i)>0?1:-1;if(p.est==='morto')p.y=y+30;else if(q.od<2)p.y=y+34;else p.y=y+110+Math.sin(G.t+i)*20;
+  c.save();peixe(c,p,{t:G.t,nivel:1});c.restore();
+  c.fillStyle='#37474f';c.font='800 15px system-ui';c.textAlign='center';c.fillText('Aquário '+(i+1),x+w/2,y-12);
+  c.font='700 13px system-ui';c.fillStyle='#5d4037';c.fillText(q.capim+' tufos de capim',x+w/2,y+h+40-26+44);
+ });
+ c.fillStyle='#4d6370';c.font='12px system-ui';c.textAlign='left';c.fillText('- - - linha mínima para o peixe',22,40);
+}
+/* ================= TELA / LOOP ================= */
+let G=null,S=null,raf=0,ultimo=0,cx=null;
+function laco(ts){const dt=Math.min(.05,(ts-ultimo)/1000||0);ultimo=ts;if(G){G.t+=dt;if(G.upd)G.upd(dt);syncMol(G,dt);partic(G,dt);if(cx)drawCena(cx,G);if(G.extra)G.extra(cx);}raf=requestAnimationFrame(laco);}
+function parar(){cancelAnimationFrame(raf);raf=0;}
+function rodar(){parar();ultimo=performance.now();raf=requestAnimationFrame(laco);}
+function hud(){$('hud').style.display='flex';$('hF').textContent=`Fase ${S.f+1} de ${FASES.length}`;$('hP').textContent=`${Math.max(0,S.tot+S.fp)} pts`;}
+function telaJogo(chip,info){
+ const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><span class="chip" id="chip">${chip}</span><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="acao"><span class="dedo">👉</span><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});
+}
+function acao(t){const e=$('acao');if(e&&e.innerHTML!==t)e.innerHTML=t;}
+function ajuda(){const F=FASES[S.f],d=document.createElement('div');d.className='modal';
+ d.innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn">Entendi</button></div>`;
+ d.onclick=e=>{if(e.target===d||e.target.tagName==='BUTTON')d.remove();};document.body.appendChild(d);}
+function medidor(id,rot,cls,max,alvo){const a=alvo!=null?`<span class="alvo" style="left:${alvo/max*100}%"></span>`:'';return`<div class="met ${cls}" id="${id}" data-max="${max}"><span>${rot}</span><div class="bar"><span class="fill"></span>${a}</div><span class="v"></span></div>`;}
+function poeMed(id,v){const e=$(id);if(!e)return;const m=+e.dataset.max;e.querySelector('.fill').style.width=clamp(v/m*100,0,100)+'%';e.querySelector('.v').textContent=Math.round(v);}
+function poeSaldo(v,max){const e=$('mSaldo');if(!e)return;const f=e.querySelector('.fill'),p=clamp(Math.abs(v)/max*50,0,50);if(v<0){f.style.left=(50-p)+'%';f.style.width=p+'%';f.style.background='#43a047';}else{f.style.left='50%';f.style.width=p+'%';f.style.background='#e53935';}e.querySelector('.v').textContent=(v>0?'+':'')+Math.round(v);}
+
+/* ================= FASES ================= */
+const FASES=[
+ {nome:'Onde falta oxigênio?',ic:'🔍',obj:'Achar os 2 pontos da baía sem oxigênio, usando no máximo 5 medições.',passos:[['👆','Toque na água para levar a canoa e medir'],['🔴','As bolinhas vermelhas são o oxigênio (O₂) da água'],['🐟','Peixes boiando ou ofegando são uma pista']],ini:()=>f1()},
+ {nome:'Experimento dos aquários',ic:'🧪',obj:'Descobrir a maior quantidade de capim que pode apodrecer na água sem matar o peixe.',passos:[['🌿','Escolha quanto capim vai em cada aquário'],['▶','Rode 5 dias e veja o oxigênio cair'],['🔢','No fim, responda o limite que você descobriu']],ini:()=>f2()},
+ {nome:'Três baías, três casos',ic:'🕵️',obj:'Descobrir se cada mortandade foi natural (decoada) ou causada por pessoas (eutrofização).',passos:[['🔍','Toque nas lupas para juntar as pistas'],['🔁','Troque de baía nos botões'],['🗂️','No fim, separe: natural ou humana']],ini:()=>f3()},
+ {nome:'Quando vem a decoada?',ic:'📅',obj:'Prever em que época e em que lugar a decoada começa.',passos:[['📈','Toque no gráfico do nível do rio para prever a época'],['📍','Toque no lugar onde ela começa'],['▶','Rode o ano e compare']],ini:()=>f4()},
+ {nome:'Salve a baía do bairro',ic:'🏘️',obj:'Passar o ano sem nenhum peixe morto por esgoto. A decoada natural vai acontecer e não conta contra você.',passos:[['🏭','Construa a estação de tratamento (ETE)'],['🔗','Ligue as casas na rede de esgoto'],['▶','Comece o ano e acompanhe a água']],ini:()=>f5()}
+];
+function intro(){parar();G=null;cx=null;hud();const F=FASES[S.f];$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><div class="n">FASE ${S.f+1} DE ${FASES.length}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left;max-width:420px;margin:12px auto 0"><b>🎯 Objetivo</b><span>${F.obj}</span></div>
+ <div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn" id="bGo">Começar</button></div>`;
+ $('bGo').onclick=()=>{S.fp=0;F.ini();};}
+function fimFase(pts,ok,oque,pergunta,extraHtml){
+ parar();pts=Math.max(0,Math.round(pts));S.fp=0;S.tot+=pts;S.res[S.f]={pts,ok,oque};hud();
+ $('tela').innerHTML=`<div class="card res"><div class="small">${FASES[S.f].ic} ${FASES[S.f].nome}</div><div class="big">+${pts}</div>
+ <p class="${ok?'ok':'no'}">${ok?'Meta cumprida':'Meta não cumprida'}</p>${extraHtml||''}
+ <div class="pensa"><b>O que aconteceu:</b> ${oque}</div><div class="pensa"><b>Pergunta para a turma:</b> ${pergunta}</div>
+ <div class="row" style="justify-content:center"><button class="btn" id="bNx">${S.f<FASES.length-1?'Próxima fase':'Ver relatório'}</button></div></div>`;
+ $('bNx').onclick=()=>{S.f++;if(S.f<FASES.length)intro();else relatorio();};
+}
+
+/* ---------- FASE 1 ---------- */
+function f1(){
+ const a=Math.floor(rr(1,4));const od=[0,0,0,0,0,0,0,0].map((v,z)=>{const d=Math.min(Math.abs(z-a),Math.abs(z-a-1));return z===a||z===a+1?rr(.2,.6):clamp(1.6+d*1.5+rr(-.3,.3),1.6,7.2);});
+ G=novaCena({od,oculto:true,canoa:520});poePeixes(G,16);G.peixes.forEach(p=>{const z=zonaDe(p.x);if(z===a||z===a+1){p.est='morto';p.y=sup(G)+3;}});
+ G.sondas=5;G.achou=[];G.alvo=[a,a+1];G.ir=null;G.pts=0;
+ telaJogo('🔍 Onde falta oxigênio?','🧪 5 sondas');
+ $('mets').innerHTML=`<div class="small">🔴🔴 = oxigênio (O₂). Cada ponto medido mostra o oxigênio daquela parte da baía.</div>`;
+ const dica=()=>acao(G.sondas>0?`Toque na água onde você quer medir. Sondas: <b>${G.sondas}</b>. Zonas mortas achadas: <b>${G.achou.length} de 2</b>.`:'Acabaram as sondas.');dica();
+ G.tap=(x,y)=>{if(G.ir||G.sonda||G.sondas<=0||G.fim)return;const ys=sup(G);if(y<ys-10||x>630||chao(x)-ys<5)return;const z=zonaDe(x);if(G.medido[z]){acao('Esse ponto já foi medido. Escolha outro lugar.');return;}G.ir={x:clamp(x-18,40,600),z};};
+ G.upd=dt=>{
+  if(G.ir){const d=G.ir.x-G.canoa;G.canoa+=Math.sign(d)*Math.min(Math.abs(d),260*dt);if(Math.abs(d)<1){G.sonda={d:0,z:G.ir.z,t:0};G.ir=null;acao('Medindo...');}}
+  if(G.sonda){const s=G.sonda,prof=chao(G.canoa+18)-sup(G)-16;s.d=Math.min(prof,s.d+60*dt);s.t+=dt;if(s.t>1.6){G.medido[s.z]=true;G.sondas--;$('info').textContent=`🧪 ${G.sondas} sondas`;
+   const v=G.od[s.z];if(v<1){G.achou.push(s.z);G.pts+=60;G.marcas.push({x:zx(s.z),y:sup(G)-30-(s.z%2)*24,t:'Sem O₂!'});}else G.marcas.push({x:zx(s.z),y:sup(G)-30-(s.z%2)*24,t:v<2.5?'Pouco O₂':'Tem O₂',cor:v<2.5?'#ef6c00':'#2e7d32'});
+   S.fp=G.pts;hud();G.sonda=null;dica();
+   if(G.achou.length===2||G.sondas===0){G.fim=true;setTimeout(()=>{const ok=G.achou.length===2;fimFase(G.pts+(ok?G.sondas*15:0),ok,ok?'Os peixes morreram onde o oxigênio da água chegou perto de zero. Eles sobem para a superfície tentando respirar e morrem asfixiados.':`Você achou ${G.achou.length} de 2 zonas mortas. Os peixes boiando mostravam onde o oxigênio tinha acabado.`,'Se o peixe morreu por falta de oxigênio, o que está consumindo o oxigênio da água?');},1600);}}}
+ };
+ rodar();
+}
+
+/* ---------- FASE 2 ---------- */
+function f2(){
+ G=novaCena({modo:'lab'});G.aq=[0,2,4].map(c=>({capim:c,od:8,cha:0,peixe:{x:0,y:0,dir:1,est:'vivo',esp:0,ph:0},mn:8}));G.roda=false;G.dia=0;G.runs=0;
+ telaJogo('🧪 Experimento dos aquários','Dia 0');
+ const ctrl=()=>{$('ctrl').innerHTML=G.aq.map((q,i)=>`<div class="row" style="gap:6px"><b>${i+1}</b><button class="tool" data-i="${i}" data-d="-1">−</button><span class="pill">🌿 ${q.capim}</span><button class="tool" data-i="${i}" data-d="1">+</button></div>`).join('')+`<button class="btn sm" id="bR">▶ Rodar 5 dias</button>`;
+  document.querySelectorAll('.tool').forEach(b=>b.onclick=()=>{if(G.roda)return;const q=G.aq[+b.dataset.i];q.capim=clamp(q.capim+ +b.dataset.d,0,6);ctrl();});
+  $('bR').onclick=()=>{if(G.roda)return;G.runs++;G.roda=true;G.dia=0;G.aq.forEach(q=>{q.od=8;q.cha=0;q.mn=8;q.peixe.est='vivo';q.tb=0;});$('bR').disabled=true;};};
+ ctrl();
+ $('mets').innerHTML=G.aq.map((q,i)=>medidor('mA'+i,'O₂ aq. '+(i+1),'o2',8,2)).join('');G.aq.forEach((q,i)=>poeMed('mA'+i,8));
+ acao('Escolha o capim de cada aquário com − e +. Depois aperte <b>▶ Rodar 5 dias</b>. A linha tracejada é o mínimo de oxigênio para o peixe.');
+ G.upd=dt=>{if(!G.roda)return;const dh=dt*10;G.dia+=dh/24;const t=G.dia*24;
+  G.aq.forEach((q,i)=>{const f=(t/24)*Math.exp(1-t/24);q.od=clamp(q.od+(0.04*(8-q.od)-0.07*q.capim*f)*dh,0,8);q.mn=Math.min(q.mn,q.od);q.cha=Math.min(1,q.capim/6*Math.min(1,t/30));
+   if(q.od<2&&q.peixe.est!=='morto'){q.tb=(q.tb||0)+dt;if(q.tb>.8)q.peixe.est='morto';}poeMed('mA'+i,q.od);});
+  $('info').textContent='Dia '+Math.min(5,Math.floor(G.dia));
+  acao(G.dia<1.5?'O capim começa a apodrecer. Os micróbios que decompõem gastam oxigênio.':'Olhe cada aquário: o oxigênio caiu abaixo da linha?');
+  if(G.dia>=5){G.roda=false;resp2();}};
+ rodar();
+}
+function resp2(){
+ const vivos=G.aq.map(q=>q.peixe.est!=='morto');
+ acao(`Resultado: ${G.aq.map((q,i)=>`${q.capim} tufos ${vivos[i]?'✓ vivo':'✗ morto'}`).join(' · ')}. Teste de novo ou responda.`);
+ $('ctrl').innerHTML=`<div style="width:100%"><b>Qual é o máximo de tufos de capim com o peixe vivo?</b><div class="row" style="margin-top:6px">${[0,1,2,3,4,5,6].map(n=>`<button class="tool" data-n="${n}">${n}</button>`).join('')}</div></div>${G.runs<3?'<button class="btn ghost sm" id="bDe">🔁 Testar outros valores</button>':''}`;
+ document.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{const n=+b.dataset.n,ok=n===4;fimFase(ok?150-30*(G.runs-1):20,ok,ok?`Com 4 tufos o oxigênio ficou acima da linha. Com 5 caiu abaixo e o peixe morreu. Você usou ${G.runs} rodada${G.runs>1?'s':''} de teste.`:'O limite certo era 4 tufos. Com 5, o oxigênio caiu abaixo da linha do peixe.','No Pantanal, o que faz o papel do capim do aquário quando a água sobe?');});
+ if($('bDe'))$('bDe').onclick=()=>{G.aq.forEach((q,i)=>{q.od=8;q.cha=0;q.peixe.est='vivo';poeMed('mA'+i,8);});acao('Mude o capim dos aquários e rode de novo.');const r=G.runs;f2ctrl();G.runs=r;};
+}
+function f2ctrl(){const aq=G.aq;$('ctrl').innerHTML='';G.roda=false;
+ const ctrl=()=>{$('ctrl').innerHTML=aq.map((q,i)=>`<div class="row" style="gap:6px"><b>${i+1}</b><button class="tool" data-i="${i}" data-d="-1">−</button><span class="pill">🌿 ${q.capim}</span><button class="tool" data-i="${i}" data-d="1">+</button></div>`).join('')+`<button class="btn sm" id="bR">▶ Rodar 5 dias</button>`;
+  document.querySelectorAll('.tool').forEach(b=>b.onclick=()=>{if(G.roda)return;const q=aq[+b.dataset.i];q.capim=clamp(q.capim+ +b.dataset.d,0,6);ctrl();});
+  $('bR').onclick=()=>{if(G.roda)return;G.runs++;G.roda=true;G.dia=0;aq.forEach(q=>{q.od=8;q.cha=0;q.mn=8;q.peixe.est='vivo';q.tb=0;});$('bR').disabled=true;};};ctrl();}
+
+/* ---------- FASE 3 ---------- */
+const CASOS=[
+ {id:'bairro',nome:'Baía do Bairro',cls:'humana',cena:{casas:[680,700,720,740].map(x=>({x,lig:false})),verde:.8,esgoto:true,nivel:.7},
+  pistas:[{x:300,y:186,ic:'🟢',t:'Água verde, cheia de algas'},{x:612,y:160,ic:'🚰',t:'Cano de esgoto da cidade'},{x:520,y:120,ic:'📍',t:'Peixes mortos só perto da cidade'}]},
+ {id:'campo',nome:'Baía do Campo',cls:'natural',cena:{cha:.85,nivel:1},
+  pistas:[{x:320,y:196,ic:'🟤',t:'Água escura, cor de chá, e ácida'},{x:100,y:182,ic:'🌿',t:'Capim do campo apodrecendo debaixo d’água'},{x:520,y:110,ic:'📅',t:'Começou junto com a subida da água, no começo da cheia'}]},
+ {id:'lavoura',nome:'Baía da Lavoura',cls:'humana',cena:{lavoura:true,verde:.7,chuvaAdubo:true,nivel:.7},
+  pistas:[{x:300,y:186,ic:'🟢',t:'Água verde, cheia de algas'},{x:690,y:126,ic:'🌾',t:'Adubo da plantação levado pela chuva'},{x:470,y:110,ic:'📍',t:'Lagoa ao lado da plantação'}]}];
+function f3(){
+ G=null;S.c3={atual:0,vistas:CASOS.map(c=>c.pistas.map(()=>false)),pts:0};
+ telaJogo('🕵️ Três baías, três casos','0 de 9 pistas');
+ $('ctrl').innerHTML=CASOS.map((c,i)=>`<button class="tool${i===0?' on':''}" data-c="${i}">${c.nome}</button>`).join('');
+ document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{S.c3.atual=+b.dataset.c;document.querySelectorAll('[data-c]').forEach(x=>x.classList.toggle('on',x===b));monta3();});
+ monta3();rodar();
+}
+function monta3(){const k=S.c3.atual,C=CASOS[k];const op=Object.assign({od:Array(NZ).fill(.4),canoa:null},C.cena);if(op.casas)op.casas=op.casas.map(h=>({...h}));G=novaCena(op);G.corr=1;poePeixes(G,12);
+ G.peixes.forEach((p,i)=>{if(k===0&&p.x<420){p.x=rr(440,600);}if(i%2===0){p.est='morto';p.y=sup(G)+3;}});
+ if(k===0){G.od=G.od.map((v,z)=>z>=5?.4:6);}
+ G.extra=c=>{C.pistas.forEach((p,i)=>{if(S.c3.vistas[k][i])return;const r=13+Math.sin(G.t*4)*2;c.fillStyle='rgba(255,255,255,.9)';c.strokeStyle=CORES.main;c.lineWidth=3;c.beginPath();c.arc(p.x,p.y,r,0,7);c.fill();c.stroke();c.font='15px system-ui';c.textAlign='center';c.textBaseline='middle';c.fillText('🔍',p.x,p.y+1);c.textBaseline='alphabetic';});};
+ G.tap=(x,y)=>{C.pistas.forEach((p,i)=>{if(!S.c3.vistas[k][i]&&Math.hypot(x-p.x,y-p.y)<24){S.c3.vistas[k][i]=true;S.c3.pts+=10;S.fp=S.c3.pts;hud();lista3();}});};
+ lista3();}
+function lista3(){const k=S.c3.atual,C=CASOS[k],v=S.c3.vistas,n=v.flat().filter(Boolean).length;$('info').textContent=`${n} de 9 pistas`;
+ $('mets').innerHTML=`<div class="pensa" style="margin:0;max-width:none"><b>Pistas da ${C.nome}:</b><br>${C.pistas.map((p,i)=>v[k][i]?`${p.ic} ${p.t}`:'🔍 ...').join('<br>')}<br>💧 Oxigênio da água: quase zero</div>`;
+ const falta=CASOS.map((c,i)=>v[i].every(Boolean)?null:c.nome).filter(Boolean);
+ if(n===9){acao('Todas as pistas juntas! Agora decida a causa de cada caso.');$('mets').innerHTML+=`<div class="row" style="margin-top:8px"><button class="btn" id="bCl">Decidir as causas</button></div>`;$('bCl').onclick=classif3;}
+ else acao(v[k].every(Boolean)?`Pistas desta baía completas. Vá para: <b>${falta[0]}</b>.`:'Toque nas 🔍 da cena para descobrir as pistas.');}
+function classif3(){
+ parar();const onde=CASOS.map(()=>null);let sel=null;
+ const html=()=>`<div class="card"><div class="row top"><span class="chip">🗂️ Natural ou humana?</span><span class="pill">${S.tot+S.c3.pts} pts</span></div>
+ <div class="obj"><b>🎯 Objetivo</b><span>Separar as mortandades naturais das causadas por pessoas, com base nas pistas.</span></div><div class="acao"><span class="dedo">👉</span><span>Toque numa baía e depois na caixa certa. Nos três casos o oxigênio caiu: isso não diz a causa.</span></div>
+ <div class="cards" id="pool">${CASOS.map((c,i)=>onde[i]?'':`<button class="ct${sel===i?' sel':''}" data-i="${i}">${c.nome}</button>`).join('')}</div>
+ <div class="boxes">${[['natural','🌊 Natural: decoada'],['humana','🏭 Humana: eutrofização']].map(([b,t])=>`<div class="box${sel!=null?' alvo':''}" data-b="${b}"><h4>${t}</h4><div class="cards">${CASOS.map((c,i)=>onde[i]===b?`<span class="ct" id="c${i}">${c.nome}</span>`:'').join('')}</div></div>`).join('')}</div>
+ <div class="row" style="margin-top:12px"><button class="btn" id="bC" ${onde.every(Boolean)?'':'disabled'}>Conferir</button></div></div>`;
+ const pinta=()=>{$('tela').innerHTML=html();
+  document.querySelectorAll('#pool .ct').forEach(b=>b.onclick=()=>{sel=+b.dataset.i;pinta();});
+  document.querySelectorAll('.box').forEach(b=>b.onclick=()=>{if(sel==null)return;onde[sel]=b.dataset.b;sel=null;pinta();});
+  $('bC').onclick=()=>{let pts=S.c3.pts;const err=[];CASOS.forEach((c,i)=>{if(onde[i]===c.cls)pts+=40;else{pts-=10;err.push(i);}});
+   CASOS.forEach((c,i)=>onde[i]=c.cls);$('tela').innerHTML=html();$('bC').style.display='none';CASOS.forEach((c,i)=>{const e=$('c'+i);if(e){e.classList.add(err.includes(i)?'errado':'certo');if(err.includes(i))e.classList.add('movido');}});
+   setTimeout(()=>fimFase(pts,!err.length,'Na Baía do Campo foi a decoada: na subida da água, o capim alagado apodrece e a decomposição consome o oxigênio. A água fica escura e ácida. Nas baías do Bairro e da Lavoura foi a eutrofização: esgoto e adubo trazem nutrientes, as algas explodem e, quando morrem e apodrecem, o oxigênio acaba.','Por que o oxigênio quase zero, sozinho, não prova se a causa foi natural ou humana?'),err.length?2200:1300);};};
+ pinta();
+}
+
+/* ---------- FASE 4 ---------- */
+function nivelAno(t){t=((t%1)+1)%1;if(t<.18)return .05;if(t<.45)return .05+.95*(1-Math.cos(Math.PI*(t-.18)/.27))/2;if(t<.62)return 1;if(t<.9)return 1-.95*(1-Math.cos(Math.PI*(t-.62)/.28))/2;return .05;}
+const CX0=30,CX1=600,CY0=12,CY1=80;
+function f4(){
+ G=novaCena({nivel:.05,canoa:430,od:Array(NZ).fill(7)});poePeixes(G,16);G.prev=null;G.lugar=null;G.ano=0;G.roda=false;G.onset=null;G.chaZ=Array(NZ).fill(0);G.cha=0;
+ telaJogo('📅 Quando vem a decoada?','Prever');
+ acao('<b>1.</b> Toque no gráfico do nível do rio: em que momento do ano começa a decoada?');
+ $('mets').innerHTML=`<div class="small">A linha azul mostra o nível do rio ao longo de um ano. Ainda não há números porque é um modelo.</div>`;
+ const LUG=[{x:110,t:'Campo que acabou de alagar'},{x:400,t:'Meio do canal do rio'}];G.LUG=LUG;
+ G.chart=c=>{c.fillStyle='rgba(255,255,255,.92)';c.strokeStyle='#d1c4e9';c.lineWidth=2;c.beginPath();c.roundRect(CX0-10,CY0-10,CX1-CX0+20,CY1-CY0+34,12);c.fill();c.stroke();
+  [['Seca',0],['Enchente',.18],['Cheia',.45],['Vazante',.62],['Seca',.9]].forEach(([n,t],i,a)=>{const x0=CX0+(CX1-CX0)*t,x1=CX0+(CX1-CX0)*(a[i+1]?a[i+1][1]:1);c.fillStyle=i%2?'rgba(94,53,177,.06)':'rgba(94,53,177,.02)';c.fillRect(x0,CY0,x1-x0,CY1-CY0);c.fillStyle='#4d6370';c.font='700 11px system-ui';c.textAlign='center';c.fillText(n,(x0+x1)/2,CY1+16);});
+  c.strokeStyle='#1e88e5';c.lineWidth=3;c.beginPath();for(let i=0;i<=100;i++){const t=i/100,x=CX0+(CX1-CX0)*t,y=CY1-(CY1-CY0)*nivelAno(t);i?c.lineTo(x,y):c.moveTo(x,y);}c.stroke();
+  if(G.prev!=null){const x=CX0+(CX1-CX0)*G.prev;c.strokeStyle=CORES.main;c.lineWidth=2.5;c.setLineDash([5,4]);c.beginPath();c.moveTo(x,CY0);c.lineTo(x,CY1);c.stroke();c.setLineDash([]);c.fillStyle=CORES.main;c.font='700 11px system-ui';c.fillText('🎯 sua previsão',x,CY0+12);}
+  if(G.onset!=null){const x=CX0+(CX1-CX0)*G.onset;c.strokeStyle='#6d4c41';c.lineWidth=2.5;c.beginPath();c.moveTo(x,CY0);c.lineTo(x,CY1);c.stroke();c.fillStyle='#6d4c41';c.font='700 11px system-ui';c.fillText('decoada',x,CY0+26);}
+  if(G.roda||G.ano>0){const x=CX0+(CX1-CX0)*Math.min(1,G.ano);c.fillStyle='#1e88e5';c.beginPath();c.arc(x,CY1-(CY1-CY0)*nivelAno(G.ano),5,0,7);c.fill();}};
+ G.extra=c=>{if(G.prev==null||G.roda||G.ano>0)return;LUG.forEach((l,i)=>{const y=Math.min(chao(l.x),sup(G))-28,on=G.lugar===i;c.fillStyle=on?CORES.main:'rgba(255,255,255,.95)';c.strokeStyle=CORES.main;c.lineWidth=2;c.font='700 12px system-ui';const w=c.measureText(l.t).width+20;c.beginPath();c.roundRect(l.x-w/2,y-12,w,24,12);c.fill();c.stroke();c.fillStyle=on?'#fff':CORES.deep;c.textAlign='center';c.fillText('📍 '+l.t,l.x,y+4);});};
+ G.tap=(x,y)=>{if(G.roda||G.ano>0)return;if(y>=CY0-6&&y<=CY1+20&&x>=CX0&&x<=CX1){G.prev=(x-CX0)/(CX1-CX0);acao('<b>2.</b> Agora toque no lugar onde você acha que a decoada começa.');return;}
+  if(G.prev!=null)LUG.forEach((l,i)=>{const yy=Math.min(chao(l.x),sup(G))-28;if(Math.abs(x-l.x)<90&&Math.abs(y-yy)<20){G.lugar=i;acao('<b>3.</b> Aperte <b>▶ Rodar o ano</b> e compare com a sua previsão.');$('ctrl').innerHTML='<button class="btn sm" id="bA">▶ Rodar o ano</button>';$('bA').onclick=()=>{G.roda=true;$('ctrl').innerHTML='';};}});};
+ G.upd=dt=>{if(!G.roda)return;G.ano+=dt/26;G.nivel=nivelAno(G.ano);const ys=sup(G);
+  if(G.onset==null&&ys<chao(60)-3){G.onset=G.ano;}
+  if(G.onset!=null){const e=G.ano-G.onset;for(let z=0;z<NZ;z++){const lag=z*.025,k=clamp((e-lag)/.06,0,1)*clamp(1-(e-lag-.18)/.12,0,1)*(z<4?1:z<6?.6:.25);G.chaZ[z]=k*.9;G.od[z]=7-6.6*k;}G.cha=Math.max(...G.chaZ);}
+  acao(G.onset==null?'A água está subindo... observe o campo.':G.ano-G.onset<.2?'Decoada! A água cobriu o campo, o capim apodrece e o oxigênio some.':'A água vai voltando ao normal.');
+  if(G.ano>=1){G.roda=false;const dist=Math.abs(G.prev-G.onset),pl=G.lugar===0;const pts=Math.max(0,100-Math.round(dist*400))+(pl?60:0);
+   fimFase(pts,dist<.08&&pl,`A decoada começou na enchente, quando a água cobriu o campo seco. Sua previsão ficou ${dist<.04?'muito perto':dist<.1?'perto':'longe'} do momento real. Ela começa ${pl?'':'não no canal, mas '}no campo que acabou de alagar e depois se espalha pela baía.`,'Por que a decoada acontece na subida da água, e não no pico da cheia?');}};
+ rodar();
+}
+
+/* ---------- FASE 5 ---------- */
+function f5(){
+ G=novaCena({nivel:.7,canoa:300,casas:[668,688,708,728,748].map(x=>({x,lig:false})),loteEte:true,eteX:648,esgoto:true});poePeixes(G,20);
+ G.fichas=6;G.B=1.2;G.tf=0;G.ano=false;G.crash=0;G.humanas=0;G.naturais=0;G.ferr='ete';G.chaZ=Array(NZ).fill(0);
+ G.onMorte=p=>{if(zonaDe(p.x)>=4)G.humanas++;else G.naturais++;};
+ telaJogo('🏘️ Salve a baía do bairro','🪙 6 fichas');
+ const barra=()=>{$('ctrl').innerHTML=[['ete','🏭 ETE · 2'],['casa','🔗 Ligar casa · 1']].map(([k,t])=>`<button class="tool${G.ferr===k?' on':''}" data-k="${k}">${t}</button>`).join('')+(G.ano?'':'<button class="btn sm" id="bY">▶ Começar o ano</button>');
+  document.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{G.ferr=b.dataset.k;barra();});if($('bY'))$('bY').onclick=()=>{G.ano=true;barra();};};
+ barra();
+ $('mets').innerHTML=medidor('mB','Algas','alg',3,1.5)+`<div class="small" id="cont">Peixes mortos por esgoto: 0 · por decoada natural: 0</div>`;
+ const carga=()=>{let l=0;G.casas.forEach(h=>{l+=h.lig?(G.ete?.15:1):1;});return l;};
+ const gasta=n=>{if(G.fichas<n){acao('Fichas insuficientes.');return false;}G.fichas-=n;$('info').textContent='🪙 '+G.fichas+(G.fichas===1?' ficha':' fichas');return true;};
+ G.tap=(x,y)=>{if(G.ferr==='ete'&&!G.ete&&Math.abs(x-648)<18&&y>120&&y<156&&gasta(2)){G.ete=true;G.loteEte=false;}
+  if(G.ferr==='casa'){const h=G.casas.find(h=>Math.abs(x-h.x)<10&&y>118&&y<160);if(h&&!h.lig&&gasta(1))h.lig=true;}};
+ G.upd=dt=>{const l=carga();G.esgoto=l>.9;
+  if(!G.ano){acao(`Antes de começar: escolha <b>🏭 ETE</b> e toque no lote tracejado, ou <b>🔗 Ligar casa</b> e toque numa casa. Esgoto que chega na baía agora: <b>${Math.round(l/5*100)}%</b>.`);return;}
+  G.tf+=dt;const t=G.tf/48;G.nivel=.45+.55*nivelAno(t*.9+.1);
+  G.B=clamp(G.B+(0.6*l-G.B)*.08*dt,0,3);if(G.B>1.5&&G.crash<=0){G.crash=4;G.B=.7;}
+  if(G.crash>0)G.crash-=dt;G.verde=clamp(G.B/2.2,0,1);
+  for(let z=4;z<NZ;z++)G.od[z]=G.crash>0?.3:7-G.B*1.2;
+  const tn=t*.9+.1,dec=(tn>.2&&tn<.42)?Math.sin(Math.PI*(tn-.2)/.22):0;for(let z=0;z<4;z++){G.chaZ[z]=dec*.85;G.od[z]=7-6.7*dec;}G.cha=Math.max(...G.chaZ);
+  poeMed('mB',G.B);$('cont').textContent=`Peixes mortos por esgoto: ${G.humanas} · por decoada natural: ${G.naturais}`;
+  acao(G.crash>0?'As algas morreram e apodrecem: o oxigênio perto do bairro acabou!':dec>.2?'Decoada natural no campo. Não dá para evitar e não conta contra você.':l>2?'Ainda chega muito esgoto: as algas estão crescendo.':'A água do bairro está melhorando.');
+  if(G.tf>=48){G.ano=false;G.fim=true;parar();const ok=G.humanas===0;
+   fimFase(ok?200+G.fichas*10:Math.max(0,100-G.humanas*15),ok,`${ok?'Nenhum peixe morreu por esgoto.':`${G.humanas} peixes morreram por esgoto.`} ${G.naturais} morreram na decoada, que é natural. ${G.ete?'A ETE tratou o esgoto das casas ligadas.':'Sem a ETE, ligar casas só leva o esgoto para o mesmo cano.'}`,'Por que ligar as casas na rede não adianta se não houver tratamento do esgoto?');}};
+ rodar();
+}
+/* ================= INICIO / AVATAR ================= */
+function inicio(){parar();G=null;cx=null;$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><div class="capa"><canvas id="cA" width="560" height="560"></canvas>
+ <div><h2>Monte seu pesquisador</h2><div class="opts">
+ <div class="l">Pele</div><div class="sw" id="sP">${PELES.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.pele===i?'on':''}" aria-label="pele ${i+1}"></button>`).join('')}</div>
+ <div class="l">Cabelo</div><div class="sw" id="sE">${ESTILOS.map(([k,t])=>`<button class="tx ${A.estilo===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <div class="sw" id="sC">${CABS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.cab===i?'on':''}" aria-label="cor ${i+1}"></button>`).join('')}</div>
+ <div class="l">Camiseta</div><div class="sw" id="sT">${CAMISAS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.camisa===i?'on':''}" aria-label="camiseta ${i+1}"></button>`).join('')}</div>
+ <div class="l">Chapéu</div><div class="sw" id="sH">${CHAPEUS.map(([k,t])=>`<button class="tx ${A.chapeu===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <input class="nome" id="iN" maxlength="20" placeholder="Seu nome" value="${esc(A.nome)}">
+ </div></div></div>
+ <div class="row" style="margin-top:14px"><button class="btn" id="bJ">▶ Jogar as 5 fases</button><button class="btn ghost" id="bG">📘 Guia do professor</button></div>
+ <p class="small" style="margin-top:10px">Ciências da Natureza · Ensino Médio · BNCC EM13CNT105</p></div>`;
+ const pinta=()=>{const c=$('cA').getContext('2d');c.clearRect(0,0,560,560);c.fillStyle='#ede7f6';c.fillRect(0,0,560,560);c.fillStyle='#d1c4e9';c.beginPath();c.arc(280,600,260,0,7);c.fill();avatar(c,280,560,6.4,A,true);};
+ pinta();
+ const liga=(id,f)=>document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{f(b);salvaA();document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b));pinta();});
+ liga('sP',b=>A.pele=+b.dataset.i);liga('sC',b=>A.cab=+b.dataset.i);liga('sT',b=>A.camisa=+b.dataset.i);liga('sE',b=>A.estilo=b.dataset.k);liga('sH',b=>A.chapeu=b.dataset.k);
+ $('iN').oninput=e=>{A.nome=e.target.value;salvaA();};
+ $('bJ').onclick=novo;$('bG').onclick=guia;
+}
+function novo(){S={f:0,tot:0,fp:0,res:[],fichas:0};salvo=false;intro();}
+function relatorio(){parar();G=null;cx=null;$('rankBox').style.display='block';const nome=A.nome.trim()||'Pesquisador';
+ $('tela').innerHTML=`<div class="card"><div class="rel"><canvas id="cR" width="240" height="240"></canvas><div><div class="small">Relatório de campo</div><h2>${esc(nome)}</h2><div class="big" style="font-size:2rem;font-weight:800;color:var(--deep)">${S.tot} pts</div></div></div>
+ <table class="tab" style="margin-top:12px"><tr><th>Fase</th><th>Pontos</th><th>Meta</th></tr>${FASES.map((F,i)=>{const r=S.res[i]||{pts:0,ok:false};return`<tr><td>${F.ic} ${F.nome}</td><td>${r.pts}</td><td>${r.ok?'✓':'✗'}</td></tr>`;}).join('')}</table>
+ <div class="pensa"><b>Para escrever no caderno:</b> o peixe morre por falta de oxigênio. Explique uma causa natural e uma causa humana para o oxigênio acabar na água.</div>
+ <div class="savebox noprint"><input id="pName" maxlength="20" value="${esc(nome)}"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row noprint" style="margin-top:12px"><button class="btn ghost" id="bI">🖨️ Imprimir relatório</button><button class="btn ghost" id="bN">Jogar de novo</button><button class="btn ghost" id="bV">Início</button></div></div>`;
+ const c=$('cR').getContext('2d');c.fillStyle='#ede7f6';c.fillRect(0,0,240,240);avatar(c,120,240,3.2,A,true);
+ $('bS').onclick=()=>salvar('5 fases');$('bI').onclick=()=>window.print();$('bN').onclick=novo;$('bV').onclick=inicio;
+}
+
+/* ================= GUIA DO PROFESSOR ================= */
+function guia(){parar();$('hud').style.display='none';$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card guia">
+ <div class="row top noprint"><button class="btn ghost sm" id="bVt">← Voltar</button><button class="btn sm" id="bPr">🖨️ Imprimir guia</button></div>
+ <h2 style="margin-top:10px">Guia do professor · Peixe Morto na Baía</h2>
+ <p class="small">Ensino Médio · Ciências da Natureza e suas Tecnologias · Biologia, Química e Geografia</p>
+ <h3>Habilidade da BNCC</h3>
+ <div class="hab"><b>EM13CNT105.</b> Analisar os ciclos biogeoquímicos e interpretar os efeitos de fenômenos naturais e da interferência humana sobre esses ciclos, para promover ações individuais e/ou coletivas que minimizem consequências nocivas à vida.</div>
+ <p class="small" style="margin-top:6px">Apoio: EM13CNT205, sobre interpretar resultados e fazer previsões em atividades experimentais e fenômenos naturais.</p>
+ <h3>Objetivos da aula</h3>
+ <ul><li>Explicar que o peixe morre por falta de oxigênio dissolvido na água.</li><li>Relacionar a decomposição da matéria orgânica com o consumo de oxigênio.</li><li>Diferenciar a decoada, que é natural, da eutrofização, causada por esgoto e adubo.</li><li>Propor ações coletivas que reduzem a parte humana do problema.</li></ul>
+ <h3>Roteiro de 50 minutos</h3>
+ <table class="tab"><tr><th>Tempo</th><th>O que fazer</th></tr>
+ <tr><td>5 min</td><td>Mostre a notícia de uma mortandade de peixes e pergunte: o que matou esses peixes?</td></tr>
+ <tr><td>25 min</td><td>Alunos jogam em duplas. Peça que anotem as pistas da fase 3.</td></tr>
+ <tr><td>15 min</td><td>Discussão com as perguntas de cada fase, na tabela abaixo.</td></tr>
+ <tr><td>5 min</td><td>Cada dupla escreve a frase do relatório de campo.</td></tr></table>
+ <h3>Fase por fase</h3>
+ <table class="tab"><tr><th>Fase</th><th>O aluno faz</th><th>Pergunta para a turma</th><th>O que explicar</th></tr>
+ <tr><td>1. Onde falta oxigênio?</td><td>Mede a baía com sondas limitadas</td><td>O que está consumindo o oxigênio da água?</td><td>Peixes morrem asfixiados quando o oxigênio dissolvido chega perto de zero. Eles sobem à superfície para tentar respirar.</td></tr>
+ <tr><td>2. Experimento dos aquários</td><td>Testa uma variável: a quantidade de capim</td><td>No Pantanal, o que faz o papel do capim do aquário?</td><td>Os micróbios que decompõem a matéria orgânica consomem oxigênio. Mais matéria orgânica, menos oxigênio. Discuta controle e repetição.</td></tr>
+ <tr><td>3. Três baías, três casos</td><td>Junta pistas e decide a causa</td><td>Por que o oxigênio quase zero não prova a causa?</td><td>O mecanismo é o mesmo, a origem da matéria orgânica muda. Na decoada vem do campo alagado. Na eutrofização vem das algas alimentadas por esgoto e adubo.</td></tr>
+ <tr><td>4. Quando vem a decoada?</td><td>Prevê a época e o lugar e compara</td><td>Por que na subida da água, e não no pico da cheia?</td><td>A decoada aparece quando a água sobe e cobre o campo seco. A vegetação submersa apodrece, o oxigênio cai, o CO₂ sobe e a água fica escura e ácida.</td></tr>
+ <tr><td>5. Salve a baía do bairro</td><td>Gasta fichas em ETE e ligações de esgoto</td><td>Por que ligar casas na rede não basta sem tratamento?</td><td>Reduzir a entrada de fósforo é a medida com eficácia comprovada contra a eutrofização. A decoada continua, porque faz parte do ciclo natural do Pantanal.</td></tr></table>
+ <h3>Avaliação</h3>
+ <p>Use o relatório de campo impresso e a frase escrita por cada dupla. Todos os instrumentos têm o mesmo peso. Observe se o aluno separa o mecanismo (falta de oxigênio) da causa (natural ou humana).</p>
+ <h3>Sequência de 3 aulas</h3>
+ <ol><li><b>Aula 1.</b> Jogo completo e discussão, como neste roteiro.</li><li><b>Aula 2.</b> Leitura guiada de um estudo real de decoada no Pantanal (Andrade et al., 2022), comparando oxigênio, CO₂, pH e transparência antes e depois.</li><li><b>Aula 3.</b> Ação coletiva: as duplas mapeiam de onde vem o esgoto perto da escola e propõem uma medida para a prefeitura ou a comunidade.</li></ol>
+ <h3>Cuidado ao explicar</h3>
+ <p>Os valores do jogo são de um modelo simples, não são medidas reais. A decoada é um fenômeno natural do Pantanal e não deve ser tratada como poluição.</p>
+ <h3>Referências</h3>
+ <ul class="ref">
+ <li>Andrade M.H.S., Brandimarte A.L., Calheiros D.F., Súarez Y.R. 2022. Aspects of a unique natural limnological phenomenon in the Brazilian Pantanal. Revista Ambiente & Água 17(5). doi:10.4136/ambi-agua.2870</li>
+ <li>Schindler D.W. 2012. The dilemma of controlling cultural eutrophication of lakes. Proceedings of the Royal Society B 279: 4322-4333. doi:10.1098/rspb.2012.1032</li>
+ <li>Smith V.H., Schindler D.W. 2009. Eutrophication science: where do we go from here? Trends in Ecology & Evolution 24: 201-207. doi:10.1016/j.tree.2008.11.009</li></ul>
+ </div>`;
+ $('bVt').onclick=inicio;$('bPr').onclick=()=>window.print();
+}
+
+/* ================= RANKING ================= */
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="peixe-morto-na-baia";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__a={get S(){return S},get G(){return G},FASES,inicio,novo,intro,guia};
+inicio();
+</script>
+</body>
+</html>
