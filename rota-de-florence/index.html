@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Canoa de Florence</title>
 <style>
-:root{--main:#6d4c41;--deep:#4e342e;--soft:#f6efe9;--line:#e8dbd2;--ink:#241913;--mut:#6b5b51}
+:root{--main:#6d4c41;--deep:#4e342e;--soft:#f6efe9;--line:#e8dbd2;--ink:#10212b;--mut:#4d6370}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
 .wrap{max-width:780px;margin:0 auto;padding:12px 14px 40px}
@@ -43,7 +43,7 @@ canvas{width:100%;max-width:760px;margin:0 auto;display:block;border:2px solid v
 <a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
 <header>
   <h1>Canoa de Florence</h1>
-  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
 </header>
 <main id="tela"></main>
 <div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
@@ -117,7 +117,7 @@ let S,cv,cx,raf=null,last=0,W=720,H=460,inp={x:null,y:null,down:false,tap:null},
 const MOB=()=>W<520;
 function rrect(x,y,w,h,r,cor){cx.fillStyle=cor;cx.beginPath();cx.roundRect(x,y,w,h,r);cx.fill();}
 function sombra(x,y,rx,ry){cx.fillStyle='rgba(0,0,0,.12)';cx.beginPath();cx.ellipse(x,y,rx,ry,0,0,7);cx.fill();}
-function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/'+G.FASES.length;$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
  if(g&&!g.fim){const [a,m]=G.meta(g);$('hR').textContent=G.rotulo+' '+a+'/'+m;$('hV').textContent=G.vidas?'Vidas '+'●'.repeat(Math.max(0,g.vidas)):'';$('hT').textContent=G.semTempo?'':Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s';}
  ['hR','hV','hT'].forEach(k=>$(k).style.display=$(k).textContent?'':'none');}
 function inicio(){parar();$('hud').style.display='none';$('rankBox').style.display='block';
@@ -151,39 +151,218 @@ function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=G.FAS
  <p class="small" style="margin-top:6px">${ok?G.FASES[S.f].fato:G.dicaErro}</p>
  <div class="row" style="justify-content:center;margin-top:14px">${ok?'<button class="btn grande" id="bq">Pergunta rápida</button>':'<button class="btn grande" id="br">Jogar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
  if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}}
-/* A Expedição Langsdorff saiu de Porto Feliz pelo Tietê em 22/06/1826 e chegou a Cuiabá em 30/01/1827 (Boletim Paulista de Geografia; Wikipedia); a rota passou pelos rios Tietê, Pardo, Camapuã, Taquari, Paraguai, São Lourenço e Cuiabá (Revista Mouseion, Unilasalle). Obstáculos e pontos são regras do jogo. */
-const TRECHOS=[['Tietê','Pardo'],['Camapuã','Taquari'],['Paraguai','São Lourenço','Cuiabá']];
-const G={titulo:'Canoa de Florence',rotulo:'Desenhos',vidas:1,
- resumo:'Em 1826, o desenhista Hércules Florence viajou de canoa de Porto Feliz até Cuiabá com a Expedição Langsdorff. Pelo caminho, ele desenhou animais, plantas e paisagens.',
- como:[['Arraste','Mova a canoa para a esquerda e a direita. Setas também funcionam.'],['Pegue','As folhas de desenho com bichos do caminho: +10.'],['Desvie','Troncos e pedras tiram uma vida.']],
- dica:'Arraste a canoa para os lados.',dicaErro:'Fique no meio do rio e desvie cedo.',
- FASES:[{nome:'Rios Tietê e Pardo',dur:40,meta:6,v:170,metaTxt:'pegar 6 desenhos em 40 s.',txt:'A canoa sai de Porto Feliz em 22 de junho de 1826 e desce o rio Tietê.',fato:'A expedição saiu de Porto Feliz em 22 de junho de 1826 com 40 pessoas e 7 barcos.'},
-  {nome:'Rios Camapuã e Taquari',dur:40,meta:7,v:200,metaTxt:'pegar 7 desenhos em 40 s.',txt:'A viagem segue pelos rios Camapuã e Taquari, rumo ao Pantanal.',fato:'O caminho seguiu pelos rios Tietê, Pardo, Camapuã, Taquari, Paraguai, São Lourenço e Cuiabá.'},
-  {nome:'Pantanal até Cuiabá',dur:45,meta:8,v:230,metaTxt:'pegar 8 desenhos em 45 s.',txt:'Pelos rios Paraguai, São Lourenço e Cuiabá, até chegar à cidade.',fato:'A expedição chegou a Cuiabá em 30 de janeiro de 1827. Florence visitou Vila Maria, hoje Cáceres, em setembro de 1827.'}],
- init(g){g.vidas=3;g.x=W/2;g.n=0;g.obs=[];g.prox=.5;g.inv=0;g.y0=0;g.tr=0;msg('Rio '+TRECHOS[S.f][0]);},
- meta(g){return [g.n,FASES[S.f].meta];},cedo(g){return g.n>=FASES[S.f].meta;},
- update(g,dt){const F=FASES[S.f];g.inv-=dt;if(inp.down&&inp.x!=null)g.x+=(inp.x-g.x)*Math.min(1,dt*9);g.x+=((tec.ArrowRight?1:0)-(tec.ArrowLeft?1:0))*300*dt;const m=W*.16;g.x=Math.max(m+20,Math.min(W-m-20,g.x));
-  g.y0=(g.y0+F.v*dt)%80;const tr=TRECHOS[S.f];const k=Math.min(tr.length-1,Math.floor(g.t/F.dur*tr.length));if(k!==g.tr){g.tr=k;msg('Agora: rio '+tr[k]);}
-  g.prox-=dt;if(g.prox<=0){const r=Math.random();g.obs.push({x:rr(m+30,W-m-30),y:-30,tipo:r<.4?'folha':r<.7?'tronco':'pedra',b:Math.floor(rr(0,4))});g.prox=rr(.45,.8)*190/F.v;}
-  const cy=H*.8;for(const o of g.obs){o.y+=F.v*dt;if(!o.u&&Math.abs(o.y-cy)<30&&Math.abs(o.x-g.x)<(o.tipo==='tronco'?54:34)){o.u=1;if(o.tipo==='folha'){g.n++;ganha(10,o.x,o.y);}else if(g.inv<=0){g.vidas--;g.inv=1.2;beep(150,.3,.07);msg(o.tipo==='tronco'?'Bateu num tronco!':'Bateu na pedra!');}}}
-  g.obs=g.obs.filter(o=>o.y<H+40&&!(o.u&&o.tipo==='folha'));},
- draw(g){const m=W*.16;cx.fillStyle='#c5dc9a';cx.fillRect(0,0,W,H);const gr=cx.createLinearGradient(m,0,W-m,0);gr.addColorStop(0,'#6fb7cf');gr.addColorStop(.5,'#8fd0e2');gr.addColorStop(1,'#6fb7cf');cx.fillStyle=gr;cx.fillRect(m,0,W-2*m,H);
-  for(let y=-80+g.y0;y<H;y+=80){cx.fillStyle='#86ad5f';cx.beginPath();cx.arc(m-10,y,24,0,7);cx.arc(W-m+10,y+40,24,0,7);cx.fill();cx.fillStyle='#6b8f4c';cx.beginPath();cx.arc(m-30,y+30,18,0,7);cx.arc(W-m+30,y+10,18,0,7);cx.fill();}
-  cx.strokeStyle='rgba(255,255,255,.4)';cx.lineWidth=2;for(let y=-80+g.y0;y<H;y+=80){cx.beginPath();cx.moveTo(W*.4,y);cx.lineTo(W*.45,y);cx.moveTo(W*.6,y+40);cx.lineTo(W*.65,y+40);cx.stroke();}
-  for(const o of g.obs){if(o.tipo==='folha'){cx.save();cx.translate(o.x,o.y);cx.rotate(Math.sin(g.t*3+o.x)*.2);rrect(-20,-24,40,48,4,'#fffaf0');cx.strokeStyle='#8d6e63';cx.lineWidth=1.5;cx.strokeRect(-20,-24,40,48);
-    const tt=[()=>{cx.fillStyle='#c9963f';cx.beginPath();cx.ellipse(0,2,12,6,0,0,7);cx.fill();},()=>{cx.fillStyle='#1565c0';cx.beginPath();cx.ellipse(0,0,6,12,0,0,7);cx.fill();},()=>{cx.fillStyle='#78909c';cx.beginPath();cx.ellipse(0,0,13,5,0,0,7);cx.fill();},()=>{cx.strokeStyle='#558b2f';cx.lineWidth=3;cx.beginPath();cx.moveTo(0,14);cx.lineTo(0,-6);cx.stroke();cx.fillStyle='#7cb342';cx.beginPath();cx.arc(0,-10,9,0,7);cx.fill();}];tt[o.b]();cx.restore();}
-   else if(o.tipo==='tronco'){rrect(o.x-50,o.y-11,100,22,11,'#795548');cx.fillStyle='#a1887f';cx.beginPath();cx.ellipse(o.x+48,o.y,6,10,0,0,7);cx.fill();}
-   else{cx.fillStyle='#8d8378';cx.beginPath();cx.ellipse(o.x,o.y,28,20,0,0,7);cx.fill();}}
-  const cy=H*.8;if(!(g.inv>0&&Math.floor(g.t*10)%2)){cx.fillStyle='#6d4c41';cx.beginPath();cx.moveTo(g.x,cy-46);cx.quadraticCurveTo(g.x+20,cy,g.x,cy+46);cx.quadraticCurveTo(g.x-20,cy,g.x,cy-46);cx.fill();for(const k of [-20,0,20]){cx.fillStyle='#263238';cx.beginPath();cx.arc(g.x,cy+k,5,0,7);cx.fill();}cx.strokeStyle='#4e342e';cx.lineWidth=3;cx.beginPath();cx.moveTo(g.x-22,cy+8);cx.lineTo(g.x+22,cy-6);cx.stroke();}
-  rrect(10,H-38,MOB()?150:180,28,14,'rgba(255,255,255,.92)');cx.fillStyle='#4a321c';cx.font='bold 13px system-ui';cx.textAlign='center';cx.fillText('Rio '+TRECHOS[S.f][g.tr],(MOB()?150:180)/2+10,H-19);},
- capa(k,w,h){k.fillStyle='#8fd0e2';k.fillRect(0,0,w,h);k.fillStyle='#c5dc9a';k.fillRect(0,0,110,h);k.fillRect(w-110,0,110,h);k.fillStyle='#6d4c41';k.beginPath();k.moveTo(260,110);k.quadraticCurveTo(320,80,380,110);k.quadraticCurveTo(320,140,260,110);k.fill();k.fillStyle='#fffaf0';k.fillRect(430,60,46,56);k.strokeStyle='#8d6e63';k.strokeRect(430,60,46,56);k.fillStyle='#c9963f';k.beginPath();k.ellipse(453,90,14,7,0,0,7);k.fill();}
+/* ---------- arte vetorial compartilhada ---------- */
+beep=function(){};
+function rng(s){s=s%2147483647;if(s<=0)s+=2147483646;return()=>{s=s*16807%2147483647;return(s-1)/2147483646;};}
+function lg(k,x0,y0,x1,y1,st){const g=k.createLinearGradient(x0,y0,x1,y1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+function rg(k,x,y,r0,r1,st){const g=k.createRadialGradient(x,y,r0,x,y,r1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+const CACHE={};
+function cache(key,w,h,fn){const id=key+'_'+w+'x'+h;if(!CACHE[id]){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);CACHE[id]=c;}return CACHE[id];}
+function ceu(k,w,h,cs){k.fillStyle=lg(k,0,0,0,h,cs);k.fillRect(0,0,w,h);}
+function sol(k,x,y,r,c){k.fillStyle=rg(k,x,y,0,r*4,[c,'rgba(255,255,255,0)']);k.fillRect(x-r*4,y-r*4,r*8,r*8);k.fillStyle=c;k.beginPath();k.arc(x,y,r,0,7);k.fill();}
+function nuvem(k,x,y,s,a){k.fillStyle='rgba(255,255,255,'+(a||.8)+')';for(const [dx,dy,r] of [[0,0,1],[1.1,.15,.8],[-1,.2,.75],[.5,-.45,.7],[-.4,-.35,.6]]){k.beginPath();k.arc(x+dx*s,y+dy*s,r*s,0,7);k.fill();}k.fillRect(x-1.7*s,y+.2*s,3.6*s,.8*s);}
+function serra(k,w,y,amp,cor,seed){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,y+amp*2);let x=0;k.lineTo(0,y);while(x<w+40){x+=30+r()*50;k.lineTo(x,y-r()*amp);}k.lineTo(w,y+amp*4);k.lineTo(0,y+amp*4);k.fill();}
+function matas(k,w,y,amp,cor,seed,base){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,base);k.lineTo(0,y);let x=0;while(x<w+30){const rr=8+r()*amp;k.arc(x+rr,y-r()*amp*.6,rr,Math.PI,0);x+=rr*1.6;}k.lineTo(w,base);k.closePath();k.fill();}
+function capim(k,x0,y0,w,h,cor,seed,n){const r=rng(seed);k.strokeStyle=cor;k.lineCap='round';for(let i=0;i<n;i++){const x=x0+r()*w,y=y0+r()*h,l=4+r()*10;k.lineWidth=1+r()*1.2;for(let j=-1;j<=1;j++){k.beginPath();k.moveTo(x,y);k.quadraticCurveTo(x+j*3,y-l*.6,x+j*5+r()*2,y-l);k.stroke();}}}
+function copa(k,x,y,r,cs,seed){const R=rng(seed);const pts=[];for(let i=0;i<9;i++){const a=R()*Math.PI*2,d=R()*r*.55;pts.push([x+Math.cos(a)*d,y+Math.sin(a)*d*.7,r*(.35+R()*.3)]);}
+ k.fillStyle=cs[0];for(const [a,b,c] of pts){k.beginPath();k.arc(a+c*.12,b+c*.18,c,0,7);k.fill();}
+ k.fillStyle=cs[1];for(const [a,b,c] of pts){k.beginPath();k.arc(a,b,c*.92,0,7);k.fill();}
+ k.fillStyle=cs[2];for(const [a,b,c] of pts){k.beginPath();k.arc(a-c*.25,b-c*.3,c*.5,0,7);k.fill();}}
+function tronco(k,x,y0,y1,w0,w1,c1,c2){k.fillStyle=lg(k,x-w0,0,x+w0,0,[c2,c1,c1,c2]);k.beginPath();k.moveTo(x-w0,y0);k.lineTo(x-w1,y1);k.lineTo(x+w1,y1);k.lineTo(x+w0,y0);k.fill();k.strokeStyle='rgba(0,0,0,.12)';k.lineWidth=1;for(let y=y1+8;y<y0;y+=11){const t=(y-y1)/(y0-y1),ww=w1+(w0-w1)*t;k.beginPath();k.moveTo(x-ww*.6,y);k.quadraticCurveTo(x,y+3,x+ww*.5,y-1);k.stroke();}}
+function palmeira(k,x,y,h,lean,cfr,ctr,seed,nf){const R=rng(seed);const tx=x+lean,ty=y-h;k.strokeStyle=ctr;k.lineCap='round';for(let i=0;i<14;i++){const t0=i/14,t1=(i+1)/14;k.lineWidth=h*.05*(1-t0*.35);const xa=x+lean*t0*t0,ya=y-h*t0,xb=x+lean*t1*t1,yb=y-h*t1;k.beginPath();k.moveTo(xa,ya);k.lineTo(xb,yb);k.stroke();}
+ k.strokeStyle='rgba(0,0,0,.15)';k.lineWidth=1;for(let i=1;i<14;i++){const t=i/14,xa=x+lean*t*t,ya=y-h*t;k.beginPath();k.moveTo(xa-h*.022,ya);k.lineTo(xa+h*.022,ya);k.stroke();}
+ nf=nf||9;for(let f=0;f<nf;f++){const a=-Math.PI/2+(f-(nf-1)/2)*(2.6/nf)+(R()-.5)*.2,L=h*(.38+R()*.12),dr=.55+R()*.25;const ex=tx+Math.cos(a)*L,ey=ty+Math.sin(a)*L*.55+L*dr*.5;const mx=tx+Math.cos(a)*L*.5,my=ty+Math.sin(a)*L*.5-L*.12;
+  k.strokeStyle=cfr[0];k.lineWidth=2;k.beginPath();k.moveTo(tx,ty);k.quadraticCurveTo(mx,my,ex,ey);k.stroke();
+  for(let j=1;j<16;j++){const t=j/16,px=(1-t)*(1-t)*tx+2*(1-t)*t*mx+t*t*ex,py=(1-t)*(1-t)*ty+2*(1-t)*t*my+t*t*ey;const ll=L*.16*(1-t*.5);k.strokeStyle=cfr[j%2];k.lineWidth=1.6;k.beginPath();k.moveTo(px,py);k.lineTo(px+Math.cos(a+1.6)*ll*.5,py+ll);k.moveTo(px,py);k.lineTo(px+Math.cos(a-1.6)*ll*.5,py+ll*.9);k.stroke();}}}
+function sombraE(k,x,y,rx,ry,a){k.fillStyle='rgba(20,30,20,'+(a||.18)+')';k.beginPath();k.ellipse(x,y,rx,ry,0,0,7);k.fill();}
+function vinheta(k,w,h){k.fillStyle=rg(k,w/2,h/2,Math.min(w,h)*.45,Math.max(w,h)*.8,['rgba(0,0,0,0)','rgba(0,0,0,.18)']);k.fillRect(0,0,w,h);}
+function rrk(k,x,y,w,h,r,c){k.fillStyle=c;k.beginPath();k.roundRect(x,y,w,h,r);k.fill();}
+/* figura humana: o={pele,camisa,calca,chapeu,passo,bracoE,bracoD} ângulos em rad a partir de baixo */
+function pessoa(k,x,y,s,o){o=o||{};const p=o.passo||0;k.save();k.translate(x,y);k.scale(s*(o.dir||1),s);k.lineCap='round';k.lineJoin='round';
+ const pl=Math.sin(p)*.35;k.strokeStyle=o.calca||'#37474f';k.lineWidth=7;k.beginPath();k.moveTo(-3,-38);k.lineTo(-3+Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18,0);k.stroke();k.beginPath();k.moveTo(3,-38);k.lineTo(3-Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(3-Math.sin(pl)*20-Math.sin(pl*.5)*18,0);k.stroke();
+ k.fillStyle='#3e2723';k.beginPath();k.ellipse(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.ellipse(3-Math.sin(pl)*20-Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.fill();
+ k.fillStyle=o.camisa||'#1e88e5';k.beginPath();k.moveTo(-9,-40);k.lineTo(-10,-68);k.quadraticCurveTo(0,-74,10,-68);k.lineTo(9,-40);k.closePath();k.fill();k.fillStyle='rgba(0,0,0,.12)';k.fillRect(2,-68,7,28);
+ const be=o.bracoE!==undefined?o.bracoE:-pl*.8,bd=o.bracoD!==undefined?o.bracoD:pl*.8;k.strokeStyle=o.camisa||'#1e88e5';k.lineWidth=6;
+ for(const [sx,a] of [[-8,be],[8,bd]]){k.beginPath();k.moveTo(sx,-66);const ex=sx+Math.sin(a)*14,ey=-66+Math.cos(a)*14;k.lineTo(ex,ey);k.stroke();k.strokeStyle=o.pele||'#c68b59';k.beginPath();k.moveTo(ex,ey);k.lineTo(ex+Math.sin(a*1.15)*13,ey+Math.cos(a*1.15)*13);k.stroke();k.strokeStyle=o.camisa||'#1e88e5';}
+ k.fillStyle=o.pele||'#c68b59';k.fillRect(-3,-76,6,6);k.beginPath();k.ellipse(0,-83,7.5,8.5,0,0,7);k.fill();
+ if(o.chapeu!==false){k.fillStyle=o.chapeu||'#795548';k.beginPath();k.ellipse(0,-88,15,3.5,0,0,7);k.fill();k.beginPath();k.moveTo(-8,-88);k.quadraticCurveTo(-7,-99,0,-99);k.quadraticCurveTo(7,-99,8,-88);k.fill();k.fillStyle='rgba(0,0,0,.25)';k.fillRect(-8,-91,16,2.5);}
+ k.restore();}
+/* boi nelore em perfil, olhando para +x */
+function boi(k,x,y,s,dir,cor,p){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#ece6da';p=p||0;
+ const pern=[[-26,0],[-18,Math.PI],[18,Math.PI],[26,0]];
+ for(let i=0;i<4;i++){const [lx,ph]=pern[i];const a=Math.sin(p+ph)*.3;k.strokeStyle=i==1||i==2?shade(c,-.12):c;k.lineCap='round';k.lineWidth=6.5;k.beginPath();k.moveTo(lx,-24);k.lineTo(lx+Math.sin(a)*9,-10);k.lineTo(lx+Math.sin(a)*7,2);k.stroke();k.fillStyle='#3e2723';k.fillRect(lx+Math.sin(a)*7-3.5,1,7,3);}
+ k.fillStyle=c;k.beginPath();k.moveTo(-34,-40);k.quadraticCurveTo(-38,-24,-30,-20);k.quadraticCurveTo(0,-14,26,-20);k.quadraticCurveTo(34,-26,32,-40);k.quadraticCurveTo(28,-50,20,-54);k.quadraticCurveTo(12,-56,8,-48);k.quadraticCurveTo(-10,-46,-28,-48);k.quadraticCurveTo(-34,-46,-34,-40);k.fill();
+ k.fillStyle=lg(k,0,-50,0,-18,['rgba(255,255,255,.18)','rgba(0,0,0,0)','rgba(60,40,20,.22)']);k.fill();
+ k.fillStyle=c;k.beginPath();k.moveTo(26,-44);k.quadraticCurveTo(38,-44,44,-38);k.lineTo(54,-24);k.quadraticCurveTo(56,-18,51,-17);k.quadraticCurveTo(46,-18,42,-24);k.quadraticCurveTo(34,-26,28,-22);k.fill();
+ k.beginPath();k.moveTo(28,-26);k.quadraticCurveTo(34,-14,30,-12);k.quadraticCurveTo(24,-16,22,-24);k.fill();
+ k.fillStyle=shade(c,-.35);k.beginPath();k.ellipse(52,-19,3.4,2.6,.4,0,7);k.fill();k.fillStyle='#1b1b1b';k.beginPath();k.arc(44,-34,1.8,0,7);k.fill();
+ k.fillStyle=shade(c,-.08);k.beginPath();k.ellipse(38,-41,8,2.8,.5,0,7);k.fill();k.strokeStyle='#cfc4b0';k.lineWidth=2.4;k.lineCap='round';k.beginPath();k.moveTo(41,-44);k.quadraticCurveTo(44,-49,42,-52);k.stroke();
+ k.strokeStyle=c;k.lineWidth=2.2;k.beginPath();k.moveTo(-34,-42);k.quadraticCurveTo(-40,-28,-37,-14);k.stroke();k.fillStyle='#4e342e';k.beginPath();k.ellipse(-37,-13,2.2,4.5,0,0,7);k.fill();
+ k.restore();}
+function shade(hex,f){let n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;const t=f<0?0:255,p=Math.abs(f);r=Math.round((t-r)*p+r);g=Math.round((t-g)*p+g);b=Math.round((t-b)*p+b);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+function cavalo(k,x,y,s,dir,p,cor){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#8d5a3b';k.strokeStyle=c;k.lineCap='round';k.lineWidth=6;
+ for(const [lx,ph] of [[-20,0],[-12,Math.PI],[18,Math.PI],[26,0]]){const a=Math.sin(p+ph)*.45;k.beginPath();k.moveTo(lx,-22);k.lineTo(lx+Math.sin(a)*10,-8);k.lineTo(lx+Math.sin(a)*8,4);k.stroke();}
+ k.fillStyle=c;k.beginPath();k.ellipse(3,-30,28,12,0,0,7);k.fill();k.beginPath();k.moveTo(22,-36);k.quadraticCurveTo(30,-56,40,-58);k.lineTo(50,-48);k.quadraticCurveTo(44,-44,38,-46);k.lineTo(30,-26);k.fill();
+ k.fillStyle='#3e2723';k.beginPath();k.moveTo(24,-40);k.quadraticCurveTo(30,-60,40,-60);k.lineTo(36,-56);k.quadraticCurveTo(30,-52,28,-36);k.fill();k.beginPath();k.moveTo(-24,-34);k.quadraticCurveTo(-38,-26,-34,-6);k.quadraticCurveTo(-30,-22,-22,-28);k.fill();
+ k.fillStyle='rgba(0,0,0,.15)';k.beginPath();k.ellipse(3,-23,24,4,0,0,7);k.fill();k.fillStyle='#5d4037';k.fillRect(-8,-44,22,6);k.restore();}
+function cavaleiro(k,x,y,s,dir,p,o){cavalo(k,x,y,s,dir,p,o&&o.cor);k.save();k.translate(x,y);k.scale(s*dir,s);pessoa(k,2,-30,.62,Object.assign({passo:0,bracoE:.9,bracoD:1.3,calca:'#4e342e'},o||{}));k.restore();}
+/* tela cheia genérica para os jogos do motor arcade */
+const FS={on:false};
+(function(){const st=document.createElement('style');st.textContent='.fsmode{position:fixed!important;inset:0!important;z-index:9999!important;background:#fff!important;margin:0!important;padding:0!important;border-radius:0!important;max-width:none!important;width:100vw!important;height:100dvh!important;border:0!important}.fsmode canvas{width:100vw!important;height:100dvh!important;max-width:none!important;border:0!important;border-radius:0!important}.fsmode p.small{display:none}.fsmode .fsrow{position:fixed;top:48px;right:8px;z-index:10000;margin:0!important}.fsmode .fsrow .btn{padding:6px 14px;font-size:13px}';document.head.appendChild(st);
+ document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&FS.on)FS.set(false);});addEventListener('resize',()=>{if(FS.on)setTimeout(FS.ajusta,50);});})();
+FS.ajusta=function(){const c=$('cv');if(!c)return;if(FS.on){W=Math.round(innerWidth);H=Math.round(innerHeight);}else{if(c.clientWidth<520){W=420;H=560;}else{W=720;H=460;}}c.width=W;c.height=H;cx=c.getContext('2d');if(G.reajusta)G.reajusta(S.g);};
+FS.set=function(on){const c=$('cv');if(!c)return;const card=c.parentNode;FS.on=on;const b=$('btfs');if(b)b.textContent=on?'Sair':'Tela cheia';
+ if(on){card.classList.add('fsmode');try{const r=document.documentElement.requestFullscreen;if(r)r.call(document.documentElement).catch(()=>{});}catch(e){}}
+ else{card.classList.remove('fsmode');try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}}
+ setTimeout(FS.ajusta,80);};
+FS.botao=()=>'<div class="row fsrow" style="justify-content:center;margin-top:8px"><button class="btn ghost" id="btfs" onclick="FS.set(!FS.on)">Tela cheia</button></div>';
+FS.ligar=()=>{if(FS.on){const c=$('cv');c.parentNode.classList.add('fsmode');const b=$('btfs');if(b)b.textContent='Sair';FS.ajusta();}};
+FS.hud=(g,cor)=>{if(!FS.on||!g)return;const [a,m2]=G.meta(g);const t='Fase '+(S.f+1)+'/'+G.FASES.length+'  ·  '+(S.tot+S.fp)+' pts  ·  '+G.rotulo+' '+a+'/'+m2+(G.semTempo?'':'  ·  '+Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s');cx.font='bold 13px system-ui';const w=cx.measureText(t).width+24;rrk(cx,10,48,w,26,13,'rgba(255,255,255,.95)');cx.fillStyle=cor||'#37474f';cx.textAlign='left';cx.fillText(t,22,66);};
+/* Onça-pintada de perfil, andando, olhando para +x. L = comprimento do focinho à base da cauda. Origem no chão, sob o meio do corpo.
+Silhueta única (corpo, pescoço, cabeça e pernas do lado de cá), pernas do lado de lá atrás, volume sombreado e rosetas recortadas na pele. */
+const ONCA={};
+ONCA.P={
+ corpo:'M-108,-84 C-80,-96 -30,-92 0,-92 C20,-92 34,-104 56,-103 C70,-102 78,-100 84,-98 C88,-106 104,-108 116,-100 C122,-96 126,-90 129,-85 C132,-83 133,-79 131,-76 C132,-70 128,-66 122,-66 C118,-62 110,-60 104,-61 C96,-58 90,-54 84,-48 C80,-42 80,-34 80,-28 C80,-20 80,-14 82,-8 C88,-6 98,-4 98,0 L62,0 C59,-4 59,-8 59,-12 C56,-22 52,-32 48,-38 C40,-38 20,-36 0,-36 C-20,-36 -38,-40 -50,-46 C-56,-40 -62,-32 -70,-24 C-78,-16 -84,-10 -84,-6 C-80,-4 -74,-2 -74,0 L-104,0 C-108,-4 -108,-10 -106,-16 C-106,-22 -108,-28 -110,-34 C-120,-50 -122,-72 -108,-84 Z',
+ frente:'M34,-64 C48,-60 54,-48 50,-34 C47,-24 44,-14 42,-6 C46,-4 52,-2 51,0 L26,0 C24,-6 26,-14 28,-24 C30,-36 22,-48 22,-58 Z',
+ tras:'M-74,-66 C-58,-62 -46,-50 -44,-38 C-42,-28 -40,-16 -40,-6 C-36,-4 -30,-2 -31,0 L-56,0 C-58,-8 -58,-16 -60,-22 C-64,-30 -72,-38 -78,-46 C-84,-56 -82,-62 -74,-66 Z',
+ orelha:'M86,-99 C82,-113 97,-117 101,-104 Z',
+ cauda:[[-106,-82],[-134,-76],[-154,-52],[-150,-24],[-148,-14],[-140,-10]]
 };
+ONCA.p2={};for(const n of ['corpo','frente','tras','orelha'])Object.defineProperty(ONCA.p2,n,{get(){return this['_'+n]||(this['_'+n]=new Path2D(ONCA.P[n]));}});
+function oncaR(k,x,y,L,pose,dir){const s0=L/240;k.save();k.translate(x,y);k.scale((dir||1)*s0,s0);const R=rng(11),P=ONCA.p2;
+ const esc='#1b120a',risco='rgba(70,42,18,.55)';
+ /* sombra no chão */k.save();k.scale(1,.08);k.fillStyle=rg(k,-6,0,0,128,['rgba(40,28,14,.35)','rgba(40,28,14,0)']);k.beginPath();k.arc(-6,0,128,0,7);k.fill();k.restore();
+ /* cauda atrás */const c=ONCA.P.cauda;const tp=new Path2D();tp.moveTo(...c[0]);tp.bezierCurveTo(...c[1],...c[2],...c[3]);tp.bezierCurveTo(...c[4],...c[5],-136,-12);
+ k.lineCap='round';k.strokeStyle='#8a5a24';k.lineWidth=15;k.stroke(tp);k.strokeStyle=lg(k,-150,-80,-120,-10,['#c48536','#d9a04c','#e9c27f']);k.lineWidth=12.5;k.stroke(tp);
+ const bz=(t,i)=>{const u=1-t;return u*u*u*c[0][i]+3*u*u*t*c[1][i]+3*u*t*t*c[2][i]+t*t*t*c[3][i];};
+ for(const t of [.15,.28,.4,.5]){k.fillStyle=esc;k.beginPath();k.ellipse(bz(t,0)+(R()-.5)*3,bz(t,1)-2+(R()-.5)*3,2.6,2,R()*3,0,7);k.fill();}
+ for(const t of [.6,.71,.81,.9]){const px=bz(t,0),py=bz(t,1);k.save();k.translate(px,py);k.rotate(Math.atan2(bz(t+.02,1)-py,bz(t+.02,0)-px));k.fillStyle=esc;k.beginPath();k.ellipse(0,0,2.8,6.8,0,0,7);k.fill();k.restore();}
+ k.strokeStyle=esc;k.lineWidth=11;k.beginPath();k.moveTo(-151,-16);k.quadraticCurveTo(-148,-9,-139,-10);k.stroke();
+ /* pernas do lado de lá */for(const n of ['frente','tras']){k.save();k.fillStyle=lg(k,0,-64,0,0,['#9c6526','#b27833','#c99556']);k.fill(P[n]);k.clip(P[n]);ONCA.spots(k,R,-90,-70,80,4,.62,1);k.fillStyle='#1b120a';for(let i=0;i<50;i++){k.beginPath();k.ellipse(-90+R()*150,-60+R()*58,1.2+R()*1.5,1+R()*1.1,R()*3,0,7);k.fill();}k.fillStyle='rgba(25,14,5,.28)';k.fillRect(-120,-80,200,82);k.restore();k.strokeStyle=risco;k.lineWidth=1;k.stroke(P[n]);}
+ /* corpo */k.save();k.fillStyle=lg(k,0,-104,0,0,['#a86a24','#c98a3a','#dba04c','#e2ae62','#d9a35a','#c99355']);k.fill(P.corpo);k.clip(P.corpo);
+  k.save();k.translate(4,-40);k.scale(1,.2);k.fillStyle=rg(k,0,0,10,64,['rgba(248,238,218,.97)','rgba(248,238,218,.8)','rgba(248,238,218,0)']);k.beginPath();k.arc(0,0,64,0,7);k.fill();k.restore();
+  k.fillStyle=rg(k,98,-58,0,30,['rgba(250,242,226,.95)','rgba(250,242,226,0)']);k.fillRect(-130,-120,270,130);
+  
+  k.fillStyle=rg(k,44,-74,2,30,['rgba(255,236,190,.3)','rgba(255,236,190,0)']);k.fillRect(-130,-120,270,130);
+  k.fillStyle=rg(k,-84,-66,2,30,['rgba(255,236,190,.28)','rgba(255,236,190,0)']);k.fillRect(-130,-120,270,130);
+  k.fillStyle=lg(k,0,-106,0,-82,['rgba(90,50,15,.5)','rgba(90,50,15,0)']);k.fillRect(-130,-110,270,28);
+  ONCA.spots(k,R,-120,-108,140,0,1,0);k.fillStyle='#1b120a';for(let i=0;i<90;i++){const px=-112+R()*200,py=-34+R()*30;if(px>-52&&px<50&&py<-30)continue;k.beginPath();k.ellipse(px,py,1.2+R()*1.6,1+R()*1.2,R()*3,0,7);k.fill();}
+  k.strokeStyle='rgba(90,52,18,.3)';k.lineWidth=2;k.beginPath();k.moveTo(-74,-86);k.bezierCurveTo(-62,-70,-56,-58,-52,-46);k.stroke();k.beginPath();k.moveTo(34,-96);k.bezierCurveTo(42,-80,50,-60,56,-40);k.stroke();k.beginPath();k.moveTo(-98,-30);k.bezierCurveTo(-92,-24,-88,-18,-86,-10);k.stroke();
+  k.fillStyle=rg(k,-58,-40,4,22,['rgba(70,40,12,.28)','rgba(70,40,12,0)']);k.fillRect(-130,-120,270,130);
+  k.fillStyle=rg(k,60,-40,2,16,['rgba(70,40,12,.25)','rgba(70,40,12,0)']);k.fillRect(-130,-120,270,130);
+  k.fillStyle=lg(k,0,-14,0,0,['rgba(60,35,12,0)','rgba(60,35,12,.25)']);k.fillRect(-130,-14,270,14);
+ k.restore();k.strokeStyle=risco;k.lineWidth=1.2;k.stroke(P.corpo);
+ k.strokeStyle='rgba(70,42,18,.6)';k.lineWidth=1.1;for(const px of [84,-90])for(let i=0;i<3;i++){k.beginPath();k.moveTo(px+i*4,0);k.lineTo(px+i*4-1,-4);k.stroke();}
+ /* colar de telemetria */k.save();k.clip(P.corpo);k.strokeStyle='#3b2a1d';k.lineWidth=7;k.lineCap='butt';k.beginPath();k.moveTo(78,-104);k.quadraticCurveTo(86,-78,84,-48);k.stroke();k.strokeStyle='rgba(255,255,255,.18)';k.lineWidth=1.5;k.beginPath();k.moveTo(76,-104);k.quadraticCurveTo(84,-78,82,-48);k.stroke();k.restore();
+ k.fillStyle='#455a64';k.beginPath();k.roundRect(78,-56,13,10,2);k.fill();k.fillStyle='#78909c';k.fillRect(80,-54,9,2);k.strokeStyle='#37474f';k.lineWidth=1.2;k.beginPath();k.moveTo(90,-52);k.lineTo(100,-44);k.stroke();
+ /* orelha */k.fillStyle='#b67a32';k.fill(P.orelha);k.save();k.clip(P.orelha);k.fillStyle=esc;k.beginPath();k.ellipse(96,-104,6,7,-.3,0,7);k.fill();k.fillStyle='#f3e4c6';k.beginPath();k.arc(97,-104,2.4,0,7);k.fill();k.restore();k.strokeStyle=risco;k.lineWidth=1;k.stroke(P.orelha);
+ /* rosto */k.save();k.clip(P.corpo);
+  k.fillStyle='#f6ead2';k.beginPath();k.ellipse(124,-71,9,6,-.1,0,7);k.fill();k.beginPath();k.ellipse(112,-64,11,5,0,0,7);k.fill();
+  k.fillStyle=esc;for(let i=0;i<22;i++){const px=88+R()*30,py=-104+R()*24;if(px>112&&py>-88)continue;k.beginPath();k.ellipse(px,py,.9+R()*1.3,.8+R()*1.1,R()*3,0,7);k.fill();}
+  for(let i=0;i<5;i++){k.beginPath();k.arc(120+i*2.2,-73+(i%2)*2,.8,0,7);k.fill();}
+ k.restore();
+ k.save();k.translate(-1,-5);/* olho */k.fillStyle='#2a1a0c';k.beginPath();k.moveTo(108,-87);k.quadraticCurveTo(113,-92,119,-88);k.quadraticCurveTo(114,-84,108,-87);k.fill();
+ k.fillStyle='#d6a22c';k.beginPath();k.ellipse(113.6,-88,3.4,2.2,-.15,0,7);k.fill();k.fillStyle='#120a04';k.beginPath();k.ellipse(114,-88,1,2,0,0,7);k.fill();k.fillStyle='rgba(255,255,255,.85)';k.beginPath();k.arc(112.8,-88.8,.7,0,7);k.fill();
+ k.strokeStyle='rgba(40,24,10,.7)';k.lineWidth=1.3;k.beginPath();k.moveTo(119,-87);k.quadraticCurveTo(126,-84,129,-79);k.stroke();
+ /* nariz e boca */k.fillStyle='#5a3220';k.beginPath();k.moveTo(129,-80);k.quadraticCurveTo(135,-80,134,-74);k.quadraticCurveTo(130,-73,128,-76);k.fill();
+ k.strokeStyle='rgba(60,35,12,.45)';k.lineWidth=1.2;k.beginPath();k.moveTo(108,-62);k.quadraticCurveTo(100,-66,94,-64);k.stroke();k.strokeStyle='#2a1a0c';k.lineWidth=1.3;k.beginPath();k.moveTo(132,-73);k.lineTo(131,-69);k.quadraticCurveTo(124,-64,114,-66);k.stroke();
+ k.strokeStyle='rgba(255,255,255,.7)';k.lineWidth=.6;for(const [a,b] of [[-8,24],[-2,26],[4,24]]){k.beginPath();k.moveTo(124,-70);k.quadraticCurveTo(134,-70+a*.4,124+b,-70+a);k.stroke();}
+ k.restore();k.restore();}
+/* pintas: rosetas no flanco, pintas cheias na cabeça, pernas e barriga, fileira no dorso */
+ONCA.spots=function(k,R,x0,y0,x1,y1,esc0,sol){const e='#1b120a',st=18*esc0;
+ for(let y=y0;y<y1;y+=(y>-34&&!sol?st*.55:st))for(let x=x0+((Math.round((y-y0)/st))%2)*st*.5;x<x1;x+=st){const px=x+(R()-.5)*st*.5,py=y+(R()-.5)*st*.5;
+  const flanco=!sol&&px>-100&&px<62&&py>-90&&py<-48,cab=px>84&&py<-48,barr=!sol&&py>-48&&py<-34&&px>-52&&px<56,perna=sol||py>-34,dorso=py<-90;let r;
+  if(cab){if(R()<.7){k.fillStyle=e;k.beginPath();k.ellipse(px,py,1.6+R(),1.3+R()*.8,R()*3,0,7);k.fill();}continue;}
+  if(flanco){r=st*(.36+R()*.12)*(1-(Math.abs(px+16)/140)*.3);k.fillStyle='rgba(160,92,28,.75)';k.beginPath();k.ellipse(px,py,r*.9,r*.75,R(),0,7);k.fill();
+   const n=4+Math.floor(R()*3),a0=R()*6;k.fillStyle=e;for(let i=0;i<n;i++){if(R()<.15)continue;const a=a0+i/n*Math.PI*2,ar=.8+R()*.5;k.beginPath();k.ellipse(px+Math.cos(a)*r,py+Math.sin(a)*r*.84,r*.44*ar,r*.27*ar,a+Math.PI/2,0,7);k.fill();}
+   if(R()<.8){const m=1+Math.floor(R()*2);for(let j=0;j<m;j++){k.beginPath();k.arc(px+(R()-.5)*r*.6,py+(R()-.5)*r*.5,r*.13+R()*r*.06,0,7);k.fill();}}continue;}
+  k.fillStyle=e;if(dorso){k.beginPath();k.ellipse(px,py,st*.26,st*.16,(R()-.5)*.4,0,7);k.fill();continue;}
+  const rr=barr?st*(.22+R()*.14):perna?st*(.1+R()*.08):st*(.13+R()*.1);k.beginPath();k.ellipse(px,py,rr*1.15,rr*.85,R()*3,0,7);k.fill();}};
+/* Canoa de Florence. A Expedição Langsdorff pela rota das monções (1826-1827), com o desenhista Hércules Florence.
+UnB, Textos de História: saída em 22 de junho de 1826 pela rota das monções, rios Tietê, Paraná, Pardo, Camapuã, Coxim, Taquari, Paraguai, São Lourenço e Cuiabá.
+Boletim Paulista de Geografia: chegada a Cuiabá em 30 de janeiro de 1827. Mouseion: Florence visitou Vila Maria, atual Cáceres, em 6 de setembro de 1827.
+Pereira (2016, UFGD): Florence registrou paisagens, fauna, flora e povos indígenas em Mato Grosso.
+Obstáculos, bichos sorteados, tempos de desenho e pontos são regras do jogo. */
+const FL={};
+FL.RIOS=[['Tietê','Paraná'],['Pardo','Camapuã','Coxim'],['Taquari','Paraguai'],['São Lourenço','Cuiabá']];
+FL.F=[{dist:3200,v:95,bichos:['capivara','arara','anta','buriti']},{dist:3400,v:100,bichos:['capivara','anta','arara','jacare','buriti'],cach:1},{dist:3600,v:105,bichos:['tuiuiu','jacare','capivara','onca','arara']},{dist:3600,v:110,bichos:['tuiuiu','onca','jacare','anta','arara','buriti']}];
+FL.NOME={capivara:'capivara',arara:'arara-azul',anta:'anta',buriti:'buritizal',jacare:'jacaré',tuiuiu:'tuiuiú',onca:'onça-pintada'};
+const G={titulo:'Canoa de Florence',get rotulo(){return 'Desenhos';},vidas:3,semTempo:1,
+ resumo:'Em 1826 a Expedição Langsdorff saiu de Porto Feliz de canoa rumo a Cuiabá. Você é o desenhista Hércules Florence: guie a canoa pelos rios e desenhe a natureza do caminho no seu caderno.',
+ como:[['Remar','Arraste para os lados para desviar de troncos, pedras e bancos de areia.'],['Desenhar','Toque num bicho ou planta da margem. Mantenha a canoa perto até o lápis terminar o desenho.'],['Caderno','Cada desenho vai para o caderno. Batidas estragam a canoa: são 3 chances.']],
+ get dica(){return ['Toque no bicho assim que ele aparecer, para ter tempo de desenhar.','Nas cachoeiras há muitas pedras. Vá devagar pelo canal livre.','No Pantanal o rio se divide. Fique no canal mais largo.','Planeje: desenhe dos dois lados alternando a margem.'][S?S.f:0];},
+ dicaErro:'Desenhe com a canoa perto da margem do bicho. Longe, o lápis para.',
+ FASES:[{nome:'Rio Tietê',dur:999,meta:5,metaTxt:'fazer 5 desenhos e chegar ao fim do trecho com a canoa inteira.',txt:'22 de junho de 1826. A expedição deixa Porto Feliz e desce o rio Tietê. Guie a canoa e desenhe o que aparecer nas margens.',fato:'A Expedição Langsdorff saiu de Porto Feliz em 22 de junho de 1826 e seguiu a rota fluvial das monções.'},
+  {nome:'Pardo e Camapuã',dur:999,meta:6,metaTxt:'fazer 6 desenhos e passar pelas cachoeiras.',txt:'A canoa agora sobe o rio Pardo e segue para Camapuã e Coxim. O rio tem cachoeiras com muitas pedras.',fato:'O caminho seguiu pelos rios Tietê, Paraná, Pardo, Camapuã, Coxim, Taquari, Paraguai, São Lourenço e Cuiabá.'},
+  {nome:'Taquari e Paraguai',dur:999,meta:7,metaTxt:'fazer 7 desenhos no Pantanal.',txt:'A expedição desce o Taquari pelo Pantanal até o rio Paraguai. Há muita fauna nas margens.',fato:'Florence registrou paisagens, animais, plantas e povos indígenas de Mato Grosso em desenhos e aquarelas.'},
+  {nome:'Até Cuiabá',dur:999,meta:7,metaTxt:'fazer 7 desenhos e chegar a Cuiabá.',txt:'Pelos rios São Lourenço e Cuiabá, a canoa sobe até a cidade. Complete o caderno de Florence.',fato:'A expedição chegou a Cuiabá em 30 de janeiro de 1827. Florence visitou Vila Maria, hoje Cáceres, em 6 de setembro de 1827.'}],
+ init(g){const F=FL.F[S.f];g.ok=0;g.lb=[];g.cam=0;g.dist=F.dist;g.cad=[];g.x=FL.cx(60);g.wy=60;g.obs=[];g.bi=[];g.des=null;g.inv=0;FL.gera(g);},
+ meta(g){return [g.ok,FASES[S.f].meta];},cedo(g){return g.pronto;},
+ update(g,dt){FL.up(g,dt);},draw(g){FL.draw(g);},botoes(){return FS.botao();},ligar(){FS.ligar();},reajusta(g){},
+ capa(k,w,h){const o=cx,oW=W,oH=H;cx=k;W=w;H=h;const g={cam:200,t:0,obs:[],bi:[]};FL.rio(g);FL.canoa(w*.5,h*.62,0,0);FL.bicho('tuiuiu',w*.2,h*.35,1.3,0);FL.bicho('capivara',w*.82,h*.6,1.2,0);cx=o;W=oW;H=oH;}};
 const FASES=G.FASES;
+FL.cx=wy=>W*.5+Math.sin(wy*.0019+(typeof S!=="undefined"&&S?S.f:0))*W*.14+Math.sin(wy*.0051)*W*.05;
+FL.lw=wy=>Math.min(W*.62,Math.max(170,W*.46))*(1+Math.sin(wy*.0027+1)*.15);
+FL.sy=(g,wy)=>H*.7-(wy-g.cam);FL.wyOf=(g,sy)=>g.cam+H*.7-sy;
+FL.gera=function(g){const F=FL.F[S.f],R=rng(91+S.f*17);for(let wy=320;wy<g.dist-150;wy+=90+R()*110){const c=FL.cx(wy),h=FL.lw(wy)/2;const t=R();const cach=F.cach&&((wy%1100)<300);
+  if(cach){for(let j=0;j<3;j++){const lado=R()<.5?-1:1;g.obs.push({wy:wy+j*28,x:c+lado*h*(.15+R()*.75)*(j%2?1:-1),t:'pedra',r:10+R()*7});}}
+  else g.obs.push({wy,x:c+(R()-.5)*h*1.5,t:t<.45?'tronco':t<.75?'pedra':'areia',r:t<.45?24:t<.75?12:30,a:R()*3});}
+ let bi=0;for(let wy=260;wy<g.dist-200;wy+=260+R()*120){const lado=bi%2?1:-1;g.bi.push({wy,lado,k:F.bichos[Math.floor(R()*F.bichos.length)],st:0,p:0});bi++;}};
+FL.up=function(g,dt){const F=FL.F[S.f];g.lb=g.lb.filter(l=>(l.t-=dt)>0);if(g.fim2){g.fim2-=dt;if(g.fim2<=0)g.pronto=true;return;}
+ let v=F.v*Math.max(.85,Math.min(1.2,W/800));if(g.des)v*=.45;g.wy+=v*dt;g.cam=g.wy;
+ if(inp.down&&inp.x!==null&&!g.des)g.x+=(inp.x-g.x)*Math.min(1,dt*5);else if(inp.down&&inp.x!==null)g.x+=(inp.x-g.x)*Math.min(1,dt*2);
+ const c=FL.cx(g.wy),h=FL.lw(g.wy)/2-18;g.x=Math.max(c-h,Math.min(c+h,g.x));g.inv=Math.max(0,g.inv-dt);
+ for(const o of g.obs){if(o.bat)continue;const dy=o.wy-g.wy,dx=o.x-g.x;const hit=o.t==='tronco'?(Math.abs(dy)<10&&Math.abs(dx)<o.r+8):(Math.hypot(dx,dy*1.4)<o.r+9);if(hit&&g.inv<=0){o.bat=1;g.vidas--;g.inv=1.4;ganha(-10,g.x,FL.sy(g,g.wy)-20);msg(g.vidas>0?'A canoa bateu! Restam '+g.vidas+' chances.':'A canoa afundou.');}}
+ /* desenho */if(inp.tap){for(const b of g.bi){if(b.st)continue;const p=FL.posB(g,b);if(Math.hypot(inp.tap.x-p.x,inp.tap.y-p.y)<46){g.des=b;b.st=1;inp.tap=null;break;}}}
+ if(g.des){const b=g.des,p=FL.posB(g,b),cy=FL.sy(g,g.wy),d=Math.hypot(p.x-g.x,(p.y-cy)*.6);if(p.y>H+20||p.y<-30){b.st=3;g.des=null;g.lb.push({x:W/2,y:H*.4,tx:'O bicho saiu de vista',t:1.4,c:'#c62828'});}
+  else if(d<W*.45){b.p+=dt/1.6;if(b.p>=1){b.st=2;g.des=null;g.ok++;g.cad.push(b.k);ganha(12,p.x,p.y-20);g.lb.push({x:p.x,y:p.y-34,tx:FL.NOME[b.k]+' no caderno',t:1.4,c:'#4e342e'});}}}
+ if(g.wy>=g.dist&&!g.fim2){g.fim2=1.5;if(g.ok>=FASES[S.f].meta)ganha(20,W/2,H*.4);msg('Fim do trecho do rio '+FL.RIOS[S.f][FL.RIOS[S.f].length-1]+'.');}};
+FL.posB=function(g,b){const c=FL.cx(b.wy),h=FL.lw(b.wy)/2;return {x:Math.max(40,Math.min(W-40,c+b.lado*(h+34))),y:FL.sy(g,b.wy)};};
+FL.copa=(k,x,y,r,a,b)=>{k.fillStyle='rgba(30,40,15,.28)';k.beginPath();k.arc(x+r*.4,y+r*.45,r,0,7);k.fill();const gr=k.createRadialGradient(x-r*.3,y-r*.3,r*.1,x,y,r);gr.addColorStop(0,a);gr.addColorStop(1,b);k.fillStyle=gr;k.beginPath();k.arc(x,y,r,0,7);k.fill();};
+FL.rio=function(g){const k=cx;k.fillStyle='#e9dfbf';k.fillRect(0,0,W,H);const L=[],Rr=[];for(let sy=-20;sy<=H+20;sy+=8){const wy=FL.wyOf(g,sy),c=FL.cx(wy),h=FL.lw(wy)/2;L.push([c-h,sy]);Rr.push([c+h,sy]);}
+ for(const [pts,sg] of [[L,-1],[Rr,1]]){k.fillStyle=S&&S.f>=2?'#9fb16a':'#7da455';k.beginPath();k.moveTo(sg<0?0:W,-20);for(const [x,y] of pts)k.lineTo(x+sg*14,y);k.lineTo(sg<0?0:W,H+20);k.fill();}
+ for(let sy=-20;sy<H+20;sy+=10){const wy=FL.wyOf(g,sy),c=FL.cx(wy),h=FL.lw(wy)/2,s=Math.floor(wy/10);const r2=rng(Math.abs(s)*7919+11);r2();for(const sg of [-1,1])for(let j=0;j<2;j++){if(r2()<.35)continue;const x=c+sg*(h+24+r2()*60+j*36),r=7+r2()*9;FL.copa(k,x,sy+r2()*6,r,r2()<.5?'#79a352':'#5f8f43','#2f5a28');}}
+ k.strokeStyle='#e8d8a6';k.lineWidth=9;for(const pts of [L,Rr]){k.beginPath();pts.forEach(([x,y],i)=>i?k.lineTo(x,y):k.moveTo(x,y));k.stroke();}
+ k.beginPath();L.forEach(([x,y],i)=>i?k.lineTo(x,y):k.moveTo(x,y));for(let i=Rr.length-1;i>=0;i--)k.lineTo(Rr[i][0],Rr[i][1]);k.closePath();const gr=k.createLinearGradient(0,0,W,0);gr.addColorStop(0,'#a3b99c');gr.addColorStop(.5,'#8aa89a');gr.addColorStop(1,'#a3b99c');k.fillStyle=gr;k.fill();
+ k.save();k.clip();k.strokeStyle='rgba(255,255,255,.3)';k.lineWidth=1.2;for(let i=0;i<40;i++){const wy=g.cam-H*.4+((i*97)%(H*1.4))+((g.t||0)*40)%120,c=FL.cx(wy),h=FL.lw(wy)/2,x=c+(((i*.618)%1)-.5)*h*1.6,y=FL.sy(g,wy);k.beginPath();k.moveTo(x,y);k.lineTo(x,y+10);k.stroke();}k.restore();
+ for(const o of g.obs){const y=FL.sy(g,o.wy);if(y<-40||y>H+40)continue;if(o.t==='tronco'){k.save();k.translate(o.x,y);k.rotate(o.a*.3-.15);rrk(k,-o.r,-5,o.r*2,10,5,'#6d4c41');k.fillStyle='#8d6e63';k.fillRect(-o.r+3,-3,o.r*2-6,2);k.fillStyle='#a1887f';k.beginPath();k.ellipse(o.r-2,0,3,5,0,0,7);k.fill();k.restore();}
+  else if(o.t==='pedra'){k.fillStyle='rgba(255,255,255,.35)';k.beginPath();k.ellipse(o.x,y+o.r*.6,o.r*1.4,o.r*.5,0,0,7);k.fill();const gr2=k.createRadialGradient(o.x-o.r*.3,y-o.r*.3,1,o.x,y,o.r);gr2.addColorStop(0,'#aaa194');gr2.addColorStop(1,'#6d665c');k.fillStyle=gr2;k.beginPath();k.ellipse(o.x,y,o.r,o.r*.8,.4,0,7);k.fill();}
+  else{k.fillStyle='#e3d3a1';k.beginPath();k.ellipse(o.x,y,o.r,o.r*.45,.2,0,7);k.fill();k.fillStyle='rgba(255,255,255,.3)';k.beginPath();k.ellipse(o.x-4,y-2,o.r*.6,o.r*.2,.2,0,7);k.fill();}}};
+/* canoa vista de cima com remadores */
+FL.canoa=function(x,y,t,inv){const k=cx;k.save();k.translate(x,y);if(inv>0&&Math.floor(inv*10)%2)k.globalAlpha=.5;k.fillStyle='rgba(30,40,40,.25)';k.beginPath();k.ellipse(3,4,13,46,0,0,7);k.fill();
+ k.fillStyle='#7b5a3c';k.beginPath();k.moveTo(0,-48);k.quadraticCurveTo(13,-24,12,10);k.quadraticCurveTo(11,38,0,46);k.quadraticCurveTo(-11,38,-12,10);k.quadraticCurveTo(-13,-24,0,-48);k.fill();k.fillStyle='#a07a52';k.beginPath();k.moveTo(0,-42);k.quadraticCurveTo(9,-22,8,10);k.quadraticCurveTo(7,34,0,40);k.quadraticCurveTo(-7,34,-8,10);k.quadraticCurveTo(-9,-22,0,-42);k.fill();
+ k.fillStyle='#d7c7a3';k.fillRect(-7,-6,14,18);k.strokeStyle='#8d6e4c';k.lineWidth=1;k.strokeRect(-7,-6,14,18);
+ for(const [py,sg] of [[-28,1],[24,-1]]){const r=Math.sin(t*5+py)*.6;k.fillStyle='#5d4037';k.beginPath();k.arc(0,py,5,0,7);k.fill();k.fillStyle='#c9a27a';k.beginPath();k.arc(0,py,3,0,7);k.fill();k.strokeStyle='#4e342e';k.lineWidth=2;k.beginPath();k.moveTo(0,py);k.lineTo(sg*16,py+8+r*8);k.stroke();k.fillStyle='#4e342e';k.beginPath();k.ellipse(sg*17,py+10+r*8,2.5,5,0,0,7);k.fill();}
+ k.fillStyle='#37474f';k.beginPath();k.arc(0,4,4.2,0,7);k.fill();k.fillStyle='#f5f0e6';k.fillRect(2,0,6,5);k.restore();};
+/* bichos e plantas da margem, em perfil */
+FL.bicho=function(t,x,y,s,sep){const k=cx;k.save();k.translate(x,y);k.scale(s,s);const c=(a,b)=>sep?b:a;
+ k.fillStyle='rgba(30,30,15,.2)';k.beginPath();k.ellipse(0,10,18,4,0,0,7);k.fill();
+ if(t==='capivara'){k.fillStyle=c('#8a6a4a','#6d5136');k.beginPath();k.ellipse(0,0,17,10,0,0,7);k.fill();k.beginPath();k.ellipse(15,-4,8,6.5,-.2,0,7);k.fill();k.fillStyle=c('#6d5136','#4e3a26');k.fillRect(-11,6,4,6);k.fillRect(6,6,4,6);k.fillStyle='#1b120a';k.beginPath();k.arc(17,-6,1.1,0,7);k.fill();k.fillStyle=c('#5d4532','#3e2c1e');k.beginPath();k.arc(12,-10,2.2,0,7);k.fill();}
+ else if(t==='anta'){k.fillStyle=c('#4e4a46','#3e3a36');k.beginPath();k.ellipse(0,-1,19,11,0,0,7);k.fill();k.beginPath();k.ellipse(17,-3,8,7,-.3,0,7);k.fill();k.beginPath();k.moveTo(22,-3);k.quadraticCurveTo(30,0,27,6);k.lineTo(23,3);k.fill();k.fillRect(-14,6,5,8);k.fillRect(8,6,5,8);k.fillStyle=c('#e8e4dc','#a99');k.beginPath();k.ellipse(14,-10,2,3,-.3,0,7);k.fill();}
+ else if(t==='arara'){k.fillStyle=c('#2b4fa8','#4a3a2a');k.beginPath();k.ellipse(0,-2,6,11,.25,0,7);k.fill();k.beginPath();k.moveTo(-3,6);k.lineTo(-8,24);k.lineTo(-1,8);k.fill();k.beginPath();k.arc(3,-12,5,0,7);k.fill();k.fillStyle=c('#f3c623','#cbb48a');k.beginPath();k.arc(5,-12,2.2,0,7);k.fill();k.fillStyle='#222';k.beginPath();k.moveTo(7,-13);k.quadraticCurveTo(12,-12,9,-7);k.lineTo(6,-10);k.fill();k.strokeStyle='#6d4c41';k.lineWidth=2;k.beginPath();k.moveTo(-12,8);k.lineTo(14,8);k.stroke();}
+ else if(t==='tuiuiu'){k.fillStyle=c('#f7f7f4','#e8dcc4');k.beginPath();k.ellipse(0,-6,10,8,0,0,7);k.fill();k.fillStyle='#1d1d1d';k.beginPath();k.moveTo(5,-10);k.quadraticCurveTo(8,-22,6,-28);k.lineTo(9,-28);k.quadraticCurveTo(12,-20,9,-9);k.fill();k.fillStyle=c('#c62828','#8d5a4a');k.fillRect(5,-14,5,4);k.fillStyle='#1d1d1d';k.beginPath();k.arc(7.5,-30,3.5,0,7);k.fill();k.beginPath();k.moveTo(9,-31);k.lineTo(24,-27);k.lineTo(9,-28);k.fill();k.strokeStyle='#1d1d1d';k.lineWidth=1.6;k.beginPath();k.moveTo(-2,1);k.lineTo(-3,12);k.moveTo(3,1);k.lineTo(4,12);k.stroke();}
+ else if(t==='jacare'){k.fillStyle=c('#5b6339','#4a4a2e');k.beginPath();k.moveTo(-26,2);k.quadraticCurveTo(-10,-6,10,-4);k.lineTo(26,-2);k.lineTo(26,2);k.lineTo(10,4);k.quadraticCurveTo(-10,6,-26,2);k.fill();k.fillStyle=c('#3f4526','#33331f');for(let i=-18;i<8;i+=5){k.beginPath();k.moveTo(i,-4);k.lineTo(i+2,-8);k.lineTo(i+4,-4);k.fill();}k.fillRect(-10,3,3,5);k.fillRect(6,3,3,5);k.fillStyle='#e0c23a';k.beginPath();k.arc(14,-5,1.3,0,7);k.fill();}
+ else if(t==='onca'){if(typeof oncaR==='function')oncaR(k,0,10,46,1,1);}
+ else if(t==='buriti'){for(const [dx,h] of [[-10,34],[6,42]]){k.strokeStyle=c('#7a6a52','#5d4c39');k.lineWidth=3;k.beginPath();k.moveTo(dx,10);k.lineTo(dx+1,10-h);k.stroke();for(let a=0;a<9;a++){const an=-Math.PI+a/8*Math.PI;k.strokeStyle=c(a%2?'#4f7f36':'#6a9a45','#5d5a3a');k.lineWidth=2.4;k.beginPath();k.moveTo(dx+1,10-h);k.quadraticCurveTo(dx+1+Math.cos(an)*9,10-h+Math.sin(an)*9-4,dx+1+Math.cos(an)*16,10-h+Math.sin(an)*12+2);k.stroke();}}}
+ k.restore();};
+FL.draw=function(g){const m=MOB(),F=FL.F[S.f];FL.rio(g);
+ for(const b of g.bi){if(b.st===2||b.st===3)continue;const p=FL.posB(g,b);if(p.y<-40||p.y>H+40)continue;const sel=g.des===b;if(!sel){const pu=.5+Math.sin(g.t*4+b.wy)*.5;cx.strokeStyle='rgba(78,52,46,'+(.35+pu*.4)+')';cx.lineWidth=2;cx.setLineDash([4,4]);cx.beginPath();cx.arc(p.x,p.y-4,30,0,7);cx.stroke();cx.setLineDash([]);}
+  FL.bicho(b.k,p.x,p.y,m?1.35:1.55,0);if(sel){cx.strokeStyle='#4e342e';cx.lineWidth=4;cx.beginPath();cx.arc(p.x,p.y-4,32,-1.57,-1.57+6.283*b.p);cx.stroke();
+   cx.save();cx.translate(p.x+22,p.y-30);cx.rotate(.7);rrk(cx,-2,-12,4,20,1,'#f9a825');cx.fillStyle='#3e2723';cx.beginPath();cx.moveTo(-2,8);cx.lineTo(0,13);cx.lineTo(2,8);cx.fill();cx.restore();}}
+ FL.canoa(g.x,FL.sy(g,g.wy),g.t,g.inv);
+ /* mapa da rota */const top=FS.on?84:10,mw=m?160:200,mh=46;rrk(cx,10,top,mw,mh,12,'rgba(255,255,255,.95)');const rios=FL.RIOS[S.f],p=Math.min(1,g.wy/g.dist);cx.strokeStyle='#8aa89a';cx.lineWidth=5;cx.lineCap='round';cx.beginPath();cx.moveTo(22,top+30);cx.lineTo(mw-2,top+30);cx.stroke();cx.strokeStyle='#4e342e';cx.lineWidth=5;cx.beginPath();cx.moveTo(22,top+30);cx.lineTo(22+(mw-24)*p,top+30);cx.stroke();
+ cx.fillStyle='#4e342e';cx.beginPath();cx.arc(22+(mw-24)*p,top+30,5,0,7);cx.fill();cx.font='bold 10px system-ui';cx.textAlign='left';cx.fillStyle='#4e342e';cx.fillText('rio '+rios[Math.min(rios.length-1,Math.floor(p*rios.length))],20,top+16);cx.textAlign='right';cx.fillStyle='#78909c';cx.fillText(['jun 1826','ago 1826','nov 1826','jan 1827'][S.f],mw+4,top+16);
+ /* caderno */const cw=m?120:150,cxp=W-cw-10;rrk(cx,cxp,top+(FS.on?0:0),cw,46,12,'rgba(250,244,228,.97)');cx.strokeStyle='#bcaaa4';cx.lineWidth=1;cx.beginPath();cx.roundRect(cxp,top,cw,46,12);cx.stroke();cx.fillStyle='#4e342e';cx.font='bold 10px system-ui';cx.textAlign='left';cx.fillText('Caderno de Florence',cxp+8,top+14);
+ if(!FS.on||true){const n=g.cad.length;for(let i=0;i<Math.min(n,6);i++){cx.save();cx.globalAlpha=.85;FL.bicho(g.cad[n-1-i],cxp+16+i*((cw-24)/6),top+34,.42,1);cx.restore();}}
+ cx.fillStyle='#c62828';cx.font='bold 11px system-ui';cx.textAlign='left';cx.fillText('canoa: '+'■'.repeat(Math.max(0,g.vidas))+'□'.repeat(Math.max(0,3-g.vidas)),12,top+mh+16);
+ for(const l of g.lb){cx.font='bold 12px system-ui';const w=cx.measureText(l.tx).width+14;rrk(cx,l.x-w/2,l.y-13,w,20,10,'rgba(255,255,255,.95)');cx.fillStyle=l.c;cx.textAlign='center';cx.fillText(l.tx,Math.max(w/2,Math.min(W-w/2,l.x)),l.y+1);}
+ if(S.g.msgT<=0&&g.t<5){const t=m?'Arraste para remar. Toque nos bichos para desenhar.':'Arraste para os lados para remar. Toque nos bichos da margem para desenhar.';cx.font='bold 13px system-ui';const w=Math.min(W-16,cx.measureText(t).width+28);rrk(cx,W/2-w/2,H-48,w,30,15,'rgba(255,255,255,.96)');cx.strokeStyle='#6d4c41';cx.lineWidth=2;cx.beginPath();cx.roundRect(W/2-w/2,H-48,w,30,15);cx.stroke();cx.fillStyle='#4e342e';cx.textAlign='center';cx.fillText(t,W/2,H-28,W-30);}
+ FS.hud(g,'#4e342e');};
 const PERG=[
- {q:'De qual cidade a Expedição Langsdorff partiu de canoa em 1826?',o:['Porto Feliz, em São Paulo','Cuiabá, em Mato Grosso','Corumbá, em Mato Grosso do Sul']},
- {q:'Qual era o trabalho de Hércules Florence na expedição?',o:['Desenhar o que via pelo caminho','Cozinhar para os viajantes','Pilotar o barco principal']},
- {q:'Em que cidade a expedição chegou em 30 de janeiro de 1827?',o:['Cuiabá','Belém','Rio de Janeiro']}
-];
+ {q:'De qual cidade a Expedição Langsdorff partiu de canoa em 1826?',o:['Porto Feliz','Cuiabá','Corumbá']},
+ {q:'Qual era o trabalho de Hércules Florence na expedição?',o:['Desenhar o que via pelo caminho','Cozinhar para os viajantes','Comandar as canoas']},
+ {q:'Depois do rio Taquari, a expedição seguiu por qual rio?',o:['Paraguai','Tietê','Amazonas']},
+ {q:'Em que cidade a expedição chegou em 30 de janeiro de 1827?',o:['Cuiabá','Belém','Rio de Janeiro']}];
 function pergunta(){
  const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
  $('tela').innerHTML=`<div class="card"><h2>Pergunta da fase</h2><p style="margin:6px 0 4px">${P.q}</p><p class="small">Acerto +20, erro −10.</p><div class="ops">${ops.map((o,i)=>`<button data-i="${i}">${o.t}</button>`).join('')}</div><div id="pf"></div></div>`;
@@ -193,11 +372,11 @@ function pergunta(){
   $('bn').onclick=()=>{S.tot+=S.fp;S.fp=0;if(S.f===FASES.length-1)final(true);else{S.f++;fase();}};});
 }
 function final(tudo){
- S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
- $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Viagem concluída':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
+ S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?FASES.length+' fases':'Fase '+(S.f+1);
+ $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Desenhista da expedição!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
  <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
- <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Boletim Paulista de Geografia (AGB): a expedição saiu de Porto Feliz rumo a Cuiabá e chegou em 30 de janeiro de 1827; Wikipedia, Georg von Langsdorff: partida de Porto Feliz pelo Tietê em 22 de junho de 1826, com 40 pessoas e 7 barcos, e o desenhista Hércules Florence; Revista Mouseion (Unilasalle): rota pelos rios Tietê, Pardo, Camapuã, Taquari, Paraguai, São Lourenço e Cuiabá, e visita de Florence a Vila Maria, atual Cáceres, em 6 de setembro de 1827. Obstáculos, desenhos e pontos são regras do jogo.</div></div>`;
+ <div class="small" style="margin-top:12px;text-align:left">Fontes: Textos de História (UnB): partida em 22 de junho de 1826 pela rota fluvial das monções, rios Tietê, Paraná, Pardo, Camapuã, Coxim, Taquari, Paraguai, São Lourenço e Cuiabá; Boletim Paulista de Geografia (AGB): chegada a Cuiabá em 30 de janeiro de 1827; Revista Mouseion (Unilasalle): visita de Florence a Vila Maria, atual Cáceres, em 6 de setembro de 1827; Pereira (2016), Etnografia e iconografia nos registros de Hércules Florence durante a Expedição Langsdorff na província do Mato Grosso, Editora UFGD; Revista Pesquisa FAPESP, Mapa interativo traça rota de Hercule Florence na expedição Langsdorff. Obstáculos, bichos sorteados, meses no mapa, tempo de desenho e pontos são regras do jogo.</div></div>`;
  $('bS').onclick=()=>salvar(nivel);
 }
 const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
@@ -206,7 +385,7 @@ const GAME_ID="rota-de-florence";let db=null,fs=null,salvo=false;
 async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
 async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
  $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
-window.__a={get S(){return S},update,parar,G,inp};
+window.__a={get S(){return S},update,parar,G,inp,tec};
 inicio();
 </script>
 </body>
