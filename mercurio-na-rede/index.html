@@ -491,7 +491,7 @@ PS.update=function(g,dt){const s=PS.s(),ys=PS.ys(),fb=PS.fundo(),hk=g.hk,G2=PS.g
   if(p.st==='foge'){p.a-=dt*.5;PS.nada(p,dt,g);continue;}
   if(p.st==='morde'){const b=PS.boca(p);p.x+=hk.x-b.x+Math.sin(g.t*30)*1.5;p.y+=hk.y-b.y;p.f+=dt*14;continue;}
   if(p.st==='vai'||p.st==='cheira'||p.st==='ataca'){if(!iscaN){p.st='nada';p.tm=0;continue;}const side=p.x<hk.x?-1:1;
-   if(p.st==='vai'){p.tx=hk.x+side*(p.L*.48+p.L*.35);p.ty=hk.y;PS.nada(p,dt,g);if(Math.hypot(p.tx-p.x,p.ty-p.y)<8*s){p.st='cheira';p.tm=.5+Math.random()*.9;}}
+   if(p.st==='vai'){p.tx=hk.x+side*(p.L*.48+p.L*.35);p.ty=hk.y;PS.nada(p,dt,g);if(hk.isca==='art'&&Math.hypot(hk.x-p.x,hk.y-p.y)<p.L*1.6+40*s){p.st='ataca';}else if(Math.hypot(p.tx-p.x,p.ty-p.y)<8*s){p.st='cheira';p.tm=.5+Math.random()*.9;}}
    else if(p.st==='cheira'){p.tx=hk.x+side*(p.L*.48+p.L*.2+Math.sin(g.t*6)*p.L*.08);p.ty=hk.y;p.fd+=(-side-p.fd)*Math.min(1,dt*6);PS.nada(p,dt,g);p.tm-=dt;if(Math.random()<dt*3){hk.jig=.25;g.part.push({x:hk.x,y:hk.y,vx:0,vy:-20,t:.4,c:'rgba(255,255,255,.7)'});}
     if(p.tm<=0){if(Math.random()<.1){p.st='nada';p.cd=5;p.tm=0;}else p.st='ataca';}}
    else{p.tx=hk.x-PS.sg(p)*p.L*.48;p.ty=hk.y;PS.nada(p,dt,g);const b=PS.boca(p);if(Math.hypot(b.x-hk.x,b.y-hk.y)<6*s+p.L*.05){g.mord={p,t:0};hk.st='mordida';p.st='morde';
@@ -516,9 +516,9 @@ PS.update=function(g,dt){const s=PS.s(),ys=PS.ys(),fb=PS.fundo(),hk=g.hk,G2=PS.g
   if(hk.st==='voo'&&u>=1){hk.st='afunda';for(let i=0;i<8;i++)g.part.push({x:hk.x,y:ys,vx:(Math.random()-.5)*80,vy:-70-Math.random()*50,t:.45,c:'rgba(235,248,245,.95)'});}}
  else if(hk.st==='afunda'||hk.st==='espera'){if(hk.st==='afunda'){hk.y=Math.min(hk.ty,hk.y+110*s*dt);hk.x+=Math.sin(g.t*2)*4*dt;if(hk.y>=hk.ty)hk.st='espera';}
   else if(hk.isca==='art'){const d=g.x0-hk.x;hk.x+=Math.sign(d)*38*s*dt;hk.y+=((ys+(fb-ys)*.3)-hk.y)*dt*.4+Math.sin(g.t*9)*10*dt;if(Math.abs(d)<50*s){hk.st='volta';msg('Isca recolhida. Arremesse de novo.');}}
-  if(PS.galho(hk.x,hk.y,7*G2.sc)&&Math.random()<dt*(hk.isca==='art'?.35:.06))PS.prende(g,hk.x,hk.y,false,'espera');}
+  if(PS.galho(hk.x,hk.y,7*G2.sc)&&Math.random()<dt*(hk.isca==='art'?.1:.06))PS.prende(g,hk.x,hk.y,false,'espera');}
  else if(hk.st==='volta'){const dx=P.x-hk.x,dy=P.y+18*s-hk.y,d=Math.hypot(dx,dy),v=420*s;if(d<v*dt+2)hk.st='barco';else{hk.x+=dx/d*v*dt;hk.y+=dy/d*v*dt;}}
- if((hk.st==='espera'||hk.st==='afunda')&&!g.ps.some(p=>p.st==='vai'||p.st==='cheira'||p.st==='ataca')){let best=null,bd=160*s;for(const p of g.ps){if(p.st!=='nada'||p.a<1||p.cd>0||!p.E.dieta.includes(hk.isca))continue;const d=Math.hypot(p.x-hk.x,p.y-hk.y);if(d<bd){bd=d;best=p;}}if(best&&Math.random()<dt*2.5)best.st='vai';}
+ if((hk.st==='espera'||hk.st==='afunda')&&!g.ps.some(p=>p.st==='vai'||p.st==='cheira'||p.st==='ataca')){const art=hk.isca==='art';let best=null,bd=(art?260:160)*s;for(const p of g.ps){if(p.st!=='nada'||p.a<1||p.cd>0||!p.E.dieta.includes(hk.isca))continue;const d=Math.hypot(p.x-hk.x,p.y-hk.y);if(d<bd){bd=d;best=p;}}if(best&&Math.random()<dt*(art?5:2.5))best.st='vai';}
 };
 PS.canoaPt=g=>({x:g.x0+g.rs*34*PS.s(),y:PS.ys()+14*PS.s()});
 PS.briga=function(g,dt){const s=PS.s(),B=g.br,p=B.p,hk=g.hk,ys=PS.ys(),fb=PS.fundo(),C=PS.canoaPt(g),str=PS.forca(p);
@@ -540,7 +540,7 @@ PS.briga=function(g,dt){const s=PS.s(),B=g.br,p=B.p,hk=g.hk,ys=PS.ys(),fb=PS.fun
  if(d<28*s){g.fis=p;g.ps=g.ps.filter(q=>q!==p);g.br=null;hk.st='card';p.hg=+(p.hg*PS.mult(B.xh)).toFixed(2);p.loc=PS.local(B.xh);PS.reg.push({cm:p.cm,hg:p.hg,car:p.E.car,f:S.f});g.card={p,t:0};PS.perde(g,'');
   for(let i=0;i<12;i++)g.part.push({x:C.x,y:ys,vx:(Math.random()-.5)*100,vy:-90-Math.random()*60,t:.5,c:'rgba(230,245,250,.95)'});}};
 /* cartão: régua, balança, analisador e gráfico */
-PS.botoesCard=function(){const m=MOB(),tp=PS.tp();const cw=Math.min(W-20,m?360:460),ch=m?352:330,x0=W/2-cw/2,y0=Math.max(6,Math.min(PS.ys()-20,H-ch-56));const n=tp==='prato'?3:2,bw=(cw-24-(n-1)*10)/n,by=y0+ch-54;
+PS.botoesCard=function(){const m=MOB(),tp=PS.tp();const cw=Math.min(W-20,m?360:460),ch=m?386:362,x0=W/2-cw/2,y0=Math.max(6,Math.min(PS.ys()-20,H-ch-56));const n=tp==='prato'?3:2,bw=(cw-24-(n-1)*10)/n,by=y0+ch-54;
  const L=tp==='prato'?[['CRIANÇA','#00897b','cr'],['ADULTO','#1e88e5','ad'],['DEVOLVER','#8d6e63','dv']]:[['LEVAR','#2e7d32','lv'],['DEVOLVER','#8d6e63','dv']];return {x0,y0,cw,ch,bts:L.map((b,i)=>({x:x0+12+i*(bw+10),y:by,w:bw,h:44,t:b[0],c:b[1],id:b[2]}))};};
 PS.cartao=function(g){const B=PS.botoesCard();g.card.t+=1/60;if(!inp.tap||g.card.t<1.1)return;const bt=B.bts.find(b=>inp.tap.x>b.x&&inp.tap.x<b.x+b.w&&inp.tap.y>b.y&&inp.tap.y<b.y+b.h);if(!bt)return;PS.decide(g,g.card.p,bt.id);g.card=null;g.fis=null;inp.tap=null;};
 PS.decide=function(g,p,id){const tp=PS.tp(),hg=p.hg,x=W/2,y=PS.ys()+60,ok5=hg<.5;
@@ -560,10 +560,10 @@ PS.cartaoD=function(g){const B=PS.botoesCard(),p=g.card.p,tp=PS.tp(),m=MOB(),t=g
  cx.fillStyle='rgba(0,131,143,.35)';cx.fillRect(fx-fw/2,ry,fw*k1,12);
  const tx=x0+fw+30;cx.font='bold 15px system-ui';cx.fillStyle='#10212b';cx.fillText(p.E.n,tx,y0+46);cx.font='12px system-ui';cx.fillStyle='#4d6370';cx.fillText(p.E.gu,tx,y0+62);
  cx.font='bold 13px system-ui';cx.fillStyle='#37474f';cx.fillText('Comprimento: '+(t>.45?p.cm+' cm':'medindo...'),tx,y0+80);cx.fillText('Peso: '+(t>.75?p.kg.toFixed(1).replace('.',',')+' kg':t>.45?'pesando...':''),tx,y0+96);
- if(t>.45){const Lg=PS.legal(p);cx.font='bold 11px system-ui';cx.fillStyle=Lg.ok?'#546e7a':'#c62828';cx.fillText((Lg.ok?'Lei: ':'Fora da lei: ')+Lg.txt,tx,y0+112,cw-(tx-x0)-10);}
- if(tp==='fontes'){cx.font='11px system-ui';cx.fillStyle='#8d4f1f';cx.fillText(p.loc||'',tx,y0+126);}
- const c=p.hg<.2?'#2e7d32':p.hg<.5?'#f9a825':'#c62828';cx.font='bold 22px system-ui';cx.fillStyle=t>1?c:'#90a4ae';cx.fillText(t>1?fmtHg(p.hg):'analisando...',tx,y0+(tp==='fontes'?148:138));
- /* barra */const bx=x0+14,by=y0+162,bw=cw-28,mx=1.5;rrk(cx,bx,by,bw,10,5,'#eceff1');const gr=cx.createLinearGradient(bx,0,bx+bw,0);gr.addColorStop(0,'#66bb6a');gr.addColorStop(.33,'#fdd835');gr.addColorStop(.66,'#ef5350');gr.addColorStop(1,'#b71c1c');cx.save();cx.globalAlpha*=.35;cx.fillStyle=gr;cx.fillRect(bx,by,bw,10);cx.restore();
+ if(t>.45){PS.selo(p,tx,y0+104,x0+cw-tx-12);const Lg=PS.legal(p);if(Lg.min){cx.font='bold 12px system-ui';cx.textAlign='left';cx.fillStyle=Lg.ok?'#2e7d32':'#c62828';cx.fillText('mínimo da lei: '+Lg.min+' cm',fx-fw/2,ry+28);}}
+ if(tp==='fontes'){cx.font='11px system-ui';cx.textAlign='left';cx.fillStyle='#8d4f1f';cx.fillText(p.loc||'',tx,y0+158);}
+ const c=p.hg<.2?'#2e7d32':p.hg<.5?'#f9a825':'#c62828';cx.font='bold 22px system-ui';cx.fillStyle=t>1?c:'#90a4ae';cx.textAlign='left';cx.fillText(t>1?fmtHg(p.hg):'analisando...',tx,y0+(tp==='fontes'?182:166));
+ /* barra */const bx=x0+14,by=y0+(tp==='fontes'?194:178),bw=cw-28,mx=1.5;rrk(cx,bx,by,bw,10,5,'#eceff1');const gr=cx.createLinearGradient(bx,0,bx+bw,0);gr.addColorStop(0,'#66bb6a');gr.addColorStop(.33,'#fdd835');gr.addColorStop(.66,'#ef5350');gr.addColorStop(1,'#b71c1c');cx.save();cx.globalAlpha*=.35;cx.fillStyle=gr;cx.fillRect(bx,by,bw,10);cx.restore();
  const lim=[[.5,'0,5'],[1,'1,0']];if(tp==='prato')lim.unshift([.2,'0,2']);cx.font='10px system-ui';cx.textAlign='center';for(const [v,tt] of lim){const xx=bx+bw*v/mx;cx.fillStyle='#37474f';cx.fillRect(xx-1,by-3,2,16);cx.fillText(tt,xx,by+24);}
  if(t>1){const xm=bx+bw*Math.min(1,p.hg/mx);cx.fillStyle=c;cx.beginPath();cx.moveTo(xm,by-1);cx.lineTo(xm-6,by-9);cx.lineTo(xm+6,by-9);cx.fill();}
  /* gráfico comprimento x mercúrio */const gx=x0+40,gy=by+34,gw=cw-56,gh=ch-(gy-y0)-70;cx.strokeStyle='#b0bec5';cx.lineWidth=1;cx.beginPath();cx.moveTo(gx,gy);cx.lineTo(gx,gy+gh);cx.lineTo(gx+gw,gy+gh);cx.stroke();
@@ -614,7 +614,7 @@ PS.draw=function(g){const s=PS.s(),ys=PS.ys(),fb=PS.fundo(),tp=PS.tp(),m=MOB(),h
  const P=PS.ponta(g),T=g.br?g.br.T:0,tr=(hk.st==='mordida')?Math.sin(g.t*40)*4:hk.jig>0?Math.sin(g.t*50)*3:0,bend=(hk.st==='mordida'||hk.st==='briga'||hk.st==='preso')?(10+T*22)*s:0;
  const ex=P.x+(hk.x>P.x?1:-1)*bend*.25,ey=P.y+tr+bend*.7;cx.strokeStyle='#4e342e';cx.lineWidth=3*s*.9;cx.lineCap='round';cx.beginPath();cx.moveTo(P.hx,P.hy);cx.quadraticCurveTo((P.hx+P.x)/2,(P.hy+P.y)/2+bend*.4,ex,ey);cx.stroke();
  const tens=hk.st==='briga'||hk.st==='preso';cx.strokeStyle=tens?(T>.85?'rgba(198,40,40,.95)':'rgba(30,30,30,.9)'):'rgba(40,40,40,.75)';cx.lineWidth=tens?1.4:1;cx.beginPath();cx.moveTo(ex,ey);const sag=tens?(1-T)*20:hk.st==='espera'||hk.st==='afunda'?18:hk.st==='voo'?0:4;cx.quadraticCurveTo((ex+hk.x)/2,(ey+Math.min(hk.y,ys))/2+sag,hk.x,hk.y);cx.stroke();
- if(g.br)PS.peixe(g.br.p);if(hk.st!=='briga'&&hk.st!=='card')PS.anzol(hk.x,hk.y,hk.st==='preso'?null:hk.isca,s);
+ if(g.br)PS.peixe(g.br.p,1);if(hk.st!=='briga'&&hk.st!=='card')PS.anzol(hk.x,hk.y,hk.st==='preso'?null:hk.isca,s);
  if(hk.st==='mordida'){const k2=.6+.4*Math.sin(g.t*20);cx.font='bold '+(m?18:22)+'px system-ui';const t='MORDEU! TOQUE!';const w=cx.measureText(t).width+24,lx=Math.max(w/2+6,Math.min(W-w/2-6,hk.x));rrk(cx,lx-w/2,hk.y-62,w,34,17,'rgba(198,40,40,'+k2+')');cx.fillStyle='#fff';cx.textAlign='center';cx.fillText(t,lx,hk.y-38);cx.strokeStyle='#c62828';cx.lineWidth=3;cx.beginPath();cx.arc(hk.x,hk.y,22*Math.max(0,1-g.mord.t/1.6),0,7);cx.stroke();}
  if(hk.st==='preso'){const k2=.7+.3*Math.sin(g.t*10),t='ENROSCOU · TOQUE PARA PUXAR';cx.font='bold '+(m?13:15)+'px system-ui';const w=cx.measureText(t).width+24,lx=Math.max(w/2+6,Math.min(W-w/2-6,hk.x)),ly=Math.max(60,hk.y-50);rrk(cx,lx-w/2,ly,w,28,14,'rgba(191,54,12,'+k2+')');cx.fillStyle='#fff';cx.textAlign='center';cx.fillText(t,lx,ly+19);}
  if(g.br){const B=g.br,bw=m?150:200,bx=W-bw-20,by=ys+36;rrk(cx,bx-10,by-6,bw+20,62,12,'rgba(255,255,255,.95)');cx.font='bold 11px system-ui';cx.textAlign='left';cx.fillStyle='#37474f';cx.fillText('Tensão da linha',bx,by+8);
@@ -636,25 +636,26 @@ G.capa=function(k,w,h){const o=cx,oW=W,oH=H;cx=k;W=w;H=h;PS.cena(k,w,h);peixeR(k
 /* Peixe Seguro: corpo que dobra em onda, virada com volume e tamanho mínimo de captura por lei.
 Leis: Portaria IBAMA nº 8, de 2 de fevereiro de 1996 (bacia do rio Amazonas, águas da União, exceto Araguaia-Tocantins): tambaqui 55 cm de comprimento total, tolerância de 10%;
 Mato Grosso, Lei nº 9.096/2009, Anexo II (bacias Amazônica e Araguaia-Tocantins, redação da Lei nº 9.895/2013): pacu prata (Myleus spp.) 30 cm; Lei nº 12.434/2024 e Decreto nº 677/2024: piraíba e tucunaré na lista de pesque e solte. */
-function peixeR(k,x,y,L,sp,dir,f,amp){L=Math.max(14,Math.round(L/2)*2);const P=PF[sp];amp=amp==null?1:amp;const A=L*.045*amp;
+function peixeR(k,x,y,L,sp,dir,f,amp,sombra){L=Math.max(14,Math.round(L/2)*2);const P=sombra?PF.somb(sp):PF[sp];amp=amp==null?1:amp;const A=L*.045*amp;
  const wv=u=>A*(.08+u*u*1.15)*Math.sin(f-u*3.4);k.save();k.translate(x,y);k.scale(dir,1);
  const x1=PF.X(1)*L,y1=wv(1),y9=wv(.9),th=-Math.atan2(y1-y9,.08*L)+Math.sin(f-3.9)*.22*amp;
  k.save();k.translate(x1,y1);k.rotate(th);k.translate(-x1,0);PF.cauda(k,P,L,0);k.restore();
- const c=PF.sprite(sp,L),Z=2,cw=c.width,ch=c.height,ox=cw/Z/2+L*.08,sw=Z*2,N=Math.ceil(cw/sw);
+ const c=sombra?PF.spriteS(sp,L):PF.sprite(sp,L),Z=2,cw=c.width,ch=c.height,ox=cw/Z/2+L*.08,sw=Z*2,N=Math.ceil(cw/sw);
  for(let i=0;i<N;i++){const sx=i*sw,w2=Math.min(sw,cw-sx);if(w2<=0)break;const xc=(sx+w2/2)/Z-ox;const u=Math.max(0,Math.min(1.1,(.5-xc/L)/.8));
   k.drawImage(c,sx,0,w2,ch,sx/Z-ox,-ch/Z/2+wv(u),w2/Z+.6,ch/Z);}
  k.restore();}
 PS.prof=sp=>{const P=PF[sp];return Math.max(...P.top.map(q=>q[1]))+Math.max(...P.bot.map(q=>q[1]));};
-PS.peixe=p=>{const sg=PS.sg(p),a=Math.abs(p.fd),vel=Math.hypot(p.vx||0,p.vy||0)/PS.s();const amp=Math.min(2.2,.6+vel/60+(1-a)*1.2+(p.st==='briga'?.8:0)+(p.st==='morde'?.6:0));
+PS.peixe=(p,cheio)=>{const sb=!cheio;const sg=PS.sg(p),a=Math.abs(p.fd),vel=Math.hypot(p.vx||0,p.vy||0)/PS.s();const amp=Math.min(2.2,.6+vel/60+(1-a)*1.2+(p.st==='briga'?.8:0)+(p.st==='morde'?.6:0));
  cx.save();cx.translate(p.x,p.y);cx.rotate(p.ang*sg);
  if(a<.35){const P=PF[p.sp],dp=PS.prof(p.sp)*p.L,rx=p.L*(.07+.25*a);cx.globalAlpha*=Math.min(1,(.35-a)*4);
-  cx.fillStyle=lg(cx,0,-dp/2,0,dp/2,[P.cor[0],P.cor[1],P.cor[2],P.cor[3]]);cx.beginPath();cx.ellipse(0,(PF.h(P.bot,.4)-PF.h(P.top,.4))*p.L/2,rx,dp/2*.95,0,0,7);cx.fill();
+  cx.fillStyle=sb?'rgba(28,52,50,1)':lg(cx,0,-dp/2,0,dp/2,[P.cor[0],P.cor[1],P.cor[2],P.cor[3]]);cx.beginPath();cx.ellipse(0,(PF.h(P.bot,.4)-PF.h(P.top,.4))*p.L/2,rx,dp/2*.95,0,0,7);cx.fill();
   cx.fillStyle='rgba(255,255,255,.18)';cx.beginPath();cx.ellipse(-rx*.25,-dp*.15,rx*.35,dp*.3,0,0,7);cx.fill();cx.globalAlpha=1;}
- peixeR(cx,0,0,p.L,p.sp,sg*Math.max(.12,Math.sqrt(a)),p.f,amp);cx.restore();};
+ if(sb){const fund=Math.max(0,Math.min(1,(p.y-PS.ys())/(PS.fundo()-PS.ys())));cx.globalAlpha*=.42-.2*fund;}peixeR(cx,0,0,p.L,p.sp,sg*Math.max(.12,Math.sqrt(a)),p.f,amp,sb);cx.restore();
+ if(cheio){cx.font='bold 13px system-ui';const t=p.E.n+'!';const w=cx.measureText(t).width+16;rrk(cx,p.x-w/2,p.y-p.L*.45-30,w,22,11,'rgba(255,255,255,.95)');cx.strokeStyle='#00838f';cx.lineWidth=1.5;cx.beginPath();cx.roundRect(p.x-w/2,p.y-p.L*.45-30,w,22,11);cx.stroke();cx.fillStyle='#004d55';cx.textAlign='center';cx.fillText(t,p.x,p.y-p.L*.45-14);}};
 PS.LEI='am';
 PS.LEIS={am:{nome:'Lei: IBAMA · bacia Amazônica'},mt:{nome:'Lei: Mato Grosso'}};
-PS.legal=function(p){const sp=p.sp,cm=p.cm;if(PS.LEI==='am'){if(sp==='tambaqui')return {ok:cm>=55,txt:'mínimo 55 cm (Portaria IBAMA 8/1996)'};return {ok:true,txt:'sem tamanho mínimo na Portaria IBAMA 8/1996'};}
- if(sp==='pacu')return {ok:cm>=30,txt:'mínimo 30 cm (Lei MT 9.096/2009)'};if(sp==='filhote'||sp==='tucunare')return {ok:false,txt:'pesque e solte em MT (Lei 12.434/2024)'};return {ok:true,txt:'sem medida na lei de MT'};};
+PS.legal=function(p){const sp=p.sp,cm=p.cm;if(PS.LEI==='am'){if(sp==='tambaqui')return {ok:cm>=55,min:55,txt:'mínimo 55 cm (Portaria IBAMA 8/1996)'};return {ok:true,txt:'sem tamanho mínimo na Portaria IBAMA 8/1996'};}
+ if(sp==='pacu')return {ok:cm>=30,min:30,txt:'mínimo 30 cm (Lei MT 9.096/2009)'};if(sp==='filhote'||sp==='tucunare')return {ok:false,txt:'pesque e solte em MT (Lei 12.434/2024)'};return {ok:true,txt:'sem medida na lei de MT'};};
 const _dec5=PS.decide;PS.decide=function(g,p,id){const Lg=PS.legal(p),leva=id==='lv'||id==='cr'||id==='ad',x=W/2,y=PS.ys()+60;
  if(!Lg.ok){if(PS.tp()==='medir')g.n++;if(leva){ganha(-8,x,y);msg('Fora da lei: '+Lg.txt+'. Devolva vivo ao rio.');}else{ganha(5,x,y);msg('Certo: '+Lg.txt+'. Devolvido vivo.');}return;}
  _dec5(g,p,id);};
@@ -663,6 +664,15 @@ const _up5=PS.update;PS.update=function(g,dt){if(inp.tap&&!g.card){const r=PS.ch
 const _dr5=PS.draw;PS.draw=function(g){_dr5(g);if(!g.card){const r=PS.chipLei();rrk(cx,r.x,r.y,r.w,r.h,14,'rgba(255,255,255,.95)');cx.strokeStyle='#5d4037';cx.lineWidth=1.5;cx.beginPath();cx.roundRect(r.x,r.y,r.w,r.h,14);cx.stroke();cx.fillStyle='#4e342e';cx.textAlign='left';cx.fillText(r.t,r.x+9,r.y+18);}};
 G.como=[['Arremessar','Toque na água onde quer pescar, ajuste e solte. Cuidado com as copas e a galhada: a linha enrosca.'],['Brigar','Quando morder, toque para fisgar. Segure para puxar e solte quando a tensão ficar vermelha.'],['Medir e decidir','Régua, balança e analisador mostram tamanho, peso e mercúrio. Confira o tamanho mínimo da lei e devolva vivo o que não pode levar.']];
 PERG[2]={q:'Um tambaqui de 48 cm foi pescado na bacia Amazônica. O que a Portaria IBAMA 8/1996 manda fazer?',o:['Devolver, porque o mínimo é 55 cm','Levar, porque não há tamanho mínimo','Levar só se tiver pouco mercúrio']};
+
+PF.somb=sp=>{const P=PF[sp];return Object.assign({},P,{fin:'#1c3432',fin2:'#1c3432',cor:['#1c3432','#1c3432','#1c3432','#1c3432']});};
+PF.spriteS=(sp,L)=>{const b=PF.sprite(sp,L);return cache('pfs_'+sp+'_'+L,b.width,b.height,k=>{k.drawImage(b,0,0);k.globalCompositeOperation='source-in';k.fillStyle='#1c3432';k.fillRect(0,0,b.width,b.height);});};
+PS.selo=function(p,x,y,w){const Lg=PS.legal(p);let t,c,bg;if(Lg.ok&&Lg.min){t='✓ Dentro da lei: mínimo '+Lg.min+' cm';c='#1b5e20';bg='#e8f5e9';}else if(Lg.ok){t='Lei: sem tamanho mínimo';c='#455a64';bg='#eceff1';}
+ else if(Lg.min){t='✗ ABAIXO DO MÍNIMO ('+Lg.min+' cm): DEVOLVA';c='#fff';bg='#c62828';}else{t='✗ PESQUE E SOLTE: DEVOLVA';c='#fff';bg='#c62828';}
+ cx.font='bold '+(MOB()?11:13)+'px system-ui';const tw=Math.min(w,cx.measureText(t).width+16);rrk(cx,x,y,tw,26,8,bg);if(!Lg.ok){cx.strokeStyle='#8e0000';cx.lineWidth=2;cx.beginPath();cx.roundRect(x,y,tw,26,8);cx.stroke();}cx.fillStyle=c;cx.textAlign='left';cx.fillText(t,x+8,y+18,tw-14);
+ cx.font='10px system-ui';cx.fillStyle='#78909c';cx.fillText(Lg.txt.includes('(')?Lg.txt.slice(Lg.txt.indexOf('(')+1,-1):Lg.txt,x+2,y+38,w);};
+const _cd5=PS.cartaoD;PS.cartaoD=function(g){_cd5(g);const p=g.card.p;if(g.card.t>1.1&&!PS.legal(p).ok){const B=PS.botoesCard();for(const b of B.bts)if(b.id!=='dv'){cx.fillStyle='rgba(255,255,255,.55)';cx.fillRect(b.x,b.y,b.w,b.h);cx.font='bold 10px system-ui';cx.fillStyle='#c62828';cx.textAlign='center';cx.fillText('fora da lei',b.x+b.w/2,b.y+40);}}};
+PS.POP={pacu:2,tambaqui:2,jaraqui:1,tucunare:2,piranha:2,filhote:1};PS.ESP.jaraqui.zx=[.3,.7];
 function pergunta(){
  const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
  $('tela').innerHTML=`<div class="card"><h2>Pergunta da fase</h2><p style="margin:6px 0 4px">${P.q}</p><p class="small">Acerto +20, erro −10.</p><div class="ops">${ops.map((o,i)=>`<button data-i="${i}">${o.t}</button>`).join('')}</div><div id="pf"></div></div>`;
