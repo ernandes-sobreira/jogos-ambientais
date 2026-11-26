@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Balanço do Carbono</title>
+<style>
+:root{--main:#00838f;--deep:#005662;--soft:#e0f7fa;--line:#b2ebf2;--ink:#10212b;--mut:#4d6370;--co2:#e53935;--ch4:#ef6c00;--ok:#2e7d32;--bad:#c62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:820px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep);letter-spacing:-.01em}
+h2{font-size:1.2rem;color:var(--deep);margin-bottom:6px;letter-spacing:-.01em}
+h3{font-size:1rem;color:var(--deep);margin:14px 0 6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 12px;font-weight:700;font-size:.86rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.card{border:2px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:var(--deep)}.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.btn.sm{padding:9px 14px;font-size:.92rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas.cena{width:100%;height:auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff;margin-top:10px}
+.top{justify-content:space-between}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--main);color:#fff;border-radius:14px;padding:8px 14px;font-weight:800;font-size:1.05rem}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.tool{border:2px solid var(--line);background:#fff;color:var(--deep);border-radius:12px;padding:9px 12px;font-weight:700;font-family:inherit;font-size:.92rem;cursor:pointer;touch-action:manipulation}
+.tool.on{border-color:var(--main);background:var(--soft)}
+.tool:disabled{opacity:.4}
+.mets{display:grid;gap:8px;margin-top:10px}
+.met{display:grid;grid-template-columns:92px 1fr 52px;gap:8px;align-items:center;font-weight:700;font-size:.9rem}
+.met .bar{position:relative;height:18px;background:#f1f4f5;border-radius:99px;overflow:hidden}
+.met .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;transition:width .15s}
+.met .alvo{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--ink);border-radius:2px}
+.met .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--mut)}
+.met.co2 .fill{background:var(--co2)}.met.ch4 .fill{background:var(--ch4)}
+.saldo .bar{background:linear-gradient(90deg,#e8f5e9 50%,#ffebee 50%)}
+.saldo .zero{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:var(--ink)}
+.saldo .fill{border-radius:0}
+.obj{display:flex;gap:10px;align-items:flex-start;background:#fff8e1;border:2px solid #ffe082;border-radius:14px;padding:10px 12px;margin-top:10px;font-size:.95rem}
+.obj b{color:#8d6e00;white-space:nowrap}
+.acao{display:flex;gap:10px;align-items:center;background:var(--soft);border-left:5px solid var(--main);border-radius:0 12px 12px 0;padding:9px 12px;margin-top:8px;font-weight:600;font-size:.95rem;min-height:42px}
+.acao .dedo{font-size:1.25rem;animation:pulo 1s ease-in-out infinite}
+@keyframes pulo{50%{transform:translateX(4px)}}
+.help{width:34px;height:34px;border-radius:50%;border:2px solid var(--main);background:#fff;color:var(--deep);font-weight:800;font-size:1rem;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(16,33,43,.35);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal .card{max-width:460px;width:100%}
+.intro{text-align:center;padding:26px 18px}
+.intro .ic{font-size:3rem;line-height:1}
+.intro .n{color:var(--mut);font-weight:700;font-size:.85rem;margin-top:8px}
+.passos{display:grid;gap:8px;margin:16px auto;max-width:420px;text-align:left}
+.passos div{display:flex;gap:12px;align-items:center;background:var(--soft);border-radius:12px;padding:10px 14px;font-weight:600}
+.passos b{font-size:1.3rem;min-width:1.6em;text-align:center}
+.res{text-align:center}
+.res .big{font-size:2.6rem;font-weight:800;color:var(--deep);line-height:1.1}
+.res .ok{color:var(--ok);font-weight:800}.res .no{color:var(--bad);font-weight:800}
+.pensa{background:var(--soft);border-radius:14px;padding:12px 14px;margin:14px auto;max-width:520px;text-align:left}
+.pensa b{color:var(--deep)}
+.boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.box{border:2px dashed var(--line);border-radius:14px;padding:10px;min-height:110px;cursor:pointer}
+.box h4{font-size:.92rem;color:var(--deep);margin-bottom:6px}
+.box.alvo{border-color:var(--main);background:var(--soft)}
+.cards{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;min-height:48px}
+.ct{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 11px;font-weight:700;font-size:.9rem;cursor:pointer;box-shadow:0 2px 0 var(--line);font-family:inherit;color:var(--ink);transition:transform .5s}
+.ct.sel{border-color:var(--main);background:var(--soft);transform:translateY(-2px)}
+.ct.certo{border-color:var(--ok);background:#e8f5e9}.ct.errado{border-color:var(--bad);background:#ffebee}
+.ct.movido{animation:voa .8s ease}
+@keyframes voa{0%{transform:translateY(-30px) scale(1.1);opacity:.3}100%{transform:none;opacity:1}}
+.capa{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+.capa canvas{width:100%;height:auto;display:block;border-radius:16px;background:var(--soft)}
+.opts{display:grid;gap:8px;margin-top:6px}
+.opts .l{font-size:.8rem;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.sw{display:flex;gap:6px;flex-wrap:wrap}
+.sw button{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--line);cursor:pointer}
+.sw button.on{box-shadow:0 0 0 3px var(--deep)}
+.sw .tx{width:auto;height:auto;border-radius:10px;padding:6px 10px;font-weight:700;font-size:.85rem;background:#fff;color:var(--deep);font-family:inherit;border:0}
+input.nome{border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit;width:100%}
+input[type=range]{width:100%;accent-color:var(--main)}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:6px}
+.tab th{text-align:left;background:var(--soft);color:var(--deep);padding:7px 6px}
+.tab td{border-bottom:1px solid var(--line);padding:7px 6px;vertical-align:top}
+.guia p,.guia li{font-size:.95rem;margin-bottom:6px}
+.guia ul,.guia ol{padding-left:20px}
+.hab{border-left:5px solid var(--main);background:var(--soft);padding:10px 14px;border-radius:0 12px 12px 0;font-size:.95rem}
+.ref li{font-size:.86rem;color:var(--mut)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+.rel{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center}
+.rel canvas{width:120px;height:120px;border-radius:50%;background:var(--soft)}
+.mini{width:100%;max-width:420px;height:auto;display:block;margin:10px auto 0}
+@media (max-width:620px){.wrap{padding:10px 8px 30px}.card{padding:12px;border-radius:16px}.capa{grid-template-columns:1fr}.met{grid-template-columns:70px 1fr 44px;font-size:.82rem}.chip{font-size:.95rem}.rel{grid-template-columns:80px 1fr}.rel canvas{width:80px;height:80px}}
+@media print{a.hub,header .hud,.ranking,.noprint{display:none!important}.card{border:1px solid #ccc;break-inside:avoid}body{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>Balanço do Carbono</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF"></span><span class="pill" id="hP"></span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const W=760,H=372;
+function hex(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mix(a,b,t){const A=hex(a),B=hex(b);return`rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`;}
+
+/* ================= AVATAR ================= */
+const PELES=['#f6d3b8','#e3b18b','#c68a5e','#94603e','#5d3b26'];
+const CABS=['#1b1b1b','#4e342e','#8d6e63','#d4a85a','#b5532f'];
+const CAMISAS=['#00838f','#2e7d32','#f9a825','#c62828','#6a1b9a','#37474f'];
+const ESTILOS=[['curto','Curto'],['cacheado','Cacheado'],['longo','Longo'],['coque','Coque'],['raspado','Raspado']];
+const CHAPEUS=[['nenhum','Sem'],['bone','Boné'],['campo','Chapéu']];
+let A={pele:2,cab:0,estilo:'cacheado',camisa:0,chapeu:'campo',nome:''};
+try{const s=JSON.parse(localStorage.getItem('bc_avatar')||'null');if(s)A=Object.assign(A,s);}catch(e){}
+function salvaA(){try{localStorage.setItem('bc_avatar',JSON.stringify(A));}catch(e){}}
+function avatar(c,x,y,s,a,prancheta){
+ c.save();c.translate(x,y);c.scale(s,s);
+ const pele=PELES[a.pele],cab=CABS[a.cab],cam=CAMISAS[a.camisa];
+ if(a.estilo==='longo'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-39,12.5,15,0,0,7);c.fill();c.fillRect(-12.5,-40,25,22);}
+ if(a.estilo==='cacheado'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-40,15,14.5,0,0,7);c.fill();}
+ c.fillStyle=cam;c.beginPath();c.moveTo(-16,0);c.quadraticCurveTo(-17,-21,-6,-25);c.lineTo(6,-25);c.quadraticCurveTo(17,-21,16,0);c.closePath();c.fill();
+ c.fillStyle='rgba(0,0,0,.12)';c.fillRect(-1,-24,2,24);
+ c.fillStyle=pele;c.fillRect(-3.5,-29,7,6);
+ if(prancheta){c.fillStyle='#8d6e63';c.fillRect(4,-19,13,16);c.fillStyle='#fff';c.fillRect(5.5,-17,10,12);c.strokeStyle='#90a4ae';c.lineWidth=.8;for(let i=0;i<4;i++){c.beginPath();c.moveTo(7,-14+i*2.6);c.lineTo(14,-14+i*2.6);c.stroke();}}
+ c.strokeStyle=cam;c.lineWidth=6;c.lineCap='round';c.beginPath();c.moveTo(-11,-20);c.lineTo(-4,-9);c.stroke();
+ c.fillStyle=pele;c.beginPath();c.arc(-3,-8,3,0,7);c.fill();
+ c.fillStyle=pele;c.beginPath();c.ellipse(0,-39,9.5,11,0,0,7);c.fill();
+ c.beginPath();c.arc(-9.4,-38,2.3,0,7);c.arc(9.4,-38,2.3,0,7);c.fill();
+ c.fillStyle=cab;
+ if(a.estilo==='curto'){c.beginPath();c.ellipse(0,-44.5,10,6.8,0,Math.PI,0);c.fill();c.fillRect(-10,-46,2.8,7);c.fillRect(7.2,-46,2.8,7);}
+ if(a.estilo==='cacheado'){for(let i=0;i<13;i++){const an=Math.PI*(.8+i*1.4/12);c.beginPath();c.arc(Math.cos(an)*12,-41+Math.sin(an)*11.5,4.2,0,7);c.fill();}}
+ if(a.estilo==='longo'){c.beginPath();c.ellipse(0,-44.5,10.6,7.2,0,Math.PI,0);c.fill();}
+ if(a.estilo==='coque'){c.beginPath();c.ellipse(0,-44.5,10,6.4,0,Math.PI,0);c.fill();c.beginPath();c.arc(0,-53,5.2,0,7);c.fill();}
+ if(a.estilo==='raspado'){c.globalAlpha=.5;c.beginPath();c.ellipse(0,-44,9.8,6.2,0,Math.PI,0);c.fill();c.globalAlpha=1;}
+ c.fillStyle='#2b2a26';c.beginPath();c.arc(-3.4,-39,1.25,0,7);c.arc(3.4,-39,1.25,0,7);c.fill();
+ c.strokeStyle='#2b2a26';c.lineWidth=1;c.beginPath();c.arc(0,-35.6,2.6,.25,Math.PI-.25);c.stroke();
+ if(a.chapeu==='bone'){c.fillStyle=cam;c.beginPath();c.ellipse(0,-46,10.6,5.8,0,Math.PI,0);c.fill();c.fillRect(-10.6,-47,21.2,2.6);c.beginPath();c.ellipse(8.5,-46.2,8,2.2,0,0,7);c.fill();}
+ if(a.chapeu==='campo'){c.fillStyle='#d7c49e';c.beginPath();c.ellipse(0,-46,16.5,3.6,0,0,7);c.fill();c.beginPath();c.ellipse(0,-48,9.2,6.4,0,Math.PI,0);c.fill();c.fillStyle='#8d6e63';c.fillRect(-9.2,-49,18.4,1.9);}
+ c.restore();
+}
+function pernas(c,x,y,s,a){c.save();c.translate(x,y);c.scale(s,s);c.fillStyle='#455a64';c.fillRect(-11,0,9,20);c.fillRect(2,0,9,20);c.fillStyle='#3e2723';c.fillRect(-12,18,11,4);c.fillRect(1,18,11,4);c.restore();}
+
+/* ================= CENA ================= */
+function chao(x){
+ if(x<210)return 226+x*.02;
+ if(x<258){const t=(x-210)/48;return 230.2+(262-230.2)*(1-Math.cos(Math.PI*t))/2;}
+ if(x<540)return 262+(x-258)/282*58;
+ if(x<600){const t=(x-540)/60;return 320+(242-320)*(1-Math.cos(Math.PI*t))/2;}
+ return 242-(x-600)*.03;
+}
+const VEGX=[[26,'mata'],[70,'caranda'],[114,'mata'],[158,'caranda'],[200,'mata'],[618,'mata'],[650,'caranda'],[682,'mata'],[714,'caranda'],[746,'mata']];
+function novaCena(op){
+ return Object.assign({t:0,hora:null,nivel:1,mol:[],bub:[],puf:[],fum:[],atm:{co2:0,ch4:0},canoa:450,aceiros:[],
+  veg:VEGX.map(([x,t])=>({x,t,b:chao(x),vivo:true,muda:false,fogo:0,queim:false,cham:false,est:10,rel:0})),
+  src:null,snk:null,marcas:false,pe:null,camara:null},op||{});
+}
+function sup(G){return 262-G.nivel*16;}
+function ceu(G){if(G.hora==null)return 1;const h=G.hora%24;return clamp(Math.sin(Math.PI*(h-6)/12)*1.5+.35,0,1);}
+function sol(G){if(G.hora==null)return Math.max(0,1);const h=G.hora%24;return Math.max(0,Math.sin(Math.PI*(h-6)/12));}
+function drawCena(c,G){
+ const s=ceu(G);
+ const g=c.createLinearGradient(0,0,0,250);g.addColorStop(0,mix('#9ea9d6','#cbeef8',s));g.addColorStop(1,mix('#d9def2','#f6fcfd',s));
+ c.fillStyle=g;c.fillRect(0,0,W,H);
+ if(G.hora!=null){const h=G.hora%24;
+  if(h>=6&&h<=18){const a=Math.PI*(h-6)/12,x=60+640*(h-6)/12,y=160-Math.sin(a)*130;c.fillStyle='rgba(255,213,79,.35)';c.beginPath();c.arc(x,y,24,0,7);c.fill();c.fillStyle='#ffca28';c.beginPath();c.arc(x,y,15,0,7);c.fill();}
+  else{const hh=h<6?h+24:h,a=Math.PI*(hh-18)/12,x=60+640*(hh-18)/12,y=160-Math.sin(a)*120;c.fillStyle='#f5f5f5';c.beginPath();c.arc(x,y,12,0,7);c.fill();c.fillStyle=mix('#9ea9d6','#cbeef8',s);c.beginPath();c.arc(x+5,y-3,10,0,7);c.fill();}
+ }else{c.fillStyle='rgba(255,213,79,.35)';c.beginPath();c.arc(700,46,24,0,7);c.fill();c.fillStyle='#ffca28';c.beginPath();c.arc(700,46,15,0,7);c.fill();}
+ /* nuvens e capoes ao longe */
+ c.fillStyle='rgba(255,255,255,.75)';for(let i=0;i<3;i++){const x=((i*260+G.t*6)%(W+160))-80,y=40+i*22;c.beginPath();c.ellipse(x,y,46,11,0,0,7);c.ellipse(x+26,y-7,26,10,0,0,7);c.fill();}
+ c.fillStyle=mix('#9fb7a3','#b9dcc0',s);for(let x=-10;x<W+20;x+=26){const y=chao(Math.min(W,Math.max(0,x)))-6-((x*37)%11);c.beginPath();c.arc(x,Math.min(y,232),14+((x*13)%7),0,7);c.fill();}
+ c.fillRect(0,224,W,14);
+ /* solo */
+ c.beginPath();c.moveTo(0,H);for(let x=0;x<=W;x+=6)c.lineTo(x,chao(x));c.lineTo(W,H);c.closePath();
+ const gs=c.createLinearGradient(0,230,0,H);gs.addColorStop(0,'#a1887f');gs.addColorStop(.35,'#bfa58a');gs.addColorStop(1,'#d7c3a8');c.fillStyle=gs;c.fill();
+ c.strokeStyle='#5d4037';c.lineWidth=12;c.globalAlpha=.55;c.beginPath();for(let x=0;x<=W;x+=6){const y=chao(x)+6;x?c.lineTo(x,y):c.moveTo(x,y);}c.stroke();c.globalAlpha=1;
+ c.strokeStyle='#7cb342';c.lineWidth=1.4;for(let x=4;x<W;x+=9){if(x>212&&x<598)continue;const y=chao(x);for(const d of[-2,0,2]){c.beginPath();c.moveTo(x+d,y);c.lineTo(x+d*2+((x*7)%3-1),y-5-((x*11)%4));c.stroke();}}
+ c.fillStyle='rgba(93,64,55,.18)';for(let i=0;i<70;i++){const x=(i*137)%W,y=chao(x)+18+((i*71)%150);if(y<H-4){c.beginPath();c.arc(x,y,1.6,0,7);c.fill();}}
+ /* agua */
+ const ys=sup(G);let xa=210,xb=600;for(let x=210;x<300;x++){if(chao(x)>ys){xa=x;break;}}for(let x=600;x>480;x--){if(chao(x)>ys){xb=x;break;}}
+ c.beginPath();c.moveTo(xa,ys);c.lineTo(xb,ys);for(let x=xb;x>=xa;x-=4)c.lineTo(x,chao(x));c.closePath();
+ const ga=c.createLinearGradient(0,ys,0,330);ga.addColorStop(0,'#b3e5fc');ga.addColorStop(1,'#4fc3f7');c.fillStyle=ga;c.fill();
+ c.strokeStyle='#3e2723';c.lineWidth=6;c.globalAlpha=.45;c.beginPath();for(let x=xa;x<=xb;x+=4){const y=chao(x)-2;x===xa?c.moveTo(x,y):c.lineTo(x,y);}c.stroke();c.globalAlpha=1;
+ c.strokeStyle='rgba(255,255,255,.8)';c.lineWidth=1.5;for(let i=0;i<5;i++){const x=xa+20+i*60+Math.sin(G.t+i)*6;c.beginPath();c.moveTo(x,ys+4);c.lineTo(x+18,ys+4);c.stroke();}
+ if(G.aguape!==false){aguape(c,370,ys,true);aguape(c,500,ys,false);}
+ /* aceiros */
+ for(const k of G.aceiros){const v1=G.veg[k],v2=G.veg[k+1],x=(v1.x+v2.x)/2,y=chao(x);c.fillStyle='#d7b98e';c.beginPath();c.ellipse(x,y+1,11,5,0,0,7);c.fill();c.strokeStyle='#6d4c41';c.lineWidth=2;c.setLineDash([4,3]);c.beginPath();c.moveTo(x,y-46);c.lineTo(x,y);c.stroke();c.setLineDash([]);c.fillStyle='#6d4c41';c.beginPath();c.moveTo(x,y-46);c.lineTo(x+10,y-42);c.lineTo(x,y-38);c.fill();}
+ /* raizes */
+ c.strokeStyle='rgba(78,52,46,.2)';c.lineWidth=1.1;G.veg.forEach(v=>{if(!v.vivo||v.muda)return;for(const d of[-10,-3,4,10]){c.beginPath();c.moveTo(v.x,v.b+8);c.quadraticCurveTo(v.x+d*.5,v.b+18,v.x+d*1.3,v.b+30+Math.abs(d));c.stroke();}});
+ /* vegetacao */
+ G.veg.forEach((v,i)=>{
+  if(v.vivo){if(v.muda)muda(c,v.x,v.b,v.cresce??1);else if(v.t==='mata')mata(c,v.x,v.b,v.cham);else caranda(c,v.x,v.b,v.cham);}
+  else if(v.queim){c.fillStyle='#424242';c.fillRect(v.x-3,v.b-16,6,16);c.fillStyle='#9e9e9e';c.beginPath();c.ellipse(v.x,v.b,13,4,0,0,7);c.fill();}
+  else if(G.marcas){c.strokeStyle=CORES.main;c.lineWidth=2;c.setLineDash([4,4]);c.beginPath();c.arc(v.x,v.b-12,12,0,7);c.stroke();c.setLineDash([]);c.fillStyle=CORES.main;c.font='700 16px system-ui';c.textAlign='center';c.fillText('+',v.x,v.b-6);}
+  if(v.fogo>0)chama(c,v.x,v.b,G.t+i);
+ });
+ if(G.focoVis!=null&&G.veg[G.focoVis].fogo<=0&&!G.veg[G.focoVis].queim){const v=G.veg[G.focoVis];c.font='22px system-ui';c.textAlign='center';c.fillText('⚠️',v.x,v.b-80);}
+ capivara(c,232,chao(232));tuiuiu(c,586,chao(586));
+ /* bolhas e sopros */
+ for(const b of G.bub){c.fillStyle='rgba(255,255,255,.55)';c.strokeStyle='#78909c';c.lineWidth=1;c.beginPath();c.arc(b.x,b.y,b.r,0,7);c.fill();c.stroke();}
+ for(const p of G.puf){c.fillStyle=`rgba(239,108,0,${p.a*.5})`;c.beginPath();c.arc(p.x,p.y,p.r,0,7);c.fill();}
+ for(const f of G.fum){c.fillStyle=`rgba(97,97,97,${f.a*.35})`;c.beginPath();c.arc(f.x,f.y,f.r,0,7);c.fill();}
+ /* pesquisador */
+ if(G.pe!=null){const y=chao(G.pe);pernas(c,G.pe,y-22,.9,A);avatar(c,G.pe,y-22,.9,A,true);}
+ else if(G.canoa!=null){const y=sup(G);avatar(c,G.canoa-8,y-4,.82,A,false);canoa(c,G.canoa,y);}
+ if(G.camara){const x=G.camara.x,y=G.camara.terra?chao(x):sup(G);c.fillStyle='#eceff1';c.strokeStyle='#546e7a';c.lineWidth=1.5;c.beginPath();c.moveTo(x-14,y+2);c.lineTo(x-11,y-18);c.lineTo(x+11,y-18);c.lineTo(x+14,y+2);c.closePath();c.fill();c.stroke();c.strokeStyle='#26a69a';c.lineWidth=2;c.beginPath();c.moveTo(x,y-18);c.quadraticCurveTo(x+10,y-34,x+24,y-28);c.stroke();}
+ for(const m of G.mol)molDraw(c,m);
+}
+const CORES={main:'#00838f',deep:'#005662'};
+function sr(n){const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+function mata(c,x,b,ch){
+ const tg=c.createLinearGradient(x-5,0,x+5,0);tg.addColorStop(0,'#4e342e');tg.addColorStop(.5,'#7b5a48');tg.addColorStop(1,'#3e2723');
+ c.fillStyle=tg;c.beginPath();c.moveTo(x-5,b);c.quadraticCurveTo(x-3,b-20,x-2.5,b-38);c.lineTo(x+2.5,b-38);c.quadraticCurveTo(x+3,b-20,x+5,b);c.fill();
+ c.strokeStyle='#5d4037';c.lineWidth=2.2;c.lineCap='round';c.beginPath();c.moveTo(x-1,b-26);c.quadraticCurveTo(x-8,b-32,x-13,b-38);c.moveTo(x+1,b-30);c.quadraticCurveTo(x+8,b-35,x+12,b-42);c.stroke();
+ const pal=ch?['#4a3f33','#5d4f40','#7a6753','#9c8670','#bfa98f']:['#173f19','#245a23','#357a2f','#4f9a3b','#7cb653'];
+ c.fillStyle='rgba(0,0,0,.13)';c.beginPath();c.ellipse(x,b-35,21,5,0,0,7);c.fill();
+ c.fillStyle=pal[1];c.beginPath();c.ellipse(x,b-48,21,15,0,0,7);c.fill();
+ const P=[];for(let i=0;i<46;i++){const u=sr(x+i*1.31)*2-1,v=sr(x*1.7+i*2.13)*2-1;if(u*u+v*v>1)continue;P.push([x+u*22,b-49+v*16,4+sr(i*7+x)*3.6,v]);}
+ P.sort((a,b2)=>b2[3]-a[3]);for(const[px,py,r,v]of P){c.fillStyle=pal[v<-.45?4:v<-.05?3:v<.4?2:1];c.beginPath();c.arc(px,py,r,0,7);c.fill();}
+ c.fillStyle=pal[0];c.globalAlpha=.35;for(let i=0;i<10;i++){const px=x+(sr(i*3+x)*2-1)*16,py=b-42+sr(i*5+x)*8;c.beginPath();c.arc(px,py,2.5,0,7);c.fill();}c.globalAlpha=1;
+}
+function caranda(c,x,b,ch){
+ const tg=c.createLinearGradient(x-3,0,x+3,0);tg.addColorStop(0,'#6d6258');tg.addColorStop(.5,'#a39686');tg.addColorStop(1,'#5d5248');
+ c.fillStyle=tg;c.beginPath();c.moveTo(x-3.6,b);c.lineTo(x-2,b-60);c.lineTo(x+2.6,b-60);c.lineTo(x+3.6,b);c.fill();
+ c.strokeStyle='rgba(60,50,40,.55)';c.lineWidth=1;for(let y=b-4;y>b-58;y-=4.5){c.beginPath();c.moveTo(x-3,y);c.lineTo(x+3,y-2.5);c.moveTo(x+3,y);c.lineTo(x-3,y-2.5);c.stroke();}
+ c.strokeStyle='#9c8a74';c.lineWidth=1.2;for(let i=0;i<4;i++){const dx=(i-1.5)*3;c.beginPath();c.moveTo(x+dx*.4,b-58);c.quadraticCurveTo(x+dx*2,b-54,x+dx*2.6,b-46+Math.abs(dx));c.stroke();}
+ const fol=ch?['#8d7a63','#a8937a']:['#6f9150','#a4c27f'];
+ [-3.05,-2.6,-2.15,-1.7,-1.25,-.8,-.35].forEach((an,k)=>{const L=19+sr(x+k)*5,lx=x+Math.cos(an)*L*.55,ly=b-60+Math.sin(an)*L*.55;
+  c.strokeStyle='#62724a';c.lineWidth=1.3;c.beginPath();c.moveTo(x,b-60);c.lineTo(lx,ly);c.stroke();
+  c.save();c.translate(lx,ly);c.rotate(an);for(let s=-6;s<=6;s++){c.strokeStyle=fol[(s+6)%2];c.lineWidth=1.5;const aa=s*.12,r=13+((s+6)%3);c.beginPath();c.moveTo(0,0);c.lineTo(Math.cos(aa)*r,Math.sin(aa)*r);c.stroke();}c.restore();});
+ c.fillStyle='#55693b';c.beginPath();c.arc(x+.3,b-60,2.6,0,7);c.fill();
+}
+function muda(c,x,b,k){k=k||1;c.fillStyle='#6d4c41';c.beginPath();c.ellipse(x,b+1,9,3,0,0,7);c.fill();
+ const h=24*k;c.strokeStyle='#4e7a2b';c.lineWidth=2;c.beginPath();c.moveTo(x,b);c.quadraticCurveTo(x+2,b-h*.5,x,b-h);c.stroke();
+ for(let i=0;i<5;i++){const yy=b-h*(.32+i*.16),s=i%2?1:-1,L=(8-i*.8)*k;c.fillStyle=i%2?'#7cb342':'#5f9a32';c.beginPath();c.ellipse(x+s*L*.75,yy-L*.2,L,L*.42,s*-.45,0,7);c.fill();c.strokeStyle='rgba(255,255,255,.4)';c.lineWidth=.6;c.beginPath();c.moveTo(x,yy);c.lineTo(x+s*L*1.4,yy-L*.45);c.stroke();}}
+function aguape(c,x,ys,raiz){
+ const fundo=chao(x);c.lineWidth=.9;
+ for(let i=-6;i<=6;i++){const rx=x+i*3.6,yb=raiz?fundo-1:ys+14+sr(i+x)*8;c.strokeStyle='rgba(62,39,35,.7)';c.beginPath();c.moveTo(rx,ys+2);c.bezierCurveTo(rx+3,ys+(yb-ys)*.3,rx-3,ys+(yb-ys)*.7,rx+sr(i+3)*4-2,yb);c.stroke();
+  if(!raiz){c.strokeStyle='rgba(62,39,35,.3)';for(let j=0;j<3;j++){const yy=ys+5+j*3;c.beginPath();c.moveTo(rx,yy);c.lineTo(rx-2.5,yy+2);c.moveTo(rx,yy);c.lineTo(rx+2.5,yy+2);c.stroke();}}}
+ for(let p=-2;p<=2;p++){const px=x+p*11;for(let l=0;l<5;l++){const an=-Math.PI/2+(l-2)*.52+(sr(p*7+l+x)-.5)*.25,len=10+sr(p+l*3+x)*5;
+  const bx=px+Math.cos(an)*len*.45,by=ys+Math.sin(an)*len*.45;c.fillStyle='#a5d16a';c.beginPath();c.ellipse(bx,by,3.2,2.3,an,0,7);c.fill();
+  const lx=px+Math.cos(an)*len,ly=ys+Math.sin(an)*len,g=c.createRadialGradient(lx-1.6,ly-1.6,.4,lx,ly,5.5);g.addColorStop(0,'#c5e1a5');g.addColorStop(.45,'#689f38');g.addColorStop(1,'#2f5d1a');c.fillStyle=g;c.beginPath();c.ellipse(lx,ly,5.6,4.5,an,0,7);c.fill();}}
+ for(const dx of[-9,12]){const fx=x+dx;c.strokeStyle='#5f8f35';c.lineWidth=1.4;c.beginPath();c.moveTo(fx,ys-8);c.lineTo(fx,ys-25);c.stroke();
+  for(let f=0;f<5;f++){const fy=ys-14-f*3.1,fxx=fx+(f%2?3.2:-3.2);c.fillStyle='#b39ddb';c.beginPath();c.ellipse(fxx,fy,3.4,2.6,0,0,7);c.fill();c.fillStyle='#6a4fb3';c.beginPath();c.arc(fxx,fy,1,0,7);c.fill();}
+  c.fillStyle='#ffd54f';c.beginPath();c.arc(fx+3.2,ys-17,1,0,7);c.fill();}
+}
+function capivara(c,x,y){c.save();c.translate(x,y);
+ c.fillStyle='rgba(0,0,0,.15)';c.beginPath();c.ellipse(2,0,25,3.5,0,0,7);c.fill();
+ c.fillStyle='#4f3627';c.fillRect(-16,-9,5,9);c.fillRect(8,-9,5,9);
+ const g=c.createLinearGradient(0,-30,0,-5);g.addColorStop(0,'#a2805a');g.addColorStop(1,'#6b4a30');c.fillStyle=g;
+ c.beginPath();c.moveTo(-23,-12);c.bezierCurveTo(-27,-27,-6,-31,9,-25);c.bezierCurveTo(17,-23,19,-16,17,-10);c.bezierCurveTo(6,-6,-15,-5,-23,-12);c.fill();
+ c.beginPath();c.moveTo(10,-25);c.bezierCurveTo(16,-32,27,-31,32,-24);c.lineTo(34,-16);c.bezierCurveTo(32,-11,25,-11,17,-13);c.closePath();c.fill();
+ c.fillStyle='#4e3423';c.beginPath();c.ellipse(15.5,-29.5,2.7,2.2,-.3,0,7);c.fill();
+ c.fillStyle='#161616';c.beginPath();c.arc(22.5,-24.5,1.55,0,7);c.fill();c.fillStyle='#fff';c.beginPath();c.arc(23,-25,.5,0,7);c.fill();
+ c.fillStyle='#3e2a1c';c.beginPath();c.ellipse(32.6,-20.5,1.3,1,0,0,7);c.fill();
+ c.strokeStyle='#3e2a1c';c.lineWidth=.8;c.beginPath();c.moveTo(33,-16);c.quadraticCurveTo(30,-14,27,-15);c.stroke();
+ c.strokeStyle='rgba(60,40,25,.35)';c.lineWidth=.7;for(let i=0;i<16;i++){const px=-20+i*2.5,py=-23+Math.sin(i*1.7)*3;c.beginPath();c.moveTo(px,py);c.lineTo(px-2,py+4);c.stroke();}
+ c.fillStyle='#5e412b';c.fillRect(-11,-8,5,8);c.fillRect(12,-9,5,9);c.fillStyle='#3e2a1c';for(const lx of[-16,-11,8,12])c.fillRect(lx,-1.5,5,1.5);
+ c.restore();}
+function tuiuiu(c,x,y){c.save();c.translate(x,y);c.scale(1.15,1.15);
+ c.strokeStyle='#212121';c.lineWidth=1.8;c.beginPath();c.moveTo(-2,0);c.lineTo(-1,-17);c.moveTo(3,0);c.lineTo(2,-17);c.stroke();
+ c.fillStyle='#eceff1';c.beginPath();c.moveTo(-8,-21);c.lineTo(-15,-17);c.lineTo(-7,-17);c.fill();
+ const g=c.createLinearGradient(0,-30,0,-15);g.addColorStop(0,'#fff');g.addColorStop(1,'#dfe5e8');c.fillStyle=g;c.beginPath();c.ellipse(0,-23,9.5,7,-.2,0,7);c.fill();
+ c.strokeStyle='#212121';c.lineWidth=4.6;c.lineCap='round';c.beginPath();c.moveTo(5,-27);c.quadraticCurveTo(8,-35,5,-41);c.stroke();
+ c.strokeStyle='#d32f2f';c.lineWidth=5;c.lineCap='butt';c.beginPath();c.moveTo(4.6,-27);c.lineTo(6.4,-32);c.stroke();
+ c.fillStyle='#212121';c.beginPath();c.arc(5,-42,3.4,0,7);c.fill();c.beginPath();c.moveTo(7,-44);c.lineTo(22,-46);c.lineTo(7,-40);c.fill();
+ c.restore();}
+function canoa(c,x,y){const g=c.createLinearGradient(0,y-6,0,y+8);g.addColorStop(0,'#8d6e63');g.addColorStop(1,'#4e342e');c.fillStyle=g;c.beginPath();c.moveTo(x-40,y-6);c.quadraticCurveTo(x,y-3,x+40,y-6);c.quadraticCurveTo(x+32,y+8,x,y+8);c.quadraticCurveTo(x-32,y+8,x-40,y-6);c.fill();
+ c.strokeStyle='rgba(255,255,255,.25)';c.lineWidth=1;c.beginPath();c.moveTo(x-34,y-1);c.quadraticCurveTo(x,y+2,x+34,y-1);c.stroke();c.fillStyle='#a1887f';c.fillRect(x-38,y-7,76,2.2);
+ c.strokeStyle='#8d6e63';c.lineWidth=2;c.beginPath();c.moveTo(x+12,y-24);c.lineTo(x+30,y+6);c.stroke();c.fillStyle='#8d6e63';c.beginPath();c.ellipse(x+31,y+9,2.6,6,-.55,0,7);c.fill();}
+function chama(c,x,b,t){for(let i=0;i<3;i++){const dx=(i-1)*9,h=22+Math.sin(t*9+i*2)*6;c.fillStyle=['#ff7043','#ffa726','#ff7043'][i];c.beginPath();c.moveTo(x+dx-7,b);c.quadraticCurveTo(x+dx-6,b-h*.6,x+dx,b-h);c.quadraticCurveTo(x+dx+6,b-h*.6,x+dx+7,b);c.fill();}
+ c.fillStyle='#ffee58';c.beginPath();c.moveTo(x-5,b);c.quadraticCurveTo(x-3,b-10,x,b-15-Math.sin(t*11)*3);c.quadraticCurveTo(x+3,b-10,x+5,b);c.fill();}
+function molDraw(c,m){const x=m.x,y=m.y;c.save();c.globalAlpha=m.a==null?1:Math.max(0,m.a);
+ if(m.k==='co2'){c.fillStyle='#e53935';c.beginPath();c.arc(x-6,y,3.3,0,7);c.arc(x+6,y,3.3,0,7);c.fill();c.fillStyle='#37474f';c.beginPath();c.arc(x,y,3.9,0,7);c.fill();}
+ else{c.fillStyle='#fff';c.strokeStyle='#90a4ae';c.lineWidth=.9;for(const[dx,dy]of[[-4.6,-4.6],[4.6,-4.6],[-4.6,4.6],[4.6,4.6]]){c.beginPath();c.arc(x+dx,y+dy,2.3,0,7);c.fill();c.stroke();}c.fillStyle='#37474f';c.beginPath();c.arc(x,y,3.9,0,7);c.fill();c.strokeStyle='#ef6c00';c.lineWidth=1.8;c.beginPath();c.arc(x,y,6.2,0,7);c.stroke();}
+ c.restore();}
+function ceuMol(G,k,n){for(let i=0;i<n;i++)G.mol.push({k,x:rr(20,740),y:rr(16,180),st:'ceu',ph:rr(0,6)});}
+function syncMol(G,dt){
+ for(const k of['co2','ch4']){
+  const alvo=Math.round(G.atm[k]/(k==='co2'?4:2));
+  let n=G.mol.filter(m=>m.k===k&&(m.st==='ceu'||m.st==='sobe')).length,sp=0;
+  while(n<alvo&&sp<2){const p=(G.src&&G.src(k))||[rr(40,720),300];G.mol.push({k,x:p[0],y:p[1],tx:rr(20,740),ty:rr(16,175),st:'sobe',ph:rr(0,6)});n++;sp++;}
+  while(n>alvo&&sp<4){const m=G.mol.find(m=>m.k===k&&m.st==='ceu');if(!m)break;const p=G.snk&&G.snk(k);if(p){m.st='desce';m.tx=p[0];m.ty=p[1];}else m.st='some';n--;sp++;}
+ }
+ for(const m of G.mol){
+  if(m.st==='sobe'||m.st==='desce'){const dx=m.tx-m.x,dy=m.ty-m.y,d=Math.hypot(dx,dy),v=(m.st==='sobe'?95:120)*dt;if(d<=v){m.x=m.tx;m.y=m.ty;if(m.st==='sobe')m.st='ceu';else m.morto=true;}else{m.x+=dx/d*v;m.y+=dy/d*v;}}
+  else if(m.st==='ceu'){m.ph+=dt;m.x=clamp(m.x+Math.sin(m.ph*.7)*8*dt,10,750);m.y=clamp(m.y+Math.cos(m.ph*.9)*5*dt,12,185);}
+  else if(m.st==='some'){m.a=(m.a==null?1:m.a)-dt*2;if(m.a<=0)m.morto=true;}
+ }
+ G.mol=G.mol.filter(m=>!m.morto);
+}
+function copa(v){return[v.x+rr(-8,8),v.b-(v.muda?16:44)+rr(-6,6)];}
+function vivos(G){return G.veg.filter(v=>v.vivo);}
+function pontoSolo(){const x=rr(20,200);return[x,chao(x)+10];}
+function partic(G,dt){
+ for(const b of G.bub){b.y-=b.v*dt;b.x+=Math.sin(b.y*.2)*.3;}G.bub=G.bub.filter(b=>b.y>sup(G)+1);
+ for(const p of G.puf){p.y-=22*dt;p.r+=6*dt;p.a-=dt*.8;}G.puf=G.puf.filter(p=>p.a>0);
+ for(const f of G.fum){f.y-=30*dt;f.x+=10*dt;f.r+=8*dt;f.a-=dt*.45;}G.fum=G.fum.filter(f=>f.a>0);
+}
+function bolha(G,x){G.bub.push({x:x+rr(-14,14),y:chao(x)-3,r:rr(2,4.5),v:rr(28,48)});}
+
+/* ================= TELA / LOOP ================= */
+let G=null,S=null,raf=0,ultimo=0,cx=null;
+function laco(ts){const dt=Math.min(.05,(ts-ultimo)/1000||0);ultimo=ts;if(G){G.t+=dt;if(G.upd)G.upd(dt);syncMol(G,dt);partic(G,dt);if(cx)drawCena(cx,G);if(G.extra)G.extra(cx);}raf=requestAnimationFrame(laco);}
+function parar(){cancelAnimationFrame(raf);raf=0;}
+function rodar(){parar();ultimo=performance.now();raf=requestAnimationFrame(laco);}
+function hud(){$('hud').style.display='flex';$('hF').textContent=`Fase ${S.f+1} de ${FASES.length}`;$('hP').textContent=`${Math.max(0,S.tot+S.fp)} pts`;}
+function telaJogo(chip,info){
+ const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><span class="chip" id="chip">${chip}</span><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="acao"><span class="dedo">👉</span><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});
+}
+function acao(t){const e=$('acao');if(e&&e.innerHTML!==t)e.innerHTML=t;}
+function ajuda(){const F=FASES[S.f],d=document.createElement('div');d.className='modal';
+ d.innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn">Entendi</button></div>`;
+ d.onclick=e=>{if(e.target===d||e.target.tagName==='BUTTON')d.remove();};document.body.appendChild(d);}
+function medidor(id,rot,cls,max,alvo){const a=alvo!=null?`<span class="alvo" style="left:${alvo/max*100}%"></span>`:'';return`<div class="met ${cls}" id="${id}" data-max="${max}"><span>${rot}</span><div class="bar"><span class="fill"></span>${a}</div><span class="v"></span></div>`;}
+function poeMed(id,v){const e=$(id);if(!e)return;const m=+e.dataset.max;e.querySelector('.fill').style.width=clamp(v/m*100,0,100)+'%';e.querySelector('.v').textContent=Math.round(v);}
+function poeSaldo(v,max){const e=$('mSaldo');if(!e)return;const f=e.querySelector('.fill'),p=clamp(Math.abs(v)/max*50,0,50);if(v<0){f.style.left=(50-p)+'%';f.style.width=p+'%';f.style.background='#43a047';}else{f.style.left='50%';f.style.width=p+'%';f.style.background='#e53935';}e.querySelector('.v').textContent=(v>0?'+':'')+Math.round(v);}
+
+/* ================= FASES ================= */
+const FASES=[
+ {nome:'Siga o átomo',ic:'⚛️',obj:'Levar o átomo de carbono (o C rosa) por todo o ciclo, sem errar o caminho.',passos:[['🏷️','Em cima aparece um processo, como Fotossíntese'],['👆','Toque no lugar para onde o carbono vai: ar, plantas, animais, solo ou água'],['✓','Acertou: o átomo viaja. Errou: perde 5 pontos']],ini:()=>f1()},
+ {nome:'Dia e noite',ic:'🌗',obj:'Depois de 3 dias, o CO₂ do ar tem que terminar abaixo da linha preta. Use o mínimo de mudas.',passos:[['🌱','Toque nos círculos + para plantar mudas'],['▶','Aperte Rodar e veja 3 dias e 3 noites'],['▏','A conferência é no fim da última noite'],['🪙','Muda que sobra vira ficha na fase 5']],ini:()=>f2()},
+ {nome:'Bolhas na baía',ic:'🫧',obj:'Descobrir em quais lugares sai muito metano (CH₄).',passos:[['🔢','Toque nos números 1, 2, 3 e 4'],['🛶','O pesquisador leva a câmara e mede o gás'],['🗂️','No fim, separe os lugares: muito ou pouco metano']],ini:()=>f3()},
+ {nome:'Seca e fogo',ic:'🔥',obj:'Salvar o máximo de árvores do fogo e acertar sua previsão.',passos:[['🎯','Arraste a barra: quanto vai queimar?'],['🟫','Toque entre duas árvores para fazer um aceiro. O fogo não passa por ele'],['⚠️','O fogo começa onde está o aviso. Pode surgir outro foco']],ini:()=>f4()},
+ {nome:'Um ano no Pantanal',ic:'📅',obj:'Terminar o ano com o saldo no verde: o Pantanal absorveu mais carbono do que soltou.',passos:[['🔄','O ano passa sozinho: chuva, cheia, vazante e seca'],['🪙','Escolha uma ferramenta e toque na cena: plantar, aceiro ou brigada'],['🔥','Na seca aparece fogo. A brigada apaga']],ini:()=>f5()}
+];
+function intro(){parar();G=null;cx=null;hud();const F=FASES[S.f];$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><div class="n">FASE ${S.f+1} DE ${FASES.length}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left;max-width:420px;margin:12px auto 0"><b>🎯 Objetivo</b><span>${F.obj}</span></div>
+ <div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn" id="bGo">Começar</button></div>`;
+ $('bGo').onclick=()=>{S.fp=0;F.ini();};}
+function fimFase(pts,ok,oque,pergunta,extraHtml){
+ parar();pts=Math.max(0,Math.round(pts));S.fp=0;S.tot+=pts;S.res[S.f]={pts,ok,oque};hud();
+ $('tela').innerHTML=`<div class="card res"><div class="small">${FASES[S.f].ic} ${FASES[S.f].nome}</div><div class="big">+${pts}</div>
+ <p class="${ok?'ok':'no'}">${ok?'Meta cumprida':'Meta não cumprida'}</p>${extraHtml||''}
+ <div class="pensa"><b>O que aconteceu:</b> ${oque}</div><div class="pensa"><b>Pergunta para a turma:</b> ${pergunta}</div>
+ <div class="row" style="justify-content:center"><button class="btn" id="bNx">${S.f<FASES.length-1?'Próxima fase':'Ver relatório'}</button></div></div>`;
+ $('bNx').onclick=()=>{S.f++;if(S.f<FASES.length)intro();else relatorio();};
+}
+
+/* ---------- FASE 1 ---------- */
+const VIAGEM=[
+ {p:'Fotossíntese',ic:'☀️',para:'plantas',to:[114,170]},
+ {p:'Alimentação',ic:'🌿',para:'animais',to:[236,218]},
+ {p:'Fezes',ic:'⬇️',para:'solo',to:[170,300]},
+ {p:'Decomposição',ic:'🦠',para:'ar',to:[300,92],k:'co2'},
+ {p:'Fotossíntese do aguapé',ic:'☀️',para:'plantas',to:[370,236]},
+ {p:'Aguapé morre e afunda',ic:'🥀',para:'lodo',to:[372,290]},
+ {p:'Lodo sem oxigênio',ic:'🫧',para:'ar',to:[430,84],k:'ch4'}];
+const NOMES={ar:'Ar',plantas:'Plantas',animais:'Animais',solo:'Solo',lodo:'Água e lodo'};
+function regiao(x,y,G){
+ const ys=sup(G);
+ if(x>200&&x<268&&y>chao(232)-34&&y<chao(232)+4)return'animais';
+ for(const v of G.veg)if(v.vivo&&Math.abs(x-v.x)<20&&y>v.b-72&&y<v.b+2)return'plantas';
+ for(const ax of[370,500])if(Math.abs(x-ax)<34&&y>ys-26&&y<ys+8)return'plantas';
+ if(x>226&&x<570&&y>ys-4&&y<chao(x)+16)return'lodo';
+ if(y>chao(x)-2)return'solo';
+ return'ar';
+}
+function f1(){
+ G=novaCena({canoa:470});ceuMol(G,'co2',14);G.i=0;G.err=0;G.pts=0;G.anim=null;G.marca=null;G.atomo={x:520,y:92,k:'co2'};
+ G.onde='ar';telaJogo('','Passo 1 de 7');poeChip();
+ G.tap=(x,y)=>{if(G.anim||G.i>=VIAGEM.length)return;const r=regiao(x,y,G),P=VIAGEM[G.i];
+  if(r===P.para){G.onde=P.para;G.pts+=G.err===0?20:10;acao(`Isso! ${P.p} leva o carbono para <b>${NOMES[P.para]}</b>.`);G.err=0;G.anim={x0:G.atomo.x,y0:G.atomo.y,x1:P.to[0],y1:P.to[1],t:0,k:P.k};G.marca={x,y,ok:true,r,t:1};}
+  else{G.err++;G.pts-=5;G.marca={x,y,ok:false,r,t:1};acao(`Não é <b>${NOMES[r]}</b>. Tente outro lugar. Pense: depois de <b>${P.p}</b>, onde o carbono fica?`);}
+  S.fp=G.pts;hud();};
+ G.upd=dt=>{if(G.marca){G.marca.t-=dt;if(G.marca.t<=0)G.marca=null;}
+  if(G.anim){const a=G.anim;a.t+=dt/1.1;const t=Math.min(1,a.t),e=t*t*(3-2*t);G.atomo.x=a.x0+(a.x1-a.x0)*e;G.atomo.y=a.y0+(a.y1-a.y0)*e-Math.sin(Math.PI*t)*40;
+   if(a.k&&t>.5)G.atomo.k=a.k;if(!a.k&&t>.5)G.atomo.k=null;
+   if(a.t>=1){G.anim=null;G.i++;if(G.i>=VIAGEM.length){setTimeout(()=>fimFase(G.pts,true,'O mesmo átomo passou pelo ar, pela planta, pela capivara, pelo solo e pelo lodo. Ele nunca sumiu.','Se o carbono não some, por que o CO₂ do ar pode aumentar?'),900);}else{poeChip();$('info').textContent=`Passo ${G.i+1} de 7`;}}}};
+ G.extra=c=>{const a=G.atomo;c.save();c.fillStyle='rgba(236,64,122,.22)';c.beginPath();c.arc(a.x,a.y,18+Math.sin(G.t*4)*3,0,7);c.fill();
+  if(a.k==='co2'){c.fillStyle='#e53935';c.beginPath();c.arc(a.x-14,a.y,7,0,7);c.arc(a.x+14,a.y,7,0,7);c.fill();}
+  if(a.k==='ch4'){c.fillStyle='#fff';c.strokeStyle='#90a4ae';for(const[dx,dy]of[[-10,-10],[10,-10],[-10,10],[10,10]]){c.beginPath();c.arc(a.x+dx,a.y+dy,4.5,0,7);c.fill();c.stroke();}}
+  c.fillStyle='#ec407a';c.beginPath();c.arc(a.x,a.y,9.5,0,7);c.fill();c.fillStyle='#fff';c.font='800 12px system-ui';c.textAlign='center';c.textBaseline='middle';c.fillText('C',a.x,a.y+.5);c.textBaseline='alphabetic';
+  if(G.marca){const m=G.marca;c.globalAlpha=Math.min(1,m.t*2);c.font='700 13px system-ui';const tx=(m.ok?'✓ ':'✗ ')+NOMES[m.r],w=c.measureText(tx).width+18;c.fillStyle=m.ok?'#2e7d32':'#c62828';c.beginPath();c.roundRect(m.x-w/2,m.y-34,w,24,12);c.fill();c.fillStyle='#fff';c.fillText(tx,m.x,m.y-17);}
+  c.restore();};
+ rodar();
+}
+function poeChip(){const P=VIAGEM[G.i];$('chip').textContent=`${P.ic} ${P.p}`;acao(`O C está em <b>${NOMES[G.onde]}</b>. Depois de <b>${P.p}</b>, para onde ele vai? Toque no lugar.`);}
+
+/* ---------- FASE 2 ---------- */
+function f2(){
+ G=novaCena({hora:6,canoa:470});G.veg.forEach((v,i)=>{v.vivo=(i===2||i===7);});G.marcas=true;
+ G.mudas=8;G.atm={co2:100,ch4:0};G.meta=88;G.tent=0;G.roda=false;G.hist=[];ceuMol(G,'co2',25);
+ telaJogo('🌗 Dia e noite','Dia 1 · 6h');
+ $('ctrl').innerHTML=`<span class="pill" id="pM">🌱 8 mudas</span><button class="btn sm" id="bR">▶ Rodar 3 dias</button>`;
+ $('mets').innerHTML=medidor('mCO2','CO₂ no ar','co2',160,88);poeMed('mCO2',100);
+ acao('Toque nos círculos + para plantar mudas. Depois aperte <b>▶ Rodar 3 dias</b>.');
+ const n=()=>G.veg.filter(v=>v.vivo).length;
+ G.src=()=>{const r=Math.random();if(r<.45)return pontoSolo();if(r<.6)return[232,chao(232)-18];const vv=vivos(G);return copa(vv[Math.floor(Math.random()*vv.length)]);};
+ G.snk=()=>{const vv=vivos(G);return copa(vv[Math.floor(Math.random()*vv.length)]);};
+ G.tap=(x,y)=>{if(G.roda)return;let best=null,bd=26;G.veg.forEach(v=>{const d=Math.hypot(x-v.x,y-(v.b-14));if(d<bd){bd=d;best=v;}});if(!best)return;
+  if(!best.vivo&&G.mudas>0){best.vivo=true;best.muda=true;best.cresce=.2;G.mudas--;}else if(best.muda){best.vivo=false;best.muda=false;G.mudas++;}
+  $('pM').textContent=`🌱 ${G.mudas} mudas`;};
+ $('bR').onclick=()=>{G.roda=true;G.marcas=false;G.hora=6;G.atm.co2=100;G.hist=[[0,100]];$('bR').disabled=true;G.tent++;};
+ G.upd=dt=>{G.veg.forEach(v=>{if(v.muda&&v.cresce<1)v.cresce=Math.min(1,v.cresce+dt*2);});
+  if(!G.roda)return;const dh=dt*4;G.hora+=dh;const nn=n(),sl=sol(G);
+  acao(sl>0?'☀️ Dia: as plantas fazem fotossíntese e tiram CO₂ do ar.':'🌙 Noite: sem luz não há fotossíntese, mas todos respiram. O CO₂ sobe.');
+  const fl=(0.24*nn+0.8)-1.2*nn*sl;G.atm.co2=clamp(G.atm.co2+fl*dh,5,158);poeMed('mCO2',G.atm.co2);
+  const h=G.hora-6,dia=Math.floor(h/24)+1,hh=Math.floor(G.hora%24);$('info').textContent=`Dia ${Math.min(3,dia)} · ${hh}h`;
+  if(!G.hist.length||h-G.hist[G.hist.length-1][0]>=.5)G.hist.push([h,G.atm.co2]);
+  if(G.hora>=78){G.roda=false;fim2();}};
+ rodar();
+}
+function grafico(h,meta){const cv=document.createElement('canvas');cv.className='mini';cv.width=840;cv.height=260;const c=cv.getContext('2d');c.scale(2,2);const w=420,hh=130,px=x=>34+x/72*(w-44),py=v=>hh-20-v/160*(hh-30);
+ c.fillStyle='#f6fbfc';c.fillRect(34,10,w-44,hh-30);for(let d=0;d<3;d++){c.fillStyle='rgba(159,168,218,.25)';c.fillRect(px(d*24+12),10,px(24)-px(12),hh-30);}
+ c.strokeStyle='#10212b';c.setLineDash([5,4]);c.beginPath();c.moveTo(34,py(meta));c.lineTo(w-10,py(meta));c.stroke();c.setLineDash([]);
+ c.strokeStyle='#e53935';c.lineWidth=2.5;c.beginPath();h.forEach(([x,v],i)=>i?c.lineTo(px(x),py(v)):c.moveTo(px(x),py(v)));c.stroke();
+ c.fillStyle='#4d6370';c.font='11px system-ui';c.textAlign='center';for(let d=0;d<3;d++){c.fillText('dia '+(d+1),px(d*24+6),hh-6);c.fillText('noite',px(d*24+18),hh-6);}
+ c.textAlign='right';c.fillText('CO₂',30,py(150));return cv;}
+function fim2(){
+ const ok=G.atm.co2<=G.meta;
+ if(!ok){acao('O CO₂ terminou acima da linha preta. Plante mais mudas e tente de novo.');$('ctrl').innerHTML=`<span class="pill" style="background:#ffebee;color:#c62828">✗ O ar terminou acima da linha</span><span class="pill" id="pM">🌱 ${G.mudas} mudas</span><button class="btn sm" id="bT">Tentar de novo</button>`;
+  $('bT').onclick=()=>{acao('Toque nos círculos + para plantar mudas. Depois aperte <b>▶ Rodar 3 dias</b>.');G.marcas=true;G.hora=6;G.atm.co2=100;poeMed('mCO2',100);$('ctrl').innerHTML=`<span class="pill" id="pM">🌱 ${G.mudas} mudas</span><button class="btn sm" id="bR">▶ Rodar 3 dias</button>`;
+   $('bR').onclick=()=>{G.roda=true;G.marcas=false;G.hora=6;G.atm.co2=100;G.hist=[[0,100]];$('bR').disabled=true;G.tent++;};};
+  S.fp=0;return;}
+ const sobra=G.mudas;S.fichas=Math.min(4,sobra);const pts=Math.max(40,100-20*(G.tent-1))+10*sobra;
+ fimFase(pts,true,`Toda noite o CO₂ subiu, porque sem luz não há fotossíntese, mas a respiração continua. Você usou ${8-sobra} mudas e guardou ${S.fichas} fichas para a fase 5.`,'Por que a linha sobe toda noite, mesmo com muitas plantas?','<div id="gWrap"></div>');
+ const gw=$('gWrap');if(gw)gw.appendChild(grafico(G.hist,G.meta));
+}
+
+/* ---------- FASE 3 ---------- */
+const PONTOS=[
+ {x:290,nome:'Baía rasa aberta',ch4:3,co2:0,cls:'muito',como:'bolhas'},
+ {x:370,nome:'Rasa com aguapé',ch4:3,co2:-2,cls:'muito',como:'planta'},
+ {x:500,nome:'Funda com aguapé',ch4:1,co2:-3,cls:'pouco',como:'pouco'},
+ {x:700,nome:'Campo seco',ch4:0,co2:1,cls:'pouco',como:'nada',terra:true}];
+function f3(){
+ G=novaCena({canoa:450});ceuMol(G,'co2',14);G.med=PONTOS.map(()=>null);G.atual=-1;G.tm=0;G.pts=0;G.ir=null;
+ telaJogo('🫧 Bolhas na baía','0 de 4 medidos');
+
+ G.tap=(x,y)=>{if(G.ir||G.atual>=0)return;PONTOS.forEach((p,i)=>{const py=p.terra?chao(p.x)-70:sup(G)-58;if(Math.hypot(x-p.x,y-py)<26&&!G.med[i]){G.ir={i};G.camara=null;}});};
+ G.upd=dt=>{
+  {const k=G.med.findIndex(m=>!m);acao(G.atual>=0||G.ir?'Medindo... veja o que sai da água ou do solo.':k>=0?`Toque no número <b>${k+1}</b> para levar a câmara até lá.`:'Pronto! Agora vamos separar os lugares.');}
+  if(G.ir){const p=PONTOS[G.ir.i];if(p.terra){G.canoa=null;G.pe=G.pe==null?600:G.pe;const d=p.x-14-G.pe;G.pe+=Math.sign(d)*Math.min(Math.abs(d),120*dt);if(Math.abs(d)<1){G.atual=G.ir.i;G.ir=null;G.tm=0;G.camara={x:p.x+16,terra:true};}}
+   else{if(G.pe!=null){G.pe=null;G.canoa=560;}const d=p.x-40-G.canoa;G.canoa+=Math.sign(d)*Math.min(Math.abs(d),120*dt);if(Math.abs(d)<1){G.atual=G.ir.i;G.ir=null;G.tm=0;G.camara={x:p.x}; }}}
+  if(G.atual>=0){const p=PONTOS[G.atual];G.tm+=dt;
+   if(p.como==='bolhas'&&Math.random()<.35)bolha(G,p.x);
+   if(p.como==='planta'&&Math.random()<.25)G.puf.push({x:p.x+rr(-22,22),y:sup(G)-14,r:3,a:1});
+   if(p.como==='pouco'&&Math.random()<.04)bolha(G,p.x);
+   if(G.tm>2.6){G.med[G.atual]=true;G.pts+=10;S.fp=G.pts;hud();G.atual=-1;G.camara=null;const n=G.med.filter(Boolean).length;$('info').textContent=`${n} de 4 medidos`;if(n===4)setTimeout(classif3,700);}}
+ };
+ G.extra=c=>{c.save();PONTOS.forEach((p,i)=>{const py=p.terra?chao(p.x)-70:sup(G)-58;
+  if(!G.med[i]){c.fillStyle=G.atual===i?'#ffca28':CORES.main;c.beginPath();c.arc(p.x,py,15,0,7);c.fill();c.fillStyle='#fff';c.font='800 15px system-ui';c.textAlign='center';c.fillText(i+1,p.x,py+5);}
+  else{leitura(c,p,py-58);}});
+  if(G.atual>=0){const p=PONTOS[G.atual],py=(p.terra?chao(p.x):sup(G))-100;const f=Math.min(1,G.tm/2.6);c.fillStyle='#fff';c.strokeStyle=CORES.main;c.lineWidth=2;c.beginPath();c.roundRect(p.x-40,py,80,12,6);c.fill();c.stroke();c.fillStyle=CORES.main;c.beginPath();c.roundRect(p.x-40,py,80*f,12,6);c.fill();}
+  c.restore();};
+ rodar();
+}
+function leitura(c,p,py){c.fillStyle='rgba(255,255,255,.95)';c.strokeStyle='#b2ebf2';c.lineWidth=2;c.beginPath();c.roundRect(p.x-34,py-30,68,48,10);c.fill();c.stroke();
+ c.font='700 10px system-ui';c.textAlign='left';c.fillStyle='#ef6c00';c.fillText('CH₄',p.x-28,py-15);for(let k=0;k<3;k++){c.fillStyle=k<p.ch4?'#ef6c00':'#eceff1';c.fillRect(p.x-2+k*10,py-23,8,10);}
+ c.fillStyle='#e53935';c.fillText('CO₂',p.x-28,py+6);c.font='700 13px system-ui';c.fillText(p.co2<0?'⬇ entra':p.co2>0?'⬆ sai':'·',p.x-2,py+7);}
+function classif3(){
+ parar();const sel={v:null},onde=PONTOS.map(()=>null);
+ const html=()=>`<div class="card"><div class="row top"><span class="chip">🗂️ Separe os 4 pontos</span><span class="pill">${S.tot+G.pts} pts</span></div>
+ <div class="obj"><b>🎯 Objetivo</b><span>Separar os lugares que soltam muito e pouco metano, de acordo com o que você mediu.</span></div><div class="acao"><span class="dedo">👉</span><span>Toque num lugar e depois na caixa certa. Quando terminar, aperte Conferir.</span></div>
+ <div class="cards" id="pool">${PONTOS.map((p,i)=>onde[i]?'':`<button class="ct${sel.v===i?' sel':''}" data-i="${i}">${i+1}. ${p.nome}</button>`).join('')}</div>
+ <div class="boxes">${['muito','pouco'].map(b=>`<div class="box${sel.v!=null?' alvo':''}" data-b="${b}"><h4>${b==='muito'?'🫧🫧🫧 Muito metano':'🫧 Pouco metano'}</h4><div class="cards">${PONTOS.map((p,i)=>onde[i]===b?`<span class="ct" id="c${i}">${i+1}. ${p.nome}</span>`:'').join('')}</div></div>`).join('')}</div>
+ <div class="row" style="margin-top:12px"><button class="btn" id="bC" ${onde.every(Boolean)?'':'disabled'}>Conferir</button></div></div>`;
+ const pinta=()=>{$('tela').innerHTML=html();
+  document.querySelectorAll('#pool .ct').forEach(b=>b.onclick=()=>{sel.v=+b.dataset.i;pinta();});
+  document.querySelectorAll('.box').forEach(b=>b.onclick=()=>{if(sel.v==null)return;onde[sel.v]=b.dataset.b;sel.v=null;pinta();});
+  $('bC').onclick=()=>{let pts=G.pts,erros=0;PONTOS.forEach((p,i)=>{if(onde[i]===p.cls)pts+=25;else{pts-=10;erros++;}});
+   const errados=PONTOS.map((p,i)=>onde[i]!==p.cls?i:-1).filter(i=>i>=0);
+   PONTOS.forEach((p,i)=>{onde[i]=p.cls;});sel.v=null;$('tela').innerHTML=html();$('bC').style.display='none';
+   PONTOS.forEach((p,i)=>{const e=$('c'+i);if(!e)return;e.classList.add(errados.includes(i)?'errado':'certo');if(errados.includes(i))e.classList.add('movido');});
+   setTimeout(()=>fimFase(pts,erros===0,'Na baía rasa o metano sai em bolhas do lodo. No aguapé raso, a raiz chega ao lodo e o metano sobe pela planta. Na baía funda, o aguapé tira CO₂ do ar e solta pouco metano. No campo seco há oxigênio e quase não se forma metano.','Por que o mesmo aguapé solta muito metano no raso e pouco no fundo?'),erros?2200:1300);};};
+ pinta();
+}
+
+/* ---------- FASE 4 ---------- */
+function f4(){
+ G=novaCena({canoa:450,nivel:.25});ceuMol(G,'co2',14);G.atm={co2:56,ch4:0};G.etapa='prever';G.prev=30;G.maxAc=2;G.focoVis=0;
+ telaJogo('🔥 Seca e fogo','Prever');
+ $('ctrl').innerHTML=`<div style="width:100%"><div class="row top"><b>Quanto das plantas vai queimar?</b><span class="pill" id="pv">30%</span></div><input type="range" id="rg" min="0" max="100" step="10" value="30"></div><button class="btn sm" id="bOk">Confirmar previsão</button>`;
+ $('rg').oninput=e=>{G.prev=+e.target.value;$('pv').textContent=G.prev+'%';};
+ $('mets').innerHTML=medidor('mCO2','CO₂ no ar','co2',180,null);poeMed('mCO2',G.atm.co2);
+ acao('<b>1.</b> Arraste a barra: quanto das árvores você acha que vai queimar?');
+ $('bOk').onclick=()=>{G.etapa='aceiro';acao('<b>2.</b> Toque nas marcas entre as árvores para fazer 2 aceiros. O fogo não passa por eles. O ⚠️ mostra onde o fogo começa.');$('info').textContent='Aceiros';$('ctrl').innerHTML=`<span class="pill" id="pA">🟫 0 de 2 aceiros</span><span class="small">Toque no chão entre duas árvores.</span><button class="btn sm" id="bF">🔥 Começar a seca</button>`;
+  $('bF').onclick=()=>{G.etapa='fogo';acao('<b>3.</b> Veja o fogo se espalhar. Fique de olho: pode surgir outro foco.');$('info').textContent='Fogo';$('ctrl').innerHTML=`<span class="pill">🎯 Previsão: ${G.prev}%</span>`;acende(G,0);G.t2=0;G.f2=false;};};
+ G.src=()=>{const q=G.veg.filter(v=>v.fogo>0);if(q.length){const v=q[Math.floor(Math.random()*q.length)];return[v.x,v.b-30];}return pontoSolo();};
+ G.tap=(x,y)=>{if(G.etapa!=='aceiro')return;const k=gap(x,y);if(k==null)return;const j=G.aceiros.indexOf(k);if(j>=0)G.aceiros.splice(j,1);else if(G.aceiros.length<G.maxAc)G.aceiros.push(k);$('pA').textContent=`🟫 ${G.aceiros.length} de ${G.maxAc} aceiros`;};
+ G.upd=dt=>{if(G.etapa!=='fogo')return;G.t2+=dt;if(!G.f2&&G.t2>2.2){G.f2=true;acende(G,Math.random()<.5?8:9);}
+  queima(G,dt,1.1,.92);poeMed('mCO2',G.atm.co2);
+  if(G.f2&&!G.veg.some(v=>v.fogo>0)&&G.t2>3){G.etapa='fim';setTimeout(fim4,900);}};
+ G.extra=c=>{if(G.etapa!=='aceiro')return;marcasGap(c);};
+ rodar();
+}
+function marcasGap(c){for(let i=0;i<9;i++){if(i===4||G.aceiros.includes(i))continue;const gx=(G.veg[i].x+G.veg[i+1].x)/2,y=chao(gx);c.strokeStyle=CORES.main;c.lineWidth=2;c.setLineDash([3,3]);c.beginPath();c.arc(gx,y-8,9+Math.sin(G.t*4)*1.5,0,7);c.stroke();c.setLineDash([]);}}
+function gap(x,y){let k=null,bd=22;for(let i=0;i<9;i++){if(i===4)continue;const a=G.veg[i],b=G.veg[i+1],gx=(a.x+b.x)/2;const d=Math.hypot(x-gx,(y-chao(gx))*.5);if(d<bd){bd=d;k=i;}}return k;}
+function acende(G,i){const v=G.veg[i];if(v.vivo&&v.fogo<=0&&!v.queim){v.fogo=.001;v.rel=0;if(i===G.focoVis)G.focoVis=null;}}
+function queima(G,dt,tempo,prob){
+ G.veg.forEach((v,i)=>{if(v.fogo<=0)return;v.fogo+=dt;const lib=Math.min(v.est-v.rel,v.est*dt/2.2);v.rel+=lib;G.atm.co2+=lib*4;
+  if(Math.random()<.4)G.fum.push({x:v.x+rr(-10,10),y:v.b-30,r:6,a:1});
+  if(!v.esp&&v.fogo>tempo){v.esp=true;for(const j of[i-1,i+1]){if(j<0||j>9)continue;if((i===4&&j===5)||(i===5&&j===4))continue;const k=Math.min(i,j);if(G.aceiros.includes(k))continue;if(Math.random()<prob)acende(G,j);}}
+  if(v.fogo>2.2){v.fogo=0;v.vivo=false;v.queim=true;v.esp=false;}});
+}
+function fim4(){const q=G.veg.filter(v=>v.queim).length,real=q*10,salvo=(10-q)*10,bonus=Math.max(0,50-Math.abs(G.prev-real));
+ fimFase(salvo+bonus,q<=3,`Queimaram ${q} de 10 árvores (${real}%). Você previu ${G.prev}%. O carbono que elas guardaram por anos voltou ao ar em minutos.`,'Por que um ano de seca forte pode jogar no ar o carbono de muitos anos?');}
+
+/* ---------- FASE 5 ---------- */
+const ESTACOES=['🌧️ Chuva','🌊 Cheia','🌤️ Vazante','☀️ Seca'];
+function f5(){
+ G=novaCena({canoa:450});G.veg.forEach((v,i)=>{if(i===1||i===7){v.vivo=false;}});ceuMol(G,'co2',14);
+ G.fichas=6+(S.fichas||0);G.saldo=0;G.tf=0;G.ferr='plantar';G.foc=[37,40.5,44];G.fi=0;G.fim=false;G.atm={co2:56,ch4:0};
+ telaJogo(ESTACOES[0],'🪙 '+G.fichas+' fichas');
+ const barra=()=>{$('ctrl').innerHTML=[['plantar','🌱 Plantar · 1'],['aceiro','🟫 Aceiro · 1'],['brigada','🚒 Brigada · 2']].map(([k,t])=>`<button class="tool${G.ferr===k?' on':''}" data-k="${k}">${t}</button>`).join('');
+  document.querySelectorAll('.tool').forEach(b=>b.onclick=()=>{G.ferr=b.dataset.k;barra();});};
+ barra();
+ $('mets').innerHTML=`<div class="met saldo" id="mSaldo"><span>Saldo</span><div class="bar"><span class="fill"></span><span class="zero"></span></div><span class="v">0</span></div><div class="small">⬅ verde: o Pantanal absorveu mais · vermelho: soltou mais ➡</div>`;
+ const gasta=n=>{if(G.fichas<n)return false;G.fichas-=n;$('info').textContent='🪙 '+G.fichas+' fichas';return true;};
+ G.src=k=>{if(k==='ch4')return[rr(270,330),sup(G)];const q=G.veg.filter(v=>v.fogo>0);if(q.length){const v=q[0];return[v.x,v.b-30];}return Math.random()<.6?pontoSolo():[232,chao(232)-18];};
+ G.snk=()=>{const vv=vivos(G);return vv.length?copa(vv[Math.floor(Math.random()*vv.length)]):null;};
+ G.tap=(x,y)=>{if(G.fim)return;
+  if(G.ferr==='plantar'){let best=null,bd=26;G.veg.forEach(v=>{const d=Math.hypot(x-v.x,y-(v.b-14));if(d<bd){bd=d;best=v;}});if(best&&!best.vivo&&gasta(1)){best.vivo=true;best.muda=true;best.cresce=.2;best.queim=false;best.est=6;best.rel=0;}}
+  if(G.ferr==='aceiro'){const k=gap(x,y);if(k!=null&&!G.aceiros.includes(k)&&gasta(1))G.aceiros.push(k);}
+  if(G.ferr==='brigada'){let best=null,bd=30;G.veg.forEach(v=>{if(v.fogo>0){const d=Math.hypot(x-v.x,y-(v.b-20));if(d<bd){bd=d;best=v;}}});if(best&&gasta(2)){best.fogo=0;best.esp=false;best.cham=true;}}};
+ G.extra=c=>{if(G.ferr==='aceiro')marcasGap(c);};
+ const DICA=['Chuva: plante mudas agora. Elas crescem e tiram CO₂ do ar o ano todo.','Cheia: o lodo sem oxigênio solta metano. É natural, não dá para parar.','Vazante: a seca está chegando. Faça aceiros para o fogo não se espalhar.','Seca: fogo! Escolha <b>🚒 Brigada</b> e toque no fogo para apagar.'];
+ const FER={plantar:'Toque num círculo + para plantar.',aceiro:'Toque numa marca entre as árvores.',brigada:'Toque no fogo para apagar.'};
+ G.upd=dt=>{if(G.fim)return;G.tf+=dt;const e=Math.min(3,Math.floor(G.tf/12));$('chip').textContent=ESTACOES[e];G.marcas=G.ferr==='plantar';
+  acao(`${DICA[e]} <span class="small">· ${FER[G.ferr]}</span>`);
+  const tt=G.tf;G.nivel=tt<12?.3+.7*tt/12:tt<24?1:tt<36?1-.7*(tt-24)/12:.3-.3*(tt-36)/12;
+  const seca=e===3;let abs=0;G.veg.forEach(v=>{if(v.vivo&&v.fogo<=0)abs+=(v.cham?.5:1)*(seca?.08:.25)*(v.muda?(v.cresce||1):1);});
+  const ch4=seca?0:.6*G.nivel;if(!seca&&Math.random()<G.nivel*.25)bolha(G,rr(268,330));
+  const pre=G.atm.co2;queima(G,dt,1.3,.8);const fogo=(G.atm.co2-pre)/4;
+  G.saldo+=(0.9+ch4*2-abs)*dt+fogo;G.atm.co2=clamp(56+G.saldo*.8,8,170);G.atm.ch4=seca?Math.max(0,G.atm.ch4-dt*3):clamp(G.nivel*12,0,14);
+  G.veg.forEach(v=>{if(v.muda&&v.cresce<1)v.cresce=Math.min(1,v.cresce+dt*.08);});
+  while(G.fi<G.foc.length&&G.tf>=G.foc[G.fi]){const ok=G.veg.map((v,i)=>v.vivo&&v.fogo<=0?i:-1).filter(i=>i>=0);if(ok.length)acende(G,ok[Math.floor(Math.random()*ok.length)]);G.fi++;}
+  poeSaldo(G.saldo,60);
+  if(G.tf>=48){G.fim=true;G.veg.forEach(v=>{if(v.fogo>0){v.fogo=0;v.cham=true;}});setTimeout(fim5,700);}};
+ rodar();
+}
+function fim5(){const ok=G.saldo<=0,s=Math.round(G.saldo),q=G.veg.filter(v=>v.queim).length;
+ const pts=ok?150+G.fichas*5+Math.min(50,-s):Math.max(0,60-s);
+ fimFase(pts,ok,`Seu saldo do ano foi ${s>0?'+':''}${s}. ${q===0?'Nenhuma árvore queimou':q===1?'1 árvore queimou':q+' árvores queimaram'}. O metano da cheia é natural e não dá para parar. O que você controlou foi o fogo e o plantio.`,'O que pesa mais no saldo do Pantanal: o metano natural da cheia ou o fogo da seca?');}
+
+/* ================= INICIO / AVATAR ================= */
+function inicio(){parar();G=null;cx=null;$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><div class="capa"><canvas id="cA" width="560" height="560"></canvas>
+ <div><h2>Monte seu pesquisador</h2><div class="opts">
+ <div class="l">Pele</div><div class="sw" id="sP">${PELES.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.pele===i?'on':''}" aria-label="pele ${i+1}"></button>`).join('')}</div>
+ <div class="l">Cabelo</div><div class="sw" id="sE">${ESTILOS.map(([k,t])=>`<button class="tx ${A.estilo===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <div class="sw" id="sC">${CABS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.cab===i?'on':''}" aria-label="cor ${i+1}"></button>`).join('')}</div>
+ <div class="l">Camiseta</div><div class="sw" id="sT">${CAMISAS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.camisa===i?'on':''}" aria-label="camiseta ${i+1}"></button>`).join('')}</div>
+ <div class="l">Chapéu</div><div class="sw" id="sH">${CHAPEUS.map(([k,t])=>`<button class="tx ${A.chapeu===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <input class="nome" id="iN" maxlength="20" placeholder="Seu nome" value="${esc(A.nome)}">
+ </div></div></div>
+ <div class="row" style="margin-top:14px"><button class="btn" id="bJ">▶ Jogar as 5 fases</button><button class="btn ghost" id="bG">📘 Guia do professor</button></div>
+ <p class="small" style="margin-top:10px">Ciências da Natureza · Ensino Médio · BNCC EM13CNT105</p></div>`;
+ const pinta=()=>{const c=$('cA').getContext('2d');c.clearRect(0,0,560,560);c.fillStyle='#e0f7fa';c.fillRect(0,0,560,560);c.fillStyle='#b2ebf2';c.beginPath();c.arc(280,600,260,0,7);c.fill();avatar(c,280,560,6.4,A,true);};
+ pinta();
+ const liga=(id,f)=>document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{f(b);salvaA();document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b));pinta();});
+ liga('sP',b=>A.pele=+b.dataset.i);liga('sC',b=>A.cab=+b.dataset.i);liga('sT',b=>A.camisa=+b.dataset.i);liga('sE',b=>A.estilo=b.dataset.k);liga('sH',b=>A.chapeu=b.dataset.k);
+ $('iN').oninput=e=>{A.nome=e.target.value;salvaA();};
+ $('bJ').onclick=novo;$('bG').onclick=guia;
+}
+function novo(){S={f:0,tot:0,fp:0,res:[],fichas:0};salvo=false;intro();}
+function relatorio(){parar();G=null;cx=null;$('rankBox').style.display='block';const nome=A.nome.trim()||'Pesquisador';
+ $('tela').innerHTML=`<div class="card"><div class="rel"><canvas id="cR" width="240" height="240"></canvas><div><div class="small">Relatório de campo</div><h2>${esc(nome)}</h2><div class="big" style="font-size:2rem;font-weight:800;color:var(--deep)">${S.tot} pts</div></div></div>
+ <table class="tab" style="margin-top:12px"><tr><th>Fase</th><th>Pontos</th><th>Meta</th></tr>${FASES.map((F,i)=>{const r=S.res[i]||{pts:0,ok:false};return`<tr><td>${F.ic} ${F.nome}</td><td>${r.pts}</td><td>${r.ok?'✓':'✗'}</td></tr>`;}).join('')}</table>
+ <div class="pensa"><b>Para escrever no caderno:</b> o carbono não some, ele muda de lugar. Diga um lugar onde ele fica guardado e um jeito de ele voltar ao ar.</div>
+ <div class="savebox noprint"><input id="pName" maxlength="20" value="${esc(nome)}"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row noprint" style="margin-top:12px"><button class="btn ghost" id="bI">🖨️ Imprimir relatório</button><button class="btn ghost" id="bN">Jogar de novo</button><button class="btn ghost" id="bV">Início</button></div></div>`;
+ const c=$('cR').getContext('2d');c.fillStyle='#e0f7fa';c.fillRect(0,0,240,240);avatar(c,120,240,3.2,A,true);
+ $('bS').onclick=()=>salvar('5 fases');$('bI').onclick=()=>window.print();$('bN').onclick=novo;$('bV').onclick=inicio;
+}
+
+/* ================= GUIA DO PROFESSOR ================= */
+function guia(){parar();$('hud').style.display='none';$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card guia">
+ <div class="row top noprint"><button class="btn ghost sm" id="bVt">← Voltar</button><button class="btn sm" id="bPr">🖨️ Imprimir guia</button></div>
+ <h2 style="margin-top:10px">Guia do professor · Balanço do Carbono</h2>
+ <p class="small">Ensino Médio · Ciências da Natureza e suas Tecnologias · Biologia, Química e Geografia</p>
+ <h3>Habilidade da BNCC</h3>
+ <div class="hab"><b>EM13CNT105.</b> Analisar os ciclos biogeoquímicos e interpretar os efeitos de fenômenos naturais e da interferência humana sobre esses ciclos, para promover ações individuais e/ou coletivas que minimizem consequências nocivas à vida.</div>
+ <p class="small" style="margin-top:6px">Apoio: EM13CNT203, sobre avaliar e prever efeitos de intervenções nos ecossistemas.</p>
+ <h3>Objetivos da aula</h3>
+ <ul><li>Reconhecer que o carbono não some, apenas muda de reservatório e de molécula.</li><li>Explicar por que o CO₂ do ar sobe à noite e cai de dia.</li><li>Relacionar falta de oxigênio no lodo com a produção de metano.</li><li>Comparar fluxos naturais, como o metano da cheia, com fluxos causados por pessoas, como o fogo.</li></ul>
+ <h3>Roteiro de 50 minutos</h3>
+ <table class="tab"><tr><th>Tempo</th><th>O que fazer</th></tr>
+ <tr><td>5 min</td><td>Pergunte: de onde veio o carbono que forma a sua mão?</td></tr>
+ <tr><td>25 min</td><td>Alunos jogam em duplas, um celular ou computador por dupla. Peça que anotem a pontuação de cada fase.</td></tr>
+ <tr><td>15 min</td><td>Discussão com as perguntas de cada fase, na tabela abaixo.</td></tr>
+ <tr><td>5 min</td><td>Cada dupla escreve a frase do relatório de campo.</td></tr></table>
+ <h3>Fase por fase</h3>
+ <table class="tab"><tr><th>Fase</th><th>O aluno faz</th><th>Pergunta para a turma</th><th>O que explicar</th></tr>
+ <tr><td>1. Siga o átomo</td><td>Leva um átomo por 7 processos</td><td>Se o carbono não some, por que o CO₂ do ar aumenta?</td><td>Conservação da matéria. O aumento vem de carbono que sai dos estoques mais rápido do que volta.</td></tr>
+ <tr><td>2. Dia e noite</td><td>Planta o mínimo de mudas e roda 3 dias</td><td>Por que a linha sobe toda noite?</td><td>Fotossíntese depende de luz. Respiração de plantas, animais e micróbios do solo acontece o tempo todo.</td></tr>
+ <tr><td>3. Bolhas na baía</td><td>Mede 4 pontos e separa por metano</td><td>Por que o aguapé solta muito metano no raso e pouco no fundo?</td><td>No lodo sem oxigênio, a decomposição forma metano. Nas lagoas do Pantanal medidas na estiagem, a maior parte saiu em bolhas. No raso, a raiz do aguapé chega ao lodo e leva o gás para cima.</td></tr>
+ <tr><td>4. Seca e fogo</td><td>Prevê, coloca aceiros e compara</td><td>Por que uma seca pode jogar no ar o carbono de muitos anos?</td><td>O fogo devolve ao ar, em pouco tempo, o carbono guardado na biomassa. Clima extremo e manejo ruim aumentam o risco.</td></tr>
+ <tr><td>5. Um ano no Pantanal</td><td>Gasta fichas para fechar o ano com saldo negativo</td><td>O que pesa mais: o metano da cheia ou o fogo da seca?</td><td>Há fluxos naturais que não controlamos. A ação humana atua no fogo e na vegetação. Liga com a parte final da habilidade, sobre ações coletivas.</td></tr></table>
+ <h3>Avaliação</h3>
+ <p>Use o relatório de campo impresso e a frase escrita por cada dupla. Todos os instrumentos têm o mesmo peso. Observe se o aluno cita um reservatório e um processo que devolve carbono ao ar.</p>
+ <h3>Sequência de 3 aulas</h3>
+ <ol><li><b>Aula 1.</b> Jogo completo e discussão, como neste roteiro.</li><li><b>Aula 2.</b> Leitura guiada de um resultado real: as medidas de metano em lagoas do Pantanal (Bastviken et al., 2010) e o efeito do aguapé (Oliveira Junior et al., 2021).</li><li><b>Aula 3.</b> Ação coletiva: as duplas propõem uma medida para reduzir o fogo na região da escola e apresentam para a turma.</li></ol>
+ <h3>Cuidado ao explicar</h3>
+ <p>Os números do jogo são unidades de um modelo simples, não medidas reais. No saldo da fase 5, o metano pesa mais que o CO₂ porque aquece mais (Saunois et al., 2020), mas o peso usado no jogo é só ilustrativo.</p>
+ <h3>Referências</h3>
+ <ul class="ref">
+ <li>Bastviken D. et al. 2010. Methane emissions from Pantanal, South America, during the low water season: toward more comprehensive sampling. Environmental Science & Technology 44: 5450-5455. doi:10.1021/es1005048</li>
+ <li>Libonati R. et al. 2020. Rescue Brazil's burning Pantanal wetlands. Nature 588: 217-219. doi:10.1038/d41586-020-03464-1</li>
+ <li>Oliveira Junior E.S. et al. 2021. Water hyacinth's effect on greenhouse gas fluxes: a field study in a wide variety of tropical water bodies. Ecosystems 24: 988-1004. doi:10.1007/s10021-020-00564-x</li>
+ <li>Sanseverino A.M. et al. 2012. Methane carbon supports aquatic food webs to the fish level. PLoS ONE 7: e42723. doi:10.1371/journal.pone.0042723</li>
+ <li>Saunois M. et al. 2020. The Global Methane Budget 2000-2017. Earth System Science Data 12: 1561-1623. doi:10.5194/essd-12-1561-2020</li></ul>
+ </div>`;
+ $('bVt').onclick=inicio;$('bPr').onclick=()=>window.print();
+}
+
+/* ================= RANKING ================= */
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="balanco-do-carbono";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__a={get S(){return S},get G(){return G},FASES,PONTOS,inicio,novo,intro,guia};
+inicio();
+</script>
+</body>
+</html>
