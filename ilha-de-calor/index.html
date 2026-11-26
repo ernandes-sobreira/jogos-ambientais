@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ilha de Calor</title>
+<style>
+:root{--main:#c62828;--deep:#8e0000;--soft:#ffebee;--line:#ffcdd2;--ink:#10212b;--mut:#4d6370;--co2:#e53935;--ch4:#ef6c00;--ok:#2e7d32;--bad:#c62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:820px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep);letter-spacing:-.01em}
+h2{font-size:1.2rem;color:var(--deep);margin-bottom:6px;letter-spacing:-.01em}
+h3{font-size:1rem;color:var(--deep);margin:14px 0 6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 12px;font-weight:700;font-size:.86rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.card{border:2px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:var(--deep)}.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.btn.sm{padding:9px 14px;font-size:.92rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas.cena{width:100%;height:auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff;margin-top:10px}
+.top{justify-content:space-between}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--main);color:#fff;border-radius:14px;padding:8px 14px;font-weight:800;font-size:1.05rem}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.tool{border:2px solid var(--line);background:#fff;color:var(--deep);border-radius:12px;padding:9px 12px;font-weight:700;font-family:inherit;font-size:.92rem;cursor:pointer;touch-action:manipulation}
+.tool.on{border-color:var(--main);background:var(--soft)}
+.tool:disabled{opacity:.4}
+.mets{display:grid;gap:8px;margin-top:10px}
+.met{display:grid;grid-template-columns:92px 1fr 52px;gap:8px;align-items:center;font-weight:700;font-size:.9rem}
+.met .bar{position:relative;height:18px;background:#f1f4f5;border-radius:99px;overflow:hidden}
+.met .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;transition:width .15s}
+.met .alvo{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--ink);border-radius:2px}
+.met .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--mut)}
+.met.co2 .fill{background:var(--co2)}.met.ch4 .fill{background:var(--ch4)}
+.saldo .bar{background:linear-gradient(90deg,#e8f5e9 50%,#ffebee 50%)}
+.saldo .zero{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:var(--ink)}
+.saldo .fill{border-radius:0}
+.obj{display:flex;gap:10px;align-items:flex-start;background:#fff8e1;border:2px solid #ffe082;border-radius:14px;padding:10px 12px;margin-top:10px;font-size:.95rem}
+.obj b{color:#8d6e00;white-space:nowrap}
+.acao{display:flex;gap:10px;align-items:center;background:var(--soft);border-left:5px solid var(--main);border-radius:0 12px 12px 0;padding:9px 12px;margin-top:8px;font-weight:600;font-size:.95rem;min-height:42px}
+.acao .dedo{font-size:1.25rem;animation:pulo 1s ease-in-out infinite}
+@keyframes pulo{50%{transform:translateX(4px)}}
+.help{width:34px;height:34px;border-radius:50%;border:2px solid var(--main);background:#fff;color:var(--deep);font-weight:800;font-size:1rem;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(16,33,43,.35);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal .card{max-width:460px;width:100%}
+.intro{text-align:center;padding:26px 18px}
+.intro .ic{font-size:3rem;line-height:1}
+.intro .n{color:var(--mut);font-weight:700;font-size:.85rem;margin-top:8px}
+.passos{display:grid;gap:8px;margin:16px auto;max-width:420px;text-align:left}
+.passos div{display:flex;gap:12px;align-items:center;background:var(--soft);border-radius:12px;padding:10px 14px;font-weight:600}
+.passos b{font-size:1.3rem;min-width:1.6em;text-align:center}
+.res{text-align:center}
+.res .big{font-size:2.6rem;font-weight:800;color:var(--deep);line-height:1.1}
+.res .ok{color:var(--ok);font-weight:800}.res .no{color:var(--bad);font-weight:800}
+.pensa{background:var(--soft);border-radius:14px;padding:12px 14px;margin:14px auto;max-width:520px;text-align:left}
+.pensa b{color:var(--deep)}
+.boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.box{border:2px dashed var(--line);border-radius:14px;padding:10px;min-height:110px;cursor:pointer}
+.box h4{font-size:.92rem;color:var(--deep);margin-bottom:6px}
+.box.alvo{border-color:var(--main);background:var(--soft)}
+.cards{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;min-height:48px}
+.ct{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 11px;font-weight:700;font-size:.9rem;cursor:pointer;box-shadow:0 2px 0 var(--line);font-family:inherit;color:var(--ink);transition:transform .5s}
+.ct.sel{border-color:var(--main);background:var(--soft);transform:translateY(-2px)}
+.ct.certo{border-color:var(--ok);background:#e8f5e9}.ct.errado{border-color:var(--bad);background:#ffebee}
+.ct.movido{animation:voa .8s ease}
+@keyframes voa{0%{transform:translateY(-30px) scale(1.1);opacity:.3}100%{transform:none;opacity:1}}
+.capa{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+.capa canvas{width:100%;height:auto;display:block;border-radius:16px;background:var(--soft)}
+.opts{display:grid;gap:8px;margin-top:6px}
+.opts .l{font-size:.8rem;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.sw{display:flex;gap:6px;flex-wrap:wrap}
+.sw button{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--line);cursor:pointer}
+.sw button.on{box-shadow:0 0 0 3px var(--deep)}
+.sw .tx{width:auto;height:auto;border-radius:10px;padding:6px 10px;font-weight:700;font-size:.85rem;background:#fff;color:var(--deep);font-family:inherit;border:0}
+input.nome{border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit;width:100%}
+input[type=range]{width:100%;accent-color:var(--main)}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:6px}
+.tab th{text-align:left;background:var(--soft);color:var(--deep);padding:7px 6px}
+.tab td{border-bottom:1px solid var(--line);padding:7px 6px;vertical-align:top}
+.guia p,.guia li{font-size:.95rem;margin-bottom:6px}
+.guia ul,.guia ol{padding-left:20px}
+.hab{border-left:5px solid var(--main);background:var(--soft);padding:10px 14px;border-radius:0 12px 12px 0;font-size:.95rem}
+.ref li{font-size:.86rem;color:var(--mut)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+.rel{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center}
+.rel canvas{width:120px;height:120px;border-radius:50%;background:var(--soft)}
+.mini{width:100%;max-width:420px;height:auto;display:block;margin:10px auto 0}
+@media (max-width:620px){.wrap{padding:10px 8px 30px}.card{padding:12px;border-radius:16px}.capa{grid-template-columns:1fr}.met{grid-template-columns:70px 1fr 44px;font-size:.82rem}.chip{font-size:.95rem}.rel{grid-template-columns:80px 1fr}.rel canvas{width:80px;height:80px}}
+@media print{a.hub,header .hud,.ranking,.noprint{display:none!important}.card{border:1px solid #ccc;break-inside:avoid}body{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>Ilha de Calor</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF"></span><span class="pill" id="hP"></span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const W=760,H=372;
+function hex(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mix(a,b,t){const A=hex(a),B=hex(b);return`rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`;}
+
+/* ================= AVATAR ================= */
+const PELES=['#f6d3b8','#e3b18b','#c68a5e','#94603e','#5d3b26'];
+const CABS=['#1b1b1b','#4e342e','#8d6e63','#d4a85a','#b5532f'];
+const CAMISAS=['#00838f','#2e7d32','#f9a825','#c62828','#6a1b9a','#37474f'];
+const ESTILOS=[['curto','Curto'],['cacheado','Cacheado'],['longo','Longo'],['coque','Coque'],['raspado','Raspado']];
+const CHAPEUS=[['nenhum','Sem'],['bone','Boné'],['campo','Chapéu']];
+let A={pele:2,cab:0,estilo:'cacheado',camisa:0,chapeu:'campo',nome:''};
+try{const s=JSON.parse(localStorage.getItem('bc_avatar')||'null');if(s)A=Object.assign(A,s);}catch(e){}
+function salvaA(){try{localStorage.setItem('bc_avatar',JSON.stringify(A));}catch(e){}}
+function avatar(c,x,y,s,a,prancheta){
+ c.save();c.translate(x,y);c.scale(s,s);
+ const pele=PELES[a.pele],cab=CABS[a.cab],cam=CAMISAS[a.camisa];
+ if(a.estilo==='longo'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-39,12.5,15,0,0,7);c.fill();c.fillRect(-12.5,-40,25,22);}
+ if(a.estilo==='cacheado'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-40,15,14.5,0,0,7);c.fill();}
+ c.fillStyle=cam;c.beginPath();c.moveTo(-16,0);c.quadraticCurveTo(-17,-21,-6,-25);c.lineTo(6,-25);c.quadraticCurveTo(17,-21,16,0);c.closePath();c.fill();
+ c.fillStyle='rgba(0,0,0,.12)';c.fillRect(-1,-24,2,24);
+ c.fillStyle=pele;c.fillRect(-3.5,-29,7,6);
+ if(prancheta){c.fillStyle='#8d6e63';c.fillRect(4,-19,13,16);c.fillStyle='#fff';c.fillRect(5.5,-17,10,12);c.strokeStyle='#90a4ae';c.lineWidth=.8;for(let i=0;i<4;i++){c.beginPath();c.moveTo(7,-14+i*2.6);c.lineTo(14,-14+i*2.6);c.stroke();}}
+ c.strokeStyle=cam;c.lineWidth=6;c.lineCap='round';c.beginPath();c.moveTo(-11,-20);c.lineTo(-4,-9);c.stroke();
+ c.fillStyle=pele;c.beginPath();c.arc(-3,-8,3,0,7);c.fill();
+ c.fillStyle=pele;c.beginPath();c.ellipse(0,-39,9.5,11,0,0,7);c.fill();
+ c.beginPath();c.arc(-9.4,-38,2.3,0,7);c.arc(9.4,-38,2.3,0,7);c.fill();
+ c.fillStyle=cab;
+ if(a.estilo==='curto'){c.beginPath();c.ellipse(0,-44.5,10,6.8,0,Math.PI,0);c.fill();c.fillRect(-10,-46,2.8,7);c.fillRect(7.2,-46,2.8,7);}
+ if(a.estilo==='cacheado'){for(let i=0;i<13;i++){const an=Math.PI*(.8+i*1.4/12);c.beginPath();c.arc(Math.cos(an)*12,-41+Math.sin(an)*11.5,4.2,0,7);c.fill();}}
+ if(a.estilo==='longo'){c.beginPath();c.ellipse(0,-44.5,10.6,7.2,0,Math.PI,0);c.fill();}
+ if(a.estilo==='coque'){c.beginPath();c.ellipse(0,-44.5,10,6.4,0,Math.PI,0);c.fill();c.beginPath();c.arc(0,-53,5.2,0,7);c.fill();}
+ if(a.estilo==='raspado'){c.globalAlpha=.5;c.beginPath();c.ellipse(0,-44,9.8,6.2,0,Math.PI,0);c.fill();c.globalAlpha=1;}
+ c.fillStyle='#2b2a26';c.beginPath();c.arc(-3.4,-39,1.25,0,7);c.arc(3.4,-39,1.25,0,7);c.fill();
+ c.strokeStyle='#2b2a26';c.lineWidth=1;c.beginPath();c.arc(0,-35.6,2.6,.25,Math.PI-.25);c.stroke();
+ if(a.chapeu==='bone'){c.fillStyle=cam;c.beginPath();c.ellipse(0,-46,10.6,5.8,0,Math.PI,0);c.fill();c.fillRect(-10.6,-47,21.2,2.6);c.beginPath();c.ellipse(8.5,-46.2,8,2.2,0,0,7);c.fill();}
+ if(a.chapeu==='campo'){c.fillStyle='#d7c49e';c.beginPath();c.ellipse(0,-46,16.5,3.6,0,0,7);c.fill();c.beginPath();c.ellipse(0,-48,9.2,6.4,0,Math.PI,0);c.fill();c.fillStyle='#8d6e63';c.fillRect(-9.2,-49,18.4,1.9);}
+ c.restore();
+}
+function pernas(c,x,y,s,a){c.save();c.translate(x,y);c.scale(s,s);c.fillStyle='#455a64';c.fillRect(-11,0,9,20);c.fillRect(2,0,9,20);c.fillStyle='#3e2723';c.fillRect(-12,18,11,4);c.fillRect(1,18,11,4);c.restore();}
+
+/* ================= CENA ================= */
+const CORES={main:'#c62828',deep:'#8e0000'};
+function sr(n){const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+function syncMol(){}function partic(){}
+function heat(T){const u=clamp((T-30)/30,0,1);const st=[[33,150,243],[102,187,106],[255,235,59],[255,152,0],[229,57,53]];const p=u*4,i=Math.min(3,Math.floor(p)),f=p-i,a=st[i],b=st[i+1];return `rgb(${a.map((v,k)=>Math.round(v+(b[k]-v)*f)).join(',')})`;}
+function fmt(T){return Math.round(T)+'°C';}
+function ceuQ(c){const g=c.createLinearGradient(0,0,0,240);g.addColorStop(0,'#ffe0b2');g.addColorStop(1,'#fff8f0');c.fillStyle=g;c.fillRect(0,0,W,H);c.fillStyle='rgba(255,193,7,.25)';c.beginPath();c.arc(700,46,40,0,7);c.fill();c.fillStyle='#ffb300';c.beginPath();c.arc(700,46,24,0,7);c.fill();}
+function arvoreU(c,x,y,s){c.fillStyle='#6d4c41';c.fillRect(x-4*s,y-40*s,8*s,40*s);const g=['#2e7d32','#388e3c','#1b5e20','#43a047','#66bb6a'];for(let k=0;k<9;k++){c.fillStyle=g[k%5];c.beginPath();c.arc(x+(sr(k+x)-.5)*44*s,y-52*s-sr(k+3+x)*30*s,(14+sr(k+7)*8)*s,0,7);c.fill();}}
+function casa(c,x,y,w,cor,termo,T){const h=70;c.fillStyle=termo?heat(T-6):'#ffe0b2';c.fillRect(x,y-h,w,h);c.strokeStyle='#bcaaa4';c.lineWidth=2;c.strokeRect(x,y-h,w,h);
+ c.fillStyle=termo?heat(T):cor;c.beginPath();c.moveTo(x-10,y-h);c.lineTo(x+w/2,y-h-38);c.lineTo(x+w+10,y-h);c.closePath();c.fill();c.strokeStyle='#8d6e63';c.stroke();
+ if(!termo){c.fillStyle='#8d6e63';c.fillRect(x+w/2-10,y-36,20,36);c.fillStyle='#bbdefb';c.fillRect(x+10,y-56,18,16);c.fillRect(x+w-28,y-56,18,16);}}
+function carro(c,x,y,cor){c.fillStyle=cor;c.beginPath();c.roundRect(x-26,y-22,52,16,5);c.fill();c.beginPath();c.roundRect(x-15,y-34,30,14,6);c.fill();c.fillStyle='#bbdefb';c.fillRect(x-11,y-31,10,9);c.fillRect(x+2,y-31,10,9);c.fillStyle='#263238';c.beginPath();c.arc(x-15,y-6,6,0,7);c.arc(x+15,y-6,6,0,7);c.fill();}
+function balao(c,x,y,T){const t=fmt(T);c.font='800 18px system-ui';const w=c.measureText(t).width+18;c.fillStyle=heat(T);c.beginPath();c.roundRect(x-w/2,y-30,w,28,8);c.fill();c.beginPath();c.moveTo(x-6,y-3);c.lineTo(x,y+6);c.lineTo(x+6,y-3);c.fill();c.fillStyle='#fff';c.textAlign='center';c.fillText(t,x,y-10);}
+function drawCena(c,G){if(G.desenha)G.desenha(c);}
+/* ================= TELA / LOOP ================= */
+let G=null,S=null,raf=0,ultimo=0,cx=null;
+function laco(ts){const dt=Math.min(.05,(ts-ultimo)/1000||0);ultimo=ts;if(G){G.t+=dt;if(G.upd)G.upd(dt);syncMol(G,dt);partic(G,dt);if(cx)drawCena(cx,G);if(G.extra)G.extra(cx);}raf=requestAnimationFrame(laco);}
+function parar(){cancelAnimationFrame(raf);raf=0;}
+function rodar(){parar();ultimo=performance.now();raf=requestAnimationFrame(laco);}
+function hud(){$('hud').style.display='flex';$('hF').textContent=`Fase ${S.f+1} de ${FASES.length}`;$('hP').textContent=`${Math.max(0,S.tot+S.fp)} pts`;}
+function telaJogo(chip,info){
+ const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><span class="chip" id="chip">${chip}</span><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="acao"><span class="dedo">👉</span><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});
+}
+function acao(t){const e=$('acao');if(e&&e.innerHTML!==t)e.innerHTML=t;}
+function ajuda(){const F=FASES[S.f],d=document.createElement('div');d.className='modal';
+ d.innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn">Entendi</button></div>`;
+ d.onclick=e=>{if(e.target===d||e.target.tagName==='BUTTON')d.remove();};document.body.appendChild(d);}
+function medidor(id,rot,cls,max,alvo){const a=alvo!=null?`<span class="alvo" style="left:${alvo/max*100}%"></span>`:'';return`<div class="met ${cls}" id="${id}" data-max="${max}"><span>${rot}</span><div class="bar"><span class="fill"></span>${a}</div><span class="v"></span></div>`;}
+function poeMed(id,v){const e=$(id);if(!e)return;const m=+e.dataset.max;e.querySelector('.fill').style.width=clamp(v/m*100,0,100)+'%';e.querySelector('.v').textContent=Math.round(v);}
+function poeSaldo(v,max){const e=$('mSaldo');if(!e)return;const f=e.querySelector('.fill'),p=clamp(Math.abs(v)/max*50,0,50);if(v<0){f.style.left=(50-p)+'%';f.style.width=p+'%';f.style.background='#43a047';}else{f.style.left='50%';f.style.width=p+'%';f.style.background='#e53935';}e.querySelector('.v').textContent=(v>0?'+':'')+Math.round(v);}
+
+/* ================= FASES ================= */
+const FASES=[
+ {nome:'Termômetro na rua',ic:'🌡️',obj:'Medir a temperatura de 6 superfícies ao meio-dia e ver a rua com olhos de câmera térmica.',passos:[['👆','Toque em cada superfície'],['🌡️','Leia a temperatura'],['🔥','No fim, veja a rua em cores de calor']],ini:()=>f1()},
+ {nome:'Cor do telhado',ic:'🏠',obj:'Achar o telhado menos claro (tinta mais barata) que deixa a sala com no máximo 30°C.',passos:[['🎨','Mude a cor do telhado'],['🌡️','Veja o telhado e a sala'],['✅','Confira']],ini:()=>f2()},
+ {nome:'Árvore ou vaga?',ic:'🌳',obj:'Deixar a calçada com média de no máximo 40°C, sem perder mais de 4 vagas de carro.',passos:[['👆','Toque num espaço para trocar vaga e árvore'],['🌳','A árvore esfria também os vizinhos'],['✅','Confira']],ini:()=>f3()},
+ {nome:'E à noite?',ic:'🌙',obj:'Prever em que hora a cidade fica mais quente que o campo, e por quê.',passos:[['🔮','Escolha sua previsão'],['▶','Veja as 24 horas'],['💬','Explique']],ini:()=>f4()},
+ {nome:'Plano do bairro',ic:'🗺️',obj:'Com 12 fichas, deixar o bairro com média de no máximo 47°C e o pátio da escola com no máximo 40°C.',passos:[['🏠','Telhado claro: 1 ficha'],['🌳','Árvore na rua ou no pátio: 2 fichas'],['🏫','O pátio fica à direita, no meio']],ini:()=>f5()}
+];
+function intro(){parar();G=null;cx=null;hud();const F=FASES[S.f];$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><div class="n">FASE ${S.f+1} DE ${FASES.length}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left;max-width:420px;margin:12px auto 0"><b>🎯 Objetivo</b><span>${F.obj}</span></div>
+ <div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn" id="bGo">Começar</button></div>`;
+ $('bGo').onclick=()=>{S.fp=0;F.ini();};}
+function fimFase(pts,ok,oque,pergunta,extraHtml){
+ parar();pts=Math.max(0,Math.round(pts));S.fp=0;S.tot+=pts;S.res[S.f]={pts,ok,oque};hud();
+ $('tela').innerHTML=`<div class="card res"><div class="small">${FASES[S.f].ic} ${FASES[S.f].nome}</div><div class="big">+${pts}</div>
+ <p class="${ok?'ok':'no'}">${ok?'Meta cumprida':'Meta não cumprida'}</p>${extraHtml||''}
+ <div class="pensa"><b>O que aconteceu:</b> ${oque}</div><div class="pensa"><b>Pergunta para a turma:</b> ${pergunta}</div>
+ <div class="row" style="justify-content:center"><button class="btn" id="bNx">${S.f<FASES.length-1?'Próxima fase':'Ver relatório'}</button></div></div>`;
+ $('bNx').onclick=()=>{S.f++;if(S.f<FASES.length)intro();else relatorio();};
+}
+/* ---------- FASE 1 ---------- */
+const SUP=[['Grama na sombra',33,[20,160]],['Grama no sol',45,[160,250]],['Calçada',49,[250,330]],['Asfalto',60,[330,500]],['Telhado escuro',57,[500,630]],['Telhado branco',40,[630,760]]];
+function f1(){G={t:0,med:[],termo:0};telaJogo('🌡️ Termômetro na rua','0 de 6');
+ G.desenha=c=>{const tm=G.termo>0;if(tm){c.fillStyle='#37474f';c.fillRect(0,0,W,H);}else ceuQ(c);const y0=290;
+  const cor=(i,norm)=>tm?heat(SUP[i][1]):norm;
+  c.fillStyle=cor(0,'#7cb342');c.fillRect(20,y0,140,18);c.fillStyle=cor(1,'#9ccc65');c.fillRect(160,y0,90,18);c.fillStyle=cor(2,'#bdbdbd');c.fillRect(250,y0,80,22);c.fillStyle=cor(3,'#455a64');c.fillRect(330,y0+4,170,H-y0);
+  if(!tm){c.fillStyle='#fff';for(let k=0;k<4;k++)c.fillRect(345+k*42,y0+40,24,5);}
+  c.fillStyle=tm?heat(48):'#e0e0e0';c.fillRect(500,y0,260,H-y0);c.fillStyle=tm?heat(42):'#8d6e63';c.fillRect(0,y0+18,330,H-y0);
+  if(tm){c.fillStyle=heat(34);c.beginPath();c.ellipse(90,y0-60,70,55,0,0,7);c.fill();c.fillStyle=heat(36);c.fillRect(86,y0-40,8,40);}else arvoreU(c,90,y0,1.15);
+  casa(c,515,y0,100,'#4e342e',tm,57);casa(c,645,y0,100,'#fafafa',tm,40);
+  G.med.forEach(i=>{const[n,T,[a,b]]=SUP[i];const x=(a+b)/2,y=i>=4?y0-118:i===0?y0-6:y0-6;balao(c,x,y,T);});
+  if(tm){c.fillStyle='#fff';c.font='800 20px system-ui';c.textAlign='left';c.fillText('📷 Câmera térmica',16,32);}
+  else{c.fillStyle='#4e342e';c.font='800 18px system-ui';c.textAlign='left';c.fillText('☀️ Meio-dia, ar a 34°C',16,32);}};
+ G.tap=(x,y)=>{if(G.termo)return;let i=SUP.findIndex(([,,[a,b]])=>x>=a&&x<b);if(i<0)return;if(x>=500)i=x<630?4:5;if(i===0&&y>300)i=-1;if(i<0||G.med.includes(i))return;G.med.push(i);$('info').textContent=`${G.med.length} de 6`;
+  acao(`${SUP[i][0]}: ${fmt(SUP[i][1])}.`);if(G.med.length===6){G.termo=.01;acao('Agora a rua vista pela câmera térmica: azul é frio, vermelho é quente.');}};
+ G.upd=dt=>{if(G.termo){G.termo+=dt;if(G.termo>3.5&&!G.feito){G.feito=1;fimFase(150,true,'O asfalto chegou a 60°C e a grama na sombra ficou em 33°C, com o ar a 34°C. Superfícies escuras absorvem mais luz do sol. A sombra bloqueia o sol e a planta perde água pelas folhas, o que gasta energia e esfria.','Por que o telhado branco esquenta menos que o escuro, se o sol é o mesmo?');}}};
+ acao('Toque em cada superfície para medir a temperatura.');rodar();}
+/* ---------- FASE 2 ---------- */
+function f2(){G={t:0,a:1,tent:0};telaJogo('🏠 Cor do telhado','');
+ const tr=()=>32+30*(1-G.a/10),sala=()=>25+12*(1-G.a/10);
+ const inf=()=>$('info').textContent=`sala ${fmt(sala())}`;
+ G.desenha=c=>{ceuQ(c);const y0=320,v=Math.round(255*(.15+.85*G.a/10));const cor=`rgb(${v},${Math.round(v*.95)},${Math.round(v*.9)})`;
+  c.fillStyle='#9ccc65';c.fillRect(0,y0,W,H-y0);const x=230,w=300,h=150;
+  c.fillStyle='#ffe0b2';c.fillRect(x,y0-h,w,h);c.fillStyle=heat(sala());c.globalAlpha=.35;c.fillRect(x+8,y0-h+8,w-16,h-8);c.globalAlpha=1;c.strokeStyle='#bcaaa4';c.lineWidth=3;c.strokeRect(x,y0-h,w,h);
+  c.fillStyle=cor;c.beginPath();c.moveTo(x-20,y0-h);c.lineTo(x+w/2,y0-h-80);c.lineTo(x+w+20,y0-h);c.closePath();c.fill();c.strokeStyle='#5d4037';c.stroke();
+  c.strokeStyle='rgba(255,179,0,.8)';c.lineWidth=3;for(let k=0;k<5;k++){const xx=x+20+k*60;c.beginPath();c.moveTo(xx+60,40);c.lineTo(xx+20,y0-h-50+Math.abs(k-2)*14);c.stroke();const ref=G.a/10;if(ref>.2){c.globalAlpha=ref;c.beginPath();c.moveTo(xx+20,y0-h-50+Math.abs(k-2)*14);c.lineTo(xx-20,40);c.stroke();c.globalAlpha=1;}}
+  balao(c,x+w/2,y0-h-86,tr());balao(c,x+w/2,y0-40,sala());c.fillStyle='#263238';c.font='800 16px system-ui';c.textAlign='center';c.fillText('sala',x+w/2,y0-12);
+  c.font='800 18px system-ui';c.textAlign='left';c.fillText(`Luz refletida: ${G.a*10}%`,16,32);};
+ const ctrl=()=>{$('ctrl').innerHTML=`<div style="width:100%;display:grid;gap:6px"><div class="row top"><b>🎨 Cor do telhado</b><span class="pill">${G.a===0?'preto':G.a===10?'branco':'nível '+G.a}</span></div><input type="range" id="ra" min="0" max="10" step="1" value="${G.a}"></div><button class="btn sm" id="bR">Conferir</button>`;
+  $('ra').oninput=e=>{G.a=+e.target.value;inf();ctrl();};
+  $('bR').onclick=()=>{G.tent++;if(sala()>30.05)acao(`Sala a ${fmt(sala())}. Ainda quente. Clareie o telhado.`);else if(G.a>6)acao(`Sala a ${fmt(sala())}. Deu, mas dá com tinta menos clara e mais barata.`);
+   else fimFase(Math.max(60,170-20*(G.tent-1)),true,'Com o telhado refletindo 60% da luz, a sala ficou em 30°C. O telhado preto refletia quase nada e chegava a mais de 60°C. Menos luz absorvida é menos energia virando calor dentro da casa.','Por que roupas claras são mais frescas no sol?');};};
+ ctrl();inf();acao('Arraste a cor do telhado e aperte <b>Conferir</b>.');rodar();}
+/* ---------- FASE 3 ---------- */
+function calc3(v){return v.map((k,i)=>{if(k==='T')return 34;const n=(v[i-1]==='T')+(v[i+1]==='T');return 58-8*n;});}
+function f3(){G={t:0,v:Array(8).fill('V'),tent:0};telaJogo('🌳 Árvore ou vaga?','');
+ const inf=()=>{const ts=calc3(G.v),m=ts.reduce((a,b)=>a+b,0)/8;$('info').textContent=`🚗 ${G.v.filter(k=>k==='V').length} vagas`;return m;};
+ G.desenha=c=>{ceuQ(c);const ts=calc3(G.v),m=ts.reduce((a,b)=>a+b,0)/8;const y0=300;c.fillStyle='#455a64';c.fillRect(0,y0+20,W,H-y0);c.fillStyle='#fff';for(let k=0;k<9;k++)c.fillRect(20+k*85,y0+44,40,5);
+  for(let i=0;i<8;i++){const x=20+i*90;c.fillStyle=heat(ts[i]);c.globalAlpha=.55;c.fillRect(x,y0,86,20);c.globalAlpha=1;c.strokeStyle='#fff';c.lineWidth=2;c.strokeRect(x,y0,86,20);
+   if(G.v[i]==='T')arvoreU(c,x+43,y0,1);else carro(c,x+43,y0+2,['#e53935','#1e88e5','#fdd835','#8e24aa'][i%4]);balao(c,x+43,y0-120,ts[i]);}
+  c.fillStyle='#263238';c.font='800 20px system-ui';c.textAlign='left';c.fillText(`Média da calçada: ${m.toFixed(1).replace('.',',')}°C (meta 40)`,16,32);};
+ G.tap=(x,y)=>{const i=Math.floor((x-20)/90);if(i<0||i>7||y<150)return;G.v[i]=G.v[i]==='T'?'V':'T';inf();};
+ $('ctrl').innerHTML=`<button class="btn sm" id="bR">Conferir</button>`;
+ $('bR').onclick=()=>{G.tent++;const m=inf(),nv=G.v.filter(k=>k==='V').length;
+  if(m<=40&&nv>=4)fimFase(Math.max(60,180-20*(G.tent-1)),true,`Com árvores espalhadas, a média ficou em ${m.toFixed(1).replace('.',',')}°C e sobraram ${nv} vagas. Árvores juntas esfriam só o próprio trecho. Espalhadas, cada uma faz sombra também nos vizinhos.`,'Na rua da escola, onde você plantaria as próximas árvores?');
+  else acao(`${m<=40?'✅':'❌'} média ${m.toFixed(1).replace('.',',')}°C · ${nv>=4?'✅':'❌'} ${nv} vagas. ${nv>=4&&m>40?'Tente outra posição para as árvores.':''}`);};
+ inf();acao('Toque nos espaços da calçada para trocar carro e árvore.');rodar();}
+/* ---------- FASE 4 ---------- */
+function campoT(h){return 27+8*Math.sin((h-9)/24*2*Math.PI);}
+function ilha(h){return 2.5+1.5*Math.cos((h-3)/24*2*Math.PI);}
+function f4(){G={t:0,h:0,run:false};telaJogo('🌙 E à noite?','previsão');
+ G.desenha=c=>{c.fillStyle='#fff';c.fillRect(0,0,W,H);const x0=70,y0=310,w=640,hh=250,ty=T=>y0-(T-15)/25*hh;
+  c.strokeStyle='#cfd8dc';c.lineWidth=1;for(let T=15;T<=40;T+=5){c.beginPath();c.moveTo(x0,ty(T));c.lineTo(x0+w,ty(T));c.stroke();c.fillStyle='#607d8b';c.font='14px system-ui';c.textAlign='right';c.fillText(T+'°',x0-6,ty(T)+4);}
+  for(let h=0;h<=24;h+=6){c.textAlign='center';c.fillText(h+'h',x0+h/24*w,y0+20);}
+  c.fillStyle='rgba(26,35,126,.07)';c.fillRect(x0,y0-hh,w*6/24,hh);c.fillRect(x0+w*18/24,y0-hh,w*6/24,hh);
+  const H2=G.run?G.h:0;[['#2e7d32',h=>campoT(h),'Campo'],['#c62828',h=>campoT(h)+ilha(h),'Cidade']].forEach(([cor,f,n],k)=>{c.strokeStyle=cor;c.lineWidth=3;c.beginPath();for(let h=0;h<=H2;h+=.25)c.lineTo(x0+h/24*w,ty(f(h)));c.stroke();c.fillStyle=cor;c.font='800 16px system-ui';c.textAlign='left';c.fillText(n,x0+10+k*90,y0-hh-10);});
+  if(G.run&&G.h>=24){c.fillStyle='#c62828';c.font='800 17px system-ui';c.textAlign='center';c.fillText('maior diferença: 3h da madrugada',x0+3/24*w+150,ty(33));c.strokeStyle='#c62828';c.setLineDash([5,4]);c.lineWidth=2;c.beginPath();c.moveTo(x0+3/24*w,ty(campoT(3)));c.lineTo(x0+3/24*w,ty(campoT(3)+ilha(3)));c.stroke();c.setLineDash([]);}};
+ G.upd=dt=>{if(G.run&&G.h<24){G.h=Math.min(24,G.h+dt*5);if(G.h>=24)G.onFim&&G.onFim();}};
+ const P=[['tarde','À tarde, no sol forte'],['noite','De madrugada'],['igual','Igual o dia todo']];
+ $('ctrl').innerHTML=`<div style="width:100%"><b>Em que hora a cidade fica mais quente que o campo?</b><div class="row" style="margin-top:6px">${P.map(([k,t])=>`<button class="tool" data-p="${k}">${t}</button>`).join('')}</div></div>`;
+ document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{G.p1=b.dataset.p==='noite'?80:0;$('ctrl').innerHTML='';G.run=true;acao('Veja as 24 horas.');
+  G.onFim=()=>{G.onFim=null;acao(G.p1?'Isso: a diferença é maior de madrugada.':'A diferença é maior de madrugada, não à tarde.');
+   const Q=[['b','A lua aquece mais o asfalto do que aquece o mato'],['a','Concreto e asfalto guardam o calor do dia'],['c','Os carros circulam mais de madrugada nas cidades']];
+   $('ctrl').innerHTML=`<div style="width:100%"><b>Por que a cidade demora a esfriar?</b><div style="display:grid;gap:6px;margin-top:6px">${Q.map(([k,t])=>`<button class="tool" style="text-align:left" data-q="${k}">${t}</button>`).join('')}</div></div>`;
+   document.querySelectorAll('[data-q]').forEach(b2=>b2.onclick=()=>{const ok=b2.dataset.q==='a';fimFase(G.p1+(ok?80:0),ok&&G.p1>0,'De dia o campo e a cidade esquentam parecido. À noite o campo esfria rápido, mas asfalto, concreto e tijolo guardaram calor e continuam soltando. Por isso a ilha de calor é mais forte de madrugada.','Quem sofre mais numa onda de calor: quem dorme numa casa no centro ou numa casa perto da mata?');});};});
+ acao('Escolha sua previsão.');rodar();}
+/* ---------- FASE 5 ---------- */
+const MAPA5=['CCCCCC','RRRRRR','CCCCPP','CCCCCC'];const BASE5={C:55,B:41,R:58,P:50,T:34};
+function temps5(g){return g.map((row,r)=>row.map((k,c)=>{if(k==='T')return 34;const n=[[1,0],[-1,0],[0,1],[0,-1]].filter(([a,b])=>g[r+a]&&g[r+a][c+b]==='T').length;return Math.max(34,BASE5[k]-5*n);}));}
+function f5(){G={t:0,g:MAPA5.map(s=>s.split('')),tent:0};telaJogo('🗺️ Plano do bairro','');
+ const custo=()=>{let s=0;G.g.forEach((row,r)=>row.forEach((k,c)=>{if(k==='B')s+=1;if(k==='T')s+=2;}));return s;};
+ const est=()=>{const T=temps5(G.g),m=T.flat().reduce((a,b)=>a+b,0)/24,p=(T[2][4]+T[2][5])/2;return{T,m,p};};
+ const inf=()=>{const f=12-custo();$('info').textContent=`🎟️ ${f} ficha${f===1?'':'s'}`;};
+ G.desenha=c=>{c.fillStyle='#fff';c.fillRect(0,0,W,H);const e=est(),x0=50,y0=50,cw=110,ch=78;
+  G.g.forEach((row,r)=>row.forEach((k,cc)=>{const x=x0+cc*cw,y=y0+r*ch;c.fillStyle=heat(e.T[r][cc]);c.fillRect(x+2,y+2,cw-4,ch-4);
+   c.font='30px system-ui';c.textAlign='center';c.fillText(k==='C'?'🏠':k==='B'?'🏡':k==='R'?'🛣️':k==='P'?'🏫':'🌳',x+cw/2,y+40);
+   c.fillStyle='#fff';c.font='800 16px system-ui';c.fillText(fmt(e.T[r][cc]),x+cw/2,y+66);}));
+  c.strokeStyle='#263238';c.lineWidth=3;c.strokeRect(x0+4*cw+2,y0+2*ch+2,2*cw-4,ch-4);
+  c.fillStyle='#263238';c.font='800 22px system-ui';c.textAlign='left';c.fillText(`Média: ${e.m.toFixed(1).replace('.',',')}°C (meta 47) · Pátio: ${fmt(e.p)} (meta 40)`,16,32);};
+ G.tap=(x,y)=>{const cc=Math.floor((x-50)/110),r=Math.floor((y-50)/78);if(cc<0||cc>5||r<0||r>3)return;const o=MAPA5[r][cc],k=G.g[r][cc];let nx;
+  if(o==='C')nx=k==='C'?'B':'C';else nx=k==='T'?o:'T';G.g[r][cc]=nx;if(custo()>12){G.g[r][cc]=k;acao('Fichas acabaram. Desfaça alguma troca.');}inf();};
+ $('ctrl').innerHTML=`<button class="btn sm" id="bR">Conferir</button>`;
+ $('mets').innerHTML=`<div class="pensa" style="margin:0;max-width:none">Toque numa casa 🏠 para telhado claro 🏡 (1 ficha). Toque na rua 🛣️ ou no pátio 🏫 para plantar árvore 🌳 (2 fichas). Toque de novo para desfazer.</div>`;inf();
+ $('bR').onclick=()=>{G.tent++;const e=est(),a=e.m<=47,b=e.p<=40;
+  if(a&&b)fimFase(Math.max(70,200-20*(G.tent-1)),true,`O bairro ficou com média de ${e.m.toFixed(1).replace('.',',')}°C e o pátio com ${fmt(e.p)}. Só telhado claro não resolve o pátio, e só árvore gasta fichas demais. A mistura das duas é que funciona.`,'Que mudanças da sua escola podem ser feitas ainda este ano?');
+  else acao(`${a?'✅':'❌'} média ${e.m.toFixed(1).replace('.',',')}°C · ${b?'✅':'❌'} pátio ${fmt(e.p)}`);};
+ acao('Gaste as 12 fichas em telhados claros e árvores. Depois aperte <b>Conferir</b>.');rodar();}
+/* ================= INICIO / AVATAR ================= */
+function inicio(){parar();G=null;cx=null;$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><div class="capa"><canvas id="cA" width="560" height="560"></canvas>
+ <div><h2>Monte seu pesquisador</h2><div class="opts">
+ <div class="l">Pele</div><div class="sw" id="sP">${PELES.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.pele===i?'on':''}" aria-label="pele ${i+1}"></button>`).join('')}</div>
+ <div class="l">Cabelo</div><div class="sw" id="sE">${ESTILOS.map(([k,t])=>`<button class="tx ${A.estilo===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <div class="sw" id="sC">${CABS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.cab===i?'on':''}" aria-label="cor ${i+1}"></button>`).join('')}</div>
+ <div class="l">Camiseta</div><div class="sw" id="sT">${CAMISAS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.camisa===i?'on':''}" aria-label="camiseta ${i+1}"></button>`).join('')}</div>
+ <div class="l">Chapéu</div><div class="sw" id="sH">${CHAPEUS.map(([k,t])=>`<button class="tx ${A.chapeu===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <input class="nome" id="iN" maxlength="20" placeholder="Seu nome" value="${esc(A.nome)}">
+ </div></div></div>
+ <div class="row" style="margin-top:14px"><button class="btn" id="bJ">▶ Jogar as 5 fases</button><button class="btn ghost" id="bG">📘 Guia do professor</button></div>
+ <p class="small" style="margin-top:10px">Ciências da Natureza · Ensino Médio · BNCC EM13CNT102</p></div>`;
+ const pinta=()=>{const c=$('cA').getContext('2d');c.clearRect(0,0,560,560);c.fillStyle='#ffebee';c.fillRect(0,0,560,560);c.fillStyle='#ffcdd2';c.beginPath();c.arc(280,600,260,0,7);c.fill();avatar(c,280,560,6.4,A,true);};
+ pinta();
+ const liga=(id,f)=>document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{f(b);salvaA();document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b));pinta();});
+ liga('sP',b=>A.pele=+b.dataset.i);liga('sC',b=>A.cab=+b.dataset.i);liga('sT',b=>A.camisa=+b.dataset.i);liga('sE',b=>A.estilo=b.dataset.k);liga('sH',b=>A.chapeu=b.dataset.k);
+ $('iN').oninput=e=>{A.nome=e.target.value;salvaA();};
+ $('bJ').onclick=novo;$('bG').onclick=guia;
+}
+function novo(){S={f:0,tot:0,fp:0,res:[],fichas:0};salvo=false;intro();}
+function relatorio(){parar();G=null;cx=null;$('rankBox').style.display='block';const nome=A.nome.trim()||'Pesquisador';
+ $('tela').innerHTML=`<div class="card"><div class="rel"><canvas id="cR" width="240" height="240"></canvas><div><div class="small">Relatório de campo</div><h2>${esc(nome)}</h2><div class="big" style="font-size:2rem;font-weight:800;color:var(--deep)">${S.tot} pts</div></div></div>
+ <table class="tab" style="margin-top:12px"><tr><th>Fase</th><th>Pontos</th><th>Meta</th></tr>${FASES.map((F,i)=>{const r=S.res[i]||{pts:0,ok:false};return`<tr><td>${F.ic} ${F.nome}</td><td>${r.pts}</td><td>${r.ok?'✓':'✗'}</td></tr>`;}).join('')}</table>
+ <div class="pensa"><b>Para escrever no caderno:</b> explique por que o asfalto esquenta mais que a grama e por que a cidade demora a esfriar à noite.</div>
+ <div class="savebox noprint"><input id="pName" maxlength="20" value="${esc(nome)}"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row noprint" style="margin-top:12px"><button class="btn ghost" id="bI">🖨️ Imprimir relatório</button><button class="btn ghost" id="bN">Jogar de novo</button><button class="btn ghost" id="bV">Início</button></div></div>`;
+ const c=$('cR').getContext('2d');c.fillStyle='#ffebee';c.fillRect(0,0,240,240);avatar(c,120,240,3.2,A,true);
+ $('bS').onclick=()=>salvar('5 fases');$('bI').onclick=()=>window.print();$('bN').onclick=novo;$('bV').onclick=inicio;
+}
+
+/* ================= GUIA DO PROFESSOR ================= */
+function guia(){parar();$('hud').style.display='none';$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card guia">
+ <div class="row top noprint"><button class="btn ghost sm" id="bVt">← Voltar</button><button class="btn sm" id="bPr">🖨️ Imprimir guia</button></div>
+ <h2 style="margin-top:10px">Guia do professor · Ilha de Calor</h2>
+ <p class="small">Ensino Médio · Ciências da Natureza e suas Tecnologias · Física, Biologia e Geografia</p>
+ <h3>Habilidade da BNCC</h3>
+ <div class="hab"><b>EM13CNT102.</b> Realizar previsões, avaliar intervenções e/ou construir protótipos de sistemas térmicos que visem à sustentabilidade, considerando sua composição e os efeitos das variáveis termodinâmicas sobre seu funcionamento, considerando também o uso de tecnologias digitais que auxiliem no cálculo de estimativas e no apoio à construção dos protótipos.</div>
+ <h3>Objetivos da aula</h3>
+ <ul><li>Relacionar cor e material de uma superfície com a energia absorvida do sol.</li><li>Explicar como sombra e transpiração esfriam o ambiente.</li><li>Avaliar intervenções urbanas contra o calor com metas e custos.</li></ul>
+ <h3>Roteiro de 50 minutos</h3>
+ <table class="tab"><tr><th>Tempo</th><th>O que fazer</th></tr>
+ <tr><td>5 min</td><td>Pergunte: por que o pátio da escola queima o pé ao meio-dia?</td></tr>
+ <tr><td>25 min</td><td>Alunos jogam em duplas e anotam as temperaturas de cada fase.</td></tr>
+ <tr><td>15 min</td><td>Discussão com as perguntas de cada fase.</td></tr>
+ <tr><td>5 min</td><td>Cada dupla escreve a frase do relatório de campo.</td></tr></table>
+ <h3>Fase por fase</h3>
+ <table class="tab"><tr><th>Fase</th><th>O aluno faz</th><th>Pergunta para a turma</th><th>O que explicar</th></tr>
+ <tr><td>1. Termômetro na rua</td><td>Mede 6 superfícies e vê a câmera térmica</td><td>Por que o telhado branco esquenta menos?</td><td>Albedo: superfície clara reflete mais luz e absorve menos energia.</td></tr>
+ <tr><td>2. Cor do telhado</td><td>Ajusta a cor até a sala chegar a 30°C</td><td>Por que roupa clara é mais fresca?</td><td>Energia absorvida vira calor e passa por condução para dentro da casa.</td></tr>
+ <tr><td>3. Árvore ou vaga?</td><td>Distribui árvores e vagas na calçada</td><td>Onde plantar as próximas árvores?</td><td>Sombra e transpiração. Árvores espalhadas cobrem mais área.</td></tr>
+ <tr><td>4. E à noite?</td><td>Prevê a hora da maior diferença</td><td>Quem sofre mais numa onda de calor?</td><td>Materiais urbanos guardam calor de dia e liberam à noite.</td></tr>
+ <tr><td>5. Plano do bairro</td><td>Combina telhados claros e árvores</td><td>O que dá para mudar na escola este ano?</td><td>Intervenções diferentes resolvem problemas diferentes.</td></tr></table>
+ <h3>Avaliação</h3>
+ <p>Use o relatório de campo impresso e a frase escrita por cada dupla. Todos os instrumentos têm o mesmo peso. Observe se o aluno explica o calor pela energia absorvida, e não só pela cor.</p>
+ <h3>Sequência de 3 aulas</h3>
+ <ol><li><b>Aula 1.</b> Jogo completo e discussão.</li><li><b>Aula 2.</b> Saída pelo pátio com termômetro de infravermelho, medindo as mesmas superfícies do jogo.</li><li><b>Aula 3.</b> As duplas montam um plano de sombra e telhado para a escola, com custo.</li></ol>
+ <h3>Cuidado ao explicar</h3>
+ <p>As temperaturas e custos do jogo são de um modelo simples. Os valores reais mudam com a hora, o vento, a umidade e o material. Revisões de estudos mostram que áreas verdes tendem a ser mais frescas que áreas sem verde (Bowler et al., 2010; Knight et al., 2021). A explicação de por que a ilha de calor é mais forte à noite está em Oke (1982).</p>
+ <h3>Referências</h3>
+ <ul class="ref">
+ <li>Bowler D.E., Buyung-Ali L., Knight T.M., Pullin A.S. 2010. Urban greening to cool towns and cities: a systematic review of the empirical evidence. Landscape and Urban Planning 97: 147-155. doi:10.1016/j.landurbplan.2010.05.006</li>
+ <li>Knight T., Price S., Bowler D. et al. 2021. How effective is greening of urban areas in reducing human exposure to ground-level ozone concentrations, UV exposure and the urban heat island effect? An updated systematic review. Environmental Evidence 10: 12. doi:10.1186/s13750-021-00226-y</li>
+ <li>Oke T.R. 1982. The energetic basis of the urban heat island. Quarterly Journal of the Royal Meteorological Society 108: 1-24. doi:10.1002/qj.49710845502</li></ul>
+ </div>`;
+ $('bVt').onclick=inicio;$('bPr').onclick=()=>window.print();
+}
+
+/* ================= RANKING ================= */
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="ilha-de-calor";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__a={get S(){return S},get G(){return G},FASES,inicio,novo,intro,guia};
+inicio();
+</script>
+</body>
+</html>
