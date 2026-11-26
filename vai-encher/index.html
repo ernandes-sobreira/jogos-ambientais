@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vai Encher?</title>
+<style>
+:root{--main:#1565c0;--deep:#0d47a1;--soft:#e3f2fd;--line:#bbdefb;--ink:#10212b;--mut:#4d6370;--co2:#e53935;--ch4:#ef6c00;--ok:#2e7d32;--bad:#c62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:820px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep);letter-spacing:-.01em}
+h2{font-size:1.2rem;color:var(--deep);margin-bottom:6px;letter-spacing:-.01em}
+h3{font-size:1rem;color:var(--deep);margin:14px 0 6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 12px;font-weight:700;font-size:.86rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.card{border:2px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:var(--deep)}.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.btn.sm{padding:9px 14px;font-size:.92rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas.cena{width:100%;height:auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff;margin-top:10px}
+.top{justify-content:space-between}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--main);color:#fff;border-radius:14px;padding:8px 14px;font-weight:800;font-size:1.05rem}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.tool{border:2px solid var(--line);background:#fff;color:var(--deep);border-radius:12px;padding:9px 12px;font-weight:700;font-family:inherit;font-size:.92rem;cursor:pointer;touch-action:manipulation}
+.tool.on{border-color:var(--main);background:var(--soft)}
+.tool:disabled{opacity:.4}
+.mets{display:grid;gap:8px;margin-top:10px}
+.met{display:grid;grid-template-columns:92px 1fr 52px;gap:8px;align-items:center;font-weight:700;font-size:.9rem}
+.met .bar{position:relative;height:18px;background:#f1f4f5;border-radius:99px;overflow:hidden}
+.met .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;transition:width .15s}
+.met .alvo{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--ink);border-radius:2px}
+.met .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--mut)}
+.met.co2 .fill{background:var(--co2)}.met.ch4 .fill{background:var(--ch4)}
+.saldo .bar{background:linear-gradient(90deg,#e8f5e9 50%,#ffebee 50%)}
+.saldo .zero{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:var(--ink)}
+.saldo .fill{border-radius:0}
+.obj{display:flex;gap:10px;align-items:flex-start;background:#fff8e1;border:2px solid #ffe082;border-radius:14px;padding:10px 12px;margin-top:10px;font-size:.95rem}
+.obj b{color:#8d6e00;white-space:nowrap}
+.acao{display:flex;gap:10px;align-items:center;background:var(--soft);border-left:5px solid var(--main);border-radius:0 12px 12px 0;padding:9px 12px;margin-top:8px;font-weight:600;font-size:.95rem;min-height:42px}
+.acao .dedo{font-size:1.25rem;animation:pulo 1s ease-in-out infinite}
+@keyframes pulo{50%{transform:translateX(4px)}}
+.help{width:34px;height:34px;border-radius:50%;border:2px solid var(--main);background:#fff;color:var(--deep);font-weight:800;font-size:1rem;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(16,33,43,.35);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal .card{max-width:460px;width:100%}
+.intro{text-align:center;padding:26px 18px}
+.intro .ic{font-size:3rem;line-height:1}
+.intro .n{color:var(--mut);font-weight:700;font-size:.85rem;margin-top:8px}
+.passos{display:grid;gap:8px;margin:16px auto;max-width:420px;text-align:left}
+.passos div{display:flex;gap:12px;align-items:center;background:var(--soft);border-radius:12px;padding:10px 14px;font-weight:600}
+.passos b{font-size:1.3rem;min-width:1.6em;text-align:center}
+.res{text-align:center}
+.res .big{font-size:2.6rem;font-weight:800;color:var(--deep);line-height:1.1}
+.res .ok{color:var(--ok);font-weight:800}.res .no{color:var(--bad);font-weight:800}
+.pensa{background:var(--soft);border-radius:14px;padding:12px 14px;margin:14px auto;max-width:520px;text-align:left}
+.pensa b{color:var(--deep)}
+.boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.box{border:2px dashed var(--line);border-radius:14px;padding:10px;min-height:110px;cursor:pointer}
+.box h4{font-size:.92rem;color:var(--deep);margin-bottom:6px}
+.box.alvo{border-color:var(--main);background:var(--soft)}
+.cards{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;min-height:48px}
+.ct{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 11px;font-weight:700;font-size:.9rem;cursor:pointer;box-shadow:0 2px 0 var(--line);font-family:inherit;color:var(--ink);transition:transform .5s}
+.ct.sel{border-color:var(--main);background:var(--soft);transform:translateY(-2px)}
+.ct.certo{border-color:var(--ok);background:#e8f5e9}.ct.errado{border-color:var(--bad);background:#ffebee}
+.ct.movido{animation:voa .8s ease}
+@keyframes voa{0%{transform:translateY(-30px) scale(1.1);opacity:.3}100%{transform:none;opacity:1}}
+.capa{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+.capa canvas{width:100%;height:auto;display:block;border-radius:16px;background:var(--soft)}
+.opts{display:grid;gap:8px;margin-top:6px}
+.opts .l{font-size:.8rem;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.sw{display:flex;gap:6px;flex-wrap:wrap}
+.sw button{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--line);cursor:pointer}
+.sw button.on{box-shadow:0 0 0 3px var(--deep)}
+.sw .tx{width:auto;height:auto;border-radius:10px;padding:6px 10px;font-weight:700;font-size:.85rem;background:#fff;color:var(--deep);font-family:inherit;border:0}
+input.nome{border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit;width:100%}
+input[type=range]{width:100%;accent-color:var(--main)}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:6px}
+.tab th{text-align:left;background:var(--soft);color:var(--deep);padding:7px 6px}
+.tab td{border-bottom:1px solid var(--line);padding:7px 6px;vertical-align:top}
+.guia p,.guia li{font-size:.95rem;margin-bottom:6px}
+.guia ul,.guia ol{padding-left:20px}
+.hab{border-left:5px solid var(--main);background:var(--soft);padding:10px 14px;border-radius:0 12px 12px 0;font-size:.95rem}
+.ref li{font-size:.86rem;color:var(--mut)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+.rel{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center}
+.rel canvas{width:120px;height:120px;border-radius:50%;background:var(--soft)}
+.mini{width:100%;max-width:420px;height:auto;display:block;margin:10px auto 0}
+@media (max-width:620px){.wrap{padding:10px 8px 30px}.card{padding:12px;border-radius:16px}.capa{grid-template-columns:1fr}.met{grid-template-columns:70px 1fr 44px;font-size:.82rem}.chip{font-size:.95rem}.rel{grid-template-columns:80px 1fr}.rel canvas{width:80px;height:80px}}
+@media print{a.hub,header .hud,.ranking,.noprint{display:none!important}.card{border:1px solid #ccc;break-inside:avoid}body{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>Vai Encher?</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF"></span><span class="pill" id="hP"></span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const W=760,H=372;
+function hex(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mix(a,b,t){const A=hex(a),B=hex(b);return`rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`;}
+
+/* ================= AVATAR ================= */
+const PELES=['#f6d3b8','#e3b18b','#c68a5e','#94603e','#5d3b26'];
+const CABS=['#1b1b1b','#4e342e','#8d6e63','#d4a85a','#b5532f'];
+const CAMISAS=['#00838f','#2e7d32','#f9a825','#c62828','#6a1b9a','#37474f'];
+const ESTILOS=[['curto','Curto'],['cacheado','Cacheado'],['longo','Longo'],['coque','Coque'],['raspado','Raspado']];
+const CHAPEUS=[['nenhum','Sem'],['bone','Boné'],['campo','Chapéu']];
+let A={pele:2,cab:0,estilo:'cacheado',camisa:0,chapeu:'campo',nome:''};
+try{const s=JSON.parse(localStorage.getItem('bc_avatar')||'null');if(s)A=Object.assign(A,s);}catch(e){}
+function salvaA(){try{localStorage.setItem('bc_avatar',JSON.stringify(A));}catch(e){}}
+function avatar(c,x,y,s,a,prancheta){
+ c.save();c.translate(x,y);c.scale(s,s);
+ const pele=PELES[a.pele],cab=CABS[a.cab],cam=CAMISAS[a.camisa];
+ if(a.estilo==='longo'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-39,12.5,15,0,0,7);c.fill();c.fillRect(-12.5,-40,25,22);}
+ if(a.estilo==='cacheado'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-40,15,14.5,0,0,7);c.fill();}
+ c.fillStyle=cam;c.beginPath();c.moveTo(-16,0);c.quadraticCurveTo(-17,-21,-6,-25);c.lineTo(6,-25);c.quadraticCurveTo(17,-21,16,0);c.closePath();c.fill();
+ c.fillStyle='rgba(0,0,0,.12)';c.fillRect(-1,-24,2,24);
+ c.fillStyle=pele;c.fillRect(-3.5,-29,7,6);
+ if(prancheta){c.fillStyle='#8d6e63';c.fillRect(4,-19,13,16);c.fillStyle='#fff';c.fillRect(5.5,-17,10,12);c.strokeStyle='#90a4ae';c.lineWidth=.8;for(let i=0;i<4;i++){c.beginPath();c.moveTo(7,-14+i*2.6);c.lineTo(14,-14+i*2.6);c.stroke();}}
+ c.strokeStyle=cam;c.lineWidth=6;c.lineCap='round';c.beginPath();c.moveTo(-11,-20);c.lineTo(-4,-9);c.stroke();
+ c.fillStyle=pele;c.beginPath();c.arc(-3,-8,3,0,7);c.fill();
+ c.fillStyle=pele;c.beginPath();c.ellipse(0,-39,9.5,11,0,0,7);c.fill();
+ c.beginPath();c.arc(-9.4,-38,2.3,0,7);c.arc(9.4,-38,2.3,0,7);c.fill();
+ c.fillStyle=cab;
+ if(a.estilo==='curto'){c.beginPath();c.ellipse(0,-44.5,10,6.8,0,Math.PI,0);c.fill();c.fillRect(-10,-46,2.8,7);c.fillRect(7.2,-46,2.8,7);}
+ if(a.estilo==='cacheado'){for(let i=0;i<13;i++){const an=Math.PI*(.8+i*1.4/12);c.beginPath();c.arc(Math.cos(an)*12,-41+Math.sin(an)*11.5,4.2,0,7);c.fill();}}
+ if(a.estilo==='longo'){c.beginPath();c.ellipse(0,-44.5,10.6,7.2,0,Math.PI,0);c.fill();}
+ if(a.estilo==='coque'){c.beginPath();c.ellipse(0,-44.5,10,6.4,0,Math.PI,0);c.fill();c.beginPath();c.arc(0,-53,5.2,0,7);c.fill();}
+ if(a.estilo==='raspado'){c.globalAlpha=.5;c.beginPath();c.ellipse(0,-44,9.8,6.2,0,Math.PI,0);c.fill();c.globalAlpha=1;}
+ c.fillStyle='#2b2a26';c.beginPath();c.arc(-3.4,-39,1.25,0,7);c.arc(3.4,-39,1.25,0,7);c.fill();
+ c.strokeStyle='#2b2a26';c.lineWidth=1;c.beginPath();c.arc(0,-35.6,2.6,.25,Math.PI-.25);c.stroke();
+ if(a.chapeu==='bone'){c.fillStyle=cam;c.beginPath();c.ellipse(0,-46,10.6,5.8,0,Math.PI,0);c.fill();c.fillRect(-10.6,-47,21.2,2.6);c.beginPath();c.ellipse(8.5,-46.2,8,2.2,0,0,7);c.fill();}
+ if(a.chapeu==='campo'){c.fillStyle='#d7c49e';c.beginPath();c.ellipse(0,-46,16.5,3.6,0,0,7);c.fill();c.beginPath();c.ellipse(0,-48,9.2,6.4,0,Math.PI,0);c.fill();c.fillStyle='#8d6e63';c.fillRect(-9.2,-49,18.4,1.9);}
+ c.restore();
+}
+function pernas(c,x,y,s,a){c.save();c.translate(x,y);c.scale(s,s);c.fillStyle='#455a64';c.fillRect(-11,0,9,20);c.fillRect(2,0,9,20);c.fillStyle='#3e2723';c.fillRect(-12,18,11,4);c.fillRect(1,18,11,4);c.restore();}
+
+/* ================= CENA ================= */
+const CORES={main:'#1565c0',deep:'#0d47a1'};
+function sr(n){const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+function syncMol(){}function partic(){}
+function bola(c,x,y,r,azul){const g=c.createRadialGradient(x-r*.35,y-r*.35,r*.1,x,y,r);if(azul){g.addColorStop(0,'#90caf9');g.addColorStop(1,'#1565c0');}else{g.addColorStop(0,'#eeeeee');g.addColorStop(1,'#9e9e9e');}c.fillStyle=g;c.beginPath();c.arc(x,y,r,0,7);c.fill();}
+function pote(c,x,y,G){c.save();c.fillStyle='rgba(227,242,253,.6)';c.strokeStyle='#90a4ae';c.lineWidth=3;c.beginPath();c.moveTo(x-90,y-150);c.lineTo(x-90,y-20);c.quadraticCurveTo(x-90,y,x-70,y);c.lineTo(x+70,y);c.quadraticCurveTo(x+90,y,x+90,y-20);c.lineTo(x+90,y-150);c.stroke();c.fill();
+ c.fillStyle='#b0bec5';c.fillRect(x-96,y-160,192,12);
+ for(let i=0;i<60;i++){const bx=x-76+(i%10)*17+((Math.floor(i/10))%2)*8,by=y-12-Math.floor(i/10)*16;bola(c,bx,by,7.5,G.urna[i]);}
+ c.restore();}
+function boi(c,x,y,s,dir){c.save();c.translate(x,y);c.scale(s*(dir||1),s);c.fillStyle='#9e9e9e';c.fillRect(-14,-10,4,10);c.fillRect(9,-10,4,10);
+ c.fillStyle='#eceff1';c.strokeStyle='#90a4ae';c.lineWidth=1;c.beginPath();c.ellipse(0,-16,17,8,0,0,7);c.fill();c.stroke();c.beginPath();c.ellipse(5,-23,5,4,0,0,7);c.fill();
+ c.beginPath();c.moveTo(14,-20);c.quadraticCurveTo(22,-22,25,-16);c.lineTo(24,-11);c.quadraticCurveTo(19,-11,15,-13);c.fill();c.fillStyle='#78909c';c.beginPath();c.ellipse(16,-21,3,1.5,-.5,0,7);c.fill();
+ c.fillStyle='#111';c.beginPath();c.arc(20,-17,1,0,7);c.fill();c.fillStyle='#bdbdbd';c.fillRect(-10,-9,4,9);c.fillRect(13,-9,4,9);c.restore();}
+function drawCena(c,G){c.fillStyle='#f7fbff';c.fillRect(0,0,W,H);if(G.desenha)G.desenha(c);}
+/* ================= TELA / LOOP ================= */
+let G=null,S=null,raf=0,ultimo=0,cx=null;
+function laco(ts){const dt=Math.min(.05,(ts-ultimo)/1000||0);ultimo=ts;if(G){G.t+=dt;if(G.upd)G.upd(dt);syncMol(G,dt);partic(G,dt);if(cx)drawCena(cx,G);if(G.extra)G.extra(cx);}raf=requestAnimationFrame(laco);}
+function parar(){cancelAnimationFrame(raf);raf=0;}
+function rodar(){parar();ultimo=performance.now();raf=requestAnimationFrame(laco);}
+function hud(){$('hud').style.display='flex';$('hF').textContent=`Fase ${S.f+1} de ${FASES.length}`;$('hP').textContent=`${Math.max(0,S.tot+S.fp)} pts`;}
+function telaJogo(chip,info){
+ const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><span class="chip" id="chip">${chip}</span><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="acao"><span class="dedo">👉</span><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});
+}
+function acao(t){const e=$('acao');if(e&&e.innerHTML!==t)e.innerHTML=t;}
+function ajuda(){const F=FASES[S.f],d=document.createElement('div');d.className='modal';
+ d.innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn">Entendi</button></div>`;
+ d.onclick=e=>{if(e.target===d||e.target.tagName==='BUTTON')d.remove();};document.body.appendChild(d);}
+function medidor(id,rot,cls,max,alvo){const a=alvo!=null?`<span class="alvo" style="left:${alvo/max*100}%"></span>`:'';return`<div class="met ${cls}" id="${id}" data-max="${max}"><span>${rot}</span><div class="bar"><span class="fill"></span>${a}</div><span class="v"></span></div>`;}
+function poeMed(id,v){const e=$(id);if(!e)return;const m=+e.dataset.max;e.querySelector('.fill').style.width=clamp(v/m*100,0,100)+'%';e.querySelector('.v').textContent=Math.round(v);}
+function poeSaldo(v,max){const e=$('mSaldo');if(!e)return;const f=e.querySelector('.fill'),p=clamp(Math.abs(v)/max*50,0,50);if(v<0){f.style.left=(50-p)+'%';f.style.width=p+'%';f.style.background='#43a047';}else{f.style.left='50%';f.style.width=p+'%';f.style.background='#e53935';}e.querySelector('.v').textContent=(v>0?'+':'')+Math.round(v);}
+
+/* ================= FASES ================= */
+const FASES=[
+ {nome:'Anos no pote',ic:'🫙',obj:'Descobrir, com o menor número de sorteios, a porcentagem de anos com cheia grande. Erro máximo: 10 pontos.',passos:[['🫙','Cada bola é um ano do registro do rio'],['🔵','Azul: cheia grande · ⚪ cinza: cheia normal'],['🎯','Sorteie, estime e confirme']],ini:()=>f1()},
+ {nome:'Quantos anos de registro?',ic:'📏',obj:'Achar o menor registro em que pelo menos 16 de 20 pesquisadores acertam a chance com erro de até 10 pontos.',passos:[['📏','Escolha quantos anos cada pesquisador usa'],['▶','Rode 20 pesquisadores'],['🎯','Veja quantos caem na faixa e responda']],ini:()=>f2()},
+ {nome:'Tirar o gado?',ic:'🐄',obj:'Criar uma regra para tirar o gado antes da cheia e gastar o mínimo em 30 anos.',passos:[['💸','Tirar o gado custa 2 fichas'],['🌊','Se a cheia vier e o gado ficar, a perda é 10 fichas'],['🎚️','Escolha a partir de qual chance você tira o gado']],ini:()=>f3()},
+ {nome:'O que é 70%?',ic:'🎲',obj:'Prever em quantos de 10 anos com previsão de 70% a cheia grande realmente vem.',passos:[['🔢','Escolha um número de 0 a 10'],['▶','Veja os 10 anos acontecerem'],['🔁','São 3 rodadas']],ini:()=>f4()},
+ {nome:'Brigadas no mapa de risco',ic:'🚒',obj:'Durante 6 semanas, pôr 3 brigadas onde a chance de fogo é maior e proteger o máximo de focos.',passos:[['🗺️','Cada região mostra a chance de fogo na semana'],['🚒','Toque em 3 regiões para mandar brigadas'],['▶','Veja onde o fogo apareceu']],ini:()=>f5()}
+];
+function intro(){parar();G=null;cx=null;hud();const F=FASES[S.f];$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><div class="n">FASE ${S.f+1} DE ${FASES.length}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left;max-width:420px;margin:12px auto 0"><b>🎯 Objetivo</b><span>${F.obj}</span></div>
+ <div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn" id="bGo">Começar</button></div>`;
+ $('bGo').onclick=()=>{S.fp=0;F.ini();};}
+function fimFase(pts,ok,oque,pergunta,extraHtml){
+ parar();pts=Math.max(0,Math.round(pts));S.fp=0;S.tot+=pts;S.res[S.f]={pts,ok,oque};hud();
+ $('tela').innerHTML=`<div class="card res"><div class="small">${FASES[S.f].ic} ${FASES[S.f].nome}</div><div class="big">+${pts}</div>
+ <p class="${ok?'ok':'no'}">${ok?'Meta cumprida':'Meta não cumprida'}</p>${extraHtml||''}
+ <div class="pensa"><b>O que aconteceu:</b> ${oque}</div><div class="pensa"><b>Pergunta para a turma:</b> ${pergunta}</div>
+ <div class="row" style="justify-content:center"><button class="btn" id="bNx">${S.f<FASES.length-1?'Próxima fase':'Ver relatório'}</button></div></div>`;
+ $('bNx').onclick=()=>{S.f++;if(S.f<FASES.length)intro();else relatorio();};
+}
+const pct=v=>Math.round(v*100)+'%';
+/* ---------- FASE 1 ---------- */
+function f1(){const p=[.2,.3,.4,.6][Math.floor(Math.random()*4)];const urna=Array.from({length:60},(_,i)=>i<Math.round(p*60));urna.sort(()=>Math.random()-.5);
+ G={t:0,p,urna,sorteios:[],voo:null,est:50};telaJogo('🫙 Anos no pote','0 sorteios');
+ G.desenha=c=>{pote(c,180,330,G);c.fillStyle='#37474f';c.font='800 15px system-ui';c.textAlign='center';c.fillText('Registro do rio: 60 anos',180,160);
+  const n=G.sorteios.length,az=G.sorteios.filter(Boolean).length;c.textAlign='left';c.font='800 15px system-ui';c.fillText('Anos sorteados',330,40);
+  G.sorteios.forEach((b,i)=>bola(c,342+(i%20)*20,62+Math.floor(i/20)*22,8,b));
+  if(n){const f=az/n;c.fillStyle='#37474f';c.font='700 14px system-ui';c.fillText(`🔵 ${az} de ${n} anos = ${pct(f)} com cheia grande`,330,250);
+   c.fillStyle='#e3f2fd';c.fillRect(330,265,400,22);c.fillStyle=CORES.main;c.fillRect(330,265,400*f,22);c.strokeStyle='#90caf9';c.strokeRect(330,265,400,22);}
+  if(G.voo){const v=G.voo,t=Math.min(1,v.t);bola(c,180+(v.x-180)*t,190+(v.y-190)*t-Math.sin(Math.PI*t)*60,9,v.b);}
+  if(G.fim){c.strokeStyle='#c62828';c.lineWidth=3;c.beginPath();c.moveTo(330+400*G.p,258);c.lineTo(330+400*G.p,294);c.stroke();c.fillStyle='#c62828';c.font='700 12px system-ui';c.fillText('verdade: '+pct(G.p),330+400*G.p-30,312);}};
+ const ctrl=()=>{$('ctrl').innerHTML=`<button class="btn sm" id="bS">🫙 Sortear 1 ano</button><button class="btn ghost sm" id="bS5">Sortear 5</button><div style="width:100%"><div class="row top"><b>Minha estimativa</b><span class="pill" id="pv">${G.est}%</span></div><input type="range" id="rg" min="0" max="100" step="5" value="${G.est}"></div><button class="btn sm" id="bOk" ${G.sorteios.length?'':'disabled'}>Confirmar estimativa</button>`;
+  $('rg').oninput=e=>{G.est=+e.target.value;$('pv').textContent=G.est+'%';};
+  const tira=()=>{if(G.fim)return;const b=G.urna[Math.floor(Math.random()*60)];const i=G.sorteios.length;G.voo={b,t:0,x:342+(i%20)*20,y:62+Math.floor(i/20)*22};setTimeout(()=>{G.sorteios.push(b);G.voo=null;$('info').textContent=G.sorteios.length+' sorteios';$('bOk').disabled=false;},450);};
+  $('bS').onclick=tira;$('bS5').onclick=()=>{for(let k=0;k<5;k++)setTimeout(tira,k*500);};
+  $('bOk').onclick=()=>{G.fim=true;const err=Math.abs(G.est/100-G.p)*100,n=G.sorteios.length,ok=err<=10;
+   setTimeout(()=>fimFase(ok?Math.max(40,160-Math.max(0,n-10)*3):Math.max(0,60-err*2),ok,`A verdade era ${pct(G.p)}. Você estimou ${G.est}% com ${n} sorteios (erro de ${Math.round(err)} pontos). Com poucos anos, a estimativa pula muito. Com mais anos, ela fica mais estável.`,'Por que 3 anos de registro não bastam para dizer a chance de cheia grande?'),1800);};};
+ G.upd=dt=>{if(G.voo)G.voo.t+=dt/0.45;};
+ ctrl();acao('Aperte <b>Sortear</b> para tirar anos do pote. Acompanhe a barra. Quando achar que sabe, ajuste a estimativa e confirme.');rodar();}
+/* ---------- FASE 2 ---------- */
+const NS=[5,10,20,50,100];
+function f2(){const p=.3;G={t:0,p,N:10,runs:[],est:[]};telaJogo('📏 Quantos anos de registro?','Chance real: 30%');
+ G.desenha=c=>{const x0=60,x1=720,y0=60,y1=300,px=v=>x0+(x1-x0)*v;c.fillStyle='rgba(76,175,80,.15)';c.fillRect(px(p-.1),y0,px(p+.1)-px(p-.1),y1-y0);
+  c.strokeStyle='#c62828';c.lineWidth=2;c.beginPath();c.moveTo(px(p),y0);c.lineTo(px(p),y1);c.stroke();c.fillStyle='#c62828';c.font='700 12px system-ui';c.textAlign='center';c.fillText('chance real '+pct(p),px(p),y0-8);
+  c.strokeStyle='#b0bec5';c.beginPath();c.moveTo(x0,y1);c.lineTo(x1,y1);c.stroke();c.fillStyle='#4d6370';c.font='12px system-ui';for(let v=0;v<=1.001;v+=.1)c.fillText(pct(v),px(v),y1+18);
+  const pilha={};G.est.forEach((e,i)=>{const k=Math.round(e*100);pilha[k]=(pilha[k]||0)+1;const dentro=Math.abs(e-p)<=.1+1e-9;c.fillStyle=dentro?'#2e7d32':'#ef6c00';c.beginPath();c.arc(px(e),y1-10-(pilha[k]-1)*15,6.5,0,7);c.fill();});
+  c.fillStyle='#37474f';c.font='800 15px system-ui';c.textAlign='left';c.fillText(`Cada bolinha = um pesquisador com ${G.N} anos de registro`,x0,30);};
+ const ctrl=()=>{$('ctrl').innerHTML=`<span class="pill">📏 Anos</span>${NS.map(n=>`<button class="tool${G.N===n?' on':''}" data-n="${n}">${n}</button>`).join('')}<button class="btn sm" id="bR">▶ Rodar 20 pesquisadores</button>`;
+  document.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{G.N=+b.dataset.n;G.est=[];ctrl();acao('Aperte <b>▶ Rodar</b> para ver as estimativas.');});
+  $('bR').onclick=()=>{G.est=[];for(let i=0;i<20;i++){let a=0;for(let k=0;k<G.N;k++)if(Math.random()<p)a++;G.est.push(a/G.N);}const d=G.est.filter(e=>Math.abs(e-p)<=.1+1e-9).length;G.runs.push([G.N,d]);
+   acao(`Com ${G.N} anos, <b>${d} de 20</b> ficaram na faixa verde. ${d>=16?'Passou! Mas será que um registro menor também passa?':'Não passou. Tente mais anos.'}`);resp();};};
+ const resp=()=>{$('mets').innerHTML=`<div class="pensa" style="margin:0;max-width:none"><b>Seus testes:</b> ${G.runs.map(([n,d])=>`${n} anos → ${d}/20`).join(' · ')}</div><div class="row" style="margin-top:8px"><b>O menor registro que funciona é:</b>${NS.map(n=>`<button class="tool" data-r="${n}">${n} anos</button>`).join('')}</div>`;
+  document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{const n=+b.dataset.r,ok=n===50;fimFase(ok?Math.max(60,160-15*Math.max(0,G.runs.length-3)):30,ok,`${ok?'Isso.':'O menor que funciona, na média, é 50 anos.'} Com 5 ou 10 anos, as estimativas se espalham demais. Com 50, a maioria cai perto da chance real. Como cada rodada é sorteada, às vezes um registro menor passa por sorte.`,'Por que registros longos de nível do rio valem tanto para prever cheias?');});};
+ ctrl();acao('Escolha quantos anos cada pesquisador usa e aperte <b>▶ Rodar</b>. Bolinha verde: acertou com erro de até 10 pontos.');resp();rodar();}
+/* ---------- FASE 3 ---------- */
+function custoEsperado(T){let s=0;for(let i=0;i<=10;i++){const p=i/10;s+=p>=T-1e-9?2:p*10;}return s/11;}
+function f3(){G={t:0,T:50,anos:[],tent:0};telaJogo('🐄 Tirar o gado?','30 anos');
+ G.desenha=c=>{c.fillStyle='#e8f5e9';c.fillRect(0,250,W,H-250);c.fillStyle='#4fc3f7';c.fillRect(0,300,W,H-300);
+  for(let i=0;i<7;i++)boi(c,70+i*90,292,1.6,i%2?1:-1);
+  c.fillStyle='#37474f';c.font='800 15px system-ui';c.textAlign='left';c.fillText('Seus 30 anos',20,30);
+  G.anos.forEach((a,i)=>{const x=20+(i%15)*48,y=46+Math.floor(i/15)*90;c.fillStyle='#fff';c.strokeStyle='#bbdefb';c.lineWidth=2;c.beginPath();c.roundRect(x,y,42,80,8);c.fill();c.stroke();
+   c.fillStyle='#37474f';c.font='700 11px system-ui';c.textAlign='center';c.fillText(pct(a.p),x+21,y+15);c.font='18px system-ui';c.fillText(a.tira?'🚚':'🐄',x+21,y+38);c.fillText(a.cheia?'🌊':'☀️',x+21,y+60);
+   c.font='700 11px system-ui';c.fillStyle=a.custo>0?'#c62828':'#2e7d32';c.fillText(a.custo?'-'+a.custo:'0',x+21,y+76);});};
+ const ctrl=()=>{$('ctrl').innerHTML=`<div style="width:100%"><div class="row top"><b>Tiro o gado quando a chance de cheia for de pelo menos</b><span class="pill" id="pv">${G.T}%</span></div><input type="range" id="rg" min="0" max="100" step="10" value="${G.T}"></div><button class="btn sm" id="bR">▶ Rodar 30 anos</button>`;
+  $('rg').oninput=e=>{G.T=+e.target.value;$('pv').textContent=G.T+'%';};
+  $('bR').onclick=()=>{G.tent++;G.anos=[];for(let i=0;i<30;i++){const p=Math.floor(Math.random()*11)/10,cheia=Math.random()<p,tira=p>=G.T/100-1e-9;G.anos.push({p,cheia,tira,custo:tira?2:(cheia?10:0)});}
+   const tot=G.anos.reduce((s,a)=>s+a.custo,0),e=custoEsperado(G.T/100)*30;$('info').textContent=`Gasto: ${tot} fichas`;
+   $('mets').innerHTML=`<div class="pensa" style="margin:0;max-width:none">🚚 tirou · 🐄 ficou · 🌊 veio cheia · ☀️ não veio<br>Gasto nestes 30 anos: <b>${tot} fichas</b>. Na média de muitas repetições, essa regra gasta cerca de <b>${Math.round(e)}</b>.</div><div class="row" style="margin-top:8px"><button class="btn ghost sm" id="bF">Ficar com esta regra</button></div>`;
+   acao('Mude a regra e rode de novo para comparar, ou fique com ela.');
+   $('bF').onclick=()=>{const best=Math.min(...[0,10,20,30,40,50,60,70,80,90,100].map(t=>custoEsperado(t/100))),ok=custoEsperado(G.T/100)<=best+1e-9;
+    fimFase(ok?150:Math.max(20,150-Math.round((custoEsperado(G.T/100)-best)*30*4)),ok,`${ok?'Sua regra é a melhor possível.':`A melhor regra era tirar o gado a partir de 20% ou 30%. Você usou ${G.T}%.`} Como a perda (10) é 5 vezes o custo (2), vale tirar o gado mesmo com chance baixa. Esperar a chance passar de 50% sai caro.`,'Se tirar o gado ficasse muito caro, a regra mudaria para cima ou para baixo?');};};};
+ ctrl();acao('Mexa na régua: a partir de qual chance de cheia você tira o gado? Depois aperte <b>▶ Rodar 30 anos</b>.');rodar();}
+/* ---------- FASE 4 ---------- */
+function f4(){G={t:0,r:0,prev:5,res:[],anos:[],pts:0};telaJogo('🎲 O que é 70%?','Rodada 1 de 3');
+ G.desenha=c=>{c.fillStyle='#37474f';c.font='800 15px system-ui';c.textAlign='left';c.fillText('10 anos com previsão: 70% de chance de cheia grande',20,32);
+  for(let i=0;i<10;i++){const x=30+i*70,y=60,a=G.anos[i];c.fillStyle='#fff';c.strokeStyle='#bbdefb';c.lineWidth=2;c.beginPath();c.roundRect(x,y,60,90,10);c.fill();c.stroke();c.fillStyle='#4d6370';c.font='700 12px system-ui';c.textAlign='center';c.fillText('ano '+(i+1),x+30,y+18);
+   if(a!=null){c.font='30px system-ui';c.fillText(a?'🌊':'☀️',x+30,y+60);}else{c.font='26px system-ui';c.fillText('❔',x+30,y+60);}}
+  if(G.res.length){c.fillStyle='#37474f';c.font='800 14px system-ui';c.textAlign='left';c.fillText('Rodadas: '+G.res.map(r=>`você ${r[0]}, veio ${r[1]}`).join(' · '),20,190);}
+  if(G.hist){const x0=60,y1=360;c.fillStyle='#37474f';c.font='700 13px system-ui';c.fillText('1000 rodadas iguais: quantas cheias vieram em cada uma',x0,222);
+   const mx=Math.max(...G.hist);for(let k=0;k<=10;k++){const h=G.hist[k]/mx*110;c.fillStyle=k===7?CORES.main:'#90caf9';c.fillRect(x0+k*56,y1-h,40,h);c.fillStyle='#4d6370';c.font='12px system-ui';c.textAlign='center';c.fillText(k,x0+k*56+20,y1+16);}}};
+ const ctrl=()=>{$('ctrl').innerHTML=`<div style="width:100%"><div class="row top"><b>Em quantos dos 10 anos a cheia grande vem?</b><span class="pill" id="pv">${G.prev}</span></div><input type="range" id="rg" min="0" max="10" step="1" value="${G.prev}"></div><button class="btn sm" id="bR">▶ Ver os 10 anos</button>`;
+  $('rg').oninput=e=>{G.prev=+e.target.value;$('pv').textContent=G.prev;};
+  $('bR').onclick=()=>{$('bR').disabled=true;G.anos=[];const sai=Array.from({length:10},()=>Math.random()<.7);sai.forEach((v,i)=>setTimeout(()=>{G.anos[i]=v;if(i===9){const n=sai.filter(Boolean).length,d=Math.abs(n-G.prev);G.res.push([G.prev,n]);G.pts+=d<=1?50:d<=2?30:10;S.fp=G.pts;hud();G.r++;
+    acao(`Vieram <b>${n}</b> cheias. Você disse ${G.prev}. ${G.r<3?'Próxima rodada!':'Veja agora o que acontece em 1000 rodadas.'}`);
+    if(G.r<3){$('info').textContent=`Rodada ${G.r+1} de 3`;setTimeout(()=>{G.anos=[];ctrl();},1400);}else{G.hist=Array(11).fill(0);for(let k=0;k<1000;k++){let a=0;for(let j=0;j<10;j++)if(Math.random()<.7)a++;G.hist[a]++;}
+     $('ctrl').innerHTML='<button class="btn sm" id="bF">Concluir</button>';$('bF').onclick=()=>{const ok=G.pts>=100;fimFase(G.pts,ok,'70% quer dizer que, em muitos casos parecidos, a cheia vem em cerca de 7 de cada 10. Numa rodada de 10 anos pode vir 5, 7 ou 9. Ninguém acerta sempre o número exato, mas 7 é o mais comum.','Se a previsão diz 70% e a cheia não vem, a previsão errou?');};}}},i*220));};};
+ ctrl();acao('Escolha em quantos dos 10 anos você acha que a cheia grande vem. Depois aperte <b>▶ Ver os 10 anos</b>.');rodar();}
+/* ---------- FASE 5 ---------- */
+const REG=[[40,40,220,140,'Morraria'],[270,40,220,140,'Baía'],[500,40,240,140,'Chapada'],[40,195,220,140,'Corixo'],[270,195,220,140,'Capão'],[500,195,240,140,'Estrada']];
+function f5(){G={t:0,sem:0,esc:new Set(),fogo:null,prot:0,focos:0,efic:[]};telaJogo('🚒 Brigadas no mapa de risco','Semana 1 de 6');novaSemana();
+ G.desenha=c=>{REG.forEach(([x,y,w,h,n],i)=>{const p=G.risco[i],sel=G.esc.has(i);c.fillStyle=`rgba(${Math.round(255)},${Math.round(235-p*170)},${Math.round(205-p*190)},1)`;c.beginPath();c.roundRect(x,y,w,h,14);c.fill();c.strokeStyle=sel?CORES.main:'#ffe0b2';c.lineWidth=sel?5:2;c.stroke();
+  c.fillStyle='#37474f';c.font='800 15px system-ui';c.textAlign='left';c.fillText(n,x+14,y+24);c.font='800 30px system-ui';c.fillText(pct(p),x+14,y+64);c.font='12px system-ui';c.fillText('chance de fogo',x+14,y+82);
+  if(sel){c.font='28px system-ui';c.fillText('🚒',x+w-50,y+40);}
+  if(G.fogo){const f=G.fogo[i];c.font='30px system-ui';c.textAlign='center';if(f)c.fillText(sel?'🧯':'🔥',x+w-40,y+h-24);}});};
+ G.tap=(x,y)=>{if(G.fogo)return;REG.forEach(([rx,ry,w,h],i)=>{if(x>rx&&x<rx+w&&y>ry&&y<ry+h){if(G.esc.has(i))G.esc.delete(i);else if(G.esc.size<3)G.esc.add(i);ctrl();}});};
+ const ctrl=()=>{$('ctrl').innerHTML=`<span class="pill">🚒 ${3-G.esc.size} brigadas livres</span><button class="btn sm" id="bR" ${G.esc.size===3?'':'disabled'}>▶ Passar a semana</button>`;
+  $('mets').innerHTML=`<div class="small">Focos apagados: ${G.prot} de ${G.focos}</div>`;
+  if($('bR'))$('bR').onclick=()=>{G.fogo=G.risco.map(p=>Math.random()<p);const n=G.fogo.filter(Boolean).length,ap=[...G.esc].filter(i=>G.fogo[i]).length;G.focos+=n;G.prot+=ap;
+   const ch=[...G.esc].reduce((s,i)=>s+G.risco[i],0),top=[...G.risco].sort((a,b)=>b-a).slice(0,3).reduce((s,v)=>s+v,0);G.efic.push(ch/top);
+   acao(`Fogo em ${n} região(ões). Suas brigadas apagaram ${ap}. ${ch>=top-1e-9?'Você escolheu as 3 de maior chance.':'Havia regiões com chance maior sem brigada.'}`);$('mets').innerHTML=`<div class="small">Focos apagados: ${G.prot} de ${G.focos}</div>`;
+   $('ctrl').innerHTML=`<button class="btn sm" id="bN">${G.sem<5?'Próxima semana':'Ver resultado'}</button>`;$('bN').onclick=()=>{G.sem++;if(G.sem<6){novaSemana();$('info').textContent=`Semana ${G.sem+1} de 6`;ctrl();}else{const ef=G.efic.reduce((a,b)=>a+b,0)/6,ok=ef>=.9;
+    fimFase(Math.round(ef*160)+G.prot*5,ok,`Suas escolhas ficaram em ${Math.round(ef*100)}% do melhor possível, e você apagou ${G.prot} de ${G.focos} focos. Escolher as maiores chances é a melhor aposta, mas o fogo às vezes aparece onde a chance era baixa.`,'Se a brigada estava no lugar de maior risco e o fogo apareceu em outro, a decisão foi errada?');}};};};
+ ctrl();acao('Toque em 3 regiões para mandar as brigadas. Depois aperte <b>▶ Passar a semana</b>.');rodar();}
+function novaSemana(){const base=[.1,.2,.3,.5,.6,.8].sort(()=>Math.random()-.5);G.risco=base;G.esc=new Set();G.fogo=null;}
+/* ================= INICIO / AVATAR ================= */
+function inicio(){parar();G=null;cx=null;$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><div class="capa"><canvas id="cA" width="560" height="560"></canvas>
+ <div><h2>Monte seu pesquisador</h2><div class="opts">
+ <div class="l">Pele</div><div class="sw" id="sP">${PELES.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.pele===i?'on':''}" aria-label="pele ${i+1}"></button>`).join('')}</div>
+ <div class="l">Cabelo</div><div class="sw" id="sE">${ESTILOS.map(([k,t])=>`<button class="tx ${A.estilo===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <div class="sw" id="sC">${CABS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.cab===i?'on':''}" aria-label="cor ${i+1}"></button>`).join('')}</div>
+ <div class="l">Camiseta</div><div class="sw" id="sT">${CAMISAS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.camisa===i?'on':''}" aria-label="camiseta ${i+1}"></button>`).join('')}</div>
+ <div class="l">Chapéu</div><div class="sw" id="sH">${CHAPEUS.map(([k,t])=>`<button class="tx ${A.chapeu===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <input class="nome" id="iN" maxlength="20" placeholder="Seu nome" value="${esc(A.nome)}">
+ </div></div></div>
+ <div class="row" style="margin-top:14px"><button class="btn" id="bJ">▶ Jogar as 5 fases</button><button class="btn ghost" id="bG">📘 Guia do professor</button></div>
+ <p class="small" style="margin-top:10px">Ciências da Natureza · Ensino Médio · BNCC EM13CNT205</p></div>`;
+ const pinta=()=>{const c=$('cA').getContext('2d');c.clearRect(0,0,560,560);c.fillStyle='#e3f2fd';c.fillRect(0,0,560,560);c.fillStyle='#bbdefb';c.beginPath();c.arc(280,600,260,0,7);c.fill();avatar(c,280,560,6.4,A,true);};
+ pinta();
+ const liga=(id,f)=>document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{f(b);salvaA();document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b));pinta();});
+ liga('sP',b=>A.pele=+b.dataset.i);liga('sC',b=>A.cab=+b.dataset.i);liga('sT',b=>A.camisa=+b.dataset.i);liga('sE',b=>A.estilo=b.dataset.k);liga('sH',b=>A.chapeu=b.dataset.k);
+ $('iN').oninput=e=>{A.nome=e.target.value;salvaA();};
+ $('bJ').onclick=novo;$('bG').onclick=guia;
+}
+function novo(){S={f:0,tot:0,fp:0,res:[],fichas:0};salvo=false;intro();}
+function relatorio(){parar();G=null;cx=null;$('rankBox').style.display='block';const nome=A.nome.trim()||'Pesquisador';
+ $('tela').innerHTML=`<div class="card"><div class="rel"><canvas id="cR" width="240" height="240"></canvas><div><div class="small">Relatório de campo</div><h2>${esc(nome)}</h2><div class="big" style="font-size:2rem;font-weight:800;color:var(--deep)">${S.tot} pts</div></div></div>
+ <table class="tab" style="margin-top:12px"><tr><th>Fase</th><th>Pontos</th><th>Meta</th></tr>${FASES.map((F,i)=>{const r=S.res[i]||{pts:0,ok:false};return`<tr><td>${F.ic} ${F.nome}</td><td>${r.pts}</td><td>${r.ok?'✓':'✗'}</td></tr>`;}).join('')}</table>
+ <div class="pensa"><b>Para escrever no caderno:</b> explique o que quer dizer "70% de chance de cheia grande" com um exemplo de 10 anos.</div>
+ <div class="savebox noprint"><input id="pName" maxlength="20" value="${esc(nome)}"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row noprint" style="margin-top:12px"><button class="btn ghost" id="bI">🖨️ Imprimir relatório</button><button class="btn ghost" id="bN">Jogar de novo</button><button class="btn ghost" id="bV">Início</button></div></div>`;
+ const c=$('cR').getContext('2d');c.fillStyle='#e3f2fd';c.fillRect(0,0,240,240);avatar(c,120,240,3.2,A,true);
+ $('bS').onclick=()=>salvar('5 fases');$('bI').onclick=()=>window.print();$('bN').onclick=novo;$('bV').onclick=inicio;
+}
+
+/* ================= GUIA DO PROFESSOR ================= */
+function guia(){parar();$('hud').style.display='none';$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card guia">
+ <div class="row top noprint"><button class="btn ghost sm" id="bVt">← Voltar</button><button class="btn sm" id="bPr">🖨️ Imprimir guia</button></div>
+ <h2 style="margin-top:10px">Guia do professor · Vai Encher?</h2>
+ <p class="small">Ensino Médio · Ciências da Natureza e suas Tecnologias · com Matemática e Geografia</p>
+ <h3>Habilidade da BNCC</h3>
+ <div class="hab"><b>EM13CNT205.</b> Interpretar resultados e realizar previsões sobre atividades experimentais, fenômenos naturais e processos tecnológicos, com base nas noções de probabilidade e incerteza, reconhecendo os limites explicativos das ciências.</div>
+ <h3>Objetivos da aula</h3>
+ <ul><li>Estimar uma probabilidade a partir de frequências observadas.</li><li>Perceber que amostras pequenas geram estimativas instáveis.</li><li>Tomar decisões com previsões probabilísticas comparando custo e perda.</li><li>Interpretar corretamente uma previsão como "70% de chance".</li></ul>
+ <h3>Roteiro de 50 minutos</h3>
+ <table class="tab"><tr><th>Tempo</th><th>O que fazer</th></tr>
+ <tr><td>5 min</td><td>Pergunte: o que quer dizer "30% de chance de chuva amanhã"? Anote as respostas no quadro.</td></tr>
+ <tr><td>25 min</td><td>Alunos jogam em duplas e anotam a regra que usaram na fase 3.</td></tr>
+ <tr><td>15 min</td><td>Volte às respostas do início e discuta as perguntas de cada fase.</td></tr>
+ <tr><td>5 min</td><td>Cada dupla escreve a frase do relatório de campo.</td></tr></table>
+ <h3>Fase por fase</h3>
+ <table class="tab"><tr><th>Fase</th><th>O aluno faz</th><th>Pergunta para a turma</th><th>O que explicar</th></tr>
+ <tr><td>1. Anos no pote</td><td>Sorteia anos e estima a chance</td><td>Por que 3 anos não bastam?</td><td>A frequência observada se aproxima da probabilidade quando a amostra cresce.</td></tr>
+ <tr><td>2. Quantos anos de registro?</td><td>Varia o tamanho do registro e vê a dispersão</td><td>Por que registros longos valem tanto?</td><td>A incerteza da estimativa diminui com o tamanho da amostra.</td></tr>
+ <tr><td>3. Tirar o gado?</td><td>Escolhe uma regra de decisão e roda 30 anos</td><td>Se tirar o gado ficasse caro, a regra mudaria?</td><td>Modelo custo e perda: vale agir quando a chance supera a razão entre custo e perda (aqui, 2 sobre 10).</td></tr>
+ <tr><td>4. O que é 70%?</td><td>Prevê quantos de 10 eventos acontecem</td><td>Se der 70% e não vier, a previsão errou?</td><td>A probabilidade se refere a uma classe de casos parecidos, não a um caso só.</td></tr>
+ <tr><td>5. Brigadas no mapa de risco</td><td>Distribui recursos limitados pelo risco</td><td>A decisão foi errada se o fogo veio em outro lugar?</td><td>Uma boa decisão é a que maximiza o resultado esperado. O resultado de um caso isolado não julga a decisão.</td></tr></table>
+ <h3>Avaliação</h3>
+ <p>Use o relatório de campo impresso e a frase escrita por cada dupla. Todos os instrumentos têm o mesmo peso. Observe se o aluno separa a qualidade da decisão do resultado de um caso só.</p>
+ <h3>Sequência de 3 aulas</h3>
+ <ol><li><b>Aula 1.</b> Jogo completo e discussão.</li><li><b>Aula 2.</b> Leitura guiada sobre como as pessoas entendem "30% de chance de chuva" (Gigerenzer et al., 2005).</li><li><b>Aula 3.</b> A turma acompanha por uma semana a previsão de chuva de Cáceres e compara com o que aconteceu.</li></ol>
+ <h3>Cuidado ao explicar</h3>
+ <p>As chances do jogo são inventadas para o modelo e não representam o Pantanal real. Os custos de tirar o gado também são ilustrativos.</p>
+ <h3>Referências</h3>
+ <ul class="ref">
+ <li>Gigerenzer G., Hertwig R., van den Broek E., Fasolo B., Katsikopoulos K.V. 2005. "A 30% chance of rain tomorrow": how does the public understand probabilistic weather forecasts? Risk Analysis 25: 623-629. doi:10.1111/j.1539-6924.2005.00608.x</li>
+ <li>Murphy A.H. 1977. The value of climatological, categorical and probabilistic forecasts in the cost-loss ratio situation. Monthly Weather Review 105: 803-816. doi:10.1175/1520-0493(1977)105&lt;0803:TVOCCA&gt;2.0.CO;2</li></ul>
+ </div>`;
+ $('bVt').onclick=inicio;$('bPr').onclick=()=>window.print();
+}
+
+/* ================= RANKING ================= */
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="vai-encher";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__a={get S(){return S},get G(){return G},FASES,inicio,novo,intro,guia};
+inicio();
+</script>
+</body>
+</html>
