@@ -206,7 +206,7 @@ const FASES=[
  {nome:'Chuva nas bandejas',ic:'🌧️',obj:'Regar as 3 bandejas de terra e descobrir qual cobertura segura melhor o solo.',passos:[['✋','Arraste o regador'],['🌧️','Regue cada bandeja até encher o pote'],['👀','Compare a água que saiu']],ini:()=>f1()},
  {nome:'Minhoca engenheira',ic:'🪱',obj:'Cavar galerias até as 3 raízes e comer 6 restos de folhas em 60 segundos.',passos:[['☝️','Arraste o dedo: a minhoca vai atrás'],['🍂','Coma restos de folhas'],['🌱','Chegue às pontas das raízes']],ini:()=>f2()},
  {nome:'Barreiras no morro',ic:'⛰️',obj:'Colocar 3 barreiras de capim no morro e deixar no máximo 12 baldes de terra chegarem ao rio.',passos:[['🌿','Toque num trecho do morro'],['🌧️','Com 3 barreiras, a chuva cai sozinha'],['🔁','Toque de novo para tirar e mudar']],ini:()=>f3()},
- {nome:'Composteira',ic:'🪣',obj:'Prever o que acontece só com restos de comida e cuidar da composteira por 5 dias.',passos:[['🔮','Faça a previsão'],['🍌','Restos úmidos e plástico: cada um no seu lugar'],['🍂','Um punhado seco para cada resto úmido e revire']],ini:()=>f4()},
+ {nome:'Composteira',ic:'🪣',obj:'Prever o que acontece só com restos de comida e cuidar da composteira por 5 dias.',passos:[['🔮','Faça a previsão'],['🍌','Arraste cada resto para o lugar certo'],['🍂','Deixe o ponteiro no verde e mexa a pilha']],ini:()=>f4()},
  {nome:'Planeje o sítio',ic:'🗺️',obj:'Escolher o uso de cada área do sítio: produzir pelo menos 12, erosão até 8 e mata nas áreas protegidas.',passos:[['👆','Toque numa área para trocar o uso'],['🪙','Cada uso gasta fichas'],['✅','O jogo confere sozinho']],ini:()=>f5()}
 ];
 function intro(){parar();G=null;cx=null;hud();const F=FASES[S.f];$('rankBox').style.display='none';
@@ -338,54 +338,95 @@ function f3(){G={t:0,bar:[0,0,0,0,0,0],run:-1,tent:0,perda:0,fim:0};telaJogo('�
 
 /* ---------- FASE 4 ---------- */
 const DIAS=[['ban','cafe'],['leg','plas','fru'],['cafe','leg','ban'],['fru','lata'],['ban','leg','cafe']];
-const ITEM={ban:['🍌','casca de banana','v'],cafe:['☕','borra de café','v'],leg:['🥕','cascas de legumes','v'],fru:['🍎','restos de frutas','v'],plas:['🧴','frasco de plástico','x'],lata:['🥫','lata','x']};
-function f4(){G={t:0,fase:0,dia:0,mesa:[],v:0,s:0,ar:2,bons:0,carry:null,mov:0,erros:0,mos:[],hist:[],fim:0};telaJogo('🪣 Composteira','previsão');
- const CB=[150,170,240,170],LX=[470,200,120,150],SACO=[640,190,96,120],slot=k=>[60+k*92,62];
- const cheio=()=>Math.min(1,(G.hist.length*2+G.v+G.s)/22);
- G.desenha=c=>{c.fillStyle='#f1f8e9';c.fillRect(0,0,W,H);c.fillStyle='#c5e1a5';c.fillRect(0,330,W,42);
-  c.fillStyle='#bcaaa4';c.beginPath();c.roundRect(20,24,330,80,10);c.fill();c.fillStyle='#8d6e63';c.fillRect(20,96,330,8);c.fillStyle='#4e342e';c.font='800 12px system-ui';c.textAlign='left';c.fillText('🧺 restos da cozinha do dia',30,40);
-  const[x,y,w,h]=CB;c.fillStyle='rgba(0,0,0,.1)';c.beginPath();c.ellipse(x+w/2,y+h+4,w*.55,7,0,0,7);c.fill();
-  c.fillStyle='#efebe9';c.fillRect(x,y,w,h);const lv=cheio()*(h-24);c.save();c.beginPath();c.rect(x+6,y+h-6-lv,w-12,lv);c.clip();c.fillStyle=G.fase>=2&&G.fim?'#3e2723':'#5d4037';c.fillRect(x,y,w,h);
-  G.hist.concat([[G.v,G.s]]).forEach(([v,s],k)=>{const yy=y+h-6-k*(h-24)/11-6;c.fillStyle='rgba(139,195,74,.7)';for(let q=0;q<v*5;q++){c.beginPath();c.arc(x+12+sr(q+k*7)*(w-24),yy-sr(q+k)*12,3,0,7);c.fill();}c.fillStyle='rgba(212,167,44,.8)';for(let q=0;q<s*5;q++){c.fillRect(x+12+sr(q*3+k)*(w-24),yy-sr(q+k*3)*12,7,2);}});c.restore();
-  c.fillStyle='rgba(161,136,127,.45)';for(let k=0;k<5;k++)c.fillRect(x,y+k*(h/5),w,h/5-8);
-  c.strokeStyle='#6d4c41';c.lineWidth=3;c.strokeRect(x,y,w,h);c.fillStyle='#8d6e63';c.fillRect(x-6,y-6,w+12,8);
-  c.fillStyle='#3e2723';c.font='800 14px system-ui';c.textAlign='center';c.fillText('🪣 composteira',x+w/2,y+h+24);
-  G.mos.forEach(m=>{c.fillStyle='#263238';c.beginPath();c.arc(m.x+Math.sin(G.t*9+m.p)*8,m.y+Math.cos(G.t*7+m.p)*5,2.2,0,7);c.fill();});
-  const[lx,ly,lw,lh]=LX;c.fillStyle='#1565c0';c.beginPath();c.roundRect(lx,ly,lw,lh,[6,6,12,12]);c.fill();c.fillStyle='#0d47a1';c.fillRect(lx-6,ly-10,lw+12,14);c.fillStyle='#fff';c.font='800 26px system-ui';c.fillText('♻️',lx+lw/2,ly+70);c.font='800 12px system-ui';c.fillText('reciclagem',lx+lw/2,ly+100);
-  const[sx,sy,sw,sh]=SACO;c.fillStyle='#d7b98e';c.beginPath();c.moveTo(sx+10,sy);c.lineTo(sx+sw-10,sy);c.quadraticCurveTo(sx+sw+6,sy+sh,sx+sw-6,sy+sh);c.lineTo(sx+6,sy+sh);c.quadraticCurveTo(sx-6,sy+sh,sx+10,sy);c.fill();palhas(c,sx+8,sy+4,sx+sw-8,sy+4,3);
-  c.fillStyle='#5d4037';c.font='800 22px system-ui';c.fillText('🍂',sx+sw/2,sy+56);c.font='800 12px system-ui';c.fillText('folhas secas',sx+sw/2,sy+80);c.fillText('e serragem',sx+sw/2,sy+96);
-  if(G.fase===1&&!G.carry){const ok=G.mesa.length===0;if(G.mesa.length)G.mesa.forEach((k,i)=>{const[px,py]=slot(i);pulso(c,px,py,28);});else if(G.s<G.v)pulso(c,sx+sw/2,sy+56,30);}
-  painel(c,380,16,366,92);c.fillStyle='#3e2723';c.textAlign='left';c.font='800 14px system-ui';c.fillText(G.fase===0?'📅 Antes de começar':`📅 Dia ${G.dia+1} de 5   ✅ dias bons: ${G.bons}`,394,38);
-  c.font='700 12px system-ui';c.fillText(`Úmidos hoje: ${'🟢'.repeat(G.v)||'0'}`,394,60);c.fillText(`Secos hoje: ${'🟡'.repeat(G.s)||'0'}`,394,80);
-  c.fillText(`Ar: ${G.ar>=2?'🌬️ bom':G.ar===1?'🌬️ acabando':'⚠️ sem ar'}`,394,100);
-  const b=G.v-G.s,est=b>=2?['encharcada','#c62828']:b<=-2?['seca demais','#ef6c00']:['no ponto','#2e7d32'];c.fillStyle=est[1];c.font='800 13px system-ui';c.fillText('● '+est[0],600,60);
-  G.mesa.forEach((k,i)=>{if(G.carry&&G.carry.i===i)return;const[px,py]=slot(i);c.fillStyle='#fff';c.beginPath();c.roundRect(px-34,py-26,68,52,10);c.fill();c.font='28px system-ui';c.textAlign='center';c.fillText(ITEM[k][0],px,py+10);});
-  if(G.carry){const{x,y,k}=G.carry;c.font='34px system-ui';c.textAlign='center';c.fillText(k==='seco'?'🍂':ITEM[k][0],x,y-48);c.fillStyle='rgba(0,0,0,.6)';c.font='700 12px system-ui';c.fillText(k==='seco'?'punhado seco':ITEM[k][1],x,y-18);}
-  if(G.garfo){c.save();c.translate(G.gx,G.gy-50);c.rotate(.3);c.fillStyle='#8d6e63';c.fillRect(-3,-46,6,40);c.fillStyle='#90a4ae';c.fillRect(-12,-8,24,5);for(let k=-1.5;k<=1.5;k++)c.fillRect(k*7-1.5,-4,3,20);c.restore();}};
- G.upd=dt=>{G.mos.forEach(m=>m.y-=0);};
- const novoDia=()=>{G.mesa=DIAS[G.dia].slice();G.v=0;G.s=0;G.mov=0;G.mexeu=0;render();acao(`Dia ${G.dia+1}: chegaram restos da cozinha. Leve cada um para o lugar certo.`);};
- const render=()=>{if(G.fase!==1)return;$('ctrl').innerHTML=`<button class="btn sm ghost" id="bGa">🍴 Revirar a pilha</button><button class="btn sm" id="bDia">☀️ Terminar o dia</button>`;
-  $('bGa').onclick=()=>{G.garfo=1;G.gx=CB[0]+CB[2]/2;G.gy=CB[1]+70;G.mov=0;acao('Arraste o garfo de um lado para o outro dentro da composteira.');};
-  $('bDia').onclick=fimDia;};
- const fimDia=()=>{if(G.mesa.length){acao('Ainda tem resto em cima da mesa. Leve tudo antes de terminar o dia.');return;}
-  const b=G.v-G.s;let ok=true,msg=[];if(Math.abs(b)>=2){ok=false;msg.push(b>0?'ficou úmida demais: faltou material seco':'ficou seca demais: muito material seco');}
-  G.ar--;if(G.ar<0){ok=false;msg.push('ficou sem ar e começou a cheirar mal: faltou revirar');G.ar=0;}
-  if(ok)G.bons++;else for(let k=0;k<4;k++)G.mos.push({x:rr(CB[0]+20,CB[0]+CB[2]-20),y:rr(CB[1]-30,CB[1]-6),p:rr(0,6)});
-  G.hist.push([G.v,G.s]);acao(ok?`Dia ${G.dia+1}: composteira no ponto. 👍`:`Dia ${G.dia+1}: a composteira ${msg.join(' e ')}.`);G.dia++;
-  if(G.dia>=5){G.fase=2;G.fim=1;$('ctrl').innerHTML='';const win=G.bons>=4;setTimeout(()=>fimFase((win?110:40)+G.bons*15+(G.p1?40:0)-G.erros*10,win,'Restos de comida são úmidos. Sozinhos, eles encharcam a pilha, falta ar e aparecem mau cheiro e moscas. Com material seco junto e a pilha revirada, os micróbios e pequenos bichos do solo transformam tudo em composto escuro, que volta para a terra como adubo. Plástico e lata não viram adubo.','Que restos da merenda da escola poderiam ir para uma composteira?'),1600);}
-  else setTimeout(novoDia,1400);};
- const dentro=(x,y,[a,b,w,h])=>x>a&&x<a+w&&y>b-20&&y<b+h;
- ptr((x,y)=>{if(G.fase!==1)return;if(G.garfo){G.drag=1;G.gx=x;G.gy=y;G.lx=x;return;}
-  const i=G.mesa.findIndex((k,i)=>{const[px,py]=slot(i);return Math.abs(x-px)<40&&Math.abs(y-py)<34;});
-  if(i>=0)G.carry={i,k:G.mesa[i],x,y};else if(dentro(x,y,SACO))G.carry={k:'seco',x,y};},'pointerdown');
- ptr((x,y)=>{if(G.garfo&&G.drag){G.gx=x;G.gy=y;if(dentro(x,y-50,CB)){G.mov+=Math.abs(x-G.lx);if(G.mov>420){G.garfo=0;G.drag=0;G.ar=2;acao('Pilha revirada: entrou ar. 🌬️');}}G.lx=x;}if(G.carry){G.carry.x=x;G.carry.y=y;}});
- ptr((x,y)=>{G.drag=0;if(!G.carry)return;const{k,i}=G.carry;G.carry=null;const px=x,py=y-48;
-  if(k==='seco'){if(dentro(px,py,CB)){G.s++;acao(G.s<G.v?'Um punhado seco. 🍂':'Úmido e seco equilibrados. Revire a pilha quando o ar acabar e termine o dia.');}return;}
-  const t=ITEM[k][2];if(dentro(px,py,CB)){if(t==='v'){G.v++;G.mesa.splice(i,1);acao(`${ITEM[k][1]} na composteira. Para cada resto úmido, um punhado seco 🍂 do saco.`);}else{G.erros++;acao(`${ITEM[k][1]} não vira adubo. Leve para a reciclagem.`);}}
-  else if(dentro(px,py,LX)){if(t==='x'){G.mesa.splice(i,1);acao(`${ITEM[k][1]} na reciclagem. ♻️`);}else{G.erros++;acao(`${ITEM[k][1]} vira adubo. Leve para a composteira.`);}}},'pointerup');
- opcoes('Se a composteira receber só restos de comida, o que acontece?',['Vira adubo bem mais rápido e sem cheiro','Fica encharcada e com cheiro ruim','Nada muda na composteira'],(o)=>{G.p1=o===1;G.fase=1;$('info').textContent='5 dias';
-  acao(G.p1?'Boa previsão: restos de comida têm muita água. Vamos testar.':'Vamos testar: restos de comida têm muita água.');setTimeout(novoDia,1300);});
- acao('Faça sua previsão.');rodar();}
+const ITEM={ban:['🍌','Casca de banana','v'],cafe:['☕','Borra de café','v'],leg:['🥕','Cascas de legumes','v'],fru:['🍎','Restos de frutas','v'],plas:['🧴','Frasco de plástico','x'],lata:['🥫','Lata','x']};
+const BITC={ban:'#f9d34a',cafe:'#3b2418',leg:'#ef8a2e',fru:'#d84343'};
+function f4(){G={t:0,fase:0,dia:0,fila:[],u:0,uN:0,ar:2,bons:0,carry:null,garfo:0,mov:0,bits:[],n:0,mos:[],noite:0,fim:0,erros:0,passo:''};telaJogo('🪣 Composteira','previsão');
+ const BIN=[40,150,280,202],REC=[592,196,128,156],SACO=[414,222,112,128],FORK=[338,176],CARD=[470,84];
+ const guiado=()=>G.dia<2;
+ const alturaPilha=()=>Math.min(150,84+G.n*4);
+ const topo=(x,h)=>330-h*Math.max(0,1-((x-180)/122)**2);
+ const dentro=(x,y,[a,b,w,h])=>x>a&&x<a+w&&y>b-24&&y<b+h;
+ const gauge=c=>{painel(c,16,12,290,116);c.textAlign='center';
+  const cx=92,cy=96,r=54,zon=[['#f0b454',Math.PI,Math.PI*4/3],['#66bb6a',Math.PI*4/3,Math.PI*5/3],['#5aa9e6',Math.PI*5/3,Math.PI*2]];
+  zon.forEach(([cor,a,b])=>{c.strokeStyle=cor;c.lineWidth=14;c.beginPath();c.arc(cx,cy,r,a+.02,b-.02);c.stroke();});
+  const ang=Math.PI+clamp((G.uN+3)/6,0,1)*Math.PI;c.strokeStyle='#3e2723';c.lineWidth=4;c.lineCap='round';c.beginPath();c.moveTo(cx,cy);c.lineTo(cx+Math.cos(ang)*(r-6),cy+Math.sin(ang)*(r-6));c.stroke();c.lineCap='butt';
+  c.fillStyle='#3e2723';c.beginPath();c.arc(cx,cy,6,0,7);c.fill();c.font='18px system-ui';c.fillText('🍂',cx-r-4,cy+22);c.fillText('💦',cx+r+4,cy+22);
+  c.font='800 16px system-ui';c.fillText('umidade',cx,cy+24);
+  const ax=236;c.font='800 16px system-ui';c.fillText('ar',ax,cy+24);for(let k=0;k<2;k++){const on=G.ar>k;c.fillStyle=on?(G.ar===1?'#f0b454':'#66bb6a'):'#e0e0e0';c.beginPath();c.roundRect(ax-42+k*44,44+(1-k)*20,40,52-(1-k)*20,8);c.fill();}
+  c.font='22px system-ui';c.fillText(G.ar===0?'😷':'🌬️',ax,34);};
+ const pilha=c=>{const h=alturaPilha(),mat=Math.min(1,G.dia/5+(G.fim?1:0));
+  c.save();c.beginPath();c.moveTo(BIN[0]+14,330);for(let x=BIN[0]+14;x<=BIN[0]+BIN[2]-14;x+=6)c.lineTo(x,topo(x,h));c.lineTo(BIN[0]+BIN[2]-14,340);c.lineTo(BIN[0]+14,340);c.closePath();
+  const g=c.createLinearGradient(0,330-h,0,340);g.addColorStop(0,mix('#8a6a4c','#4a3428',mat));g.addColorStop(1,mix('#5d4532','#2e2019',mat));c.fillStyle=g;c.fill();c.clip();
+  pintas(c,BIN[0],330-h,BIN[2],h+10,11,90);
+  G.bits.forEach(b=>{const yt=topo(b.x,h),y=yt+6+b.p*(330-yt-6),a=Math.max(0,1-(G.dia-b.d)*.28-(G.fim?1:0));if(a<=0)return;c.globalAlpha=a;
+   if(b.k==='s'){c.strokeStyle='#d4a72c';c.lineWidth=2.2;c.beginPath();c.moveTo(b.x-7,y-2);c.lineTo(b.x+7,y+2);c.stroke();if(b.f)folhaSeca(c,b.x+4,y-4,b.f,'#c9893a');}
+   else{c.fillStyle=BITC[b.k];if(b.k==='ban'){c.beginPath();c.ellipse(b.x,y,8,3,b.r,0,7);c.fill();}else{c.beginPath();c.arc(b.x,y,b.k==='cafe'?2.4:3.6,0,7);c.fill();c.beginPath();c.arc(b.x+5,y+2,2.4,0,7);c.fill();}}
+   c.globalAlpha=1;});c.restore();};
+ const caixa=(c,frente)=>{const[x,y,w,h]=BIN;if(!frente){c.fillStyle='rgba(0,0,0,.12)';c.beginPath();c.ellipse(x+w/2,y+h+4,w*.56,8,0,0,7);c.fill();
+   c.fillStyle='#8d6e63';c.fillRect(x+8,y,w-16,h-6);c.fillStyle='rgba(0,0,0,.18)';for(let k=1;k<6;k++)c.fillRect(x+8,y+k*(h/6),w-16,2);
+   return;}
+  for(let k=0;k<1;k++){const py=y+h-40;const g=c.createLinearGradient(0,py,0,py+34);g.addColorStop(0,'#c49a6c');g.addColorStop(1,'#a67c52');c.fillStyle=g;c.beginPath();c.roundRect(x,py,w,34,4);c.fill();
+   c.strokeStyle='rgba(110,70,40,.35)';c.lineWidth=1;for(let q=0;q<3;q++){c.beginPath();c.moveTo(x+6,py+9+q*8);c.bezierCurveTo(x+w*.3,py+5+q*8,x+w*.6,py+13+q*8,x+w-6,py+8+q*8);c.stroke();}
+   c.fillStyle='#6d4c41';[[x+10,py+17],[x+w-10,py+17]].forEach(([a,b])=>{c.beginPath();c.arc(a,b,2.5,0,7);c.fill();});}
+  c.fillStyle='#8d6e63';c.fillRect(x-4,y-4,10,h+8);c.fillRect(x+w-6,y-4,10,h+8);
+  c.fillStyle='#fff';c.font='800 17px system-ui';c.textAlign='center';c.fillText('COMPOSTEIRA',x+w/2,y+h-17);};
+ const saco=c=>{const[x,y,w,h]=SACO;c.fillStyle='rgba(0,0,0,.1)';c.beginPath();c.ellipse(x+w/2,y+h+3,w*.5,6,0,0,7);c.fill();
+  c.save();c.translate(x,y);palhas(c,10,4,w-10,4,2);[[22,-4,.6],[56,-8,-.4],[84,-2,1.1]].forEach(([a,b,r])=>folhaSeca(c,a,b,r,'#c9893a'));
+  const g=c.createLinearGradient(0,0,w,0);g.addColorStop(0,'#c8a978');g.addColorStop(1,'#a8874f');c.fillStyle=g;c.beginPath();c.moveTo(8,6);c.quadraticCurveTo(w/2,14,w-8,6);c.quadraticCurveTo(w+8,h*.6,w-4,h);c.lineTo(4,h);c.quadraticCurveTo(-8,h*.6,8,6);c.fill();
+  c.strokeStyle='rgba(90,60,30,.25)';c.lineWidth=1;for(let q=0;q<8;q++){c.beginPath();c.moveTo(6,24+q*13);c.lineTo(w-6,24+q*13);c.stroke();}
+  c.fillStyle='#fffdf7';c.beginPath();c.roundRect(14,h*.42,w-28,34,6);c.fill();c.fillStyle='#5d4037';c.font='800 16px system-ui';c.textAlign='center';c.fillText('🍂 SECOS',w/2,h*.42+23);c.restore();};
+ const recic=c=>{const[x,y,w,h]=REC;c.fillStyle='rgba(0,0,0,.12)';c.beginPath();c.ellipse(x+w/2,y+h+3,w*.55,6,0,0,7);c.fill();
+  const g=c.createLinearGradient(x,0,x+w,0);g.addColorStop(0,'#1e88e5');g.addColorStop(1,'#1565c0');c.fillStyle=g;c.beginPath();c.moveTo(x+6,y+14);c.lineTo(x+w-6,y+14);c.lineTo(x+w-14,y+h);c.lineTo(x+14,y+h);c.closePath();c.fill();
+  c.fillStyle='#0d47a1';c.beginPath();c.roundRect(x-2,y,w+4,18,6);c.fill();c.fillStyle='rgba(255,255,255,.18)';c.fillRect(x+20,y+24,8,h-36);
+  c.font='34px system-ui';c.textAlign='center';c.fillText('♻️',x+w/2,y+82);c.fillStyle='#fff';c.font='800 15px system-ui';c.fillText('RECICLAGEM',x+w/2,y+116);};
+ const garfo=(c,x,y,ang)=>{c.save();c.translate(x,y);c.rotate(ang);c.fillStyle='#8d6e63';c.beginPath();c.roundRect(-4,-120,8,110,3);c.fill();c.fillStyle='#6d4c41';c.fillRect(-9,-124,18,8);
+  c.fillStyle='#90a4ae';c.fillRect(-16,-12,32,6);for(let k=0;k<4;k++){c.beginPath();c.roundRect(-15+k*10,-8,4,34,2);c.fill();}c.restore();};
+ const cartao=(c,k,x,y,sombra)=>{c.save();c.shadowColor='rgba(0,0,0,.18)';c.shadowBlur=sombra?18:10;c.shadowOffsetY=4;c.fillStyle='#fff';c.beginPath();c.roundRect(x-66,y-52,132,104,16);c.fill();c.restore();
+  c.font='50px system-ui';c.textAlign='center';c.fillText(ITEM[k][0],x,y+10);c.fillStyle='#3e2723';c.font='800 14px system-ui';c.fillText(ITEM[k][1],x,y+40);};
+ G.desenha=c=>{const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,'#fbf8f3');g.addColorStop(1,'#efe9df');c.fillStyle=g;c.fillRect(0,0,W,H);c.fillStyle='#e3d9c8';c.fillRect(0,348,W,24);
+  caixa(c,false);pilha(c);caixa(c,true);saco(c);recic(c);
+  if(!(G.garfo&&G.drag))garfo(c,FORK[0],FORK[1]+170,.18);
+  G.mos.forEach(m=>{const x=m.x+Math.sin(G.t*8+m.p)*14,y=m.y+Math.cos(G.t*6+m.p)*8;c.fillStyle='rgba(180,200,220,.7)';c.beginPath();c.ellipse(x-3,y-3,3,2,-.6,0,7);c.ellipse(x+3,y-3,3,2,.6,0,7);c.fill();c.fillStyle='#263238';c.beginPath();c.arc(x,y,2.6,0,7);c.fill();});
+  gauge(c);
+  const k=G.fila[0];if(k&&!(G.carry&&G.carry.k===k)){c.fillStyle='#8d6e63';c.font='800 13px system-ui';c.textAlign='center';c.fillText('CHEGOU DA COZINHA',CARD[0],22);cartao(c,k,CARD[0],CARD[1]);}
+  if(guiado()&&G.fase===1){const alvo=G.passo==='item'?(G.carry?(ITEM[G.carry.k][2]==='v'?[180,250]:[656,270]):CARD):G.passo==='seco'?(G.carry?[180,250]:[470,286]):G.passo==='ar'?(G.garfo&&G.drag?[180,262]:[FORK[0]+12,FORK[1]+60]):null;if(alvo)pulso(c,alvo[0],alvo[1],34);}
+  if(G.carry){const{x,y,k}=G.carry;if(k==='seco'){c.save();c.translate(x,y-56);palhas(c,-26,0,26,0,G.n);folhaSeca(c,-8,-6,.5,'#c9893a');folhaSeca(c,10,-4,-.7,'#d17a22');c.restore();}else cartao(c,k,x,y-60,1);}
+  if(G.garfo&&G.drag){garfo(c,G.gx,G.gy-40,Math.sin(G.t*10)*.08);const p=Math.min(1,G.mov/520);c.strokeStyle='#66bb6a';c.lineWidth=6;c.beginPath();c.arc(G.gx,G.gy-180,16,-Math.PI/2,-Math.PI/2+p*6.283);c.stroke();}
+  if(G.noite>0){const a=Math.sin(Math.min(1,G.noite/1.8)*Math.PI);c.fillStyle=`rgba(26,35,64,${.62*a})`;c.fillRect(0,0,W,H);c.globalAlpha=a;c.fillStyle='#fff';c.font='800 34px system-ui';c.textAlign='center';c.fillText(G.fim?'🌱 semanas depois':`🌙 Dia ${G.dia+1}`,W/2,H/2);if(G.fim){c.font='700 18px system-ui';c.fillText('o composto está pronto',W/2,H/2+32);}c.globalAlpha=1;}};
+ G.upd=dt=>{G.uN+=(G.u-G.uN)*Math.min(1,dt*6);if(G.noite>0){G.noite-=dt;if(G.noite<=0){G.noite=0;G.cbN&&G.cbN();}}};
+ const info=()=>$('info').textContent=`Dia ${G.dia+1} de 5 · ✅ ${G.bons}`;
+ const proximo=()=>{if(G.fila.length){G.passo='item';const k=G.fila[0];acao(guiado()?`Chegou: ${ITEM[k][1].toLowerCase()}. Arraste o cartão para o lugar certo.`:`Chegou: ${ITEM[k][1].toLowerCase()}.`);return;}
+  if(guiado()){if(G.u>0){G.passo='seco';acao(`O ponteiro foi para o azul: a pilha está úmida. Arraste ${G.u===1?'um punhado':G.u+' punhados'} de folhas secas do saco para a composteira.`);return;}
+   if(G.ar<=1){G.passo='ar';acao('O ar está acabando 🟨. Pegue o garfo e mexa a pilha de um lado para o outro.');return;}
+   G.passo='';acao('Tudo certo por hoje. ✅');setTimeout(fimDia,900);return;}
+  G.passo='';acao('Agora é com você: olhe a umidade e o ar antes de fechar o dia.');$('ctrl').innerHTML='<button class="btn" id="bDia">🌙 Fechar o dia</button>';$('bDia').onclick=fimDia;};
+ const novoDia=()=>{G.fila=DIAS[G.dia].slice();G.u=0;$('ctrl').innerHTML='';info();
+  if(G.dia===2)acao('Do dia 3 em diante, ninguém vai avisar. Use o que aprendeu.');setTimeout(proximo,G.dia===2?1800:0);};
+ const fimDia=()=>{if(G.fila.length||G.noite)return;$('ctrl').innerHTML='';const prob=[];
+  if(G.u>=2)prob.push('ficou úmida demais e começou a cheirar mal');if(G.u<=-2)prob.push('ficou seca demais e parou de decompor');
+  G.ar=Math.max(0,G.ar-1);if(G.ar===0)prob.push('ficou sem ar');
+  if(prob.length){for(let k=0;k<3;k++)G.mos.push({x:rr(80,280),y:rr(150,200),p:rr(0,6)});acao(`Dia ${G.dia+1}: a pilha ${prob.join(' e ')}. 🪰`);}else{G.bons++;acao(`Dia ${G.dia+1}: pilha no ponto. ✅`);}
+  info();G.dia++;
+  if(G.dia>=5){G.fim=1;G.noite=2.6;G.cbN=()=>{const win=G.bons>=4;fimFase((win?110:40)+G.bons*15+(G.p1?40:0)-G.erros*8,win,'Restos de comida são úmidos. Sozinhos, eles encharcam a pilha, falta ar e aparecem mau cheiro e moscas. Com material seco junto e a pilha revirada, micróbios e pequenos bichos do solo transformam tudo em composto escuro, que volta para a terra como adubo. Plástico e lata não viram adubo.','Que restos da merenda da escola poderiam ir para uma composteira?');};}
+  else{G.noite=1.8;G.cbN=()=>{if(G.ar===0)G.ar=0;novoDia();};}};
+ const addBits=(k,d)=>{for(let q=0;q<5;q++)G.bits.push({k,x:rr(70,290),p:Math.random(),r:rr(0,3),d:G.dia,f:k==='s'&&q%2?rr(0,3):0});G.n++;};
+ ptr((x,y)=>{if(G.fase!==1||G.noite)return;
+  if(Math.abs(x-FORK[0]-12)<34&&y>FORK[1]&&y<FORK[1]+190){G.garfo=1;G.drag=1;G.gx=x;G.gy=y;G.lx=x;G.mov=0;return;}
+  if(G.fila.length&&Math.abs(x-CARD[0])<70&&Math.abs(y-CARD[1])<56){G.carry={k:G.fila[0],x,y};return;}
+  if(dentro(x,y,SACO))G.carry={k:'seco',x,y};},'pointerdown');
+ ptr((x,y)=>{if(G.garfo&&G.drag){G.gx=x;G.gy=y;if(x>60&&x<300&&y-40>150&&y-40<360)G.mov+=Math.abs(x-G.lx);G.lx=x;
+   if(G.mov>=520){G.garfo=0;G.drag=0;G.ar=2;acao('Pilha revirada: entrou ar. 🌬️');if(guiado())setTimeout(proximo,700);}}
+  if(G.carry){G.carry.x=x;G.carry.y=y;}});
+ ptr((x,y)=>{if(G.garfo){G.garfo=0;G.drag=0;if(G.mov<520&&G.mov>0)acao('Mexa mais: arraste o garfo de um lado para o outro dentro da pilha até o círculo verde fechar.');return;}
+  if(!G.carry)return;const{k}=G.carry;G.carry=null;const px=x,py=y-56;
+  if(k==='seco'){if(dentro(px,py,BIN)){G.u--;addBits('s');if(guiado()&&G.passo==='seco'){if(G.u>0)acao(`Isso. Mais ${G.u===1?'um punhado':G.u+' punhados'}.`);else{acao('Ponteiro no verde. 👍');setTimeout(proximo,700);}}else if(!guiado())acao(G.u<-1?'Seco demais! O ponteiro foi para o laranja.':'Um punhado seco na pilha.');}return;}
+  const t=ITEM[k][2];
+  if(dentro(px,py,BIN)){if(t==='v'){G.fila.shift();G.u++;addBits(k);acao(`${ITEM[k][1]} na composteira.`);setTimeout(proximo,600);}else{G.erros++;acao(`${ITEM[k][1]} não vira adubo. Leve para a reciclagem ♻️.`);}}
+  else if(dentro(px,py,REC)){if(t==='x'){G.fila.shift();acao(`${ITEM[k][1]} na reciclagem. ♻️`);setTimeout(proximo,600);}else{G.erros++;acao(`${ITEM[k][1]} vira adubo. Leve para a composteira.`);}}},'pointerup');
+ for(let i=0;i<4;i++)addBits(['ban','leg','s','s'][i]);G.n=0;
+ opcoes('Se a composteira receber só restos de comida, o que acontece?',['Vira adubo bem mais rápido e sem cheiro','Fica encharcada e com cheiro ruim','Nada muda na composteira'],(o)=>{G.p1=o===1;G.fase=1;$('ctrl').innerHTML='';
+  acao(G.p1?'Boa previsão: restos de comida têm muita água. Vamos cuidar da composteira por 5 dias.':'Restos de comida têm muita água. Vamos cuidar da composteira por 5 dias e ver.');setTimeout(novoDia,1800);});
+ acao('Antes de começar, faça sua previsão.');rodar();}
 
 /* ---------- FASE 5 ---------- */
 const USOS=[['vazio','sem uso',0,0,0],['mata','🌳 mata',1,0,0],['pasto','🐄 pasto',1,2,1],['conv','🚜 lavoura sem cobertura',1,3,3],['direto','🌾 plantio direto na palha',2,3,1],['horta','🥬 horta com composto',2,4,1]];
