@@ -419,7 +419,7 @@ TL.posLobo=function(l){const ry=TL.ry(),rw=TL.rw(),k=TL.k(),top=ry-l.lado*(rw/2+
  if(t<1)return {x:v[0]*k,y:top+(cerY-top)*t,a:l.lado>0?1.57:-1.57};
  const along=Math.abs(v[v.length-1]-v[0])*k,ta=along/70;if(t<1+ta){const u=(t-1)/ta,x=(v[0]+(v[v.length-1]-v[0])*u)*k;return {x,y:cerY,a:v[v.length-1]>v[0]?0:3.14};}
  const u=t-1-ta,x=v[v.length-1]*k,y=cerY+(ry+l.lado*(rw/2+40)-cerY)*Math.min(1,u/1.2),a=l.lado>0?1.57:-1.57;
- if(l.d.tipo==='pas'){if(u>=1.2)return null;return {x,y,a,dentro:Math.abs(y-ry)<rw/2+12};}
+ if(l.d.tipo==='pas'){if(u>=1.2)return null;return {x,y,a,sob:1,dentro:Math.abs(y-ry)<rw/2+7};}
  if(l.morre&&u>.45)return {x,y:ry-l.lado*rw*.15,f:2};if(u<1.2)return {x,y,a};return null;};
 /* ---------- fase 3 e 4: obras ---------- */
 TL.ini_pass=function(g){g.pas=[];g.cer=[];g.sim=0;g.res=null;g.lobos=[];g.cars=[];g.tc=0;g.gap=1.4;};
@@ -500,7 +500,9 @@ TL.draw=function(g){const F=TL.F[S.f],m=MOB(),D=TL.dock(),k=TL.k(),ry=TL.ry();
  if(F.tipo==='pass'||F.tipo==='cerca'){for(const c of g.cars)TL.carro(c);for(const [a,b] of g.cer)TL.cercaD(a,b,F.tipo==='cerca'&&!g.pas.some(p=>p>=a-.05&&p<=b+.05));
   if(g.mk&&!g.sim&&!g.drag){const mx=Math.max(...g.mk,1),rw=TL.rw();for(let i=0;i<TL.KM;i++)if(g.mk[i]){cx.fillStyle='rgba(198,40,40,'+(.15+.45*g.mk[i]/mx)+')';cx.fillRect(i*k+2,ry-rw/2+2,k-4,rw-4);cx.fillStyle='#fff';cx.font='bold 11px system-ui';cx.textAlign='center';cx.fillText(g.mk[i]+' ✕',i*k+k/2,ry+4);}}
   for(const p of g.pas)TL.passagem(p*k,TL.hs.slice(0,2).some(h=>Math.abs(h.x-p)<.7));if(g.drag){cx.fillStyle='rgba(78,52,46,.12)';cx.fillRect(0,ry-44,W,88);}
-  for(const l of g.lobos||[]){if(l.t<0)continue;const P=TL.posLobo(l);if(!P)continue;if(P.f===2){cx.fillStyle='#c62828';cx.font='bold 18px system-ui';cx.textAlign='center';cx.fillText('✕',P.x,P.y+6);continue;}if(P.dentro){cx.fillStyle='rgba(46,125,50,.85)';cx.beginPath();cx.arc(P.x,TL.ry()-TL.rw()/2-8,5,0,7);cx.arc(P.x,TL.ry()+TL.rw()/2+8,5,0,7);cx.fill();continue;}loboTop(cx,P.x,P.y,m?36:40,P.a,g.t*8+l.x0*3,1);}
+  for(const l of g.lobos||[]){if(l.t<0)continue;const P=TL.posLobo(l);if(!P)continue;if(P.f===2){cx.fillStyle='#c62828';cx.font='bold 18px system-ui';cx.textAlign='center';cx.fillText('✕',P.x,P.y+6);continue;}if(P.sob){const ry=TL.ry(),rw=TL.rw();if(P.dentro){cx.fillStyle='rgba(46,125,50,.85)';cx.beginPath();cx.arc(P.x,ry-rw/2-7,5,0,7);cx.fill();cx.beginPath();cx.arc(P.x,ry+rw/2+7,5,0,7);cx.fill();}
+   /* o lobo entra no túnel: some tudo que estiver entre as duas bocas da passagem */cx.save();cx.beginPath();cx.rect(0,0,W,ry-rw/2-7);cx.rect(0,ry+rw/2+7,W,H);cx.clip();loboTop(cx,P.x,P.y,m?36:40,P.a,g.t*8+l.x0*3,1);cx.restore();continue;}
+   loboTop(cx,P.x,P.y,m?36:40,P.a,g.t*8+l.x0*3,1);}
   if(g.sim===1){let np=0,nm=0,nv=0;for(const l of g.lobos)if(l.t>=TL.fimL(l)){if(l.d.tipo==='pas')np++;else if(l.morre)nm++;else nv++;}const t='pela passagem '+np+'   ·   cruzou a pista e escapou '+nv+'   ·   atropelado '+nm,tm='passagem '+np+' · escapou '+nv+' · atropelado '+nm;TL.rotulo(m?tm:t,D.y-(m?62:40));}
   TL.painel(D);const B=TL.btObra();
   if(F.tipo==='pass'){TL.botao(B.a,'LIMPAR',g.pas.length>0,'#6d4c41');TL.botao(B.b,'SIMULAR 400',g.pas.length>=2);if(!m){cx.textAlign='left';cx.fillStyle='#37474f';cx.font='bold 13px system-ui';cx.fillText('Passagens: '+g.pas.length+' de 2',D.x+16,D.y+D.h/2+5);}}
