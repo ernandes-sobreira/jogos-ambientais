@@ -42,7 +42,7 @@ canvas.cena{width:100%;height:auto;display:block;border:2px solid var(--line);bo
 .saldo .fill{border-radius:0}
 .obj{display:flex;gap:10px;align-items:flex-start;background:#fff8e1;border:2px solid #ffe082;border-radius:14px;padding:10px 12px;margin-top:10px;font-size:.95rem}
 .obj b{color:#8d6e00;white-space:nowrap}
-.acao{display:flex;gap:10px;align-items:center;background:var(--soft);border-left:5px solid var(--main);border-radius:0 12px 12px 0;padding:9px 12px;margin-top:8px;font-weight:600;font-size:.95rem;min-height:42px}
+.acao{display:flex;gap:10px;align-items:center;background:var(--soft);border-left:5px solid var(--main);border-radius:0 12px 12px 0;padding:9px 12px;margin-top:8px;font-weight:600;font-size:.95rem;min-height:64px}@media(max-width:640px){.acao{min-height:5.4em}}
 .acao .dedo{font-size:1.25rem;animation:pulo 1s ease-in-out infinite}
 @keyframes pulo{50%{transform:translateX(4px)}}
 .help{width:34px;height:34px;border-radius:50%;border:2px solid var(--main);background:#fff;color:var(--deep);font-weight:800;font-size:1rem;cursor:pointer}
@@ -211,7 +211,7 @@ function poeSaldo(v,max){const e=$('mSaldo');if(!e)return;const f=e.querySelecto
 /* ================= FASES ================= */
 const FASES=[
  {nome:'Olhe a água do rio',ic:'🔎',obj:'Achar com a lupa as 4 coisas misturadas na água do rio.',passos:[['✋','Arraste a lupa pelo copo'],['🔎','Pare em cima do que achar'],['📒','Veja como separar cada uma']],ini:()=>f1()},
- {nome:'Deixe descansar',ic:'⏳',obj:'Achar o menor tempo para a areia e o barro assentarem no fundo do copo.',passos:[['⏳','Escolha o tempo'],['👀','Veja o que desce'],['✅','Confira']],ini:()=>f2()},
+ {nome:'Deixe descansar',ic:'⏳',obj:'Achar o menor tempo para a areia e a terra irem para o fundo do copo.',passos:[['⏳','Toque num tempo'],['👀','Veja o que desce'],['✅','Ache o menor tempo com tudo no fundo']],ini:()=>f2()},
  {nome:'Coagulante na medida',ic:'🧪',obj:'Deixar a água com turbidez até 10 sem passar do limite de alumínio que pode ficar na água.',passos:[['🧪','Escolha a dose de coagulante'],['🌀','Os flocos juntam a sujeira'],['⚖️','Pouco não limpa, muito deixa alumínio']],ini:()=>f3()},
  {nome:'Transparente é segura?',ic:'🔮',obj:'Prever se a água limpinha pode ter micróbios, e achar a dose de cloro que chega até a última casa.',passos:[['🔮','Faça a previsão'],['🧫','Veja no microscópio'],['🧴','Escolha a dose de cloro']],ini:()=>f4()},
  {nome:'Monte a estação',ic:'🏭',obj:'Colocar as 5 etapas da estação de tratamento na ordem certa e levar água limpa às casas.',passos:[['👆','Toque nas etapas na ordem'],['▶','Ligue a estação'],['🚰','Veja a água chegar']],ini:()=>f5()}
@@ -234,41 +234,47 @@ function painel(c,x,y,w,h){c.fillStyle='rgba(255,255,255,.95)';c.beginPath();c.r
 function texto(c,t,x,y,w,lh){const ws=t.split(' ');let l='';for(const p of ws){if(c.measureText(l+p).width>w){c.fillText(l,x,y);y+=lh;l='';}l+=p+' ';}c.fillText(l,x,y);return y;}
 /* ---------- FASE 1 ---------- */
 const ACH=[['folhas','Folhas e galhos','Boiam e são grandes. Separa com grade ou peneira.',[190,88]],['areia','Areia','Pesada, vai para o fundo. Separa deixando descansar: decantação.',[190,285]],['barro','Barro fino','Fica boiando e deixa a água turva. Precisa de coagulante e filtro.',[130,185]],['micro','Micróbios','Invisíveis a olho nu. Precisa de cloro para matar.',[250,150]]];
-function f1(){G={t:0,ach:{},sel:null,selT:0};telaJogo('🔎 Olhe a água','0 de 4');
- const BX=40,BY=50,BW=230,BH=250,ZX=335,ZY=190,ZR=58;
- const zoom=(c,k)=>{c.save();c.beginPath();c.arc(ZX,ZY,ZR,0,7);c.clip();c.fillStyle=k==='folhas'?'#cfe8f3':corAgua(55);c.fillRect(ZX-ZR,ZY-ZR,ZR*2,ZR*2);
-  if(k==='folhas'){[[-22,-10,.4],[14,-18,-.3],[0,14,.1],[24,16,.7]].forEach(([dx,dy,r])=>{c.save();c.translate(ZX+dx,ZY+dy);c.rotate(r);c.fillStyle='#6d8b3a';c.beginPath();c.ellipse(0,0,20,8,0,0,7);c.fill();c.strokeStyle='#4e6b25';c.lineWidth=1.5;c.beginPath();c.moveTo(-18,0);c.lineTo(18,0);c.stroke();c.restore();});}
-  if(k==='barro'){c.fillStyle='#8d6e4e';for(let n=0;n<70;n++){c.beginPath();c.arc(ZX-ZR+sr(n)*ZR*2,ZY-ZR+sr(n+7)*ZR*2,1.4+sr(n+2),0,7);c.fill();}}
-  if(k==='micro'){c.fillStyle='#e1f5fe';c.fillRect(ZX-ZR,ZY-ZR,ZR*2,ZR*2);for(let n=0;n<7;n++)microbio(c,ZX-38+sr(n*5)*76,ZY-38+sr(n*3+1)*76,2.4,n%2,G.t);}
-  if(k==='areia'){for(let n=0;n<16;n++){c.fillStyle=['#d7b98e','#c9a46b','#e2c79c'][n%3];c.beginPath();c.ellipse(ZX-40+sr(n)*80,ZY-40+sr(n+4)*80,9+sr(n+1)*5,7+sr(n+2)*4,sr(n)*3,0,7);c.fill();c.strokeStyle='#a88758';c.lineWidth=1;c.stroke();}}
-  c.restore();c.strokeStyle='#455a64';c.lineWidth=6;c.beginPath();c.arc(ZX,ZY,ZR,0,7);c.stroke();c.strokeStyle='#5d4037';c.lineWidth=9;c.lineCap='round';c.beginPath();c.moveTo(ZX+ZR*.72,ZY+ZR*.72);c.lineTo(ZX+ZR*1.15,ZY+ZR*1.15);c.stroke();c.lineCap='butt';};
+function f1(){G={t:0,ach:{},fx:345,fy:330,drag:false,perto:null};telaJogo('🔎 Olhe a água','0 de 4');
+ const BX=40,BY=50,BW=230,BH=250,LR=52;const lente=()=>[G.fx,G.fy-78];
+ const conteudo=(c,k,X,Y,R)=>{c.fillStyle=k==='folhas'?'#cfe8f3':k==='micro'?'#e1f5fe':corAgua(55);c.fillRect(X-R,Y-R,R*2,R*2);
+  if(!k){c.fillStyle='rgba(141,110,78,.5)';for(let n=0;n<30;n++){c.beginPath();c.arc(X-R+sr(n)*R*2,Y-R+sr(n+7)*R*2,1.3,0,7);c.fill();}return;}
+  if(k==='folhas'){[[-20,-10,.4],[14,-16,-.3],[0,14,.1],[22,14,.7]].forEach(([dx,dy,r])=>{c.save();c.translate(X+dx,Y+dy);c.rotate(r);c.fillStyle='#6d8b3a';c.beginPath();c.ellipse(0,0,19,8,0,0,7);c.fill();c.strokeStyle='#4e6b25';c.lineWidth=1.5;c.beginPath();c.moveTo(-17,0);c.lineTo(17,0);c.stroke();c.restore();});}
+  if(k==='barro'){c.fillStyle='#8d6e4e';for(let n=0;n<70;n++){c.beginPath();c.arc(X-R+sr(n)*R*2,Y-R+sr(n+7)*R*2,1.4+sr(n+2),0,7);c.fill();}}
+  if(k==='micro'){for(let n=0;n<7;n++)microbio(c,X-34+sr(n*5)*68,Y-34+sr(n*3+1)*68,2.3,n%2,G.t);}
+  if(k==='areia'){for(let n=0;n<16;n++){c.fillStyle=['#d7b98e','#c9a46b','#e2c79c'][n%3];c.beginPath();c.ellipse(X-38+sr(n)*76,Y-38+sr(n+4)*76,9+sr(n+1)*5,7+sr(n+2)*4,sr(n)*3,0,7);c.fill();c.strokeStyle='#a88758';c.lineWidth=1;c.stroke();}}};
  G.desenha=c=>{c.fillStyle='#f3f8fb';c.fillRect(0,0,W,H);bequer(c,BX,BY,BW,BH,55,{areia:22,folhas:[{x:50,r:.3},{x:120,r:-.4},{x:180,r:.1}]});
-  ACH.forEach(([k,,,[x,y]])=>{const ok=G.ach[k];const pul=1+.15*Math.sin(G.t*5);c.fillStyle=ok?'rgba(46,125,50,.9)':'rgba(255,255,255,.95)';c.beginPath();c.arc(x,y,22*(ok?1:pul),0,7);c.fill();c.strokeStyle=ok?'#2e7d32':'#0288d1';c.lineWidth=3;c.stroke();
-   c.font="20px system-ui";c.textAlign="center";c.fillStyle="#fff";c.fillText(ok?'✓':'🔎',x,y+6);});
-  if(G.sel){const a=ACH.find(q=>q[0]===G.sel);c.strokeStyle='rgba(2,136,209,.6)';c.lineWidth=2;c.setLineDash([5,4]);c.beginPath();c.moveTo(a[3][0],a[3][1]);c.lineTo(ZX-ZR,ZY);c.stroke();c.setLineDash([]);zoom(c,G.sel);
-   c.fillStyle='#01579b';c.font='800 14px system-ui';c.textAlign='center';c.fillText(a[1],ZX,ZY+ZR+38);}
-  else{c.fillStyle='#90a4ae';c.font='700 13px system-ui';c.textAlign='center';c.fillText('toque numa 🔎',ZX,ZY+4);c.strokeStyle='#cfd8dc';c.lineWidth=4;c.beginPath();c.arc(ZX,ZY,ZR,0,7);c.stroke();}
+  ACH.forEach(([k,,,[x,y]])=>{if(G.ach[k]){c.fillStyle='rgba(46,125,50,.9)';c.beginPath();c.arc(x,y,13,0,7);c.fill();c.fillStyle='#fff';c.font='800 14px system-ui';c.textAlign='center';c.fillText('✓',x,y+5);}else{c.strokeStyle=`rgba(2,136,209,${.35+.3*Math.sin(G.t*4)})`;c.lineWidth=3;c.beginPath();c.arc(x,y,16,0,7);c.stroke();}});
   painel(c,420,30,330,300);c.fillStyle='#263238';c.font='800 16px system-ui';c.textAlign='left';c.fillText('📒 O que tem na água',436,56);let y=86;
-  ACH.forEach(([k,n,d])=>{const ok=G.ach[k];c.fillStyle=ok?'#0277bd':'#b0bec5';c.font='800 14px system-ui';c.fillText((ok?'✅ ':'⬜ ')+(ok?n:'???'),436,y);if(ok){c.fillStyle='#455a64';c.font='600 12px system-ui';y=texto(c,d,458,y+18,280,15);}y+=30;});};
- G.tap=(x,y)=>{const a=ACH.find(([k,,,[hx,hy]])=>Math.hypot(x-hx,y-hy)<42);if(!a)return;G.sel=a[0];if(!G.ach[a[0]]){G.ach[a[0]]=1;const n=Object.keys(G.ach).length;$('info').textContent=`${n} de 4`;acao(`${a[1]}: ${a[2]}`);
-  if(n===4&&!G.fim){G.fim=1;setTimeout(()=>fimFase(150,true,'A água do rio é uma mistura heterogênea: folhas, areia, barro fino e micróbios. Cada parte tem um tamanho e um peso diferentes, e por isso cada uma precisa de um jeito diferente de ser separada.','Por que não dá para tirar os micróbios com uma peneira?'),2200);}}};
- acao('Toque nas 4 lupas que piscam no copo para ver de perto o que tem na água.');rodar();}
+  ACH.forEach(([k,n,d])=>{const ok=G.ach[k];c.fillStyle=ok?'#0277bd':'#b0bec5';c.font='800 14px system-ui';c.fillText((ok?'✅ ':'⬜ ')+(ok?n:'???'),436,y);if(ok){c.fillStyle='#455a64';c.font='600 12px system-ui';y=texto(c,d,458,y+18,280,15);}y+=30;});
+  const[lx,ly]=lente();c.strokeStyle='#5d4037';c.lineWidth=11;c.lineCap='round';c.beginPath();c.moveTo(lx,ly+LR);c.lineTo(G.fx,G.fy+6);c.stroke();c.lineCap='butt';
+  c.save();c.beginPath();c.arc(lx,ly,LR,0,7);c.clip();const dentro=lx>BX&&lx<BX+BW&&ly>BY+28&&ly<BY+BH;if(dentro)conteudo(c,G.perto,lx,ly,LR);else{c.fillStyle='rgba(255,255,255,.4)';c.fillRect(lx-LR,ly-LR,LR*2,LR*2);}c.restore();
+  c.strokeStyle='#37474f';c.lineWidth=7;c.beginPath();c.arc(lx,ly,LR,0,7);c.stroke();c.fillStyle='rgba(255,255,255,.35)';c.beginPath();c.ellipse(lx-18,ly-20,12,6,-.6,0,7);c.fill();
+  if(G.perto){const a=ACH.find(q=>q[0]===G.perto);c.fillStyle='#01579b';c.font='800 14px system-ui';c.textAlign='center';const tw=c.measureText(a[1]).width+16;c.fillStyle='rgba(255,255,255,.95)';c.beginPath();c.roundRect(lx-tw/2,ly-LR-28,tw,22,8);c.fill();c.fillStyle='#01579b';c.fillText(a[1],lx,ly-LR-12);}
+  if(!G.mexeu){c.fillStyle='#0288d1';c.font='800 13px system-ui';c.textAlign='center';c.fillText('arraste a lupa ☝️',G.fx,G.fy+30);}};
+ G.upd=dt=>{const[lx,ly]=lente();const a=ACH.find(([k,,,[x,y]])=>Math.hypot(lx-x,ly-y)<44);G.perto=a?a[0]:null;
+  if(a&&!G.ach[a[0]]){G.ach[a[0]]=1;const n=Object.keys(G.ach).length;$('info').textContent=`${n} de 4`;acao(`${a[1]}: ${a[2]}`);
+   if(n===4&&!G.fim){G.fim=1;setTimeout(()=>fimFase(150,true,'A água do rio é uma mistura heterogênea: folhas, areia, barro fino e micróbios. Cada parte tem um tamanho e um peso diferentes, e por isso cada uma precisa de um jeito diferente de ser separada.','Por que não dá para tirar os micróbios com uma peneira?'),2200);}}};
+ const move=(x,y)=>{G.fx=clamp(x,30,400);G.fy=clamp(y,120,365);G.mexeu=1;};
+ ptr((x,y)=>{if(x<410){G.drag=true;move(x,y);}},'pointerdown');ptr((x,y)=>{if(G.drag)move(x,y);});ptr(()=>G.drag=false,'pointerup');
+ acao('Arraste a lupa pelo copo. Os círculos azuis mostram onde olhar: superfície, meio, um ponto da água e o fundo.');rodar();}
 /* ---------- FASE 2 ---------- */
-function f2(){G={t:0,min:0,alvo:0,tent:0};telaJogo('⏳ Deixe descansar','');const TEMPOS=[0,1,2,5,10,20,30,60];
- const est=m=>({areia:Math.min(1,m/2),silte:Math.min(1,m/20),turb:8+40*(1-Math.min(1,m/2))*.4+30*(1-Math.min(1,m/20))+22});
- G.desenha=c=>{c.fillStyle='#f3f8fb';c.fillRect(0,0,W,H);const e=est(G.min);
-  const parts=[];for(let i=0;i<60;i++){const tipo=i<20?'a':i<40?'s':'b';const f=tipo==='a'?e.areia:tipo==='s'?e.silte:0;const y0=60+sr(i)*170,y=y0+(258-y0)*f;parts.push([30+sr(i+9)*200,y,tipo]);}
-  bequer(c,80,40,250,260,e.turb,{areia:4+16*e.areia,lodo:2+10*e.silte});
-  parts.forEach(([x,y,t])=>{if(t==='b')return;c.fillStyle=t==='a'?'#c9a46b':'#8d6e4e';c.beginPath();c.arc(80+x,y+40-40,t==='a'?3:2,0,7);c.fill();});
-  painel(c,380,40,370,260);c.fillStyle='#263238';c.font='800 30px system-ui';c.textAlign='left';c.fillText(`⏳ ${G.min} min`,400,90);c.font='700 15px system-ui';
-  c.fillStyle=e.areia>=1?'#2e7d32':'#ef6c00';c.fillText(`Areia: ${e.areia>=1?'no fundo ✅':'descendo...'}`,400,134);c.fillStyle=e.silte>=1?'#2e7d32':'#ef6c00';c.fillText(`Barro: ${e.silte>=1?'no fundo ✅':'descendo...'}`,400,162);
-  c.fillStyle='#6d4c41';c.fillText('Barro bem fininho: continua boiando',400,190);c.fillStyle='#546e7a';c.font='600 12px system-ui';texto(c,'O barro bem fininho é leve demais para descer sozinho. Ele deixa a água turva mesmo depois de muito tempo.',400,222,330,16);};
- G.upd=dt=>{if(G.min<G.alvo){G.min=Math.min(G.alvo,G.min+dt*Math.max(2,G.alvo/1.5));G.min=Math.round(G.min*10)/10;}};
- const ctrl=()=>{$('ctrl').innerHTML=`<div style="width:100%"><b>⏳ Quanto tempo esperar?</b><div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">${TEMPOS.slice(1).map(m=>`<button class="tool" data-m="${m}">${m} min</button>`).join('')}</div></div><button class="btn sm" id="bR">Conferir</button>`;
-  document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{G.min=0;G.alvo=+b.dataset.m;G.esc=G.alvo;});
-  $('bR').onclick=()=>{if(G.esc==null)return;G.tent++;const e=est(G.esc);if(e.silte<1)acao(`Com ${G.esc} min o barro ainda não desceu. Espere mais.`);else if(G.esc>20)acao('Desceu, mas dá para esperar menos.');
-   else fimFase(Math.max(60,170-20*(G.tent-1)),true,'Em 2 minutos a areia já foi para o fundo. O barro levou uns 20 minutos. Mas o barro bem fininho não desce sozinho, e a água continua turva. Esse jeito de separar deixando descansar se chama decantação.','O que poderia fazer o barro fininho descer mais rápido?');};};
- ctrl();acao('Escolha um tempo e veja a água descansar. Depois aperte <b>Conferir</b>.');rodar();}
+function f2(){G={t:0,min:0,alvo:0,esc:null,tent:0,fim:0};telaJogo('⏳ Deixe descansar','menor tempo');const TEMPOS=[1,2,5,10,20,30,60];
+ const est=m=>({areia:Math.min(1,m/2),terra:Math.min(1,m/20)});
+ G.desenha=c=>{c.fillStyle='#f3f8fb';c.fillRect(0,0,W,H);const e=est(G.min);const turb=20+25*(1-e.areia)+30*(1-e.terra);
+  bequer(c,60,40,250,270,turb,{areia:4+14*e.areia,lodo:2+10*e.terra});
+  for(let n=0;n<60;n++){const tipo=n<25?'a':'t';const f=tipo==='a'?e.areia:e.terra;const y0=90+sr(n)*170,yy=y0+(292-y0)*f;c.fillStyle=tipo==='a'?'#c9a46b':'#7b5e40';c.beginPath();c.arc(80+sr(n+9)*210,yy,tipo==='a'?3.4:2.2,0,7);c.fill();}
+  c.fillStyle='rgba(255,255,255,.95)';c.beginPath();c.arc(185,24,0,0,7);c.fill();
+  painel(c,350,30,400,290);c.fillStyle='#263238';c.font='800 34px system-ui';c.textAlign='left';c.fillText(`⏳ ${Math.round(G.min)} min`,370,80);
+  const linha=(y,ok,ic,txt)=>{c.fillStyle=ok?'#e8f5e9':'#fff3e0';c.beginPath();c.roundRect(366,y-22,368,34,8);c.fill();c.fillStyle=ok?'#2e7d32':'#ef6c00';c.font='800 16px system-ui';c.fillText(`${ok?'✅':'⏳'} ${ic} ${txt}`,378,y);};
+  linha(124,e.areia>=1,'🟡','Areia: '+(e.areia>=1?'já está no fundo':'descendo'));linha(166,e.terra>=1,'🟤','Terra: '+(e.terra>=1?'já está no fundo':'descendo'));
+  c.fillStyle='#eceff1';c.beginPath();c.roundRect(366,186,368,34,8);c.fill();c.fillStyle='#607d8b';c.font='800 16px system-ui';c.fillText('🌫️ Barro fininho: não desce sozinho',378,208);
+  c.fillStyle='#546e7a';c.font='600 13px system-ui';texto(c,'Meta: o menor tempo com ✅ na areia e na terra. O barro fininho vai ficar turvo de qualquer jeito: ele é assunto da próxima fase.',370,250,350,17);};
+ G.upd=dt=>{if(G.min<G.alvo){G.min=Math.min(G.alvo,G.min+dt*Math.max(3,G.alvo/1.2));if(G.min>=G.alvo&&!G.fim)avalia();}};
+ const avalia=()=>{G.tent++;const e=est(G.esc);if(e.terra<1)acao(`Com ${G.esc} min a terra ainda não chegou ao fundo. Escolha um tempo maior.`);else if(G.esc>20)acao(`Com ${G.esc} min tudo desceu, mas desceu antes disso. Tente um tempo menor.`);
+  else{G.fim=1;setTimeout(()=>fimFase(Math.max(60,170-15*(G.tent-1)),true,'Em 2 minutos a areia já foi para o fundo. A terra levou 20 minutos. O barro bem fininho não desce sozinho, e a água continua turva. Separar deixando a água descansar se chama decantação.','O que poderia fazer o barro fininho descer mais rápido?'),1200);acao('Isso! 20 minutos é o menor tempo.');}};
+ $('ctrl').innerHTML=`<div style="width:100%"><b>⏳ Toque num tempo para deixar a água descansar</b><div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">${TEMPOS.map(m=>`<button class="tool" data-m="${m}">${m} min</button>`).join('')}</div></div>`;
+ document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{if(G.fim)return;document.querySelectorAll('[data-m]').forEach(o=>{o.style.background='';o.style.color='';});b.style.background='var(--main)';b.style.color='#fff';G.min=0;G.esc=+b.dataset.m;G.alvo=G.esc;acao('Descansando...');});
+ acao('Toque num tempo. A água vai descansar e você vê o que desce.');rodar();}
 /* ---------- FASE 3 ---------- */
 function f3(){G={t:0,d:0,tent:0,an:0,fl:[]};telaJogo('🧪 Coagulante','');
  const turb=d=>80*Math.exp(-.9*d)+3,alu=d=>.03*Math.pow(d,1.5);
