@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pirâmide de Energia</title>
+<style>
+:root{--main:#558b2f;--deep:#33691e;--soft:#f1f8e9;--line:#dcedc8;--ink:#10212b;--mut:#4d6370;--co2:#e53935;--ch4:#ef6c00;--ok:#2e7d32;--bad:#c62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:820px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep);letter-spacing:-.01em}
+h2{font-size:1.2rem;color:var(--deep);margin-bottom:6px;letter-spacing:-.01em}
+h3{font-size:1rem;color:var(--deep);margin:14px 0 6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 12px;font-weight:700;font-size:.86rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.card{border:2px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:var(--deep)}.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.btn.sm{padding:9px 14px;font-size:.92rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas.cena{width:100%;height:auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff;margin-top:10px}
+.top{justify-content:space-between}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--main);color:#fff;border-radius:14px;padding:8px 14px;font-weight:800;font-size:1.05rem}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.tool{border:2px solid var(--line);background:#fff;color:var(--deep);border-radius:12px;padding:9px 12px;font-weight:700;font-family:inherit;font-size:.92rem;cursor:pointer;touch-action:manipulation}
+.tool.on{border-color:var(--main);background:var(--soft)}
+.tool:disabled{opacity:.4}
+.mets{display:grid;gap:8px;margin-top:10px}
+.met{display:grid;grid-template-columns:92px 1fr 52px;gap:8px;align-items:center;font-weight:700;font-size:.9rem}
+.met .bar{position:relative;height:18px;background:#f1f4f5;border-radius:99px;overflow:hidden}
+.met .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;transition:width .15s}
+.met .alvo{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--ink);border-radius:2px}
+.met .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--mut)}
+.met.co2 .fill{background:var(--co2)}.met.ch4 .fill{background:var(--ch4)}
+.saldo .bar{background:linear-gradient(90deg,#e8f5e9 50%,#ffebee 50%)}
+.saldo .zero{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:var(--ink)}
+.saldo .fill{border-radius:0}
+.obj{display:flex;gap:10px;align-items:flex-start;background:#fff8e1;border:2px solid #ffe082;border-radius:14px;padding:10px 12px;margin-top:10px;font-size:.95rem}
+.obj b{color:#8d6e00;white-space:nowrap}
+.acao{display:flex;gap:10px;align-items:center;background:var(--soft);border-left:5px solid var(--main);border-radius:0 12px 12px 0;padding:9px 12px;margin-top:8px;font-weight:600;font-size:.95rem;min-height:42px}
+.acao .dedo{font-size:1.25rem;animation:pulo 1s ease-in-out infinite}
+@keyframes pulo{50%{transform:translateX(4px)}}
+.help{width:34px;height:34px;border-radius:50%;border:2px solid var(--main);background:#fff;color:var(--deep);font-weight:800;font-size:1rem;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(16,33,43,.35);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal .card{max-width:460px;width:100%}
+.intro{text-align:center;padding:26px 18px}
+.intro .ic{font-size:3rem;line-height:1}
+.intro .n{color:var(--mut);font-weight:700;font-size:.85rem;margin-top:8px}
+.passos{display:grid;gap:8px;margin:16px auto;max-width:420px;text-align:left}
+.passos div{display:flex;gap:12px;align-items:center;background:var(--soft);border-radius:12px;padding:10px 14px;font-weight:600}
+.passos b{font-size:1.3rem;min-width:1.6em;text-align:center}
+.res{text-align:center}
+.res .big{font-size:2.6rem;font-weight:800;color:var(--deep);line-height:1.1}
+.res .ok{color:var(--ok);font-weight:800}.res .no{color:var(--bad);font-weight:800}
+.pensa{background:var(--soft);border-radius:14px;padding:12px 14px;margin:14px auto;max-width:520px;text-align:left}
+.pensa b{color:var(--deep)}
+.boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.box{border:2px dashed var(--line);border-radius:14px;padding:10px;min-height:110px;cursor:pointer}
+.box h4{font-size:.92rem;color:var(--deep);margin-bottom:6px}
+.box.alvo{border-color:var(--main);background:var(--soft)}
+.cards{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;min-height:48px}
+.ct{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 11px;font-weight:700;font-size:.9rem;cursor:pointer;box-shadow:0 2px 0 var(--line);font-family:inherit;color:var(--ink);transition:transform .5s}
+.ct.sel{border-color:var(--main);background:var(--soft);transform:translateY(-2px)}
+.ct.certo{border-color:var(--ok);background:#e8f5e9}.ct.errado{border-color:var(--bad);background:#ffebee}
+.ct.movido{animation:voa .8s ease}
+@keyframes voa{0%{transform:translateY(-30px) scale(1.1);opacity:.3}100%{transform:none;opacity:1}}
+.capa{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+.capa canvas{width:100%;height:auto;display:block;border-radius:16px;background:var(--soft)}
+.opts{display:grid;gap:8px;margin-top:6px}
+.opts .l{font-size:.8rem;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.sw{display:flex;gap:6px;flex-wrap:wrap}
+.sw button{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--line);cursor:pointer}
+.sw button.on{box-shadow:0 0 0 3px var(--deep)}
+.sw .tx{width:auto;height:auto;border-radius:10px;padding:6px 10px;font-weight:700;font-size:.85rem;background:#fff;color:var(--deep);font-family:inherit;border:0}
+input.nome{border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit;width:100%}
+input[type=range]{width:100%;accent-color:var(--main)}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:6px}
+.tab th{text-align:left;background:var(--soft);color:var(--deep);padding:7px 6px}
+.tab td{border-bottom:1px solid var(--line);padding:7px 6px;vertical-align:top}
+.guia p,.guia li{font-size:.95rem;margin-bottom:6px}
+.guia ul,.guia ol{padding-left:20px}
+.hab{border-left:5px solid var(--main);background:var(--soft);padding:10px 14px;border-radius:0 12px 12px 0;font-size:.95rem}
+.ref li{font-size:.86rem;color:var(--mut)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+.rel{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center}
+.rel canvas{width:120px;height:120px;border-radius:50%;background:var(--soft)}
+.mini{width:100%;max-width:420px;height:auto;display:block;margin:10px auto 0}
+@media (max-width:620px){.wrap{padding:10px 8px 30px}.card{padding:12px;border-radius:16px}.capa{grid-template-columns:1fr}.met{grid-template-columns:70px 1fr 44px;font-size:.82rem}.chip{font-size:.95rem}.rel{grid-template-columns:80px 1fr}.rel canvas{width:80px;height:80px}}
+@media print{a.hub,header .hud,.ranking,.noprint{display:none!important}.card{border:1px solid #ccc;break-inside:avoid}body{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>Pirâmide de Energia</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF"></span><span class="pill" id="hP"></span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const W=760,H=372;
+function hex(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mix(a,b,t){const A=hex(a),B=hex(b);return`rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`;}
+
+/* ================= AVATAR ================= */
+const PELES=['#f6d3b8','#e3b18b','#c68a5e','#94603e','#5d3b26'];
+const CABS=['#1b1b1b','#4e342e','#8d6e63','#d4a85a','#b5532f'];
+const CAMISAS=['#00838f','#2e7d32','#f9a825','#c62828','#6a1b9a','#37474f'];
+const ESTILOS=[['curto','Curto'],['cacheado','Cacheado'],['longo','Longo'],['coque','Coque'],['raspado','Raspado']];
+const CHAPEUS=[['nenhum','Sem'],['bone','Boné'],['campo','Chapéu']];
+let A={pele:2,cab:0,estilo:'cacheado',camisa:0,chapeu:'campo',nome:''};
+try{const s=JSON.parse(localStorage.getItem('bc_avatar')||'null');if(s)A=Object.assign(A,s);}catch(e){}
+function salvaA(){try{localStorage.setItem('bc_avatar',JSON.stringify(A));}catch(e){}}
+function avatar(c,x,y,s,a,prancheta){
+ c.save();c.translate(x,y);c.scale(s,s);
+ const pele=PELES[a.pele],cab=CABS[a.cab],cam=CAMISAS[a.camisa];
+ if(a.estilo==='longo'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-39,12.5,15,0,0,7);c.fill();c.fillRect(-12.5,-40,25,22);}
+ if(a.estilo==='cacheado'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-40,15,14.5,0,0,7);c.fill();}
+ c.fillStyle=cam;c.beginPath();c.moveTo(-16,0);c.quadraticCurveTo(-17,-21,-6,-25);c.lineTo(6,-25);c.quadraticCurveTo(17,-21,16,0);c.closePath();c.fill();
+ c.fillStyle='rgba(0,0,0,.12)';c.fillRect(-1,-24,2,24);
+ c.fillStyle=pele;c.fillRect(-3.5,-29,7,6);
+ if(prancheta){c.fillStyle='#8d6e63';c.fillRect(4,-19,13,16);c.fillStyle='#fff';c.fillRect(5.5,-17,10,12);c.strokeStyle='#90a4ae';c.lineWidth=.8;for(let i=0;i<4;i++){c.beginPath();c.moveTo(7,-14+i*2.6);c.lineTo(14,-14+i*2.6);c.stroke();}}
+ c.strokeStyle=cam;c.lineWidth=6;c.lineCap='round';c.beginPath();c.moveTo(-11,-20);c.lineTo(-4,-9);c.stroke();
+ c.fillStyle=pele;c.beginPath();c.arc(-3,-8,3,0,7);c.fill();
+ c.fillStyle=pele;c.beginPath();c.ellipse(0,-39,9.5,11,0,0,7);c.fill();
+ c.beginPath();c.arc(-9.4,-38,2.3,0,7);c.arc(9.4,-38,2.3,0,7);c.fill();
+ c.fillStyle=cab;
+ if(a.estilo==='curto'){c.beginPath();c.ellipse(0,-44.5,10,6.8,0,Math.PI,0);c.fill();c.fillRect(-10,-46,2.8,7);c.fillRect(7.2,-46,2.8,7);}
+ if(a.estilo==='cacheado'){for(let i=0;i<13;i++){const an=Math.PI*(.8+i*1.4/12);c.beginPath();c.arc(Math.cos(an)*12,-41+Math.sin(an)*11.5,4.2,0,7);c.fill();}}
+ if(a.estilo==='longo'){c.beginPath();c.ellipse(0,-44.5,10.6,7.2,0,Math.PI,0);c.fill();}
+ if(a.estilo==='coque'){c.beginPath();c.ellipse(0,-44.5,10,6.4,0,Math.PI,0);c.fill();c.beginPath();c.arc(0,-53,5.2,0,7);c.fill();}
+ if(a.estilo==='raspado'){c.globalAlpha=.5;c.beginPath();c.ellipse(0,-44,9.8,6.2,0,Math.PI,0);c.fill();c.globalAlpha=1;}
+ c.fillStyle='#2b2a26';c.beginPath();c.arc(-3.4,-39,1.25,0,7);c.arc(3.4,-39,1.25,0,7);c.fill();
+ c.strokeStyle='#2b2a26';c.lineWidth=1;c.beginPath();c.arc(0,-35.6,2.6,.25,Math.PI-.25);c.stroke();
+ if(a.chapeu==='bone'){c.fillStyle=cam;c.beginPath();c.ellipse(0,-46,10.6,5.8,0,Math.PI,0);c.fill();c.fillRect(-10.6,-47,21.2,2.6);c.beginPath();c.ellipse(8.5,-46.2,8,2.2,0,0,7);c.fill();}
+ if(a.chapeu==='campo'){c.fillStyle='#d7c49e';c.beginPath();c.ellipse(0,-46,16.5,3.6,0,0,7);c.fill();c.beginPath();c.ellipse(0,-48,9.2,6.4,0,Math.PI,0);c.fill();c.fillStyle='#8d6e63';c.fillRect(-9.2,-49,18.4,1.9);}
+ c.restore();
+}
+function pernas(c,x,y,s,a){c.save();c.translate(x,y);c.scale(s,s);c.fillStyle='#455a64';c.fillRect(-11,0,9,20);c.fillRect(2,0,9,20);c.fillStyle='#3e2723';c.fillRect(-12,18,11,4);c.fillRect(1,18,11,4);c.restore();}
+
+/* ================= CENA ================= */
+const CORES={main:'#558b2f',deep:'#33691e'};
+function sr(n){const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+function syncMol(){}function partic(){}
+function onca(c,x,y,s,dir){c.save();c.translate(x,y);c.scale(s*(dir||1),s);
+ c.strokeStyle='#c9902f';c.lineWidth=4;c.lineCap='round';c.beginPath();c.moveTo(-22,-14);c.quadraticCurveTo(-38,-12,-40,-24);c.stroke();
+ c.fillStyle='#b98226';c.fillRect(-18,-12,5,12);c.fillRect(10,-12,5,12);
+ const g=c.createLinearGradient(0,-26,0,-6);g.addColorStop(0,'#e0a63e');g.addColorStop(1,'#f3d9a4');c.fillStyle=g;c.beginPath();c.ellipse(-2,-16,22,9.5,0,0,7);c.fill();
+ c.beginPath();c.ellipse(21,-21,8.5,7.5,0,0,7);c.fill();c.beginPath();c.ellipse(27,-18,4.5,3.6,0,0,7);c.fillStyle='#f6e3bd';c.fill();
+ c.fillStyle='#e0a63e';c.beginPath();c.arc(17,-28,2.6,0,7);c.arc(23,-28.5,2.6,0,7);c.fill();c.fillStyle='#3b2a14';c.beginPath();c.arc(17,-28,1.2,0,7);c.arc(23,-28.5,1.2,0,7);c.fill();
+ c.fillStyle='#1a1a1a';c.beginPath();c.arc(24,-22,1.1,0,7);c.fill();c.beginPath();c.arc(31,-18.5,1.2,0,7);c.fill();
+ c.strokeStyle='#2b1d0e';c.lineWidth=1;for(let i=0;i<14;i++){const rx=-20+sr(i*3)*36,ry=-22+sr(i*7)*11;c.beginPath();c.arc(rx,ry,2.1,0,7);c.stroke();}
+ c.fillStyle='#2b1d0e';for(let i=0;i<6;i++){c.beginPath();c.arc(14+sr(i+9)*12,-25+sr(i*5)*8,.9,0,7);c.fill();}
+ c.fillStyle='#c9902f';c.fillRect(-14,-11,5,11);c.fillRect(14,-11,5,11);c.restore();}
+function capivara(c,x,y,s,dir){c.save();c.translate(x,y);c.scale(s*(dir||1),s);
+ c.fillStyle='#4f3627';c.fillRect(-16,-9,5,9);c.fillRect(8,-9,5,9);
+ const g=c.createLinearGradient(0,-30,0,-5);g.addColorStop(0,'#a2805a');g.addColorStop(1,'#6b4a30');c.fillStyle=g;
+ c.beginPath();c.moveTo(-23,-12);c.bezierCurveTo(-27,-27,-6,-31,9,-25);c.bezierCurveTo(17,-23,19,-16,17,-10);c.bezierCurveTo(6,-6,-15,-5,-23,-12);c.fill();
+ c.beginPath();c.moveTo(10,-25);c.bezierCurveTo(16,-32,27,-31,32,-24);c.lineTo(34,-16);c.bezierCurveTo(32,-11,25,-11,17,-13);c.closePath();c.fill();
+ c.fillStyle='#4e3423';c.beginPath();c.ellipse(15.5,-29.5,2.7,2.2,-.3,0,7);c.fill();c.fillStyle='#161616';c.beginPath();c.arc(22.5,-24.5,1.55,0,7);c.fill();
+ c.fillStyle='#5e412b';c.fillRect(-11,-8,5,8);c.fillRect(12,-9,5,9);c.restore();}
+function capim(c,x,y,h,cor){c.strokeStyle=cor||'#8bc34a';c.lineWidth=1.5;for(const d of[-3,-1,1,3]){c.beginPath();c.moveTo(x+d,y);c.quadraticCurveTo(x+d*1.3,y-h*.6,x+d*2.2,y-h);c.stroke();}}
+function pacu(c,x,y,s,dir){c.save();c.translate(x,y);c.scale(s*(dir||1),s);const L=30,a=12;
+ c.fillStyle='#37474f';c.beginPath();c.moveTo(-L*.42,0);c.lineTo(-L*.62,-a*.7);c.lineTo(-L*.55,0);c.lineTo(-L*.62,a*.7);c.closePath();c.fill();
+ const g=c.createLinearGradient(0,-a,0,a);g.addColorStop(0,'#455a64');g.addColorStop(.6,'#90a4ae');g.addColorStop(1,'#d7ccc8');c.fillStyle=g;
+ c.beginPath();c.moveTo(L*.5,1);c.bezierCurveTo(L*.4,-a*1.1,-L*.25,-a*1.05,-L*.45,0);c.bezierCurveTo(-L*.25,a*1.05,L*.4,a*.9,L*.5,1);c.fill();
+ c.fillStyle='#ff8a65';c.beginPath();c.moveTo(0,a*.7);c.lineTo(-4,a*1.15);c.lineTo(-8,a*.55);c.fill();
+ c.fillStyle='#111';c.beginPath();c.arc(L*.33,-a*.2,1.4,0,7);c.fill();c.restore();}
+
+function boi(c,x,y,s,dir){c.save();c.translate(x,y);c.scale(s*(dir||1),s);c.fillStyle='#9e9e9e';c.fillRect(-14,-10,4,10);c.fillRect(9,-10,4,10);c.fillStyle='#eceff1';c.strokeStyle='#90a4ae';c.lineWidth=1;c.beginPath();c.ellipse(0,-16,17,8,0,0,7);c.fill();c.stroke();c.beginPath();c.ellipse(5,-23,5,4,0,0,7);c.fill();
+ c.beginPath();c.moveTo(14,-20);c.quadraticCurveTo(22,-22,25,-16);c.lineTo(24,-11);c.quadraticCurveTo(19,-11,15,-13);c.fill();c.fillStyle='#111';c.beginPath();c.arc(20,-17,1,0,7);c.fill();c.fillStyle='#bdbdbd';c.fillRect(-10,-9,4,9);c.fillRect(13,-9,4,9);c.restore();}
+function solzao(c,x,y,t){c.fillStyle='rgba(255,213,79,.3)';c.beginPath();c.arc(x,y,34+Math.sin(t*2)*3,0,7);c.fill();c.fillStyle='#ffca28';c.beginPath();c.arc(x,y,22,0,7);c.fill();}
+function ceuCampo(c){const g=c.createLinearGradient(0,0,0,240);g.addColorStop(0,'#d7f0d0');g.addColorStop(1,'#f7fcf3');c.fillStyle=g;c.fillRect(0,0,W,H);c.fillStyle='#c5e1a5';c.fillRect(0,250,W,H-250);c.fillStyle='#aed581';c.fillRect(0,250,W,5);}
+function piramide(c,x,y,w,niveis){const h=34;niveis.forEach((n,i)=>{const lw=Math.max(14,w*Math.sqrt(n.v/niveis[0].v));const yy=y-i*(h+6);c.fillStyle=n.cor;c.beginPath();c.roundRect(x-lw/2,yy-h,lw,h,6);c.fill();c.fillStyle='#263238';c.font='800 17px system-ui';c.textAlign='left';c.fillText(`${n.n}: ${Math.round(n.v).toLocaleString('pt-BR')}`,x+Math.max(lw/2,60)+10,yy-12);});}
+function drawCena(c,G){if(G.desenha)G.desenha(c);}
+/* ================= TELA / LOOP ================= */
+let G=null,S=null,raf=0,ultimo=0,cx=null;
+function laco(ts){const dt=Math.min(.05,(ts-ultimo)/1000||0);ultimo=ts;if(G){G.t+=dt;if(G.upd)G.upd(dt);syncMol(G,dt);partic(G,dt);if(cx)drawCena(cx,G);if(G.extra)G.extra(cx);}raf=requestAnimationFrame(laco);}
+function parar(){cancelAnimationFrame(raf);raf=0;}
+function rodar(){parar();ultimo=performance.now();raf=requestAnimationFrame(laco);}
+function hud(){$('hud').style.display='flex';$('hF').textContent=`Fase ${S.f+1} de ${FASES.length}`;$('hP').textContent=`${Math.max(0,S.tot+S.fp)} pts`;}
+function telaJogo(chip,info){
+ const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><span class="chip" id="chip">${chip}</span><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="acao"><span class="dedo">👉</span><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});
+}
+function acao(t){const e=$('acao');if(e&&e.innerHTML!==t)e.innerHTML=t;}
+function ajuda(){const F=FASES[S.f],d=document.createElement('div');d.className='modal';
+ d.innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn">Entendi</button></div>`;
+ d.onclick=e=>{if(e.target===d||e.target.tagName==='BUTTON')d.remove();};document.body.appendChild(d);}
+function medidor(id,rot,cls,max,alvo){const a=alvo!=null?`<span class="alvo" style="left:${alvo/max*100}%"></span>`:'';return`<div class="met ${cls}" id="${id}" data-max="${max}"><span>${rot}</span><div class="bar"><span class="fill"></span>${a}</div><span class="v"></span></div>`;}
+function poeMed(id,v){const e=$(id);if(!e)return;const m=+e.dataset.max;e.querySelector('.fill').style.width=clamp(v/m*100,0,100)+'%';e.querySelector('.v').textContent=Math.round(v);}
+function poeSaldo(v,max){const e=$('mSaldo');if(!e)return;const f=e.querySelector('.fill'),p=clamp(Math.abs(v)/max*50,0,50);if(v<0){f.style.left=(50-p)+'%';f.style.width=p+'%';f.style.background='#43a047';}else{f.style.left='50%';f.style.width=p+'%';f.style.background='#e53935';}e.querySelector('.v').textContent=(v>0?'+':'')+Math.round(v);}
+
+/* ================= FASES ================= */
+const FASES=[
+ {nome:'Pegue a energia',ic:'🧺',obj:'A capivara comeu capim. Pegue com a cesta só as moedas verdes, a energia que vira corpo novo.',passos:[['⬅️➡️','Arraste a cesta para os lados'],['🟢','Verde: vira capivara. Pegue!'],['🔥','Laranja e marrom: calor e fezes. Deixe passar']],ini:()=>f1()},
+ {nome:'Quanto capim para uma onça?',ic:'🐆',obj:'Achar a menor área de capim que sustenta 1 onça.',passos:[['🌾','Mude a área de capim'],['▶','Veja a energia subir pela pirâmide'],['🐆','A onça precisa de 100 de energia por ano']],ini:()=>f2()},
+ {nome:'O prato da cidade',ic:'🍽️',obj:'Alimentar a cidade com 2000 de energia, com pelo menos 60 vindo de carne, deixando 35% da terra em cerrado.',passos:[['🌾','Lavoura: a gente come a planta direto'],['🐄','Pasto: a gente come o boi que comeu a planta'],['🌳','O resto fica cerrado']],ini:()=>f3()},
+ {nome:'Quantos cabem?',ic:'🔮',obj:'Prever quantas capivaras e onças uma área sustenta, e o que muda com um elo a mais na cadeia.',passos:[['🔢','Escolha os números'],['▶','Teste'],['➕','Depois veja uma cadeia mais longa']],ini:()=>f4()},
+ {nome:'Pesca que dura',ic:'🎣',obj:'Pescar 300 de energia, com pelo menos 20 de peixe grande, usando no máximo 20% da produção do rio.',passos:[['🐟','Cada peixe come em um nível diferente'],['⬆️','Peixe de nível alto custa mais produção do rio'],['📋','Ajuste a pesca e confira']],ini:()=>f5()}
+];
+function intro(){parar();G=null;cx=null;hud();const F=FASES[S.f];$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><div class="n">FASE ${S.f+1} DE ${FASES.length}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left;max-width:420px;margin:12px auto 0"><b>🎯 Objetivo</b><span>${F.obj}</span></div>
+ <div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn" id="bGo">Começar</button></div>`;
+ $('bGo').onclick=()=>{S.fp=0;F.ini();};}
+function fimFase(pts,ok,oque,pergunta,extraHtml){
+ parar();pts=Math.max(0,Math.round(pts));S.fp=0;S.tot+=pts;S.res[S.f]={pts,ok,oque};hud();
+ $('tela').innerHTML=`<div class="card res"><div class="small">${FASES[S.f].ic} ${FASES[S.f].nome}</div><div class="big">+${pts}</div>
+ <p class="${ok?'ok':'no'}">${ok?'Meta cumprida':'Meta não cumprida'}</p>${extraHtml||''}
+ <div class="pensa"><b>O que aconteceu:</b> ${oque}</div><div class="pensa"><b>Pergunta para a turma:</b> ${pergunta}</div>
+ <div class="row" style="justify-content:center"><button class="btn" id="bNx">${S.f<FASES.length-1?'Próxima fase':'Ver relatório'}</button></div></div>`;
+ $('bNx').onclick=()=>{S.f++;if(S.f<FASES.length)intro();else relatorio();};
+}
+/* ---------- FASE 1 ---------- */
+function f1(){G={t:0,cx:380,moedas:[],sai:0,pega:0,perde:0,verdes:0,tot:100,falsos:0};telaJogo('🧺 Pegue a energia','0 de 100');
+ G.desenha=c=>{ceuCampo(c);for(let i=0;i<30;i++)capim(c,40+i*24,250,12+sr(i)*8,'#7cb342');capivara(c,380,252,2.4,1);
+  for(const m of G.moedas){c.fillStyle=m.k==='v'?'#43a047':m.k==='c'?'#ff7043':'#8d6e63';c.beginPath();c.arc(m.x,m.y,11,0,7);c.fill();c.fillStyle='#fff';c.font='800 13px system-ui';c.textAlign='center';c.fillText(m.k==='v'?'+':m.k==='c'?'≈':'·',m.x,m.y+5);}
+  const x=G.cx;c.fillStyle='#a1887f';c.beginPath();c.moveTo(x-38,300);c.lineTo(x+38,300);c.lineTo(x+30,334);c.lineTo(x-30,334);c.fill();c.strokeStyle='#6d4c41';c.lineWidth=2;c.stroke();c.fillStyle='#fff';c.font='800 13px system-ui';c.fillText('corpo novo',x,322);
+  c.fillStyle='#263238';c.font='800 20px system-ui';c.textAlign='left';c.fillText(`🟢 pegou ${G.pega}   🔥 calor   💩 fezes`,16,30);};
+ const cv=$('cv');const mv=e=>{const r=cv.getBoundingClientRect();G.cx=clamp((e.clientX-r.left)*W/r.width,40,720);};cv.addEventListener('pointermove',mv);cv.addEventListener('pointerdown',mv);
+ G.tap=null;
+ G.upd=dt=>{if(G.fim)return;G.acc=(G.acc||0)+dt;while(G.acc>.18&&G.sai<G.tot){G.acc-=.18;G.sai++;const r=Math.random(),k=G.sai%10===0?'v':(r<.6?'c':'f');if(k==='v')G.verdes++;G.moedas.push({x:380+rr(-30,30),y:200,vx:rr(-140,140),vy:k==='c'?-rr(40,80):rr(-40,20),k});}
+  for(const m of G.moedas){if(m.k==='c'){m.y+=m.vy*dt;m.x+=m.vx*dt*.4;}else{m.vy+=260*dt;m.y+=m.vy*dt;m.x+=m.vx*dt;if(m.x<10||m.x>750)m.vx*=-1;}
+   if(!m.ok&&m.y>292&&m.y<320&&Math.abs(m.x-G.cx)<38){m.ok=true;m.morto=true;if(m.k==='v'){G.pega++;}else{G.falsos++;}}
+   if(m.y>H+20||m.y<-20)m.morto=true;}
+  G.moedas=G.moedas.filter(m=>!m.morto);$('info').textContent=`${G.sai} de 100`;
+  if(G.sai>=G.tot&&!G.moedas.length){G.fim=true;const ok=G.pega>=7;fimFase(G.pega*15-G.falsos*3,ok,`De 100 moedas de energia que a capivara comeu, só ${G.verdes} viraram corpo novo. Você pegou ${G.pega}. O resto saiu como calor do corpo e como fezes e restos. Por isso só uma pequena parte passa para quem come a capivara.`,'Se só uma parte da energia vira corpo novo, por que a pirâmide fica mais estreita em cima?');}};
+ acao('Arraste o dedo ou o mouse para mover a cesta. Pegue só as moedas verdes.');rodar();}
+/* ---------- FASE 2 ---------- */
+function f2(){G={t:0,ha:3,tent:0,res:null};telaJogo('🐆 Quanto capim para uma onça?','meta: 1 onça');
+ G.desenha=c=>{ceuCampo(c);solzao(c,690,50,G.t);const e1=G.ha*1000,e2=e1*.1,e3=e2*.1;
+  for(let i=0;i<Math.min(40,G.ha*2);i++)capim(c,20+i*17,250,14,'#7cb342');for(let i=0;i<Math.min(8,Math.round(e2/100));i++)capivara(c,60+i*60,300,.9,i%2?1:-1);
+  const no=Math.floor(e3/100);for(let i=0;i<Math.min(3,no);i++)onca(c,560+i*60,248,1.1,-1);
+  piramide(c,230,230,260,[{n:'Capim',v:e1,cor:'#9ccc65'},{n:'Capivaras',v:e2,cor:'#a1887f'},{n:'Onças',v:e3,cor:'#ffb74d'}]);
+  c.fillStyle='#263238';c.font='800 20px system-ui';c.textAlign='left';c.fillText(`Área: ${G.ha} hectares`,20,32);};
+ const ctrl=()=>{$('ctrl').innerHTML=`<span class="pill">🌾 Hectares</span><button class="tool" id="bM">−</button><span class="pill" style="font-size:1.05rem">${G.ha}</span><button class="tool" id="bP">+</button><button class="btn sm" id="bR">Conferir a onça</button>`;
+  $('bM').onclick=()=>{G.ha=Math.max(1,G.ha-1);ctrl();};$('bP').onclick=()=>{G.ha=Math.min(30,G.ha+1);ctrl();};
+  $('bR').onclick=()=>{G.tent++;const e3=G.ha*1000*.01;if(e3<100){acao(`Com ${G.ha} hectares chegam só ${e3} de energia às onças. Não dá para uma onça. Aumente a área.`);}
+   else if(G.ha>10){acao(`Com ${G.ha} hectares a onça vive, mas dá para usar menos. Qual é o mínimo?`);}
+   else fimFase(Math.max(50,160-20*(G.tent-1)),true,'São 10 hectares de capim para 1 onça. Os 10 000 de energia do capim viram 1 000 nas capivaras e só 100 na onça. A cada nível, cerca de 10% passa adiante.','Por que existem muito menos onças do que capivaras no Pantanal?');};};
+ ctrl();acao('Mude a área de capim com − e +. Veja a pirâmide e aperte <b>Conferir a onça</b>.');rodar();}
+/* ---------- FASE 3 ---------- */
+function f3(){G={t:0,lav:10,pas:10,tent:0};telaJogo('🍽️ O prato da cidade','40 hectares');
+ const calc=()=>{const cer=40-G.lav-G.pas,comida=G.lav*100+G.pas*10,carne=G.pas*10;return{cer,comida,carne,okC:comida>=2000,okM:carne>=60,okR:cer>=14};};
+ G.desenha=c=>{ceuCampo(c);const r=calc();const tot=40;let x=20;const seg=(n,cor,lb)=>{const w=n/tot*720;c.fillStyle=cor;c.fillRect(x,40,w,90);if(w>40){c.fillStyle='#263238';c.font='800 18px system-ui';c.textAlign='center';c.fillText(`${lb} ${n} ha`,x+w/2,92);}x+=w;};
+  seg(G.lav,'#fff59d','🌾 Lavoura');seg(G.pas,'#c5e1a5','🐄 Pasto');seg(Math.max(0,r.cer),'#6b8e23','🌳 Cerrado');
+  for(let i=0;i<Math.min(9,G.pas);i++)boi(c,50+i*78,325,2,i%2?1:-1);
+  c.fillStyle='#263238';c.font='800 19px system-ui';c.textAlign='left';c.fillText(`🍽️ Comida: ${r.comida} de 2000`,20,168);c.fillText(`🥩 Carne: ${r.carne} (mínimo 60)`,20,198);c.fillText(`🌳 Cerrado: ${r.cer} ha (mínimo 14)`,20,228);
+  c.fillStyle='#e3f2fd';c.fillRect(400,152,320,22);c.fillStyle=r.okC?'#43a047':'#ef6c00';c.fillRect(400,152,320*Math.min(1,r.comida/2000),22);};
+ const ctrl=()=>{const r=calc();$('ctrl').innerHTML=`<div class="row" style="gap:4px"><span class="pill">🌾 Lavoura</span><button class="tool" data-k="lav" data-d="-1">−</button><span class="pill">${G.lav}</span><button class="tool" data-k="lav" data-d="1">+</button></div><div class="row" style="gap:4px"><span class="pill">🐄 Pasto</span><button class="tool" data-k="pas" data-d="-1">−</button><span class="pill">${G.pas}</span><button class="tool" data-k="pas" data-d="1">+</button></div><button class="btn sm" id="bR">Conferir</button>`;
+  document.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k,o=k==='lav'?'pas':'lav';G[k]=clamp(G[k]+ +b.dataset.d,0,40-G[o]);ctrl();});
+  $('mets').innerHTML=`<div class="pensa" style="margin:0;max-width:none">${r.okC?'✅':'⬜'} Comida até 2000 · ${r.okM?'✅':'⬜'} Carne pelo menos 60 · ${r.okR?'✅':'⬜'} Cerrado pelo menos 14 ha<br><span class="small">1 ha de lavoura dá 100 de comida. 1 ha de pasto dá só 10, porque o boi gasta quase tudo vivendo.</span></div>`;
+  $('bR').onclick=()=>{G.tent++;const r2=calc();if(r2.okC&&r2.okM&&r2.okR)fimFase(Math.max(60,170-20*(G.tent-1)),true,`Com ${G.lav} ha de lavoura e ${G.pas} de pasto a cidade comeu e o cerrado ficou em pé. Cada hectare de pasto alimenta 10 vezes menos que um de lavoura, porque a comida passa por mais um nível da cadeia.`,'Por que comer mais longe do começo da cadeia alimentar exige mais terra?');else acao('Ainda falta meta. Lembre: o pasto rende pouco por hectare.');};};
+ ctrl();acao('Divida os 40 hectares entre lavoura e pasto. O que sobrar fica cerrado. Depois aperte <b>Conferir</b>.');rodar();}
+/* ---------- FASE 4 ---------- */
+function f4(){G={t:0,et:1,k:10,o:1,ha:30};telaJogo('🔮 Quantos cabem?','30 hectares');
+ G.desenha=c=>{ceuCampo(c);solzao(c,690,50,G.t);for(let i=0;i<36;i++)capim(c,20+i*20,250,14,'#7cb342');
+  c.fillStyle='#263238';c.font='800 19px system-ui';c.textAlign='left';c.fillText('30 hectares = 30 000 de energia por ano',20,30);c.font='600 16px system-ui';c.fillText('Capivara e onça: cada uma precisa de 100',20,54);
+  if(G.real){const R=G.real;for(let i=0;i<Math.min(15,R.k);i++)capivara(c,30+i*46,300,.8,i%2?1:-1);for(let i=0;i<R.o;i++)onca(c,560+i*60,248,1.1,-1);
+   piramide(c,220,230,260,G.et===1?[{n:'Capim',v:30000,cor:'#9ccc65'},{n:'Capivaras',v:3000,cor:'#a1887f'},{n:'Onças',v:300,cor:'#ffb74d'}]:[{n:'Algas e capim',v:30000,cor:'#9ccc65'},{n:'Peixes pequenos',v:3000,cor:'#90caf9'},{n:'Jacarés',v:300,cor:'#81c784'},{n:'Onças',v:30,cor:'#ffb74d'}]);}};
+ const ctrl1=()=>{$('ctrl').innerHTML=`<div style="width:100%;display:grid;gap:6px"><div class="row top"><b>Capivaras que cabem</b><span class="pill" id="pk">${G.k}</span></div><input type="range" id="rk" min="0" max="60" step="5" value="${G.k}"><div class="row top"><b>Onças que cabem</b><span class="pill" id="po">${G.o}</span></div><input type="range" id="ro" min="0" max="10" step="1" value="${G.o}"></div><button class="btn sm" id="bR">▶ Testar</button>`;
+  $('rk').oninput=e=>{G.k=+e.target.value;$('pk').textContent=G.k;};$('ro').oninput=e=>{G.o=+e.target.value;$('po').textContent=G.o;};
+  $('bR').onclick=()=>{G.real={k:30,o:3};const p=(G.k===30?60:Math.max(0,60-Math.abs(G.k-30)*3))+(G.o===3?60:Math.max(0,60-Math.abs(G.o-3)*20));G.p1=p;S.fp=p;hud();
+   acao(`Cabem 30 capivaras e 3 onças. Você disse ${G.k} e ${G.o}. Agora: e se a onça comesse jacaré, que come peixe, que come alga?`);
+   $('ctrl').innerHTML=`<div style="width:100%"><b>Com esse elo a mais, quantas onças cabem nos mesmos 30 hectares?</b><div class="row" style="margin-top:6px">${[0,1,3,5].map(n=>`<button class="tool" data-o="${n}">${n}</button>`).join('')}</div></div>`;
+   document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{const ok=+b.dataset.o===0;G.et=2;G.real={k:0,o:0};const pts=G.p1+(ok?60:0);
+    setTimeout(()=>fimFase(pts,ok&&G.p1>=100,`Com 3 níveis cabem 3 onças. Com 4 níveis, chegam às onças só 30 de energia, menos do que 1 onça precisa. Cada elo a mais divide por cerca de 10.`,'Por que cadeias alimentares raramente têm mais de 4 ou 5 níveis?'),1500);acao(ok?'Isso: nenhuma onça. Só 30 de energia chegam lá em cima.':'Não. Só chegam 30 de energia às onças, menos que 1 onça precisa.');});};};
+ ctrl1();acao('Use os 30 000 de energia do capim e a regra dos 10%. Preveja e aperte <b>▶ Testar</b>.');rodar();}
+/* ---------- FASE 5 ---------- */
+const PEIXES=[['n2','🐟 Come plantas e restos (como o curimbatá)',2],['n3','🐠 Come peixes pequenos',3],['n4','🦈 Come peixes grandes (como o dourado)',4]];
+function f5(){G={t:0,q:{n2:0,n3:0,n4:0},tent:0};telaJogo('🎣 Pesca que dura','meta: 300');const PROD=100000;
+ const calc=()=>{let food=0,ppr=0;PEIXES.forEach(([k,,tl])=>{food+=G.q[k]*10;ppr+=G.q[k]*10*Math.pow(10,tl-1);});return{food,ppr,pct:ppr/PROD*100,gr:(G.q.n3+G.q.n4)*10};};
+ G.desenha=c=>{c.fillStyle='#e1f5fe';c.fillRect(0,0,W,H);c.fillStyle='#4fc3f7';c.fillRect(0,120,W,H-120);const r=calc();
+  PEIXES.forEach(([k,n,tl],i)=>{c.fillStyle='rgba(255,255,255,.85)';c.font='800 17px system-ui';c.textAlign='left';c.fillText(`nível ${tl}`,14,168+i*80);for(let j=0;j<Math.min(9,G.q[k]);j++)pacu(c,120+j*70,175+i*80,1.3+i*.25,j%2?1:-1);});
+  c.fillStyle='#263238';c.font='800 19px system-ui';c.textAlign='left';c.fillText(`🐟 Pescado: ${r.food} de 300 · grande: ${r.gr} (mín. 20)`,20,30);c.fillText(`Produção do rio usada: ${r.pct.toFixed(1).replace('.',',')}% (máx. 20%)`,20,60);
+  c.fillStyle='#fff';c.fillRect(20,76,500,22);c.fillStyle=r.pct<=20?'#43a047':'#e53935';c.fillRect(20,76,Math.min(500,500*r.pct/40),22);c.fillStyle='#263238';c.fillRect(20+500*20/40,72,3,30);};
+ const ctrl=()=>{const r=calc();$('ctrl').innerHTML=PEIXES.map(([k,n,tl])=>`<div class="row" style="gap:4px;width:100%"><span class="pill" style="flex:1;white-space:normal">${n} · nível ${tl}</span><button class="tool" data-k="${k}" data-d="-1">−</button><span class="pill">${G.q[k]*10}</span><button class="tool" data-k="${k}" data-d="1">+</button></div>`).join('')+`<button class="btn sm" id="bR">Conferir a pesca</button>`;
+  document.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k;G.q[k]=clamp(G.q[k]+ +b.dataset.d,0,40);ctrl();});
+  $('bR').onclick=()=>{G.tent++;const r2=calc();if(r2.food>=300&&r2.gr>=20&&r2.pct<=20)fimFase(Math.max(60,170-20*(G.tent-1)),true,`Você pescou ${r2.food} usando ${r2.pct.toFixed(1).replace('.',',')}% da produção do rio. Peixes que comem plantas e restos custam muito menos produção. Entre os peixes grandes, o de nível 3 custa 10 vezes menos que o de nível 4.`,'Por que pescar só os peixes grandes e predadores pesa mais sobre o rio?');else acao(r2.food<300?'Ainda falta comida.':r2.gr<20?'A comunidade quer pelo menos 20 de peixe grande.':'Passou de 20% da produção do rio. Veja qual peixe grande custa menos.');};};
+ ctrl();acao('Escolha quanto pescar de cada tipo. Cada 10 de peixe de nível 4 consome 100 vezes mais produção do rio que 10 de nível 2. Aperte <b>Conferir</b>.');rodar();}
+/* ================= INICIO / AVATAR ================= */
+function inicio(){parar();G=null;cx=null;$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><div class="capa"><canvas id="cA" width="560" height="560"></canvas>
+ <div><h2>Monte seu pesquisador</h2><div class="opts">
+ <div class="l">Pele</div><div class="sw" id="sP">${PELES.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.pele===i?'on':''}" aria-label="pele ${i+1}"></button>`).join('')}</div>
+ <div class="l">Cabelo</div><div class="sw" id="sE">${ESTILOS.map(([k,t])=>`<button class="tx ${A.estilo===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <div class="sw" id="sC">${CABS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.cab===i?'on':''}" aria-label="cor ${i+1}"></button>`).join('')}</div>
+ <div class="l">Camiseta</div><div class="sw" id="sT">${CAMISAS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.camisa===i?'on':''}" aria-label="camiseta ${i+1}"></button>`).join('')}</div>
+ <div class="l">Chapéu</div><div class="sw" id="sH">${CHAPEUS.map(([k,t])=>`<button class="tx ${A.chapeu===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <input class="nome" id="iN" maxlength="20" placeholder="Seu nome" value="${esc(A.nome)}">
+ </div></div></div>
+ <div class="row" style="margin-top:14px"><button class="btn" id="bJ">▶ Jogar as 5 fases</button><button class="btn ghost" id="bG">📘 Guia do professor</button></div>
+ <p class="small" style="margin-top:10px">Ciências da Natureza · Ensino Médio · BNCC EM13CNT101</p></div>`;
+ const pinta=()=>{const c=$('cA').getContext('2d');c.clearRect(0,0,560,560);c.fillStyle='#f1f8e9';c.fillRect(0,0,560,560);c.fillStyle='#dcedc8';c.beginPath();c.arc(280,600,260,0,7);c.fill();avatar(c,280,560,6.4,A,true);};
+ pinta();
+ const liga=(id,f)=>document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{f(b);salvaA();document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b));pinta();});
+ liga('sP',b=>A.pele=+b.dataset.i);liga('sC',b=>A.cab=+b.dataset.i);liga('sT',b=>A.camisa=+b.dataset.i);liga('sE',b=>A.estilo=b.dataset.k);liga('sH',b=>A.chapeu=b.dataset.k);
+ $('iN').oninput=e=>{A.nome=e.target.value;salvaA();};
+ $('bJ').onclick=novo;$('bG').onclick=guia;
+}
+function novo(){S={f:0,tot:0,fp:0,res:[],fichas:0};salvo=false;intro();}
+function relatorio(){parar();G=null;cx=null;$('rankBox').style.display='block';const nome=A.nome.trim()||'Pesquisador';
+ $('tela').innerHTML=`<div class="card"><div class="rel"><canvas id="cR" width="240" height="240"></canvas><div><div class="small">Relatório de campo</div><h2>${esc(nome)}</h2><div class="big" style="font-size:2rem;font-weight:800;color:var(--deep)">${S.tot} pts</div></div></div>
+ <table class="tab" style="margin-top:12px"><tr><th>Fase</th><th>Pontos</th><th>Meta</th></tr>${FASES.map((F,i)=>{const r=S.res[i]||{pts:0,ok:false};return`<tr><td>${F.ic} ${F.nome}</td><td>${r.pts}</td><td>${r.ok?'✓':'✗'}</td></tr>`;}).join('')}</table>
+ <div class="pensa"><b>Para escrever no caderno:</b> explique por que uma onça precisa de tanto capim, mesmo sem comer capim.</div>
+ <div class="savebox noprint"><input id="pName" maxlength="20" value="${esc(nome)}"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row noprint" style="margin-top:12px"><button class="btn ghost" id="bI">🖨️ Imprimir relatório</button><button class="btn ghost" id="bN">Jogar de novo</button><button class="btn ghost" id="bV">Início</button></div></div>`;
+ const c=$('cR').getContext('2d');c.fillStyle='#f1f8e9';c.fillRect(0,0,240,240);avatar(c,120,240,3.2,A,true);
+ $('bS').onclick=()=>salvar('5 fases');$('bI').onclick=()=>window.print();$('bN').onclick=novo;$('bV').onclick=inicio;
+}
+
+/* ================= GUIA DO PROFESSOR ================= */
+function guia(){parar();$('hud').style.display='none';$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card guia">
+ <div class="row top noprint"><button class="btn ghost sm" id="bVt">← Voltar</button><button class="btn sm" id="bPr">🖨️ Imprimir guia</button></div>
+ <h2 style="margin-top:10px">Guia do professor · Pirâmide de Energia</h2>
+ <p class="small">Ensino Médio · Ciências da Natureza e suas Tecnologias · Biologia e Física</p>
+ <h3>Habilidade da BNCC</h3>
+ <div class="hab"><b>EM13CNT101.</b> Analisar e representar, com ou sem o uso de dispositivos e de aplicativos digitais específicos, as transformações e conservações em sistemas que envolvam quantidade de matéria, de energia e de movimento para realizar previsões sobre seus comportamentos em situações cotidianas e em processos produtivos que priorizem o desenvolvimento sustentável, o uso consciente dos recursos naturais e a preservação da vida em todas as suas formas.</div>
+ <h3>Objetivos da aula</h3>
+ <ul><li>Explicar por que a energia diminui a cada nível trófico.</li><li>Calcular, com a regra aproximada dos 10%, quanto produtor sustenta um predador.</li><li>Relacionar a posição na cadeia com o uso de terra e de recursos.</li></ul>
+ <h3>Roteiro de 50 minutos</h3>
+ <table class="tab"><tr><th>Tempo</th><th>O que fazer</th></tr>
+ <tr><td>5 min</td><td>Pergunte: por que há tanta capivara e tão pouca onça?</td></tr>
+ <tr><td>25 min</td><td>Alunos jogam em duplas e anotam as contas das fases 2 e 4.</td></tr>
+ <tr><td>15 min</td><td>Discussão com as perguntas de cada fase.</td></tr>
+ <tr><td>5 min</td><td>Cada dupla escreve a frase do relatório de campo.</td></tr></table>
+ <h3>Fase por fase</h3>
+ <table class="tab"><tr><th>Fase</th><th>O aluno faz</th><th>Pergunta para a turma</th><th>O que explicar</th></tr>
+ <tr><td>1. Pegue a energia</td><td>Pega a energia que vira corpo novo</td><td>Por que a pirâmide afina em cima?</td><td>A maior parte da energia sai como calor da respiração e como fezes e restos. Só uma parte vira biomassa.</td></tr>
+ <tr><td>2. Quanto capim para uma onça?</td><td>Varia a área até sustentar uma onça</td><td>Por que há menos onças que capivaras?</td><td>Regra aproximada: cerca de 10% passa de um nível para o outro.</td></tr>
+ <tr><td>3. O prato da cidade</td><td>Divide a terra entre lavoura e pasto</td><td>Por que comer mais acima na cadeia exige mais terra?</td><td>Cada nível a mais multiplica a área necessária. Liga com o uso consciente dos recursos.</td></tr>
+ <tr><td>4. Quantos cabem?</td><td>Prevê e testa, com e sem um elo a mais</td><td>Por que as cadeias são curtas?</td><td>Com 4 níveis, quase nada chega ao topo.</td></tr>
+ <tr><td>5. Pesca que dura</td><td>Escolhe o nível dos peixes pescados</td><td>Por que pescar só predadores pesa mais?</td><td>Cada quilo de predador exige muito mais produção do rio que um quilo de peixe que come plantas.</td></tr></table>
+ <h3>Avaliação</h3>
+ <p>Use o relatório de campo impresso e a frase escrita por cada dupla. Todos os instrumentos têm o mesmo peso. Observe se o aluno explica a perda de energia, e não só repete os 10%.</p>
+ <h3>Sequência de 3 aulas</h3>
+ <ol><li><b>Aula 1.</b> Jogo completo e discussão.</li><li><b>Aula 2.</b> Leitura guiada sobre a produção primária que sustenta a pesca (Pauly e Christensen, 1995).</li><li><b>Aula 3.</b> As duplas montam a pirâmide de energia de uma refeição da cantina da escola.</li></ol>
+ <h3>Cuidado ao explicar</h3>
+ <p>Os 10% são uma média. A eficiência real varia entre ecossistemas e grupos de animais. Os números de área, comida e pesca do jogo são de um modelo simples.</p>
+ <h3>Referências</h3>
+ <ul class="ref">
+ <li>Lindeman R.L. 1942. The trophic-dynamic aspect of ecology. Ecology 23: 399-417. doi:10.2307/1930126</li>
+ <li>Pauly D., Christensen V. 1995. Primary production required to sustain global fisheries. Nature 374: 255-257. doi:10.1038/374255a0</li></ul>
+ </div>`;
+ $('bVt').onclick=inicio;$('bPr').onclick=()=>window.print();
+}
+
+/* ================= RANKING ================= */
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="piramide-de-energia";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__a={get S(){return S},get G(){return G},FASES,inicio,novo,intro,guia};
+inicio();
+</script>
+</body>
+</html>
