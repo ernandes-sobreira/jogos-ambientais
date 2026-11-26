@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Energia da Cidade</title>
+<style>
+:root{--main:#455a64;--deep:#263238;--soft:#eceff1;--line:#cfd8dc;--ink:#10212b;--mut:#4d6370;--co2:#e53935;--ch4:#ef6c00;--ok:#2e7d32;--bad:#c62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:820px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep);letter-spacing:-.01em}
+h2{font-size:1.2rem;color:var(--deep);margin-bottom:6px;letter-spacing:-.01em}
+h3{font-size:1rem;color:var(--deep);margin:14px 0 6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 12px;font-weight:700;font-size:.86rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.card{border:2px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:var(--deep)}.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.btn.sm{padding:9px 14px;font-size:.92rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas.cena{width:100%;height:auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff;margin-top:10px}
+.top{justify-content:space-between}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--main);color:#fff;border-radius:14px;padding:8px 14px;font-weight:800;font-size:1.05rem}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.tool{border:2px solid var(--line);background:#fff;color:var(--deep);border-radius:12px;padding:9px 12px;font-weight:700;font-family:inherit;font-size:.92rem;cursor:pointer;touch-action:manipulation}
+.tool.on{border-color:var(--main);background:var(--soft)}
+.tool:disabled{opacity:.4}
+.mets{display:grid;gap:8px;margin-top:10px}
+.met{display:grid;grid-template-columns:92px 1fr 52px;gap:8px;align-items:center;font-weight:700;font-size:.9rem}
+.met .bar{position:relative;height:18px;background:#f1f4f5;border-radius:99px;overflow:hidden}
+.met .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;transition:width .15s}
+.met .alvo{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--ink);border-radius:2px}
+.met .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--mut)}
+.met.co2 .fill{background:var(--co2)}.met.ch4 .fill{background:var(--ch4)}
+.saldo .bar{background:linear-gradient(90deg,#e8f5e9 50%,#ffebee 50%)}
+.saldo .zero{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:var(--ink)}
+.saldo .fill{border-radius:0}
+.obj{display:flex;gap:10px;align-items:flex-start;background:#fff8e1;border:2px solid #ffe082;border-radius:14px;padding:10px 12px;margin-top:10px;font-size:.95rem}
+.obj b{color:#8d6e00;white-space:nowrap}
+.acao{display:flex;gap:10px;align-items:center;background:var(--soft);border-left:5px solid var(--main);border-radius:0 12px 12px 0;padding:9px 12px;margin-top:8px;font-weight:600;font-size:.95rem;min-height:42px}
+.acao .dedo{font-size:1.25rem;animation:pulo 1s ease-in-out infinite}
+@keyframes pulo{50%{transform:translateX(4px)}}
+.help{width:34px;height:34px;border-radius:50%;border:2px solid var(--main);background:#fff;color:var(--deep);font-weight:800;font-size:1rem;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(16,33,43,.35);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal .card{max-width:460px;width:100%}
+.intro{text-align:center;padding:26px 18px}
+.intro .ic{font-size:3rem;line-height:1}
+.intro .n{color:var(--mut);font-weight:700;font-size:.85rem;margin-top:8px}
+.passos{display:grid;gap:8px;margin:16px auto;max-width:420px;text-align:left}
+.passos div{display:flex;gap:12px;align-items:center;background:var(--soft);border-radius:12px;padding:10px 14px;font-weight:600}
+.passos b{font-size:1.3rem;min-width:1.6em;text-align:center}
+.res{text-align:center}
+.res .big{font-size:2.6rem;font-weight:800;color:var(--deep);line-height:1.1}
+.res .ok{color:var(--ok);font-weight:800}.res .no{color:var(--bad);font-weight:800}
+.pensa{background:var(--soft);border-radius:14px;padding:12px 14px;margin:14px auto;max-width:520px;text-align:left}
+.pensa b{color:var(--deep)}
+.boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.box{border:2px dashed var(--line);border-radius:14px;padding:10px;min-height:110px;cursor:pointer}
+.box h4{font-size:.92rem;color:var(--deep);margin-bottom:6px}
+.box.alvo{border-color:var(--main);background:var(--soft)}
+.cards{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;min-height:48px}
+.ct{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 11px;font-weight:700;font-size:.9rem;cursor:pointer;box-shadow:0 2px 0 var(--line);font-family:inherit;color:var(--ink);transition:transform .5s}
+.ct.sel{border-color:var(--main);background:var(--soft);transform:translateY(-2px)}
+.ct.certo{border-color:var(--ok);background:#e8f5e9}.ct.errado{border-color:var(--bad);background:#ffebee}
+.ct.movido{animation:voa .8s ease}
+@keyframes voa{0%{transform:translateY(-30px) scale(1.1);opacity:.3}100%{transform:none;opacity:1}}
+.capa{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+.capa canvas{width:100%;height:auto;display:block;border-radius:16px;background:var(--soft)}
+.opts{display:grid;gap:8px;margin-top:6px}
+.opts .l{font-size:.8rem;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.sw{display:flex;gap:6px;flex-wrap:wrap}
+.sw button{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--line);cursor:pointer}
+.sw button.on{box-shadow:0 0 0 3px var(--deep)}
+.sw .tx{width:auto;height:auto;border-radius:10px;padding:6px 10px;font-weight:700;font-size:.85rem;background:#fff;color:var(--deep);font-family:inherit;border:0}
+input.nome{border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit;width:100%}
+input[type=range]{width:100%;accent-color:var(--main)}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:6px}
+.tab th{text-align:left;background:var(--soft);color:var(--deep);padding:7px 6px}
+.tab td{border-bottom:1px solid var(--line);padding:7px 6px;vertical-align:top}
+.guia p,.guia li{font-size:.95rem;margin-bottom:6px}
+.guia ul,.guia ol{padding-left:20px}
+.hab{border-left:5px solid var(--main);background:var(--soft);padding:10px 14px;border-radius:0 12px 12px 0;font-size:.95rem}
+.ref li{font-size:.86rem;color:var(--mut)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+.rel{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center}
+.rel canvas{width:120px;height:120px;border-radius:50%;background:var(--soft)}
+.mini{width:100%;max-width:420px;height:auto;display:block;margin:10px auto 0}
+@media (max-width:620px){.wrap{padding:10px 8px 30px}.card{padding:12px;border-radius:16px}.capa{grid-template-columns:1fr}.met{grid-template-columns:70px 1fr 44px;font-size:.82rem}.chip{font-size:.95rem}.rel{grid-template-columns:80px 1fr}.rel canvas{width:80px;height:80px}}
+@media print{a.hub,header .hud,.ranking,.noprint{display:none!important}.card{border:1px solid #ccc;break-inside:avoid}body{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>Energia da Cidade</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF"></span><span class="pill" id="hP"></span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const W=760,H=372;
+function hex(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mix(a,b,t){const A=hex(a),B=hex(b);return`rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`;}
+
+/* ================= AVATAR ================= */
+const PELES=['#f6d3b8','#e3b18b','#c68a5e','#94603e','#5d3b26'];
+const CABS=['#1b1b1b','#4e342e','#8d6e63','#d4a85a','#b5532f'];
+const CAMISAS=['#00838f','#2e7d32','#f9a825','#c62828','#6a1b9a','#37474f'];
+const ESTILOS=[['curto','Curto'],['cacheado','Cacheado'],['longo','Longo'],['coque','Coque'],['raspado','Raspado']];
+const CHAPEUS=[['nenhum','Sem'],['bone','Boné'],['campo','Chapéu']];
+let A={pele:2,cab:0,estilo:'cacheado',camisa:0,chapeu:'campo',nome:''};
+try{const s=JSON.parse(localStorage.getItem('bc_avatar')||'null');if(s)A=Object.assign(A,s);}catch(e){}
+function salvaA(){try{localStorage.setItem('bc_avatar',JSON.stringify(A));}catch(e){}}
+function avatar(c,x,y,s,a,prancheta){
+ c.save();c.translate(x,y);c.scale(s,s);
+ const pele=PELES[a.pele],cab=CABS[a.cab],cam=CAMISAS[a.camisa];
+ if(a.estilo==='longo'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-39,12.5,15,0,0,7);c.fill();c.fillRect(-12.5,-40,25,22);}
+ if(a.estilo==='cacheado'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-40,15,14.5,0,0,7);c.fill();}
+ c.fillStyle=cam;c.beginPath();c.moveTo(-16,0);c.quadraticCurveTo(-17,-21,-6,-25);c.lineTo(6,-25);c.quadraticCurveTo(17,-21,16,0);c.closePath();c.fill();
+ c.fillStyle='rgba(0,0,0,.12)';c.fillRect(-1,-24,2,24);
+ c.fillStyle=pele;c.fillRect(-3.5,-29,7,6);
+ if(prancheta){c.fillStyle='#8d6e63';c.fillRect(4,-19,13,16);c.fillStyle='#fff';c.fillRect(5.5,-17,10,12);c.strokeStyle='#90a4ae';c.lineWidth=.8;for(let i=0;i<4;i++){c.beginPath();c.moveTo(7,-14+i*2.6);c.lineTo(14,-14+i*2.6);c.stroke();}}
+ c.strokeStyle=cam;c.lineWidth=6;c.lineCap='round';c.beginPath();c.moveTo(-11,-20);c.lineTo(-4,-9);c.stroke();
+ c.fillStyle=pele;c.beginPath();c.arc(-3,-8,3,0,7);c.fill();
+ c.fillStyle=pele;c.beginPath();c.ellipse(0,-39,9.5,11,0,0,7);c.fill();
+ c.beginPath();c.arc(-9.4,-38,2.3,0,7);c.arc(9.4,-38,2.3,0,7);c.fill();
+ c.fillStyle=cab;
+ if(a.estilo==='curto'){c.beginPath();c.ellipse(0,-44.5,10,6.8,0,Math.PI,0);c.fill();c.fillRect(-10,-46,2.8,7);c.fillRect(7.2,-46,2.8,7);}
+ if(a.estilo==='cacheado'){for(let i=0;i<13;i++){const an=Math.PI*(.8+i*1.4/12);c.beginPath();c.arc(Math.cos(an)*12,-41+Math.sin(an)*11.5,4.2,0,7);c.fill();}}
+ if(a.estilo==='longo'){c.beginPath();c.ellipse(0,-44.5,10.6,7.2,0,Math.PI,0);c.fill();}
+ if(a.estilo==='coque'){c.beginPath();c.ellipse(0,-44.5,10,6.4,0,Math.PI,0);c.fill();c.beginPath();c.arc(0,-53,5.2,0,7);c.fill();}
+ if(a.estilo==='raspado'){c.globalAlpha=.5;c.beginPath();c.ellipse(0,-44,9.8,6.2,0,Math.PI,0);c.fill();c.globalAlpha=1;}
+ c.fillStyle='#2b2a26';c.beginPath();c.arc(-3.4,-39,1.25,0,7);c.arc(3.4,-39,1.25,0,7);c.fill();
+ c.strokeStyle='#2b2a26';c.lineWidth=1;c.beginPath();c.arc(0,-35.6,2.6,.25,Math.PI-.25);c.stroke();
+ if(a.chapeu==='bone'){c.fillStyle=cam;c.beginPath();c.ellipse(0,-46,10.6,5.8,0,Math.PI,0);c.fill();c.fillRect(-10.6,-47,21.2,2.6);c.beginPath();c.ellipse(8.5,-46.2,8,2.2,0,0,7);c.fill();}
+ if(a.chapeu==='campo'){c.fillStyle='#d7c49e';c.beginPath();c.ellipse(0,-46,16.5,3.6,0,0,7);c.fill();c.beginPath();c.ellipse(0,-48,9.2,6.4,0,Math.PI,0);c.fill();c.fillStyle='#8d6e63';c.fillRect(-9.2,-49,18.4,1.9);}
+ c.restore();
+}
+function pernas(c,x,y,s,a){c.save();c.translate(x,y);c.scale(s,s);c.fillStyle='#455a64';c.fillRect(-11,0,9,20);c.fillRect(2,0,9,20);c.fillStyle='#3e2723';c.fillRect(-12,18,11,4);c.fillRect(1,18,11,4);c.restore();}
+
+/* ================= MODELO ================= */
+const DEM=h=>55+30*Math.exp(-(((h-19.5)/2.5)**2))+12*Math.exp(-(((h-12)/3)**2));
+const SOLH=h=>Math.max(0,Math.sin(Math.PI*(h-6)/12));
+function dia(N,B){let bat=0,cap=B*60;const out=[];for(let d=0;d<2;d++)for(let h=0;h<24;h+=.5){const s=N*9*SOLH(h),dm=DEM(h);let sob=s-dm,usoS=Math.min(s,dm),car=0,desc=0,ter=0,perd=0;
+ if(sob>=0){car=Math.min(sob,(cap-bat)/.5);bat+=car*.5;perd=sob-car;}else{desc=Math.min(-sob,bat/.5);bat-=desc*.5;ter=-sob-desc;}if(d)out.push({h,dm,s:usoS,desc,ter,perd,bat});}return out;}
+function resumoDia(o){return{co2:Math.round(o.reduce((a,x)=>a+x.ter*.5,0)),perd:Math.round(o.reduce((a,x)=>a+x.perd*.5,0))};}
+/* ano: 12 meses, comeca em janeiro (chuva) */
+const CHUVA=[1,1,1,.8,.4,.2,.1,.1,.2,.5,.8,1];
+const VENTO=[.5,.5,.55,.7,.9,1.1,1.2,1.25,1.2,1,.7,.55];
+function ano(o){/* o: {hid,sol,eol,ter,novaHid,seca} */const dem=120;let R=o.Rini??150;const cap=(o.hid+(o.novaHid||0))*25,Rmax=(o.hid+(o.novaHid||0))*120;const m=[];
+ for(let i=0;i<12;i++){const inflow=(o.hid+(o.novaHid||0))*22*CHUVA[i]*(o.seca?.45:1);R=Math.min(Rmax,R+inflow);const s=Math.min(dem*.45,o.sol*8),e=Math.min(dem-s,o.eol*10*VENTO[i]);let rest=dem-s-e;
+  const h=Math.min(rest,cap,R);R-=h;rest-=h;const t=Math.min(rest,o.ter*30);rest-=t;m.push({s,e,h,t,ap:rest,R});}
+ return{m,co2:Math.round(m.reduce((a,x)=>a+x.t,0)),ap:Math.round(m.reduce((a,x)=>a+x.ap,0))};}
+
+/* ================= CENA ================= */
+const CORES={main:'#455a64',deep:'#263238'};
+function sr(n){const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+function syncMol(){}function partic(){}
+const CF={s:'#f9a825',e:'#26a69a',h:'#1e88e5',t:'#757575',d:'#ab47bc',p:'#ffe082'};
+function painel(c,x,y,on){c.save();c.translate(x,y);c.fillStyle='#78909c';c.fillRect(-1,-4,2,8);c.transform(1,0,-.4,1,0,0);const g=c.createLinearGradient(0,-16,0,-4);g.addColorStop(0,on?'#5c8fd6':'#3f5f8f');g.addColorStop(1,'#1d3557');c.fillStyle=g;c.fillRect(-14,-16,28,12);c.strokeStyle='rgba(255,255,255,.5)';c.lineWidth=.7;for(let i=1;i<4;i++){c.beginPath();c.moveTo(-14+i*7,-16);c.lineTo(-14+i*7,-4);c.stroke();}c.beginPath();c.moveTo(-14,-10);c.lineTo(14,-10);c.stroke();c.restore();}
+function turbina(c,x,y,a,s){s=s||1;c.save();c.translate(x,y);c.scale(s,s);c.fillStyle='#eceff1';c.beginPath();c.moveTo(-2.5,0);c.lineTo(-1.2,-60);c.lineTo(1.2,-60);c.lineTo(2.5,0);c.fill();c.translate(0,-60);c.rotate(a);c.fillStyle='#fafafa';c.strokeStyle='#b0bec5';c.lineWidth=.6;for(let i=0;i<3;i++){c.rotate(Math.PI*2/3);c.beginPath();c.moveTo(0,0);c.quadraticCurveTo(4,-14,1,-30);c.lineTo(-1.5,-29);c.quadraticCurveTo(-2,-14,0,0);c.fill();c.stroke();}c.fillStyle='#cfd8dc';c.beginPath();c.arc(0,0,3,0,7);c.fill();c.restore();}
+function barragem(c,x,y,nivel){c.fillStyle='#90caf9';c.fillRect(x-90,y-10-nivel*40,80,10+nivel*40);c.fillStyle='#9e9e9e';c.beginPath();c.moveTo(x-12,y);c.lineTo(x-10,y-58);c.lineTo(x+6,y-58);c.lineTo(x+16,y);c.fill();c.fillStyle='#bdbdbd';c.fillRect(x-10,y-58,16,5);
+ c.fillStyle='#64b5f6';c.fillRect(x+16,y-8,70,8);}
+function termica(c,x,y,f,t){c.fillStyle='#8d6e63';c.fillRect(x-30,y-30,48,30);c.fillStyle='#bcaaa4';c.fillRect(x+6,y-70,12,40);c.fillStyle='#c62828';c.fillRect(x+6,y-70,12,4);c.fillRect(x+6,y-58,12,3);
+ for(let i=0;i<Math.round(f*7);i++){const k=(t*.5+i/7)%1;c.fillStyle=`rgba(97,97,97,${.45*(1-k)})`;c.beginPath();c.arc(x+12+k*40,y-76-k*60,6+k*14,0,7);c.fill();}}
+function cidade(c,x,y,noite){const B=[[0,40],[18,62],[38,50],[56,80],[78,56],[96,70],[116,46]];B.forEach(([dx,h],i)=>{c.fillStyle=noite?'#37474f':'#90a4ae';c.fillRect(x+dx,y-h,16,h);for(let r=0;r<Math.floor(h/10);r++)for(let k=0;k<2;k++){c.fillStyle=noite?(sr(i*9+r*3+k)>.3?'#ffe082':'#455a64'):'#cfd8dc';c.fillRect(x+dx+3+k*6,y-h+4+r*10,4,5);}});}
+function fundo(c,G,noite){const g=c.createLinearGradient(0,0,0,230);g.addColorStop(0,noite?'#7986cb':'#cbeef8');g.addColorStop(1,noite?'#c5cae9':'#f6fcfd');c.fillStyle=g;c.fillRect(0,0,W,H);
+ c.fillStyle='#c5e1a5';c.fillRect(0,230,W,H-230);c.fillStyle='#aed581';c.fillRect(0,230,W,6);}
+function drawCena(c,G){if(G.desenha)G.desenha(c);}
+/* ================= TELA / LOOP ================= */
+let G=null,S=null,raf=0,ultimo=0,cx=null;
+function laco(ts){const dt=Math.min(.05,(ts-ultimo)/1000||0);ultimo=ts;if(G){G.t+=dt;if(G.upd)G.upd(dt);syncMol(G,dt);partic(G,dt);if(cx)drawCena(cx,G);if(G.extra)G.extra(cx);}raf=requestAnimationFrame(laco);}
+function parar(){cancelAnimationFrame(raf);raf=0;}
+function rodar(){parar();ultimo=performance.now();raf=requestAnimationFrame(laco);}
+function hud(){$('hud').style.display='flex';$('hF').textContent=`Fase ${S.f+1} de ${FASES.length}`;$('hP').textContent=`${Math.max(0,S.tot+S.fp)} pts`;}
+function telaJogo(chip,info){
+ const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><span class="chip" id="chip">${chip}</span><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="acao"><span class="dedo">👉</span><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});
+}
+function acao(t){const e=$('acao');if(e&&e.innerHTML!==t)e.innerHTML=t;}
+function ajuda(){const F=FASES[S.f],d=document.createElement('div');d.className='modal';
+ d.innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn">Entendi</button></div>`;
+ d.onclick=e=>{if(e.target===d||e.target.tagName==='BUTTON')d.remove();};document.body.appendChild(d);}
+function medidor(id,rot,cls,max,alvo){const a=alvo!=null?`<span class="alvo" style="left:${alvo/max*100}%"></span>`:'';return`<div class="met ${cls}" id="${id}" data-max="${max}"><span>${rot}</span><div class="bar"><span class="fill"></span>${a}</div><span class="v"></span></div>`;}
+function poeMed(id,v){const e=$(id);if(!e)return;const m=+e.dataset.max;e.querySelector('.fill').style.width=clamp(v/m*100,0,100)+'%';e.querySelector('.v').textContent=Math.round(v);}
+function poeSaldo(v,max){const e=$('mSaldo');if(!e)return;const f=e.querySelector('.fill'),p=clamp(Math.abs(v)/max*50,0,50);if(v<0){f.style.left=(50-p)+'%';f.style.width=p+'%';f.style.background='#43a047';}else{f.style.left='50%';f.style.width=p+'%';f.style.background='#e53935';}e.querySelector('.v').textContent=(v>0?'+':'')+Math.round(v);}
+
+/* ================= FASES ================= */
+const FASES=[
+ {nome:'O que gira a turbina?',ic:'⚙️',obj:'Descobrir o que move cada usina e separar as fontes renováveis das não renováveis.',passos:[['👆','Toque em cada usina para ver o que a move'],['🗂️','Depois separe em renovável ou não renovável'],['✗','Errar tira pontos']],ini:()=>f1()},
+ {nome:'Sol e a noite',ic:'🌇',obj:'Escolher quantos painéis solares deixam o CO₂ o mais baixo possível sem desperdiçar mais de 20 de energia.',passos:[['☀️','Mude o número de painéis'],['▶','Rode um dia de 24 horas'],['🏭','O que o sol não cobre vem da térmica, que solta CO₂']],ini:()=>f2()},
+ {nome:'Guardar o sol',ic:'🔋',obj:'Com 14 moedas, combinar painéis e baterias para deixar o CO₂ em até 840.',passos:[['☀️','Painel custa 1 moeda'],['🔋','Bateria custa 2 e guarda a sobra do dia'],['🌙','À noite a bateria devolve a energia']],ini:()=>f3()},
+ {nome:'Ano seco',ic:'🏜️',obj:'Prever o que acontece com a térmica e o CO₂ num ano de pouca chuva, e depois testar a ajuda do vento.',passos:[['🔮','Marque se cada coisa sobe, fica igual ou desce'],['▶','Rode o ano seco'],['🌬️','Depois teste com usinas eólicas']],ini:()=>f4()},
+ {nome:'Planeje a matriz',ic:'🗺️',obj:'Montar a energia da região para um ano normal e um ano seco: sem apagão, CO₂ até 560, custo até 24 e sem nova barragem no Pantanal.',passos:[['➕','Escolha quantas usinas de cada tipo'],['▶','Teste os dois anos'],['📋','Acompanhe as metas']],ini:()=>f5()}
+];
+function intro(){parar();G=null;cx=null;hud();const F=FASES[S.f];$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><div class="n">FASE ${S.f+1} DE ${FASES.length}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left;max-width:420px;margin:12px auto 0"><b>🎯 Objetivo</b><span>${F.obj}</span></div>
+ <div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn" id="bGo">Começar</button></div>`;
+ $('bGo').onclick=()=>{S.fp=0;F.ini();};}
+function fimFase(pts,ok,oque,pergunta,extraHtml){
+ parar();pts=Math.max(0,Math.round(pts));S.fp=0;S.tot+=pts;S.res[S.f]={pts,ok,oque};hud();
+ $('tela').innerHTML=`<div class="card res"><div class="small">${FASES[S.f].ic} ${FASES[S.f].nome}</div><div class="big">+${pts}</div>
+ <p class="${ok?'ok':'no'}">${ok?'Meta cumprida':'Meta não cumprida'}</p>${extraHtml||''}
+ <div class="pensa"><b>O que aconteceu:</b> ${oque}</div><div class="pensa"><b>Pergunta para a turma:</b> ${pergunta}</div>
+ <div class="row" style="justify-content:center"><button class="btn" id="bNx">${S.f<FASES.length-1?'Próxima fase':'Ver relatório'}</button></div></div>`;
+ $('bNx').onclick=()=>{S.f++;if(S.f<FASES.length)intro();else relatorio();};
+}
+/* ---------- FASE 1 ---------- */
+const USINAS=[{x:90,nome:'Usina solar',fonte:'☀️ Luz do sol',cls:'ren'},{x:210,nome:'Usina eólica',fonte:'🌬️ Vento',cls:'ren'},{x:360,nome:'Hidrelétrica',fonte:'💧 Água do rio represada',cls:'ren'},{x:500,nome:'Térmica a gás',fonte:'🔥 Gás natural, um combustível fóssil',cls:'nao'},{x:630,nome:'Térmica a bagaço',fonte:'🌾 Bagaço de cana queimado',cls:'ren'}];
+function cenaUsinas(c,G,noite){fundo(c,G,noite);painel(c,70,240,!noite);painel(c,105,236,!noite);painel(c,80,262,!noite);painel(c,115,258,!noite);turbina(c,195,250,G.t*2,1);turbina(c,232,240,G.t*2+1,.8);barragem(c,380,252,.7);termica(c,500,250,.8,G.t);
+ c.fillStyle='#a1887f';c.fillRect(605,222,44,28);c.fillStyle='#d7ccc8';c.fillRect(640,190,10,32);c.fillStyle='#c5e1a5';for(let i=0;i<8;i++){c.fillStyle='#8bc34a';c.fillRect(590+i*9,250,3,-14-sr(i)*6);}
+ for(let i=0;i<4;i++){const k=(G.t*.4+i/4)%1;c.fillStyle=`rgba(158,158,158,${.4*(1-k)})`;c.beginPath();c.arc(645+k*20,186-k*40,5+k*10,0,7);c.fill();}}
+function f1(){G={t:0,vis:USINAS.map(()=>false),pts:0};telaJogo('⚙️ O que gira a turbina?','0 de 5');
+ G.desenha=c=>{cenaUsinas(c,G,false);USINAS.forEach((u,i)=>{const y=i%2?70:130;if(G.vis[i]){c.font='700 12px system-ui';const w=Math.max(c.measureText(u.nome).width,c.measureText(u.fonte).width)+18;c.fillStyle='#fff';c.strokeStyle=CORES.main;c.lineWidth=2;c.beginPath();c.roundRect(u.x-w/2,y-20,w,44,10);c.fill();c.stroke();c.fillStyle='#263238';c.textAlign='center';c.fillText(u.nome,u.x,y-3);c.font='12px system-ui';c.fillText(u.fonte,u.x,y+15);}
+  else{const r=16+Math.sin(G.t*4)*2;c.fillStyle='#fff';c.strokeStyle=CORES.main;c.lineWidth=3;c.beginPath();c.arc(u.x,y+40,r,0,7);c.fill();c.stroke();c.font='16px system-ui';c.textAlign='center';c.fillText('❔',u.x,y+46);}});};
+ G.tap=(x,y)=>{USINAS.forEach((u,i)=>{if(!G.vis[i]&&Math.abs(x-u.x)<60&&y>60&&y<280){G.vis[i]=true;G.pts+=10;S.fp=G.pts;hud();const n=G.vis.filter(Boolean).length;$('info').textContent=n+' de 5';
+  if(n===5){acao('Todas reveladas! Agora vamos separar.');setTimeout(classif1,1200);}else acao('Toque nas outras usinas.');}});};
+ acao('Toque em cada usina (nos ❔) para descobrir o que gira a turbina dela.');rodar();}
+function classif1(){parar();const onde=USINAS.map(()=>null);let sel=null;
+ const html=()=>`<div class="card"><div class="row top"><span class="chip">🗂️ Renovável ou não?</span><span class="pill">${S.tot+G.pts} pts</span></div>
+ <div class="obj"><b>🎯 Objetivo</b><span>Separar as fontes que se renovam das que acabam.</span></div><div class="acao"><span class="dedo">👉</span><span>Toque numa usina e depois na caixa certa. Depois aperte Conferir.</span></div>
+ <div class="cards" id="pool">${USINAS.map((u,i)=>onde[i]?'':`<button class="ct${sel===i?' sel':''}" data-i="${i}">${u.nome}</button>`).join('')}</div>
+ <div class="boxes">${[['ren','♻️ Renovável'],['nao','⛽ Não renovável']].map(([b,t])=>`<div class="box${sel!=null?' alvo':''}" data-b="${b}"><h4>${t}</h4><div class="cards">${USINAS.map((u,i)=>onde[i]===b?`<span class="ct" id="c${i}">${u.nome}</span>`:'').join('')}</div></div>`).join('')}</div>
+ <div class="row" style="margin-top:12px"><button class="btn" id="bC" ${onde.every(Boolean)?'':'disabled'}>Conferir</button></div></div>`;
+ const pinta=()=>{$('tela').innerHTML=html();document.querySelectorAll('#pool .ct').forEach(b=>b.onclick=()=>{sel=+b.dataset.i;pinta();});document.querySelectorAll('.box').forEach(b=>b.onclick=()=>{if(sel==null)return;onde[sel]=b.dataset.b;sel=null;pinta();});
+  $('bC').onclick=()=>{let pts=G.pts;const err=[];USINAS.forEach((u,i)=>{if(onde[i]===u.cls)pts+=20;else{pts-=10;err.push(i);}});USINAS.forEach((u,i)=>onde[i]=u.cls);$('tela').innerHTML=html();$('bC').style.display='none';USINAS.forEach((u,i)=>{const e=$('c'+i);if(e){e.classList.add(err.includes(i)?'errado':'certo');if(err.includes(i))e.classList.add('movido');}});
+   setTimeout(()=>fimFase(pts,!err.length,'Sol, vento, água e bagaço de cana se renovam. O gás natural é fóssil: levou milhões de anos para se formar e, quando queimado, devolve ao ar carbono que estava guardado.','Renovável quer dizer sem nenhum impacto ambiental?'),err.length?2200:1300);};};pinta();}
+/* ---------- grafico do dia ---------- */
+function grafDia(c,o,x0,y0,w,h){c.fillStyle='#fff';c.strokeStyle='#cfd8dc';c.lineWidth=1.5;c.beginPath();c.roundRect(x0-8,y0-8,w+16,h+28,10);c.fill();c.stroke();const mx=140,px=i=>x0+i/47*w,py=v=>y0+h-v/mx*h;
+ const camada=(f,cor,base)=>{c.fillStyle=cor;c.beginPath();o.forEach((p,i)=>{const y=py(base(p)+f(p));i?c.lineTo(px(i),y):c.moveTo(px(i),y);});for(let i=o.length-1;i>=0;i--)c.lineTo(px(i),py(base(o[i])));c.closePath();c.fill();};
+ camada(p=>p.s,CF.s,()=>0);camada(p=>p.desc,CF.d,p=>p.s);camada(p=>p.ter,CF.t,p=>p.s+p.desc);camada(p=>p.perd,'rgba(249,168,37,.35)',p=>p.dm);
+ c.strokeStyle='#263238';c.lineWidth=2;c.beginPath();o.forEach((p,i)=>i?c.lineTo(px(i),py(p.dm)):c.moveTo(px(i),py(p.dm)));c.stroke();
+ c.fillStyle='#4d6370';c.font='11px system-ui';c.textAlign='center';[0,6,12,18,24].forEach(hh=>c.fillText(hh+'h',x0+hh/24*w,y0+h+14));
+ c.textAlign='left';c.font='700 11px system-ui';[['Sol',CF.s],['Bateria',CF.d],['Térmica (CO₂)',CF.t],['Sobra perdida','rgba(249,168,37,.35)'],['Consumo','#263238']].forEach(([n,cor],i)=>{c.fillStyle=cor;c.fillRect(x0+i*110,y0-6,10,10);c.fillStyle='#37474f';c.fillText(n,x0+i*110+14,y0+3);});}
+/* ---------- FASE 2 ---------- */
+function f2(){G={t:0,N:2,o:null,hora:0,roda:false,tent:0};telaJogo('🌇 Sol e a noite','1 dia');
+ G.desenha=c=>{const h=G.o?G.o[Math.min(G.o.length-1,Math.floor(G.hora*2))].h:12,noite=h<6||h>18;fundo(c,G,noite);for(let i=0;i<G.N;i++)painel(c,40+i*34,232-(i%2)*10,!noite);cidade(c,560,232,noite);
+  const p=G.o?G.o[Math.min(G.o.length-1,Math.floor(G.hora*2))]:null;termica(c,470,232,p?p.ter/90:0,G.t);if(G.o)grafDia(c,G.o.slice(0,Math.max(2,Math.floor(G.hora*2)+1)).concat([]),40,262,680,90);
+  c.fillStyle='#263238';c.font='800 14px system-ui';c.textAlign='left';c.fillText(G.o?`${String(Math.floor(h)).padStart(2,'0')}h`:'',20,24);};
+ const ctrl=()=>{$('ctrl').innerHTML=`<span class="pill">☀️ Painéis</span><button class="tool" id="bM">−</button><span class="pill" style="font-size:1.05rem">${G.N}</span><button class="tool" id="bP">+</button><button class="btn sm" id="bR">▶ Rodar 24 horas</button>`;
+  $('bM').onclick=()=>{if(G.roda)return;G.N=Math.max(0,G.N-1);ctrl();};$('bP').onclick=()=>{if(G.roda)return;G.N=Math.min(12,G.N+1);ctrl();};
+  $('bR').onclick=()=>{if(G.roda)return;G.tent++;G.o=dia(G.N,0);G.hora=0;G.roda=true;$('bR').disabled=true;};};
+ G.upd=dt=>{if(!G.roda)return;G.hora+=dt*2.2;const h=G.hora;acao(h<6||h>18?'🌙 Noite: sem sol, a térmica liga e solta CO₂.':'☀️ Dia: os painéis cobrem parte do consumo.');
+  if(G.hora>=24){G.roda=false;const r=resumoDia(G.o);$('info').textContent=`CO₂ ${r.co2} · sobra ${r.perd}`;$('mets').innerHTML=`<div class="pensa" style="margin:0;max-width:none">Com <b>${G.N}</b> painéis: CO₂ <b>${r.co2}</b> · energia perdida <b>${r.perd}</b><div class="row" style="margin-top:6px"><button class="btn ghost sm" id="bF">Ficar com ${G.N} painéis</button></div></div>`;
+   $('bF').onclick=()=>{const ok=G.N===8;fimFase(ok?Math.max(60,160-15*Math.max(0,G.tent-3)):Math.max(10,80-Math.abs(G.N-8)*15),ok,`${ok?'8 painéis é o ponto certo.':'O ponto certo era 8 painéis.'} Mais painéis quase não baixam o CO₂, porque o problema é a noite: a sobra do meio-dia se perde sem bateria.`,'Por que encher a cidade de painéis não acaba com a térmica?');};
+   acao(`Resultado: CO₂ ${r.co2}, sobra perdida ${r.perd}. Mude os painéis e rode de novo, ou fique com este número.`);ctrl();}};
+ ctrl();acao('Escolha quantos painéis e aperte <b>▶ Rodar 24 horas</b>.');rodar();}
+/* ---------- FASE 3 ---------- */
+function f3(){G={t:0,N:6,B:0,o:null,hora:0,roda:false,tent:0};telaJogo('🔋 Guardar o sol','1 dia');
+ G.desenha=c=>{const p=G.o?G.o[Math.min(G.o.length-1,Math.floor(G.hora*2))]:null,h=p?p.h:12,noite=h<6||h>18;fundo(c,G,noite);for(let i=0;i<G.N;i++)painel(c,30+(i%7)*34,228-(Math.floor(i/7))*22,!noite);
+  for(let i=0;i<G.B;i++){const x=290+i*36,y=232,lv=p&&G.B?p.bat/(G.B*60):0;c.fillStyle='#455a64';c.fillRect(x,y-40,26,40);c.fillStyle='#66bb6a';c.fillRect(x+3,y-3-34*lv,20,34*lv);c.fillStyle='#455a64';c.fillRect(x+9,y-44,8,4);}
+  cidade(c,560,232,noite);termica(c,470,232,p?p.ter/90:0,G.t);if(G.o)grafDia(c,G.o.slice(0,Math.max(2,Math.floor(G.hora*2)+1)),40,262,680,90);};
+ const ctrl=()=>{const custo=G.N+2*G.B;$('ctrl').innerHTML=`<span class="pill">🪙 ${14-custo} moedas</span><span class="pill">☀️</span><button class="tool" data-a="N" data-d="-1">−</button><span class="pill">${G.N}</span><button class="tool" data-a="N" data-d="1">+</button><span class="pill">🔋</span><button class="tool" data-a="B" data-d="-1">−</button><span class="pill">${G.B}</span><button class="tool" data-a="B" data-d="1">+</button><button class="btn sm" id="bR">▶ Rodar 24 horas</button>`;
+  document.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{if(G.roda)return;const k=b.dataset.a,d=+b.dataset.d,nv=Math.max(0,G[k]+d);const c2=(k==='N'?nv:G.N)+2*(k==='B'?nv:G.B);if(c2>14){acao('Moedas insuficientes.');return;}G[k]=nv;ctrl();});
+  $('bR').onclick=()=>{if(G.roda)return;G.tent++;G.o=dia(G.N,G.B);G.hora=0;G.roda=true;$('bR').disabled=true;};};
+ G.upd=dt=>{if(!G.roda)return;G.hora+=dt*2.2;const h=G.hora;acao(h<6||h>18?'🌙 Noite: a bateria devolve o que guardou. Quando acaba, a térmica liga.':'☀️ Dia: a sobra do sol carrega a bateria.');
+  if(G.hora>=24){G.roda=false;const r=resumoDia(G.o),ok=r.co2<=840;$('info').textContent=`CO₂ ${r.co2}`;
+   if(ok){fimFase(Math.max(60,170-20*(G.tent-1)),true,`Com ${G.N} painéis e ${G.B} baterias o CO₂ ficou em ${r.co2}. A bateria leva a sobra do meio-dia para a noite. Só painel ou só bateria não resolve: um precisa do outro.`,'Por que a bateria sozinha, sem painel a mais, não ajuda?');return;}
+   acao(`CO₂ ${r.co2}, sobra perdida ${r.perd}. Ainda acima de 840. Troque a combinação e rode de novo.`);ctrl();}};
+ ctrl();acao('Use as 14 moedas em painéis (1) e baterias (2). Depois aperte <b>▶ Rodar 24 horas</b>.');rodar();}
+/* ---------- grafico do ano ---------- */
+const MESES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+function grafAno(c,a,x0,y0,w,h,ate){c.fillStyle='#fff';c.strokeStyle='#cfd8dc';c.lineWidth=1.5;c.beginPath();c.roundRect(x0-8,y0-8,w+16,h+30,10);c.fill();c.stroke();const bw=w/12-6,py=v=>v/130*h;
+ a.m.forEach((m,i)=>{if(i>=ate)return;let y=y0+h;[['h',CF.h],['s',CF.s],['e',CF.e],['t',CF.t],['ap','#e53935']].forEach(([k,cor])=>{const v=m[k];if(v<=0)return;c.fillStyle=cor;c.fillRect(x0+i*(w/12)+3,y-py(v),bw,py(v));y-=py(v);});c.fillStyle='#4d6370';c.font='11px system-ui';c.textAlign='center';c.fillText(MESES[i],x0+i*(w/12)+3+bw/2,y0+h+14);});
+ c.textAlign='left';c.font='700 11px system-ui';[['Hidrelétrica',CF.h],['Sol',CF.s],['Vento',CF.e],['Térmica (CO₂)',CF.t],['Apagão','#e53935']].forEach(([n,cor],i)=>{c.fillStyle=cor;c.fillRect(x0+i*120,y0-6,10,10);c.fillStyle='#37474f';c.fillText(n,x0+i*120+14,y0+3);});}
+/* ---------- FASE 4 ---------- */
+const PR=[['h','Energia da hidrelétrica'],['t','Uso da térmica'],['co2','CO₂']];
+function f4(){G={t:0,et:0,prev:{},prev2:null,mes:0,roda:false,a:null,base:ano({hid:3,sol:2,eol:0,ter:4})};telaJogo('🏜️ Ano seco','Prever');
+ G.desenha=c=>{fundo(c,G,false);barragem(c,200,232,G.a?Math.max(.05,G.a.m[Math.min(11,Math.floor(G.mes))].R/360):.8);termica(c,420,232,G.a?G.a.m[Math.min(11,Math.floor(G.mes))].t/120:.3,G.t);if(G.et===2)for(let i=0;i<3;i++)turbina(c,540+i*40,232,G.t*2+i,.8);cidade(c,640,232,false);
+  grafAno(c,G.a||G.base,40,262,680,80,G.a?Math.floor(G.mes)+1:12);c.fillStyle='#263238';c.font='800 13px system-ui';c.textAlign='left';c.fillText(G.a?(G.et===2?'Ano seco com 3 eólicas':'Ano seco'):'Ano normal (para comparar)',20,24);};
+ const tab=(v,fn)=>`<div style="width:100%;display:grid;gap:6px">${PR.map(([k,n])=>`<div class="row" style="gap:6px"><b style="min-width:190px">${n}</b>${[['up','⬆ sobe'],['eq','➖ igual'],['dn','⬇ desce']].map(([x,t])=>`<button class="tool${v[k]===x?' on':''}" data-k="${k}" data-v="${x}">${t}</button>`).join('')}</div>`).join('')}</div>`;
+ const ctrl=()=>{$('ctrl').innerHTML=tab(G.prev)+`<button class="btn sm" id="bR" ${Object.keys(G.prev).length<3?'disabled':''}>▶ Rodar o ano seco</button>`;
+  document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{G.prev[b.dataset.k]=b.dataset.v;ctrl();});
+  $('bR').onclick=()=>{G.a=ano({hid:3,sol:2,eol:0,ter:4,seca:1});G.mes=0;G.roda=true;G.et=1;$('ctrl').innerHTML='';acao('Pouca chuva: o reservatório enche menos...');};};
+ G.upd=dt=>{if(!G.roda)return;G.mes+=dt*1.6;if(G.mes>=12){G.roda=false;if(G.et===1)res1();else res2();}};
+ const tot=(a,k)=>a.m.reduce((s,x)=>s+x[k],0);
+ const res1=()=>{const real={h:'dn',t:'up',co2:'up'};let ac=0;PR.forEach(([k])=>{if(G.prev[k]===real[k])ac++;});G.ac1=ac;
+  acao(`Você acertou ${ac} de 3. Com pouca chuva a hidrelétrica gerou menos e a térmica cobriu a falta. CO₂: ${G.base.co2} no ano normal, ${G.a.co2} no ano seco.`);
+  $('ctrl').innerHTML=`<div style="width:100%"><b>E se a região tiver 3 usinas eólicas no ano seco? O uso da térmica:</b><div class="row" style="margin-top:6px">${[['up','⬆ sobe'],['eq','➖ igual'],['dn','⬇ desce']].map(([x,t])=>`<button class="tool" data-p2="${x}">${t}</button>`).join('')}</div></div>`;
+  document.querySelectorAll('[data-p2]').forEach(b=>b.onclick=()=>{G.prev2=b.dataset.p2;G.seco=G.a;G.a=ano({hid:3,sol:2,eol:3,ter:4,seca:1});G.mes=0;G.roda=true;G.et=2;$('ctrl').innerHTML='';acao('Rodando o ano seco com vento...');});};
+ const res2=()=>{const ok2=G.prev2==='dn',ac=G.ac1+(ok2?1:0);fimFase(ac*40,ac>=3,`Você acertou ${ac} de 4. No ano seco, a térmica e o CO₂ sobem (${G.seco.co2}). Com eólicas, o CO₂ caiu para ${G.a.co2}, porque no modelo o vento é mais forte justamente na estação seca e ajuda quando falta água.`,'Por que depender de um só tipo de usina deixa a região mais frágil?');};
+ ctrl();acao('O gráfico mostra um ano normal. Preveja o que muda num ano seco e aperte <b>▶ Rodar</b>.');rodar();}
+/* ---------- FASE 5 ---------- */
+const TIPOS=[['sol','☀️ Solar',2],['eol','🌬️ Eólica',3],['novaHid','💧 Nova hidrelétrica',4],['ter','🏭 Térmica',2]];
+function f5(){G={t:0,q:{sol:2,eol:0,novaHid:0,ter:2},a:null,b:null,ver:'a',mes:12,tent:0};telaJogo('🗺️ Planeje a matriz','');
+ G.desenha=c=>{fundo(c,G,false);for(let i=0;i<G.q.sol;i++)painel(c,30+(i%6)*30,228-Math.floor(i/6)*20,true);for(let i=0;i<G.q.eol;i++)turbina(c,230+i*28,232,G.t*2+i,.7);barragem(c,450,232,.6);if(G.q.novaHid){c.fillStyle='#c62828';c.font='700 11px system-ui';c.textAlign='center';c.fillText('nova barragem no rio do Pantanal',400,150);barragem(c,380,200,.4);}
+  for(let i=0;i<G.q.ter;i++)termica(c,520+i*36,232,.6,G.t+i);cidade(c,640,232,false);const a=G.ver==='a'?G.a:G.b;if(a)grafAno(c,a,40,262,680,80,12);
+  c.fillStyle='#263238';c.font='800 13px system-ui';c.textAlign='left';c.fillText(a?(G.ver==='a'?'Ano normal':'Ano seco'):'Monte a matriz e teste',20,24);};
+ const custo=()=>TIPOS.reduce((s,[k,,p])=>s+G.q[k]*p,0);
+ const ctrl=()=>{$('ctrl').innerHTML=TIPOS.map(([k,n,p])=>`<div class="row" style="gap:4px"><span class="pill">${n} · ${p}</span><button class="tool" data-k="${k}" data-d="-1">−</button><span class="pill">${G.q[k]}</span><button class="tool" data-k="${k}" data-d="1">+</button></div>`).join('')+`<button class="btn sm" id="bR">▶ Testar os dois anos</button>`;
+  document.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k;G.q[k]=Math.max(0,Math.min(9,G.q[k]+ +b.dataset.d));G.a=null;G.b=null;ctrl();metas();});
+  $('bR').onclick=()=>{G.tent++;const o={hid:2,...G.q};G.a=ano(o);G.b=ano({...o,seca:1});metas(true);};};
+ const metas=(test)=>{const c2=custo(),ap=G.a?G.a.ap+G.b.ap:null,co=G.a?G.a.co2+G.b.co2:null;const M=[['⚡ Sem apagão nos dois anos',ap===0,ap==null?'teste':ap],[`🏭 CO₂ até 560 nos dois anos`,co!=null&&co<=560,co==null?'teste':co],['🪙 Custo até 24',c2<=24,c2],['🐟 Nenhuma nova barragem no Pantanal',G.q.novaHid===0,'']];
+  $('info').textContent=`🪙 custo ${c2}`;$('mets').innerHTML=`<div class="row" style="margin-bottom:6px">${G.a?`<button class="tool${G.ver==='a'?' on':''}" id="vA">Ano normal</button><button class="tool${G.ver==='b'?' on':''}" id="vB">Ano seco</button>`:''}</div><div class="pensa" style="margin:0;max-width:none">${M.map(([t,ok,v])=>`${ok?'✅':'⬜'} ${t} ${v!==''?`<b>(${v})</b>`:''}`).join('<br>')}</div>`;
+  if($('vA')){$('vA').onclick=()=>{G.ver='a';metas();};$('vB').onclick=()=>{G.ver='b';metas();};}
+  if(test){const k=M.filter(x=>x[1]).length;if(k===4){acao('Todas as metas cumpridas!');setTimeout(()=>fimFase(Math.max(80,200-25*(G.tent-1)),true,`Sua matriz: ${G.q.sol} solares, ${G.q.eol} eólicas, ${G.q.ter} térmicas e nenhuma barragem nova. Ela aguenta o ano seco sem apagão e com pouco CO₂. Misturar fontes que falham em épocas diferentes dá segurança.`,'Por que a térmica ainda aparece numa matriz limpa?'),1500);}
+   else{acao(`Faltam metas: ${M.filter(x=>!x[1]).map(x=>x[0].slice(2)).join('; ')}. Ajuste e teste de novo.`);if(G.tent>=4&&!$('bDes')){$('ctrl').innerHTML+=`<button class="btn ghost sm" id="bDes">Encerrar a fase</button>`;$('bDes').onclick=()=>fimFase(k*30,false,'Uma solução era 7 solares, 2 eólicas e 2 térmicas. O sol cobre o dia, o vento ajuda na seca e a térmica fica só de reserva.','Por que a térmica ainda aparece numa matriz limpa?');}}}};
+ ctrl();metas();acao('Escolha quantas usinas de cada tipo. Já existem 2 hidrelétricas. Depois aperte <b>▶ Testar os dois anos</b>.');rodar();}
+/* ================= INICIO / AVATAR ================= */
+function inicio(){parar();G=null;cx=null;$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><div class="capa"><canvas id="cA" width="560" height="560"></canvas>
+ <div><h2>Monte seu pesquisador</h2><div class="opts">
+ <div class="l">Pele</div><div class="sw" id="sP">${PELES.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.pele===i?'on':''}" aria-label="pele ${i+1}"></button>`).join('')}</div>
+ <div class="l">Cabelo</div><div class="sw" id="sE">${ESTILOS.map(([k,t])=>`<button class="tx ${A.estilo===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <div class="sw" id="sC">${CABS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.cab===i?'on':''}" aria-label="cor ${i+1}"></button>`).join('')}</div>
+ <div class="l">Camiseta</div><div class="sw" id="sT">${CAMISAS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.camisa===i?'on':''}" aria-label="camiseta ${i+1}"></button>`).join('')}</div>
+ <div class="l">Chapéu</div><div class="sw" id="sH">${CHAPEUS.map(([k,t])=>`<button class="tx ${A.chapeu===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <input class="nome" id="iN" maxlength="20" placeholder="Seu nome" value="${esc(A.nome)}">
+ </div></div></div>
+ <div class="row" style="margin-top:14px"><button class="btn" id="bJ">▶ Jogar as 5 fases</button><button class="btn ghost" id="bG">📘 Guia do professor</button></div>
+ <p class="small" style="margin-top:10px">Ciências da Natureza · Ensino Médio · BNCC EM13CNT309</p></div>`;
+ const pinta=()=>{const c=$('cA').getContext('2d');c.clearRect(0,0,560,560);c.fillStyle='#eceff1';c.fillRect(0,0,560,560);c.fillStyle='#cfd8dc';c.beginPath();c.arc(280,600,260,0,7);c.fill();avatar(c,280,560,6.4,A,true);};
+ pinta();
+ const liga=(id,f)=>document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{f(b);salvaA();document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b));pinta();});
+ liga('sP',b=>A.pele=+b.dataset.i);liga('sC',b=>A.cab=+b.dataset.i);liga('sT',b=>A.camisa=+b.dataset.i);liga('sE',b=>A.estilo=b.dataset.k);liga('sH',b=>A.chapeu=b.dataset.k);
+ $('iN').oninput=e=>{A.nome=e.target.value;salvaA();};
+ $('bJ').onclick=novo;$('bG').onclick=guia;
+}
+function novo(){S={f:0,tot:0,fp:0,res:[],fichas:0};salvo=false;intro();}
+function relatorio(){parar();G=null;cx=null;$('rankBox').style.display='block';const nome=A.nome.trim()||'Pesquisador';
+ $('tela').innerHTML=`<div class="card"><div class="rel"><canvas id="cR" width="240" height="240"></canvas><div><div class="small">Relatório de campo</div><h2>${esc(nome)}</h2><div class="big" style="font-size:2rem;font-weight:800;color:var(--deep)">${S.tot} pts</div></div></div>
+ <table class="tab" style="margin-top:12px"><tr><th>Fase</th><th>Pontos</th><th>Meta</th></tr>${FASES.map((F,i)=>{const r=S.res[i]||{pts:0,ok:false};return`<tr><td>${F.ic} ${F.nome}</td><td>${r.pts}</td><td>${r.ok?'✓':'✗'}</td></tr>`;}).join('')}</table>
+ <div class="pensa"><b>Para escrever no caderno:</b> explique por que uma região segura precisa de mais de um tipo de usina.</div>
+ <div class="savebox noprint"><input id="pName" maxlength="20" value="${esc(nome)}"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row noprint" style="margin-top:12px"><button class="btn ghost" id="bI">🖨️ Imprimir relatório</button><button class="btn ghost" id="bN">Jogar de novo</button><button class="btn ghost" id="bV">Início</button></div></div>`;
+ const c=$('cR').getContext('2d');c.fillStyle='#eceff1';c.fillRect(0,0,240,240);avatar(c,120,240,3.2,A,true);
+ $('bS').onclick=()=>salvar('5 fases');$('bI').onclick=()=>window.print();$('bN').onclick=novo;$('bV').onclick=inicio;
+}
+
+/* ================= GUIA DO PROFESSOR ================= */
+function guia(){parar();$('hud').style.display='none';$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card guia">
+ <div class="row top noprint"><button class="btn ghost sm" id="bVt">← Voltar</button><button class="btn sm" id="bPr">🖨️ Imprimir guia</button></div>
+ <h2 style="margin-top:10px">Guia do professor · Energia da Cidade</h2>
+ <p class="small">Ensino Médio · Ciências da Natureza e suas Tecnologias · Física, Química e Geografia</p>
+ <h3>Habilidade da BNCC</h3>
+ <div class="hab"><b>EM13CNT309.</b> Analisar questões socioambientais, políticas e econômicas relativas à dependência do mundo atual em relação aos recursos não renováveis e discutir a necessidade de introdução de alternativas e novas tecnologias energéticas e de materiais, comparando diferentes tipos de motores e processos de produção de novos materiais.</div>
+ <h3>Objetivos da aula</h3>
+ <ul><li>Diferenciar fontes renováveis e não renováveis.</li><li>Explicar a intermitência do sol e o papel do armazenamento.</li><li>Relacionar seca, hidrelétricas e uso de térmicas fósseis.</li><li>Planejar uma matriz com metas de custo, emissões, segurança e impacto nos rios.</li></ul>
+ <h3>Roteiro de 50 minutos</h3>
+ <table class="tab"><tr><th>Tempo</th><th>O que fazer</th></tr>
+ <tr><td>5 min</td><td>Pergunte: de onde vem a energia da tomada da escola à noite?</td></tr>
+ <tr><td>25 min</td><td>Alunos jogam em duplas e anotam a matriz final da fase 5.</td></tr>
+ <tr><td>15 min</td><td>Compare as matrizes das duplas e discuta as perguntas de cada fase.</td></tr>
+ <tr><td>5 min</td><td>Cada dupla escreve a frase do relatório de campo.</td></tr></table>
+ <h3>Fase por fase</h3>
+ <table class="tab"><tr><th>Fase</th><th>O aluno faz</th><th>Pergunta para a turma</th><th>O que explicar</th></tr>
+ <tr><td>1. O que gira a turbina?</td><td>Descobre a fonte de cada usina e classifica</td><td>Renovável é sem impacto?</td><td>Toda fonte tem impacto. A diferença está em se renovar e em quanto carbono fóssil devolve ao ar.</td></tr>
+ <tr><td>2. Sol e a noite</td><td>Varia o número de painéis</td><td>Por que mais painéis não acabam com a térmica?</td><td>Intermitência: o sol não cobre a noite, e a sobra do dia se perde sem armazenamento.</td></tr>
+ <tr><td>3. Guardar o sol</td><td>Combina painéis e baterias com orçamento</td><td>Por que a bateria sozinha não ajuda?</td><td>Armazenamento só funciona se houver sobra para guardar.</td></tr>
+ <tr><td>4. Ano seco</td><td>Prevê e testa um ano de pouca chuva</td><td>Por que depender de uma fonte é frágil?</td><td>Sistemas apoiados em hidrelétricas usam mais térmica na seca. No Nordeste, o vento tende a ser mais forte na estação seca e complementa a água.</td></tr>
+ <tr><td>5. Planeje a matriz</td><td>Cumpre metas de custo, CO₂, segurança e rios</td><td>Por que a térmica ainda aparece numa matriz limpa?</td><td>Barragens alteram o regime dos rios que alimentam o Pantanal. Diversificar reduz riscos.</td></tr></table>
+ <h3>Avaliação</h3>
+ <p>Use o relatório de campo impresso e a frase escrita por cada dupla. Todos os instrumentos têm o mesmo peso. Observe se o aluno justifica a matriz com mais de um critério.</p>
+ <h3>Sequência de 3 aulas</h3>
+ <ol><li><b>Aula 1.</b> Jogo completo e discussão.</li><li><b>Aula 2.</b> Leitura guiada sobre barragens nos rios que alimentam o Pantanal (Ely et al., 2020).</li><li><b>Aula 3.</b> As duplas analisam a conta de luz da casa e propõem formas de reduzir o consumo no horário de pico.</li></ol>
+ <h3>Cuidado ao explicar</h3>
+ <p>Os números de geração, custo e CO₂ do jogo vêm de um modelo simples e não representam usinas reais. As usinas a bagaço são renováveis, mas também queimam e soltam CO₂ e partículas.</p>
+ <h3>Referências</h3>
+ <ul class="ref">
+ <li>Ely P., Fantin-Cruz I., Tritico H.M., Girard P., Kaplan D. 2020. Dam-induced hydrologic alterations in the rivers feeding the Pantanal. Frontiers in Environmental Science 8: 579031. doi:10.3389/fenvs.2020.579031</li>
+ <li>Silva A.R., Pimenta F.M., Assireu A.T., Spyrides M.H.C. 2016. Complementarity of Brazil's hydro and offshore wind power. Renewable and Sustainable Energy Reviews 56: 413-427. doi:10.1016/j.rser.2015.11.045</li></ul>
+ </div>`;
+ $('bVt').onclick=inicio;$('bPr').onclick=()=>window.print();
+}
+
+/* ================= RANKING ================= */
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="energia-da-cidade";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__a={get S(){return S},get G(){return G},FASES,inicio,novo,intro,guia};
+inicio();
+</script>
+</body>
+</html>
