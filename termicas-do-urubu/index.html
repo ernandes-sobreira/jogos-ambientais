@@ -218,6 +218,30 @@ FS.set=function(on){const c=$('cv');if(!c)return;const card=c.parentNode;FS.on=o
 FS.botao=()=>'<div class="row fsrow" style="justify-content:center;margin-top:8px"><button class="btn ghost" id="btfs" onclick="FS.set(!FS.on)">Tela cheia</button></div>';
 FS.ligar=()=>{if(FS.on){const c=$('cv');c.parentNode.classList.add('fsmode');const b=$('btfs');if(b)b.textContent='Sair';FS.ajusta();}};
 FS.hud=(g,cor)=>{if(!FS.on||!g)return;const [a,m2]=G.meta(g);const t='Fase '+(S.f+1)+'/'+G.FASES.length+'  ·  '+(S.tot+S.fp)+' pts  ·  '+G.rotulo+' '+a+'/'+m2+(G.semTempo?'':'  ·  '+Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s');cx.font='bold 13px system-ui';const w=cx.measureText(t).width+24;rrk(cx,10,48,w,26,13,'rgba(255,255,255,.95)');cx.fillStyle=cor||'#37474f';cx.textAlign='left';cx.fillText(t,22,66);};
+/* urubu visto de baixo, em voo. Cabeça para +x. tipo 0: urubu-de-cabeça-preta (Coragyps atratus), asas largas e curtas, mancha clara na base das primárias, cauda curta e quadrada.
+   tipo 1: urubu-de-cabeça-vermelha (Cathartes aura), asas longas em dois tons (forro preto, penas de voo prateadas), cauda longa, cabeça vermelha.
+   ang: rumo na tela; inc: inclinação nas curvas (-1 a 1); bat: batida de asa (0 = planando) */
+function urubuV(k,x,y,s,ang,inc,bat,tipo){k.save();k.translate(x,y);k.rotate(ang);k.scale(s,s);const v=tipo===1,P='#1c1a18',Lw=v?112:92,cr=v?30:38;
+ const asa=sd=>{/* sd=1 asa de baixo na tela, -1 de cima; a curva aproxima uma e afasta a outra */const enc=(1-Math.abs(bat)*.35)*(1+sd*inc*.18),L=Lw*enc;k.save();k.scale(1,sd);
+  const pts=[[8,4],[10,L*.3],[7,L*.62],[3,L*.82]];const tr=[[-cr,4],[-cr+2,L*.35],[-cr+6,L*.7],[-cr+10,L*.8]];
+  /* forro e penas de voo */k.fillStyle=P;k.beginPath();k.moveTo(9,4);k.bezierCurveTo(13,L*.2,17,L*.42,12,L*.55);k.quadraticCurveTo(7,L*.68,2,L*.76);
+  /* dedos das primárias: 6 penas separadas na ponta */const nf=6,fw=(cr-6)/nf;for(let i=0;i<nf;i++){const bx=2-i*fw-fw/2,by=L*(.76+.025*i),len=L*(v?.22:.27)*(1-Math.abs(i-2)*.08),sp=(i-2.5)*.13;const tx=bx+Math.sin(sp)*len,ty=by+Math.cos(sp)*len;k.lineTo(bx+fw*.45,by);k.quadraticCurveTo(tx+fw*.35,ty-len*.15,tx,ty);k.quadraticCurveTo(tx-fw*.35,ty-len*.2,bx-fw*.45,by+2);}
+  k.bezierCurveTo(-cr+4,L*.66,-cr-4,L*.38,-cr+1,6);k.closePath();k.fill();
+  if(v){/* penas de voo prateadas na metade de trás */k.save();k.clip();const gr=k.createLinearGradient(0,0,0,L*1.05);gr.addColorStop(0,'#8f8a84');gr.addColorStop(1,'#c9c5bf');k.fillStyle=gr;k.beginPath();k.moveTo(-6,4);k.bezierCurveTo(-4,L*.3,-6,L*.6,-10,L*.78);k.lineTo(-40,L*1.2);k.lineTo(-40,0);k.closePath();k.fill();
+   k.strokeStyle='rgba(60,55,50,.45)';k.lineWidth=1;for(let i=1;i<12;i++){const t=i/12;k.beginPath();k.moveTo(-6,L*t*.8);k.lineTo(-cr+2,L*t*.8+3);k.stroke();}k.restore();}
+  else{/* mancha clara na base das primárias */k.save();k.clip();const gr=k.createLinearGradient(0,L*.68,0,L*.95);gr.addColorStop(0,'rgba(220,214,204,0)');gr.addColorStop(.35,'#ddd7cc');gr.addColorStop(1,'#bdb6aa');k.fillStyle=gr;k.beginPath();k.ellipse(-cr*.45,L*.84,cr*.62,L*.13,0,0,7);k.fill();
+   k.strokeStyle='rgba(30,28,26,.55)';k.lineWidth=1.1;for(let i=0;i<5;i++){k.beginPath();k.moveTo(2-i*5,L*.74);k.lineTo(-1-i*5,L*.95);k.stroke();}k.restore();}
+  /* coberteiras: linhas finas das penas */k.strokeStyle='rgba(255,255,255,.07)';k.lineWidth=1;for(let i=1;i<7;i++){const t=i/8;k.beginPath();k.moveTo(6,L*t*.8);k.quadraticCurveTo(-cr*.4,L*t*.8+2,-cr+3,L*t*.8+3);k.stroke();}
+  k.restore();};
+ asa(-1);asa(1);
+ /* cauda */k.fillStyle=P;k.beginPath();if(v){k.moveTo(-16,-7);k.lineTo(-52,-11);k.quadraticCurveTo(-56,0,-52,11);k.lineTo(-16,7);}else{k.moveTo(-16,-8);k.lineTo(-38,-12);k.lineTo(-40,0);k.lineTo(-38,12);k.lineTo(-16,8);}k.closePath();k.fill();
+ if(v){k.fillStyle='rgba(170,165,158,.55)';k.beginPath();k.moveTo(-26,-9);k.lineTo(-52,-11);k.quadraticCurveTo(-56,0,-52,11);k.lineTo(-26,9);k.closePath();k.fill();}
+ /* patas recolhidas: no urubu-de-cabeça-preta chegam perto da ponta da cauda */if(!v){k.strokeStyle='#cfc8bb';k.lineWidth=2.2;k.lineCap='round';for(const sd of [-1,1]){k.beginPath();k.moveTo(-10,sd*4);k.lineTo(-33,sd*5);k.stroke();}}
+ /* corpo */const bg=k.createLinearGradient(0,-10,0,10);bg.addColorStop(0,'#2a2724');bg.addColorStop(.5,'#151311');bg.addColorStop(1,'#2a2724');k.fillStyle=bg;k.beginPath();k.ellipse(2,0,22,10,0,0,7);k.fill();
+ /* pescoço e cabeça */k.fillStyle=P;k.beginPath();k.ellipse(21,0,6,5.5,0,0,7);k.fill();
+ if(v){k.fillStyle='#c0392b';k.beginPath();k.ellipse(29,0,6,4,0,0,7);k.fill();k.fillStyle='#f1ece0';k.beginPath();k.moveTo(34,-1.5);k.lineTo(38,0);k.lineTo(34,1.5);k.fill();}
+ else{k.fillStyle='#55504b';k.beginPath();k.ellipse(28,0,6,4,0,0,7);k.fill();k.strokeStyle='rgba(30,28,26,.6)';k.lineWidth=.8;for(let i=0;i<3;i++){k.beginPath();k.moveTo(25+i*2,-3);k.lineTo(25+i*2,3);k.stroke();}k.fillStyle='#d6cfc2';k.beginPath();k.moveTo(33,-1.4);k.lineTo(37.5,0);k.lineTo(33,1.4);k.fill();}
+ k.restore();}
 /* Voo do Urubu. Voo planado em térmicas e busca de carcaças pelo cheiro.
 Duriez et al. (2014, PLoS ONE): bater asas custa cerca de sete vezes o metabolismo basal; minutos após o voo batido, planando, o coração dos abutres volta a valores próximos do repouso; em dias nublados, com menos térmicas, o coração bate mais rápido.
 Houston (1986, Condor): urubus-de-cabeça-vermelha (Cathartes aura) acham carcaças na floresta pelo cheiro, voando baixo sobre as copas; carcaças escondidas são achadas tão bem quanto as visíveis; carcaças recém-mortas, sem cheiro, não são achadas.
@@ -236,7 +260,7 @@ const G={titulo:'Voo do Urubu',get rotulo(){return ['Carcaça','Carcaça','Carca
  init(g){g.ok=0;g.lb=[];UR['ini_'+UR.F[S.f].tipo](g);},
  meta(g){return [g.ok,FASES[S.f].meta];},cedo(g){return g.pronto;},
  update(g,dt){g.lb=g.lb.filter(l=>(l.t-=dt)>0);UR['up_'+UR.F[S.f].tipo](g,dt);},draw(g){UR.draw(g);},botoes(){return FS.botao();},ligar(){FS.ligar();},reajusta(g){},
- capa(k,w,h){const o=cx,oW=W,oH=H;cx=k;W=w;H=h;const g={x:0,t:0,ter:[{x:260,r:60,w:3}],solo:x=>'campo',cam:0};UR.cena(g,0);urubuR(k,w*.55,h*.36,1.1,0,0,0);urubuR(k,w*.3,h*.22,.6,.4,0,0);urubuR(k,w*.78,h*.5,.5,-.3,0,1);cx=o;W=oW;H=oH;}};
+ capa(k,w,h){const o=cx,oW=W,oH=H;cx=k;W=w;H=h;const g={x:0,t:0,ter:[{x:260,r:60,w:3}],solo:x=>'campo',cam:0};UR.cena(g,0);for(const [px,py,sc,an,tp] of [[.52,.42,.95,-.35,0],[.3,.22,.6,2.4,0],[.77,.58,.55,.7,1]]){k.save();k.translate(w*px,h*py);k.scale(1,.5);urubuV(k,0,0,sc,an,0,0,tp);k.restore();}cx=o;W=oW;H=oH;}};
 const FASES=G.FASES;
 /* urubu visto de baixo: tipo 0 urubu-de-cabeça-preta, 1 urubu-de-cabeça-vermelha; ban = inclinação nas curvas */
 function urubuR(k,x,y,s,ban,flap,tipo){k.save();k.translate(x,y);k.scale(s,s*(1-Math.abs(ban)*.45));k.rotate(ban*.25);const a=flap||0,preto='#1d1b19';
@@ -259,7 +283,7 @@ UR.up_term=function(g,dt){const F=UR.F[S.f],B=UR.bt(),inB=p=>p&&p.x>B.x&&p.x<B.x
  if(g.pouso>0){g.pouso-=dt;if(g.pouso<=0){g.z=40;g.hr=Math.min(1,g.hr+.35);msg('O urubu bateu asas para decolar. Isso cansa.');}return;}
  if(inp.tap&&inB(inp.tap)){g.flap=.6;g.z+=26;g.hr=Math.min(1,g.hr+.16);inp.tap=null;}
  const gir=inp.down&&!inB(inp);g.giro=gir;const lift=UR.lift(g,g.x,g.z),sink=gir?1.1:.9;const esc=.45;
- g.z+=(lift-sink)*dt*esc*60;if(!gir){g.x+=dt*(MOB()?150:175);}g.ban+=((gir?1:0)-g.ban)*dt*4;g.ac+=dt*(gir?3.5:0);
+ g.z+=(lift-sink)*dt*esc*60;if(!gir){g.x+=dt*(MOB()?150:175);}g.ban+=((gir?1:0)-g.ban)*dt*4;g.ac+=dt*(gir?3.5:0);g.gk=(g.gk||0)+((gir?1:0)-(g.gk||0))*Math.min(1,dt*5);
  g.flap=Math.max(0,g.flap-dt);g.hr=Math.max(.18,g.hr-dt*.03);g.z=Math.min(UR.Z*.97,g.z);
  if(g.z<=6){g.z=0;g.pouso=1.6;ganha(-15,W*.3,H*.7);msg('Sem altura: o urubu pousou.');g.nPouso=(g.nPouso||0)+1;}
  if(g.x>=F.dist){const ok=!(F.nuv&&g.hr>.7);if(ok){g.ok=1;ganha(20+Math.round((1-g.hr)*20),W*.3,H*.4);}else msg('Chegou com o coração disparado.');g.fim2=1.4;}};
@@ -274,7 +298,7 @@ UR.up_cheiro=function(g,dt){const B=UR.bt(),D=UR.btD(),inB=(b,p)=>p&&p.x>b.x&&p.
  if(inp.tap&&inB(B,inp.tap)){g.flap=.6;g.z+=26;g.hr=Math.min(1,g.hr+.16);inp.tap=null;}
  if(inp.tap&&inB(D,inp.tap)){inp.tap=null;let best=null;for(const k of g.car)if(!k.ach&&Math.abs(k.x-g.x)<45)best=k;if(best&&!best.fresca){best.ach=1;g.desce={t:0,ok:1,x:best.x};g.lb.push({x:W*.3,y:H*.35,tx:'achou a carcaça!',t:1.4,c:'#2e7d32'});}else{g.desce={t:0,ok:0,x:g.x};ganha(-5,W*.3,H*.4);g.lb.push({x:W*.3,y:H*.35,tx:best?'carcaça fresca: ainda sem cheiro':'nada aqui',t:1.6,c:'#c62828'});}return;}
  const V=UR.btV();if(inp.tap&&inB(V,inp.tap)){g.vx*=-1;inp.tap=null;return;}
- const gir=inp.down&&!inB(B,inp)&&!inB(D,inp)&&!inB(V,inp);g.giro=gir;g.ban+=((gir?1:0)-g.ban)*dt*4;g.ac+=dt*(gir?3.5:0);
+ const gir=inp.down&&!inB(B,inp)&&!inB(D,inp)&&!inB(V,inp);g.giro=gir;g.ban+=((gir?1:0)-g.ban)*dt*4;g.ac+=dt*(gir?3.5:0);g.gk=(g.gk||0)+((gir?1:0)-(g.gk||0))*Math.min(1,dt*5);
  const lift=.8+(g.z<UR.Z*.14?.2:0);g.z+=(lift-(gir?1.05:.95))*dt*.32*60;if(!gir)g.x+=dt*(MOB()?90:110)*g.vx;
  if(g.x>g.car.reduce((m,k)=>Math.max(m,k.x),0)+700){g.vx=-1;}if(g.x<g.car.reduce((m,k)=>Math.min(m,k.x),1e9)-700)g.vx=1;
  g.z=Math.max(UR.Z*.12,Math.min(UR.Z*.8,g.z));g.hr=Math.max(.18,g.hr-dt*.03);g.flap=Math.max(0,g.flap-dt);g.chr=UR.cheiro(g,g.x,g.z);};
@@ -282,9 +306,9 @@ UR.up_cheiro=function(g,dt){const B=UR.bt(),D=UR.btD(),inB=(b,p)=>p&&p.x>b.x&&p.
 UR.zy=z=>{const top=(FS.on?84:10)+30,gy=H*.82;return gy-(z/UR.Z)*(gy-top);};
 UR.cena=function(g,nub){const k=cx,cam=g.x-W*.3;const gr=k.createLinearGradient(0,0,0,H);gr.addColorStop(0,nub?'#dfe6ea':'#cfe8f6');gr.addColorStop(1,nub?'#f2f2ee':'#f6f3e6');k.fillStyle=gr;k.fillRect(0,0,W,H);
  if(!nub){k.fillStyle='rgba(255,248,215,.9)';k.beginPath();k.arc(W*.85,H*.12,22,0,7);k.fill();}
- /* serra distante */k.fillStyle='#c4cdb8';k.beginPath();k.moveTo(0,H*.74);for(let x=0;x<=W;x+=10){const wx=x+cam*.2;k.lineTo(x,H*.7-Math.sin(wx*.004)*14-Math.sin(wx*.011)*6);}k.lineTo(W,H);k.lineTo(0,H);k.fill();
+ /* planície: capões de mata ao longe, sem serra */k.fillStyle='#c3ccb4';k.beginPath();k.moveTo(0,H*.8);for(let x=0;x<=W;x+=6){const wx=x+cam*.25;const cap=Math.max(0,Math.sin(wx*.006))*Math.max(0,Math.sin(wx*.031+1));k.lineTo(x,H*.78-cap*18-Math.abs(Math.sin(wx*.09))*3*cap);}k.lineTo(W,H);k.lineTo(0,H);k.fill();k.fillStyle='#cfd5c0';k.fillRect(0,H*.78,W,H*.04);
  const gy=H*.82;/* chão em perfil */for(let x=-10;x<W+10;x+=6){const wx=x+cam,t=g.solo(wx);k.fillStyle=t==='mata'?'#557d3c':t==='lagoa'?'#7fb3c6':t==='cerrado'?'#b8b57a':'#d8c58e';k.fillRect(x,gy,6,H-gy);}
- for(let x=-40;x<W+40;x+=14){const wx=Math.floor((x+cam)/14)*14,sx=wx-cam,t=g.solo(wx),R=rng(Math.abs(wx)*7919+13);R();if(t==='mata'){for(let j=0;j<2;j++){const r=11+R()*8;UR.copa(k,sx+R()*10,gy-r*.6-R()*8,r,'#6f9a4c','#2f5a28');}}else if(t==='cerrado'&&R()<.35){k.strokeStyle='#6d5640';k.lineWidth=2;k.beginPath();k.moveTo(sx,gy);k.lineTo(sx+2,gy-12);k.stroke();UR.copa(k,sx+2,gy-16,7,'#8ea456','#3e5a2a');}else if(t==='campo'&&R()<.12){k.fillStyle='#b0a070';k.beginPath();k.arc(sx,gy-2,3,0,7);k.fill();}else if(t==='lagoa'&&R()<.3){k.strokeStyle='rgba(255,255,255,.6)';k.beginPath();k.moveTo(sx,gy+6);k.lineTo(sx+8,gy+6);k.stroke();}}
+ for(let x=-40;x<W+40;x+=14){const wx=Math.floor((x+cam)/14)*14,sx=wx-cam,t=g.solo(wx),R=rng(Math.abs(wx)*7919+13);R();if(t==='mata'){for(let j=0;j<2;j++){const r=11+R()*8;UR.copa(k,sx+R()*10,gy-r*.6-R()*8,r,'#6f9a4c','#2f5a28');}}else if(t==='cerrado'&&R()<.35){k.strokeStyle='#6d5640';k.lineWidth=2;k.beginPath();k.moveTo(sx,gy);k.lineTo(sx+2,gy-12);k.stroke();UR.copa(k,sx+2,gy-16,7,'#8ea456','#3e5a2a');}else if(t==='campo'&&R()<.07){/* carandá, a palmeira do Pantanal */const hh=26+R()*22;k.strokeStyle='#7d6a55';k.lineWidth=2.4;k.beginPath();k.moveTo(sx,gy);k.quadraticCurveTo(sx+2,gy-hh*.5,sx+1,gy-hh);k.stroke();for(let f=0;f<11;f++){const an=-Math.PI+f/10*Math.PI,l=9+R()*3;k.strokeStyle=f%2?'#6f8f45':'#86a356';k.lineWidth=1.6;k.beginPath();k.moveTo(sx+1,gy-hh);k.lineTo(sx+1+Math.cos(an)*l,gy-hh+Math.sin(an)*l*.8+2);k.stroke();}}else if(t==='campo'&&R()<.05){/* gado pastando */k.fillStyle='#f2efe8';k.beginPath();k.ellipse(sx,gy-5,6,3.6,0,0,7);k.fill();k.fillRect(sx-5,gy-3,1.4,4);k.fillRect(sx+3.6,gy-3,1.4,4);k.beginPath();k.ellipse(sx+6.5,gy-6.5,2.4,1.8,0,0,7);k.fill();}else if(t==='lagoa'&&R()<.3){k.strokeStyle='rgba(255,255,255,.6)';k.beginPath();k.moveTo(sx,gy+6);k.lineTo(sx+8,gy+6);k.stroke();}}
  /* rótulos do chão */let last='';for(let x=0;x<W;x+=4){const t=g.solo(x+cam);if(t!==last){last=t;if(x>4&&x<W-60){const nm={mata:'mata',lagoa:'lagoa',campo:'campo seco',cerrado:'cerrado'}[t];k.font='600 11px system-ui';const tw=k.measureText(nm).width+12;rrk(k,x+4,gy+10,tw,17,8,'rgba(255,255,255,.85)');k.fillStyle='#5d4c39';k.textAlign='left';k.fillText(nm,x+10,gy+22);}}}
  /* térmicas */for(const t of g.ter){const sx=t.x-cam;if(sx<-150||sx>W+150)continue;const ty=UR.zy(t.top);const a=Math.min(1,t.w/2.6);
   const gr2=k.createLinearGradient(sx-t.r,0,sx+t.r,0);gr2.addColorStop(0,'rgba(255,180,120,0)');gr2.addColorStop(.5,'rgba(255,170,110,'+(.14*a+.04)+')');gr2.addColorStop(1,'rgba(255,180,120,0)');k.fillStyle=gr2;k.fillRect(sx-t.r,ty,t.r*2,gy-ty);
@@ -296,8 +320,10 @@ UR.draw=function(g){const F=UR.F[S.f],m=MOB(),cam=g.x-W*.3;UR.cena(g,F.nuv?1:0);
  if(F.tipo==='term'){const cx2=F.dist-cam;if(cx2<W+40){const gy=H*.82;k2(cx2,gy);}
   /* altímetro */}
  if(F.tipo==='cheiro'){const gy=H*.82;for(const kk of g.car){if(kk.ach)continue;const sx=kk.x-cam;if(sx<-400||sx>W+100)continue;if(!kk.fresca){for(let i=0;i<30;i++){const dd=(i*37+g.t*30)%380,sz=26+dd*.22,z=UR.Z*.12+((((i*29)%40)/40)-.5)*sz*1.6;const px=sx-dd,py=UR.zy(z);cx.fillStyle='rgba(150,130,60,'+(.2*(1-dd/380))+')';cx.beginPath();cx.arc(px,py,5+dd*.03,0,7);cx.fill();}}}}
- /* urubu */const y=UR.zy(g.z),x=W*.3+(g.giro?Math.cos(g.ac)*18:0),yy=y+(g.giro?Math.sin(g.ac)*6:0);if(g.pouso>0){urubuR(cx,x,H*.82-10,m?.32:.38,0,0,F.tipo==='cheiro'?1:0);}else if(g.desce){const d=g.desce;const p=Math.min(1,d.t/1);urubuR(cx,x,y+(H*.82-30-y)*p,m?.4:.46,0,0,1);if(d.ok&&d.t>.8){cx.fillStyle='#6d4c41';cx.beginPath();cx.ellipse(x,H*.82-6,16,6,0,0,7);cx.fill();}}
- else urubuR(cx,x,yy,m?.42:.5,(g.giro?Math.sin(g.ac):0)*.9,g.flap?Math.sin(g.t*30)*.8:0,F.tipo==='cheiro'?1:0);
+ /* urubu: girando na térmica ele descreve um círculo e, visto de baixo, a silhueta gira junto */const tp=F.tipo==='cheiro'?1:0,Rg=m?34:46,y=UR.zy(g.z);const gk=g.gk||0,x=W*.3+Math.cos(g.ac)*Rg*gk,yy=y+Math.sin(g.ac)*Rg*.42*gk;
+ const rumo0=(g.vx||1)<0?Math.PI:0,rumoG=g.ac+Math.PI/2;let rumo=gk>.5?rumoG:rumo0+Math.sin(g.t*1.4)*.05;const sc=(m?.4:.48)*(1+Math.sin(g.ac)*.1*gk);
+ if(g.pouso>0){urubuPousado(cx,x,H*.82-4,m?.55:.65,tp);}else if(g.desce){const d=g.desce;const p=Math.min(1,d.t/1);if(p<1)urubuV(cx,x,y+(H*.82-30-y)*p,m?.4:.46,1.2,0,Math.sin(g.t*20)*.5,1);else urubuPousado(cx,x+16,H*.82-4,m?.55:.65,1);if(d.ok&&d.t>.8){cx.fillStyle='#6d4c41';cx.beginPath();cx.ellipse(x,H*.82-6,16,6,0,0,7);cx.fill();}}
+ else{/* o plano do voo é visto de lado e de baixo: achata na vertical */cx.save();cx.translate(x,yy);cx.scale(1,.62);urubuV(cx,0,0,sc*1.12,rumo,Math.sin(g.ac)*gk,g.flap?Math.sin(g.t*30)*.8:0,tp);cx.restore();}
  /* painel do alto */const top=FS.on?84:10;rrk(cx,10,top,m?172:220,F.tipo==='cheiro'?66:48,12,'rgba(255,255,255,.95)');cx.textAlign='left';cx.fillStyle='#37474f';cx.font='bold 11px system-ui';cx.fillText('Altura '+Math.round(g.z)+' m',20,top+15);
  const bw=m?150:198;cx.fillText('Coração',20,top+31);rrk(cx,74,top+23,bw-54,10,5,'#eceff1');rrk(cx,74,top+23,Math.max(5,(bw-54)*g.hr),10,5,g.hr>.7?'#e53935':g.hr>.45?'#f9a825':'#2e7d32');if(F.nuv){cx.fillStyle='#e53935';cx.fillRect(74+(bw-54)*.7,top+20,2,16);}
  if(F.tipo==='cheiro'){cx.fillStyle='#37474f';cx.fillText('Cheiro',20,top+53);rrk(cx,74,top+45,bw-54,10,5,'#eceff1');rrk(cx,74,top+45,Math.max(5,(bw-54)*g.chr),10,5,'#8d6e2c');}
@@ -309,10 +335,17 @@ UR.draw=function(g){const F=UR.F[S.f],m=MOB(),cam=g.x-W*.3;UR.cena(g,F.nuv?1:0);
  FS.hud(g,'#bf5000');
  function k2(sx,gy){cx.fillStyle='#8d6e63';cx.beginPath();cx.ellipse(sx,gy-4,18,6,0,0,7);cx.fill();cx.font='bold 11px system-ui';cx.textAlign='center';const tw=cx.measureText('carcaça').width+12;rrk(cx,sx-tw/2,gy-30,tw,18,9,'rgba(255,255,255,.92)');cx.fillStyle='#5d4037';cx.fillText('carcaça',sx,gy-17);}};
 const PERG=[
- {q:'O que é uma térmica?',o:['Uma coluna de ar quente que sobe','Um vento frio que desce','Uma nuvem de chuva parada']},
- {q:'Onde se formam as térmicas mais fortes num dia de sol?',o:['Sobre o chão seco e exposto','Sobre a lagoa','Dentro da mata fechada']},
+ {q:'O que é uma térmica?',o:['Ar quente que sobe','Um vento frio que desce do alto da serra','Uma nuvem de chuva parada no céu']},
+ {q:'Onde se formam as térmicas mais fortes num dia de sol?',o:['Sobre o chão seco','Sobre a água fria da lagoa','Dentro da mata fechada e úmida']},
  {q:'Por que o urubu prefere planar a bater asas?',o:['Planar gasta bem menos energia','Bater asas é proibido para aves grandes','Planando ele enxerga no escuro']},
  {q:'Como o urubu-de-cabeça-vermelha acha carcaças escondidas na mata?',o:['Pelo cheiro','Pelo som','Pela cor das folhas']}];
+
+/* urubu pousado, de lado */
+function urubuPousado(k,x,y,s,tipo){k.save();k.translate(x,y);k.scale(s,s);const v=tipo===1;k.fillStyle='rgba(60,45,25,.25)';k.beginPath();k.ellipse(0,0,26,4,0,0,7);k.fill();
+ k.strokeStyle=v?'#c9a58c':'#cfc8bb';k.lineWidth=2.4;k.lineCap='round';k.beginPath();k.moveTo(-3,-14);k.lineTo(-5,0);k.moveTo(4,-14);k.lineTo(5,0);k.stroke();
+ k.fillStyle='#1c1a18';k.beginPath();k.moveTo(16,-30);k.bezierCurveTo(8,-40,-14,-36,-22,-24);k.lineTo(-34,-16);k.lineTo(-30,-12);k.bezierCurveTo(-18,-10,4,-10,12,-18);k.closePath();k.fill();
+ if(!v){k.fillStyle='#d6d0c4';k.beginPath();k.ellipse(-16,-24,5,2.4,-.3,0,7);k.fill();}else{k.fillStyle='#9e9890';k.beginPath();k.moveTo(-6,-26);k.lineTo(-30,-17);k.lineTo(-10,-19);k.closePath();k.fill();}
+ k.fillStyle='#1c1a18';k.beginPath();k.ellipse(15,-31,5,5,0,0,7);k.fill();k.fillStyle=v?'#c0392b':'#55504b';k.beginPath();k.ellipse(22,-33,6,4,-.2,0,7);k.fill();k.fillStyle=v?'#f1ece0':'#d6cfc2';k.beginPath();k.moveTo(26,-35);k.quadraticCurveTo(31,-34,29,-30);k.lineTo(26,-31);k.fill();k.restore();}
 function pergunta(){
  const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
  $('tela').innerHTML=`<div class="card"><h2>Pergunta da fase</h2><p style="margin:6px 0 4px">${P.q}</p><p class="small">Acerto +20, erro −10.</p><div class="ops">${ops.map((o,i)=>`<button data-i="${i}">${o.t}</button>`).join('')}</div><div id="pf"></div></div>`;
