@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Caça ao Hífen</title>
 <style>
-:root{--main:#5e35b1;--deep:#4527a0;--soft:#f1ecfa;--line:#ddd3f2;--ink:#1d1630;--mut:#5d5573}
+:root{--main:#7e57c2;--deep:#4527a0;--soft:#f3eefc;--line:#d1c4e9;--ink:#10212b;--mut:#4d6370}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
 .wrap{max-width:780px;margin:0 auto;padding:12px 14px 40px}
@@ -43,7 +43,7 @@ canvas{width:100%;max-width:760px;margin:0 auto;display:block;border:2px solid v
 <a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
 <header>
   <h1>Caça ao Hífen</h1>
-  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
 </header>
 <main id="tela"></main>
 <div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
@@ -117,7 +117,7 @@ let S,cv,cx,raf=null,last=0,W=720,H=460,inp={x:null,y:null,down:false,tap:null},
 const MOB=()=>W<520;
 function rrect(x,y,w,h,r,cor){cx.fillStyle=cor;cx.beginPath();cx.roundRect(x,y,w,h,r);cx.fill();}
 function sombra(x,y,rx,ry){cx.fillStyle='rgba(0,0,0,.12)';cx.beginPath();cx.ellipse(x,y,rx,ry,0,0,7);cx.fill();}
-function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/'+G.FASES.length;$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
  if(g&&!g.fim){const [a,m]=G.meta(g);$('hR').textContent=G.rotulo+' '+a+'/'+m;$('hV').textContent=G.vidas?'Vidas '+'●'.repeat(Math.max(0,g.vidas)):'';$('hT').textContent=G.semTempo?'':Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s';}
  ['hR','hV','hT'].forEach(k=>$(k).style.display=$(k).textContent?'':'none');}
 function inicio(){parar();$('hud').style.display='none';$('rankBox').style.display='block';
@@ -151,35 +151,199 @@ function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=G.FAS
  <p class="small" style="margin-top:6px">${ok?G.FASES[S.f].fato:G.dicaErro}</p>
  <div class="row" style="justify-content:center;margin-top:14px">${ok?'<button class="btn grande" id="bq">Pergunta rápida</button>':'<button class="btn grande" id="br">Jogar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
  if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}}
-/* Acordo Ortográfico, Base XV: hífen nos compostos que designam espécies botânicas e zoológicas; locuções como pé de moleque perderam o hífen (STJ). Pontos e velocidades são regras do jogo. */
-const PARES=[['onça-pintada','onça pintada'],['tamanduá-bandeira','tamanduá bandeira'],['lobo-guará','lobo guará'],['joão-de-barro','joão de barro'],['bem-te-vi','bem te vi'],['tatu-canastra','tatu canastra'],['arara-azul','arara azul'],['jacaré-do-pantanal','jacaré do pantanal'],['urubu-rei','urubu rei'],['cervo-do-pantanal','cervo do pantanal'],['beija-flor','beija flor'],['macaco-prego','macaco prego'],['castanha-do-pará','castanha do pará'],['louva-a-deus','louva a deus']];
-const LOC=[['pé de moleque','pé-de-moleque','doce'],['mula sem cabeça','mula-sem-cabeça','lenda'],['bico de papagaio','bico-de-papagaio','nariz curvo']];
-const G={titulo:'Caça ao Hífen',rotulo:'Acertos',vidas:1,
- resumo:'Nomes de bichos e plantas formados por mais de uma palavra levam hífen: onça-pintada, joão-de-barro, beija-flor. Expressões que não nomeiam espécie ficam sem hífen.',
- como:[['Toque','Duas bolhas sobem com o mesmo nome escrito de jeitos diferentes. Toque na escrita certa: +10.'],['Erro','Tocar na errada tira uma vida.'],['Fase 3','Aparecem expressões que não são espécies, como pé de moleque (o doce): essas ficam sem hífen.']],
- dica:'Toque na escrita certa antes de a bolha sumir.',dicaErro:'Nome de espécie de bicho ou planta leva hífen.',
- FASES:[{nome:'Bichos do Pantanal',dur:40,meta:8,v:55,loc:0,metaTxt:'acertar 8 nomes em 40 s.',txt:'Escolha a escrita certa dos nomes de animais.',fato:'O Acordo Ortográfico manda usar hífen nos nomes compostos de espécies de animais e plantas.'},
-  {nome:'Bolhas rápidas',dur:40,meta:10,v:80,loc:0,metaTxt:'acertar 10 nomes em 40 s.',txt:'As bolhas sobem mais rápido. Leia com atenção.',fato:'O hífen vale mesmo quando há preposição no meio: joão-de-barro, cervo-do-pantanal, louva-a-deus.'},
-  {nome:'Espécie ou não?',dur:45,meta:10,v:80,loc:1,metaTxt:'acertar 10 em 45 s.',txt:'Agora aparecem expressões que não são nomes de espécies. A dica entre parênteses ajuda.',fato:'Pé de moleque (o doce) e mula sem cabeça (a lenda) perderam o hífen porque não nomeiam espécies.'}],
- init(g){g.vidas=3;g.ok=0;g.bs=[];g.prox=0;},meta(g){return [g.ok,FASES[S.f].meta];},cedo(g){return g.ok>=FASES[S.f].meta;},
- update(g,dt){const F=FASES[S.f];g.prox-=dt;if(g.prox<=0&&g.bs.length<2){let par,certo,dica='';if(F.loc&&Math.random()<.35){const l=LOC[Math.floor(Math.random()*LOC.length)];par=[l[0],l[1]];certo=l[0];dica=l[2];}else{const p=PARES[Math.floor(Math.random()*PARES.length)];par=p;certo=p[0];}
-   const ord=shuf(par),id=Math.random();ord.forEach((t,i)=>g.bs.push({t,c:t===certo,x:W*(i?.7:.3)+rr(-30,30),y:H+40,id,dica,v:F.v*rr(.9,1.1)}));g.prox=1.2;}
-  for(const b of g.bs){b.y-=b.v*dt;}
-  if(inp.tap){for(const b of g.bs){const r=G.raio(b);if(Math.hypot(b.x-inp.tap.x,b.y-inp.tap.y)<r){if(b.c){g.ok++;ganha(10,b.x,b.y);}else{g.vidas--;ganha(-10,b.x,b.y);const c=g.bs.find(x=>x.id===b.id&&x.c);msg('O certo é: '+(c?c.t:''));}g.bs=g.bs.filter(x=>x.id!==b.id);break;}}}
-  const fora=g.bs.filter(b=>b.y<-50);if(fora.length){g.bs=g.bs.filter(b=>b.y>=-50);}},
- raio(b){return Math.max(60,b.t.length*5.2)*(MOB()?.85:1);},
- draw(g){const gr=cx.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#e3f2fd');gr.addColorStop(1,'#f3e5f5');cx.fillStyle=gr;cx.fillRect(0,0,W,H);
-  cx.fillStyle='rgba(129,199,132,.35)';for(let x=0;x<W;x+=60){cx.beginPath();cx.arc(x+30,H,40,Math.PI,0);cx.fill();}
-  for(const b of g.bs){const r=G.raio(b);const gb=cx.createRadialGradient(b.x-r*.3,b.y-r*.3,4,b.x,b.y,r);gb.addColorStop(0,'rgba(255,255,255,.98)');gb.addColorStop(1,'rgba(179,157,219,.55)');cx.fillStyle=gb;cx.beginPath();cx.arc(b.x,b.y,r,0,7);cx.fill();cx.strokeStyle='rgba(126,87,194,.6)';cx.lineWidth=2;cx.stroke();
-   cx.fillStyle='#311b92';cx.font='bold '+(MOB()?14:17)+'px Georgia,serif';cx.textAlign='center';cx.fillText(b.t,b.x,b.y+5);if(b.dica){cx.font='12px system-ui';cx.fillStyle='#5e35b1';cx.fillText('('+b.dica+')',b.x,b.y+24);}}},
- capa(k,w,h){const gr=k.createLinearGradient(0,0,0,h);gr.addColorStop(0,'#e3f2fd');gr.addColorStop(1,'#f3e5f5');k.fillStyle=gr;k.fillRect(0,0,w,h);for(const [x,y,t] of [[200,110,'onça-pintada'],[440,110,'onça pintada']]){k.fillStyle='rgba(255,255,255,.95)';k.beginPath();k.arc(x,y,80,0,7);k.fill();k.strokeStyle='rgba(126,87,194,.6)';k.lineWidth=3;k.stroke();k.fillStyle='#311b92';k.font='bold 22px Georgia';k.textAlign='center';k.fillText(t,x,y+8);}}
-};
+/* ---------- arte vetorial compartilhada ---------- */
+beep=function(){};
+function rng(s){s=s%2147483647;if(s<=0)s+=2147483646;return()=>{s=s*16807%2147483647;return(s-1)/2147483646;};}
+function lg(k,x0,y0,x1,y1,st){const g=k.createLinearGradient(x0,y0,x1,y1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+function rg(k,x,y,r0,r1,st){const g=k.createRadialGradient(x,y,r0,x,y,r1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+const CACHE={};
+function cache(key,w,h,fn){const id=key+'_'+w+'x'+h;if(!CACHE[id]){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);CACHE[id]=c;}return CACHE[id];}
+function ceu(k,w,h,cs){k.fillStyle=lg(k,0,0,0,h,cs);k.fillRect(0,0,w,h);}
+function sol(k,x,y,r,c){k.fillStyle=rg(k,x,y,0,r*4,[c,'rgba(255,255,255,0)']);k.fillRect(x-r*4,y-r*4,r*8,r*8);k.fillStyle=c;k.beginPath();k.arc(x,y,r,0,7);k.fill();}
+function nuvem(k,x,y,s,a){k.fillStyle='rgba(255,255,255,'+(a||.8)+')';for(const [dx,dy,r] of [[0,0,1],[1.1,.15,.8],[-1,.2,.75],[.5,-.45,.7],[-.4,-.35,.6]]){k.beginPath();k.arc(x+dx*s,y+dy*s,r*s,0,7);k.fill();}k.fillRect(x-1.7*s,y+.2*s,3.6*s,.8*s);}
+function serra(k,w,y,amp,cor,seed){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,y+amp*2);let x=0;k.lineTo(0,y);while(x<w+40){x+=30+r()*50;k.lineTo(x,y-r()*amp);}k.lineTo(w,y+amp*4);k.lineTo(0,y+amp*4);k.fill();}
+function matas(k,w,y,amp,cor,seed,base){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,base);k.lineTo(0,y);let x=0;while(x<w+30){const rr=8+r()*amp;k.arc(x+rr,y-r()*amp*.6,rr,Math.PI,0);x+=rr*1.6;}k.lineTo(w,base);k.closePath();k.fill();}
+function capim(k,x0,y0,w,h,cor,seed,n){const r=rng(seed);k.strokeStyle=cor;k.lineCap='round';for(let i=0;i<n;i++){const x=x0+r()*w,y=y0+r()*h,l=4+r()*10;k.lineWidth=1+r()*1.2;for(let j=-1;j<=1;j++){k.beginPath();k.moveTo(x,y);k.quadraticCurveTo(x+j*3,y-l*.6,x+j*5+r()*2,y-l);k.stroke();}}}
+function copa(k,x,y,r,cs,seed){const R=rng(seed);const pts=[];for(let i=0;i<9;i++){const a=R()*Math.PI*2,d=R()*r*.55;pts.push([x+Math.cos(a)*d,y+Math.sin(a)*d*.7,r*(.35+R()*.3)]);}
+ k.fillStyle=cs[0];for(const [a,b,c] of pts){k.beginPath();k.arc(a+c*.12,b+c*.18,c,0,7);k.fill();}
+ k.fillStyle=cs[1];for(const [a,b,c] of pts){k.beginPath();k.arc(a,b,c*.92,0,7);k.fill();}
+ k.fillStyle=cs[2];for(const [a,b,c] of pts){k.beginPath();k.arc(a-c*.25,b-c*.3,c*.5,0,7);k.fill();}}
+function tronco(k,x,y0,y1,w0,w1,c1,c2){k.fillStyle=lg(k,x-w0,0,x+w0,0,[c2,c1,c1,c2]);k.beginPath();k.moveTo(x-w0,y0);k.lineTo(x-w1,y1);k.lineTo(x+w1,y1);k.lineTo(x+w0,y0);k.fill();k.strokeStyle='rgba(0,0,0,.12)';k.lineWidth=1;for(let y=y1+8;y<y0;y+=11){const t=(y-y1)/(y0-y1),ww=w1+(w0-w1)*t;k.beginPath();k.moveTo(x-ww*.6,y);k.quadraticCurveTo(x,y+3,x+ww*.5,y-1);k.stroke();}}
+function palmeira(k,x,y,h,lean,cfr,ctr,seed,nf){const R=rng(seed);const tx=x+lean,ty=y-h;k.strokeStyle=ctr;k.lineCap='round';for(let i=0;i<14;i++){const t0=i/14,t1=(i+1)/14;k.lineWidth=h*.05*(1-t0*.35);const xa=x+lean*t0*t0,ya=y-h*t0,xb=x+lean*t1*t1,yb=y-h*t1;k.beginPath();k.moveTo(xa,ya);k.lineTo(xb,yb);k.stroke();}
+ k.strokeStyle='rgba(0,0,0,.15)';k.lineWidth=1;for(let i=1;i<14;i++){const t=i/14,xa=x+lean*t*t,ya=y-h*t;k.beginPath();k.moveTo(xa-h*.022,ya);k.lineTo(xa+h*.022,ya);k.stroke();}
+ nf=nf||9;for(let f=0;f<nf;f++){const a=-Math.PI/2+(f-(nf-1)/2)*(2.6/nf)+(R()-.5)*.2,L=h*(.38+R()*.12),dr=.55+R()*.25;const ex=tx+Math.cos(a)*L,ey=ty+Math.sin(a)*L*.55+L*dr*.5;const mx=tx+Math.cos(a)*L*.5,my=ty+Math.sin(a)*L*.5-L*.12;
+  k.strokeStyle=cfr[0];k.lineWidth=2;k.beginPath();k.moveTo(tx,ty);k.quadraticCurveTo(mx,my,ex,ey);k.stroke();
+  for(let j=1;j<16;j++){const t=j/16,px=(1-t)*(1-t)*tx+2*(1-t)*t*mx+t*t*ex,py=(1-t)*(1-t)*ty+2*(1-t)*t*my+t*t*ey;const ll=L*.16*(1-t*.5);k.strokeStyle=cfr[j%2];k.lineWidth=1.6;k.beginPath();k.moveTo(px,py);k.lineTo(px+Math.cos(a+1.6)*ll*.5,py+ll);k.moveTo(px,py);k.lineTo(px+Math.cos(a-1.6)*ll*.5,py+ll*.9);k.stroke();}}}
+function sombraE(k,x,y,rx,ry,a){k.fillStyle='rgba(20,30,20,'+(a||.18)+')';k.beginPath();k.ellipse(x,y,rx,ry,0,0,7);k.fill();}
+function vinheta(k,w,h){k.fillStyle=rg(k,w/2,h/2,Math.min(w,h)*.45,Math.max(w,h)*.8,['rgba(0,0,0,0)','rgba(0,0,0,.18)']);k.fillRect(0,0,w,h);}
+function rrk(k,x,y,w,h,r,c){k.fillStyle=c;k.beginPath();k.roundRect(x,y,w,h,r);k.fill();}
+/* figura humana: o={pele,camisa,calca,chapeu,passo,bracoE,bracoD} ângulos em rad a partir de baixo */
+function pessoa(k,x,y,s,o){o=o||{};const p=o.passo||0;k.save();k.translate(x,y);k.scale(s*(o.dir||1),s);k.lineCap='round';k.lineJoin='round';
+ const pl=Math.sin(p)*.35;k.strokeStyle=o.calca||'#37474f';k.lineWidth=7;k.beginPath();k.moveTo(-3,-38);k.lineTo(-3+Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18,0);k.stroke();k.beginPath();k.moveTo(3,-38);k.lineTo(3-Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(3-Math.sin(pl)*20-Math.sin(pl*.5)*18,0);k.stroke();
+ k.fillStyle='#3e2723';k.beginPath();k.ellipse(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.ellipse(3-Math.sin(pl)*20-Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.fill();
+ k.fillStyle=o.camisa||'#1e88e5';k.beginPath();k.moveTo(-9,-40);k.lineTo(-10,-68);k.quadraticCurveTo(0,-74,10,-68);k.lineTo(9,-40);k.closePath();k.fill();k.fillStyle='rgba(0,0,0,.12)';k.fillRect(2,-68,7,28);
+ const be=o.bracoE!==undefined?o.bracoE:-pl*.8,bd=o.bracoD!==undefined?o.bracoD:pl*.8;k.strokeStyle=o.camisa||'#1e88e5';k.lineWidth=6;
+ for(const [sx,a] of [[-8,be],[8,bd]]){k.beginPath();k.moveTo(sx,-66);const ex=sx+Math.sin(a)*14,ey=-66+Math.cos(a)*14;k.lineTo(ex,ey);k.stroke();k.strokeStyle=o.pele||'#c68b59';k.beginPath();k.moveTo(ex,ey);k.lineTo(ex+Math.sin(a*1.15)*13,ey+Math.cos(a*1.15)*13);k.stroke();k.strokeStyle=o.camisa||'#1e88e5';}
+ k.fillStyle=o.pele||'#c68b59';k.fillRect(-3,-76,6,6);k.beginPath();k.ellipse(0,-83,7.5,8.5,0,0,7);k.fill();
+ if(o.chapeu!==false){k.fillStyle=o.chapeu||'#795548';k.beginPath();k.ellipse(0,-88,15,3.5,0,0,7);k.fill();k.beginPath();k.moveTo(-8,-88);k.quadraticCurveTo(-7,-99,0,-99);k.quadraticCurveTo(7,-99,8,-88);k.fill();k.fillStyle='rgba(0,0,0,.25)';k.fillRect(-8,-91,16,2.5);}
+ k.restore();}
+/* boi nelore em perfil, olhando para +x */
+function boi(k,x,y,s,dir,cor,p){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#ece6da';p=p||0;
+ const pern=[[-26,0],[-18,Math.PI],[18,Math.PI],[26,0]];
+ for(let i=0;i<4;i++){const [lx,ph]=pern[i];const a=Math.sin(p+ph)*.3;k.strokeStyle=i==1||i==2?shade(c,-.12):c;k.lineCap='round';k.lineWidth=6.5;k.beginPath();k.moveTo(lx,-24);k.lineTo(lx+Math.sin(a)*9,-10);k.lineTo(lx+Math.sin(a)*7,2);k.stroke();k.fillStyle='#3e2723';k.fillRect(lx+Math.sin(a)*7-3.5,1,7,3);}
+ k.fillStyle=c;k.beginPath();k.moveTo(-34,-40);k.quadraticCurveTo(-38,-24,-30,-20);k.quadraticCurveTo(0,-14,26,-20);k.quadraticCurveTo(34,-26,32,-40);k.quadraticCurveTo(28,-50,20,-54);k.quadraticCurveTo(12,-56,8,-48);k.quadraticCurveTo(-10,-46,-28,-48);k.quadraticCurveTo(-34,-46,-34,-40);k.fill();
+ k.fillStyle=lg(k,0,-50,0,-18,['rgba(255,255,255,.18)','rgba(0,0,0,0)','rgba(60,40,20,.22)']);k.fill();
+ k.fillStyle=c;k.beginPath();k.moveTo(26,-44);k.quadraticCurveTo(38,-44,44,-38);k.lineTo(54,-24);k.quadraticCurveTo(56,-18,51,-17);k.quadraticCurveTo(46,-18,42,-24);k.quadraticCurveTo(34,-26,28,-22);k.fill();
+ k.beginPath();k.moveTo(28,-26);k.quadraticCurveTo(34,-14,30,-12);k.quadraticCurveTo(24,-16,22,-24);k.fill();
+ k.fillStyle=shade(c,-.35);k.beginPath();k.ellipse(52,-19,3.4,2.6,.4,0,7);k.fill();k.fillStyle='#1b1b1b';k.beginPath();k.arc(44,-34,1.8,0,7);k.fill();
+ k.fillStyle=shade(c,-.08);k.beginPath();k.ellipse(38,-41,8,2.8,.5,0,7);k.fill();k.strokeStyle='#cfc4b0';k.lineWidth=2.4;k.lineCap='round';k.beginPath();k.moveTo(41,-44);k.quadraticCurveTo(44,-49,42,-52);k.stroke();
+ k.strokeStyle=c;k.lineWidth=2.2;k.beginPath();k.moveTo(-34,-42);k.quadraticCurveTo(-40,-28,-37,-14);k.stroke();k.fillStyle='#4e342e';k.beginPath();k.ellipse(-37,-13,2.2,4.5,0,0,7);k.fill();
+ k.restore();}
+function shade(hex,f){let n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;const t=f<0?0:255,p=Math.abs(f);r=Math.round((t-r)*p+r);g=Math.round((t-g)*p+g);b=Math.round((t-b)*p+b);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+function cavalo(k,x,y,s,dir,p,cor){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#8d5a3b';k.strokeStyle=c;k.lineCap='round';k.lineWidth=6;
+ for(const [lx,ph] of [[-20,0],[-12,Math.PI],[18,Math.PI],[26,0]]){const a=Math.sin(p+ph)*.45;k.beginPath();k.moveTo(lx,-22);k.lineTo(lx+Math.sin(a)*10,-8);k.lineTo(lx+Math.sin(a)*8,4);k.stroke();}
+ k.fillStyle=c;k.beginPath();k.ellipse(3,-30,28,12,0,0,7);k.fill();k.beginPath();k.moveTo(22,-36);k.quadraticCurveTo(30,-56,40,-58);k.lineTo(50,-48);k.quadraticCurveTo(44,-44,38,-46);k.lineTo(30,-26);k.fill();
+ k.fillStyle='#3e2723';k.beginPath();k.moveTo(24,-40);k.quadraticCurveTo(30,-60,40,-60);k.lineTo(36,-56);k.quadraticCurveTo(30,-52,28,-36);k.fill();k.beginPath();k.moveTo(-24,-34);k.quadraticCurveTo(-38,-26,-34,-6);k.quadraticCurveTo(-30,-22,-22,-28);k.fill();
+ k.fillStyle='rgba(0,0,0,.15)';k.beginPath();k.ellipse(3,-23,24,4,0,0,7);k.fill();k.fillStyle='#5d4037';k.fillRect(-8,-44,22,6);k.restore();}
+function cavaleiro(k,x,y,s,dir,p,o){cavalo(k,x,y,s,dir,p,o&&o.cor);k.save();k.translate(x,y);k.scale(s*dir,s);pessoa(k,2,-30,.62,Object.assign({passo:0,bracoE:.9,bracoD:1.3,calca:'#4e342e'},o||{}));k.restore();}
+/* tela cheia genérica para os jogos do motor arcade */
+const FS={on:false};
+(function(){const st=document.createElement('style');st.textContent='.fsmode{position:fixed!important;inset:0!important;z-index:9999!important;background:#fff!important;margin:0!important;padding:0!important;border-radius:0!important;max-width:none!important;width:100vw!important;height:100dvh!important;border:0!important}.fsmode canvas{width:100vw!important;height:100dvh!important;max-width:none!important;border:0!important;border-radius:0!important}.fsmode p.small{display:none}.fsmode .fsrow{position:fixed;top:48px;right:8px;z-index:10000;margin:0!important}.fsmode .fsrow .btn{padding:6px 14px;font-size:13px}';document.head.appendChild(st);
+ document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&FS.on)FS.set(false);});addEventListener('resize',()=>{if(FS.on)setTimeout(FS.ajusta,50);});})();
+FS.ajusta=function(){const c=$('cv');if(!c)return;if(FS.on){W=Math.round(innerWidth);H=Math.round(innerHeight);}else{if(c.clientWidth<520){W=420;H=560;}else{W=720;H=460;}}c.width=W;c.height=H;cx=c.getContext('2d');if(G.reajusta)G.reajusta(S.g);};
+FS.set=function(on){const c=$('cv');if(!c)return;const card=c.parentNode;FS.on=on;const b=$('btfs');if(b)b.textContent=on?'Sair':'Tela cheia';
+ if(on){card.classList.add('fsmode');try{const r=document.documentElement.requestFullscreen;if(r)r.call(document.documentElement).catch(()=>{});}catch(e){}}
+ else{card.classList.remove('fsmode');try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}}
+ setTimeout(FS.ajusta,80);};
+FS.botao=()=>'<div class="row fsrow" style="justify-content:center;margin-top:8px"><button class="btn ghost" id="btfs" onclick="FS.set(!FS.on)">Tela cheia</button></div>';
+FS.ligar=()=>{if(FS.on){const c=$('cv');c.parentNode.classList.add('fsmode');const b=$('btfs');if(b)b.textContent='Sair';FS.ajusta();}};
+FS.hud=(g,cor)=>{if(!FS.on||!g)return;const [a,m2]=G.meta(g);const t='Fase '+(S.f+1)+'/'+G.FASES.length+'  ·  '+(S.tot+S.fp)+' pts  ·  '+G.rotulo+' '+a+'/'+m2+(G.semTempo?'':'  ·  '+Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s');cx.font='bold 13px system-ui';const w=cx.measureText(t).width+24;rrk(cx,10,48,w,26,13,'rgba(255,255,255,.95)');cx.fillStyle=cor||'#37474f';cx.textAlign='left';cx.fillText(t,22,66);};
+/* Caça ao Hífen, versão 2. Regras do Acordo Ortográfico da Língua Portuguesa (1990), Bases XV e XVI, conforme o VOLP da ABL.
+Cada palavra: [forma certa, formas erradas, chave da regra]. */
+const RG={
+ comp:'Composto sem elemento de ligação: hífen (guarda-chuva, arco-íris).',
+ esp:'Nome de espécie de animal ou planta: hífen, com ou sem preposição.',
+ gent:'Gentílico composto: hífen (mato-grossense, norte-americano).',
+ onom:'Palavra repetida ou onomatopeia: hífen (zigue-zague, tique-taque).',
+ loc:'Locução com elemento de ligação: sem hífen (fim de semana, dia a dia).',
+ aglu:'Perdeu a noção de composição: tudo junto (girassol, paraquedas).',
+ para:'Para- de parar mantém hífen: para-raios, para-choque. Só paraquedas e paraquedista juntaram.',
+ exc:'Exceção consagrada pelo uso: mantém o hífen (cor-de-rosa, pé-de-meia).',
+ vig:'Prefixo termina na mesma vogal que começa a palavra: hífen (micro-ondas).',
+ vdif:'Prefixo termina em vogal diferente da seguinte: tudo junto (autoescola).',
+ rs:'Prefixo em vogal antes de r ou s: dobra a letra e junta (antissocial).',
+ h:'Segunda palavra começa com h: hífen (anti-higiênico, super-homem).',
+ co:'Co- se junta sempre, até antes de o: cooperar, coautor.',
+ re:'Re- e pre- sem acento se juntam: reeleição, preexistente.',
+ pref:'Ex-, vice-, pós-, pré-, pró-, recém-, sem- e além-: sempre hífen.',
+ rr:'Hiper-, inter- e super- antes de r: hífen (inter-racial). Antes de outras letras: junto (hipermercado).',
+ cons:'Prefixo em vogal antes de consoante que não é r nem s: junto (infravermelho).',
+ sub:'Sub- antes de b, r ou h: hífen (sub-reitor). Antes de outras letras: junto (subsolo).',
+ circ:'Circum- e pan- antes de vogal, h, m ou n: hífen (pan-americano).',
+ bem:'Bem- costuma levar hífen (bem-vindo). Algumas formas juntaram: benfeitor.',
+ mal:'Mal- antes de vogal ou h: hífen (mal-estar). Antes de consoante: junto (malcriado).',
+ des:'Des- e in- perdem o h e se juntam: desumano, inábil.'};
+const PAL=[
+ /* fase 1: compostos, espécies, gentílicos, onomatopeias */
+ ['guarda-chuva',['guarda chuva','guardachuva'],'comp',0],['arco-íris',['arco íris','arcoíris'],'comp',0],['segunda-feira',['segunda feira','segundafeira'],'comp',0],['guarda-roupa',['guarda roupa','guardaroupa'],'comp',0],
+ ['arranha-céu',['arranha céu','arranhacéu'],'comp',0],['bate-papo',['bate papo','batepapo'],'comp',0],['quebra-cabeça',['quebra cabeça','quebracabeça'],'comp',0],['vira-lata',['vira lata','viralata'],'comp',0],
+ ['porta-voz',['porta voz','portavoz'],'comp',0],['conta-gotas',['conta gotas','contagotas'],'comp',0],['decreto-lei',['decreto lei','decretolei'],'comp',0],['couve-flor',['couve flor','couveflor'],'comp',0],
+ ['beija-flor',['beija flor','beijaflor'],'esp',0],['bem-te-vi',['bem te vi','bentevi'],'esp',0],['joão-de-barro',['joão de barro','joãodebarro'],'esp',0],['onça-pintada',['onça pintada','onçapintada'],'esp',0],
+ ['lobo-guará',['lobo guará','loboguará'],'esp',0],['tamanduá-bandeira',['tamanduá bandeira','tamanduábandeira'],'esp',0],['mico-leão-dourado',['mico leão dourado','mico-leão dourado'],'esp',0],['peixe-boi',['peixe boi','peixeboi'],'esp',0],
+ ['louva-a-deus',['louva a deus','louvadeus'],'esp',0],['erva-doce',['erva doce','ervadoce'],'esp',0],['cana-de-açúcar',['cana de açúcar','canadeaçúcar'],'esp',0],['castanha-do-pará',['castanha do pará','castanha-do pará'],'esp',0],
+ ['pimenta-do-reino',['pimenta do reino','pimenta-do reino'],'esp',0],['ipê-amarelo',['ipê amarelo','ipêamarelo'],'esp',0],['arara-azul',['arara azul','araraazul'],'esp',0],['tatu-bola',['tatu bola','tatubola'],'esp',0],
+ ['mato-grossense',['mato grossense','matogrossense'],'gent',0],['sul-mato-grossense',['sul mato-grossense','sulmatogrossense'],'gent',0],['norte-americano',['norte americano','norteamericano'],'gent',0],['afro-brasileiro',['afro brasileiro','afrobrasileiro'],'gent',0],
+ ['zigue-zague',['zigue zague','ziguezague'],'onom',0],['tique-taque',['tique taque','tiquetaque'],'onom',0],['pingue-pongue',['pingue pongue','pinguepongue'],'onom',0],['blá-blá-blá',['blá blá blá','bláblablá'],'onom',0],
+ /* fase 2: parece que tem, mas não tem */
+ ['fim de semana',['fim-de-semana','fim de-semana'],'loc',1],['dia a dia',['dia-a-dia','dia a-dia'],'loc',1],['mão de obra',['mão-de-obra','mão de-obra'],'loc',1],['pôr do sol',['pôr-do-sol','pôr do-sol'],'loc',1],
+ ['café com leite',['café-com-leite','café com-leite'],'loc',1],['lua de mel',['lua-de-mel','lua de-mel'],'loc',1],['ponto de vista',['ponto-de-vista','ponto de-vista'],'loc',1],['cão de guarda',['cão-de-guarda','cão de-guarda'],'loc',1],
+ ['sala de jantar',['sala-de-jantar','sala de-jantar'],'loc',1],['pé de moleque',['pé-de-moleque','pé de-moleque'],'loc',1],['mula sem cabeça',['mula-sem-cabeça','mula sem-cabeça'],'loc',1],['cara de pau',['cara-de-pau','cara de-pau'],'loc',1],
+ ['passo a passo',['passo-a-passo','passo a-passo'],'loc',1],['cor de vinho',['cor-de-vinho','cor de-vinho'],'loc',1],['ponto e vírgula',['ponto-e-vírgula','ponto e-vírgula'],'loc',1],['pé de vento',['pé-de-vento','pé de-vento'],'loc',1],
+ ['girassol',['gira-sol','girasol'],'aglu',1],['paraquedas',['para-quedas','para quedas'],'aglu',1],['paraquedista',['para-quedista','para quedista'],'aglu',1],['pontapé',['ponta-pé','ponta pé'],'aglu',1],
+ ['mandachuva',['manda-chuva','manda chuva'],'aglu',1],['madressilva',['madre-silva','madresilva'],'aglu',1],['passatempo',['passa-tempo','passa tempo'],'aglu',1],
+ ['para-raios',['pararraios','pararaios'],'para',1],['para-choque',['parachoque','para choque'],'para',1],['para-brisa',['parabrisa','para brisa'],'para',1],['para-lama',['paralama','para lama'],'para',1],
+ /* fase 3: vogais iguais, vogais diferentes, h, co-, re- */
+ ['micro-ondas',['microondas','micro ondas'],'vig',2],['micro-ônibus',['microônibus','micro ônibus'],'vig',2],['anti-inflamatório',['antiinflamatório','anti inflamatório'],'vig',2],['contra-ataque',['contraataque','contra ataque'],'vig',2],
+ ['semi-interno',['semiinterno','semi interno'],'vig',2],['auto-observação',['autoobservação','auto observação'],'vig',2],['arqui-inimigo',['arquiinimigo','arqui inimigo'],'vig',2],['micro-organismo',['microorganismo','micro organismo'],'vig',2],
+ ['anti-ibérico',['antiibérico','anti ibérico'],'vig',2],['contra-almirante',['contraalmirante','contra almirante'],'vig',2],
+ ['autoescola',['auto-escola','auto escola'],'vdif',2],['autoestrada',['auto-estrada','auto estrada'],'vdif',2],['infraestrutura',['infra-estrutura','infra estrutura'],'vdif',2],['extraoficial',['extra-oficial','extra oficial'],'vdif',2],
+ ['contraindicação',['contra-indicação','contra indicação'],'vdif',2],['antiaéreo',['anti-aéreo','anti aéreo'],'vdif',2],['semianalfabeto',['semi-analfabeto','semi analfabeto'],'vdif',2],['aeroespacial',['aero-espacial','aero espacial'],'vdif',2],
+ ['extraescolar',['extra-escolar','extra escolar'],'vdif',2],['agroindústria',['agro-indústria','agro indústria'],'vdif',2],
+ ['anti-higiênico',['antihigiênico','anti higiênico'],'h',2],['super-homem',['superhomem','super homem'],'h',2],['sobre-humano',['sobrehumano','sobre humano'],'h',2],['pré-história',['préhistória','pré história'],'h',2],
+ ['coautor',['co-autor','co autor'],'co',2],['cooperar',['co-operar','co operar'],'co',2],['coordenar',['co-ordenar','co ordenar'],'co',2],
+ ['reeleição',['re-eleição','re eleição'],'re',2],['reescrever',['re-escrever','re escrever'],'re',2],['preexistente',['pre-existente','pré-existente'],'re',2],['reestruturar',['re-estruturar','re estruturar'],'re',2],
+ ['desumano',['des-humano','deshumano'],'des',2],
+ /* fase 4: letras dobradas e prefixos fixos */
+ ['antissocial',['anti-social','antisocial'],'rs',3],['minissaia',['mini-saia','minisaia'],'rs',3],['ultrassom',['ultra-som','ultrasom'],'rs',3],['autorretrato',['auto-retrato','autoretrato'],'rs',3],
+ ['contrarregra',['contra-regra','contraregra'],'rs',3],['semirreta',['semi-reta','semireta'],'rs',3],['minissérie',['mini-série','minisérie'],'rs',3],['autossustentável',['auto-sustentável','autosustentável'],'rs',3],
+ ['antirrábica',['anti-rábica','antirábica'],'rs',3],['ultrassonografia',['ultra-sonografia','ultrasonografia'],'rs',3],['infravermelho',['infra-vermelho','infra vermelho'],'cons',3],
+ ['inter-racial',['interracial','inter racial'],'rr',3],['hiper-realista',['hiperrealista','hiper realista'],'rr',3],['super-resistente',['superresistente','super resistente'],'rr',3],['inter-regional',['interregional','inter regional'],'rr',3],
+ ['superinteressante',['super-interessante','super interessante'],'rr',3],['hipermercado',['hiper-mercado','hiper mercado'],'rr',3],['interestadual',['inter-estadual','inter estadual'],'rr',3],
+ ['sub-reitor',['subreitor','sub reitor'],'sub',3],['sub-base',['subbase','sub base'],'sub',3],['sub-região',['subregião','sub região'],'sub',3],['subsolo',['sub-solo','sub solo'],'sub',3],['subterrâneo',['sub-terrâneo','sub terrâneo'],'sub',3],
+ ['ex-aluno',['exaluno','ex aluno'],'pref',3],['vice-presidente',['vicepresidente','vice presidente'],'pref',3],['pós-graduação',['pósgraduação','pós graduação'],'pref',3],['pré-natal',['prénatal','pré natal'],'pref',3],
+ ['pró-reitor',['próreitor','pró reitor'],'pref',3],['recém-nascido',['recémnascido','recém nascido'],'pref',3],['sem-terra',['semterra','sem terra'],'pref',3],['além-mar',['alémmar','além mar'],'pref',3],
+ ['pan-americano',['panamericano','pan americano'],'circ',3],['circum-navegação',['circumnavegação','circum navegação'],'circ',3],
+ ['bem-vindo',['benvindo','bem vindo'],'bem',3],['bem-estar',['bemestar','bem estar'],'bem',3],['benfeitor',['bem-feitor','bem feitor'],'bem',3],
+ ['mal-estar',['malestar','mal estar'],'mal',3],['mal-humorado',['malhumorado','mal humorado'],'mal',3],['malcriado',['mal-criado','mal criado'],'mal',3],
+ /* fase 5: exceções que mantêm o hífen */
+ ['cor-de-rosa',['cor de rosa','cor de-rosa'],'exc',4],['pé-de-meia',['pé de meia','pé de-meia'],'exc',4],['água-de-colônia',['água de colônia','água de-colônia'],'exc',4],['mais-que-perfeito',['mais que perfeito','mais que-perfeito'],'exc',4],
+ ['arco-da-velha',['arco da velha','arco da-velha'],'exc',4]];
+const HF={};
+HF.s=()=>Math.max(.8,Math.min(1.3,Math.min(W,H)/440));
+HF.pool=f=>PAL.filter(p=>f===4?true:f===1?(p[3]===1||(p[3]===0&&Math.random()<.25)):p[3]===f);
+HF.FS=[{v:42,ev:1.05,mx:7},{v:50,ev:.9,mx:8},{v:58,ev:.8,mx:9},{v:66,ev:.7,mx:10},{v:78,ev:.58,mx:12}];
+const G={titulo:'Caça ao Hífen',get rotulo(){return 'Bolhas certas';},vidas:3,
+ resumo:'Bolhas sobem com palavras escritas certo ou errado. Estoure só as que estão escritas do jeito certo. Tem composto com hífen, locução sem hífen, prefixo com vogal repetida, letra dobrada e exceções.',
+ como:[['Estourar','Toque só nas bolhas escritas do jeito certo: +10. Acertos seguidos multiplicam os pontos.'],['Deixar passar','Bolha escrita errada deve subir e sumir. Estourar uma errada tira 10 pontos e uma vida.'],['Aprender','A cada erro aparece a forma certa e a regra.']],
+ get dica(){return ['Composto sem ligação e nome de espécie levam hífen.','Locução com de, a, com ou e fica sem hífen. Girassol e paraquedas juntaram.','Vogal igual separa com hífen. Vogal diferente junta.','Prefixo em vogal antes de r ou s: dobra a letra e junta.','Agora vale tudo, mais rápido, com as exceções.'][S?S.f:0];},
+ dicaErro:'Leia a regra que aparece embaixo depois de cada erro.',
+ FASES:[{nome:'Compostos e espécies',dur:60,meta:10,metaTxt:'estourar 10 bolhas certas em 60 s.',txt:'Guarda-chuva, beija-flor e mato-grossense levam hífen. Estoure só as escritas certas.',fato:'O Acordo Ortográfico manda usar hífen nos compostos sem elemento de ligação e nos nomes de espécies de animais e plantas, com ou sem preposição.'},
+  {nome:'Parece, mas não tem',dur:60,meta:10,metaTxt:'estourar 10 bolhas certas em 60 s.',txt:'Fim de semana, dia a dia e mão de obra ficam sem hífen. Girassol e paraquedas se juntaram. Mas para-raios continua com hífen.',fato:'Locuções com elemento de ligação perderam o hífen. Alguns compostos perderam a noção de composição e se escrevem juntos: girassol, madressilva, mandachuva, pontapé, paraquedas, paraquedista.'},
+  {nome:'Vogais que se encontram',dur:65,meta:12,metaTxt:'estourar 12 bolhas certas em 65 s.',txt:'Micro-ondas e anti-inflamatório levam hífen porque a vogal se repete. Autoescola e infraestrutura se juntam. Co- e re- se juntam sempre.',fato:'Pela Base XVI, há hífen quando o prefixo termina na mesma vogal que inicia o segundo elemento, como em micro-onda e semi-interno. O prefixo co- se aglutina mesmo antes de o: cooperar, coobrigação.'},
+  {nome:'Letras dobradas',dur:65,meta:12,metaTxt:'estourar 12 bolhas certas em 65 s.',txt:'Antissocial e ultrassom dobram a letra. Inter-racial e sub-reitor levam hífen. Ex-, vice-, pós- e recém- sempre com hífen.',fato:'Quando o prefixo termina em vogal e a palavra seguinte começa com r ou s, a consoante dobra e tudo se junta: antirreligioso, contrarregra, ultrassom, minissaia.'},
+  {nome:'Tudo junto e rápido',dur:70,meta:15,metaTxt:'estourar 15 bolhas certas em 70 s.',txt:'Todas as regras misturadas e mais rápido. Atenção às exceções: cor-de-rosa, pé-de-meia e água-de-colônia mantêm o hífen.',fato:'Algumas locuções mantêm o hífen por serem consagradas pelo uso: água-de-colônia, arco-da-velha, cor-de-rosa, mais-que-perfeito, pé-de-meia, ao deus-dará e à queima-roupa.'}],
+ init(g){g.vidas=3;g.ok=0;g.bs=[];g.prox=.3;g.deck=[];g.usadas=new Set();g.combo=0;g.part=[];g.reg=null;g.lb=[];},
+ meta(g){return [g.ok,FASES[S.f].meta];},cedo(g){return g.ok>=FASES[S.f].meta;},
+ update(g,dt){HF.update(g,dt);},draw(g){HF.draw(g);},botoes(){return FS.botao();},ligar(){FS.ligar();},reajusta(g){for(const b of g.bs)b.x=Math.max(b.r,Math.min(W-b.r,b.x));},
+ capa(k,w,h){const o=cx,oW=W,oH=H;cx=k;W=w;H=h;HF.fundo(k,w,h);for(const [x,y,t,c] of [[w*.27,h*.55,'micro-ondas',1],[w*.5,h*.35,'fim de semana',1],[w*.73,h*.58,'anti-social',0]]){HF.bolha(k,{x,y,r:Math.max(64,t.length*5.6),t,ph:x,c},0);}cx=o;W=oW;H=oH;}};
 const FASES=G.FASES;
+HF.fundo=function(k,w,h){const gr=k.createLinearGradient(0,0,0,h);gr.addColorStop(0,'#f4f0fc');gr.addColorStop(1,'#e9f4fb');k.fillStyle=gr;k.fillRect(0,0,w,h);
+ k.fillStyle='rgba(126,87,194,.05)';for(let i=0;i<14;i++){const x=(i*173)%w,y=(i*97)%h;k.beginPath();k.arc(x,y,20+(i*37)%50,0,7);k.fill();}};
+HF.proxima=function(g){const f=S.f;if(!g.deck.length){g.deck=HF.pool(f).filter(p=>!g.usadas.has(p[0]));if(g.deck.length<6){g.usadas.clear();g.deck=HF.pool(f);}g.deck=shuf(g.deck);}
+ const vis=new Set(g.bs.map(b=>b.p[0]));let i=g.deck.findIndex(p=>!vis.has(p[0]));if(i<0)return null;const p=g.deck.splice(i,1)[0];g.usadas.add(p[0]);return p;};
+HF.update=function(g,dt){const f=S.f,F=HF.FS[f],s=HF.s(),m=MOB();for(const p of g.part){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=160*dt;p.t-=dt;}g.part=g.part.filter(p=>p.t>0);g.lb=g.lb.filter(l=>(l.t-=dt)>0);for(const l of g.lb)l.y-=30*dt;
+ g.prox-=dt;if(g.prox<=0&&g.bs.length<F.mx*(m?.75:1)){const p=HF.proxima(g);if(p){const certo=Math.random()<.5;const t=certo?p[0]:p[1][Math.floor(Math.random()*p[1].length)];cx.font='bold '+(m?15:18)+'px Georgia,serif';const tw=cx.measureText(t).width;const r=Math.max(m?40:48,tw/2+14);
+   let x=r+Math.random()*(W-2*r),tries=0;while(tries++<8&&g.bs.some(b=>Math.abs(b.x-x)<b.r+r&&b.y>H-2.5*r))x=r+Math.random()*(W-2*r);
+   g.bs.push({p,t,c:certo,x,y:H+r+4,r,v:F.v*s*(.85+Math.random()*.35)*(1+g.t/FASES[f].dur*.35),ph:Math.random()*6,w:.6+Math.random()*.8,a:0,pop:0});}g.prox=F.ev*(.75+Math.random()*.5);}
+ for(const b of g.bs){b.y-=b.v*dt;b.ph+=dt*b.w*2;b.x+=Math.sin(b.ph)*14*dt;b.x=Math.max(b.r,Math.min(W-b.r,b.x));b.a=Math.min(1,b.a+dt*3);}
+ for(let i=0;i<g.bs.length;i++)for(let j=i+1;j<g.bs.length;j++){const a=g.bs[i],b=g.bs[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1,o=a.r+b.r-d;if(o>0){const k=o/2/d;a.x-=dx*k*.5;b.x+=dx*k*.5;a.y-=dy*k*.3;b.y+=dy*k*.3;}}
+ const fora=g.bs.filter(b=>b.y<-b.r);for(const b of fora){if(b.c){g.combo=0;g.lb.push({x:b.x,y:20+b.r*0,t:1.2,tx:'passou: '+b.t,c:'#8d6e63'});}}g.bs=g.bs.filter(b=>b.y>=-b.r);
+ if(inp.tap){let alvo=null,bd=1e9;for(const b of g.bs){const d=Math.hypot(b.x-inp.tap.x,b.y-inp.tap.y);if(d<b.r*1.05&&d<bd){bd=d;alvo=b;}}
+  if(alvo){HF.estoura(g,alvo);inp.tap=null;}}};
+HF.estoura=function(g,b){g.bs=g.bs.filter(x=>x!==b);const cor=b.c?'rgba(129,199,132,.95)':'rgba(239,83,80,.95)';for(let i=0;i<16;i++){const a=i/16*Math.PI*2;g.part.push({x:b.x+Math.cos(a)*b.r,y:b.y+Math.sin(a)*b.r,vx:Math.cos(a)*120,vy:Math.sin(a)*120-40,t:.45,c:cor});}
+ if(b.c){g.combo++;const mult=g.combo>=8?3:g.combo>=4?2:1;g.ok++;ganha(10*mult,b.x,b.y);if(mult>1)g.lb.push({x:b.x,y:b.y-b.r,t:.9,tx:'×'+mult,c:'#6a1b9a'});}
+ else{g.combo=0;g.vidas--;ganha(-10,b.x,b.y);g.reg={certo:b.p[0],errado:b.t,txt:RG[b.p[2]],t:4.5};msg('O certo é: '+b.p[0]);}};
+HF.bolha=function(k,b,t){const r=b.r,x=b.x,y=b.y+Math.sin((b.ph||0)*1.3)*1.5;k.save();k.globalAlpha=b.a==null?1:b.a;
+ let gr=k.createRadialGradient(x-r*.35,y-r*.4,r*.05,x,y,r);gr.addColorStop(0,'rgba(255,255,255,.95)');gr.addColorStop(.55,'rgba(237,231,246,.75)');gr.addColorStop(.85,'rgba(179,157,219,.55)');gr.addColorStop(1,'rgba(126,87,194,.55)');k.fillStyle=gr;k.beginPath();k.arc(x,y,r,0,7);k.fill();
+ gr=k.createLinearGradient(x-r,y-r,x+r,y+r);gr.addColorStop(0,'rgba(129,212,250,.5)');gr.addColorStop(.5,'rgba(206,147,216,.35)');gr.addColorStop(1,'rgba(255,204,128,.45)');k.strokeStyle=gr;k.lineWidth=3;k.stroke();
+ k.fillStyle='rgba(255,255,255,.85)';k.beginPath();k.ellipse(x-r*.42,y-r*.48,r*.2,r*.1,-.6,0,7);k.fill();k.beginPath();k.arc(x+r*.5,y+r*.45,r*.05,0,7);k.fill();
+ k.fillStyle='#2a1659';k.font='bold '+(MOB()?15:18)+'px Georgia,serif';k.textAlign='center';k.textBaseline='middle';k.fillText(b.t,x,y+1);k.textBaseline='alphabetic';k.restore();};
+HF.draw=function(g){const m=MOB();HF.fundo(cx,W,H);for(const b of g.bs)HF.bolha(cx,b,g.t);
+ for(const p of g.part){cx.globalAlpha=Math.min(1,p.t*2.5);cx.fillStyle=p.c;cx.beginPath();cx.arc(p.x,p.y,3,0,7);cx.fill();cx.globalAlpha=1;}
+ for(const l of g.lb){cx.font='bold 13px system-ui';const w=cx.measureText(l.tx).width+14;rrk(cx,Math.max(4,Math.min(W-w-4,l.x-w/2)),l.y-14,w,22,11,'rgba(255,255,255,.92)');cx.fillStyle=l.c;cx.textAlign='center';cx.fillText(l.tx,Math.max(4+w/2,Math.min(W-w/2-4,l.x)),l.y+2);}
+ if(g.combo>=2){const t='sequência '+g.combo+(g.combo>=8?'  ·  ×3':g.combo>=4?'  ·  ×2':'');cx.font='bold 13px system-ui';const w=cx.measureText(t).width+20;rrk(cx,W-w-10,(FS.on?84:50),w,26,13,'rgba(106,27,154,.9)');cx.fillStyle='#fff';cx.textAlign='center';cx.fillText(t,W-w/2-10,(FS.on?84:50)+18);}
+ if(g.reg){g.reg.t-=1/60;if(g.reg.t<=0)g.reg=null;else{const pw=Math.min(W-20,560),px=W/2-pw/2,ph=m?78:66,py=H-ph-10;cx.globalAlpha=Math.min(1,g.reg.t*2);rrk(cx,px,py,pw,ph,14,'rgba(255,255,255,.97)');cx.strokeStyle='#c62828';cx.lineWidth=2;cx.beginPath();cx.roundRect(px,py,pw,ph,14);cx.stroke();
+  cx.textAlign='left';cx.font='bold 14px system-ui';cx.fillStyle='#c62828';cx.fillText('✗ '+g.reg.errado,px+14,py+22);cx.fillStyle='#2e7d32';cx.fillText('✓ '+g.reg.certo,px+14+Math.min(pw*.45,cx.measureText('✗ '+g.reg.errado).width+30),py+22);
+  cx.font=(m?12:13)+'px system-ui';cx.fillStyle='#37474f';HF.quebra(g.reg.txt,px+14,py+44,pw-28,16);cx.globalAlpha=1;}}
+ else if(S.g.msgT<=0){const t=m?'Estoure só as palavras escritas certo.':'Estoure só as bolhas com a palavra escrita do jeito certo. Deixe as erradas subirem.';cx.font='bold '+(m?12:14)+'px system-ui';const w=Math.min(W-16,cx.measureText(t).width+28);rrk(cx,W/2-w/2,H-42,w,30,15,'rgba(255,255,255,.95)');cx.strokeStyle='#7e57c2';cx.lineWidth=2;cx.beginPath();cx.roundRect(W/2-w/2,H-42,w,30,15);cx.stroke();cx.fillStyle='#4527a0';cx.textAlign='center';cx.fillText(t,W/2,H-22);}
+ FS.hud(g,'#4527a0');};
+HF.quebra=function(t,x,y,w,lh){const ps=t.split(' ');let l='';for(const p of ps){const tt=l?l+' '+p:p;if(cx.measureText(tt).width>w&&l){cx.fillText(l,x,y);y+=lh;l=p;}else l=tt;}if(l)cx.fillText(l,x,y);};
 const PERG=[
- {q:'Qual é a escrita certa do nome do animal?',o:['Tamanduá-bandeira','Tamanduá bandeira','Tamanduábandeira']},
- {q:'Por que "joão-de-barro" leva hífen?',o:['Porque é nome de uma espécie de ave','Porque tem mais de dez letras','Porque começa com nome de pessoa']},
- {q:'Qual destas expressões NÃO leva hífen?',o:['Pé de moleque, o doce','Beija-flor, a ave','Bem-te-vi, a ave']}
-];
+ {q:'Qual destas palavras está escrita do jeito certo?',o:['joão-de-barro','joão de barro','joãodebarro']},
+ {q:'Por que "fim de semana" fica sem hífen?',o:['É locução com elemento de ligação','É nome de espécie de planta','Tem mais de dez letras ao todo']},
+ {q:'Qual é a escrita certa do aparelho de cozinha?',o:['micro-ondas','microondas','micro ondas']},
+ {q:'Qual palavra segue a regra das letras dobradas?',o:['antissocial','anti-social','antisocial']},
+ {q:'Qual destas locuções manteve o hífen como exceção?',o:['cor-de-rosa','fim-de-semana','pé-de-moleque']}];
 function pergunta(){
  const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
  $('tela').innerHTML=`<div class="card"><h2>Pergunta da fase</h2><p style="margin:6px 0 4px">${P.q}</p><p class="small">Acerto +20, erro −10.</p><div class="ops">${ops.map((o,i)=>`<button data-i="${i}">${o.t}</button>`).join('')}</div><div id="pf"></div></div>`;
@@ -189,11 +353,11 @@ function pergunta(){
   $('bn').onclick=()=>{S.tot+=S.fp;S.fp=0;if(S.f===FASES.length-1)final(true);else{S.f++;fase();}};});
 }
 function final(tudo){
- S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
- $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Mestre do hífen':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
+ S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?FASES.length+' fases':'Fase '+(S.f+1);
+ $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Mestre do hífen!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
  <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
- <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Acordo Ortográfico da Língua Portuguesa, Base XV, 3º: usa-se hífen nas palavras compostas que designam espécies botânicas e zoológicas, ligadas ou não por preposição; ABL, Nota explicativa do VOLP: homógrafos com outro sentido, como bico de papagaio (nariz curvo), ficam sem hífen; STJ, dica de português: pé de moleque e mula sem cabeça perderam o hífen, e castanha-do-pará e urubu-rei mantêm. Velocidades e pontos são regras do jogo.</div></div>`;
+ <div class="small" style="margin-top:12px;text-align:left">Fontes: Acordo Ortográfico da Língua Portuguesa (1990), Base XV (hífen em compostos, locuções e nomes de espécies; compostos aglutinados como girassol, madressilva, mandachuva, pontapé, paraquedas e paraquedista; locuções sem hífen e exceções consagradas como água-de-colônia, arco-da-velha, cor-de-rosa, mais-que-perfeito, pé-de-meia, ao deus-dará e à queima-roupa) e Base XVI (hífen com prefixos: vogal igual, h, r e s dobrados, co-, des- e in-, ex-, vice-, pós-, pré-, pró-, recém-, sem-, além-, circum-, pan-, hiper-, inter-, super-, sub-); ABL, Vocabulário Ortográfico da Língua Portuguesa (VOLP); Senado Federal, Manual de Comunicação, verbete Hífen; Tufano, Guia Prático da Nova Ortografia (Melhoramentos, de acordo com o VOLP); TRF3, Emprego do hífen (anti-inflamatório, micro-ônibus, micro-organismo). Velocidades, quantidade de bolhas, combos, vidas e pontos são regras do jogo.</div></div>`;
  $('bS').onclick=()=>salvar(nivel);
 }
 const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
@@ -202,7 +366,7 @@ const GAME_ID="hifen-na-fauna";let db=null,fs=null,salvo=false;
 async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
 async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
  $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
-window.__a={get S(){return S},update,parar,G,inp};
+window.__a={get S(){return S},update,parar,G,inp,tec};
 inicio();
 </script>
 </body>
