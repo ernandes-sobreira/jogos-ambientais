@@ -390,12 +390,12 @@ QP.botoesT=function(){const m=MOB(),fase=G0().tray.fase,pir=QP.F[S.f].pir>0&&fas
  const L=fase==='marcar'?[['MARCAR OS PACUS E SOLTAR','#ef6c00','ok']]:pir?[['TEM MARCA','#ef6c00','sim'],['SEM MARCA','#1565c0','nao'],['OUTRA ESPÉCIE','#6d4c41','outra']]:[['TEM MARCA','#ef6c00','sim'],['SEM MARCA','#1565c0','nao']];
  const n=L.length,bw=(cw-24-(n-1)*8)/n;return {x0,y0,cw,ch,bts:L.map((b,i)=>({x:x0+12+i*(bw+8),y:y0+ch-54,w:bw,h:44,t:b[0],c:b[1],id:b[2]}))};};
 const G0=()=>S.g;
-QP.bandeja=function(g,dt){const T=g.tray;T.t+=dt;const p=T.fs[T.i];if(!p){QP.solta(g);return;}const B=QP.botoesT();
+QP.bandeja=function(g,dt){const T=g.tray;T.t+=dt;if(T.an){T.an.t+=dt;if(T.an.t>.55){T.an=null;T.i++;T.t=0;}inp.tap=null;return;}const p=T.fs[T.i];if(!p){QP.solta(g);return;}const B=QP.botoesT();
  if(T.fase==='marcar'){if(inp.tap&&T.t>.25){const b=B.bts[0];if(inp.tap.x>b.x&&inp.tap.x<b.x+b.w&&inp.tap.y>b.y&&inp.tap.y<b.y+b.h){let n=0;for(const q of T.fs)if(q.sp==='pacu'&&!q.m){q.m=1;q.tag=1;q.clip=QP.F[S.f].perde>0?1:0;g.M++;n++;}if(n)ganha(2*n,W/2,B.y0+40);msg(n?n+' pacus marcados e soltos.':'Nenhum pacu novo para marcar.');QP.solta(g);}inp.tap=null;}return;}
  if(!inp.tap||T.t<.3)return;const bt=B.bts.find(b=>inp.tap.x>b.x&&inp.tap.x<b.x+b.w&&inp.tap.y>b.y&&inp.tap.y<b.y+b.h);inp.tap=null;if(!bt)return;
  const certo=p.sp!=='pacu'?'outra':p.m?'sim':'nao';const pir=QP.F[S.f].pir>0;const ok=bt.id===certo||(!pir&&p.sp!=='pacu');
  if(ok){ganha(3,W/2,B.y0+B.ch-70);}else{ganha(-5,W/2,B.y0+B.ch-70);g.err++;msg(certo==='sim'?(p.tag?'Tinha a etiqueta laranja.':'Tinha o corte na cauda: foi marcado.'):certo==='outra'?'É uma piranha: não entra na conta dos pacus.':'Esse não tinha marca.');}
- if(p.sp==='pacu'){g.C++;if(p.m)g.R++;}T.i++;T.t=0;};
+ if(p.sp==='pacu'){g.C++;if(p.m)g.R++;}T.an={t:0,ok,txt:(certo==='sim'?'com marca':certo==='outra'?'piranha':'sem marca')};};
 QP.solta=function(g){const T=g.tray;if(T.fase==='recap'){for(const p of T.fs){p.viv=1;}g.viv=(g.viv||0)+T.fs.length;g.tray=null;msg('Peixes examinados ficam no viveiro até o fim da pesca.');return;}for(const p of T.fs){p.pego=0;p.x=W/2+(Math.random()-.5)*80;p.y=QP.ys()+20;p.tm=0;p.foge=.6;p.fx=p.x+(Math.random()-.5)*300;p.fy=QP.ys()+60+Math.random()*100;}g.tray=null;};
 QP.abreConta=function(g){if(!g.R){g.et='fim';msg('Nenhum marcado reapareceu. Marque mais pacus e tente de novo.');return;}const M=g.M,C=g.C,R=g.R,ex=Math.round(M*C/R);
  let ops=[ex,M*C,Math.max(1,Math.round(M*R/C))];if(new Set(ops).size<3)ops=[ex,ex*2+3,Math.max(1,Math.round(ex/2)-2)];g.calc={M,C,R,ex,ops:shuf(ops),t:0,res:null};g.et='calc';};
@@ -445,8 +445,10 @@ QP.bandejaD=function(g){const T=g.tray,p=T.fs[T.i];if(!p)return;const B=QP.botoe
  cx.textAlign='left';cx.fillStyle='#bf360c';cx.font='bold 14px system-ui';cx.fillText(T.fase==='marcar'?'Marcação: '+T.fs.length+' peixes na tarrafa':'Exame do peixe',x0+14,y0+22);cx.fillStyle='#607d8b';cx.font='12px system-ui';cx.textAlign='right';if(T.fase!=='marcar')cx.fillText((T.i+1)+' de '+T.fs.length,x0+cw-14,y0+22);
  if(T.fase==='marcar'){const n=T.fs.length,cols=Math.min(4,n),rows=Math.ceil(n/cols),cwl=(cw-28)/cols,rh=Math.min(64,(ch-110)/rows);T.fs.forEach((q,k)=>{const xx=x0+14+cwl*(k%cols)+cwl/2,yy=y0+50+rh*Math.floor(k/cols)+rh*.45;peixeR(cx,xx,yy,Math.min(cwl*.8,rh*1.6),q.sp,1,g.t*4+k,.5);if(q.m){QP.marca(cx,xx,yy,Math.min(cwl*.8,rh*1.6),1,q.tag,q.clip,0);}cx.font='10px system-ui';cx.fillStyle=q.sp==='pacu'?'#37474f':'#8d6e63';cx.textAlign='center';cx.fillText(q.sp==='pacu'?(q.m?'pacu já marcado':'pacu'):'piranha: só soltar',xx,yy+rh*.5);});
   for(const b of B.bts){rrk(cx,b.x,b.y,b.w,b.h,12,b.c);cx.fillStyle='#fff';cx.font='bold '+(m?13:15)+'px system-ui';cx.textAlign='center';cx.fillText(b.t,b.x+b.w/2,b.y+27);}return;}
- const L=Math.min(cw*.55,190),fx=x0+cw/2,fy=y0+40+L*.3;peixeR(cx,fx,fy,L,p.sp,1,g.t*4,.5);
- const marcado=T.fase==='marcar'?(p.sp==='pacu'&&T.t>.25&&false):p.m;if(T.fase==='recap'&&p.m)QP.marca(cx,fx,fy,L,1,p.tag,p.clip,1);
+ const L=Math.min(cw*.55,190)*Math.min(1.15,Math.max(.85,p.L/(26*QP.s()))),an=T.an,sl=an?an.t/.55:0,fx=x0+cw/2+sl*sl*cw*.7,fy=y0+40+Math.min(cw*.55,190)*.3;cx.save();cx.beginPath();cx.rect(x0,y0,cw,ch);cx.clip();cx.globalAlpha=1-sl*.8;peixeR(cx,fx,fy,L,p.sp,1,g.t*4,.5);cx.globalAlpha=1;cx.restore();
+ if(an){cx.save();cx.translate(x0+cw/2,fy);cx.rotate(-.15);cx.font='bold 22px system-ui';const st=(an.ok?'✓ ':'✗ ')+an.txt;const sw=cx.measureText(st).width+24;cx.strokeStyle=an.ok?'#2e7d32':'#c62828';cx.lineWidth=3;cx.strokeRect(-sw/2,-20,sw,40);cx.fillStyle=an.ok?'#2e7d32':'#c62828';cx.textAlign='center';cx.fillText(st,0,8);cx.restore();}
+ {const n=T.fs.length,dw=Math.min(14,(cw-60)/n);for(let k=0;k<n;k++){cx.fillStyle=k<T.i?'#ef6c00':k===T.i?'#ffb74d':'#e0e0e0';cx.beginPath();cx.arc(x0+cw/2-(n-1)*dw/2+k*dw,y0+34,4,0,7);cx.fill();}}
+ const marcado=T.fase==='marcar'?(p.sp==='pacu'&&T.t>.25&&false):p.m;if(T.fase==='recap'&&p.m&&!an)QP.marca(cx,fx,fy,L,1,p.tag,p.clip,1);
  cx.textAlign='center';cx.font='bold 13px system-ui';cx.fillStyle='#37474f';
  if(T.fase==='marcar'){cx.fillText(p.sp==='pacu'?(p.m?'Já marcado: só soltar.':'Pacu: coloque a etiqueta'+(QP.F[S.f].perde?' e faça o corte na cauda':'')+'.'):'Piranha: não é o alvo, volta para a água.',fx,y0+ch-66);}
  else cx.fillText(QP.F[S.f].perde?'Procure a etiqueta laranja e o corte na cauda.':'Procure a etiqueta laranja perto da nadadeira dorsal.',fx,y0+ch-66);
