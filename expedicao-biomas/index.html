@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Expedição Biomas</title>
+<style>
+:root{--main:#7b1fa2;--deep:#4a148c;--soft:#f3e5f5;--line:#e1bee7;--ink:#10212b;--mut:#4d6370;--co2:#e53935;--ch4:#ef6c00;--ok:#2e7d32;--bad:#c62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:820px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep);letter-spacing:-.01em}
+h2{font-size:1.2rem;color:var(--deep);margin-bottom:6px;letter-spacing:-.01em}
+h3{font-size:1rem;color:var(--deep);margin:14px 0 6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 12px;font-weight:700;font-size:.86rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.card{border:2px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:var(--deep)}.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.btn.sm{padding:9px 14px;font-size:.92rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas.cena{width:100%;height:auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff;margin-top:10px}
+.top{justify-content:space-between}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--main);color:#fff;border-radius:14px;padding:8px 14px;font-weight:800;font-size:1.05rem}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.tool{border:2px solid var(--line);background:#fff;color:var(--deep);border-radius:12px;padding:9px 12px;font-weight:700;font-family:inherit;font-size:.92rem;cursor:pointer;touch-action:manipulation}
+.tool.on{border-color:var(--main);background:var(--soft)}
+.tool:disabled{opacity:.4}
+.mets{display:grid;gap:8px;margin-top:10px}
+.met{display:grid;grid-template-columns:92px 1fr 52px;gap:8px;align-items:center;font-weight:700;font-size:.9rem}
+.met .bar{position:relative;height:18px;background:#f1f4f5;border-radius:99px;overflow:hidden}
+.met .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;transition:width .15s}
+.met .alvo{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--ink);border-radius:2px}
+.met .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--mut)}
+.met.co2 .fill{background:var(--co2)}.met.ch4 .fill{background:var(--ch4)}
+.saldo .bar{background:linear-gradient(90deg,#e8f5e9 50%,#ffebee 50%)}
+.saldo .zero{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:var(--ink)}
+.saldo .fill{border-radius:0}
+.obj{display:flex;gap:10px;align-items:flex-start;background:#fff8e1;border:2px solid #ffe082;border-radius:14px;padding:10px 12px;margin-top:10px;font-size:.95rem}
+.obj b{color:#8d6e00;white-space:nowrap}
+.acao{display:flex;gap:10px;align-items:center;background:var(--soft);border-left:5px solid var(--main);border-radius:0 12px 12px 0;padding:9px 12px;margin-top:8px;font-weight:600;font-size:.95rem;min-height:42px}
+.acao .dedo{font-size:1.25rem;animation:pulo 1s ease-in-out infinite}
+@keyframes pulo{50%{transform:translateX(4px)}}
+.help{width:34px;height:34px;border-radius:50%;border:2px solid var(--main);background:#fff;color:var(--deep);font-weight:800;font-size:1rem;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(16,33,43,.35);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal .card{max-width:460px;width:100%}
+.intro{text-align:center;padding:26px 18px}
+.intro .ic{font-size:3rem;line-height:1}
+.intro .n{color:var(--mut);font-weight:700;font-size:.85rem;margin-top:8px}
+.passos{display:grid;gap:8px;margin:16px auto;max-width:420px;text-align:left}
+.passos div{display:flex;gap:12px;align-items:center;background:var(--soft);border-radius:12px;padding:10px 14px;font-weight:600}
+.passos b{font-size:1.3rem;min-width:1.6em;text-align:center}
+.res{text-align:center}
+.res .big{font-size:2.6rem;font-weight:800;color:var(--deep);line-height:1.1}
+.res .ok{color:var(--ok);font-weight:800}.res .no{color:var(--bad);font-weight:800}
+.pensa{background:var(--soft);border-radius:14px;padding:12px 14px;margin:14px auto;max-width:520px;text-align:left}
+.pensa b{color:var(--deep)}
+.boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.box{border:2px dashed var(--line);border-radius:14px;padding:10px;min-height:110px;cursor:pointer}
+.box h4{font-size:.92rem;color:var(--deep);margin-bottom:6px}
+.box.alvo{border-color:var(--main);background:var(--soft)}
+.cards{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;min-height:48px}
+.ct{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 11px;font-weight:700;font-size:.9rem;cursor:pointer;box-shadow:0 2px 0 var(--line);font-family:inherit;color:var(--ink);transition:transform .5s}
+.ct.sel{border-color:var(--main);background:var(--soft);transform:translateY(-2px)}
+.ct.certo{border-color:var(--ok);background:#e8f5e9}.ct.errado{border-color:var(--bad);background:#ffebee}
+.ct.movido{animation:voa .8s ease}
+@keyframes voa{0%{transform:translateY(-30px) scale(1.1);opacity:.3}100%{transform:none;opacity:1}}
+.capa{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+.capa canvas{width:100%;height:auto;display:block;border-radius:16px;background:var(--soft)}
+.opts{display:grid;gap:8px;margin-top:6px}
+.opts .l{font-size:.8rem;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.sw{display:flex;gap:6px;flex-wrap:wrap}
+.sw button{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--line);cursor:pointer}
+.sw button.on{box-shadow:0 0 0 3px var(--deep)}
+.sw .tx{width:auto;height:auto;border-radius:10px;padding:6px 10px;font-weight:700;font-size:.85rem;background:#fff;color:var(--deep);font-family:inherit;border:0}
+input.nome{border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit;width:100%}
+input[type=range]{width:100%;accent-color:var(--main)}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:6px}
+.tab th{text-align:left;background:var(--soft);color:var(--deep);padding:7px 6px}
+.tab td{border-bottom:1px solid var(--line);padding:7px 6px;vertical-align:top}
+.guia p,.guia li{font-size:.95rem;margin-bottom:6px}
+.guia ul,.guia ol{padding-left:20px}
+.hab{border-left:5px solid var(--main);background:var(--soft);padding:10px 14px;border-radius:0 12px 12px 0;font-size:.95rem}
+.ref li{font-size:.86rem;color:var(--mut)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+.rel{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center}
+.rel canvas{width:120px;height:120px;border-radius:50%;background:var(--soft)}
+.mini{width:100%;max-width:420px;height:auto;display:block;margin:10px auto 0}
+@media (max-width:620px){.wrap{padding:10px 8px 30px}.card{padding:12px;border-radius:16px}.capa{grid-template-columns:1fr}.met{grid-template-columns:70px 1fr 44px;font-size:.82rem}.chip{font-size:.95rem}.rel{grid-template-columns:80px 1fr}.rel canvas{width:80px;height:80px}}
+@media print{a.hub,header .hud,.ranking,.noprint{display:none!important}.card{border:1px solid #ccc;break-inside:avoid}body{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>Expedição Biomas</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF"></span><span class="pill" id="hP"></span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const W=760,H=372;
+function hex(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mix(a,b,t){const A=hex(a),B=hex(b);return`rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`;}
+
+/* ================= AVATAR ================= */
+const PELES=['#f6d3b8','#e3b18b','#c68a5e','#94603e','#5d3b26'];
+const CABS=['#1b1b1b','#4e342e','#8d6e63','#d4a85a','#b5532f'];
+const CAMISAS=['#00838f','#2e7d32','#f9a825','#c62828','#6a1b9a','#37474f'];
+const ESTILOS=[['curto','Curto'],['cacheado','Cacheado'],['longo','Longo'],['coque','Coque'],['raspado','Raspado']];
+const CHAPEUS=[['nenhum','Sem'],['bone','Boné'],['campo','Chapéu']];
+let A={pele:2,cab:0,estilo:'cacheado',camisa:0,chapeu:'campo',nome:''};
+try{const s=JSON.parse(localStorage.getItem('bc_avatar')||'null');if(s)A=Object.assign(A,s);}catch(e){}
+function salvaA(){try{localStorage.setItem('bc_avatar',JSON.stringify(A));}catch(e){}}
+function avatar(c,x,y,s,a,prancheta){
+ c.save();c.translate(x,y);c.scale(s,s);
+ const pele=PELES[a.pele],cab=CABS[a.cab],cam=CAMISAS[a.camisa];
+ if(a.estilo==='longo'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-39,12.5,15,0,0,7);c.fill();c.fillRect(-12.5,-40,25,22);}
+ if(a.estilo==='cacheado'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-40,15,14.5,0,0,7);c.fill();}
+ c.fillStyle=cam;c.beginPath();c.moveTo(-16,0);c.quadraticCurveTo(-17,-21,-6,-25);c.lineTo(6,-25);c.quadraticCurveTo(17,-21,16,0);c.closePath();c.fill();
+ c.fillStyle='rgba(0,0,0,.12)';c.fillRect(-1,-24,2,24);
+ c.fillStyle=pele;c.fillRect(-3.5,-29,7,6);
+ if(prancheta){c.fillStyle='#8d6e63';c.fillRect(4,-19,13,16);c.fillStyle='#fff';c.fillRect(5.5,-17,10,12);c.strokeStyle='#90a4ae';c.lineWidth=.8;for(let i=0;i<4;i++){c.beginPath();c.moveTo(7,-14+i*2.6);c.lineTo(14,-14+i*2.6);c.stroke();}}
+ c.strokeStyle=cam;c.lineWidth=6;c.lineCap='round';c.beginPath();c.moveTo(-11,-20);c.lineTo(-4,-9);c.stroke();
+ c.fillStyle=pele;c.beginPath();c.arc(-3,-8,3,0,7);c.fill();
+ c.fillStyle=pele;c.beginPath();c.ellipse(0,-39,9.5,11,0,0,7);c.fill();
+ c.beginPath();c.arc(-9.4,-38,2.3,0,7);c.arc(9.4,-38,2.3,0,7);c.fill();
+ c.fillStyle=cab;
+ if(a.estilo==='curto'){c.beginPath();c.ellipse(0,-44.5,10,6.8,0,Math.PI,0);c.fill();c.fillRect(-10,-46,2.8,7);c.fillRect(7.2,-46,2.8,7);}
+ if(a.estilo==='cacheado'){for(let i=0;i<13;i++){const an=Math.PI*(.8+i*1.4/12);c.beginPath();c.arc(Math.cos(an)*12,-41+Math.sin(an)*11.5,4.2,0,7);c.fill();}}
+ if(a.estilo==='longo'){c.beginPath();c.ellipse(0,-44.5,10.6,7.2,0,Math.PI,0);c.fill();}
+ if(a.estilo==='coque'){c.beginPath();c.ellipse(0,-44.5,10,6.4,0,Math.PI,0);c.fill();c.beginPath();c.arc(0,-53,5.2,0,7);c.fill();}
+ if(a.estilo==='raspado'){c.globalAlpha=.5;c.beginPath();c.ellipse(0,-44,9.8,6.2,0,Math.PI,0);c.fill();c.globalAlpha=1;}
+ c.fillStyle='#2b2a26';c.beginPath();c.arc(-3.4,-39,1.25,0,7);c.arc(3.4,-39,1.25,0,7);c.fill();
+ c.strokeStyle='#2b2a26';c.lineWidth=1;c.beginPath();c.arc(0,-35.6,2.6,.25,Math.PI-.25);c.stroke();
+ if(a.chapeu==='bone'){c.fillStyle=cam;c.beginPath();c.ellipse(0,-46,10.6,5.8,0,Math.PI,0);c.fill();c.fillRect(-10.6,-47,21.2,2.6);c.beginPath();c.ellipse(8.5,-46.2,8,2.2,0,0,7);c.fill();}
+ if(a.chapeu==='campo'){c.fillStyle='#d7c49e';c.beginPath();c.ellipse(0,-46,16.5,3.6,0,0,7);c.fill();c.beginPath();c.ellipse(0,-48,9.2,6.4,0,Math.PI,0);c.fill();c.fillStyle='#8d6e63';c.fillRect(-9.2,-49,18.4,1.9);}
+ c.restore();
+}
+function pernas(c,x,y,s,a){c.save();c.translate(x,y);c.scale(s,s);c.fillStyle='#455a64';c.fillRect(-11,0,9,20);c.fillRect(2,0,9,20);c.fillStyle='#3e2723';c.fillRect(-12,18,11,4);c.fillRect(1,18,11,4);c.restore();}
+
+/* ================= CENA ================= */
+const CORES={main:'#7b1fa2',deep:'#4a148c'};
+function sr(n){const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+function syncMol(){}function partic(){}
+/* ===== BIOMAS ===== */
+const BIO={ama:['Amazônia','#1b5e20'],cer:['Cerrado','#9a5b13'],caa:['Caatinga','#6d4c41'],pan:['Pantanal','#0277bd'],mat:['Mata Atlântica','#2e7d32'],pam:['Pampa','#558b2f']};
+function mixC(a,b,t){const h=s=>[1,3,5].map(i=>parseInt(s.slice(i,i+2),16));const A=h(a),B=h(b);return`rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`;}
+function copa(c,x,y,r,cores,seed){for(let k=0;k<7;k++){c.fillStyle=cores[k%cores.length];c.beginPath();c.arc(x+(sr(seed+k)-.5)*r*1.4,y+(sr(seed+k+5)-.5)*r*.8,r*(.45+sr(seed+k+2)*.35),0,7);c.fill();}}
+function tronco(c,x,y,h,w,cor){c.fillStyle=cor||'#5d4037';c.beginPath();c.moveTo(x-w/2,y);c.lineTo(x-w*.3,y-h);c.lineTo(x+w*.3,y-h);c.lineTo(x+w/2,y);c.fill();}
+function ceu(c,x,y,w,h,a,b){const g=c.createLinearGradient(0,y,0,y+h);g.addColorStop(0,a);g.addColorStop(1,b);c.fillStyle=g;c.fillRect(x,y,w,h);}
+function paisagem(c,x,y,w,h,k,t){c.save();c.beginPath();c.roundRect(x,y,w,h,14);c.clip();c.translate(x,y);const s=w/360;c.scale(s,s);const H2=h/s;t=t||0;
+ if(k==='ama'){ceu(c,0,0,360,H2,'#9fc5c9','#dfeee9');
+  [['#2f6b3a',.55,60],['#24572e',.68,90],['#1b4524',.82,120]].forEach(([cor,yy,sd],L)=>{for(let i=0;i<14;i++){const xx=i*28+sr(i+sd)*14;copa(c,xx,H2*yy-sr(i+sd+3)*24,20+L*4,[cor,mixC(cor,'#ffffff',.12),mixC(cor,'#000000',.12)],i+sd);}});
+  tronco(c,250,H2*.62,70,8,'#6d5a44');copa(c,250,H2*.62-80,34,['#3d7f45','#2f6b3a','#4e9152'],7);
+  c.fillStyle='#8d6e4a';c.beginPath();c.moveTo(0,H2*.86);c.quadraticCurveTo(180,H2*.80,360,H2*.88);c.lineTo(360,H2);c.lineTo(0,H2);c.fill();c.fillStyle='rgba(255,255,255,.18)';c.fillRect(0,H2*.88,360,2);
+  c.fillStyle='rgba(255,255,255,.35)';for(let i=0;i<4;i++){c.beginPath();c.ellipse(60+i*90,H2*.45,50,8,0,0,7);c.fill();}
+  c.strokeStyle='rgba(80,120,160,.45)';c.lineWidth=1.2;for(let i=0;i<40;i++){const xx=(i*37+t*60)%360,yy=(i*53+t*200)%(H2*.8);c.beginPath();c.moveTo(xx,yy);c.lineTo(xx-2,yy+7);c.stroke();}}
+ else if(k==='cer'){ceu(c,0,0,360,H2,'#7ec8f0','#e7f5fb');c.fillStyle='#d9b26a';c.fillRect(0,H2*.62,360,H2);c.fillStyle='#b5473a';c.fillRect(0,H2*.9,360,H2*.1);
+  for(let i=0;i<60;i++){c.strokeStyle=['#c89a42','#a6802f','#d8b45c'][i%3];c.lineWidth=1.2;const xx=sr(i)*360,yy=H2*.66+sr(i+3)*H2*.24;c.beginPath();c.moveTo(xx,yy);c.lineTo(xx-3,yy-10);c.moveTo(xx,yy);c.lineTo(xx+3,yy-9);c.stroke();}
+  [[60,.66,1],[170,.64,1.2],[290,.67,.9]].forEach(([xx,yy,ss],i)=>{c.strokeStyle='#4e342e';c.lineWidth=4*ss;c.beginPath();c.moveTo(xx,H2*yy);c.bezierCurveTo(xx+8*ss,H2*yy-20*ss,xx-10*ss,H2*yy-30*ss,xx+4*ss,H2*yy-46*ss);c.moveTo(xx+2,H2*yy-30*ss);c.quadraticCurveTo(xx+18*ss,H2*yy-34*ss,xx+22*ss,H2*yy-48*ss);c.stroke();copa(c,xx+4*ss,H2*yy-52*ss,16*ss,['#6b8e23','#7a9a2c','#556b1f'],i*3);copa(c,xx+22*ss,H2*yy-52*ss,11*ss,['#6b8e23','#7a9a2c'],i*3+9);});
+  c.fillStyle='#a1542f';c.beginPath();c.moveTo(225,H2*.8);c.quadraticCurveTo(232,H2*.8-40,240,H2*.8-44);c.quadraticCurveTo(250,H2*.8-36,256,H2*.8);c.fill();}
+ else if(k==='caa'){ceu(c,0,0,360,H2,'#f3d27a','#fbf0d3');c.fillStyle='#ffcc33';c.beginPath();c.arc(300,40,22,0,7);c.fill();c.fillStyle='#d7b98e';c.fillRect(0,H2*.62,360,H2);
+  c.strokeStyle='#a98a62';c.lineWidth=1;for(let i=0;i<30;i++){const xx=sr(i)*360,yy=H2*.68+sr(i+1)*H2*.28;c.beginPath();c.moveTo(xx,yy);c.lineTo(xx+8,yy+4);c.lineTo(xx+14,yy-2);c.stroke();}
+  [[40,.66],[130,.64],[230,.66],[320,.65]].forEach(([xx,yy],i)=>{c.strokeStyle='#7d6a5a';c.lineWidth=1.6;const b=(x0,y0,a,l,d)=>{if(d>4)return;const x1=x0+Math.cos(a)*l,y1=y0+Math.sin(a)*l;c.beginPath();c.moveTo(x0,y0);c.lineTo(x1,y1);c.stroke();b(x1,y1,a-.5,l*.7,d+1);b(x1,y1,a+.5,l*.7,d+1);};b(xx,H2*yy,-Math.PI/2,18,0);});
+  const cacto=(xx,yy,s)=>{c.fillStyle='#4e8a3e';c.beginPath();c.roundRect(xx-5*s,yy-60*s,10*s,60*s,5*s);c.fill();c.beginPath();c.roundRect(xx-20*s,yy-42*s,8*s,24*s,4*s);c.fill();c.fillRect(xx-16*s,yy-22*s,12*s,6*s);c.beginPath();c.roundRect(xx+12*s,yy-50*s,8*s,28*s,4*s);c.fill();c.fillRect(xx+4*s,yy-26*s,12*s,6*s);c.strokeStyle='#2f5e25';c.lineWidth=1;c.beginPath();c.moveTo(xx,yy-58*s);c.lineTo(xx,yy-2);c.stroke();};
+  cacto(180,H2*.86,1.1);cacto(80,H2*.92,.7);}
+ else if(k==='pan'){ceu(c,0,0,360,H2,'#86ccf2','#e9f7fd');c.fillStyle='#9bbf6b';c.fillRect(0,H2*.55,360,H2);c.fillStyle='#5aa9d6';c.beginPath();c.moveTo(0,H2*.7);c.quadraticCurveTo(120,H2*.64,200,H2*.72);c.quadraticCurveTo(290,H2*.8,360,H2*.7);c.lineTo(360,H2);c.lineTo(0,H2);c.fill();
+  c.strokeStyle='rgba(255,255,255,.5)';for(let i=0;i<6;i++){c.beginPath();c.moveTo(20+i*60,H2*.82+Math.sin(t+i)*2);c.lineTo(50+i*60,H2*.82+Math.sin(t+i)*2);c.stroke();}
+  [[60,.58],[300,.57]].forEach(([xx,yy],i)=>{c.strokeStyle='#6d5a45';c.lineWidth=3;c.beginPath();c.moveTo(xx,H2*yy);c.lineTo(xx+1,H2*yy-60);c.stroke();c.strokeStyle='#4b7d3e';c.lineWidth=2;for(let j=0;j<11;j++){const a=-Math.PI+j*Math.PI/10;c.beginPath();c.moveTo(xx+1,H2*yy-60);c.quadraticCurveTo(xx+Math.cos(a)*12,H2*yy-60+Math.sin(a)*12-3,xx+Math.cos(a)*20,H2*yy-60+Math.sin(a)*14+5);c.stroke();}});
+  copa(c,170,H2*.5,22,['#4f8a3c','#3e7530','#62a04c'],3);tronco(c,170,H2*.58,16,6);
+  for(let i=0;i<5;i++){const xx=100+i*40,yy=H2*.78+sr(i)*10;c.fillStyle='#56a44b';c.beginPath();c.ellipse(xx,yy,9,4,0,0,7);c.fill();c.fillStyle='#b39ddb';c.beginPath();c.arc(xx+2,yy-5,2.5,0,7);c.fill();}}
+ else if(k==='mat'){ceu(c,0,0,360,H2,'#9fd4ec','#eef8fc');c.fillStyle='#3f8fb8';c.fillRect(0,H2*.78,110,H2);
+  [['#4a8c4a',.45,30],['#357a3a',.55,60],['#25652d',.68,90]].forEach(([cor,yy,sd])=>{c.fillStyle=cor;c.beginPath();c.moveTo(60,H2);for(let xx=60;xx<=380;xx+=10)c.lineTo(xx,H2*yy-Math.sin((xx+sd)/50)*26-sr(xx+sd)*6);c.lineTo(380,H2);c.fill();for(let i=0;i<14;i++){const xx=70+i*22;copa(c,xx,H2*yy-Math.sin((xx+sd)/50)*26-4,9,[cor,mixC(cor,'#ffffff',.15)],i+sd);}});
+  const arauc=(xx,yy)=>{c.strokeStyle='#5d4037';c.lineWidth=3;c.beginPath();c.moveTo(xx,yy);c.lineTo(xx,yy-60);c.stroke();c.fillStyle='#2e5e2e';c.beginPath();c.ellipse(xx,yy-62,24,8,0,Math.PI,0);c.fill();c.lineWidth=1.6;c.strokeStyle='#2e5e2e';for(let j=-3;j<=3;j++){c.beginPath();c.moveTo(xx,yy-50);c.quadraticCurveTo(xx+j*7,yy-58,xx+j*9,yy-62);c.stroke();}};arauc(300,H2*.62);
+  c.fillStyle='#e0c38c';c.beginPath();c.moveTo(0,H2*.78);c.quadraticCurveTo(70,H2*.74,120,H2*.8);c.lineTo(120,H2*.84);c.quadraticCurveTo(60,H2*.8,0,H2*.84);c.fill();}
+ else if(k==='pam'){ceu(c,0,0,360,H2,'#a9cfe6','#eef5f8');c.fillStyle='rgba(255,255,255,.9)';[[80,40],[230,30]].forEach(([xx,yy])=>{[[0,0,14],[16,-5,18],[32,0,13]].forEach(([dx,dy,r])=>{c.beginPath();c.arc(xx+dx,yy+dy,r,0,7);c.fill();});});
+  [['#a5c977',.52],['#8fbd5f',.62],['#7aa94a',.74]].forEach(([cor,yy],i)=>{c.fillStyle=cor;c.beginPath();c.moveTo(0,H2);for(let xx=0;xx<=360;xx+=10)c.lineTo(xx,H2*yy+Math.sin(xx/70+i*2)*12);c.lineTo(360,H2);c.fill();});
+  for(let i=0;i<70;i++){c.strokeStyle='rgba(90,130,50,.6)';c.lineWidth=1;const xx=sr(i*3)*360,yy=H2*.78+sr(i*5)*H2*.2;c.beginPath();c.moveTo(xx,yy);c.lineTo(xx+(sr(i)-.5)*4,yy-8);c.stroke();}
+  copa(c,280,H2*.6,10,['#557a35','#4a6d2e'],5);tronco(c,280,H2*.64,8,3);c.fillStyle='rgba(255,255,255,.55)';c.font='16px system-ui';c.fillText('❄',30,H2*.5);}
+ c.restore();}
+/* ===== ANIMAIS ===== */
+function animal(c,x,y,s,k,t){c.save();c.translate(x,y);c.scale(s,s);t=t||0;
+ if(k==='tuiuiu'){c.strokeStyle='#212121';c.lineWidth=2.2;c.beginPath();c.moveTo(-4,10);c.lineTo(-6,34);c.moveTo(4,10);c.lineTo(6,34);c.stroke();c.fillStyle='#fafafa';c.beginPath();c.ellipse(0,0,16,13,-.2,0,7);c.fill();c.strokeStyle='#cfd8dc';c.lineWidth=1;c.stroke();c.fillStyle='#212121';c.beginPath();c.moveTo(8,-6);c.quadraticCurveTo(12,-24,10,-34);c.lineTo(16,-34);c.quadraticCurveTo(18,-20,14,-5);c.fill();c.fillStyle='#e53935';c.beginPath();c.ellipse(12,-9,5,4,0,0,7);c.fill();c.fillStyle='#212121';c.beginPath();c.arc(13,-37,6,0,7);c.fill();c.beginPath();c.moveTo(16,-40);c.lineTo(38,-30);c.lineTo(17,-33);c.fill();c.fillStyle='#fff';c.beginPath();c.arc(15,-38,1.3,0,7);c.fill();}
+ else if(k==='boto'){c.fillStyle='#f48fb1';c.beginPath();c.moveTo(-34,2);c.quadraticCurveTo(-10,-16,18,-10);c.quadraticCurveTo(30,-8,40,-2);c.lineTo(40,2);c.quadraticCurveTo(30,4,18,8);c.quadraticCurveTo(-10,14,-34,4);c.closePath();c.fill();c.fillStyle='#ec407a';c.beginPath();c.moveTo(-34,3);c.lineTo(-46,-8);c.lineTo(-42,3);c.lineTo(-46,14);c.closePath();c.fill();c.beginPath();c.moveTo(-2,-11);c.quadraticCurveTo(2,-18,8,-12);c.fill();c.fillStyle='#fce4ec';c.beginPath();c.ellipse(4,6,14,4,0,0,7);c.fill();c.fillStyle='#263238';c.beginPath();c.arc(22,-4,1.6,0,7);c.fill();c.strokeStyle='#c2185b';c.lineWidth=1;c.beginPath();c.moveTo(30,1);c.lineTo(40,0);c.stroke();}
+ else if(k==='lobo'){c.strokeStyle='#212121';c.lineWidth=3.2;c.lineCap='round';[[-14,6,-16,36],[-6,8,-6,36],[14,6,16,36],[20,6,22,36]].forEach(([a,b,cc,d])=>{c.beginPath();c.moveTo(a,b);c.lineTo(cc,d);c.stroke();});c.lineCap='butt';
+  c.fillStyle='#e07a2a';c.beginPath();c.ellipse(2,0,24,11,0,0,7);c.fill();c.fillStyle='#212121';c.beginPath();c.ellipse(10,-8,12,5,-.2,0,7);c.fill();c.fillStyle='#e07a2a';c.beginPath();c.moveTo(-22,-2);c.quadraticCurveTo(-36,6,-32,20);c.quadraticCurveTo(-26,10,-20,4);c.fill();c.fillStyle='#fff';c.beginPath();c.arc(-32,19,3,0,7);c.fill();
+  c.fillStyle='#e07a2a';c.beginPath();c.moveTo(20,-6);c.lineTo(28,-22);c.lineTo(40,-16);c.lineTo(42,-10);c.lineTo(30,-6);c.closePath();c.fill();c.fillStyle='#212121';c.beginPath();c.moveTo(40,-16);c.lineTo(46,-12);c.lineTo(41,-9);c.fill();c.fillStyle='#e07a2a';c.beginPath();c.moveTo(27,-20);c.lineTo(25,-34);c.lineTo(31,-22);c.fill();c.beginPath();c.moveTo(31,-20);c.lineTo(33,-33);c.lineTo(35,-19);c.fill();c.fillStyle='#212121';c.beginPath();c.arc(34,-17,1.4,0,7);c.fill();c.fillStyle='#fff';c.beginPath();c.moveTo(38,-11);c.lineTo(42,-9);c.lineTo(36,-8);c.fill();}
+ else if(k==='tatu'){c.fillStyle='#8d7b68';c.beginPath();c.arc(0,0,20,0,7);c.fill();c.strokeStyle='#5d4e40';c.lineWidth=1.2;for(let i=-3;i<=3;i++){c.beginPath();c.arc(0,0,20,-Math.PI/2+i*.38-.15,-Math.PI/2+i*.38+.15);c.stroke();c.beginPath();c.moveTo(Math.cos(-Math.PI/2+i*.38)*6,Math.sin(-Math.PI/2+i*.38)*6);c.lineTo(Math.cos(-Math.PI/2+i*.38)*20,Math.sin(-Math.PI/2+i*.38)*20);c.stroke();}
+  c.fillStyle='#a8957f';for(let i=0;i<24;i++){const a=sr(i)*6.28,r=4+sr(i+2)*14;c.beginPath();c.arc(Math.cos(a)*r,Math.sin(a)*r,1.4,0,7);c.fill();}c.fillStyle='#7a6a59';c.beginPath();c.moveTo(14,12);c.lineTo(24,16);c.lineTo(16,20);c.fill();c.beginPath();c.moveTo(-14,12);c.lineTo(-22,20);c.lineTo(-12,19);c.fill();c.fillStyle='#212121';c.beginPath();c.arc(19,15,1,0,7);c.fill();}
+ else if(k==='mico'){c.strokeStyle='#e8a317';c.lineWidth=4;c.lineCap='round';c.beginPath();c.moveTo(-10,10);c.quadraticCurveTo(-34,20,-30,40);c.stroke();c.lineCap='butt';c.fillStyle='#f2a91c';c.beginPath();c.ellipse(-2,8,12,15,0,0,7);c.fill();c.beginPath();c.arc(6,-12,15,0,7);c.fill();c.fillStyle='#e8920a';for(let i=0;i<14;i++){const a=i/14*6.28;c.beginPath();c.arc(6+Math.cos(a)*14,-12+Math.sin(a)*14,4,0,7);c.fill();}
+  c.fillStyle='#6d4c41';c.beginPath();c.ellipse(9,-10,7,8,0,0,7);c.fill();c.fillStyle='#212121';c.beginPath();c.arc(7,-12,1.4,0,7);c.arc(12,-12,1.4,0,7);c.fill();c.strokeStyle='#f2a91c';c.lineWidth=3;c.lineCap='round';c.beginPath();c.moveTo(-6,20);c.lineTo(-8,32);c.moveTo(4,20);c.lineTo(6,32);c.moveTo(6,4);c.lineTo(16,14);c.stroke();c.lineCap='butt';}
+ else if(k==='quero'){c.strokeStyle='#d81b60';c.lineWidth=2;c.beginPath();c.moveTo(-2,10);c.lineTo(-4,30);c.moveTo(4,10);c.lineTo(6,30);c.stroke();c.fillStyle='#9e9e9e';c.beginPath();c.ellipse(0,0,18,11,-.15,0,7);c.fill();c.fillStyle='#fff';c.beginPath();c.ellipse(-2,6,13,6,0,0,7);c.fill();c.fillStyle='#212121';c.beginPath();c.ellipse(10,0,6,8,0,0,7);c.fill();c.fillStyle='#8bc34a';c.globalAlpha=.6;c.beginPath();c.ellipse(-6,-3,10,4,-.2,0,7);c.fill();c.globalAlpha=1;
+  c.fillStyle='#bdbdbd';c.beginPath();c.arc(14,-12,8,0,7);c.fill();c.fillStyle='#212121';c.beginPath();c.moveTo(10,-18);c.quadraticCurveTo(0,-26,-6,-22);c.lineTo(10,-16);c.fill();c.beginPath();c.ellipse(15,-8,4,3,0,0,7);c.fill();c.fillStyle='#e53935';c.beginPath();c.arc(16,-13,2,0,7);c.fill();c.fillStyle='#f06292';c.beginPath();c.moveTo(21,-12);c.lineTo(28,-10);c.lineTo(21,-9);c.fill();}
+ c.restore();}
+
+function drawCena(c,G){if(G.desenha)G.desenha(c);}
+/* ================= TELA / LOOP ================= */
+let G=null,S=null,raf=0,ultimo=0,cx=null;
+function laco(ts){const dt=Math.min(.05,(ts-ultimo)/1000||0);ultimo=ts;if(G){G.t+=dt;if(G.upd)G.upd(dt);syncMol(G,dt);partic(G,dt);if(cx)drawCena(cx,G);if(G.extra)G.extra(cx);}raf=requestAnimationFrame(laco);}
+function parar(){cancelAnimationFrame(raf);raf=0;}
+function rodar(){parar();ultimo=performance.now();raf=requestAnimationFrame(laco);}
+function hud(){$('hud').style.display='flex';$('hF').textContent=`Fase ${S.f+1} de ${FASES.length}`;$('hP').textContent=`${Math.max(0,S.tot+S.fp)} pts`;}
+function telaJogo(chip,info){
+ const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><span class="chip" id="chip">${chip}</span><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="acao"><span class="dedo">👉</span><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});
+}
+function acao(t){const e=$('acao');if(e&&e.innerHTML!==t)e.innerHTML=t;}
+function ajuda(){const F=FASES[S.f],d=document.createElement('div');d.className='modal';
+ d.innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn">Entendi</button></div>`;
+ d.onclick=e=>{if(e.target===d||e.target.tagName==='BUTTON')d.remove();};document.body.appendChild(d);}
+function medidor(id,rot,cls,max,alvo){const a=alvo!=null?`<span class="alvo" style="left:${alvo/max*100}%"></span>`:'';return`<div class="met ${cls}" id="${id}" data-max="${max}"><span>${rot}</span><div class="bar"><span class="fill"></span>${a}</div><span class="v"></span></div>`;}
+function poeMed(id,v){const e=$(id);if(!e)return;const m=+e.dataset.max;e.querySelector('.fill').style.width=clamp(v/m*100,0,100)+'%';e.querySelector('.v').textContent=Math.round(v);}
+function poeSaldo(v,max){const e=$('mSaldo');if(!e)return;const f=e.querySelector('.fill'),p=clamp(Math.abs(v)/max*50,0,50);if(v<0){f.style.left=(50-p)+'%';f.style.width=p+'%';f.style.background='#43a047';}else{f.style.left='50%';f.style.width=p+'%';f.style.background='#e53935';}e.querySelector('.v').textContent=(v>0?'+':'')+Math.round(v);}
+
+/* ================= FASES ================= */
+const FASES=[
+ {nome:'Expedição de medidas',ic:'🧭',obj:'Visitar os 6 biomas e medir chuva, luz no chão e solo em cada um.',passos:[['⬅️➡️','Troque de bioma pelas setas'],['🌧️☀️🟫','Toque nos 3 instrumentos'],['📒','Tudo vai para o caderno de campo']],ini:()=>f1()},
+ {nome:'Monte a planta',ic:'🌱',obj:'Montar uma planta que sobreviva em cada bioma: Amazônia, Caatinga e Cerrado.',passos:[['🍃','Escolha a folha'],['🪵','Escolha o caule'],['🌿','Escolha a raiz e teste']],ini:()=>f2()},
+ {nome:'Quem mora onde?',ic:'🐾',obj:'Levar cada bicho até o bioma onde ele vive, usando as pistas.',passos:[['🔎','Leia a pista do bicho'],['✋','Arraste até o bioma'],['✅','Acerte os 6']],ini:()=>f3()},
+ {nome:'Cheia e seca no Pantanal',ic:'🔮',obj:'Prever o que acontece com os bichos quando a água sobe e quando ela desce.',passos:[['🔮','Faça a previsão'],['▶','Veja a água subir e descer'],['🐦','Repare nos bichos']],ini:()=>f4()},
+ {nome:'Mochila do explorador',ic:'🎒',obj:'Montar a mochila para duas expedições, com tudo o que precisa e até 9 kg.',passos:[['👆','Toque nos itens para pôr ou tirar'],['⚖️','Cuidado com o peso'],['🗺️','Pense em como é cada bioma']],ini:()=>f5()}
+];
+function intro(){parar();G=null;cx=null;hud();const F=FASES[S.f];$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><div class="n">FASE ${S.f+1} DE ${FASES.length}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left;max-width:420px;margin:12px auto 0"><b>🎯 Objetivo</b><span>${F.obj}</span></div>
+ <div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn" id="bGo">Começar</button></div>`;
+ $('bGo').onclick=()=>{S.fp=0;F.ini();};}
+function fimFase(pts,ok,oque,pergunta,extraHtml){
+ parar();pts=Math.max(0,Math.round(pts));S.fp=0;S.tot+=pts;S.res[S.f]={pts,ok,oque};hud();
+ $('tela').innerHTML=`<div class="card res"><div class="small">${FASES[S.f].ic} ${FASES[S.f].nome}</div><div class="big">+${pts}</div>
+ <p class="${ok?'ok':'no'}">${ok?'Meta cumprida':'Meta não cumprida'}</p>${extraHtml||''}
+ <div class="pensa"><b>O que aconteceu:</b> ${oque}</div><div class="pensa"><b>Pergunta para a turma:</b> ${pergunta}</div>
+ <div class="row" style="justify-content:center"><button class="btn" id="bNx">${S.f<FASES.length-1?'Próxima fase':'Ver relatório'}</button></div></div>`;
+ $('bNx').onclick=()=>{S.f++;if(S.f<FASES.length)intro();else relatorio();};
+}
+function ptr(fn,ev){const cv=$('cv');cv.style.touchAction='none';cv.addEventListener(ev||'pointermove',e=>{const r=cv.getBoundingClientRect();fn((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height,e);});}
+function painel(c,x,y,w,h){c.fillStyle='rgba(255,255,255,.95)';c.beginPath();c.roundRect(x,y,w,h,10);c.fill();}
+/* ---------- FASE 1 ---------- */
+const MED={ama:['Muita chuva o ano todo','Pouca luz: as copas fecham o céu','Solo pobre, coberto de folhas'],
+ cer:['Chuva no verão e seca longa no inverno','Muita luz: árvores espaçadas','Solo vermelho, ácido e profundo'],
+ caa:['Pouca chuva, e ela falha em alguns anos','Muita luz e sol forte','Solo raso e cheio de pedras'],
+ pan:['Chuva forte no verão: a planície enche','Muita luz nos campos abertos','Solo que fica alagado na cheia'],
+ mat:['Muita chuva: o vento do mar bate na serra','Pouca luz embaixo da floresta','Solo em morros, que escorrega se perde a mata'],
+ pam:['Chuva espalhada pelo ano','Muita luz: campo aberto','Solo fértil e frio, com geada no inverno']};
+const ORD=['ama','cer','caa','pan','mat','pam'];
+function f1(){G={t:0,i:0,med:{}};telaJogo('🧭 Expedição','0 de 18');
+ const tot=()=>Object.values(G.med).reduce((a,v)=>a+v.length,0);
+ G.desenha=c=>{c.fillStyle='#f4f1f8';c.fillRect(0,0,W,H);const k=ORD[G.i];paisagem(c,20,20,430,330,k,G.t);
+  c.fillStyle='rgba(255,255,255,.92)';c.beginPath();c.roundRect(34,32,170,32,10);c.fill();c.fillStyle=BIO[k][1];c.font='800 19px system-ui';c.textAlign='left';c.fillText(BIO[k][0],46,55);
+  [['◀',40],['▶',410]].forEach(([s,x])=>{c.fillStyle='rgba(255,255,255,.92)';c.beginPath();c.arc(x+10,185,20,0,7);c.fill();c.fillStyle='#4a148c';c.font='800 18px system-ui';c.textAlign='center';c.fillText(s,x+10,191);});
+  const feito=G.med[k]||[];['🌧️','☀️','🟫'].forEach((ic,j)=>{const x=100+j*130,y=300;c.fillStyle=feito.includes(j)?'#7b1fa2':'rgba(255,255,255,.95)';c.beginPath();c.arc(x+20,y+10,26,0,7);c.fill();c.font='26px system-ui';c.textAlign='center';c.fillText(ic,x+20,y+19);});
+  painel(c,470,20,270,330);c.fillStyle='#263238';c.font='800 16px system-ui';c.textAlign='left';c.fillText('📒 Caderno de campo',486,46);
+  const rot=['Chuva','Luz no chão','Solo'];let yy=74;feito.forEach(j=>{c.fillStyle='#7b1fa2';c.font='800 13px system-ui';c.fillText(rot[j],486,yy);c.fillStyle='#37474f';c.font='600 13px system-ui';const txt=MED[k][j];const words=txt.split(' ');let line='';for(const w of words){if(c.measureText(line+w).width>236){c.fillText(line,486,yy+18);yy+=16;line='';}line+=w+' ';}c.fillText(line,486,yy+18);yy+=44;});
+  c.fillStyle='#78909c';c.font='600 12px system-ui';c.fillText(`Biomas completos: ${ORD.filter(b=>(G.med[b]||[]).length===3).length} de 6`,486,336);};
+ G.tap=(x,y)=>{if(Math.hypot(x-50,y-185)<24){G.i=(G.i+5)%6;return;}if(Math.hypot(x-420,y-185)<24){G.i=(G.i+1)%6;return;}
+  for(let j=0;j<3;j++){if(Math.hypot(x-(120+j*130),y-310)<30){const k=ORD[G.i];G.med[k]=G.med[k]||[];if(!G.med[k].includes(j)){G.med[k].push(j);$('info').textContent=`${tot()} de 18`;acao(MED[k][j]+'.');}
+   if(G.med[k].length===3&&tot()<18)setTimeout(()=>acao(`${BIO[k][0]} completo. Vá para outro bioma pelas setas.`),900);
+   if(tot()===18&&!G.fim){G.fim=1;setTimeout(()=>fimFase(150,true,'Cada bioma tem um jeito de chuva, de luz e de solo. A Amazônia e a Mata Atlântica têm muita chuva e pouca luz no chão. A Caatinga tem pouca chuva e solo raso. O Cerrado tem seca longa. O Pantanal enche e seca todo ano. O Pampa é campo aberto com inverno frio.','Qual destas três coisas você acha que mais decide quais plantas vivem num lugar: chuva, luz ou solo?'),1200);}}}};
+ acao('Toque nos 3 instrumentos. Depois use as setas para ir a outro bioma.');rodar();}
+/* ---------- FASE 2 ---------- */
+const PEC={folha:[['grande','Grande e fina'],['pequena','Pequena, com espinhos'],['dura','Dura e grossa']],caule:[['fino','Fino'],['suculento','Guarda água'],['cortica','Casca grossa']],raiz:[['rasa','Rasa e espalhada'],['funda','Funda']]};
+const ALVO2=[['ama',{folha:'grande',caule:'fino',raiz:'rasa'},'Sob as copas da floresta quase não chega luz. A folha grande capta a pouca luz. A chuva é constante, então a raiz rasa basta.'],['caa',{folha:'pequena',caule:'suculento',raiz:'funda'},'Folha pequena perde pouca água, o caule guarda água para a seca e a raiz funda busca umidade.'],['cer',{folha:'dura',caule:'cortica',raiz:'funda'},'A casca grossa protege do fogo, a raiz funda alcança água na seca e a folha dura aguenta o sol.']];
+function desenhaPlanta(c,x,y,p,vivo,t){c.save();c.translate(x,y);const mur=vivo===false?1:0;
+ // raiz
+ c.strokeStyle='#8d6e63';c.lineWidth=3;if(p.raiz==='rasa'){for(let i=-3;i<=3;i++){c.beginPath();c.moveTo(0,0);c.quadraticCurveTo(i*16,12,i*30,14+Math.abs(i)*2);c.stroke();}}else if(p.raiz==='funda'){c.beginPath();c.moveTo(0,0);c.lineTo(0,90);c.stroke();for(let i=1;i<5;i++){c.lineWidth=1.5;c.beginPath();c.moveTo(0,i*18);c.lineTo((i%2?1:-1)*14,i*18+10);c.stroke();}}
+ // caule
+ if(p.caule==='suculento'){c.fillStyle=mur?'#9e9d6b':'#4e8a3e';c.beginPath();c.roundRect(-12,-110,24,110,12);c.fill();c.strokeStyle='#2f5e25';c.lineWidth=1;for(const dx of[-5,5]){c.beginPath();c.moveTo(dx,-106);c.lineTo(dx,-4);c.stroke();}}
+ else if(p.caule==='cortica'){c.fillStyle='#6d4c41';c.beginPath();c.moveTo(-12,0);c.bezierCurveTo(-4,-40,-16,-70,-6,-110);c.lineTo(6,-110);c.bezierCurveTo(-4,-70,8,-40,12,0);c.fill();c.strokeStyle='#3e2723';c.lineWidth=1.5;for(let i=0;i<8;i++){c.beginPath();c.moveTo(-8,-10-i*12);c.lineTo(6,-14-i*12);c.stroke();}}
+ else if(p.caule==='fino'){c.strokeStyle='#795548';c.lineWidth=5;c.beginPath();c.moveTo(0,0);c.lineTo(0,-110);c.stroke();}
+ // folhas
+ const cor=mur?'#b9a46a':'#2e7d32';const sw=Math.sin(t*2)*.05;
+ if(p.folha==='grande'){c.fillStyle=mur?'#c0a868':'#388e3c';[[-1,-60],[1,-80],[-1,-96],[1,-108]].forEach(([d,yy])=>{c.save();c.translate(0,yy);c.rotate(d*(.5+sw));c.beginPath();c.ellipse(d*28,0,30,13,0,0,7);c.fill();c.strokeStyle='rgba(0,0,0,.2)';c.beginPath();c.moveTo(0,0);c.lineTo(d*56,0);c.stroke();c.restore();});}
+ else if(p.folha==='pequena'){for(let i=0;i<14;i++){const yy=-30-i*6,d=i%2?1:-1;c.fillStyle=cor;c.beginPath();c.ellipse(d*10,yy,5,2.5,d*.4,0,7);c.fill();c.strokeStyle='#5d4037';c.lineWidth=1;c.beginPath();c.moveTo(d*4,yy+2);c.lineTo(d*12,yy+6);c.stroke();}}
+ else if(p.folha==='dura'){c.fillStyle=mur?'#a09060':'#6b8e23';[[-22,-112],[0,-122],[22,-112],[-12,-100],[12,-100]].forEach(([dx,dy])=>{c.beginPath();c.ellipse(dx,dy,14,9,dx*.02,0,7);c.fill();c.strokeStyle='#4a6318';c.lineWidth=1.4;c.stroke();});}
+ c.restore();}
+function f2(){G={t:0,r:0,p:{folha:null,caule:null,raiz:null},tent:0,anim:0,res:null};telaJogo('🌱 Monte a planta','1 de 3');
+ G.desenha=c=>{c.fillStyle='#f4f1f8';c.fillRect(0,0,W,H);const[k]=ALVO2[G.r];paisagem(c,20,20,330,330,k,G.t);
+  c.fillStyle='rgba(255,255,255,.92)';c.beginPath();c.roundRect(34,32,190,32,10);c.fill();c.fillStyle=BIO[k][1];c.font='800 18px system-ui';c.textAlign='left';c.fillText('Bioma: '+BIO[k][0],46,54);
+  c.fillStyle='#6d4c41';c.fillRect(380,262,360,90);c.fillStyle='#8d6e63';c.fillRect(380,258,360,6);c.save();c.translate(560,262);c.scale(1.35,1.35);desenhaPlanta(c,0,0,G.p,G.res,G.t);c.restore();
+  if(G.res!=null){c.fillStyle=G.res?'#2e7d32':'#c62828';c.font='800 22px system-ui';c.textAlign='center';c.fillText(G.res?'🌱 Sobreviveu!':'🥀 Murchou',560,60);}
+  const txt=k==='ama'?'Desafio: viver embaixo das árvores':k==='caa'?'Desafio: meses sem chuva':'Desafio: seca longa e fogo';painel(c,380,80,360,34);c.fillStyle='#4a148c';c.font='800 15px system-ui';c.textAlign='left';c.fillText(txt,394,102);};
+ const ctrl=()=>{$('ctrl').innerHTML=Object.keys(PEC).map(g=>`<div style="width:100%"><b>${g==='folha'?'🍃 Folha':g==='caule'?'🪵 Caule':'🌿 Raiz'}</b><div class="row" style="gap:6px;margin-top:4px">${PEC[g].map(([v,n])=>`<button class="tool" data-g="${g}" data-v="${v}" style="${G.p[g]===v?'background:var(--main);color:#fff':''}">${n}</button>`).join('')}</div></div>`).join('')+`<button class="btn sm" id="bR" ${G.p.folha&&G.p.caule&&G.p.raiz?'':'disabled'}>Testar no bioma</button>`;
+  document.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{G.p[b.dataset.g]=b.dataset.v;G.res=null;ctrl();});
+  $('bR').onclick=()=>{G.tent++;const[k,al,exp]=ALVO2[G.r];const err=Object.keys(al).filter(g=>G.p[g]!==al[g]);G.res=!err.length;
+   if(err.length)acao(`Murchou. Reveja: ${err.map(g=>g==='folha'?'folha':g==='caule'?'caule':'raiz').join(', ')}.`);
+   else{acao(exp);setTimeout(()=>{G.r++;if(G.r>=3){fimFase(Math.max(60,200-15*(G.tent-3)),true,'Em cada bioma vivem plantas com partes diferentes. Folha grande na sombra da floresta. Folha pequena e caule que guarda água na Caatinga. Casca grossa e raiz funda no Cerrado, onde há seca e fogo.','Que planta da sua casa ou da sua rua tem alguma dessas características?');return;}G.p={folha:null,caule:null,raiz:null};G.res=null;$('info').textContent=`${G.r+1} de 3`;ctrl();acao('Agora monte a planta para o próximo bioma.');},2600);}
+   ctrl();};};
+ ctrl();acao('Escolha folha, caule e raiz. Depois aperte <b>Testar no bioma</b>.');rodar();}
+/* ---------- FASE 3 ---------- */
+const BICHO=[['tuiuiu','Tuiuiú','Ave de pernas longas que pesca na água rasa das planícies alagadas.','pan'],['boto','Boto-cor-de-rosa','Golfinho de rio que nada entre árvores quando a floresta alaga.','ama'],['lobo','Lobo-guará','Pernas longas para enxergar por cima do capim alto. Vive onde há árvores espaçadas.','cer'],['tatu','Tatu-bola','Vira uma bola para se defender. Vive em mato seco, espinhoso e quente.','caa'],['mico','Mico-leão-dourado','Vive nas árvores de uma floresta úmida perto do mar.','mat'],['quero','Quero-quero','Faz ninho no chão, em campo aberto quase sem árvores.','pam']];
+function f3(){G={t:0,fila:BICHO.slice().sort(()=>Math.random()-.5),ok:0,err:0,drag:null,feitos:{}};telaJogo('🐾 Quem mora onde?','0 de 6');
+ const tile=i=>[20+(i%3)*160,20+Math.floor(i/3)*170];
+ G.desenha=c=>{c.fillStyle='#f4f1f8';c.fillRect(0,0,W,H);ORD.forEach((k,i)=>{const[x,y]=tile(i);paisagem(c,x,y,150,160,k,G.t);c.font='800 13px system-ui';c.fillStyle='rgba(255,255,255,.9)';c.beginPath();c.roundRect(x+6,y+6,c.measureText(BIO[k][0]).width+16,22,8);c.fill();c.fillStyle=BIO[k][1];c.font='800 13px system-ui';c.textAlign='left';c.fillText(BIO[k][0],x+14,y+22);
+   if(G.feitos[k])animal(c,x+75,y+110,.9,G.feitos[k],G.t);});
+  const b=G.fila[0];painel(c,500,20,250,330);if(b){c.fillStyle='#263238';c.font='800 18px system-ui';c.textAlign='center';c.fillText(b[1],625,50);if(!G.drag)animal(c,625,150,1.6,b[0],G.t);
+   c.font='600 14px system-ui';c.fillStyle='#37474f';const words=b[2].split(' ');let line='',yy=250;c.textAlign='left';for(const w of words){if(c.measureText(line+w).width>220){c.fillText(line,512,yy);yy+=19;line='';}line+=w+' ';}c.fillText(line,512,yy);}
+  if(G.drag)animal(c,G.drag.x,G.drag.y,1.3,G.drag.k,G.t);};
+ ptr((x,y)=>{const b=G.fila[0];if(b&&Math.abs(x-625)<70&&Math.abs(y-140)<70)G.drag={k:b[0],x,y};},'pointerdown');ptr((x,y)=>{if(G.drag){G.drag.x=x;G.drag.y=y;}});
+ ptr((x,y)=>{if(!G.drag)return;G.drag=null;const i=ORD.findIndex((k,i)=>{const[tx,ty]=tile(i);return x>tx&&x<tx+150&&y>ty&&y<ty+160;});if(i<0)return;const b=G.fila[0],k=ORD[i];
+  if(b[3]===k){G.ok++;G.feitos[k]=b[0];G.fila.shift();acao(`Isso! ${b[1]} vive no ${BIO[k][0]==='Mata Atlântica'?'bioma Mata Atlântica':BIO[k][0]}.`);$('info').textContent=`${G.ok} de 6`;
+   if(!G.fila.length)setTimeout(()=>fimFase(Math.max(40,180-G.err*20),G.err<=3,`Você acertou os 6 com ${G.err} erros. Cada bicho tem partes do corpo e hábitos que combinam com o lugar: pernas longas na água rasa ou no capim alto, ninho no chão onde não há árvores, corpo de nadar entre árvores alagadas.`,'Se a floresta do mico-leão virasse pasto, o que aconteceria com ele?'),900);}
+  else{G.err++;acao(`${b[1]} não vive aí. Releia a pista.`);}},'pointerup');
+ acao('Leia a pista e arraste o bicho até o bioma dele.');rodar();}
+/* ---------- FASE 4 ---------- */
+function f4(){G={t:0,nivel:.3,fase:0,alvo:null,an:0};telaJogo('🔮 Cheia e seca','previsão');const yW=n=>300-n*150;
+ const aves=[];for(let i=0;i<8;i++)aves.push({x:80+i*80,y:0});const capis=[];for(let i=0;i<5;i++)capis.push({x:120+i*110});
+ G.desenha=c=>{ceuQ(c);const n=G.nivel,yw=yW(n);
+  c.fillStyle='#9bbf6b';c.beginPath();c.moveTo(0,320);c.lineTo(120,300);c.quadraticCurveTo(180,240,250,240);c.lineTo(300,240);c.quadraticCurveTo(360,260,420,300);c.lineTo(560,300);c.quadraticCurveTo(610,250,660,250);c.quadraticCurveTo(710,260,760,300);c.lineTo(760,H);c.lineTo(0,H);c.fill();
+  c.fillStyle='#7aa44f';c.font='800 12px system-ui';c.textAlign='center';c.fillStyle='#33691e';c.fillText('cordilheira (parte alta)',275,262);c.fillText('cordilheira',660,272);
+  const lag=[[60,330,40],[480,330,50]];c.fillStyle='rgba(66,165,245,.75)';if(n>0){c.fillRect(0,yw,W,H-yw);}lag.forEach(([x,y,r])=>{c.beginPath();c.ellipse(x,y,r*1.6,r*.5,0,0,7);c.fill();});
+  [[275,236],[660,246]].forEach(([x,y])=>{c.fillStyle='#5d4037';c.fillRect(x-3,y-38,6,38);copa(c,x,y-44,16,['#4f8a3c','#3e7530'],x);});
+  const seca=n<.15;aves.forEach((a,i)=>{let tx,ty;if(seca){const L=lag[i%2];tx=L[0]+(i-3.5)*12;ty=318;}else{tx=60+i*90;ty=Math.min(yw,300)-2;}a.x+=(tx-a.x)*.05;a.y+=((ty)-a.y)*.05||0;animal(c,a.x,a.y-34,.55,'tuiuiu',G.t);});
+  const alto=n>.45;capis.forEach((p,i)=>{const tx=alto?(i<3?240+i*25:640+(i-3)*25):120+i*110;p.x+=(tx-p.x)*.04;const ty=alto?(i<3?240:250):300;c.fillStyle='#8d6e4e';c.beginPath();c.ellipse(p.x,ty-8,12,7,0,0,7);c.fill();c.beginPath();c.ellipse(p.x+10,ty-12,6,5,0,0,7);c.fill();});
+  painel(c,10,10,260,32);c.fillStyle='#01579b';c.font='800 15px system-ui';c.textAlign='left';c.fillText(n>.45?'🌊 Cheia':n<.15?'☀️ Seca':'Água mudando...',22,31);};
+ G.upd=dt=>{if(G.alvo!=null){G.nivel+=(G.alvo-G.nivel)*Math.min(1,dt*.8);if(Math.abs(G.alvo-G.nivel)<.01){G.nivel=G.alvo;const f=G.cb;G.alvo=null;G.cb=null;setTimeout(()=>f&&f(),1400);}}};
+ const Q1=[['juntas','Juntos nas lagoas que sobram'],['espalhadas','Espalhados por toda a planície'],['embora','Todos voam para o mar']];
+ $('ctrl').innerHTML=`<div style="width:100%"><b>Na seca, onde ficam os tuiuiús?</b><div style="display:grid;gap:6px;margin-top:6px">${Q1.map(([k,t])=>`<button class="tool" style="text-align:left" data-p="${k}">${t}</button>`).join('')}</div></div>`;
+ document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{G.p1=b.dataset.p==='juntas'?80:0;$('ctrl').innerHTML='';acao('A água está baixando...');G.alvo=0;
+  G.cb=()=>{acao(G.p1?'Isso: os peixes ficam presos nas lagoas e as aves se juntam para comer.':'As aves se juntam nas lagoas que sobram, onde os peixes ficam presos.');
+   const Q2=[['alto','Nas partes altas, as cordilheiras'],['nadando','Nadando o tempo todo'],['agua','Embaixo da água']];
+   $('ctrl').innerHTML=`<div style="width:100%"><b>Na cheia, para onde vão as capivaras e outros bichos de terra?</b><div style="display:grid;gap:6px;margin-top:6px">${Q2.map(([k,t])=>`<button class="tool" style="text-align:left" data-q="${k}">${t}</button>`).join('')}</div></div>`;
+   document.querySelectorAll('[data-q]').forEach(b2=>b2.onclick=()=>{const ok=b2.dataset.q==='alto';$('ctrl').innerHTML='';acao('A água está subindo...');G.alvo=.8;
+    G.cb=()=>fimFase(G.p1+(ok?80:0),ok&&G.p1>0,'No Pantanal a água sobe e desce todo ano. Na seca, os peixes ficam presos nas lagoas e as aves se juntam ali para comer. Na cheia, os bichos de terra sobem para as cordilheiras, as partes altas que não alagam.','Por que a cheia e a seca são boas para a vida do Pantanal, e não um problema?');});};});
+ acao('Faça sua previsão.');rodar();}
+function ceuQ(c){const g=c.createLinearGradient(0,0,0,240);g.addColorStop(0,'#86ccf2');g.addColorStop(1,'#e9f7fd');c.fillStyle=g;c.fillRect(0,0,W,H);}
+/* ---------- FASE 5 ---------- */
+const ITENS=[['casaco','🧥','Casaco',3],['agua','💧','Água extra',3],['chapeu','👒','Chapéu',1],['capa','☔','Capa de chuva',1],['repel','🦟','Repelente',1],['bota','🥾','Bota de borracha',2],['protetor','🧴','Protetor solar',1],['lanterna','🔦','Lanterna',1],['bussola','🧭','Bússola',1]];
+const ROT=[{rota:['pam','caa','ama'],quando:'Pampa no inverno, depois Caatinga, depois Amazônia',prec:['casaco','agua','chapeu','capa','repel']},{rota:['pan','cer','mat'],quando:'Pantanal na cheia, Cerrado na seca, Mata Atlântica',prec:['bota','agua','protetor','capa']}];
+function f5(){G={t:0,r:0,sel:[],tent:0};telaJogo('🎒 Mochila','expedição 1 de 2');
+ const peso=()=>G.sel.reduce((a,k)=>a+ITENS.find(i=>i[0]===k)[3],0);
+ G.desenha=c=>{c.fillStyle='#f4f1f8';c.fillRect(0,0,W,H);const R=ROT[G.r];R.rota.forEach((k,i)=>{paisagem(c,20+i*175,20,165,120,k,G.t);c.fillStyle='rgba(255,255,255,.9)';c.beginPath();c.roundRect(26+i*175,26,120,22,8);c.fill();c.fillStyle=BIO[k][1];c.font='800 13px system-ui';c.textAlign='left';c.fillText(BIO[k][0],34+i*175,42);if(i<2){c.fillStyle='#4a148c';c.font='800 20px system-ui';c.fillText('→',178+i*175,86);}});
+  c.fillStyle='#4a148c';c.font='800 14px system-ui';c.textAlign='left';c.fillText('🗺️ '+R.quando,24,162);
+  ITENS.forEach(([k,ic,n,p],i)=>{const x=24+(i%5)*110,y=176+Math.floor(i/5)*84;const on=G.sel.includes(k);c.fillStyle=on?'#ede7f6':'#fff';c.strokeStyle=on?'#7b1fa2':'#d1c4e9';c.lineWidth=on?3:1.5;c.beginPath();c.roundRect(x,y,100,76,12);c.fill();c.stroke();c.font='28px system-ui';c.textAlign='center';c.fillText(ic,x+50,y+34);c.fillStyle='#263238';c.font='700 12px system-ui';c.fillText(n,x+50,y+54);c.fillStyle='#78909c';c.fillText(p+' kg',x+50,y+69);});
+  const pw=peso();painel(c,580,176,170,160);c.font='56px system-ui';c.textAlign='center';c.fillText('🎒',665,240);c.fillStyle=pw>9?'#c62828':'#2e7d32';c.font='800 22px system-ui';c.fillText(`${pw} de 9 kg`,665,272);c.fillStyle='#546e7a';c.font='600 12px system-ui';c.fillText(`${G.sel.length} itens`,665,296);};
+ G.tap=(x,y)=>{ITENS.forEach(([k],i)=>{const bx=24+(i%5)*110,by=176+Math.floor(i/5)*84;if(x>bx&&x<bx+100&&y>by&&y<by+76){G.sel=G.sel.includes(k)?G.sel.filter(s=>s!==k):G.sel.concat(k);}});};
+ $('ctrl').innerHTML=`<button class="btn sm" id="bR">Partir</button>`;
+ $('bR').onclick=()=>{G.tent++;const R=ROT[G.r],falta=R.prec.filter(k=>!G.sel.includes(k)),pw=peso();
+  if(!falta.length&&pw<=9){if(G.r===0){G.r=1;G.sel=[];$('info').textContent='expedição 2 de 2';acao('Boa viagem! Agora a segunda expedição.');}
+   else fimFase(Math.max(60,200-20*(G.tent-2)),true,'No frio do Pampa vai o casaco. Na Caatinga e no Cerrado seco, água e proteção contra o sol. Na Amazônia e na Mata Atlântica, capa de chuva. No Pantanal cheio, bota de borracha. A mochila certa depende de como é cada bioma.','Que bioma fica mais perto da sua cidade, e o que você levaria para visitá-lo?');}
+  else acao(pw>9?`Passou de 9 kg (${pw} kg). Tire o que não precisa.`:`Falta algo importante para ${R.rota.map(k=>BIO[k][0]).join(', ')}. Pense em frio, sol, chuva e água.`);};
+ acao('Toque nos itens para pôr na mochila. Depois aperte <b>Partir</b>.');rodar();}
+/* ================= INICIO / AVATAR ================= */
+function inicio(){parar();G=null;cx=null;$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><div class="capa"><canvas id="cA" width="560" height="560"></canvas>
+ <div><h2>Monte seu pesquisador</h2><div class="opts">
+ <div class="l">Pele</div><div class="sw" id="sP">${PELES.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.pele===i?'on':''}" aria-label="pele ${i+1}"></button>`).join('')}</div>
+ <div class="l">Cabelo</div><div class="sw" id="sE">${ESTILOS.map(([k,t])=>`<button class="tx ${A.estilo===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <div class="sw" id="sC">${CABS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.cab===i?'on':''}" aria-label="cor ${i+1}"></button>`).join('')}</div>
+ <div class="l">Camiseta</div><div class="sw" id="sT">${CAMISAS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.camisa===i?'on':''}" aria-label="camiseta ${i+1}"></button>`).join('')}</div>
+ <div class="l">Chapéu</div><div class="sw" id="sH">${CHAPEUS.map(([k,t])=>`<button class="tx ${A.chapeu===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <input class="nome" id="iN" maxlength="20" placeholder="Seu nome" value="${esc(A.nome)}">
+ </div></div></div>
+ <div class="row" style="margin-top:14px"><button class="btn" id="bJ">▶ Jogar as 5 fases</button><button class="btn ghost" id="bG">📘 Guia do professor</button></div>
+ <p class="small" style="margin-top:10px">Ciências · 7º ano · BNCC EF07CI07</p></div>`;
+ const pinta=()=>{const c=$('cA').getContext('2d');c.clearRect(0,0,560,560);c.fillStyle='#f3e5f5';c.fillRect(0,0,560,560);c.fillStyle='#e1bee7';c.beginPath();c.arc(280,600,260,0,7);c.fill();avatar(c,280,560,6.4,A,true);};
+ pinta();
+ const liga=(id,f)=>document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{f(b);salvaA();document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b));pinta();});
+ liga('sP',b=>A.pele=+b.dataset.i);liga('sC',b=>A.cab=+b.dataset.i);liga('sT',b=>A.camisa=+b.dataset.i);liga('sE',b=>A.estilo=b.dataset.k);liga('sH',b=>A.chapeu=b.dataset.k);
+ $('iN').oninput=e=>{A.nome=e.target.value;salvaA();};
+ $('bJ').onclick=novo;$('bG').onclick=guia;
+}
+function novo(){S={f:0,tot:0,fp:0,res:[],fichas:0};salvo=false;intro();}
+function relatorio(){parar();G=null;cx=null;$('rankBox').style.display='block';const nome=A.nome.trim()||'Pesquisador';
+ $('tela').innerHTML=`<div class="card"><div class="rel"><canvas id="cR" width="240" height="240"></canvas><div><div class="small">Relatório de campo</div><h2>${esc(nome)}</h2><div class="big" style="font-size:2rem;font-weight:800;color:var(--deep)">${S.tot} pts</div></div></div>
+ <table class="tab" style="margin-top:12px"><tr><th>Fase</th><th>Pontos</th><th>Meta</th></tr>${FASES.map((F,i)=>{const r=S.res[i]||{pts:0,ok:false};return`<tr><td>${F.ic} ${F.nome}</td><td>${r.pts}</td><td>${r.ok?'✓':'✗'}</td></tr>`;}).join('')}</table>
+ <div class="pensa"><b>Para escrever no caderno:</b> escolha um bioma e explique como a chuva, a luz ou o solo de lá combinam com uma planta ou um bicho que vive ali.</div>
+ <div class="savebox noprint"><input id="pName" maxlength="20" value="${esc(nome)}"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row noprint" style="margin-top:12px"><button class="btn ghost" id="bI">🖨️ Imprimir relatório</button><button class="btn ghost" id="bN">Jogar de novo</button><button class="btn ghost" id="bV">Início</button></div></div>`;
+ const c=$('cR').getContext('2d');c.fillStyle='#f3e5f5';c.fillRect(0,0,240,240);avatar(c,120,240,3.2,A,true);
+ $('bS').onclick=()=>salvar('5 fases');$('bI').onclick=()=>window.print();$('bN').onclick=novo;$('bV').onclick=inicio;
+}
+
+/* ================= GUIA DO PROFESSOR ================= */
+function guia(){parar();$('hud').style.display='none';$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card guia">
+ <div class="row top noprint"><button class="btn ghost sm" id="bVt">← Voltar</button><button class="btn sm" id="bPr">🖨️ Imprimir guia</button></div>
+ <h2 style="margin-top:10px">Guia do professor · Expedição Biomas</h2>
+ <p class="small">Ensino Fundamental · 7º ano · Ciências · Vida e Evolução</p>
+ <h3>Habilidade da BNCC</h3>
+ <div class="hab"><b>EF07CI07.</b> Caracterizar os principais ecossistemas brasileiros quanto à paisagem, à quantidade de água, ao tipo de solo, à disponibilidade de luz solar, à temperatura etc., correlacionando essas características à flora e fauna específicas.</div>
+ <h3>Objetivos da aula</h3>
+ <ul><li>Descrever os seis biomas brasileiros por chuva, luz, solo e temperatura.</li><li>Relacionar partes de plantas e características de animais com as condições de cada bioma.</li><li>Explicar o ciclo de cheia e seca do Pantanal e seu efeito sobre os animais.</li></ul>
+ <h3>Roteiro de 50 minutos</h3>
+ <table class="tab"><tr><th>Tempo</th><th>O que fazer</th></tr>
+ <tr><td>5 min</td><td>Pergunte: por que não tem cacto na Amazônia?</td></tr>
+ <tr><td>25 min</td><td>Alunos jogam em duplas e preenchem o caderno de campo.</td></tr>
+ <tr><td>15 min</td><td>Discussão com as perguntas de cada fase.</td></tr>
+ <tr><td>5 min</td><td>Cada dupla escreve a frase do relatório de campo.</td></tr></table>
+ <h3>Fase por fase</h3>
+ <table class="tab"><tr><th>Fase</th><th>O aluno faz</th><th>Pergunta para a turma</th><th>O que explicar</th></tr>
+ <tr><td>1. Expedição de medidas</td><td>Mede chuva, luz e solo nos 6 biomas</td><td>O que mais decide as plantas de um lugar?</td><td>Fatores abióticos de cada bioma.</td></tr>
+ <tr><td>2. Monte a planta</td><td>Escolhe folha, caule e raiz</td><td>Que planta da rua tem essas partes?</td><td>Adaptações: folha grande na sombra, caule que guarda água, casca grossa contra o fogo.</td></tr>
+ <tr><td>3. Quem mora onde?</td><td>Leva bichos ao bioma pelas pistas</td><td>O que acontece se o habitat sumir?</td><td>Fauna associada às condições de cada bioma.</td></tr>
+ <tr><td>4. Cheia e seca no Pantanal</td><td>Prevê e vê o ciclo da água</td><td>Por que a cheia e a seca são boas?</td><td>Pulso de inundação.</td></tr>
+ <tr><td>5. Mochila do explorador</td><td>Escolhe o que levar</td><td>Que bioma fica perto da sua cidade?</td><td>Revisão das condições de cada bioma.</td></tr></table>
+ <h3>Avaliação</h3>
+ <p>Use o relatório de campo impresso e a frase escrita por cada dupla. Todos os instrumentos têm o mesmo peso. Observe se o aluno explica a característica do ser vivo pela condição do ambiente.</p>
+ <h3>Sequência de 3 aulas</h3>
+ <ol><li><b>Aula 1.</b> Jogo completo e discussão.</li><li><b>Aula 2.</b> Cada dupla pesquisa uma planta e um animal de um bioma e explica uma adaptação.</li><li><b>Aula 3.</b> Mural dos biomas da turma, com o bioma da sua cidade em destaque.</li></ol>
+ <h3>Cuidado ao explicar</h3>
+ <p>Os biomas foram simplificados para o 7º ano. Dentro de cada um há muita variação: o Cerrado tem matas, a Amazônia tem campos, e vários animais vivem em mais de um bioma. As medidas são qualitativas, sem números. O tuiuiú, por exemplo, também ocorre fora do Pantanal. As plantas montadas na fase 2 são modelos, não espécies reais.</p>
+ <h3>Referências</h3>
+ <ul class="ref">
+ <li>Junk W.J., Nunes da Cunha C., Wantzen K.M. et al. 2006. Biodiversity and its conservation in the Pantanal of Mato Grosso, Brazil. Aquatic Sciences 68: 278-309. doi:10.1007/s00027-006-0851-4</li>
+ <li>Simon M.F., Grether R., Queiroz L.P., Skema C., Pennington R.T., Hughes C.E. 2009. Recent assembly of the Cerrado, a neotropical plant diversity hotspot, by in situ evolution of adaptations to fire. PNAS 106: 20359-20364. doi:10.1073/pnas.0903410106</li></ul>
+ </div>`;
+ $('bVt').onclick=inicio;$('bPr').onclick=()=>window.print();
+}
+
+/* ================= RANKING ================= */
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="expedicao-biomas";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__a={get S(){return S},get G(){return G},FASES,inicio,novo,intro,guia};
+inicio();
+</script>
+</body>
+</html>
