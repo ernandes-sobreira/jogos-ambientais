@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rios Voadores</title>
+<style>
+:root{--main:#3949ab;--deep:#283593;--soft:#e8eaf6;--line:#c5cae9;--ink:#10212b;--mut:#4d6370;--co2:#e53935;--ch4:#ef6c00;--ok:#2e7d32;--bad:#c62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:820px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep);letter-spacing:-.01em}
+h2{font-size:1.2rem;color:var(--deep);margin-bottom:6px;letter-spacing:-.01em}
+h3{font-size:1rem;color:var(--deep);margin:14px 0 6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 12px;font-weight:700;font-size:.86rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.card{border:2px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:var(--deep)}.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.btn.sm{padding:9px 14px;font-size:.92rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas.cena{width:100%;height:auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff;margin-top:10px}
+.top{justify-content:space-between}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--main);color:#fff;border-radius:14px;padding:8px 14px;font-weight:800;font-size:1.05rem}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.tool{border:2px solid var(--line);background:#fff;color:var(--deep);border-radius:12px;padding:9px 12px;font-weight:700;font-family:inherit;font-size:.92rem;cursor:pointer;touch-action:manipulation}
+.tool.on{border-color:var(--main);background:var(--soft)}
+.tool:disabled{opacity:.4}
+.mets{display:grid;gap:8px;margin-top:10px}
+.met{display:grid;grid-template-columns:92px 1fr 52px;gap:8px;align-items:center;font-weight:700;font-size:.9rem}
+.met .bar{position:relative;height:18px;background:#f1f4f5;border-radius:99px;overflow:hidden}
+.met .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;transition:width .15s}
+.met .alvo{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--ink);border-radius:2px}
+.met .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--mut)}
+.met.co2 .fill{background:var(--co2)}.met.ch4 .fill{background:var(--ch4)}
+.saldo .bar{background:linear-gradient(90deg,#e8f5e9 50%,#ffebee 50%)}
+.saldo .zero{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:var(--ink)}
+.saldo .fill{border-radius:0}
+.obj{display:flex;gap:10px;align-items:flex-start;background:#fff8e1;border:2px solid #ffe082;border-radius:14px;padding:10px 12px;margin-top:10px;font-size:.95rem}
+.obj b{color:#8d6e00;white-space:nowrap}
+.acao{display:flex;gap:10px;align-items:center;background:var(--soft);border-left:5px solid var(--main);border-radius:0 12px 12px 0;padding:9px 12px;margin-top:8px;font-weight:600;font-size:.95rem;min-height:42px}
+.acao .dedo{font-size:1.25rem;animation:pulo 1s ease-in-out infinite}
+@keyframes pulo{50%{transform:translateX(4px)}}
+.help{width:34px;height:34px;border-radius:50%;border:2px solid var(--main);background:#fff;color:var(--deep);font-weight:800;font-size:1rem;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(16,33,43,.35);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal .card{max-width:460px;width:100%}
+.intro{text-align:center;padding:26px 18px}
+.intro .ic{font-size:3rem;line-height:1}
+.intro .n{color:var(--mut);font-weight:700;font-size:.85rem;margin-top:8px}
+.passos{display:grid;gap:8px;margin:16px auto;max-width:420px;text-align:left}
+.passos div{display:flex;gap:12px;align-items:center;background:var(--soft);border-radius:12px;padding:10px 14px;font-weight:600}
+.passos b{font-size:1.3rem;min-width:1.6em;text-align:center}
+.res{text-align:center}
+.res .big{font-size:2.6rem;font-weight:800;color:var(--deep);line-height:1.1}
+.res .ok{color:var(--ok);font-weight:800}.res .no{color:var(--bad);font-weight:800}
+.pensa{background:var(--soft);border-radius:14px;padding:12px 14px;margin:14px auto;max-width:520px;text-align:left}
+.pensa b{color:var(--deep)}
+.boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.box{border:2px dashed var(--line);border-radius:14px;padding:10px;min-height:110px;cursor:pointer}
+.box h4{font-size:.92rem;color:var(--deep);margin-bottom:6px}
+.box.alvo{border-color:var(--main);background:var(--soft)}
+.cards{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;min-height:48px}
+.ct{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 11px;font-weight:700;font-size:.9rem;cursor:pointer;box-shadow:0 2px 0 var(--line);font-family:inherit;color:var(--ink);transition:transform .5s}
+.ct.sel{border-color:var(--main);background:var(--soft);transform:translateY(-2px)}
+.ct.certo{border-color:var(--ok);background:#e8f5e9}.ct.errado{border-color:var(--bad);background:#ffebee}
+.ct.movido{animation:voa .8s ease}
+@keyframes voa{0%{transform:translateY(-30px) scale(1.1);opacity:.3}100%{transform:none;opacity:1}}
+.capa{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+.capa canvas{width:100%;height:auto;display:block;border-radius:16px;background:var(--soft)}
+.opts{display:grid;gap:8px;margin-top:6px}
+.opts .l{font-size:.8rem;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.sw{display:flex;gap:6px;flex-wrap:wrap}
+.sw button{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--line);cursor:pointer}
+.sw button.on{box-shadow:0 0 0 3px var(--deep)}
+.sw .tx{width:auto;height:auto;border-radius:10px;padding:6px 10px;font-weight:700;font-size:.85rem;background:#fff;color:var(--deep);font-family:inherit;border:0}
+input.nome{border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit;width:100%}
+input[type=range]{width:100%;accent-color:var(--main)}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:6px}
+.tab th{text-align:left;background:var(--soft);color:var(--deep);padding:7px 6px}
+.tab td{border-bottom:1px solid var(--line);padding:7px 6px;vertical-align:top}
+.guia p,.guia li{font-size:.95rem;margin-bottom:6px}
+.guia ul,.guia ol{padding-left:20px}
+.hab{border-left:5px solid var(--main);background:var(--soft);padding:10px 14px;border-radius:0 12px 12px 0;font-size:.95rem}
+.ref li{font-size:.86rem;color:var(--mut)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+.rel{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center}
+.rel canvas{width:120px;height:120px;border-radius:50%;background:var(--soft)}
+.mini{width:100%;max-width:420px;height:auto;display:block;margin:10px auto 0}
+@media (max-width:620px){.wrap{padding:10px 8px 30px}.card{padding:12px;border-radius:16px}.capa{grid-template-columns:1fr}.met{grid-template-columns:70px 1fr 44px;font-size:.82rem}.chip{font-size:.95rem}.rel{grid-template-columns:80px 1fr}.rel canvas{width:80px;height:80px}}
+@media print{a.hub,header .hud,.ranking,.noprint{display:none!important}.card{border:1px solid #ccc;break-inside:avoid}body{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>Rios Voadores</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF"></span><span class="pill" id="hP"></span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const W=760,H=372;
+function hex(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mix(a,b,t){const A=hex(a),B=hex(b);return`rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`;}
+
+/* ================= AVATAR ================= */
+const PELES=['#f6d3b8','#e3b18b','#c68a5e','#94603e','#5d3b26'];
+const CABS=['#1b1b1b','#4e342e','#8d6e63','#d4a85a','#b5532f'];
+const CAMISAS=['#00838f','#2e7d32','#f9a825','#c62828','#6a1b9a','#37474f'];
+const ESTILOS=[['curto','Curto'],['cacheado','Cacheado'],['longo','Longo'],['coque','Coque'],['raspado','Raspado']];
+const CHAPEUS=[['nenhum','Sem'],['bone','Boné'],['campo','Chapéu']];
+let A={pele:2,cab:0,estilo:'cacheado',camisa:0,chapeu:'campo',nome:''};
+try{const s=JSON.parse(localStorage.getItem('bc_avatar')||'null');if(s)A=Object.assign(A,s);}catch(e){}
+function salvaA(){try{localStorage.setItem('bc_avatar',JSON.stringify(A));}catch(e){}}
+function avatar(c,x,y,s,a,prancheta){
+ c.save();c.translate(x,y);c.scale(s,s);
+ const pele=PELES[a.pele],cab=CABS[a.cab],cam=CAMISAS[a.camisa];
+ if(a.estilo==='longo'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-39,12.5,15,0,0,7);c.fill();c.fillRect(-12.5,-40,25,22);}
+ if(a.estilo==='cacheado'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-40,15,14.5,0,0,7);c.fill();}
+ c.fillStyle=cam;c.beginPath();c.moveTo(-16,0);c.quadraticCurveTo(-17,-21,-6,-25);c.lineTo(6,-25);c.quadraticCurveTo(17,-21,16,0);c.closePath();c.fill();
+ c.fillStyle='rgba(0,0,0,.12)';c.fillRect(-1,-24,2,24);
+ c.fillStyle=pele;c.fillRect(-3.5,-29,7,6);
+ if(prancheta){c.fillStyle='#8d6e63';c.fillRect(4,-19,13,16);c.fillStyle='#fff';c.fillRect(5.5,-17,10,12);c.strokeStyle='#90a4ae';c.lineWidth=.8;for(let i=0;i<4;i++){c.beginPath();c.moveTo(7,-14+i*2.6);c.lineTo(14,-14+i*2.6);c.stroke();}}
+ c.strokeStyle=cam;c.lineWidth=6;c.lineCap='round';c.beginPath();c.moveTo(-11,-20);c.lineTo(-4,-9);c.stroke();
+ c.fillStyle=pele;c.beginPath();c.arc(-3,-8,3,0,7);c.fill();
+ c.fillStyle=pele;c.beginPath();c.ellipse(0,-39,9.5,11,0,0,7);c.fill();
+ c.beginPath();c.arc(-9.4,-38,2.3,0,7);c.arc(9.4,-38,2.3,0,7);c.fill();
+ c.fillStyle=cab;
+ if(a.estilo==='curto'){c.beginPath();c.ellipse(0,-44.5,10,6.8,0,Math.PI,0);c.fill();c.fillRect(-10,-46,2.8,7);c.fillRect(7.2,-46,2.8,7);}
+ if(a.estilo==='cacheado'){for(let i=0;i<13;i++){const an=Math.PI*(.8+i*1.4/12);c.beginPath();c.arc(Math.cos(an)*12,-41+Math.sin(an)*11.5,4.2,0,7);c.fill();}}
+ if(a.estilo==='longo'){c.beginPath();c.ellipse(0,-44.5,10.6,7.2,0,Math.PI,0);c.fill();}
+ if(a.estilo==='coque'){c.beginPath();c.ellipse(0,-44.5,10,6.4,0,Math.PI,0);c.fill();c.beginPath();c.arc(0,-53,5.2,0,7);c.fill();}
+ if(a.estilo==='raspado'){c.globalAlpha=.5;c.beginPath();c.ellipse(0,-44,9.8,6.2,0,Math.PI,0);c.fill();c.globalAlpha=1;}
+ c.fillStyle='#2b2a26';c.beginPath();c.arc(-3.4,-39,1.25,0,7);c.arc(3.4,-39,1.25,0,7);c.fill();
+ c.strokeStyle='#2b2a26';c.lineWidth=1;c.beginPath();c.arc(0,-35.6,2.6,.25,Math.PI-.25);c.stroke();
+ if(a.chapeu==='bone'){c.fillStyle=cam;c.beginPath();c.ellipse(0,-46,10.6,5.8,0,Math.PI,0);c.fill();c.fillRect(-10.6,-47,21.2,2.6);c.beginPath();c.ellipse(8.5,-46.2,8,2.2,0,0,7);c.fill();}
+ if(a.chapeu==='campo'){c.fillStyle='#d7c49e';c.beginPath();c.ellipse(0,-46,16.5,3.6,0,0,7);c.fill();c.beginPath();c.ellipse(0,-48,9.2,6.4,0,Math.PI,0);c.fill();c.fillStyle='#8d6e63';c.fillRect(-9.2,-49,18.4,1.9);}
+ c.restore();
+}
+function pernas(c,x,y,s,a){c.save();c.translate(x,y);c.scale(s,s);c.fillStyle='#455a64';c.fillRect(-11,0,9,20);c.fillRect(2,0,9,20);c.fillStyle='#3e2723';c.fillRect(-12,18,11,4);c.fillRect(1,18,11,4);c.restore();}
+
+/* ================= CENA ================= */
+const CORES={main:'#3949ab',deep:'#283593'};
+function sr(n){const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+function syncMol(){}function partic(){}
+function boi(c,x,y,s,dir){c.save();c.translate(x,y);c.scale(s*(dir||1),s);c.fillStyle='#9e9e9e';c.fillRect(-14,-10,4,10);c.fillRect(9,-10,4,10);c.fillStyle='#eceff1';c.strokeStyle='#90a4ae';c.lineWidth=1;c.beginPath();c.ellipse(0,-16,17,8,0,0,7);c.fill();c.stroke();c.beginPath();c.ellipse(5,-23,5,4,0,0,7);c.fill();
+ c.beginPath();c.moveTo(14,-20);c.quadraticCurveTo(22,-22,25,-16);c.lineTo(24,-11);c.quadraticCurveTo(19,-11,15,-13);c.fill();c.fillStyle='#111';c.beginPath();c.arc(20,-17,1,0,7);c.fill();c.fillStyle='#bdbdbd';c.fillRect(-10,-9,4,9);c.fillRect(13,-9,4,9);c.restore();}
+
+const REC={F:.75,A:.65,P:.35},NOME={F:'Floresta',A:'Agrofloresta',P:'Pasto'},ICO={F:'🌳',A:'🌱',P:'🐄'};
+function perfil(t){let M=100;const o=[];for(const k of t){const r=.35*M,e=r*REC[k];M=M-r+e;o.push({r,e,M});}return{cel:o,mt:.35*M};}
+function cx0(i){return 665-95*(i+1);}
+function arvore(c,x,y,s,seed){c.fillStyle='#6d4c41';c.fillRect(x-2*s,y-14*s,4*s,14*s);const g=['#2e7d32','#388e3c','#1b5e20','#43a047'];for(let k=0;k<6;k++){c.fillStyle=g[k%4];c.beginPath();c.arc(x+(sr(seed+k)-.5)*16*s,y-18*s-sr(seed+k+9)*12*s,(7+sr(seed+k+3)*4)*s,0,7);c.fill();}}
+function tufo(c,x,y,cor){c.strokeStyle=cor;c.lineWidth=2;for(let k=-2;k<=2;k++){c.beginPath();c.moveTo(x+k*2,y);c.quadraticCurveTo(x+k*3,y-6,x+k*4,y-11);c.stroke();}}
+function celula(c,i,k){const x=cx0(i),y=250;c.fillStyle=k==='F'?'#8bc34a':k==='A'?'#d4e157':'#c5e1a5';c.fillRect(x,y,95,H-y);c.strokeStyle='rgba(255,255,255,.8)';c.lineWidth=2;c.strokeRect(x+1,y,93,H-y);
+ if(k==='F'){for(let n=0;n<4;n++)arvore(c,x+14+n*22,y+4,1.25,i*17+n);}
+ else if(k==='A'){arvore(c,x+22,y+4,1,i*7);arvore(c,x+72,y+4,1,i*7+3);c.fillStyle='#689f38';for(let n=0;n<5;n++){c.beginPath();c.ellipse(x+12+n*17,y-3,6,4,0,0,7);c.fill();}}
+ else{for(let n=0;n<6;n++)tufo(c,x+8+n*16,y+2,'#7cb342');boi(c,x+48,y+2,1.1,i%2?1:-1);}
+ c.font='24px system-ui';c.textAlign='center';c.fillText(ICO[k],x+47,y+40);}
+function faixa(c,G){const g=c.createLinearGradient(0,0,0,250);g.addColorStop(0,'#c5cae9');g.addColorStop(1,'#f3f5fd');c.fillStyle=g;c.fillRect(0,0,W,H);
+ c.fillStyle='#4fc3f7';c.fillRect(665,236,95,H-236);c.strokeStyle='#e1f5fe';c.lineWidth=2;for(let k=0;k<4;k++){c.beginPath();for(let x=668;x<760;x+=6)c.lineTo(x,250+k*22+Math.sin(x/9+G.t*2+k)*3);c.stroke();}
+ c.fillStyle='#01579b';c.font='800 16px system-ui';c.textAlign='center';c.fillText('Oceano',712,228);
+ G.tipos.forEach((k,i)=>celula(c,i,k));
+ c.fillStyle='#e0e0e0';c.fillRect(0,250,95,H-250);[[8,40,'#90a4ae'],[30,62,'#b0bec5'],[56,48,'#78909c']].forEach(([x,h,cor])=>{c.fillStyle=cor;c.fillRect(x,250-h,22,h);c.fillStyle='#fff59d';for(let yy=250-h+6;yy<244;yy+=10)c.fillRect(x+5,yy,4,4),c.fillRect(x+13,yy,4,4);});
+ c.fillStyle='#263238';c.font='800 15px system-ui';c.fillText('Mato',47,284);c.fillText('Grosso',47,302);
+ const sm=G.sim;if(sm){const P=sm.p,xc=Math.max(70,700-sm.t/4*690);let M=100;
+  P.cel.forEach((o,i)=>{const cc=cx0(i)+47;if(xc<cc){M=o.M;c.fillStyle='rgba(57,73,171,.85)';c.font='800 17px system-ui';c.textAlign='center';c.fillText(o.r.toFixed(0),cc,118);
+   c.strokeStyle='rgba(255,255,255,.9)';c.lineWidth=3;const hv=o.e*1.6;c.beginPath();c.moveTo(cc+30,232);c.lineTo(cc+30,232-hv);c.stroke();c.beginPath();c.moveTo(cc+24,238-hv);c.lineTo(cc+30,230-hv);c.lineTo(cc+36,238-hv);c.stroke();}});
+  const rad=14+M*.32;c.fillStyle='rgba(255,255,255,.96)';c.strokeStyle='#9fa8da';c.lineWidth=2;[[-rad*.7,4,.7],[0,-rad*.25,1],[rad*.75,6,.65]].forEach(([dx,dy,k])=>{c.beginPath();c.arc(xc+dx,58+dy,rad*k,0,7);c.fill();c.stroke();});
+  c.fillStyle='#283593';c.font='800 15px system-ui';c.textAlign='center';c.fillText(Math.round(M)+' de vapor',xc,64);
+  if(xc<665){c.strokeStyle='rgba(41,121,255,.6)';c.lineWidth=2;for(let k=0;k<8;k++){const x=xc-rad+k*rad/4,yy=90+((G.t*300+k*37)%140);c.beginPath();c.moveTo(x,yy);c.lineTo(x-3,yy+10);c.stroke();}}
+  if(sm.t>=4){c.fillStyle='#283593';c.font='800 22px system-ui';c.textAlign='left';c.fillText(`🌧️ Chuva em MT: ${P.mt.toFixed(1).replace('.',',')}`,240,34);}}
+ else{c.fillStyle='#283593';c.font='800 18px system-ui';c.textAlign='left';c.fillText('← O vento traz vapor do oceano ☁️',300,30);}
+ if(sm){c.fillStyle='#455a64';c.font='600 14px system-ui';c.textAlign='left';c.fillText('número sobre cada área: chuva que caiu ali',220,146);}}
+function drawCena(c,G){if(G.desenha)G.desenha(c);}
+/* ================= TELA / LOOP ================= */
+let G=null,S=null,raf=0,ultimo=0,cx=null;
+function laco(ts){const dt=Math.min(.05,(ts-ultimo)/1000||0);ultimo=ts;if(G){G.t+=dt;if(G.upd)G.upd(dt);syncMol(G,dt);partic(G,dt);if(cx)drawCena(cx,G);if(G.extra)G.extra(cx);}raf=requestAnimationFrame(laco);}
+function parar(){cancelAnimationFrame(raf);raf=0;}
+function rodar(){parar();ultimo=performance.now();raf=requestAnimationFrame(laco);}
+function hud(){$('hud').style.display='flex';$('hF').textContent=`Fase ${S.f+1} de ${FASES.length}`;$('hP').textContent=`${Math.max(0,S.tot+S.fp)} pts`;}
+function telaJogo(chip,info){
+ const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><span class="chip" id="chip">${chip}</span><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="acao"><span class="dedo">👉</span><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});
+}
+function acao(t){const e=$('acao');if(e&&e.innerHTML!==t)e.innerHTML=t;}
+function ajuda(){const F=FASES[S.f],d=document.createElement('div');d.className='modal';
+ d.innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn">Entendi</button></div>`;
+ d.onclick=e=>{if(e.target===d||e.target.tagName==='BUTTON')d.remove();};document.body.appendChild(d);}
+function medidor(id,rot,cls,max,alvo){const a=alvo!=null?`<span class="alvo" style="left:${alvo/max*100}%"></span>`:'';return`<div class="met ${cls}" id="${id}" data-max="${max}"><span>${rot}</span><div class="bar"><span class="fill"></span>${a}</div><span class="v"></span></div>`;}
+function poeMed(id,v){const e=$(id);if(!e)return;const m=+e.dataset.max;e.querySelector('.fill').style.width=clamp(v/m*100,0,100)+'%';e.querySelector('.v').textContent=Math.round(v);}
+function poeSaldo(v,max){const e=$('mSaldo');if(!e)return;const f=e.querySelector('.fill'),p=clamp(Math.abs(v)/max*50,0,50);if(v<0){f.style.left=(50-p)+'%';f.style.width=p+'%';f.style.background='#43a047';}else{f.style.left='50%';f.style.width=p+'%';f.style.background='#e53935';}e.querySelector('.v').textContent=(v>0?'+':'')+Math.round(v);}
+
+/* ================= FASES ================= */
+const FASES=[
+ {nome:'Pegue o vapor',ic:'💧',obj:'Pegar gotas de vapor que sobem do chão e descobrir qual área devolve mais água ao ar.',passos:[['👆','Toque nas gotas que sobem'],['⏱️','Você tem 15 segundos'],['📊','No fim, veja de onde veio mais vapor']],ini:()=>f1()},
+ {nome:'Rio voador',ic:'☁️',obj:'Achar o menor número de áreas de floresta que faz chover pelo menos 14 em Mato Grosso.',passos:[['👆','Toque numa área para trocar floresta e pasto'],['▶','Solte a nuvem'],['🌧️','Veja quanto chove em Mato Grosso']],ini:()=>f2()},
+ {nome:'Fazenda e chuva',ic:'⚖️',obj:'Ganhar pelo menos 8 moedas e manter pelo menos 12 de chuva em Mato Grosso.',passos:[['🐄','Pasto dá 2 moedas e devolve pouco vapor'],['🌱','Agrofloresta dá 1 moeda e devolve bastante'],['🌳','Floresta dá 0 moeda e devolve mais']],ini:()=>f3()},
+ {nome:'E se virar tudo pasto?',ic:'🔮',obj:'Prever quanto choveria em Mato Grosso se todo o caminho virasse pasto.',passos:[['🌳','Veja a chuva com tudo floresta'],['🔢','Preveja com tudo pasto'],['▶','Teste e compare']],ini:()=>f4()},
+ {nome:'Plano da bacia',ic:'🗺️',obj:'Com 6 fichas, levar a chuva em MT a pelo menos 14, com pelo menos 5 moedas e floresta na nascente.',passos:[['🎟️','Pasto para agrofloresta: 1 ficha'],['🎟️','Pasto para floresta: 2 fichas'],['💧','A nascente fica na área ao lado de MT']],ini:()=>f5()}
+];
+function intro(){parar();G=null;cx=null;hud();const F=FASES[S.f];$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><div class="n">FASE ${S.f+1} DE ${FASES.length}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left;max-width:420px;margin:12px auto 0"><b>🎯 Objetivo</b><span>${F.obj}</span></div>
+ <div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn" id="bGo">Começar</button></div>`;
+ $('bGo').onclick=()=>{S.fp=0;F.ini();};}
+function fimFase(pts,ok,oque,pergunta,extraHtml){
+ parar();pts=Math.max(0,Math.round(pts));S.fp=0;S.tot+=pts;S.res[S.f]={pts,ok,oque};hud();
+ $('tela').innerHTML=`<div class="card res"><div class="small">${FASES[S.f].ic} ${FASES[S.f].nome}</div><div class="big">+${pts}</div>
+ <p class="${ok?'ok':'no'}">${ok?'Meta cumprida':'Meta não cumprida'}</p>${extraHtml||''}
+ <div class="pensa"><b>O que aconteceu:</b> ${oque}</div><div class="pensa"><b>Pergunta para a turma:</b> ${pergunta}</div>
+ <div class="row" style="justify-content:center"><button class="btn" id="bNx">${S.f<FASES.length-1?'Próxima fase':'Ver relatório'}</button></div></div>`;
+ $('bNx').onclick=()=>{S.f++;if(S.f<FASES.length)intro();else relatorio();};
+}
+function soltar(onFim){G.sim={t:0,p:perfil(G.tipos)};G.anim=true;G.onFim=onFim;}
+function updSim(dt){if(G.sim&&G.anim){G.sim.t+=dt;if(G.sim.t>=4.2){G.anim=false;const f=G.onFim;G.onFim=null;f&&f(G.sim.p);}}}
+function celTap(x,y){if(y<236||x<95||x>665)return -1;return Math.floor((665-x)/95);}
+/* ---------- FASE 1 ---------- */
+const AREAS1=[['Floresta','F',2.2],['Pasto','P',1.1],['Solo nu','S',.45],['Asfalto','X',.12]];
+function f1(){G={t:0,gotas:[],cont:[0,0,0,0],sai:[0,0,0,0],pega:0,acc:[0,0,0,0]};telaJogo('💧 Pegue o vapor','15 s');
+ G.desenha=c=>{const g=c.createLinearGradient(0,0,0,250);g.addColorStop(0,'#c5cae9');g.addColorStop(1,'#f3f5fd');c.fillStyle=g;c.fillRect(0,0,W,H);
+  AREAS1.forEach(([n,k],i)=>{const x=i*190;c.fillStyle=k==='F'?'#8bc34a':k==='P'?'#c5e1a5':k==='S'?'#bcaaa4':'#78909c';c.fillRect(x,260,190,H-260);
+   if(k==='F')for(let n2=0;n2<7;n2++)arvore(c,x+14+n2*27,264,1.4,n2*3+1);else if(k==='P'){for(let n2=0;n2<10;n2++)tufo(c,x+8+n2*18,262,'#7cb342');boi(c,x+95,262,1.3,1);}
+   else if(k==='S'){c.fillStyle='#a1887f';for(let n2=0;n2<9;n2++){c.beginPath();c.ellipse(x+12+n2*20,268+(n2%3)*8,6,3,0,0,7);c.fill();}}
+   else{c.fillStyle='#fff';for(let n2=0;n2<6;n2++)c.fillRect(x+10+n2*32,300,18,4);}
+   c.fillStyle='#fff';c.font='800 18px system-ui';c.textAlign='center';c.fillText(n,x+95,350);
+   c.fillStyle='#283593';c.font='800 20px system-ui';c.fillText(`💧 ${G.cont[i]}`,x+95,30);});
+  for(const d of G.gotas){c.fillStyle='rgba(41,121,255,.85)';c.beginPath();c.moveTo(d.x,d.y-18);c.quadraticCurveTo(d.x+15,d.y+3,d.x,d.y+12);c.quadraticCurveTo(d.x-15,d.y+3,d.x,d.y-18);c.fill();}
+  if(G.fimT){c.fillStyle='rgba(255,255,255,.9)';c.fillRect(0,60,W,90);c.fillStyle='#263238';c.font='800 17px system-ui';AREAS1.forEach(([n],i)=>{c.textAlign='center';c.fillText(`subiram ${G.sai[i]}`,i*190+95,110);});}};
+ G.tap=(x,y)=>{if(G.fimT)return;let best=null,bd=30;for(const d of G.gotas){const dd=Math.hypot(d.x-x,d.y-y);if(dd<bd){bd=dd;best=d;}}if(best){best.morto=true;G.cont[best.a]++;G.pega++;}};
+ G.upd=dt=>{if(G.fimT){G.fimT+=dt;if(G.fimT>2.5&&!G.feito){G.feito=1;const ok=G.pega>=12;fimFase(Math.min(160,G.pega*6),ok,`Da floresta subiram ${G.sai[0]} gotas, do pasto ${G.sai[1]}, do solo nu ${G.sai[2]} e do asfalto ${G.sai[3]}. As árvores puxam água do fundo do solo pelas raízes e soltam vapor pelas folhas. Isso é a transpiração.`,'Para onde vai o vapor que a floresta solta?');}return;}
+  if(G.t>15){G.fimT=.01;G.gotas=[];return;}$('info').textContent=Math.ceil(15-G.t)+' s';
+  AREAS1.forEach(([,,r],i)=>{G.acc[i]+=dt*r;while(G.acc[i]>=1){G.acc[i]--;G.sai[i]++;G.gotas.push({x:i*190+20+Math.random()*150,y:255,a:i,v:rr(38,58)});}});
+  for(const d of G.gotas){d.y-=d.v*dt;d.x+=Math.sin(G.t*3+d.v)*.3;if(d.y<45)d.morto=true;}G.gotas=G.gotas.filter(d=>!d.morto);};
+ acao('Toque nas gotas azuis que sobem. Pegue pelo menos 12.');rodar();}
+/* ---------- FASE 2 ---------- */
+function f2(){G={t:0,tipos:['P','P','P','P','P','P'],tent:0};telaJogo('☁️ Rio voador','meta: 14');
+ G.desenha=c=>faixa(c,G);G.upd=dt=>updSim(dt);
+ G.tap=(x,y)=>{if(G.anim)return;const i=celTap(x,y);if(i<0)return;G.tipos[i]=G.tipos[i]==='F'?'P':'F';G.sim=null;acao(`${G.tipos.filter(k=>k==='F').length} áreas de floresta. Aperte <b>▶ Soltar a nuvem</b>.`);};
+ $('ctrl').innerHTML=`<button class="btn sm" id="bR">▶ Soltar a nuvem</button>`;
+ $('bR').onclick=()=>{if(G.anim)return;G.tent++;soltar(p=>{const nf=G.tipos.filter(k=>k==='F').length;
+  if(p.mt<14)acao(`Choveu ${p.mt.toFixed(1).replace('.',',')} em MT. Falta. Troque pasto por floresta.`);
+  else if(nf>4)acao(`Choveu ${p.mt.toFixed(1).replace('.',',')}. Deu, mas dá com menos floresta. Tente tirar uma.`);
+  else setTimeout(()=>fimFase(Math.max(60,170-20*(G.tent-1)),true,'Com 4 áreas de floresta chegou chuva suficiente em Mato Grosso. A cada área, parte do vapor cai como chuva. A floresta devolve boa parte dessa chuva ao ar, e a nuvem segue carregada.','Por que a chuva de Mato Grosso depende de florestas que ficam longe daqui?'),900);});};
+ acao('Toque nas áreas para trocar pasto 🐄 e floresta 🌳. Depois aperte <b>▶ Soltar a nuvem</b>.');rodar();}
+/* ---------- FASE 3 ---------- */
+const MOE={F:0,A:1,P:2};
+function f3(){G={t:0,tipos:['F','F','F','F','F','F'],tent:0};telaJogo('⚖️ Fazenda e chuva','');
+ const moedas=()=>G.tipos.reduce((a,k)=>a+MOE[k],0);const inf=()=>$('info').textContent=`🪙 ${moedas()} moedas`;
+ G.desenha=c=>faixa(c,G);G.upd=dt=>updSim(dt);
+ G.tap=(x,y)=>{if(G.anim)return;const i=celTap(x,y);if(i<0)return;G.tipos[i]={F:'A',A:'P',P:'F'}[G.tipos[i]];G.sim=null;inf();};
+ $('ctrl').innerHTML=`<button class="btn sm" id="bR">▶ Soltar a nuvem</button>`;
+ $('mets').innerHTML=`<div class="pensa" style="margin:0;max-width:none">Toque numa área para trocar: 🌳 floresta, 🌱 agrofloresta, 🐄 pasto.<br><span class="small">Pasto 2 moedas · Agrofloresta 1 · Floresta 0</span></div>`;inf();
+ $('bR').onclick=()=>{if(G.anim)return;G.tent++;soltar(p=>{const m=moedas(),ok1=m>=8,ok2=p.mt>=12;
+  if(ok1&&ok2)setTimeout(()=>fimFase(Math.max(60,180-20*(G.tent-1)),true,`Com ${m} moedas e ${p.mt.toFixed(1).replace('.',',')} de chuva você cumpriu as duas metas. Só pasto dá mais moedas, mas seca Mato Grosso. A agrofloresta rende e ainda devolve bastante vapor ao ar.`,'Quem paga quando uma fazenda longe daqui troca floresta por pasto?'),900);
+  else acao(`${ok1?'✅':'❌'} ${m} moedas (meta 8) · ${ok2?'✅':'❌'} chuva ${p.mt.toFixed(1).replace('.',',')} (meta 12). Tente outra mistura.`);});};
+ acao('Troque as áreas para ganhar 8 moedas sem deixar a chuva em MT cair abaixo de 12.');rodar();}
+/* ---------- FASE 4 ---------- */
+function f4(){G={t:0,tipos:['F','F','F','F','F','F'],pred:10};telaJogo('🔮 E se virar tudo pasto?','previsão');
+ G.desenha=c=>faixa(c,G);G.upd=dt=>updSim(dt);$('ctrl').innerHTML='';
+ acao('Primeiro, veja a chuva com tudo floresta.');
+ setTimeout(()=>soltar(p=>{acao(`Com tudo floresta choveu ${p.mt.toFixed(1).replace('.',',')} em MT. E com tudo pasto?`);
+  $('ctrl').innerHTML=`<div style="width:100%;display:grid;gap:6px"><div class="row top"><b>Sua previsão para tudo pasto</b><span class="pill" id="pp">${G.pred}</span></div><input type="range" id="rp" min="0" max="25" step="1" value="${G.pred}"></div><button class="btn sm" id="bR">▶ Testar</button>`;
+  $('rp').oninput=e=>{G.pred=+e.target.value;$('pp').textContent=G.pred;};
+  $('bR').onclick=()=>{if(G.anim)return;G.tipos=['P','P','P','P','P','P'];$('ctrl').innerHTML='';soltar(q=>{const real=q.mt,p1=Math.max(0,90-Math.abs(G.pred-real)*12);G.p1=p1;S.fp=Math.round(p1);hud();
+   acao(`Com tudo pasto choveu ${real.toFixed(1).replace('.',',')}. Você previu ${G.pred}.`);
+   $('ctrl').innerHTML=`<div style="width:100%"><b>Então, quanto da chuva de MT vinha do vapor das florestas do caminho?</b><div class="row" style="margin-top:6px">${['10%','30%','60%','90%'].map(n=>`<button class="tool" data-o="${n}">${n}</button>`).join('')}</div></div>`;
+   document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{const ok=b.dataset.o==='60%';
+    fimFase(G.p1+(ok?70:0),ok&&G.p1>=40,'Tudo floresta deu cerca de 20 de chuva. Tudo pasto deu cerca de 7. Cerca de 60% da chuva que chegava a Mato Grosso dependia do vapor devolvido pelas florestas do caminho.','Se a Amazônia perder floresta, o que pode acontecer com a chuva no Pantanal?');});});};}),600);
+ rodar();}
+/* ---------- FASE 5 ---------- */
+function f5(){G={t:0,tipos:['F','P','P','P','P','P'],ini:['F','P','P','P','P','P'],tent:0};telaJogo('🗺️ Plano da bacia','');
+ const custo=()=>G.tipos.reduce((a,k,i)=>a+(G.ini[i]==='P'?(k==='A'?1:k==='F'?2:0):0),0);const moedas=()=>G.tipos.reduce((a,k)=>a+MOE[k],0);
+ const inf=()=>{const fx=6-custo();$('info').textContent=`🎟️ ${fx} ficha${fx===1?'':'s'} · 🪙 ${moedas()}`;};
+ G.desenha=c=>{faixa(c,G);const x=cx0(5);c.fillStyle='#0288d1';c.font='800 14px system-ui';c.textAlign='center';c.fillText('💧 nascente',x+47,366);};
+ G.upd=dt=>updSim(dt);
+ G.tap=(x,y)=>{if(G.anim)return;const i=celTap(x,y);if(i<0||G.ini[i]!=='P')return;const nx={P:'A',A:'F',F:'P'}[G.tipos[i]];const ant=G.tipos[i];G.tipos[i]=nx;if(custo()>6){G.tipos[i]=nx==='A'?'P':nx==='F'?'P':'P';acao('Fichas acabaram. Desfaça alguma troca.');}G.sim=null;inf();};
+ $('ctrl').innerHTML=`<button class="btn sm" id="bR">▶ Soltar a nuvem</button>`;
+ $('mets').innerHTML=`<div class="pensa" style="margin:0;max-width:none">Toque num pasto para trocar: 🐄 → 🌱 (1 ficha) → 🌳 (2 fichas). A floresta perto do oceano já existe.<br><span class="small">Metas: chuva em MT pelo menos 14 · pelo menos 5 moedas · floresta na nascente</span></div>`;inf();
+ $('bR').onclick=()=>{if(G.anim)return;G.tent++;soltar(p=>{const m=moedas(),a=p.mt>=14,b=m>=5,n=G.tipos[5]==='F';
+  if(a&&b&&n)setTimeout(()=>fimFase(Math.max(70,200-20*(G.tent-1)),true,`Chuva de ${p.mt.toFixed(1).replace('.',',')} em MT, ${m} moedas e a nascente protegida. Floresta onde ela é obrigatória, agrofloresta onde a fazenda precisa de renda.`,'Que lei protege a mata ao redor de nascentes, e por que ela importa para a chuva e para o rio?'),900);
+  else acao(`${a?'✅':'❌'} chuva ${p.mt.toFixed(1).replace('.',',')} · ${b?'✅':'❌'} ${m} moedas · ${n?'✅':'❌'} nascente com floresta`);});};
+ acao('Use as fichas para trocar pastos. Depois aperte <b>▶ Soltar a nuvem</b>.');rodar();}
+/* ================= INICIO / AVATAR ================= */
+function inicio(){parar();G=null;cx=null;$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><div class="capa"><canvas id="cA" width="560" height="560"></canvas>
+ <div><h2>Monte seu pesquisador</h2><div class="opts">
+ <div class="l">Pele</div><div class="sw" id="sP">${PELES.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.pele===i?'on':''}" aria-label="pele ${i+1}"></button>`).join('')}</div>
+ <div class="l">Cabelo</div><div class="sw" id="sE">${ESTILOS.map(([k,t])=>`<button class="tx ${A.estilo===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <div class="sw" id="sC">${CABS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.cab===i?'on':''}" aria-label="cor ${i+1}"></button>`).join('')}</div>
+ <div class="l">Camiseta</div><div class="sw" id="sT">${CAMISAS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.camisa===i?'on':''}" aria-label="camiseta ${i+1}"></button>`).join('')}</div>
+ <div class="l">Chapéu</div><div class="sw" id="sH">${CHAPEUS.map(([k,t])=>`<button class="tx ${A.chapeu===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <input class="nome" id="iN" maxlength="20" placeholder="Seu nome" value="${esc(A.nome)}">
+ </div></div></div>
+ <div class="row" style="margin-top:14px"><button class="btn" id="bJ">▶ Jogar as 5 fases</button><button class="btn ghost" id="bG">📘 Guia do professor</button></div>
+ <p class="small" style="margin-top:10px">Ciências da Natureza · Ensino Médio · BNCC EM13CNT105</p></div>`;
+ const pinta=()=>{const c=$('cA').getContext('2d');c.clearRect(0,0,560,560);c.fillStyle='#e8eaf6';c.fillRect(0,0,560,560);c.fillStyle='#c5cae9';c.beginPath();c.arc(280,600,260,0,7);c.fill();avatar(c,280,560,6.4,A,true);};
+ pinta();
+ const liga=(id,f)=>document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{f(b);salvaA();document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b));pinta();});
+ liga('sP',b=>A.pele=+b.dataset.i);liga('sC',b=>A.cab=+b.dataset.i);liga('sT',b=>A.camisa=+b.dataset.i);liga('sE',b=>A.estilo=b.dataset.k);liga('sH',b=>A.chapeu=b.dataset.k);
+ $('iN').oninput=e=>{A.nome=e.target.value;salvaA();};
+ $('bJ').onclick=novo;$('bG').onclick=guia;
+}
+function novo(){S={f:0,tot:0,fp:0,res:[],fichas:0};salvo=false;intro();}
+function relatorio(){parar();G=null;cx=null;$('rankBox').style.display='block';const nome=A.nome.trim()||'Pesquisador';
+ $('tela').innerHTML=`<div class="card"><div class="rel"><canvas id="cR" width="240" height="240"></canvas><div><div class="small">Relatório de campo</div><h2>${esc(nome)}</h2><div class="big" style="font-size:2rem;font-weight:800;color:var(--deep)">${S.tot} pts</div></div></div>
+ <table class="tab" style="margin-top:12px"><tr><th>Fase</th><th>Pontos</th><th>Meta</th></tr>${FASES.map((F,i)=>{const r=S.res[i]||{pts:0,ok:false};return`<tr><td>${F.ic} ${F.nome}</td><td>${r.pts}</td><td>${r.ok?'✓':'✗'}</td></tr>`;}).join('')}</table>
+ <div class="pensa"><b>Para escrever no caderno:</b> explique o caminho de uma gota que sai do oceano, passa pela floresta e chove em Mato Grosso.</div>
+ <div class="savebox noprint"><input id="pName" maxlength="20" value="${esc(nome)}"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row noprint" style="margin-top:12px"><button class="btn ghost" id="bI">🖨️ Imprimir relatório</button><button class="btn ghost" id="bN">Jogar de novo</button><button class="btn ghost" id="bV">Início</button></div></div>`;
+ const c=$('cR').getContext('2d');c.fillStyle='#e8eaf6';c.fillRect(0,0,240,240);avatar(c,120,240,3.2,A,true);
+ $('bS').onclick=()=>salvar('5 fases');$('bI').onclick=()=>window.print();$('bN').onclick=novo;$('bV').onclick=inicio;
+}
+
+/* ================= GUIA DO PROFESSOR ================= */
+function guia(){parar();$('hud').style.display='none';$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card guia">
+ <div class="row top noprint"><button class="btn ghost sm" id="bVt">← Voltar</button><button class="btn sm" id="bPr">🖨️ Imprimir guia</button></div>
+ <h2 style="margin-top:10px">Guia do professor · Rios Voadores</h2>
+ <p class="small">Ensino Médio · Ciências da Natureza e suas Tecnologias · Biologia, Química e Geografia</p>
+ <h3>Habilidade da BNCC</h3>
+ <div class="hab"><b>EM13CNT105.</b> Analisar os ciclos biogeoquímicos e interpretar os efeitos de fenômenos naturais e da interferência humana sobre esses ciclos, para promover ações individuais e/ou coletivas que minimizem consequências nocivas à vida.</div>
+ <h3>Objetivos da aula</h3>
+ <ul><li>Explicar a transpiração e a evapotranspiração como parte do ciclo da água.</li><li>Mostrar que o vapor devolvido pela floresta volta a cair como chuva mais adiante.</li><li>Relacionar o uso da terra longe daqui com a chuva em Mato Grosso.</li></ul>
+ <h3>Roteiro de 50 minutos</h3>
+ <table class="tab"><tr><th>Tempo</th><th>O que fazer</th></tr>
+ <tr><td>5 min</td><td>Pergunte: de onde vem a chuva que cai em Mato Grosso?</td></tr>
+ <tr><td>25 min</td><td>Alunos jogam em duplas e anotam a chuva em MT em cada fase.</td></tr>
+ <tr><td>15 min</td><td>Discussão com as perguntas de cada fase.</td></tr>
+ <tr><td>5 min</td><td>Cada dupla escreve a frase do relatório de campo.</td></tr></table>
+ <h3>Fase por fase</h3>
+ <table class="tab"><tr><th>Fase</th><th>O aluno faz</th><th>Pergunta para a turma</th><th>O que explicar</th></tr>
+ <tr><td>1. Pegue o vapor</td><td>Pega gotas que sobem de quatro superfícies</td><td>Para onde vai o vapor da floresta?</td><td>Raízes fundas e muitas folhas fazem a floresta devolver mais água ao ar.</td></tr>
+ <tr><td>2. Rio voador</td><td>Acha o mínimo de floresta para chover em MT</td><td>Por que a chuva daqui depende de florestas distantes?</td><td>A umidade do oceano é reciclada várias vezes pela floresta ao longo do caminho.</td></tr>
+ <tr><td>3. Fazenda e chuva</td><td>Equilibra renda e chuva</td><td>Quem paga quando uma fazenda distante desmata?</td><td>O benefício do desmate é local, a perda de chuva é de quem está a jusante do vento.</td></tr>
+ <tr><td>4. E se virar tudo pasto?</td><td>Prevê e testa a chuva sem floresta</td><td>O que pode acontecer com a chuva no Pantanal?</td><td>No modelo, cerca de 60% da chuva em MT vinha do vapor reciclado.</td></tr>
+ <tr><td>5. Plano da bacia</td><td>Usa fichas para restaurar a paisagem</td><td>Que lei protege nascentes?</td><td>Área de Preservação Permanente no entorno de nascentes, prevista na Lei 12.651.</td></tr></table>
+ <h3>Avaliação</h3>
+ <p>Use o relatório de campo impresso e a frase escrita por cada dupla. Todos os instrumentos têm o mesmo peso. Observe se o aluno liga transpiração, nuvem e chuva em um mesmo ciclo.</p>
+ <h3>Sequência de 3 aulas</h3>
+ <ol><li><b>Aula 1.</b> Jogo completo e discussão.</li><li><b>Aula 2.</b> Experimento com saco plástico em volta de um galho para coletar a água transpirada.</li><li><b>Aula 3.</b> Leitura guiada sobre a observação de que o ar que passa por floresta produz mais chuva (Spracklen et al., 2012).</li></ol>
+ <h3>Cuidado ao explicar</h3>
+ <p>As taxas de vapor, chuva e moedas do jogo são de um modelo simples. Na realidade o caminho da umidade muda com a estação e com o relevo. A ideia central, de que a floresta recicla a água da chuva, vem de estudos com isótopos (Salati et al., 1979) e com satélite (Spracklen et al., 2012).</p>
+ <h3>Referências</h3>
+ <ul class="ref">
+ <li>Brasil. Lei 12.651, de 25 de maio de 2012. Dispõe sobre a proteção da vegetação nativa.</li>
+ <li>Salati E., Dall'Olio A., Matsui E., Gat J.R. 1979. Recycling of water in the Amazon basin: an isotopic study. Water Resources Research 15: 1250-1258. doi:10.1029/WR015i005p01250</li>
+ <li>Spracklen D.V., Arnold S.R., Taylor C.M. 2012. Observations of increased tropical rainfall preceded by air passage over forests. Nature 489: 282-285. doi:10.1038/nature11390</li></ul>
+ </div>`;
+ $('bVt').onclick=inicio;$('bPr').onclick=()=>window.print();
+}
+
+/* ================= RANKING ================= */
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="rios-voadores";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__a={get S(){return S},get G(){return G},FASES,inicio,novo,intro,guia};
+inicio();
+</script>
+</body>
+</html>
