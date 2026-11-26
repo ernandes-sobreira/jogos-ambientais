@@ -318,28 +318,30 @@ Galetti et al. 2013, Science 340:1086-1090: sementes grandes de palmito-juçara 
 Capacidade do papo, tempo de voo, tempo até a semente se perder e tamanhos sorteados são regras do jogo. */
 TC.LIM=12;
 FASES[2].txt='Mata Atlântica. Os frutos de palmito-juçara caem com sementes de tamanhos diferentes. Arraste cada semente até uma ave. Só o tucano engole sementes de 12 mm ou mais. O sabiá leva as pequenas e deixa o tucano livre para as grandes.';
-FASES[2].metaTxt='espalhar 10 sementes antes que fiquem secando embaixo da palmeira.';
+FASES[2].metaTxt='espalhar 25 sementes. Aos 30 s da fase a mata vira fragmento e o tucano some.';FASES[2].meta=25;FASES[2].dur=75;TC.F[2].meta=25;TC.FRAG=30;
+Object.defineProperty(FASES[2],'fato',{get(){const g=S&&S.g,h=g&&g.hist;let t='';if(h){t=' Você espalhou '+h.antes+' sementes grandes enquanto havia tucano e '+h.depois+' depois que ele sumiu.';}return 'Sem aves de bico largo, só as sementes pequenas são levadas para longe. Em fragmentos de Mata Atlântica sem tucanos, o palmito-juçara passou a produzir sementes menores em menos de 100 anos (Galetti et al. 2013).'+t;}});
 /* ---- fases 1 e 2: tucano maior no celular e mira de onde a semente vai cair ---- */
 TC.prev=function(g){if(!g.bar||!g.bar.length)return null;const b=g.bar.reduce((a,c)=>c.t<a.t?c:a);if(b.t>2.2)return null;const tu=g.tu,x=tu.x-tu.dir*14,chao=TC.alt(g,x),nv=TC.nivel(g);let ok=1,tx='aqui vinga';if(nv<chao)ok=0,tx='água';else if(chao>g.gy-6)ok=0,tx='campo alaga';else if(g.maes.some(m=>Math.abs(m.x-x)<m.h*.3))ok=0,tx='embaixo da mãe';return {x,y0:tu.y+8,y:Math.min(chao,nv),ok,tx,t:b.t};};
 TC._cena2=TC.cena2;TC.cena2=function(g){const p=TC.prev(g);if(p){cx.save();cx.setLineDash([4,5]);cx.strokeStyle=p.ok?'rgba(46,125,50,.8)':'rgba(198,40,40,.8)';cx.lineWidth=2;cx.beginPath();cx.moveTo(p.x,p.y0);cx.lineTo(p.x,p.y-4);cx.stroke();cx.setLineDash([]);
   cx.fillStyle=p.ok?'#2e7d32':'#c62828';cx.beginPath();cx.ellipse(p.x,p.y,11,4,0,0,7);cx.globalAlpha=.35;cx.fill();cx.globalAlpha=1;cx.font='bold 11px system-ui';const tw=cx.measureText(p.tx).width+12;rrk(cx,Math.max(4,Math.min(W-tw-4,p.x-tw/2)),p.y+8,tw,18,9,'rgba(255,255,255,.95)');cx.textAlign='center';cx.fillStyle=p.ok?'#2e7d32':'#c62828';cx.fillText(p.tx,Math.max(4+tw/2,Math.min(W-tw/2-4,p.x)),p.y+21);cx.restore();}
  TC._cena2(g);};
 /* ---- fase 3 nova ---- */
-TC.ini_bico=function(g){g.cord=[];g.gy=H*.8;g.fila=[];g.sel=null;g.tc=.4;g.perd=0;g.ave={tucano:{n:0,fora:0},sabia:{n:0,fora:0}};g.drag=null;};
-TC.av=()=>{const m=MOB(),y=m?H*.36:H*.4;return [{k:'tucano',x:W*(m?.26:.24),y,cap:3,volta:4},{k:'sabia',x:W*(m?.74:.76),y,cap:1,volta:1.6}];};
+TC.ini_bico=function(g){g.cord=[];g.gy=H*.8;g.fila=[];g.sel=null;g.tc=.4;g.perd=0;g.ave={tucano:{n:0,fora:0},sabia:{n:0,fora:0}};g.drag=null;g.hist={b:[0,0,0,0],antes:0,depois:0};};
+TC.av=()=>{const m=MOB(),y=m?H*.36:H*.4;return [{k:'tucano',x:W*(m?.26:.24),y,cap:3,volta:6},{k:'sabia',x:W*(m?.74:.76),y,cap:1,volta:2.4}];};
 TC.chaoB=()=>{const m=MOB();return {y0:H*(m?.66:.7),y1:H-(m?60:54)};};
-TC.up_bico=function(g,dt){const C=TC.chaoB();g.tc-=dt;if(g.tc<=0&&g.fila.length<6){const d=Math.round((8+Math.random()*7)*2)/2;let x=0;for(let k=0;k<12;k++){x=W*(.12+Math.random()*.76);if(g.fila.every(f=>Math.abs(f.x-x)>44))break;}g.fila.push({d,x,y:C.y0-30,vy:0,yf:C.y0+12+Math.random()*(C.y1-C.y0-30),t:0});g.tc=1.3+Math.random()*.6;}
+TC.up_bico=function(g,dt){const C=TC.chaoB();g.tc-=dt;if(g.tc<=0&&g.fila.length<6){const d=Math.round((8+Math.random()*7)*2)/2;let x=0;for(let k=0;k<12;k++){x=W*(.12+Math.random()*.76);if(g.fila.every(f=>Math.abs(f.x-x)>44))break;}g.fila.push({d,x,y:C.y0-30,vy:0,yf:C.y0+12+Math.random()*(C.y1-C.y0-30),t:0});g.tc=.9+Math.random()*.5;}
+ if(g.t>=TC.FRAG&&!g.frag){g.frag=1;msg('A mata virou fragmento. O tucano sumiu.');}
  for(const a of TC.av()){const st=g.ave[a.k];if(st.fora>0){st.fora-=dt;if(st.fora<=0){st.n=0;}}}
- for(const s of g.fila){if(s.y<s.yf){s.vy+=600*dt;s.y=Math.min(s.yf,s.y+s.vy*dt);}else s.t+=dt;if(s.t>9&&!s.fim){s.fim=1;g.perd++;g.lb.push({x:s.x,y:s.y-20,tx:'ficou embaixo da palmeira',t:1.2,c:'#c62828'});ganha(-2,s.x,s.y-30);}}
+ for(const s of g.fila){if(s.y<s.yf){s.vy+=600*dt;s.y=Math.min(s.yf,s.y+s.vy*dt);}else s.t+=dt;if(s.t>7&&!s.fim){s.fim=1;g.perd++;g.lb.push({x:s.x,y:s.y-20,tx:'ficou embaixo da palmeira',t:1.2,c:'#c62828'});ganha(-2,s.x,s.y-30);}}
  g.fila=g.fila.filter(s=>!s.fim);
  const pega=p=>{let b=null;for(const s of g.fila){const d=Math.hypot(p.x-s.x,p.y-s.y);if(d<Math.max(28,s.d*1.6+12)&&(!b||d<b.d))b={s,d};}return b&&b.s;};
  const ave=p=>TC.av().find(a=>Math.abs(p.x-a.x)<(MOB()?78:90)&&Math.abs(p.y-a.y+20)<90);
  /* arrastar */if(inp.down&&inp.x!==null){if(!g.drag){const s=pega(inp);if(s){g.drag=s;g.sel=null;}}if(g.drag){g.drag.x=inp.x;g.drag.y=inp.y;}}
  else if(g.drag){const a=ave({x:g.drag.x,y:g.drag.y});const s=g.drag;g.drag=null;if(a)TC.entrega(g,s,a);else{s.y=Math.max(C.y0+10,Math.min(C.y1-10,s.y));s.yf=s.y;}inp.tap=null;return;}
  /* ou tocar semente e depois a ave */if(inp.tap){const tp=inp.tap;inp.tap=null;const s=pega(tp);if(s){g.sel=s;return;}if(g.sel){const a=ave(tp);if(a)TC.entrega(g,g.sel,a);g.sel=null;}}};
-TC.entrega=function(g,s,a){const st=g.ave[a.k];if(st.fora>0){g.lb.push({x:a.x,y:a.y-90,tx:(a.k==='tucano'?'o tucano':'o sabiá')+' ainda está fora',t:1.2,c:'#8d6e63'});return;}
+TC.entrega=function(g,s,a){const st=g.ave[a.k];if(a.k==='tucano'&&g.frag){g.lb.push({x:a.x,y:a.y-90,tx:'não há mais tucano nesta mata',t:1.4,c:'#c62828'});return;}if(st.fora>0){g.lb.push({x:a.x,y:a.y-90,tx:(a.k==='tucano'?'o tucano':'o sabiá')+' ainda está fora',t:1.2,c:'#8d6e63'});return;}
  if(s.d>=TC.LIM&&a.k==='sabia'){g.lb.push({x:a.x,y:a.y-90,tx:'não cabe no bico do sabiá',t:1.4,c:'#c62828'});ganha(-3,a.x,a.y-60);return;}
- g.fila=g.fila.filter(f=>f!==s);if(g.sel===s)g.sel=null;st.n++;g.ok++;ganha(s.d>=TC.LIM?12:8,a.x,a.y-60);
+ g.fila=g.fila.filter(f=>f!==s);if(g.sel===s)g.sel=null;st.n++;g.ok++;g.hist.b[Math.min(3,Math.floor((s.d-8)/2))]++;if(s.d>=TC.LIM)g.hist[g.frag?'depois':'antes']++;ganha(s.d>=TC.LIM?12:8,a.x,a.y-60);
  if(st.n>=a.cap){st.fora=a.volta;g.lb.push({x:a.x,y:a.y-90,tx:a.k==='tucano'?'papo cheio: foi soltar longe':'levou para longe',t:1.4,c:'#2e7d32'});}};
 TC.desBico=function(g){const k=cx,m=MOB(),C=TC.chaoB();const gr=k.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#dfeee0');gr.addColorStop(1,'#eef1e2');k.fillStyle=gr;k.fillRect(0,0,W,H);
  /* fundo de mata em camadas */k.drawImage(cache('tcbm'+W+'x'+H,W,H,c=>{const R=rng(9);for(let l=0;l<3;l++){const yb=H*(.42+l*.1),cor=['#b9cfae','#93b483','#6e9a5c'][l];c.fillStyle=cor;for(let i=0;i<W/14;i++){const x=R()*W,r=18+R()*26-l*4;c.beginPath();c.arc(x,yb-R()*20,r,0,7);c.fill();}c.fillRect(0,yb,W,H-yb);}
@@ -347,7 +349,8 @@ TC.desBico=function(g){const k=cx,m=MOB(),C=TC.chaoB();const gr=k.createLinearGr
   const g2=c.createLinearGradient(0,C.y0,0,H);g2.addColorStop(0,'#9b8466');g2.addColorStop(1,'#7d6a52');c.fillStyle=g2;c.fillRect(0,C.y0,W,H-C.y0);for(let i=0;i<W*1.2;i++){c.fillStyle=R()<.5?'rgba(255,255,255,.07)':'rgba(40,25,10,.12)';c.beginPath();c.ellipse(R()*W,C.y0+R()*(H-C.y0),2+R()*5,1+R()*2,R()*3,0,7);c.fill();}
   c.fillStyle='rgba(255,255,255,.85)';c.font='bold 11px system-ui';c.textAlign='center';c.fillText('chão embaixo das palmeiras',W/2,C.y0+16);}),0,0);
  /* aves */for(const a of TC.av()){const st=g.ave[a.k],cw=m?W*.44:170,ch=m?168:178,x0=a.x-cw/2,y0=a.y-ch*.62;rrk(k,x0,y0,cw,ch,16,'rgba(255,255,255,.93)');k.strokeStyle=(g.sel||g.drag)?'#ef6c00':'#ffe0b2';k.lineWidth=2;k.beginPath();k.roundRect(x0,y0,cw,ch,16);k.stroke();
-  if(st.fora>0){k.fillStyle='#90a4ae';k.font='bold 12px system-ui';k.textAlign='center';k.fillText('voando longe',a.x,a.y-24);k.fillText(Math.ceil(st.fora)+' s',a.x,a.y-6);}
+  if(a.k==='tucano'&&g.frag){k.fillStyle='#c62828';k.font='bold 12px system-ui';k.textAlign='center';k.fillText('sumiu: a mata',a.x,a.y-34);k.fillText('virou fragmento',a.x,a.y-18);}
+  else if(st.fora>0){k.fillStyle='#90a4ae';k.font='bold 12px system-ui';k.textAlign='center';k.fillText('voando longe',a.x,a.y-24);k.fillText(Math.ceil(st.fora)+' s',a.x,a.y-6);}
   else if(a.k==='tucano')tucanoR(k,a.x-8,a.y-28,m?.95:1.1,g.t*2,1);else sabiaR(k,a.x,a.y-28,m?1.6:1.8,g.t*2,1);
   k.textAlign='center';k.fillStyle='#bf360c';k.font='bold 13px system-ui';k.fillText(a.k==='tucano'?'tucano':'sabiá-laranjeira',a.x,a.y+18);k.fillStyle='#607d8b';k.font='11px system-ui';k.fillText(a.k==='tucano'?'bico largo: engole 12 mm ou mais':'bico estreito: só sementes pequenas',a.x,a.y+34,cw-10);
   /* papo */for(let i=0;i<a.cap;i++){const xx=a.x+(i-(a.cap-1)/2)*20;k.strokeStyle='#bdbdbd';k.lineWidth=2;k.beginPath();k.arc(xx,a.y+52,7,0,7);k.stroke();if(i<st.n||st.fora>0){k.fillStyle='#4a2c5c';k.beginPath();k.arc(xx,a.y+52,5,0,7);k.fill();}}}
@@ -356,11 +359,121 @@ TC.desBico=function(g){const k=cx,m=MOB(),C=TC.chaoB();const gr=k.createLinearGr
   if(s.t>6){k.strokeStyle='rgba(198,40,40,'+(.4+.4*Math.sin(s.t*10))+')';k.lineWidth=2;k.beginPath();k.arc(s.x,s.y,r+4,0,7);k.stroke();}
   if(sel){k.strokeStyle='#f9a825';k.lineWidth=3;k.beginPath();k.arc(s.x,s.y,r+5,0,7);k.stroke();}
   k.fillStyle=s.d>=TC.LIM?'#bf360c':'#455a64';k.font='bold 10px system-ui';k.textAlign='center';k.fillText(String(s.d).replace('.',',')+' mm',s.x,s.y+r+13);}
+ TC.hist(g);
+ k.textAlign='center';
  const t=g.drag?'Solte sobre a ave.':g.sel?'Agora toque na ave.':'Arraste uma semente até a ave.';k.font='bold 13px system-ui';const w=Math.min(W-16,k.measureText(t).width+28);rrk(k,W/2-w/2,H-44,w,30,15,'rgba(255,255,255,.96)');k.strokeStyle='#ef6c00';k.lineWidth=2;k.beginPath();k.roundRect(W/2-w/2,H-44,w,30,15);k.stroke();k.fillStyle='#bf360c';k.fillText(t,W/2,H-24);};
 TC._draw=TC.draw;TC.draw=function(g){if(TC.F[S.f].tipo!=='bico')return TC._draw(g);TC.desBico(g);for(const l of g.lb){cx.font='bold 11px system-ui';const w=cx.measureText(l.tx).width+12;const lx=Math.max(w/2+4,Math.min(W-w/2-4,l.x));rrk(cx,lx-w/2,l.y-12,w,18,9,'rgba(255,255,255,.95)');cx.fillStyle=l.c;cx.textAlign='center';cx.fillText(l.tx,lx,l.y+1);}FS.hud(g,'#bf360c');};
 PERG[2]={q:'Onde as aves de bico grande sumiram, o que aconteceu com o palmito-juçara?',o:['Passou a ter sementes menores','Passou a ter sementes maiores e mais duras','Deixou de dar frutos durante a seca']};
 PERG.push({q:'Por que o sabiá-laranjeira não substitui o tucano para o palmito-juçara?',o:['Seu bico não engole sementes grandes','Ele só come frutos verdes de outras plantas','Ele só voa durante a noite, quando as sementes caem']});
 TC.U=()=>MOB()?2.6:3;
+TC.hist=function(g){const m=MOB(),k=cx,w=m?W-20:220,x0=m?10:W-w-10,y0=(FS.on?84:10)+(m?0:0),h=m?62:74;if(m)return TC.histM(g);rrk(k,x0,y0,w,h,10,'rgba(255,255,255,.94)');k.fillStyle='#bf360c';k.font='bold 10px system-ui';k.textAlign='left';k.fillText('Sementes espalhadas por tamanho',x0+8,y0+13);
+ const lab=['8-9','10-11','12-13','14-15'],mx=Math.max(3,...g.hist.b),bw=(w-24)/4;g.hist.b.forEach((n,i)=>{const bh=(h-36)*n/mx,x=x0+8+i*(bw+2.5);k.fillStyle=i>=2?'#ef6c00':'#90a4ae';k.fillRect(x,y0+h-16-bh,bw,bh);k.fillStyle='#37474f';k.font='9px system-ui';k.textAlign='center';k.fillText(lab[i]+' mm',x+bw/2,y0+h-5);if(n)k.fillText(n,x+bw/2,y0+h-19-bh);});};
+TC.histM=function(g){const k=cx,y0=(FS.on?84:10),x0=10,w=W-20;rrk(k,x0,y0,w,22,10,'rgba(255,255,255,.94)');const lab=['8-9','10-11','12-13','14-15'];k.font='bold 10px system-ui';k.textAlign='left';let x=x0+8;k.fillStyle='#bf360c';k.fillText('espalhadas:',x,y0+15);x+=k.measureText('espalhadas:').width+6;g.hist.b.forEach((n,i)=>{k.fillStyle=i>=2?'#ef6c00':'#607d8b';const t=lab[i]+' mm: '+n;k.fillText(t,x,y0+15);x+=k.measureText(t).width+8;});};
+/* Tucano Semeador, fases 1 e 2 refeitas: paisagem rolável do Pantanal, distância em metros e caderno de campo.
+Santos Júnior 2006, Ambiência 2(2): na Estância Caiman (Miranda-MS) o tucano-toco engole as sementes do manduvi inteiras, tira a sarcotesta e regurgita as sementes intactas.
+Kays et al. 2011, Acta Oecologica: tucanos com GPS no Panamá levaram sementes em média a 144 m da árvore-mãe; 56% passaram de 100 m; sementes engolidas no meio do dia foram levadas mais perto.
+Pizo et al. 2008 (via Current Conservation): sementes de manduvi viram árvores grandes sobretudo longe de outros manduvis.
+Tamanho do mapa em metros, chance de cada semente vingar, tempo até regurgitar, ritmo do relógio e altura da cheia são regras do jogo. */
+TC.MT=800;TC.PV=[.05,.3,.65];TC.CL=['até 30 m','30 a 100 m','mais de 100 m'];
+FASES[0].nome='Longe da mãe';FASES[0].dur=95;FASES[0].meta=6;FASES[0].metaTxt='fazer vingar 6 mudas de manduvi entre 6 h e 18 h.';
+FASES[0].txt='Pouse nos frutos abertos do manduvi. O tucano engole as sementes e depois de alguns segundos regurgita cada uma. A chance de virar muda cresce com a distância até o manduvi adulto mais próximo. No meio do dia faz calor e o tucano voa devagar.';
+FASES[1].nome='A cheia sobe';FASES[1].dur=95;FASES[1].meta=6;FASES[1].metaTxt='ter 6 mudas vivas quando a cheia chegar ao máximo.';
+FASES[1].txt='A água sobe o dia todo até a marca da cheia. Muda plantada em cordilheira mais baixa que a marca morre afogada. Plante alto e longe dos manduvis adultos.';
+TC.fatoBase=[FASES[0].fato,FASES[1].fato];
+TC.cad=()=>{const g=S&&S.g;if(!g||!g.cad)return '';const c=g.cad;return ' Seu caderno: '+TC.CL.map((t,i)=>t+', '+c[i].ok+' de '+c[i].n+' vingaram').join('; ')+'.';};
+Object.defineProperty(FASES[0],'fato',{get(){return 'Tucanos levam sementes longe: no Panamá a distância média foi de 144 m. Longe de outros manduvis a muda escapa da competição e das pragas da árvore-mãe.'+TC.cad();}});
+Object.defineProperty(FASES[1],'fato',{get(){return TC.fatoBase[1]+TC.cad();}});
+Object.defineProperty(G,'dica',{get(){return ['Olhe o caderno no painel. Leve as sementes para cordilheiras a mais de 100 m de qualquer manduvi adulto. Ao meio-dia aproveite para comer.','Plante só nas cordilheiras acima da linha azul tracejada, que marca a cheia máxima.','O sabiá só engole sementes pequenas. Guarde o tucano para as grandes enquanto ele ainda existe na mata.'][S?S.f:0];},configurable:true});
+/* ---------- mundo ---------- */
+TC.mundo=function(g){const port=H>W*1.2,R=rng(31+S.f*7),ch=TC.F[S.f].tipo==='cheia';g.WW=Math.max(W*(port?5.2:3.8),1800);g.ppm=g.WW/TC.MT;g.gy=H*(port?.74:.8);g.cord=[];let x=60;
+ while(x<g.WW-200){const w=(port?110:130)+R()*(port?110:150),h=H*(ch?.025+R()*.085:.04+R()*.06)*(port?1.3:1);g.cord.push({x:x+w/2,w,h});x+=w+30+R()*90;}
+ const th=Math.min(H*(port?.42:.5),port?320:300);g.maes=[];for(const fr of [.08,.5,.92]){let c=g.cord[0];for(const c2 of g.cord)if(Math.abs(c2.x-fr*g.WW)<Math.abs(c.x-fr*g.WW))c=c2;const i=g.maes.length;g.maes.push({x:c.x,y:g.gy-c.h,h:th*(.85+R()*.25),seed:11+i+S.f*5,c});}
+ g.frutos=[];for(const m of g.maes){const R2=rng(m.seed*13);for(let i=0;i<6;i++){const a=R2()*Math.PI,rr=.22+R2()*.2;g.frutos.push({x:m.x+Math.cos(a)*m.h*rr*1.2*(R2()<.5?-1:1),y:m.y-m.h*(.66+R2()*.12),m,cd:0,s:R2()});}}
+ g.carandas=[];for(let i=0;i<g.WW/90;i++){const xx=R()*g.WW;if(TC.alt(g,xx)<g.gy-2)continue;g.carandas.push({x:xx,h:H*(.12+R()*.08),s:R()});}
+ if(ch){const hs=g.cord.map(c=>c.h).sort((a,b)=>a-b);g.marca=g.gy-hs[Math.floor(hs.length*.4)]+3;let k2=0;for(const c of g.cord){if(Math.min(...g.maes.map(m=>Math.abs(m.x-c.x)))/(g.WW/TC.MT)>=100&&(k2++%2===0))c.h=Math.max(c.h,g.gy-g.marca+H*.02);}}else g.marca=null;};
+TC.camx=g=>Math.max(0,Math.min(g.WW-W,g.tu.x-W*.42));
+TC.nivel=g=>TC.F[S.f].tipo==='cheia'?g.gy-Math.min(1,g.t/(FASES[S.f].dur*.92))*(g.gy-g.marca)+2:g.gy+4;
+TC.hora=g=>6+12*Math.min(1,g.t/FASES[S.f].dur);
+TC.calor=g=>{const h=TC.hora(g);return h>=11&&h<14;};
+TC.distM=(g,x)=>Math.min(...g.maes.map(m=>Math.abs(m.x-x)))/g.ppm;
+TC.classe=d=>d<30?0:d<100?1:2;
+TC.ini_semeia=function(g){TC.mundo(g);const m=g.maes[0];g.tu={x:m.x-80,y:H*.3,fl:0,dir:1};g.bar=[];g.cad=[0,1,2].map(()=>({n:0,ok:0}));g.mudas=[];g.cai=[];};
+TC.ini_cheia=TC.ini_semeia;
+G.cedo=g=>TC.F[S.f].tipo==='cheia'?false:g.ok>=FASES[S.f].meta;
+G.reajusta=function(g){if(!g||TC.F[S.f].tipo==='bico')return;const fx=g.tu.x/g.WW;const mud=g.mudas;TC.mundo(g);g.tu.x=fx*g.WW;g.mudas=mud.filter(m=>m.x<g.WW);};
+TC.up_semeia=function(g,dt){const tu=g.tu,cam=TC.camx(g),lento=TC.calor(g),sp=(MOB()?190:230)*(lento?.45:1);tu.fl+=dt*(lento?7:12);
+ if(inp.down&&inp.x!==null){const tx=inp.x+cam,dx=tx-tu.x,dy=inp.y-tu.y,d=Math.hypot(dx,dy);if(d>4){const s=Math.min(d,sp*dt);tu.x+=dx/d*s;tu.y+=dy/d*s;if(Math.abs(dx)>3)tu.dir=dx<0?-1:1;}}
+ tu.y=Math.max((FS.on?84:10)+(MOB()?132:60),Math.min(Math.min(TC.alt(g,tu.x),TC.nivel(g))-18,tu.y));tu.x=Math.max(20,Math.min(g.WW-20,tu.x));
+ for(const f of g.frutos){f.cd=Math.max(0,f.cd-dt);if(f.cd<=0&&g.bar.length<3&&Math.hypot(f.x-(tu.x+tu.dir*18),f.y-tu.y)<32){f.cd=7;g.bar.push({t:4+Math.random()*3});g.lb.push({x:f.x,y:f.y-18,tx:'engoliu uma semente',t:1,c:'#5d4037'});}}
+ for(const b of g.bar)b.t-=dt;const sai=g.bar.filter(b=>b.t<=0);g.bar=g.bar.filter(b=>b.t>0);for(const b of sai)g.cai.push({x:tu.x-tu.dir*12,y:tu.y+6,vy:0});
+ const nv=TC.nivel(g);
+ for(const c of g.cai){c.vy+=500*dt;c.y+=c.vy*dt;const chao=TC.alt(g,c.x),fundo=Math.min(chao,nv);if(c.y<fundo)continue;c.fim=1;let res;
+  if(nv<chao)res={ok:0,tx:'caiu na água'};else if(chao>g.gy-6)res={ok:0,tx:'campo baixo: alaga'};
+  else{const d=TC.distM(g,c.x),k=TC.classe(d),p=TC.PV[k],vinga=Math.random()<p;g.cad[k].n++;if(vinga)g.cad[k].ok++;res={ok:vinga,tx:Math.round(d)+' m da mãe: '+(vinga?'vingou':(k===0?'não vingou na sombra da mãe':'não vingou'))};}
+  g.lb.push({x:c.x,y:fundo-26,tx:res.tx,t:1.8,c:res.ok?'#2e7d32':'#c62828'});
+  if(res.ok){g.ok++;g.mudas.push({x:c.x,y:chao,t:0});ganha(10,c.x-cam,fundo-40);}else ganha(-1,c.x-cam,fundo-40);}
+ g.cai=g.cai.filter(c=>!c.fim);
+ for(const m of g.mudas){m.t+=dt;if(!m.afog&&m.y>nv+1){m.afog=1;g.ok--;g.lb.push({x:m.x,y:m.y-22,tx:'a cheia cobriu a muda',t:1.6,c:'#c62828'});}}
+ if(lento&&!g.avCalor){g.avCalor=1;msg('Meio-dia: calor. O tucano voa devagar.');}};
+TC.up_cheia=TC.up_semeia;
+/* ---------- arte ---------- */
+TC.copa=function(k,x,y,r,R,cores){for(let i=0;i<5;i++){const a=R()*6.28,rr=r*(.55+R()*.35);const cx2=x+Math.cos(a)*r*.45,cy2=y+Math.sin(a)*r*.3;const gr=k.createRadialGradient(cx2-rr*.35,cy2-rr*.45,1,cx2,cy2,rr);gr.addColorStop(0,cores[0]);gr.addColorStop(.6,cores[1]);gr.addColorStop(1,cores[2]);k.fillStyle=gr;k.beginPath();k.arc(cx2,cy2,rr,0,7);k.fill();}
+ k.fillStyle='rgba(255,255,230,.10)';for(let i=0;i<10;i++){k.beginPath();k.arc(x+(R()-.5)*r*1.2,y-r*.3+(R()-.5)*r*.5,1.5+R()*2.5,0,7);k.fill();}};
+TC.cordC=function(g,c){return cache('tcc'+S.f+'_'+Math.round(c.x)+'_'+W+'x'+H,Math.ceil(c.w+60),Math.ceil(c.h+H*.22),k=>{const R=rng(Math.round(c.x)),ox=30,oy=H*.22,gy=c.h+oy;
+ const top=x=>{const d=Math.abs(x-c.w/2)/(c.w/2);return d<1?gy-c.h*Math.pow(Math.cos(d*1.5708),.6):gy;};
+ const gr=k.createLinearGradient(0,oy,0,gy);gr.addColorStop(0,'#b5a274');gr.addColorStop(1,'#8f7d55');k.fillStyle=gr;k.beginPath();k.moveTo(ox,gy);for(let x=0;x<=c.w;x+=3)k.lineTo(ox+x,top(x));k.lineTo(ox+c.w,gy);k.fill();
+ /* sub-bosque e copas em duas camadas */for(const [cor,n,rs] of [[['#8fae66','#5f8a45','#3a5f2c'],c.w/14,[9,14]],[['#a7c47a','#6f9a4e','#40662e'],c.w/18,[11,18]]]){for(let i=0;i<n;i++){const x=8+R()*(c.w-16),y=top(x),r=rs[0]+R()*rs[1];TC.copa(k,ox+x,y-r*.7,r,R,cor);}}
+ for(let i=0;i<c.w/30;i++){const x=10+R()*(c.w-20),y=top(x);k.strokeStyle='#6d5b45';k.lineWidth=1.4;k.beginPath();k.moveTo(ox+x,y);k.lineTo(ox+x,y-6);k.stroke();}});};
+TC.manduviC=function(m){return cache('tcm'+m.seed+'_'+Math.round(m.h),Math.ceil(m.h*1.3),Math.ceil(m.h*1.1),k=>{const h=m.h,ox=h*.65,oy=h*1.05,R=rng(m.seed*7);
+ /* sapopemas e tronco claro */k.fillStyle='#9e9384';k.beginPath();k.moveTo(ox-h*.12,oy);k.quadraticCurveTo(ox-h*.05,oy-h*.06,ox-h*.035,oy-h*.18);k.lineTo(ox-h*.025,oy-h*.6);k.lineTo(ox+h*.025,oy-h*.6);k.lineTo(ox+h*.035,oy-h*.18);k.quadraticCurveTo(ox+h*.05,oy-h*.06,ox+h*.12,oy);k.closePath();k.fill();
+ k.fillStyle='rgba(255,255,255,.18)';k.fillRect(ox-h*.018,oy-h*.6,h*.012,h*.55);k.fillStyle='rgba(60,50,40,.18)';k.fillRect(ox+h*.008,oy-h*.6,h*.014,h*.58);
+ /* galhos em candelabro */k.strokeStyle='#8f8576';k.lineCap='round';for(const [a,l,w] of [[-.9,.32,.03],[-.45,.28,.024],[.45,.3,.024],[.9,.34,.03],[0,.2,.02]]){k.lineWidth=h*w;k.beginPath();k.moveTo(ox,oy-h*.56);k.quadraticCurveTo(ox+Math.sin(a)*h*l*.5,oy-h*.66,ox+Math.sin(a)*h*l,oy-h*(.66+Math.cos(a)*.08));k.stroke();}
+ /* copa em guarda-chuva com folhas palmadas */const cores=['#9cc26a','#5e8f3e','#2f5a26'];for(const [a] of [[-.9],[-.45],[.45],[.9],[0]]){const bx=ox+Math.sin(a)*h*(Math.abs(a)>.6?.34:.25),by=oy-h*(.68+Math.cos(a)*.1);for(let i=0;i<10;i++)TC.copa(k,bx+(R()-.5)*h*.24,by-R()*h*.12,h*(.05+R()*.045),R,cores);}
+ 
+ for(let i=0;i<40;i++){const x=ox+(R()-.5)*h*1.0,y=oy-h*(.72+R()*.14);k.save();k.translate(x,y);k.rotate(R()*6);k.fillStyle=R()<.5?'#a9cc78':'#6f9e4a';for(let j=0;j<5;j++){k.rotate(1.256);k.beginPath();k.ellipse(0,-h*.012,h*.005,h*.012,0,0,7);k.fill();}k.restore();}});};
+TC.capsula=function(x,y,s,aberto,rot){cx.save();cx.translate(x,y);cx.rotate(rot||0);cx.scale(s,s);for(let i=0;i<5;i++){cx.save();cx.rotate(i*1.2566+.3);
+ const gr=cx.createLinearGradient(0,0,0,13);gr.addColorStop(0,'#6b3b22');gr.addColorStop(1,'#a4592f');cx.fillStyle=gr;cx.beginPath();cx.moveTo(-2,1);cx.quadraticCurveTo(-6.5,7,-3,13);cx.quadraticCurveTo(0,15,3,13);cx.quadraticCurveTo(6.5,7,2,1);cx.closePath();cx.fill();
+ if(aberto){cx.fillStyle='#e8732a';cx.beginPath();cx.ellipse(0,8,2.6,4.6,0,0,7);cx.fill();cx.fillStyle='#151515';cx.beginPath();cx.ellipse(-.9,6.5,1.1,1.6,0,0,7);cx.ellipse(1,9.5,1.1,1.6,0,0,7);cx.fill();}cx.restore();}
+ cx.fillStyle='#4e2c18';cx.beginPath();cx.arc(0,0,1.8,0,7);cx.fill();cx.restore();};
+TC.caranda=function(x,y,h,s){cx.strokeStyle='#8a7f6c';cx.lineWidth=2.4;cx.beginPath();cx.moveTo(x,y);cx.quadraticCurveTo(x+s*4,y-h*.5,x+1,y-h);cx.stroke();cx.save();cx.translate(x+1,y-h);for(let i=0;i<11;i++){const a=-Math.PI+i/10*Math.PI;cx.strokeStyle=i%2?'#7f9a58':'#6a8a48';cx.lineWidth=1.6;for(let j=-2;j<=2;j++){cx.beginPath();cx.moveTo(0,0);cx.lineTo(Math.cos(a+j*.06)*h*.2,Math.sin(a+j*.06)*h*.16-1);cx.stroke();}}cx.fillStyle='#5b5040';cx.beginPath();cx.arc(0,0,2.4,0,7);cx.fill();cx.restore();};
+TC.ceu=()=>cache('tcceu'+W+'x'+H,W,H,k=>{const gr=k.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#cfe6f2');gr.addColorStop(.7,'#eef3e6');gr.addColorStop(1,'#f3efdc');k.fillStyle=gr;k.fillRect(0,0,W,H);
+ const R=rng(5);k.fillStyle='rgba(255,255,255,.7)';for(let i=0;i<6;i++){const x=R()*W,y=H*(.08+R()*.25);for(let j=0;j<5;j++){k.beginPath();k.ellipse(x+j*14,y+(j%2)*3,18+R()*10,7+R()*4,0,0,7);k.fill();}}});
+TC.longe=()=>cache('tclonge'+W+'x'+H,W*2,H,k=>{const R=rng(8),gy=H*(H>W*1.2?.74:.8);k.fillStyle='#b9c9a6';k.beginPath();k.moveTo(0,gy);for(let x=0;x<=W*2;x+=10)k.lineTo(x,gy-H*.06-Math.sin(x*.01)*6-Math.sin(x*.037)*4);k.lineTo(W*2,gy);k.fill();
+ k.fillStyle='#a3b98e';for(let i=0;i<W/6;i++){const x=R()*W*2;k.beginPath();k.arc(x,gy-H*.06-R()*8,6+R()*9,0,7);k.fill();}});
+TC.drawMundo=function(g){const m=MOB(),cam=TC.camx(g),nv=TC.nivel(g),gy=g.gy;cx.drawImage(TC.ceu(),0,0);const lo=TC.longe();const px=-(cam*.3)%(W);cx.drawImage(lo,px,0);cx.drawImage(lo,px+W*2,0);
+ /* campo */const gr=cx.createLinearGradient(0,gy,0,H);gr.addColorStop(0,'#d3c58e');gr.addColorStop(1,'#bfae74');cx.fillStyle=gr;cx.fillRect(0,gy,W,H-gy);cx.strokeStyle='rgba(110,120,50,.45)';cx.lineWidth=1;for(let i=0;i<W/3;i++){const x=((i*37-cam)%W+W)%W,yy=gy+3+(i*7)%(H-gy-4);cx.beginPath();cx.moveTo(x,yy);cx.lineTo(x+1.5,yy-5);cx.stroke();}
+ cx.save();cx.translate(-cam,0);
+ for(const c of g.carandas)if(c.x>cam-40&&c.x<cam+W+40)TC.caranda(c.x,gy+2,c.h,c.s);
+ for(const c of g.cord){if(c.x+c.w/2<cam-40||c.x-c.w/2>cam+W+40)continue;cx.drawImage(TC.cordC(g,c),c.x-c.w/2-30,gy-c.h-H*.22);}
+ for(const mm of g.maes){if(Math.abs(mm.x-cam-W/2)>W)continue;const img=TC.manduviC(mm);cx.drawImage(img,mm.x-mm.h*.65,mm.y-mm.h*1.05);}
+ for(const f of g.frutos){if(f.x<cam-20||f.x>cam+W+20)continue;cx.strokeStyle='#6a5d4c';cx.lineWidth=1;cx.beginPath();cx.moveTo(f.x,f.y-8);cx.lineTo(f.x,f.y-2);cx.stroke();TC.capsula(f.x,f.y,m?.62:.72,f.cd<=0,f.s*2);}
+ /* água */if(nv<gy+3){cx.fillStyle='rgba(104,150,170,.78)';cx.beginPath();cx.moveTo(cam,nv);for(let x=cam;x<=cam+W;x+=8)cx.lineTo(x,nv+Math.sin(x*.05+g.t*2)*1.5);cx.lineTo(cam+W,H);cx.lineTo(cam,H);cx.fill();const R=rng(3);for(let i=0;i<30;i++){const x=cam+((R()*g.WW-cam)%W+W)%W;if(TC.alt(g,x)<nv)continue;cx.fillStyle='#5f8f3e';cx.beginPath();cx.ellipse(x,nv+3+R()*12,4+R()*3,2,0,0,7);cx.fill();cx.fillStyle='#b39ddb';if(R()<.3){cx.beginPath();cx.arc(x,nv+1,1.6,0,7);cx.fill();}}}
+ if(g.marca){cx.setLineDash([8,6]);cx.strokeStyle='#1565c0';cx.lineWidth=2;cx.beginPath();cx.moveTo(cam,g.marca);cx.lineTo(cam+W,g.marca);cx.stroke();cx.setLineDash([]);cx.font='bold 11px system-ui';const t='marca da cheia máxima';const tw=cx.measureText(t).width+12;rrk(cx,cam+W-tw-10,g.marca-22,tw,18,9,'rgba(255,255,255,.92)');cx.fillStyle='#1565c0';cx.textAlign='left';cx.fillText(t,cam+W-tw-4,g.marca-9);}
+ for(const mu of g.mudas){if(mu.afog)continue;const s=Math.min(1,mu.t/1.2);cx.strokeStyle='#5d7a3a';cx.lineWidth=2;cx.beginPath();cx.moveTo(mu.x,mu.y);cx.lineTo(mu.x,mu.y-16*s);cx.stroke();cx.save();cx.translate(mu.x,mu.y-16*s);for(let j=0;j<5;j++){cx.rotate(1.256);cx.fillStyle='#7cb342';cx.beginPath();cx.ellipse(0,-4*s,1.8*s,4*s,0,0,7);cx.fill();}cx.restore();rrk(cx,mu.x-2,mu.y-2,4,4,2,'#33691e');}
+ for(const c of g.cai){cx.fillStyle='#151515';cx.beginPath();cx.ellipse(c.x,c.y,2.6,3.4,0,0,7);cx.fill();}
+ TC.mira(g);const tu=g.tu;tucanoR(cx,tu.x,tu.y,m?.82:.85,tu.fl,tu.dir);
+ for(const l of g.lb){cx.font='bold 11px system-ui';const w=cx.measureText(l.tx).width+12;const lx=Math.max(cam+w/2+4,Math.min(cam+W-w/2-4,l.x));rrk(cx,lx-w/2,l.y-12,w,18,9,'rgba(255,255,255,.95)');cx.fillStyle=l.c;cx.textAlign='center';cx.fillText(l.tx,lx,l.y+1);}
+ cx.restore();
+ if(TC.calor(g)){cx.fillStyle='rgba(255,183,77,.12)';cx.fillRect(0,0,W,H);}};
+TC.mira=function(g){if(!g.bar.length)return;const b=Math.min(...g.bar.map(b=>b.t));if(b>2.5)return;const tu=g.tu,x=tu.x-tu.dir*12,chao=TC.alt(g,x),nv=TC.nivel(g),y=Math.min(chao,nv);let ok=1,tx;
+ if(nv<chao){ok=0;tx='água';}else if(chao>g.gy-6){ok=0;tx='campo alaga';}else{const d=TC.distM(g,x),k=TC.classe(d);ok=k;tx=Math.round(d)+' m da mãe · chance '+Math.round(TC.PV[k]*100)+'%';if(g.marca&&chao>g.marca){tx='abaixo da marca da cheia';ok=0;}}
+ const cor=ok===2?'#2e7d32':ok===1?'#ef6c00':'#c62828';cx.save();cx.setLineDash([4,5]);cx.strokeStyle=cor;cx.lineWidth=2;cx.beginPath();cx.moveTo(x,tu.y+8);cx.lineTo(x,y-3);cx.stroke();cx.setLineDash([]);cx.globalAlpha=.4;cx.fillStyle=cor;cx.beginPath();cx.ellipse(x,y,12,4,0,0,7);cx.fill();cx.globalAlpha=1;
+ cx.font='bold 11px system-ui';const tw=cx.measureText(tx).width+12;const cam=TC.camx(g),lx=Math.max(cam+4,Math.min(cam+W-tw-4,x-tw/2));rrk(cx,lx,y+6,tw,18,9,'rgba(255,255,255,.95)');cx.fillStyle=cor;cx.textAlign='left';cx.fillText(tx,lx+6,y+19);cx.restore();};
+TC.painel=function(g){const m=MOB(),top=FS.on?84:10,pw=m?W-20:250,x0=10;const ph=m?96:118;rrk(cx,x0,top,pw,ph,12,'rgba(255,255,255,.95)');cx.strokeStyle='#ffe0b2';cx.lineWidth=1.5;cx.beginPath();cx.roundRect(x0,top,pw,ph,12);cx.stroke();
+ cx.textAlign='left';cx.fillStyle='#37474f';cx.font='bold 11px system-ui';cx.fillText('No papo',x0+10,top+16);for(let i=0;i<3;i++){const b=g.bar[i],x=x0+18+i*30;cx.strokeStyle='#cfd8dc';cx.lineWidth=2;cx.beginPath();cx.arc(x,top+32,9,0,7);cx.stroke();if(b){cx.fillStyle='#151515';cx.beginPath();cx.ellipse(x,top+32,2.6,3.4,0,0,7);cx.fill();cx.strokeStyle=b.t<1.5?'#e53935':'#ef6c00';cx.lineWidth=3;cx.beginPath();cx.arc(x,top+32,9,-1.57,-1.57+6.283*Math.min(1,b.t/7));cx.stroke();}}
+ const h=TC.hora(g),hh=Math.floor(h),mm=Math.floor((h-hh)*60/15)*15;cx.fillStyle=TC.calor(g)?'#e65100':'#37474f';cx.font='bold 12px system-ui';cx.fillText((hh<10?'0':'')+hh+':'+(mm<10?'0':'')+mm+(TC.calor(g)?'  calor':''),x0+108,top+36);
+ /* caderno */const cy0=top+52,cw=(pw-20)/3;cx.font='bold 10px system-ui';cx.fillStyle='#bf360c';cx.fillText('Caderno: mudas que vingaram por distância da mãe',x0+10,cy0,pw-20);
+ TC.CL.forEach((t,i)=>{const c=g.cad[i],x=x0+10+i*cw,bw=cw-10,y=cy0+8;rrk(cx,x,y,bw,m?14:16,7,'#f1ece0');if(c.n){rrk(cx,x,y,Math.max(6,bw*c.ok/c.n),m?14:16,7,['#e57373','#ffb74d','#81c784'][i]);}cx.fillStyle='#37474f';cx.font='bold 10px system-ui';cx.fillText(c.ok+'/'+c.n,x+5,y+(m?11:12));cx.font='10px system-ui';cx.fillStyle='#607d8b';cx.fillText(t,x,y+(m?28:32),bw);});
+ /* minimapa */const mw=m?W-20:Math.min(300,W*.32),mx=m?10:W-mw-10,my=m?top+ph+6:top,mh=22;rrk(cx,mx,my,mw,mh,8,'rgba(255,255,255,.92)');const s=mw/g.WW;
+ for(const c of g.cord){cx.fillStyle=g.marca&&g.gy-c.h>g.marca?'#bcaaa4':'#8d6e63';cx.fillRect(mx+(c.x-c.w/2)*s,my+mh-6,c.w*s,4);}for(const mm of g.maes){cx.fillStyle='#2e7d32';cx.beginPath();cx.arc(mx+mm.x*s,my+mh-9,4,0,7);cx.fill();cx.strokeStyle='rgba(46,125,50,.35)';cx.lineWidth=1;cx.beginPath();cx.moveTo(mx+(mm.x-100*g.ppm)*s,my+4);cx.lineTo(mx+(mm.x+100*g.ppm)*s,my+4);cx.stroke();}
+ for(const mu of g.mudas)if(!mu.afog){cx.fillStyle='#7cb342';cx.fillRect(mx+mu.x*s-1,my+mh-12,2,5);}const cam=TC.camx(g);cx.strokeStyle='#bf360c';cx.lineWidth=1.5;cx.strokeRect(mx+cam*s,my+1,W*s,mh-2);cx.fillStyle='#151515';cx.beginPath();cx.arc(mx+g.tu.x*s,my+8,3,0,7);cx.fill();
+ /* escala */const sb=50*g.ppm,by=H-(m?58:20);if(!m||true){rrk(cx,W-sb-30,by-14,sb+20,22,8,'rgba(255,255,255,.85)');cx.fillStyle='#37474f';cx.fillRect(W-sb-20,by,sb,3);cx.font='bold 10px system-ui';cx.textAlign='center';cx.fillText('50 m',W-sb/2-20,by-3);}};
+TC._draw2=TC.draw;TC.draw=function(g){if(TC.F[S.f].tipo==='bico')return TC._draw2(g);TC.drawMundo(g);TC.painel(g);
+ if(g.t<6&&g.msgT<=0){const t=MOB()?'Arraste o tucano até os frutos abertos.':'Arraste o tucano até os frutos abertos do manduvi.';cx.font='bold 13px system-ui';const w=Math.min(W-16,cx.measureText(t).width+28);rrk(cx,W/2-w/2,H-(MOB()?96:46),w,30,15,'rgba(255,255,255,.96)');cx.strokeStyle='#ef6c00';cx.lineWidth=2;cx.beginPath();cx.roundRect(W/2-w/2,H-(MOB()?96:46),w,30,15);cx.stroke();cx.fillStyle='#bf360c';cx.textAlign='center';cx.fillText(t,W/2,H-(MOB()?76:26));}
+ FS.hud(g,'#bf360c');};
+G.capa=function(k,w,h){const o=cx,oW=W,oH=H,semS=!S;if(semS)S={f:0};const oS=S.f;cx=k;W=w;H=h;S.f=0;const g={t:0,lb:[],bar:[],cad:[0,1,2].map(()=>({n:0,ok:0})),mudas:[],cai:[]};TC.mundo(g);g.tu={x:g.maes[0].x+g.maes[0].h*.45,y:h*.3,fl:1,dir:1};g.tu.x=Math.min(g.tu.x,g.WW);
+ const cam0=g.maes[0].x-w*.4;g.tu.x=cam0+w*.62;TC.drawMundo(g);cx=o;W=oW;H=oH;S.f=oS;if(semS)S=undefined;};
+G.como=[['Voar','Arraste o dedo e o tucano voa até lá. A tela acompanha o tucano pela paisagem.'],['Comer','Pouse nos frutos abertos do manduvi. Cabem 3 sementes no papo.'],['Plantar','A semente sai sozinha depois de alguns segundos. A linha tracejada mostra onde cai e a chance de vingar.'],['Anotar','O caderno mostra quantas mudas vingaram em cada distância da mãe.']];
 function pergunta(){
  const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
  $('tela').innerHTML=`<div class="card"><h2>Pergunta da fase</h2><p style="margin:6px 0 4px">${P.q}</p><p class="small">Acerto +20, erro −10.</p><div class="ops">${ops.map((o,i)=>`<button data-i="${i}">${o.t}</button>`).join('')}</div><div id="pf"></div></div>`;
@@ -374,7 +487,7 @@ function final(tudo){
  $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Plantador de florestas!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
  <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
- <div class="small" style="margin-top:12px;text-align:left">Fontes: Pizo, Donatti, Guedes & Galetti (2008), Conservation puzzle: endangered hyacinth macaw depends on its nest predator for reproduction, Biological Conservation 141(3): 792-796 (o tucano-toco faz 83,3% da dispersão das sementes do manduvi, Sterculia apetala, e também come ovos da arara-azul); Agência FAPESP (2008), Dependente do inimigo (14 espécies de aves comem manduvi, mas só o tucano-toco e o araçari engolem e dispersam as sementes; 90% dos ninhos de arara-azul ficam no manduvi); Current Conservation, Toco toucans are a double-edged sword for endangered macaws (sementes de manduvi viram árvores grandes sobretudo longe de outros manduvis); Galetti et al. (2013), Science, via Revista Pesquisa FAPESP, Escassez de aves pode afetar evolução de plantas (sem aves de bico grande, o palmito-juçara passou a produzir sementes menores). Galetti et al. (2013), Functional extinction of birds drives rapid evolutionary changes in seed size, Science 340(6136): 1086-1090 (sementes grandes do palmito-juçara só são engolidas por aves com bico de mais de 12 mm de largura, como tucanos e grandes cotingas). Tempo no intestino, capacidade do papo, tempo de voo, relevo, cheia, tamanhos em milímetros, limite de cada bico e pontos são regras do jogo.</div></div>`;
+ <div class="small" style="margin-top:12px;text-align:left">Fontes: Pizo, Donatti, Guedes & Galetti (2008), Conservation puzzle: endangered hyacinth macaw depends on its nest predator for reproduction, Biological Conservation 141(3): 792-796 (o tucano-toco faz 83,3% da dispersão das sementes do manduvi, Sterculia apetala, e também come ovos da arara-azul); Agência FAPESP (2008), Dependente do inimigo (14 espécies de aves comem manduvi, mas só o tucano-toco e o araçari engolem e dispersam as sementes; 90% dos ninhos de arara-azul ficam no manduvi); Current Conservation, Toco toucans are a double-edged sword for endangered macaws (sementes de manduvi viram árvores grandes sobretudo longe de outros manduvis); Galetti et al. (2013), Science, via Revista Pesquisa FAPESP, Escassez de aves pode afetar evolução de plantas (sem aves de bico grande, o palmito-juçara passou a produzir sementes menores). Galetti et al. (2013), Functional extinction of birds drives rapid evolutionary changes in seed size, Science 340(6136): 1086-1090 (sementes grandes do palmito-juçara só são engolidas por aves com bico de mais de 12 mm de largura, como tucanos e grandes cotingas). Santos Júnior (2006), Evidencia de dispersión de semillas de Sterculia apetala por Ramphastos toco en la región del Pantanal, Ambiência 2(2) (na Estância Caiman o tucano-toco engole as sementes inteiras e regurgita as sementes intactas); Kays, Jansen, Knecht, Vohwinkel & Wikelski (2011), The effect of feeding time on dispersal of Virola seeds by toucans determined from GPS tracking and accelerometers, Acta Oecologica 37(6): 625-631 (distância média de 144 m, 56% das sementes a mais de 100 m, sementes engolidas no meio do dia levadas mais perto). Tamanho do mapa, chance de vingar em cada faixa de distância, altura da cheia, momento do fragmento, tempo no intestino, capacidade do papo, tempo de voo, relevo, cheia, tamanhos em milímetros, limite de cada bico e pontos são regras do jogo.</div></div>`;
  $('bS').onclick=()=>salvar(nivel);
 }
 const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
