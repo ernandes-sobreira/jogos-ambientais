@@ -484,7 +484,7 @@ PS.nada=function(p,dt,g){const s=PS.s();if(p.st==='nada'){p.tm-=dt;if(p.tm<=0||M
  p.f+=dt*(4+Math.hypot(p.vx,p.vy)/s*.08);};
 PS.update=function(g,dt){const s=PS.s(),ys=PS.ys(),fb=PS.fundo(),hk=g.hk,G2=PS.geo(W,H);g.x0=W*.5;
  g.lb=g.lb.filter(l=>(l.t-=dt)>0);for(const p of g.part){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=300*dt;p.t-=dt;}g.part=g.part.filter(p=>p.t>0);
- if(Math.random()<dt*.5){const j=G2.jau[Math.floor(Math.random()*2)];g.fr.push({x:j.x+8*G2.sc+Math.random()*6,y:j.top+10*G2.sc,vy:0,ag:0});}for(const r of g.fr){if(r.y<ys){r.vy+=400*dt;r.y+=r.vy*dt;if(r.y>=ys){r.y=ys;for(let i=0;i<5;i++)g.part.push({x:r.x,y:ys,vx:(Math.random()-.5)*60,vy:-60-Math.random()*40,t:.4,c:'rgba(235,248,245,.9)'});}}else{r.y+=22*s*dt;r.ag+=dt;}}g.fr=g.fr.filter(r=>r.ag<3);
+ if(Math.random()<dt*.5){const j=G2.jau[Math.floor(Math.random()*G2.jau.length)];if(j)g.fr.push({x:j.x+8*G2.sc+Math.random()*6,y:j.top+10*G2.sc,vy:0,ag:0});}for(const r of g.fr){if(r.y<ys){r.vy+=400*dt;r.y+=r.vy*dt;if(r.y>=ys){r.y=ys;for(let i=0;i<5;i++)g.part.push({x:r.x,y:ys,vx:(Math.random()-.5)*60,vy:-60-Math.random()*40,t:.4,c:'rgba(235,248,245,.9)'});}}else{r.y+=22*s*dt;r.ag+=dt;}}g.fr=g.fr.filter(r=>r.ag<3);
  g.prox-=dt;if(g.prox<=0){g.prox=.6;for(const sp in PS.POP){const n=g.ps.filter(p=>p.sp===sp&&p.st!=='foge').length;if(n<PS.POP[sp]){g.ps.push(PS.ger(g,sp));break;}}}
  const iscaN=(hk.st==='espera'||hk.st==='afunda');
  for(const p of g.ps){p.a=Math.min(1,p.a+dt*1.5);p.cd=Math.max(0,p.cd-dt);if(p===g.fis||p.st==='briga')continue;
@@ -507,7 +507,7 @@ PS.update=function(g,dt){const s=PS.s(),ys=PS.ys(),fb=PS.fundo(),hk=g.hk,G2=PS.g
  if(hk.st==='preso'){const P=g.preso;P.t+=dt;if(inp.tap&&P.t>.25){P.t=0;P.tent++;if(Math.random()<.6){msg('Soltou! Recolhendo a linha.');hk.st='volta';g.preso=null;}else if(P.tent>=3){PS.perdeAnzol(g,P.x,P.y,P.ar?'arvore':'agua','A linha arrebentou. Anzol, linha e isca ficaram no rio. Podem ferir aves, jacarés e peixes.');}else msg('Ainda preso. Puxe de novo ('+(3-P.tent)+' tentativas).');inp.tap=null;}}
  const podeMirar=hk.st==='barco'||hk.st==='espera'||hk.st==='afunda';
  if(inp.tap&&podeMirar&&inp.tap.y>ys-10&&inp.tap.y<H-56)g.aimOk=true;
- if(g.aimOk&&inp.down&&inp.x!==null){if(hk.st==='barco')g.rs=inp.x<g.x0?-1:1;g.aim={x:Math.max(12,Math.min(W-12,inp.x)),y:Math.max(ys+14,Math.min(fb-8,inp.y))};}
+ if(g.aimOk&&inp.down&&inp.x!==null){if(hk.st==='barco')g.rs=inp.x<g.x0?-1:1;g.aim={x:Math.max(12,Math.min(PS.xmax(),inp.x)),y:Math.max(ys+14,Math.min(fb-8,inp.y))};}
  if(g.pd&&!inp.down&&g.aim){if(podeMirar)PS.lanca(g,g.aim);g.aim=null;g.aimOk=false;}if(!inp.down&&!g.pd)g.aim=null;g.pd=inp.down;
  const P=PS.ponta(g);hk.jig=Math.max(0,(hk.jig||0)-dt);
  if(hk.st==='barco'){hk.x=P.x;hk.y=P.y+18*s;}
@@ -544,7 +544,7 @@ PS.botoesCard=function(){const m=MOB(),tp=PS.tp();const cw=Math.min(W-20,m?360:4
  const L=tp==='prato'?[['CRIANÇA','#00897b','cr'],['ADULTO','#1e88e5','ad'],['DEVOLVER','#8d6e63','dv']]:[['LEVAR','#2e7d32','lv'],['DEVOLVER','#8d6e63','dv']];return {x0,y0,cw,ch,bts:L.map((b,i)=>({x:x0+12+i*(bw+10),y:by,w:bw,h:44,t:b[0],c:b[1],id:b[2]}))};};
 PS.cartao=function(g){const B=PS.botoesCard();g.card.t+=1/60;if(!inp.tap||g.card.t<1.1)return;const bt=B.bts.find(b=>inp.tap.x>b.x&&inp.tap.x<b.x+b.w&&inp.tap.y>b.y&&inp.tap.y<b.y+b.h);if(!bt)return;PS.decide(g,g.card.p,bt.id);g.card=null;g.fis=null;inp.tap=null;};
 PS.decide=function(g,p,id){const tp=PS.tp(),hg=p.hg,x=W/2,y=PS.ys()+60,ok5=hg<.5;
- if(tp==='acum'||tp==='medir'||tp==='fontes'){if(tp==='medir'){g.n++;ganha(3,x,y-30);}
+ if(tp==='acum'||tp==='medir'||PS.fonte()){if(tp==='medir'){g.n++;ganha(3,x,y-30);}
   if(id==='lv'){if(ok5){if(tp!=='medir')g.n++;ganha(10,x,y);msg(p.E.n+' de '+p.cm+' cm com '+fmtHg(hg)+': seguro para o prato.');}else{g.vidas--;ganha(-10,x,y);msg(p.E.n+' acima do limite! '+(p.E.car?'Carnívoro grande acumula mais.':'Perto do garimpo ou da PCH até herbívoro passa.'));}}
   else{if(!ok5){ganha(5,x,y);msg('Boa! Devolvido ao rio: estava acima de 0,5 µg/g.');}else msg('Esse estava seguro, mas tudo bem devolver.');}}
  if(tp==='familia'){if(id==='lv'){const por=Math.min(28-g.porc,Math.max(1,Math.round(p.kg*2.5)));g.porc+=por;g.hg+=hg*por*100;g.n=g.porc;ganha(Math.max(1,Math.round(por/2)),x,y);const r=g.hg/(4*60*.1*7);
@@ -561,9 +561,9 @@ PS.cartaoD=function(g){const B=PS.botoesCard(),p=g.card.p,tp=PS.tp(),m=MOB(),t=g
  const tx=x0+fw+30;cx.font='bold 15px system-ui';cx.fillStyle='#10212b';cx.fillText(p.E.n,tx,y0+46);cx.font='12px system-ui';cx.fillStyle='#4d6370';cx.fillText(p.E.gu,tx,y0+62);
  cx.font='bold 13px system-ui';cx.fillStyle='#37474f';cx.fillText('Comprimento: '+(t>.45?p.cm+' cm':'medindo...'),tx,y0+80);cx.fillText('Peso: '+(t>.75?p.kg.toFixed(1).replace('.',',')+' kg':t>.45?'pesando...':''),tx,y0+96);
  if(t>.45){PS.selo(p,tx,y0+104,x0+cw-tx-12);const Lg=PS.legal(p);if(Lg.min){cx.font='bold 12px system-ui';cx.textAlign='left';cx.fillStyle=Lg.ok?'#2e7d32':'#c62828';cx.fillText('mínimo da lei: '+Lg.min+' cm',fx-fw/2,ry+28);}}
- if(tp==='fontes'){cx.font='11px system-ui';cx.textAlign='left';cx.fillStyle='#8d4f1f';cx.fillText(p.loc||'',tx,y0+158);}
- const c=p.hg<.2?'#2e7d32':p.hg<.5?'#f9a825':'#c62828';cx.font='bold 22px system-ui';cx.fillStyle=t>1?c:'#90a4ae';cx.textAlign='left';cx.fillText(t>1?fmtHg(p.hg):'analisando...',tx,y0+(tp==='fontes'?182:166));
- /* régua de mercúrio com os limites */const bx=x0+14,by=y0+(tp==='fontes'?200:184),bw=cw-28,mx=1.5,bh=18,X1=v=>bx+bw*Math.min(1,v/mx);
+ if(PS.fonte()){cx.font='11px system-ui';cx.textAlign='left';cx.fillStyle='#8d4f1f';cx.fillText(p.loc||'',tx,y0+158);}
+ const c=p.hg<.2?'#2e7d32':p.hg<.5?'#f9a825':'#c62828';cx.font='bold 22px system-ui';cx.fillStyle=t>1?c:'#90a4ae';cx.textAlign='left';cx.fillText(t>1?fmtHg(p.hg):'analisando...',tx,y0+(PS.fonte()?182:166));
+ /* régua de mercúrio com os limites */const bx=x0+14,by=y0+(PS.fonte()?200:184),bw=cw-28,mx=1.5,bh=18,X1=v=>bx+bw*Math.min(1,v/mx);
  const zs=[[0,.5,'#c8e6c9','#2e7d32','seguro'],[.5,1,'#ffe0b2','#e65100','acima de 0,5'],[1,1.5,'#ffcdd2','#b71c1c','acima de 1,0']];for(const [a,b2,cf,ct,lb] of zs){cx.fillStyle=cf;cx.fillRect(X1(a),by,X1(b2)-X1(a),bh);cx.font='bold 10px system-ui';cx.fillStyle=ct;cx.textAlign='center';cx.fillText(lb,(X1(a)+X1(b2))/2,by+13);}
  cx.strokeStyle='#546e7a';cx.lineWidth=1;cx.strokeRect(bx,by,bw,bh);for(let v=0;v<=1.5001;v+=.1){const xx=X1(v),big=Math.abs(v*2-Math.round(v*2))<1e-6;cx.beginPath();cx.moveTo(xx,by+bh);cx.lineTo(xx,by+bh+(big?7:4));cx.stroke();if(big){cx.font='10px system-ui';cx.fillStyle='#37474f';cx.textAlign='center';cx.fillText(v.toFixed(1).replace('.',','),xx,by+bh+17);}}
  const lim=[[.5,'#e65100'],[1,'#b71c1c']];if(tp==='prato')lim.unshift([.2,'#00897b']);for(const [v,c2] of lim){cx.fillStyle=c2;cx.fillRect(X1(v)-1.5,by-5,3,bh+10);}
@@ -604,12 +604,9 @@ PS.iscaR=(k,x,y,tp,s)=>{if(tp==='fruta'){k.fillStyle=rg(k,x-1,y-1,0,5*s,['#e39a4
 PS.peixe=p=>{const sg=PS.sg(p),d=sg*Math.max(.15,Math.abs(p.fd));cx.save();cx.translate(p.x,p.y);cx.rotate(p.ang*sg);peixeR(cx,0,0,p.L,p.sp,d,p.f);cx.restore();};
 PS.anzol=(x,y,isca,s)=>{cx.strokeStyle='#90a4ae';cx.lineWidth=1.8;cx.beginPath();cx.moveTo(x,y-6);cx.lineTo(x,y+3);cx.arc(x-3,y+3,3,0,Math.PI);cx.stroke();if(isca)PS.iscaR(cx,x+1,y+5,isca,s*.9);};
 PS.draw=function(g){const s=PS.s(),ys=PS.ys(),fb=PS.fundo(),tp=PS.tp(),m=MOB(),hk=g.hk;cx.drawImage(cache('ps4_'+tp+'_'+W+'x'+H,W,H,PS.cena),0,0);
- if(tp==='fontes'){const bx=W*.08;for(let i=0;i<5;i++){const k=((g.t*.25+i/5)%1);cx.fillStyle='rgba(140,140,140,'+(.45*(1-k))+')';cx.beginPath();cx.arc(bx+15+k*60,ys-40-k*70,8+k*16,0,7);cx.fill();}
-  let gr=cx.createLinearGradient(0,0,W*.6,0);gr.addColorStop(0,'rgba(150,110,60,.4)');gr.addColorStop(1,'rgba(150,110,60,0)');cx.fillStyle=gr;cx.fillRect(0,ys+2,W*.6,fb-ys);
-  gr=cx.createLinearGradient(W,0,W*.5,0);gr.addColorStop(0,'rgba(70,90,120,.3)');gr.addColorStop(1,'rgba(70,90,120,0)');cx.fillStyle=gr;cx.fillRect(W*.5,ys+2,W*.5,fb-ys);
-  for(const [x,t,c] of [[W*.2,'← mais mercúrio do garimpo','#8d4f1f'],[W*.8,'mais mercúrio da represa →','#37474f']]){cx.font='bold 11px system-ui';const tw=cx.measureText(t).width+14;rrk(cx,Math.max(4,Math.min(W-tw-4,x-tw/2)),ys+32,tw,18,9,'rgba(255,255,255,.88)');cx.fillStyle=c;cx.textAlign='center';cx.fillText(t,Math.max(4+tw/2,Math.min(W-tw/2-4,x)),ys+45);}}
+ PS.overlay(g);
  for(const r of g.fr){cx.globalAlpha=Math.max(0,1-r.ag/3);cx.fillStyle='#b86a1e';cx.beginPath();cx.arc(r.x,r.y,3*s,0,7);cx.fill();cx.globalAlpha=1;}
- /* petrechos deixados no rio */for(const l of PS.lixo){if(l.tipo==='peixe')continue;cx.strokeStyle='rgba(60,60,60,.7)';cx.lineWidth=1;cx.beginPath();if(l.tipo==='arvore'){cx.moveTo(l.x,l.y);cx.quadraticCurveTo(l.x+6,l.y+14,l.x+2,l.y+26);cx.stroke();PS.anzol(l.x+2,l.y+30,null,s);}else{for(let i=0;i<14;i++){const a=i*1.3;cx.lineTo(l.x+Math.cos(a)*(4+i*.6),l.y+Math.sin(a)*(3+i*.4));}cx.stroke();PS.anzol(l.x+6,l.y+6,null,s);}}
+ /* petrechos deixados no rio */for(const l of PS.lixo){if(l.tipo==='peixe'||l.f!==S.f)continue;cx.strokeStyle='rgba(60,60,60,.7)';cx.lineWidth=1;cx.beginPath();if(l.tipo==='arvore'){cx.moveTo(l.x,l.y);cx.quadraticCurveTo(l.x+6,l.y+14,l.x+2,l.y+26);cx.stroke();PS.anzol(l.x+2,l.y+30,null,s);}else{for(let i=0;i<14;i++){const a=i*1.3;cx.lineTo(l.x+Math.cos(a)*(4+i*.6),l.y+Math.sin(a)*(3+i*.4));}cx.stroke();PS.anzol(l.x+6,l.y+6,null,s);}}
  for(const p of g.ps){if(p===g.fis||p.st==='briga')continue;cx.globalAlpha=Math.max(0,Math.min(1,p.a));PS.peixe(p);cx.globalAlpha=1;}
  if(g.aim){const P=PS.ponta(g),tx=g.aim.x,d=Math.abs(tx-g.x0),hgt=18*s+d*.08;cx.strokeStyle='rgba(255,255,255,.95)';cx.lineWidth=2.5;cx.setLineDash([6,6]);cx.beginPath();for(let i=0;i<=24;i++){const u=i/24,x=P.x+(tx-P.x)*u,y=P.y+(ys-P.y)*u-4*hgt*u*(1-u);i?cx.lineTo(x,y):cx.moveTo(x,y);}cx.lineTo(tx,g.aim.y);cx.stroke();cx.setLineDash([]);
   cx.strokeStyle='#00838f';cx.lineWidth=2;cx.beginPath();cx.arc(tx,g.aim.y,10,0,7);cx.stroke();cx.beginPath();cx.moveTo(tx-15,g.aim.y);cx.lineTo(tx+15,g.aim.y);cx.moveTo(tx,g.aim.y-15);cx.lineTo(tx,g.aim.y+15);cx.stroke();
@@ -678,6 +675,84 @@ PS.selo=function(p,x,y,w){const Lg=PS.legal(p);let t,c,bg;if(Lg.ok&&Lg.min){t='�
  cx.font='10px system-ui';cx.fillStyle='#78909c';cx.fillText(Lg.txt.includes('(')?Lg.txt.slice(Lg.txt.indexOf('(')+1,-1):Lg.txt,x+2,y+38,w);};
 const _cd5=PS.cartaoD;PS.cartaoD=function(g){_cd5(g);const p=g.card.p;if(g.card.t>1.1&&!PS.legal(p).ok){const B=PS.botoesCard();for(const b of B.bts)if(b.id!=='dv'){cx.fillStyle='rgba(255,255,255,.55)';cx.fillRect(b.x,b.y,b.w,b.h);cx.font='bold 10px system-ui';cx.fillStyle='#c62828';cx.textAlign='center';cx.fillText('fora da lei',b.x+b.w/2,b.y+40);}}};
 PS.POP={pacu:2,tambaqui:2,jaraqui:1,tucunare:2,piranha:2,filhote:1};PS.ESP.jaraqui.zx=[.3,.7];
+/* Peixe Seguro: um cenário por fase (floresta, lago de várzea, comunidade ribeirinha, garimpo, represa de PCH) e herbívoros espalhados.
+Paliteiro: troncos mortos em pé na área alagada por represas. Balsa de garimpo: draga flutuante que revolve o leito e usa mercúrio para separar o ouro. */
+PS.TIPO=['acum','medir','familia','garimpo','pch','prato'];
+PS.CEN=['floresta','lago','ribeirinha','garimpo','pch','floresta'];
+PS.cen=()=>PS.CEN[S?S.f:0];PS.fonte=()=>{const t=PS.tp();return t==='garimpo'||t==='pch';};
+const F0=FASES.slice();FASES.length=0;
+FASES.push(Object.assign({},F0[0],{nome:'Floresta de várzea',txt:'Floresta preservada, com igapó e galhada. Escolha a isca, arremesse, brigue com o peixe e leve só os que têm menos de 0,5 µg/g de mercúrio.'}),
+ Object.assign({},F0[1],{nome:'Lago de várzea',txt:'Um lago com bancos de aguapé. Cada peixe passa pela régua e pela balança. Veja no gráfico como o mercúrio muda com o tamanho.'}),
+ Object.assign({},F0[2],{nome:'Comunidade ribeirinha',txt:'Na beira da vila, uma família de 4 pessoas come 100 g de peixe por pessoa por dia: 28 porções na semana. Peixe grande enche a cesta, mas pode trazer muito mercúrio.'}),
+ {nome:'Rio com garimpo',dur:110,meta:4,metaTxt:'levar 4 peixes abaixo de 0,5 µg/g em 110 s.',txt:'Balsas de garimpo trabalham rio acima, à esquerda. A água fica barrenta e o mercúrio dos peixes sobe perto delas. Pesque mais longe.',fato:'No garimpo, o mercúrio se junta ao ouro e a mistura é aquecida. O mercúrio vira vapor, volta com a chuva e, na água, vira metilmercúrio, que se acumula na cadeia alimentar.'},
+ {nome:'Represa da PCH',dur:110,meta:4,metaTxt:'levar 4 peixes abaixo de 0,5 µg/g em 110 s.',txt:'Uma PCH represou o rio. A mata alagada morreu e ficou o paliteiro de troncos. Perto da barragem, à direita, o mercúrio dos peixes é maior. Cuidado: os troncos enroscam a linha.',fato:'Nas represas, a floresta alagada se decompõe e ajuda a transformar o mercúrio natural do solo em metilmercúrio, que entra nos peixes. Áreas alagadas por hidrelétricas na Amazônia podem aumentar o mercúrio nos peixes consumidos pelos moradores.'},
+ Object.assign({},F0[4],{nome:'O prato da criança',txt:'De volta à floresta. Criança e gestante são mais sensíveis ao mercúrio. O prato delas pede peixe com menos de 0,2 µg/g. O prato do adulto aceita até 0,5 µg/g.'}));
+const P0=PERG.slice();PERG.length=0;PERG.push(P0[0],P0[1],P0[2],{q:'Como o mercúrio do garimpo chega ao ar?',o:['A mistura com o ouro é queimada','O ouro solta mercúrio ao sol','Os peixes soltam mercúrio na água']},P0[3],P0[4]);
+Object.defineProperty(G,'rotulo',{get(){return {acum:'Peixes seguros',medir:'Peixes medidos',familia:'Porções de 100 g',garimpo:'Peixes seguros',pch:'Peixes seguros',prato:'Pratos certos'}[PS.tp()];},configurable:true});
+Object.defineProperty(G,'dica',{get(){return {acum:'Fruta no igapó traz herbívoros, que têm pouco mercúrio.',medir:'Pesque com fruta e com peixe e compare os pontos no gráfico.',familia:'Peixe grande dá mais porções, mas veja o mercúrio da semana.',garimpo:'Quanto mais longe das balsas, à direita, menos mercúrio.',pch:'Quanto mais longe da barragem, à esquerda, menos mercúrio.',prato:'Prato da criança: menos de 0,2 µg/g. Prato do adulto: menos de 0,5 µg/g.'}[PS.tp()];},configurable:true});
+PS.mult=x=>{const t=PS.tp();if(t==='garimpo')return 1+1.6*Math.max(0,1-(x/W)/.75);if(t==='pch')return 1+1.3*Math.max(0,1-((W-x)/W)/.65);return 1;};
+PS.local=x=>{const t=PS.tp();if(t==='garimpo')return x<W*.35?'pescado perto das balsas de garimpo':x<W*.6?'pescado a meia distância do garimpo':'pescado longe do garimpo';return x>W*.65?'pescado perto da barragem da PCH':x>W*.4?'pescado a meia distância da barragem':'pescado longe da barragem';};
+PS.ZON={floresta:['igapó','canal fundo','galhada'],lago:['aguapé','lago aberto','galhada'],ribeirinha:['beira da vila','canal','galhada'],garimpo:['perto da balsa','canal','galhada'],pch:['paliteiro','represa','perto da barragem']};
+PS.BIO={floresta:'Amazônia · floresta de várzea',lago:'Amazônia · lago de várzea',ribeirinha:'Amazônia · comunidade ribeirinha',garimpo:'Amazônia · rio com garimpo',pch:'Amazônia · represa de PCH'};
+PS.zona=t=>PS.ZON[PS.cen()][t<.3?0:t<.66?1:2];
+Object.assign(PS.ESP.pacu,{zx:[0,.75]});Object.assign(PS.ESP.tambaqui,{zx:[0,.7]});
+const _ger6=PS.ger;PS.ger=function(g,sp){const p=_ger6(g,sp),E=PS.ESP[sp],span=E.zx[1]-E.zx[0];if(span>.45){const c0=E.zx[0]+Math.random()*(span-.35);p.xa=W*c0+p.L*.5;p.xb=W*(c0+.35)-p.L*.5;p.x=p.xa+Math.random()*(p.xb-p.xa);p.tx=p.x;}if(PS.cen()==='pch'){p.xb=Math.min(p.xb,W*.8-p.L*.5);p.xa=Math.min(p.xa,p.xb-10);p.x=Math.min(p.x,p.xb);p.tx=p.x;}return p;};
+PS.xmax=()=>PS.cen()==='pch'?W*.8:W-12;
+PS.geo=function(w,h){const cen=PS.cen(),key=cen+w+'x'+h;if(PS._geo&&PS._geo.key===key)return PS._geo;const sc=Math.min(w,h)/440,ys=h*.3,fb=h*.88,R=rng(23);const copas=[],seg=[],arv=[],pal=[],post=[];let jau=[];
+ const arvore=(x)=>{const tw=(7+R()*4)*sc,top=ys-h*.06-R()*h*.02;arv.push({x,tw,top});seg.push([x,ys,x,fb]);copas.push({x,y:top-14*sc,r:34*sc});};
+ if(cen==='floresta'){for(let i=0;i<3;i++)arvore(w*(.03+i*.1)+R()*8);jau=[w*.2,w*.28].map(x=>({x,top:ys-h*.09}));}
+ if(cen==='lago'){arvore(w*.04);jau=[w*.12].map(x=>({x,top:ys-h*.09}));}
+ if(cen==='ribeirinha'){jau=[w*.33].map(x=>({x,top:ys-h*.09}));for(const x of [w*.05,w*.11,w*.17,w*.23]){post.push(x);seg.push([x,ys-h*.04,x,ys+(fb-ys)*.55]);}}
+ if(cen==='pch'){for(let i=0;i<7;i++){const x=w*(.04+i*.085)+R()*12,top=ys-h*(.05+R()*.08),base=fb-R()*8;pal.push({x,top,base,tw:(5+R()*4)*sc,b:R()});seg.push([x,ys,x,base]);}}
+ for(const j of jau){copas.push({x:j.x+4*sc,y:j.top,r:28*sc});seg.push([j.x,ys,j.x,fb]);}
+ let A=null,B=null;const gal=[];if(cen!=='pch'){A=[w*1.01,ys-8];B=[w*.72,ys+(fb-ys)*.62];const R2=rng(5);const ram=(x,y,a,l,lw,d)=>{const x2=x+Math.cos(a)*l,y2=y+Math.sin(a)*l;gal.push([x,y,x2,y2,lw]);if(y>ys||y2>ys)seg.push([x,y,x2,y2]);if(d>0){ram(x2,y2,a-.5,l*.6,lw*.6,d-1);ram(x2,y2,a+.45,l*.55,lw*.6,d-1);}};
+  seg.push([A[0],A[1],B[0],B[1]]);for(const [t,a,l] of [[.2,-2.4,44],[.32,.5,40],[.45,-2.6,50],[.58,.8,46],[.7,-2.2,42],[.86,.3,38],[.92,-2.8,36]]){const x=A[0]+(B[0]-A[0])*t,y=A[1]+(B[1]-A[1])*t;ram(x,y,a+(R2()-.5)*.3,l*sc,5*sc,2);}}
+ if(cen==='garimpo'){seg.push([w*.12+30*sc,ys,w*.12+60*sc,fb-8]);}
+ PS._geo={key,sc,copas,seg,arv,jau,A,B,gal,pal,post};return PS._geo;};
+PS.AGUA={floresta:['#b8d6c6','#93bcaa','#76a393'],lago:['#bfdcc3','#9cc4a6','#80ab8c'],ribeirinha:['#bcd6c8','#97bcab','#7aa394'],garimpo:['#d6c7a3','#bfab80','#a48f64'],pch:['#b3cdc4','#8fb1a6','#74978c']};
+PS.cena=function(k,w,h){const cen=PS.cen(),ys=h*.3,fb=h*.88,R=rng(11),G2=PS.geo(w,h),sc=G2.sc;
+ k.fillStyle=lg(k,0,0,0,ys,cen==='garimpo'?['#e2e6e8','#f1efe6']:['#d7ecf4','#eef5ea']);k.fillRect(0,0,w,ys);
+ /* floresta de fundo */const x0f=cen==='garimpo'?w*.42:0;for(let l=0;l<2;l++){k.fillStyle=l?'#5f8f52':'#8db57c';for(let x=x0f-20;x<w+40;x+=18+R()*16){const r=(l?14:18)+R()*14;k.beginPath();k.arc(x,ys-h*(l?.06:.1)-R()*h*.03,r,0,7);k.fill();}k.fillRect(x0f,ys-h*(l?.06:.1),w,h*.1);}
+ if(cen==='garimpo'){k.fillStyle='#c9a77a';k.beginPath();k.moveTo(0,ys);k.lineTo(0,ys-h*.07);for(let x=0;x<=w*.44;x+=14)k.lineTo(x,ys-h*.07+Math.sin(x*.05)*4+R()*5);k.lineTo(w*.44,ys);k.fill();
+  k.fillStyle='#a5835a';for(let i=0;i<9;i++){const x=R()*w*.4,y=ys-h*.06+R()*h*.04;k.fillRect(x,y-6*sc,5*sc,7*sc);k.beginPath();k.ellipse(x+2.5*sc,y-6*sc,3*sc,1.4*sc,0,0,7);k.fill();}
+  k.fillStyle='#8d6e4a';for(let i=0;i<4;i++){k.beginPath();k.ellipse(w*(.05+i*.1),ys-h*.03,18*sc,6*sc,0,0,7);k.fill();}}
+ for(let i=0;i<4;i++){const x=w*(.12+i*.24)+R()*30,ht=h*(.2+R()*.04);if(x<x0f+20)continue;k.strokeStyle='#8a7a60';k.lineWidth=4;k.beginPath();k.moveTo(x,ys-h*.07);k.lineTo(x+3,ys-ht);k.stroke();k.fillStyle='#6f9b5e';for(const [dx,dy,r] of [[0,0,22],[-20,6,16],[20,5,17],[-8,-10,15],[10,-9,14]]){k.beginPath();k.arc(x+3+dx,ys-ht+dy,r,0,7);k.fill();}}
+ for(let i=0;i<7;i++){const x=w*(.06+i*.15)+R()*20,ht=h*(.12+R()*.05);if(x<x0f+10)continue;k.strokeStyle='#7d6c55';k.lineWidth=2;k.beginPath();k.moveTo(x,ys-h*.05);k.quadraticCurveTo(x+4,ys-ht*.6,x+2,ys-ht);k.stroke();k.strokeStyle='#4f7f45';k.lineWidth=1.6;for(let j=0;j<9;j++){const a=-Math.PI/2+(j-4)*.4;k.beginPath();k.moveTo(x+2,ys-ht);k.quadraticCurveTo(x+2+Math.cos(a)*12,ys-ht+Math.sin(a)*8-3,x+2+Math.cos(a)*20,ys-ht+Math.sin(a)*12+10);k.stroke();}}
+ if(cen==='pch'){const px=w*.9,top=ys-h*.2;k.fillStyle=lg(k,px-w*.08,0,w,0,['#c9cdd1','#a7adb3','#8e9398']);k.beginPath();k.moveTo(px-w*.06,top);k.lineTo(w+2,top);k.lineTo(w+2,h);k.lineTo(px-w*.1,h);k.fill();
+  k.fillStyle='#6b7075';k.fillRect(px-w*.06,top-6,w*.18,6);for(let i=0;i<3;i++){k.fillStyle='#d9eef4';k.fillRect(px-w*.03+i*w*.035,top+8,w*.016,ys-top-8);}k.fillStyle='#5a5f64';k.fillRect(px+w*.02,top-24,w*.06,18);
+  k.font='bold 11px system-ui';k.textAlign='center';const tl='barragem da PCH';const tw=k.measureText(tl).width+12;rrk(k,Math.min(w-tw-4,px-tw/2),ys-30,tw,18,9,'rgba(55,71,79,.88)');k.fillStyle='#fff';k.fillText(tl,Math.min(w-tw/2-4,px),ys-17);}
+ else{k.fillStyle='#e3cf9e';k.beginPath();k.moveTo(w*.86,ys+2);k.quadraticCurveTo(w*.94,ys-h*.03,w,ys-h*.035);k.lineTo(w,ys+2);k.fill();}
+ if(cen==='ribeirinha'){/* casas de palafita */for(const [x,c1,c2] of [[w*.08,'#d7b98a','#8d4f2b'],[w*.2,'#cfa77f','#6d4c41']]){const bw=w*.1,top=ys-h*.13;k.fillStyle=c1;k.fillRect(x-bw/2,top,bw,h*.06);k.fillStyle=c2;k.beginPath();k.moveTo(x-bw/2-6,top);k.lineTo(x,top-h*.05);k.lineTo(x+bw/2+6,top);k.fill();k.fillStyle='#5d4037';k.fillRect(x-bw*.12,top+h*.02,bw*.24,h*.04);k.fillStyle='#9e8463';k.fillRect(x-bw/2-4,top+h*.06,bw+8,4);}
+  k.strokeStyle='#4e3b2a';k.lineWidth=3*sc;for(const x of G2.post){k.beginPath();k.moveTo(x,ys-h*.07);k.lineTo(x,ys+(fb-ys)*.55);k.stroke();}
+  k.fillStyle='#7a4f2c';k.beginPath();k.moveTo(w*.27,ys-2);k.lineTo(w*.36,ys-2);k.lineTo(w*.34,ys+4);k.lineTo(w*.29,ys+4);k.fill();}
+ const AG=PS.AGUA[cen];k.fillStyle=lg(k,0,ys,0,fb,AG);k.fillRect(0,ys,cen==='pch'?w*.84:w,fb-ys);if(cen==='pch'){k.fillStyle=lg(k,0,ys,0,fb,AG);k.fillRect(w*.84,ys,w*.06,fb-ys);}
+ k.save();k.globalAlpha=.1;k.fillStyle='#fffbe6';for(let i=0;i<5;i++){const x=R()*w;k.beginPath();k.moveTo(x,ys);k.lineTo(x+30,ys);k.lineTo(x+90,fb);k.lineTo(x+40,fb);k.fill();}k.restore();k.fillStyle='rgba(255,255,255,.35)';k.fillRect(0,ys,w,2);
+ if(cen==='pch'){k.fillStyle=lg(k,w*.84,0,w*.9,0,['#b9bec3','#8e9398']);k.fillRect(w*.84,ys-h*.2+6,w*.06,fb-ys+h*.2);}
+ for(const a of G2.arv){const {x,tw,top}=a;k.fillStyle=lg(k,x-tw,0,x+tw,0,['#6b5a44','#8c7a5e','#5d4d39']);k.fillRect(x-tw/2,top,tw,fb-top);k.fillStyle='rgba(118,163,147,.5)';k.fillRect(x-tw/2,ys,tw,fb-ys);
+  k.strokeStyle='rgba(80,66,48,.6)';k.lineWidth=2*sc;for(let j=-2;j<=2;j++){k.beginPath();k.moveTo(x,fb-24*sc);k.quadraticCurveTo(x+j*8*sc,fb-10*sc,x+j*16*sc,fb);k.stroke();}
+  k.strokeStyle='#5d4d39';k.lineWidth=3*sc;for(const d of [-1,1]){k.beginPath();k.moveTo(x,top+6*sc);k.lineTo(x+d*22*sc,top-14*sc);k.stroke();}
+  for(const [dx,dy,r,c] of [[0,-14,30,'#4f8244'],[-26,-6,22,'#5b8f4f'],[26,-6,23,'#5b8f4f'],[-12,-30,20,'#67a05a'],[14,-28,19,'#67a05a']]){k.fillStyle=c;k.beginPath();k.arc(x+dx*sc,top+dy*sc,r*sc,0,7);k.fill();}}
+ for(const pp of G2.pal){/* paliteiro: tronco morto em pé */k.fillStyle=lg(k,pp.x-pp.tw,0,pp.x+pp.tw,0,['#8f8a80','#b8b2a6','#7d776d']);k.fillRect(pp.x-pp.tw/2,pp.top,pp.tw,pp.base-pp.top);k.strokeStyle='#8f8a80';k.lineWidth=2*sc;
+  for(let q=0;q<3;q++){const y=pp.top+q*12*sc+6*sc,d=q%2?1:-1;k.beginPath();k.moveTo(pp.x,y);k.lineTo(pp.x+d*(10+pp.b*10)*sc,y-8*sc);k.stroke();}k.fillStyle='rgba(116,151,140,.45)';k.fillRect(pp.x-pp.tw/2,ys,pp.tw,pp.base-ys);}
+ for(const j of G2.jau){const x=j.x,top=j.top;k.strokeStyle='#5f5140';k.lineWidth=5*sc;k.beginPath();k.moveTo(x,fb);k.lineTo(x+4*sc,top);k.stroke();k.strokeStyle='rgba(30,25,20,.7)';k.lineWidth=1;for(let y=top+4;y<ys;y+=5){k.beginPath();k.moveTo(x+2,y);k.lineTo(x-4*sc,y-2);k.moveTo(x+3,y);k.lineTo(x+9*sc,y-2);k.stroke();}
+  for(let q=0;q<12;q++){const a=-Math.PI/2+(q-5.5)*.33,L2=(30+Math.abs(q-5.5)*2)*sc;k.strokeStyle=q%2?'#4e7d43':'#5c9150';k.lineWidth=2.4*sc;k.beginPath();k.moveTo(x+4*sc,top);k.quadraticCurveTo(x+4*sc+Math.cos(a)*L2*.55,top+Math.sin(a)*L2*.45-6*sc,x+4*sc+Math.cos(a)*L2,top+Math.sin(a)*L2*.5+16*sc);k.stroke();}
+  k.strokeStyle='#6d5a42';k.lineWidth=1.5*sc;k.beginPath();k.moveTo(x+5*sc,top+2*sc);k.quadraticCurveTo(x+12*sc,top+6*sc,x+11*sc,top+14*sc);k.stroke();for(const [dx,dy] of [[0,0],[-4,3],[4,3],[-2,7],[3,8],[0,11],[-5,10],[5,12],[1,15]]){k.fillStyle=rg(k,x+(11+dx-.8)*sc,top+(14+dy-.8)*sc,0,3.2*sc,['#e9a04f','#a85d18']);k.beginPath();k.ellipse(x+(11+dx)*sc,top+(14+dy)*sc,2.8*sc,3.2*sc,0,0,7);k.fill();}}
+ if(G2.A){const A=G2.A,B=G2.B;k.strokeStyle='#5e4b36';k.lineCap='round';k.lineWidth=10*sc;k.beginPath();k.moveTo(A[0],A[1]);k.lineTo(B[0],B[1]);k.stroke();for(const [x1,y1,x2,y2,lw] of G2.gal){k.strokeStyle='#6d5a42';k.lineWidth=lw;k.beginPath();k.moveTo(x1,y1);k.quadraticCurveTo((x1+x2)/2+3,(y1+y2)/2-3,x2,y2);k.stroke();}}
+ if(cen==='lago'){/* bancos de aguapé */for(const [a,b2] of [[0,.24],[.6,.7]]){for(let x=w*a;x<w*b2;x+=10*sc){const y=ys+1;k.strokeStyle='rgba(90,70,50,.5)';k.lineWidth=1;for(let r=0;r<4;r++){k.beginPath();k.moveTo(x,y+3);k.quadraticCurveTo(x+(r-1.5)*4,y+14*sc,x+(r-1.5)*6,y+(22+R()*14)*sc);k.stroke();}
+   k.fillStyle=R()<.5?'#4f8a3f':'#5e9b4c';k.beginPath();k.ellipse(x,y-4*sc,7*sc,5*sc,R()-.5,0,7);k.fill();k.fillStyle='#6fae5b';k.beginPath();k.ellipse(x+4*sc,y-7*sc,5*sc,4*sc,R()-.5,0,7);k.fill();if(R()<.12){k.fillStyle='#b39ddb';k.beginPath();k.arc(x,y-12*sc,3*sc,0,7);k.fill();}}}}
+ if(cen==='garimpo'){const bx=w*.12;k.fillStyle='#7d8389';k.fillRect(bx-46*sc,ys-14*sc,92*sc,16*sc);k.fillStyle='#a84236';k.fillRect(bx-34*sc,ys-36*sc,46*sc,22*sc);k.fillStyle='#d9d4c9';k.fillRect(bx-30*sc,ys-30*sc,8*sc,6*sc);k.fillRect(bx-18*sc,ys-30*sc,8*sc,6*sc);
+  k.fillStyle='#55595e';k.fillRect(bx+16*sc,ys-50*sc,7*sc,36*sc);k.strokeStyle='#4e5055';k.lineWidth=5*sc;k.beginPath();k.moveTo(bx+30*sc,ys);k.lineTo(bx+60*sc,fb-8);k.stroke();k.fillStyle='#fff';k.font='bold 11px system-ui';k.textAlign='center';const tl='balsa de garimpo';const tw=k.measureText(tl).width+12;rrk(k,Math.max(4,bx-tw/2),ys-72*sc,tw,18,9,'rgba(55,71,79,.88)');k.fillStyle='#fff';k.fillText(tl,Math.max(4+tw/2,bx),ys-72*sc+13);}
+ k.fillStyle=lg(k,0,fb-6,0,h,cen==='garimpo'?['#bfa274','#a88a5c']:['#cdb98c','#b89f6e']);k.beginPath();k.moveTo(0,h);k.lineTo(0,fb);for(let x=0;x<=w;x+=16)k.lineTo(x,fb-3+Math.sin(x*.03)*3+(x>w*.32&&x<w*.66?4:0));k.lineTo(w,h);k.fill();k.fillStyle='rgba(120,100,70,.35)';for(let i=0;i<30;i++){k.beginPath();k.ellipse(R()*w,fb+R()*(h-fb)*.5,2+R()*5,1.5+R()*2,0,0,7);k.fill();}
+ k.font='bold 11px system-ui';k.textAlign='center';const Z=PS.ZON[cen];for(const [x,t] of [[w*.15,Z[0]],[w*.48,Z[1]],[w*.8,Z[2]]]){const tw=k.measureText(t).width+14;rrk(k,x-tw/2,ys+8,tw,18,9,'rgba(255,255,255,.85)');k.fillStyle='#2f5d50';k.fillText(t,x,ys+21);}
+ const bt=PS.BIO[cen];const bw=k.measureText(bt).width+16;rrk(k,w/2-bw/2,fb-26,bw,20,10,'rgba(255,255,255,.85)');k.fillStyle='#2e6b3a';k.fillText(bt,w/2,fb-12);};
+PS.overlay=function(g){const cen=PS.cen(),ys=PS.ys(),fb=PS.fundo(),sc=PS.sc();
+ if(cen==='garimpo'){const bx=W*.12;for(let i=0;i<5;i++){const k=((g.t*.25+i/5)%1);cx.fillStyle='rgba(140,140,140,'+(.45*(1-k))+')';cx.beginPath();cx.arc(bx+20*sc+k*60,ys-50*sc-k*70,8+k*16,0,7);cx.fill();}
+  const gr=cx.createLinearGradient(0,0,W*.75,0);gr.addColorStop(0,'rgba(150,110,60,.45)');gr.addColorStop(1,'rgba(150,110,60,0)');cx.fillStyle=gr;cx.fillRect(0,ys+2,W*.75,fb-ys);
+  const t='← mais mercúrio perto da balsa';cx.font='bold 11px system-ui';const tw=cx.measureText(t).width+14;rrk(cx,W*.3,ys+32,tw,18,9,'rgba(255,255,255,.88)');cx.fillStyle='#8d4f1f';cx.textAlign='left';cx.fillText(t,W*.3+7,ys+45);}
+ if(cen==='pch'){const gr=cx.createLinearGradient(W,0,W*.35,0);gr.addColorStop(0,'rgba(60,85,110,.3)');gr.addColorStop(1,'rgba(60,85,110,0)');cx.fillStyle=gr;cx.fillRect(W*.35,ys+2,W*.49,fb-ys);
+  const t='mais mercúrio perto da barragem →';cx.font='bold 11px system-ui';const tw=cx.measureText(t).width+14;rrk(cx,W*.82-tw,ys+32,tw,18,9,'rgba(255,255,255,.88)');cx.fillStyle='#37474f';cx.textAlign='left';cx.fillText(t,W*.82-tw+7,ys+45);}};
+G.capa=function(k,w,h){const o=cx,oW=W,oH=H;cx=k;W=w;H=h;PS._geo=null;PS.cena(k,w,h);peixeR(k,w*.25,h*.6,110,'tambaqui',1,0);peixeR(k,w*.75,h*.55,110,'tucunare',-1,1);k.save();k.translate(w*.5,h*.3);canoaR(k,0,0,1,0,0);k.restore();
+ for(const [x,y,t,c] of [[w*.25,h*.42,'0,08 µg/g','#2e7d32'],[w*.75,h*.38,'0,71 µg/g','#c62828']]){k.font='bold 15px system-ui';const tw=k.measureText(t).width+16;rrk(k,x-tw/2,y,tw,24,12,'rgba(255,255,255,.95)');k.fillStyle=c;k.textAlign='center';k.fillText(t,x,y+17);}vinheta(k,w,h);PS._geo=null;cx=o;W=oW;H=oH;};
 function pergunta(){
  const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
  $('tela').innerHTML=`<div class="card"><h2>Pergunta da fase</h2><p style="margin:6px 0 4px">${P.q}</p><p class="small">Acerto +20, erro −10.</p><div class="ops">${ops.map((o,i)=>`<button data-i="${i}">${o.t}</button>`).join('')}</div><div id="pf"></div></div>`;
