@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Travessia do Lobo</title>
 <style>
-:root{--main:#d35400;--deep:#a04000;--soft:#fdf0e6;--line:#f6dcc6;--ink:#2b190c;--mut:#6d5848}
+:root{--main:#c0461b;--deep:#7a2a0c;--soft:#fbe9e7;--line:#ffccbc;--ink:#10212b;--mut:#4d6370}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
 .wrap{max-width:780px;margin:0 auto;padding:12px 14px 40px}
@@ -43,7 +43,7 @@ canvas{width:100%;max-width:760px;margin:0 auto;display:block;border:2px solid v
 <a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
 <header>
   <h1>Travessia do Lobo</h1>
-  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
 </header>
 <main id="tela"></main>
 <div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
@@ -117,7 +117,7 @@ let S,cv,cx,raf=null,last=0,W=720,H=460,inp={x:null,y:null,down:false,tap:null},
 const MOB=()=>W<520;
 function rrect(x,y,w,h,r,cor){cx.fillStyle=cor;cx.beginPath();cx.roundRect(x,y,w,h,r);cx.fill();}
 function sombra(x,y,rx,ry){cx.fillStyle='rgba(0,0,0,.12)';cx.beginPath();cx.ellipse(x,y,rx,ry,0,0,7);cx.fill();}
-function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/'+G.FASES.length;$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
  if(g&&!g.fim){const [a,m]=G.meta(g);$('hR').textContent=G.rotulo+' '+a+'/'+m;$('hV').textContent=G.vidas?'Vidas '+'●'.repeat(Math.max(0,g.vidas)):'';$('hT').textContent=G.semTempo?'':Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s';}
  ['hR','hV','hT'].forEach(k=>$(k).style.display=$(k).textContent?'':'none');}
 function inicio(){parar();$('hud').style.display='none';$('rankBox').style.display='block';
@@ -151,42 +151,315 @@ function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=G.FAS
  <p class="small" style="margin-top:6px">${ok?G.FASES[S.f].fato:G.dicaErro}</p>
  <div class="row" style="justify-content:center;margin-top:14px">${ok?'<button class="btn grande" id="bq">Pergunta rápida</button>':'<button class="btn grande" id="br">Jogar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
  if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}}
-/* Corredores ecológicos e passagens de fauna ajudam o lobo-guará a se mover entre fragmentos de Cerrado (Andrade, UnB, 2020; Physis Terrae). Pistas, veículos e pontos são regras do jogo. */
-const G={titulo:'Travessia do Lobo',rotulo:'Travessias',vidas:1,
- resumo:'O lobo-guará vive no Cerrado e anda muito para achar comida. Entre um pedaço de mata e outro, ele precisa atravessar lavouras e estradas.',
- como:[['Toque','Na parte de cima da tela o lobo pula para frente. Nos lados, pula para a esquerda ou a direita. Setas também funcionam.'],['Cuidado','Carros e máquinas tiram uma vida.'],['Passagem','O túnel verde embaixo da estrada é uma passagem de fauna: ali o lobo atravessa seguro.']],
- dica:'Toque em cima para avançar, nos lados para desviar.',dicaErro:'Espere o carro passar ou use a passagem de fauna verde.',
- FASES:[{nome:'Uma estrada',dur:60,meta:3,linhas:['cer','pas','est','pas','lav','cer'],v:1,metaTxt:'chegar 3 vezes ao Cerrado do outro lado em 60 s.',txt:'Atravesse o pasto, a estrada e a lavoura até a mata do outro lado.',fato:'Corredores de vegetação ligam pedaços de Cerrado e deixam o lobo-guará andar entre eles com mais segurança.'},
-  {nome:'Rodovia movimentada',dur:60,meta:3,linhas:['cer','pas','est','est','lav','pas','cer'],v:1.35,metaTxt:'chegar 3 vezes ao outro lado em 60 s.',txt:'Agora são duas pistas e os carros são mais rápidos. Procure a passagem de fauna.',fato:'Passagens de fauna, por baixo ou por cima da pista, reduzem os atropelamentos de animais.'},
-  {nome:'Paisagem fragmentada',dur:70,meta:3,linhas:['cer','lav','est','pas','est','lav','est','cer'],v:1.6,metaTxt:'chegar 3 vezes ao outro lado em 70 s.',txt:'Três estradas e colheitadeiras na lavoura. Vá com calma.',fato:'O lobo-guará é endêmico do Cerrado e está quase ameaçado: proteger os corredores ajuda a espécie.'}],
- init(g){const F=FASES[S.f];g.vidas=3;g.L=F.linhas;g.nl=g.L.length;g.lh=H/g.nl;g.cols=MOB()?7:11;g.cw=W/g.cols;g.c=Math.floor(g.cols/2);g.r=g.nl-1;g.trav=0;g.inv=0;g.objs=[];g.pass={};g.p=0;
-  g.L.forEach((t,i)=>{if(t==='est'){g.pass[i]=Math.floor(rr(1,g.cols-1));const dir=i%2?1:-1;for(let k=0;k<3;k++)g.objs.push({r:i,x:k*W/3+rr(0,80),dir,v:rr(110,160)*F.v,w:g.cw*1.3,tipo:'carro',cor:['#e53935','#1e88e5','#fdd835','#8e24aa'][k%4]});}
-   if(t==='lav'){const dir=i%2?-1:1;g.objs.push({r:i,x:rr(0,W),dir,v:60*F.v,w:g.cw*1.8,tipo:'maquina',cor:'#43a047'});}});},
- meta(g){return [g.trav,FASES[S.f].meta];},cedo(g){return g.trav>=FASES[S.f].meta;},
- mover(g,dc,dr){g.c=Math.max(0,Math.min(g.cols-1,g.c+dc));g.r=Math.max(0,Math.min(g.nl-1,g.r+dr));g.p=1;beep(500,.03,.02);
-  if(g.r===0){g.trav++;ganha(20,(g.c+.5)*g.cw,g.lh*.5);msg('Chegou ao Cerrado! Agora volte ao início.');g.r=g.nl-1;}},
- update(g,dt){g.inv-=dt;g.p=Math.max(0,g.p-dt*5);
-  if(inp.tap){const t=inp.tap;if(t.y<H*.5&&Math.abs(t.x-W/2)<W*.3)G.mover(g,0,-1);else if(t.y>=H*.5&&Math.abs(t.x-W/2)<W*.3)G.mover(g,0,1);else G.mover(g,t.x<W/2?-1:1,0);}
-  if(tec.ArrowUp){G.mover(g,0,-1);tec.ArrowUp=0;}if(tec.ArrowDown){G.mover(g,0,1);tec.ArrowDown=0;}if(tec.ArrowLeft){G.mover(g,-1,0);tec.ArrowLeft=0;}if(tec.ArrowRight){G.mover(g,1,0);tec.ArrowRight=0;}
-  for(const o of g.objs){o.x+=o.dir*o.v*dt;if(o.dir>0&&o.x>W+o.w)o.x=-o.w;if(o.dir<0&&o.x<-o.w)o.x=W+o.w;}
-  const lx=(g.c+.5)*g.cw;if(g.inv<=0){for(const o of g.objs){if(o.r!==g.r)continue;if(g.L[g.r]==='est'&&g.pass[g.r]===g.c)continue;if(Math.abs(o.x-lx)<o.w/2+g.cw*.3){g.vidas--;g.inv=1.5;beep(150,.3,.07);msg(o.tipo==='carro'?'Atropelado! Use a passagem de fauna.':'A máquina da lavoura!');g.r=g.nl-1;break;}}}},
- draw(g){const cores={cer:'#b5cf8a',pas:'#e8e3b3',est:'#9e9e9e',lav:'#f3d27a'};
-  g.L.forEach((t,i)=>{const y=i*g.lh;cx.fillStyle=cores[t];cx.fillRect(0,y,W,g.lh);
-   if(t==='cer'){for(let x=10;x<W;x+=46){cx.fillStyle='#7a9a55';cx.beginPath();cx.arc(x+(i*13)%20,y+g.lh*.5,14,0,7);cx.fill();cx.fillStyle='#6d5a43';cx.fillRect(x+(i*13)%20-2,y+g.lh*.5+8,4,10);}cx.fillStyle='rgba(255,255,255,.85)';cx.font='bold 13px system-ui';cx.textAlign='left';cx.fillText(i===0?'Cerrado: chegada':'Cerrado: início',8,y+16);}
-   if(t==='est'){cx.strokeStyle='#fff';cx.lineWidth=3;cx.setLineDash([18,14]);cx.beginPath();cx.moveTo(0,y+g.lh/2);cx.lineTo(W,y+g.lh/2);cx.stroke();cx.setLineDash([]);const px=g.pass[i]*g.cw;rrect(px+4,y+4,g.cw-8,g.lh-8,10,'rgba(76,175,80,.85)');cx.fillStyle='#fff';cx.font='bold 11px system-ui';cx.textAlign='center';cx.fillText('passagem',px+g.cw/2,y+g.lh/2+4);}
-   if(t==='lav'){cx.strokeStyle='rgba(160,120,40,.35)';cx.lineWidth=2;for(let x=0;x<W;x+=12){cx.beginPath();cx.moveTo(x,y+4);cx.lineTo(x,y+g.lh-4);cx.stroke();}}
-   if(t==='pas'){cx.fillStyle='rgba(120,140,60,.25)';for(let x=0;x<W;x+=22)cx.fillRect(x+(i*7)%10,y+g.lh*.6,2,8);}});
-  for(const o of g.objs){const y=o.r*g.lh+g.lh/2;if(o.tipo==='carro'){rrect(o.x-o.w/2,y-g.lh*.3,o.w,g.lh*.6,10,o.cor);rrect(o.x-o.w*.2+o.dir*o.w*.1,y-g.lh*.22,o.w*.3,g.lh*.44,6,'rgba(255,255,255,.7)');}
-   else{rrect(o.x-o.w/2,y-g.lh*.34,o.w,g.lh*.68,8,o.cor);cx.fillStyle='#fbc02d';cx.fillRect(o.x+o.dir*o.w*.45-4,y-g.lh*.34,8,g.lh*.68);}}
-  const lx=(g.c+.5)*g.cw,ly=g.r*g.lh+g.lh/2-g.p*8;if(!(g.inv>0&&Math.floor(g.t*10)%2)){sombra(lx,ly+g.lh*.32,20,5);loboSil(cx,lx,ly+4,Math.min(1.4,g.lh/48),1,g.t*10);}},
- capa(k,w,h){const o=cx;cx=k;k.fillStyle='#b5cf8a';k.fillRect(0,0,w,70);k.fillStyle='#9e9e9e';k.fillRect(0,70,w,70);k.fillStyle='#e8e3b3';k.fillRect(0,140,w,80);rrect.call(null,250,74,90,62,10,'rgba(76,175,80,.85)');cx.fillStyle='#e53935';cx.beginPath();cx.roundRect(80,85,90,40,10);cx.fill();loboSil(k,300,185,1.4,1,0);cx=o;}
+/* ---------- arte vetorial compartilhada ---------- */
+beep=function(){};
+function rng(s){s=s%2147483647;if(s<=0)s+=2147483646;return()=>{s=s*16807%2147483647;return(s-1)/2147483646;};}
+function lg(k,x0,y0,x1,y1,st){const g=k.createLinearGradient(x0,y0,x1,y1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+function rg(k,x,y,r0,r1,st){const g=k.createRadialGradient(x,y,r0,x,y,r1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+const CACHE={};
+function cache(key,w,h,fn){const id=key+'_'+w+'x'+h;if(!CACHE[id]){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);CACHE[id]=c;}return CACHE[id];}
+function ceu(k,w,h,cs){k.fillStyle=lg(k,0,0,0,h,cs);k.fillRect(0,0,w,h);}
+function sol(k,x,y,r,c){k.fillStyle=rg(k,x,y,0,r*4,[c,'rgba(255,255,255,0)']);k.fillRect(x-r*4,y-r*4,r*8,r*8);k.fillStyle=c;k.beginPath();k.arc(x,y,r,0,7);k.fill();}
+function nuvem(k,x,y,s,a){k.fillStyle='rgba(255,255,255,'+(a||.8)+')';for(const [dx,dy,r] of [[0,0,1],[1.1,.15,.8],[-1,.2,.75],[.5,-.45,.7],[-.4,-.35,.6]]){k.beginPath();k.arc(x+dx*s,y+dy*s,r*s,0,7);k.fill();}k.fillRect(x-1.7*s,y+.2*s,3.6*s,.8*s);}
+function serra(k,w,y,amp,cor,seed){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,y+amp*2);let x=0;k.lineTo(0,y);while(x<w+40){x+=30+r()*50;k.lineTo(x,y-r()*amp);}k.lineTo(w,y+amp*4);k.lineTo(0,y+amp*4);k.fill();}
+function matas(k,w,y,amp,cor,seed,base){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,base);k.lineTo(0,y);let x=0;while(x<w+30){const rr=8+r()*amp;k.arc(x+rr,y-r()*amp*.6,rr,Math.PI,0);x+=rr*1.6;}k.lineTo(w,base);k.closePath();k.fill();}
+function capim(k,x0,y0,w,h,cor,seed,n){const r=rng(seed);k.strokeStyle=cor;k.lineCap='round';for(let i=0;i<n;i++){const x=x0+r()*w,y=y0+r()*h,l=4+r()*10;k.lineWidth=1+r()*1.2;for(let j=-1;j<=1;j++){k.beginPath();k.moveTo(x,y);k.quadraticCurveTo(x+j*3,y-l*.6,x+j*5+r()*2,y-l);k.stroke();}}}
+function copa(k,x,y,r,cs,seed){const R=rng(seed);const pts=[];for(let i=0;i<9;i++){const a=R()*Math.PI*2,d=R()*r*.55;pts.push([x+Math.cos(a)*d,y+Math.sin(a)*d*.7,r*(.35+R()*.3)]);}
+ k.fillStyle=cs[0];for(const [a,b,c] of pts){k.beginPath();k.arc(a+c*.12,b+c*.18,c,0,7);k.fill();}
+ k.fillStyle=cs[1];for(const [a,b,c] of pts){k.beginPath();k.arc(a,b,c*.92,0,7);k.fill();}
+ k.fillStyle=cs[2];for(const [a,b,c] of pts){k.beginPath();k.arc(a-c*.25,b-c*.3,c*.5,0,7);k.fill();}}
+function tronco(k,x,y0,y1,w0,w1,c1,c2){k.fillStyle=lg(k,x-w0,0,x+w0,0,[c2,c1,c1,c2]);k.beginPath();k.moveTo(x-w0,y0);k.lineTo(x-w1,y1);k.lineTo(x+w1,y1);k.lineTo(x+w0,y0);k.fill();k.strokeStyle='rgba(0,0,0,.12)';k.lineWidth=1;for(let y=y1+8;y<y0;y+=11){const t=(y-y1)/(y0-y1),ww=w1+(w0-w1)*t;k.beginPath();k.moveTo(x-ww*.6,y);k.quadraticCurveTo(x,y+3,x+ww*.5,y-1);k.stroke();}}
+function palmeira(k,x,y,h,lean,cfr,ctr,seed,nf){const R=rng(seed);const tx=x+lean,ty=y-h;k.strokeStyle=ctr;k.lineCap='round';for(let i=0;i<14;i++){const t0=i/14,t1=(i+1)/14;k.lineWidth=h*.05*(1-t0*.35);const xa=x+lean*t0*t0,ya=y-h*t0,xb=x+lean*t1*t1,yb=y-h*t1;k.beginPath();k.moveTo(xa,ya);k.lineTo(xb,yb);k.stroke();}
+ k.strokeStyle='rgba(0,0,0,.15)';k.lineWidth=1;for(let i=1;i<14;i++){const t=i/14,xa=x+lean*t*t,ya=y-h*t;k.beginPath();k.moveTo(xa-h*.022,ya);k.lineTo(xa+h*.022,ya);k.stroke();}
+ nf=nf||9;for(let f=0;f<nf;f++){const a=-Math.PI/2+(f-(nf-1)/2)*(2.6/nf)+(R()-.5)*.2,L=h*(.38+R()*.12),dr=.55+R()*.25;const ex=tx+Math.cos(a)*L,ey=ty+Math.sin(a)*L*.55+L*dr*.5;const mx=tx+Math.cos(a)*L*.5,my=ty+Math.sin(a)*L*.5-L*.12;
+  k.strokeStyle=cfr[0];k.lineWidth=2;k.beginPath();k.moveTo(tx,ty);k.quadraticCurveTo(mx,my,ex,ey);k.stroke();
+  for(let j=1;j<16;j++){const t=j/16,px=(1-t)*(1-t)*tx+2*(1-t)*t*mx+t*t*ex,py=(1-t)*(1-t)*ty+2*(1-t)*t*my+t*t*ey;const ll=L*.16*(1-t*.5);k.strokeStyle=cfr[j%2];k.lineWidth=1.6;k.beginPath();k.moveTo(px,py);k.lineTo(px+Math.cos(a+1.6)*ll*.5,py+ll);k.moveTo(px,py);k.lineTo(px+Math.cos(a-1.6)*ll*.5,py+ll*.9);k.stroke();}}}
+function sombraE(k,x,y,rx,ry,a){k.fillStyle='rgba(20,30,20,'+(a||.18)+')';k.beginPath();k.ellipse(x,y,rx,ry,0,0,7);k.fill();}
+function vinheta(k,w,h){k.fillStyle=rg(k,w/2,h/2,Math.min(w,h)*.45,Math.max(w,h)*.8,['rgba(0,0,0,0)','rgba(0,0,0,.18)']);k.fillRect(0,0,w,h);}
+function rrk(k,x,y,w,h,r,c){k.fillStyle=c;k.beginPath();k.roundRect(x,y,w,h,r);k.fill();}
+/* figura humana: o={pele,camisa,calca,chapeu,passo,bracoE,bracoD} ângulos em rad a partir de baixo */
+function pessoa(k,x,y,s,o){o=o||{};const p=o.passo||0;k.save();k.translate(x,y);k.scale(s*(o.dir||1),s);k.lineCap='round';k.lineJoin='round';
+ const pl=Math.sin(p)*.35;k.strokeStyle=o.calca||'#37474f';k.lineWidth=7;k.beginPath();k.moveTo(-3,-38);k.lineTo(-3+Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18,0);k.stroke();k.beginPath();k.moveTo(3,-38);k.lineTo(3-Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(3-Math.sin(pl)*20-Math.sin(pl*.5)*18,0);k.stroke();
+ k.fillStyle='#3e2723';k.beginPath();k.ellipse(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.ellipse(3-Math.sin(pl)*20-Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.fill();
+ k.fillStyle=o.camisa||'#1e88e5';k.beginPath();k.moveTo(-9,-40);k.lineTo(-10,-68);k.quadraticCurveTo(0,-74,10,-68);k.lineTo(9,-40);k.closePath();k.fill();k.fillStyle='rgba(0,0,0,.12)';k.fillRect(2,-68,7,28);
+ const be=o.bracoE!==undefined?o.bracoE:-pl*.8,bd=o.bracoD!==undefined?o.bracoD:pl*.8;k.strokeStyle=o.camisa||'#1e88e5';k.lineWidth=6;
+ for(const [sx,a] of [[-8,be],[8,bd]]){k.beginPath();k.moveTo(sx,-66);const ex=sx+Math.sin(a)*14,ey=-66+Math.cos(a)*14;k.lineTo(ex,ey);k.stroke();k.strokeStyle=o.pele||'#c68b59';k.beginPath();k.moveTo(ex,ey);k.lineTo(ex+Math.sin(a*1.15)*13,ey+Math.cos(a*1.15)*13);k.stroke();k.strokeStyle=o.camisa||'#1e88e5';}
+ k.fillStyle=o.pele||'#c68b59';k.fillRect(-3,-76,6,6);k.beginPath();k.ellipse(0,-83,7.5,8.5,0,0,7);k.fill();
+ if(o.chapeu!==false){k.fillStyle=o.chapeu||'#795548';k.beginPath();k.ellipse(0,-88,15,3.5,0,0,7);k.fill();k.beginPath();k.moveTo(-8,-88);k.quadraticCurveTo(-7,-99,0,-99);k.quadraticCurveTo(7,-99,8,-88);k.fill();k.fillStyle='rgba(0,0,0,.25)';k.fillRect(-8,-91,16,2.5);}
+ k.restore();}
+/* boi nelore em perfil, olhando para +x */
+function boi(k,x,y,s,dir,cor,p){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#ece6da';p=p||0;
+ const pern=[[-26,0],[-18,Math.PI],[18,Math.PI],[26,0]];
+ for(let i=0;i<4;i++){const [lx,ph]=pern[i];const a=Math.sin(p+ph)*.3;k.strokeStyle=i==1||i==2?shade(c,-.12):c;k.lineCap='round';k.lineWidth=6.5;k.beginPath();k.moveTo(lx,-24);k.lineTo(lx+Math.sin(a)*9,-10);k.lineTo(lx+Math.sin(a)*7,2);k.stroke();k.fillStyle='#3e2723';k.fillRect(lx+Math.sin(a)*7-3.5,1,7,3);}
+ k.fillStyle=c;k.beginPath();k.moveTo(-34,-40);k.quadraticCurveTo(-38,-24,-30,-20);k.quadraticCurveTo(0,-14,26,-20);k.quadraticCurveTo(34,-26,32,-40);k.quadraticCurveTo(28,-50,20,-54);k.quadraticCurveTo(12,-56,8,-48);k.quadraticCurveTo(-10,-46,-28,-48);k.quadraticCurveTo(-34,-46,-34,-40);k.fill();
+ k.fillStyle=lg(k,0,-50,0,-18,['rgba(255,255,255,.18)','rgba(0,0,0,0)','rgba(60,40,20,.22)']);k.fill();
+ k.fillStyle=c;k.beginPath();k.moveTo(26,-44);k.quadraticCurveTo(38,-44,44,-38);k.lineTo(54,-24);k.quadraticCurveTo(56,-18,51,-17);k.quadraticCurveTo(46,-18,42,-24);k.quadraticCurveTo(34,-26,28,-22);k.fill();
+ k.beginPath();k.moveTo(28,-26);k.quadraticCurveTo(34,-14,30,-12);k.quadraticCurveTo(24,-16,22,-24);k.fill();
+ k.fillStyle=shade(c,-.35);k.beginPath();k.ellipse(52,-19,3.4,2.6,.4,0,7);k.fill();k.fillStyle='#1b1b1b';k.beginPath();k.arc(44,-34,1.8,0,7);k.fill();
+ k.fillStyle=shade(c,-.08);k.beginPath();k.ellipse(38,-41,8,2.8,.5,0,7);k.fill();k.strokeStyle='#cfc4b0';k.lineWidth=2.4;k.lineCap='round';k.beginPath();k.moveTo(41,-44);k.quadraticCurveTo(44,-49,42,-52);k.stroke();
+ k.strokeStyle=c;k.lineWidth=2.2;k.beginPath();k.moveTo(-34,-42);k.quadraticCurveTo(-40,-28,-37,-14);k.stroke();k.fillStyle='#4e342e';k.beginPath();k.ellipse(-37,-13,2.2,4.5,0,0,7);k.fill();
+ k.restore();}
+function shade(hex,f){let n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;const t=f<0?0:255,p=Math.abs(f);r=Math.round((t-r)*p+r);g=Math.round((t-g)*p+g);b=Math.round((t-b)*p+b);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+function cavalo(k,x,y,s,dir,p,cor){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#8d5a3b';k.strokeStyle=c;k.lineCap='round';k.lineWidth=6;
+ for(const [lx,ph] of [[-20,0],[-12,Math.PI],[18,Math.PI],[26,0]]){const a=Math.sin(p+ph)*.45;k.beginPath();k.moveTo(lx,-22);k.lineTo(lx+Math.sin(a)*10,-8);k.lineTo(lx+Math.sin(a)*8,4);k.stroke();}
+ k.fillStyle=c;k.beginPath();k.ellipse(3,-30,28,12,0,0,7);k.fill();k.beginPath();k.moveTo(22,-36);k.quadraticCurveTo(30,-56,40,-58);k.lineTo(50,-48);k.quadraticCurveTo(44,-44,38,-46);k.lineTo(30,-26);k.fill();
+ k.fillStyle='#3e2723';k.beginPath();k.moveTo(24,-40);k.quadraticCurveTo(30,-60,40,-60);k.lineTo(36,-56);k.quadraticCurveTo(30,-52,28,-36);k.fill();k.beginPath();k.moveTo(-24,-34);k.quadraticCurveTo(-38,-26,-34,-6);k.quadraticCurveTo(-30,-22,-22,-28);k.fill();
+ k.fillStyle='rgba(0,0,0,.15)';k.beginPath();k.ellipse(3,-23,24,4,0,0,7);k.fill();k.fillStyle='#5d4037';k.fillRect(-8,-44,22,6);k.restore();}
+function cavaleiro(k,x,y,s,dir,p,o){cavalo(k,x,y,s,dir,p,o&&o.cor);k.save();k.translate(x,y);k.scale(s*dir,s);pessoa(k,2,-30,.62,Object.assign({passo:0,bracoE:.9,bracoD:1.3,calca:'#4e342e'},o||{}));k.restore();}
+/* tela cheia genérica para os jogos do motor arcade */
+const FS={on:false};
+(function(){const st=document.createElement('style');st.textContent='.fsmode{position:fixed!important;inset:0!important;z-index:9999!important;background:#fff!important;margin:0!important;padding:0!important;border-radius:0!important;max-width:none!important;width:100vw!important;height:100dvh!important;border:0!important}.fsmode canvas{width:100vw!important;height:100dvh!important;max-width:none!important;border:0!important;border-radius:0!important}.fsmode p.small{display:none}.fsmode .fsrow{position:fixed;top:48px;right:8px;z-index:10000;margin:0!important}.fsmode .fsrow .btn{padding:6px 14px;font-size:13px}';document.head.appendChild(st);
+ document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&FS.on)FS.set(false);});addEventListener('resize',()=>{if(FS.on)setTimeout(FS.ajusta,50);});})();
+FS.ajusta=function(){const c=$('cv');if(!c)return;if(FS.on){W=Math.round(innerWidth);H=Math.round(innerHeight);}else{if(c.clientWidth<520){W=420;H=560;}else{W=720;H=460;}}c.width=W;c.height=H;cx=c.getContext('2d');if(G.reajusta)G.reajusta(S.g);};
+FS.set=function(on){const c=$('cv');if(!c)return;const card=c.parentNode;FS.on=on;const b=$('btfs');if(b)b.textContent=on?'Sair':'Tela cheia';
+ if(on){card.classList.add('fsmode');try{const r=document.documentElement.requestFullscreen;if(r)r.call(document.documentElement).catch(()=>{});}catch(e){}}
+ else{card.classList.remove('fsmode');try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}}
+ setTimeout(FS.ajusta,80);};
+FS.botao=()=>'<div class="row fsrow" style="justify-content:center;margin-top:8px"><button class="btn ghost" id="btfs" onclick="FS.set(!FS.on)">Tela cheia</button></div>';
+FS.ligar=()=>{if(FS.on){const c=$('cv');c.parentNode.classList.add('fsmode');const b=$('btfs');if(b)b.textContent='Sair';FS.ajusta();}};
+FS.hud=(g,cor)=>{if(!FS.on||!g)return;const [a,m2]=G.meta(g);const t='Fase '+(S.f+1)+'/'+G.FASES.length+'  ·  '+(S.tot+S.fp)+' pts  ·  '+G.rotulo+' '+a+'/'+m2+(G.semTempo?'':'  ·  '+Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s');cx.font='bold 13px system-ui';const w=cx.measureText(t).width+24;rrk(cx,10,48,w,26,13,'rgba(255,255,255,.95)');cx.fillStyle=cor||'#37474f';cx.textAlign='left';cx.fillText(t,22,66);};
+/* Lobo-guará (Chrysocyon brachyurus). loboR: perfil andando, olhando para +x, L = focinho à base da cauda, origem no chão.
+loboTop: visto de cima, para o mapa, com passo animado (t). */
+const LOBO={};
+LOBO.P={
+ corpo:'M-84,-146 C-50,-154 0,-150 30,-154 C48,-158 60,-168 72,-176 C78,-182 88,-184 96,-180 C104,-176 110,-168 118,-162 C124,-158 130,-156 134,-155 C137,-154 138,-150 134,-149 C126,-148 116,-150 108,-152 C98,-152 88,-148 80,-140 C72,-130 68,-118 66,-108 C65,-90 64,-60 64,-14 C68,-7 76,-4 76,0 L56,0 C55,-10 55,-40 54,-70 C54,-86 50,-98 44,-102 C20,-104 -20,-104 -44,-106 C-50,-96 -56,-82 -62,-70 C-70,-56 -74,-40 -74,-14 C-70,-6 -64,-3 -64,0 L-84,0 C-86,-8 -86,-18 -86,-30 C-88,-40 -92,-48 -96,-60 C-102,-80 -102,-120 -84,-146 Z',
+ fr:'M34,-104 C42,-96 42,-70 42,-40 C42,-24 40,-12 40,-6 C44,-4 50,-2 50,0 L30,0 C30,-8 30,-24 30,-40 C30,-64 26,-86 26,-100 Z',
+ tr:'M-60,-112 C-46,-104 -42,-86 -44,-66 C-46,-46 -46,-24 -46,-6 C-42,-4 -36,-2 -36,0 L-56,0 C-58,-14 -58,-34 -58,-50 C-60,-66 -68,-86 -70,-100 Z',
+ orelha:'M84,-181 C82,-198 84,-212 88,-222 C94,-208 98,-194 99,-179 Z',
+ crina:'M14,-150 C36,-156 54,-166 70,-178 C78,-185 88,-188 93,-183 L88,-172 C76,-162 62,-150 46,-144 C34,-141 22,-144 14,-150 Z',
+ orelha2:'M76,-178 C72,-194 72,-206 75,-214 C82,-202 88,-190 90,-180 Z'
 };
+LOBO.p2={};for(const n in LOBO.P)Object.defineProperty(LOBO.p2,n,{get(){return this['_'+n]||(this['_'+n]=new Path2D(LOBO.P[n]));}});
+function loboR(k,x,y,L,dir){const s0=L/224;k.save();k.translate(x,y);k.scale((dir||1)*s0,s0);const P=LOBO.p2,R=rng(5),pr='#1c120c';
+ k.save();k.scale(1,.07);k.fillStyle=rg(k,-4,0,0,120,['rgba(40,28,14,.35)','rgba(40,28,14,0)']);k.beginPath();k.arc(-4,0,120,0,7);k.fill();k.restore();
+ /* cauda */const tp=new Path2D('M-88,-142 C-110,-138 -122,-118 -124,-96 C-125,-84 -122,-74 -117,-66');k.lineCap='round';k.strokeStyle='#8f3b16';k.lineWidth=19;k.stroke(tp);k.strokeStyle=lg(k,-130,-140,-110,-50,['#c2541f','#d97a3a','#e9a25e']);k.lineWidth=18;k.stroke(tp);
+ k.save();k.beginPath();k.rect(-160,-84,60,40);k.clip();k.strokeStyle='#f3ece0';k.lineWidth=16;k.stroke(tp);k.restore();
+ /* orelha de trás e pernas de lá */k.fillStyle='#8f3b16';k.fill(P.orelha2);
+ for(const n of ['fr','tr']){k.save();k.fillStyle='#6a2c10';k.fill(P[n]);k.clip(P[n]);k.fillStyle='#120b07';k.fillRect(n==='fr'?0:-120,n==='fr'?-96:-70,n==='fr'?80:200,100);k.restore();}
+ /* corpo */k.save();k.fillStyle=lg(k,0,-160,0,-100,['#a83e16','#c9581f','#da7a38','#e9a466']);k.fill(P.corpo);k.clip(P.corpo);
+  k.fillStyle=rg(k,94,-150,0,18,['rgba(248,242,230,.98)','rgba(248,242,230,0)']);k.fillRect(60,-170,80,60);
+  k.save();k.translate(92,-148);k.scale(1,.55);k.fillStyle='rgba(248,242,230,.9)';k.beginPath();k.arc(0,0,14,0,7);k.fill();k.restore();
+  /* crina preta */k.fillStyle=pr;k.fill(P.crina);k.strokeStyle=pr;k.lineWidth=1.6;k.lineCap='round';for(let i=0;i<46;i++){const t=i/46,px=16+t*74,py=-150-t*t*34;k.beginPath();k.moveTo(px,py);k.lineTo(px-2+R()*4,py-4-R()*6);k.stroke();}
+  k.strokeStyle='rgba(28,18,12,.55)';k.lineWidth=5;k.beginPath();k.moveTo(-40,-151);k.quadraticCurveTo(0,-152,20,-151);k.stroke();
+  /* pernas pretas do meio para baixo */k.fillStyle=pr;k.beginPath();k.moveTo(-120,-58);for(let xx=-120;xx<=140;xx+=6)k.lineTo(xx,(xx>40?-84:-58)-Math.sin(xx*.3)*2);k.lineTo(140,2);k.lineTo(-120,2);k.fill();
+  k.fillStyle=lg(k,0,-62,0,-50,['rgba(18,11,7,0)','rgba(18,11,7,.8)']);k.fillRect(-120,-66,160,10);k.fillStyle=lg(k,0,-96,0,-84,['rgba(18,11,7,0)','rgba(18,11,7,.8)']);k.fillRect(40,-96,100,12);
+  /* focinho escuro */k.fillStyle=lg(k,112,0,132,0,['rgba(28,18,12,0)','rgba(28,18,12,.92)']);k.beginPath();k.moveTo(112,-170);k.lineTo(142,-158);k.lineTo(142,-144);k.lineTo(112,-148);k.fill();
+  /* pelo */k.strokeStyle='rgba(120,45,15,.2)';k.lineWidth=1;for(let i=0;i<90;i++){const px=-96+R()*170,py=-148+R()*44;k.beginPath();k.moveTo(px,py);k.lineTo(px-5,py+3);k.stroke();}
+  k.fillStyle=lg(k,0,-160,0,-140,['rgba(255,220,170,0)','rgba(255,220,170,.15)']);k.fillRect(-100,-160,200,20);
+ k.restore();k.strokeStyle='rgba(60,25,10,.5)';k.lineWidth=1.2;k.stroke(P.corpo);
+ /* orelha da frente */k.fillStyle='#b8501d';k.fill(P.orelha);k.save();k.clip(P.orelha);k.fillStyle='#f5ece0';k.beginPath();k.moveTo(87,-183);k.quadraticCurveTo(87,-200,88,-214);k.quadraticCurveTo(94,-198,96,-182);k.fill();k.restore();k.strokeStyle='rgba(60,25,10,.5)';k.stroke(P.orelha);
+ /* olho e nariz */k.fillStyle='#1a0f08';k.beginPath();k.ellipse(107,-171,3.4,2.3,-.35,0,7);k.fill();k.fillStyle='#c98a2a';k.beginPath();k.arc(107.6,-171.2,1.3,0,7);k.fill();
+ k.fillStyle='#0d0804';k.beginPath();k.ellipse(135,-153,3.8,3,-.2,0,7);k.fill();k.strokeStyle='#0d0804';k.lineWidth=1.5;k.beginPath();k.moveTo(133,-149.5);k.quadraticCurveTo(122,-149,112,-152);k.stroke();
+ k.restore();}
+/* visto de cima: ang = direção do focinho, t = tempo para o passo */
+function loboTop(k,x,y,L,ang,t,mov){const s=L/100;k.save();k.translate(x,y);k.rotate(ang);k.scale(s,s);const ph=mov?Math.sin(t*12):0,pr='#1c120c';
+ k.fillStyle='rgba(30,20,10,.3)';k.beginPath();k.ellipse(3,4,40,12,0,0,7);k.fill();
+ /* pernas */k.strokeStyle=pr;k.lineWidth=4;k.lineCap='round';for(const [px,sg,f] of [[18,-1,1],[18,1,-1],[-16,-1,-1],[-16,1,1]]){const d=ph*f*9;k.beginPath();k.moveTo(px,sg*6);k.lineTo(px+d,sg*14);k.stroke();}
+ /* cauda */k.strokeStyle='#c45a22';k.lineWidth=8;k.beginPath();k.moveTo(-26,0);k.quadraticCurveTo(-38,ph*4,-48,ph*7);k.stroke();k.strokeStyle='#f3ece0';k.lineWidth=7;k.beginPath();k.moveTo(-44,ph*6);k.lineTo(-50,ph*7.5);k.stroke();
+ /* corpo */k.fillStyle=lg(k,0,-11,0,11,['#c9581f','#e08a46','#c9581f']);k.beginPath();k.ellipse(-2,0,28,10.5,0,0,7);k.fill();
+ /* crina */k.fillStyle=pr;k.beginPath();k.ellipse(12,0,15,3.6,0,0,7);k.fill();k.beginPath();k.ellipse(-6,0,10,2,0,0,7);k.fill();
+ /* cabeça */k.fillStyle='#d06a2c';k.beginPath();k.ellipse(32,0,9,7,0,0,7);k.fill();k.fillStyle=pr;k.beginPath();k.ellipse(42,0,6,3.4,0,0,7);k.fill();
+ for(const sg of [-1,1]){k.fillStyle='#b8501d';k.beginPath();k.moveTo(28,sg*4);k.lineTo(22,sg*15);k.lineTo(32,sg*7);k.fill();k.fillStyle='#f5ece0';k.beginPath();k.moveTo(27,sg*6);k.lineTo(23,sg*12.5);k.lineTo(30,sg*7.5);k.fill();}
+ k.restore();}
+/* Travessia do Lobo. Ecologia de estradas com o lobo-guará no Cerrado.
+Rytwinski et al. (2016, PLoS ONE): cercas com passagens reduziram 83% dos atropelamentos de grandes mamíferos; passagens sem cerca não tiveram efeito detectável; animais andam junto à cerca e atravessam no fim dela.
+Paula et al. (2013, Biodiversidade Brasileira): lobo-guará Vulnerável no Brasil, ocorre principalmente no Cerrado e no Pampa.
+Motta-Junior (Pesquisa FAPESP) e Veloso (2019, UFU): lobeira é item central da dieta; sementes das fezes germinam melhor.
+Mapa, largura de 12 km, trilhas, risco no asfalto, uso das passagens, orçamento de cerca e pontos são regras do jogo. */
+const TL={KM:12,RISCO:.4,USO:.3};
+TL.F=[{tipo:'guia'},{tipo:'hot'},{tipo:'pass'},{tipo:'cerca'},{tipo:'corr'}];
+const G={titulo:'Travessia do Lobo',get rotulo(){return {guia:'Lobeiras',hot:'Trechos críticos',pass:'Teste',cerca:'Meta de redução',corr:'Corredores'}[TL.F[S?S.f:0].tipo];},vidas:0,semTempo:1,
+ resumo:'O lobo-guará anda pelo Cerrado atrás de comida e cruza estradas. Você vai guiar um lobo, achar onde eles morrem atropelados, testar passagens e cercas e abrir um corredor de vegetação.',
+ como:[['Guiar','Toque ou arraste no mapa para o lobo andar até lá. Fuja dos carros.'],['Dados','Veja os registros de atropelamento e marque os trechos com mais mortes por quilômetro.'],['Obras','Toque na pista para pôr passagens e arraste ao longo dela para pôr cerca. Depois simule.'],['Corredor','Toque nos quadros de soja para restaurar o Cerrado e ligar as matas à passagem.']],
+ get dica(){return ['Espere um vão entre os carros. O lobo anda mais rápido que você pensa.','Olhe as barras: cada uma é 1 km de rodovia. Marque as duas mais altas.','Ponha as passagens onde as veredas cruzam a pista.','A cerca leva o lobo até a passagem. Cuidado com o fim da cerca perto das trilhas.','O lobo cruza no máximo um quadro de soja seguido. Restaure os outros.'][S?S.f:0];},
+ dicaErro:'Volte aos dados: as mortes se juntam onde as veredas cruzam a pista.',
+ FASES:[{nome:'A rodovia',dur:999,meta:6,metaTxt:'comer 6 lobeiras dos dois lados da pista.',txt:'É fim de tarde e o lobo-guará sai para comer lobeira. Os frutos estão dos dois lados da rodovia. Toque ou arraste para guiar o lobo e atravesse nos vãos entre os carros.',fato:'A lobeira, ou fruta-do-lobo, é um dos itens mais comidos pelo lobo-guará. As sementes passam inteiras pelo intestino e germinam melhor depois disso.'},
+  {nome:'Onde morrem',dur:999,meta:2,metaTxt:'achar os 2 trechos de 1 km com mais atropelamentos.',txt:'Uma equipe percorreu a rodovia por um ano e anotou cada lobo atropelado. Veja os registros caírem no mapa e no gráfico. Marque os 2 trechos com mais mortes.',fato:'Os atropelamentos não se espalham ao acaso. Eles se juntam em trechos críticos, onde a vegetação nativa e os caminhos dos animais encostam na pista.'},
+  {nome:'Passagem sem cerca',dur:999,meta:1,metaTxt:'testar 2 passagens nos trechos críticos.',txt:'Toque na pista para construir 2 passagens por baixo dela. Depois simule 400 travessias de lobos e compare com a pista sem obra.',fato:'Numa revisão de 50 estudos, passagens de fauna sem cerca não tiveram efeito detectável nos atropelamentos. Os animais nem sempre acham a passagem sozinhos.'},
+  {nome:'Cerca que guia',dur:999,meta:1,metaTxt:'reduzir os atropelamentos em pelo menos 75%.',txt:'Agora arraste o dedo ao longo da pista para pôr cerca. A cerca leva o lobo até a passagem. Você tem cerca para 8 km de pista e pode pôr uma passagem a mais.',fato:'Cerca com passagem reduziu em 83% os atropelamentos de grandes mamíferos. Mas o animal anda junto à cerca e atravessa onde ela acaba. O fim da cerca vira um novo ponto crítico.'},
+  {nome:'Corredor de Cerrado',dur:999,meta:2,metaTxt:'ligar as duas matas à passagem em 2 paisagens.',txt:'A passagem existe, mas há lavoura de soja entre ela e as matas. O lobo evita andar muito tempo no aberto. Restaure quadros de Cerrado para fazer um corredor dos dois lados.',fato:'Corredores de vegetação ligam pedaços de Cerrado. O lobo-guará que passa por eles leva sementes de lobeira e ajuda a vegetação a voltar.'}],
+ init(g){g.ok=0;g.pronto=false;g.lb=[];const F=TL.F[S.f];if(!TL.seed||S.f<=1)TL.novaSeed();TL['ini_'+F.tipo](g);},
+ meta(g){return [g.ok,FASES[S.f].meta];},cedo(g){return g.ok>=FASES[S.f].meta&&g.pronto;},
+ update(g,dt){g.lb=g.lb.filter(l=>(l.t-=dt)>0);TL['up_'+TL.F[S.f].tipo](g,dt);},
+ draw(g){TL.draw(g);},botoes(){return FS.botao();},ligar(){FS.ligar();},reajusta(g){if(g&&TL.F[S.f].tipo==='corr')TL.ini_corr(g,true);},
+ capa(k,w,h){if(!TL.seed)TL.novaSeed();const o=cx,oW=W,oH=H;cx=k;W=w;H=h;k.drawImage(TL.mapa(w,h,0),0,0,w,h);loboR(k,w*.56,h*.97,h*.8,1);cx=o;W=oW;H=oH;}};
 const FASES=G.FASES;
+/* ---------- paisagem ---------- */
+TL.novaSeed=function(){TL.seed=1+Math.floor(Math.random()*9000);const R=rng(TL.seed);const xs=[];while(xs.length<3){const x=1.4+R()*9.2;if(xs.every(v=>Math.abs(v-x)>2.4))xs.push(x);}const w=[.46,.34,.2];TL.hs=xs.map((x,i)=>({x,w:w[i]}));};
+TL.k=()=>W/TL.KM;TL.ry=()=>Math.round(H*.44);TL.rw=()=>Math.max(30,Math.min(40,W*.05));
+TL.dock=function(){const m=MOB(),t=TL.F[S?S.f:0].tipo,h=t==='hot'?(m?150:132):t==='guia'?0:(m?62:58);return {x:8,y:H-h-8,w:W-16,h,m};};
+/* ponto onde um lobo chega na pista: 85% pelas veredas, 15% em qualquer lugar (regra do jogo) */
+TL.chega=function(R){if(R()<.15)return .3+R()*(TL.KM-.6);let u=R(),i=0;while(i<2&&u>TL.hs[i].w){u-=TL.hs[i].w;i++;}const z=Math.sqrt(-2*Math.log(R()+1e-9))*Math.cos(6.283*R());return Math.max(.2,Math.min(TL.KM-.2,TL.hs[i].x+z*.45));};
+TL.vereda=(i,y)=>{const h=TL.hs[i];return h.x+Math.sin(y*.004+i*2)*.35+Math.sin(y*.013+i)*.12;};
+TL.nz=(function(){const P=new Float32Array(4096),R=rng(33);for(let i=0;i<4096;i++)P[i]=R();const v=(x,y)=>{const xi=Math.floor(x),yi=Math.floor(y),fx=x-xi,fy=y-yi,h=(a,b)=>P[((a&63)*64+(b&63))],sx=fx*fx*(3-2*fx),sy=fy*fy*(3-2*fy);return (h(xi,yi)*(1-sx)+h(xi+1,yi)*sx)*(1-sy)+(h(xi,yi+1)*(1-sx)+h(xi+1,yi+1)*sx)*sy;};return (x,y)=>v(x,y)*.55+v(x*2.3+5,y*2.3+1)*.3+v(x*5.1,y*5.1+7)*.15;})();
+TL.copa=(k,x,y,r,a,b)=>{k.fillStyle='rgba(40,40,15,.3)';k.beginPath();k.arc(x+r*.4,y+r*.45,r,0,7);k.fill();const gr=k.createRadialGradient(x-r*.3,y-r*.3,r*.1,x,y,r);gr.addColorStop(0,a);gr.addColorStop(1,b);k.fillStyle=gr;k.beginPath();k.arc(x,y,r,0,7);k.fill();};
+TL.buriti=(k,x,y,r)=>{k.fillStyle='rgba(30,40,20,.3)';k.beginPath();k.arc(x+r*.5,y+r*.5,r*.9,0,7);k.fill();for(let a=0;a<9;a++){const an=a/9*6.283;k.fillStyle=a%2?'#4f7f36':'#6a9a45';k.beginPath();k.moveTo(x,y);k.lineTo(x+Math.cos(an-.2)*r,y+Math.sin(an-.2)*r);k.lineTo(x+Math.cos(an)*r*1.15,y+Math.sin(an)*r*1.15);k.lineTo(x+Math.cos(an+.2)*r,y+Math.sin(an+.2)*r);k.fill();}k.fillStyle='#3e6a2c';k.beginPath();k.arc(x,y,r*.22,0,7);k.fill();};
+TL.mapa=function(w,h,agro){const dp=Math.min(2,window.devicePixelRatio||1);return cache('tlmap'+agro+'_'+TL.seed+'_'+dp,Math.round(w*dp),Math.round(h*dp),(k,W2,H2)=>{const R=rng(TL.seed*7+1),kk=W2/TL.KM,u=dp,st=2,lw=Math.ceil(W2/st),lh=Math.ceil(H2/st);
+ const lc=document.createElement('canvas');lc.width=lw;lc.height=lh;const kl=lc.getContext('2d'),im=kl.createImageData(lw,lh),D=im.data;
+ for(let j=0;j<lh;j++)for(let i=0;i<lw;i++){const X=i*st/kk,Y=j*st/kk,n=TL.nz(X*1.3,Y*1.3),n2=TL.nz(X*7,Y*7);let c=[196+n*28,184+n*20,118+n*10];c=[c[0]-(1-n)*40,c[1]-(1-n)*12,c[2]-(1-n)*30];
+  const v=(n2-.5)*18,o=(j*lw+i)*4;D[o]=c[0]+v;D[o+1]=c[1]+v;D[o+2]=c[2]+v*.5;D[o+3]=255;}
+ kl.putImageData(im,0,0);k.imageSmoothingEnabled=true;k.drawImage(lc,0,0,lw*st,lh*st);
+ /* veredas: córrego com buritis e mata ciliar */for(let i=0;i<3;i++){k.strokeStyle='rgba(70,110,50,.55)';k.lineWidth=kk*.55;k.lineCap='round';k.beginPath();for(let y=0;y<=H2;y+=6*u){const x=TL.vereda(i,y/u)*kk;y?k.lineTo(x,y):k.moveTo(x,y);}k.stroke();
+  k.strokeStyle='#5f93a8';k.lineWidth=2*u;k.beginPath();for(let y=0;y<=H2;y+=6*u){const x=TL.vereda(i,y/u)*kk;y?k.lineTo(x,y):k.moveTo(x,y);}k.stroke();
+  for(let y=0;y<H2;y+=7*u){const x=TL.vereda(i,y/u)*kk;for(const sg of [-1,1])if(R()<.8)(R()<.55?TL.buriti(k,x+sg*(4+R()*kk*.22)*1,y+R()*4,(4+R()*2.5)*u):TL.copa(k,x+sg*(3+R()*kk*.2),y,(3+R()*3)*u,'#79a352','#2f5a28'));}}
+ /* árvores tortas do cerrado e cupinzeiros */const n=Math.round(W2*H2/(260*u*u));for(let i=0;i<n;i++){const x=R()*W2,y=R()*H2;if(R()<.18){k.fillStyle='#a5764a';k.beginPath();k.arc(x,y,(1.6+R())*u,0,7);k.fill();k.fillStyle='rgba(60,40,20,.3)';k.beginPath();k.arc(x+u,y+u,(1.6)*u,0,7);k.fill();continue;}
+  const r=(2.4+R()*3)*u;TL.copa(k,x,y,r,R()<.5?'#8ea456':'#7a9548','#3e5a2a');}
+ /* lobeiras: arbustos claros */for(let i=0;i<n*.25;i++){const x=R()*W2,y=R()*H2;TL.copa(k,x,y,(2+R()*1.6)*u,'#b9c79a','#6f8a5a');}
+ /* rodovia */const ry=TL.ry()*u,rw=TL.rw()*u;k.fillStyle='rgba(60,50,30,.25)';k.fillRect(0,ry-rw/2-7*u,W2,rw+14*u);k.fillStyle='#cdbf98';k.fillRect(0,ry-rw/2-5*u,W2,rw+10*u);
+ k.fillStyle='#5b5e60';k.fillRect(0,ry-rw/2,W2,rw);k.fillStyle='rgba(255,255,255,.05)';for(let i=0;i<W2/3;i++)k.fillRect(R()*W2,ry-rw/2+R()*rw,1.2*u,1.2*u);
+ k.fillStyle='#f5f5f5';k.fillRect(0,ry-rw/2+2*u,W2,1.4*u);k.fillRect(0,ry+rw/2-3.4*u,W2,1.4*u);k.fillStyle='#f2c230';for(let x=0;x<W2;x+=22*u)k.fillRect(x,ry-u,12*u,2*u);
+ /* marcos de km */k.font='600 '+(9*u)+'px system-ui';k.textAlign='center';for(let i=0;i<=TL.KM;i+=2){const x=i*kk;k.fillStyle='rgba(255,255,255,.9)';k.fillRect(x-8*u,ry+rw/2+6*u,16*u,11*u);k.fillStyle='#37474f';k.fillText(i,x,ry+rw/2+14.5*u);}
+ const vg=k.createRadialGradient(W2/2,H2/2,Math.min(W2,H2)*.45,W2/2,H2/2,Math.hypot(W2,H2)*.62);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(40,30,10,.18)');k.fillStyle=vg;k.fillRect(0,0,W2,H2);});};
+/* lobeira com frutos, vista de cima */
+TL.lobeira=function(x,y,s,fr){TL.copa(cx,x,y,13*s,'#c3cfa4','#6c8758');cx.strokeStyle='rgba(90,110,70,.6)';cx.lineWidth=1;for(let a=0;a<6;a++){cx.beginPath();cx.moveTo(x,y);cx.lineTo(x+Math.cos(a)*10*s,y+Math.sin(a)*10*s);cx.stroke();}
+ if(fr)for(const [dx,dy] of [[-4,-3],[5,1],[-1,6]]){cx.fillStyle='#d8dd6a';cx.strokeStyle='#7e8a2e';cx.lineWidth=1;cx.beginPath();cx.arc(x+dx*s,y+dy*s,4.2*s,0,7);cx.fill();cx.stroke();cx.fillStyle='rgba(255,255,255,.5)';cx.beginPath();cx.arc(x+dx*s-1.2,y+dy*s-1.2,1.3*s,0,7);cx.fill();}};
+TL.carro=function(c){cx.save();cx.translate(c.x,c.y);if(c.v<0)cx.scale(-1,1);const L=c.cam?46:26,Wd=c.cam?15:12;
+ const gr=cx.createLinearGradient(L/2,0,L/2+90,0);gr.addColorStop(0,'rgba(255,240,170,.45)');gr.addColorStop(1,'rgba(255,240,170,0)');cx.fillStyle=gr;cx.beginPath();cx.moveTo(L/2,-Wd/2+2);cx.lineTo(L/2+90,-Wd*1.6);cx.lineTo(L/2+90,Wd*1.6);cx.lineTo(L/2,Wd/2-2);cx.fill();
+ cx.fillStyle='rgba(0,0,0,.3)';cx.fillRect(-L/2+2,-Wd/2+2,L,Wd);rrk(cx,-L/2,-Wd/2,L,Wd,3,c.cor);
+ if(c.cam){cx.fillStyle='rgba(255,255,255,.35)';cx.fillRect(-L/2+2,-Wd/2+2,L*.68,Wd-4);cx.fillStyle='#37474f';cx.fillRect(L*.24,-Wd/2+1,L*.2,Wd-2);}
+ else{cx.fillStyle='#263238';cx.fillRect(L*.06,-Wd/2+1.5,L*.18,Wd-3);cx.fillRect(-L*.36,-Wd/2+1.5,L*.12,Wd-3);cx.fillStyle='rgba(255,255,255,.25)';cx.fillRect(-L*.18,-Wd/2+1.5,L*.2,Wd-3);}
+ cx.fillStyle='#fff7c0';cx.fillRect(L/2-2,-Wd/2+1,2,3);cx.fillRect(L/2-2,Wd/2-4,2,3);cx.fillStyle='#e53935';cx.fillRect(-L/2,-Wd/2+1,1.5,3);cx.fillRect(-L/2,Wd/2-4,1.5,3);cx.restore();};
+TL.carros=function(g,dt){const ry=TL.ry(),sp=W/900;g.tc-=dt;if(g.tc<=0){const d=Math.random()<.5?1:-1,cam=Math.random()<.25;g.cars.push({x:d>0?-60:W+60,y:ry+(d>0?TL.rw()*.25:-TL.rw()*.25),v:d*(150+Math.random()*120)*Math.max(.7,sp)*(cam?.8:1),cam,cor:cam?'#eceff1':['#c62828','#1565c0','#f5f5f5','#424242','#2e7d32','#fbc02d'][Math.floor(Math.random()*6)]});g.tc=g.gap*(.6+Math.random()*.9);}
+ for(const c of g.cars)c.x+=c.v*dt;g.cars=g.cars.filter(c=>c.x>-120&&c.x<W+120);};
+/* ---------- fase 1: guiar o lobo ---------- */
+TL.ini_guia=function(g){const ry=TL.ry();g.lobo={x:W*.5,y:Math.min(H-50,ry+H*.3),a:-1.57,mov:0};g.alvo=null;g.cars=[];g.tc=0;g.gap=1.0;g.frutos=[];g.come=0;TL.novaFruta(g);g.morto=0;};
+TL.novaFruta=function(g){const ry=TL.ry(),top=128,cima=g.lobo.y>ry;let x,y,t=0;do{x=40+Math.random()*(W-80);y=cima?top+Math.random()*(ry-TL.rw()-50-top):ry+TL.rw()+40+Math.random()*(H-ry-TL.rw()-80);t++;}while(Math.hypot(x-g.lobo.x,y-g.lobo.y)<120&&t<30);g.frutos=[{x,y}];};
+TL.up_guia=function(g,dt){TL.carros(g,dt);g.gap=Math.max(.55,1.0-g.come*.06);const L=g.lobo;
+ if(g.morto>0){g.morto-=dt;if(g.morto<=0){L.y=TL.ry()+(L.y>TL.ry()?1:-1)*(TL.rw()+60);g.alvo=null;}return;}
+ if(inp.down&&inp.x!==null)g.alvo={x:inp.x,y:inp.y};else if(inp.tap)g.alvo={x:inp.tap.x,y:inp.tap.y};
+ L.mov=0;if(g.alvo){const dx=g.alvo.x-L.x,dy=g.alvo.y-L.y,d=Math.hypot(dx,dy),sp=140*Math.max(.8,W/900);if(d>4){const s=Math.min(d,sp*dt);L.x+=dx/d*s;L.y+=dy/d*s;L.a=Math.atan2(dy,dx);L.mov=1;}else g.alvo=null;}
+ L.x=Math.max(16,Math.min(W-16,L.x));L.y=Math.max((FS.on?84:10)+16,Math.min(H-16,L.y));
+ for(const c of g.cars){const hl=(c.cam?46:26)/2+10,hw=9;if(Math.abs(c.x-L.x)<hl&&Math.abs(c.y-L.y)<hw){g.morto=1.2;g.boom={x:L.x,y:L.y};ganha(-15,L.x,L.y-20);msg('O lobo foi atingido. Espere um vão maior.');break;}}
+ const f=g.frutos[0];if(f&&Math.hypot(f.x-L.x,f.y-L.y)<22){g.ok++;g.come++;ganha(10,f.x,f.y-16);g.sem=(g.sem||[]).concat([{x:f.x+(Math.random()-.5)*30,y:f.y+(Math.random()-.5)*30,t:0}]);if(g.ok>=FASES[S.f].meta){g.pronto=true;g.frutos=[];}else TL.novaFruta(g);}
+ for(const s of g.sem||[])s.t+=dt;};
+/* ---------- fase 2: trechos críticos ---------- */
+TL.ini_hot=function(g){const R=rng(TL.seed*3+5);g.recs=[];for(let i=0;i<46;i++)g.recs.push({x:TL.chega(R),m:Math.floor(i/46*12)});g.tv=0;g.sel=[];g.res=null;g.cont=new Array(TL.KM).fill(0);for(const r of g.recs)g.cont[Math.min(TL.KM-1,Math.floor(r.x))]++;
+ const ord=g.cont.map((v,i)=>[v,i]).sort((a,b)=>b[0]-a[0]);g.top=ord.slice(0,2).map(o=>o[1]);g.lim=ord[1][0];};
+TL.barras=function(){const D=TL.dock(),x0=D.x+14,w=D.w-28-(D.m?0:150),bw=w/TL.KM,y1=D.y+D.h-(D.m?56:22),h=D.h-(D.m?80:46);return {x0,bw,y1,h,bt:D.m?{x:D.x+14,y:D.y+D.h-46,w:D.w-28,h:38}:{x:D.x+D.w-150,y:D.y+D.h/2-20,w:136,h:40}};};
+TL.up_hot=function(g,dt){if(g.tv<1){g.tv=Math.min(1,g.tv+dt/6);return;}if(g.res){g.res.t+=dt;if(inp.tap&&g.res.t>.6){inp.tap=null;if(g.ok>=2)g.pronto=true;else{g.res=null;g.sel=[];}}return;}
+ if(!inp.tap)return;const tp=inp.tap,B=TL.barras(),inb=b=>tp.x>b.x&&tp.x<b.x+b.w&&tp.y>b.y&&tp.y<b.y+b.h;
+ if(inb(B.bt)){if(g.sel.length<2){msg('Marque 2 trechos.');return;}let c=0;for(const s of g.sel)if(g.cont[s]>=g.lim)c++;g.ok=c;g.res={t:0,c};if(c===2)ganha(20,W/2,H/2);else ganha(-5,W/2,H/2);return;}
+ let i=-1;if(tp.y>B.y1-B.h-14&&tp.y<B.y1+16)i=Math.floor((tp.x-B.x0)/B.bw);else{const ry=TL.ry();if(Math.abs(tp.y-ry)<40)i=Math.floor(tp.x/TL.k());}
+ if(i>=0&&i<TL.KM){const j=g.sel.indexOf(i);if(j>=0)g.sel.splice(j,1);else{if(g.sel.length>=2)g.sel.shift();g.sel.push(i);}}};
+/* ---------- simulação de travessias ---------- */
+TL.cerca=(g,x)=>{for(const [a,b] of g.cer||[])if(x>=a&&x<=b)return [a,b];return null;};
+TL.destino=function(g,x0,R){const P=g.pas||[],f=TL.cerca(g,x0);
+ if(!f){for(const p of P)if(Math.abs(p-x0)<.4&&R()<TL.USO)return {tipo:'pas',x:p,via:[x0,p]};return {tipo:'pista',x:x0,via:[x0]};}
+ let best=null;for(const p of P)if(p>=f[0]-.05&&p<=f[1]+.05){const d=Math.abs(p-x0);if(d<1&&(!best||d<best.d))best={d,x:p,tipo:'pas'};}
+ if(!best)for(const e of f){const d=Math.abs(e-x0);if(!best||d<best.d)best={d,x:e,tipo:'pista'};}
+ if(best.tipo==='pista'){const out=best.x===f[0]?best.x-.05:best.x+.05;return {tipo:'pista',x:Math.max(0,Math.min(TL.KM,out)),via:[x0,out]};}return {tipo:'pas',x:best.x,via:[x0,best.x]};};
+TL.estat=function(g,comObra){const R=rng(TL.seed*11+3),R2=rng(TL.seed*13+7);let m=0;const N=400,keep={pas:g.pas,cer:g.cer};const gg=comObra?keep:{pas:[],cer:[]};
+ for(let i=0;i<N;i++){const x0=TL.chega(R),d=TL.destino(gg,x0,R2);if(d.tipo==='pista'&&R2()<TL.RISCO)m++;}return m;};
+TL.simula=function(g){const R=rng(Math.floor(Math.random()*9999));g.lobos=[];for(let i=0;i<24;i++){const x0=TL.chega(R),d=TL.destino(g,x0,R);g.lobos.push({x0,d,t:-i*.35,lado:R()<.5?-1:1,morre:d.tipo==='pista'&&R()<TL.RISCO});}
+ g.antes=TL.estat(g,0);g.depois=TL.estat(g,1);g.sim=1;g.st=0;};
+TL.up_lobos=function(g,dt){if(!g.sim)return;g.st+=dt;const sp=1.6;let vivos=0;for(const l of g.lobos){l.t+=dt*sp;if(l.t<6)vivos++;}if(!vivos&&g.sim===1){g.sim=2;TL.fimSim(g);}};
+TL.posLobo=function(l){const ry=TL.ry(),k=TL.k(),top=ry-l.lado*(TL.rw()/2+90),cerY=ry-l.lado*(TL.rw()/2+10),t=Math.max(0,l.t);const v=l.d.via;
+ if(t<1)return {x:v[0]*k,y:top+(cerY-top)*t,a:l.lado>0?1.57:-1.57,f:0};
+ const along=Math.abs(v[v.length-1]-v[0])*k,ta=along/(70);if(t<1+ta){const u=(t-1)/ta,x=(v[0]+(v[v.length-1]-v[0])*u)*k;return {x,y:cerY,a:v[v.length-1]>v[0]?0:3.14,f:0};}
+ const u=(t-1-ta);const x=v[v.length-1]*k;if(l.morre&&u>.45)return {x,y:ry-l.lado*TL.rw()*.15,a:0,f:2};if(u<1.2)return {x,y:cerY+(ry+l.lado*(TL.rw()/2+40)-cerY)*u/1.2,a:l.lado>0?-1.57:1.57,f:1,sob:l.d.tipo==='pas'};return null;};
+/* ---------- fase 3 e 4: obras ---------- */
+TL.ini_pass=function(g){g.pas=[];g.cer=[];g.sim=0;g.res=null;g.lobos=[];g.cars=[];g.tc=0;g.gap=1.4;};
+TL.ini_cerca=function(g){TL.ini_pass(g);g.pas=TL.hs.slice(0,2).map(h=>Math.round(h.x*10)/10);g.orc=8;};
+TL.btObra=function(){const D=TL.dock(),bh=40;if(D.m){const bw=(D.w-30)/2;return {a:{x:D.x+10,y:D.y+(D.h-bh)/2,w:bw,h:bh},b:{x:D.x+20+bw,y:D.y+(D.h-bh)/2,w:bw,h:bh}};}const bw=160;return {a:{x:D.x+D.w-2*bw-20,y:D.y+(D.h-bh)/2,w:bw,h:bh},b:{x:D.x+D.w-bw-10,y:D.y+(D.h-bh)/2,w:bw,h:bh}};};
+TL.fimSim=function(g){const red=g.antes?1-g.depois/g.antes:0,F=TL.F[S.f];let ok=false;
+ if(F.tipo==='pass'){const perto=TL.hs.slice(0,2).every(h=>g.pas.some(p=>Math.abs(p-h.x)<.7));ok=perto&&g.pas.length>=2;if(ok){g.ok=1;ganha(20,W/2,H/2);}else ganha(-5,W/2,H/2);g.res={t:0,red,ok,txt:ok?'Passagens nos trechos críticos.':'Uma passagem ficou longe de um trecho crítico.'};}
+ else{ok=red>=.75;if(ok){g.ok=1;ganha(red>=.83?30:20,W/2,H/2);}else ganha(-5,W/2,H/2);g.res={t:0,red,ok,txt:ok?'Meta batida!':'Faltou chegar a 75%. Veja onde os lobos ainda morrem.'};}};
+TL.usoCerca=g=>(g.cer||[]).reduce((s,[a,b])=>s+(b-a),0);
+TL.addCerca=function(g,a,b){if(a>b)[a,b]=[b,a];a=Math.max(0,a);b=Math.min(TL.KM,b);let L=g.cer.concat([[a,b]]).sort((p,q)=>p[0]-q[0]);const m=[];for(const s of L){if(m.length&&s[0]<=m[m.length-1][1])m[m.length-1][1]=Math.max(m[m.length-1][1],s[1]);else m.push(s.slice());}
+ const tot=m.reduce((s,[p,q])=>s+(q-p),0);if(tot>g.orc+1e-6){msg('Acabou a cerca: são 8 km de pista.');return false;}g.cer=m;return true;};
+TL.up_pass=function(g,dt){TL.carros(g,dt);TL.up_lobos(g,dt);const F=TL.F[S.f],k=TL.k(),ry=TL.ry();
+ if(g.res){g.res.t+=dt;if(inp.tap&&g.res.t>.6){inp.tap=null;if(g.ok>=1)g.pronto=true;else{g.res=null;g.sim=0;g.lobos=[];}}return;}
+ if(g.sim)return;const B=TL.btObra(),inb=(b,p)=>p&&p.x>b.x&&p.x<b.x+b.w&&p.y>b.y&&p.y<b.y+b.h;
+ if(inp.tap&&inb(B.b,inp.tap)){if(F.tipo==='pass'&&g.pas.length<2){msg('Construa 2 passagens antes.');return;}TL.simula(g);return;}
+ if(inp.tap&&inb(B.a,inp.tap)){if(F.tipo==='pass')g.pas=[];else g.cer=[];return;}
+ if(F.tipo==='cerca'){if(inp.down&&inp.x!==null&&Math.abs(inp.y-ry)<44&&!inb(B.a,inp)&&!inb(B.b,inp)){if(!g.drag)g.drag={a:inp.x/k,cer0:g.cer.map(s=>s.slice())};const b=inp.x/k;g.cer=g.drag.cer0.map(s=>s.slice());if(!TL.addCerca(g,g.drag.a,b))g.cer=g.drag.cer0;if(Math.abs(b-g.drag.a)>.15)g.drag.mov=1;return;}
+  if(!inp.down&&g.drag){const d=g.drag;g.drag=null;if(!d.mov){const x=d.a,j=g.pas.findIndex(p=>Math.abs(p-x)<.35);g.cer=d.cer0;if(j>=0)g.pas.splice(j,1);else if(g.pas.length<3)g.pas.push(Math.round(x*10)/10);else msg('No máximo 3 passagens.');}return;}return;}
+ if(inp.tap&&Math.abs(inp.tap.y-ry)<44){const x=inp.tap.x/k,j=g.pas.findIndex(p=>Math.abs(p-x)<.35);if(j>=0)g.pas.splice(j,1);else if(g.pas.length<2)g.pas.push(Math.round(x*10)/10);else msg('Já são 2 passagens. Toque numa para tirar.');}};
+TL.up_cerca=TL.up_pass;
+/* ---------- fase 5: corredor ---------- */
+TL.ini_corr=function(g,mant){const c=Math.max(30,Math.min(44,Math.floor(Math.min(W/11,(H-170)/12)))),top=(FS.on?84:10)+58,D=TL.dock(),nr=Math.floor((D.y-50-top)/c),nc=Math.floor((W-16)/c);
+ const pn=g.nr,pc=g.nc,tinha=mant&&g.cel;g.c=c;g.nr=Math.max(8,nr);g.nc=nc;g.ox=(W-nc*c)/2;g.oy=top;g.rr=Math.floor(g.nr/2);if(tinha&&pc===nc&&pn===g.nr)return;
+ g.ronda=g.ronda||0;const R=rng(TL.seed*17+g.ronda*101+(mant?0:Math.floor(Math.random()*99)));g.cel=[];
+ for(let r=0;r<g.nr;r++){const row=[];for(let q=0;q<nc;q++){let t='soja';if(r===0||r===g.nr-1)t='nat';if(r===g.rr)t='road';row.push(t);}g.cel.push(row);}
+ /* manchas nativas e beira de córrego */for(let i=0;i<Math.round(nc*g.nr*.07);i++){const r=1+Math.floor(R()*(g.nr-2)),q=Math.floor(R()*nc);if(g.cel[r][q]==='soja')g.cel[r][q]='nat';}
+ for(let r=0;r<g.nr;r++)for(let q=0;q<nc;q++)if((r===1||r===g.nr-2)&&R()<.3&&g.cel[r][q]==='soja')g.cel[r][q]='nat';
+ g.pq=2+Math.floor(R()*(nc-4));g.cel[g.rr][g.pq]='pas';g.res=null;g.sim=0;g.cam=null;g.orc=TL.minimo(g)+2;g.usado=0;g.semen=[];};
+TL.caminho=function(g){const nr=g.nr,nc=g.nc,K=(r,q,s)=>(r*nc+q)*2+s,dist=new Map(),prev=new Map(),Q=[];
+ for(let q=0;q<nc;q++)if(g.cel[0][q]==='nat'){const k=K(0,q,0);dist.set(k,0);Q.push(k);}
+ while(Q.length){const k=Q.shift(),s=k%2,cell=(k-s)/2,r=Math.floor(cell/nc),q=cell%nc;if(r===nr-1)return TL.refaz(prev,k,nc);
+  for(const [dr,dq] of [[1,0],[0,1],[0,-1],[-1,0]]){const r2=r+dr,q2=q+dq;if(r2<0||r2>=nr||q2<0||q2>=nc)continue;const t=g.cel[r2][q2];if(t==='road')continue;let s2=0;if(t==='soja'){if(s>=1)continue;s2=1;}
+   const k2=K(r2,q2,s2);if(dist.has(k2))continue;dist.set(k2,1);prev.set(k2,k);Q.push(k2);}}return null;};
+TL.refaz=function(prev,k,nc){const p=[];while(k!==undefined){const cell=(k-k%2)/2;p.unshift([Math.floor(cell/nc),cell%nc]);k=prev.get(k);}return p;};
+TL.minimo=function(g){const nr=g.nr,nc=g.nc,INF=1e9,D=new Float64Array(nr*nc*2).fill(INF),Q=[];const K=(r,q,s)=>(r*nc+q)*2+s;for(let q=0;q<nc;q++)if(g.cel[0][q]==='nat'){D[K(0,q,0)]=0;Q.push([0,K(0,q,0)]);}
+ while(Q.length){Q.sort((a,b)=>a[0]-b[0]);const [d,k]=Q.shift();if(d>D[k])continue;const s=k%2,cell=(k-s)/2,r=Math.floor(cell/nc),q=cell%nc;if(r===nr-1)return d;
+  for(const [dr,dq] of [[1,0],[0,1],[0,-1],[-1,0]]){const r2=r+dr,q2=q+dq;if(r2<0||r2>=nr||q2<0||q2>=nc)continue;const t=g.cel[r2][q2];if(t==='road')continue;
+   const op=t==='soja'?[[1,0],...(s<1?[[0,1]]:[])]:[[0,0]];for(const [c,s2] of op){const k2=K(r2,q2,s2);if(d+c<D[k2]){D[k2]=d+c;Q.push([d+c,k2]);}}}}return 99;};
+TL.btCorr=TL.btObra;
+TL.up_corr=function(g,dt){if(g.sim){g.st+=dt;for(const s of g.semen)s.t+=dt;if(g.st>g.cam.length*.22+2.2&&g.sim===1){g.sim=2;g.ok++;ganha(20,W/2,H/2);g.res={t:0};}}
+ if(g.res){g.res.t+=dt;if(inp.tap&&g.res.t>.6){inp.tap=null;if(g.ok>=FASES[S.f].meta)g.pronto=true;else{g.ronda++;TL.ini_corr(g);}}return;}if(g.sim)return;
+ if(!inp.tap)return;const tp=inp.tap,B=TL.btCorr(),inb=b=>tp.x>b.x&&tp.x<b.x+b.w&&tp.y>b.y&&tp.y<b.y+b.h;
+ if(inb(B.b)){const p=TL.caminho(g);if(!p){ganha(-5,W/2,H/2);msg('Ainda não há caminho. Procure os trechos de soja seguidos.');return;}g.cam=p;g.sim=1;g.st=0;g.semen=p.filter((_,i)=>i%2===1).map(([r,q])=>({r,q,t:-Math.random()}));return;}
+ if(inb(B.a)){for(const row of g.cel)for(let q=0;q<row.length;q++)if(row[q]==='rest')row[q]='soja';g.usado=0;return;}
+ const q=Math.floor((tp.x-g.ox)/g.c),r=Math.floor((tp.y-g.oy)/g.c);if(r<0||r>=g.nr||q<0||q>=g.nc)return;const t=g.cel[r][q];
+ if(t==='soja'){if(g.usado>=g.orc){msg('Acabaram as mudas. Tire um quadro para usar em outro.');return;}g.cel[r][q]='rest';g.usado++;}else if(t==='rest'){g.cel[r][q]='soja';g.usado--;}};
+/* ---------- desenho ---------- */
+TL.painel=function(D){if(D.h<=0)return;cx.fillStyle='rgba(0,0,0,.12)';cx.beginPath();cx.roundRect(D.x,D.y+3,D.w,D.h,16);cx.fill();rrk(cx,D.x,D.y,D.w,D.h,16,'rgba(255,255,255,.96)');};
+TL.botao=function(b,t,on,cor){rrk(cx,b.x,b.y,b.w,b.h,12,on?(cor||'#c0461b'):'#cfd8dc');cx.fillStyle='#fff';cx.font='bold 13px system-ui';cx.textAlign='center';cx.fillText(t,b.x+b.w/2,b.y+b.h/2+5);};
+TL.rotulo=function(t,y){cx.font='bold 13px system-ui';const w=Math.min(W-16,cx.measureText(t).width+28);rrk(cx,W/2-w/2,y,w,30,15,'rgba(255,255,255,.96)');cx.strokeStyle='#c0461b';cx.lineWidth=2;cx.beginPath();cx.roundRect(W/2-w/2,y,w,30,15);cx.stroke();cx.fillStyle='#7a2a0c';cx.textAlign='center';cx.fillText(t,W/2,y+20,W-30);};
+TL.cartao=function(y0,h,linhas,cor){const m=MOB(),cw=Math.min(W-20,m?340:440),x0=W/2-cw/2;rrk(cx,x0,y0,cw,h,16,'rgba(255,255,255,.97)');cx.strokeStyle=cor||'#c0461b';cx.lineWidth=2;cx.beginPath();cx.roundRect(x0,y0,cw,h,16);cx.stroke();cx.textAlign='center';
+ for(const [t,y,f,c] of linhas){cx.font=f;cx.fillStyle=c;cx.fillText(t,W/2,y0+y,cw-24);}return {x0,cw};};
+TL.passagem=function(x,ok){const ry=TL.ry(),rw=TL.rw();cx.fillStyle='rgba(40,30,20,.35)';cx.fillRect(x-11,ry-rw/2-12,22,rw+24);rrk(cx,x-10,ry-rw/2-12,20,10,3,'#8d8d8d');rrk(cx,x-10,ry+rw/2+2,20,10,3,'#8d8d8d');cx.fillStyle='#2b2b2b';cx.fillRect(x-7,ry-rw/2-9,14,6);cx.fillRect(x-7,ry+rw/2+4,14,6);
+ cx.strokeStyle=ok?'#2e7d32':'#c0461b';cx.lineWidth=2;cx.setLineDash([3,3]);cx.beginPath();cx.moveTo(x,ry-rw/2-3);cx.lineTo(x,ry+rw/2+3);cx.stroke();cx.setLineDash([]);};
+TL.cercaD=function(a,b){const ry=TL.ry(),rw=TL.rw(),k=TL.k();for(const sg of [-1,1]){const y=ry+sg*(rw/2+8);cx.strokeStyle='#4e342e';cx.lineWidth=2.4;cx.beginPath();cx.moveTo(a*k,y);cx.lineTo(b*k,y);cx.stroke();cx.fillStyle='#3e2723';for(let x=a*k;x<=b*k;x+=10)cx.fillRect(x-1,y-3,2,6);}};
+TL.draw=function(g){const F=TL.F[S.f],m=MOB(),D=TL.dock(),k=TL.k(),ry=TL.ry();
+ if(F.tipo==='corr'){TL.drawCorr(g);FS.hud(g,'#7a2a0c');return;}
+ cx.drawImage(TL.mapa(W,H,0),0,0,W,H);
+ if(F.tipo==='guia'){for(const s of g.sem||[]){const a=Math.min(1,s.t/2);cx.globalAlpha=a;TL.copa(cx,s.x,s.y,3+a*3,'#9fcf6a','#4a7a2e');cx.globalAlpha=1;}
+  for(const f of g.frutos){const p=1+Math.sin(g.t*4)*.08;cx.strokeStyle='rgba(192,70,27,.6)';cx.lineWidth=2;cx.beginPath();cx.arc(f.x,f.y,24*p,0,7);cx.stroke();TL.lobeira(f.x,f.y,1.25,1);}
+  for(const c of g.cars)TL.carro(c);const L=g.lobo;if(g.morto>0){cx.fillStyle='rgba(198,40,40,.85)';cx.font='bold 26px system-ui';cx.textAlign='center';cx.fillText('✕',g.boom.x,g.boom.y+9);}else loboTop(cx,L.x,L.y,m?64:76,L.a,g.t,L.mov);
+  if(g.alvo&&g.morto<=0){cx.strokeStyle='rgba(255,255,255,.9)';cx.lineWidth=2;cx.beginPath();cx.arc(g.alvo.x,g.alvo.y,8,0,7);cx.stroke();}
+  if(S.g.msgT<=0&&g.ok<1)TL.rotulo(m?'Toque ou arraste para guiar o lobo.':'Toque ou arraste para guiar o lobo até a lobeira.',H-44);}
+ if(F.tipo==='hot'){TL.painel(D);const B=TL.barras(),n=Math.floor(g.recs.length*g.tv),mx=Math.max(...g.cont,1);const c=new Array(TL.KM).fill(0);
+  for(const s of g.sel){cx.fillStyle='rgba(192,70,27,.18)';cx.fillRect(s*k,0,k,D.y-4);cx.strokeStyle='#c0461b';cx.lineWidth=2;cx.strokeRect(s*k+1,ry-TL.rw()/2-14,k-2,TL.rw()+28);}
+  for(let i=0;i<n;i++){const r=g.recs[i];c[Math.min(TL.KM-1,Math.floor(r.x))]++;const x=r.x*k,y=ry+((i*37)%11-5)*TL.rw()/14;cx.fillStyle='#c62828';cx.strokeStyle='#fff';cx.lineWidth=1.5;cx.beginPath();cx.arc(x,y,4.5,0,7);cx.fill();cx.stroke();}
+  cx.textAlign='left';cx.fillStyle='#37474f';cx.font='bold 12px system-ui';cx.fillText('Lobos atropelados por km · '+(g.tv<1?'mês '+(Math.floor(g.tv*12)+1)+' de 12':'12 meses, '+g.recs.length+' registros'),D.x+14,D.y+18);
+  for(let i=0;i<TL.KM;i++){const v=g.tv<1?c[i]:g.cont[i],h=B.h*v/mx,x=B.x0+i*B.bw;const sel=g.sel.includes(i),cert=g.res&&g.cont[i]>=g.lim;rrk(cx,x+2,B.y1-h,B.bw-4,Math.max(1,h),3,cert?'#2e7d32':sel?'#c0461b':'#bcaaa4');cx.fillStyle='#546e7a';cx.font='10px system-ui';cx.textAlign='center';cx.fillText(i+'-'+(i+1),x+B.bw/2,B.y1+12);if(g.tv>=1&&v){cx.fillStyle='#37474f';cx.font='bold 10px system-ui';cx.fillText(v,x+B.bw/2,B.y1-h-3);}}
+  if(g.tv>=1)TL.botao(B.bt,'CONFERIR',g.sel.length===2);
+  if(g.res){const c2=g.res.c;TL.cartao(m?110:96,112,[[c2===2?'Trechos críticos certos!':c2+' de 2 trechos certos',32,'bold 17px system-ui',c2===2?'#2e7d32':'#c62828'],['Em verde: os trechos com mais registros por km.',58,'12px system-ui','#546e7a'],['Eles ficam onde as veredas cruzam a pista.',76,'12px system-ui','#546e7a'],['toque para '+(c2===2?'continuar':'tentar de novo'),100,'11px system-ui','#90a4ae']]);}
+  else if(g.tv>=1&&S.g.msgT<=0)TL.rotulo(m?'Marque as 2 barras mais altas.':'Toque nas 2 barras mais altas ou nos trechos da pista.',D.y-40);}
+ if(F.tipo==='pass'||F.tipo==='cerca'){for(const c of g.cars)TL.carro(c);for(const [a,b] of g.cer)TL.cercaD(a,b);
+  for(const p of g.pas)TL.passagem(p*k,TL.hs.slice(0,2).some(h=>Math.abs(h.x-p)<.7));if(g.drag){cx.fillStyle='rgba(78,52,46,.12)';cx.fillRect(0,ry-44,W,88);}
+  for(const l of g.lobos||[]){if(l.t<0)continue;const P=TL.posLobo(l);if(!P)continue;if(P.f===2){cx.fillStyle='#c62828';cx.font='bold 18px system-ui';cx.textAlign='center';cx.fillText('✕',P.x,P.y+6);continue;}cx.globalAlpha=P.sob?.45:1;loboTop(cx,P.x,P.y,m?40:46,P.a,g.t+l.x0,1);cx.globalAlpha=1;}
+  TL.painel(D);const B=TL.btObra();
+  if(F.tipo==='pass'){TL.botao(B.a,'LIMPAR',g.pas.length>0,'#6d4c41');TL.botao(B.b,'SIMULAR 400',g.pas.length>=2);if(!m){cx.textAlign='left';cx.fillStyle='#37474f';cx.font='bold 13px system-ui';cx.fillText('Passagens: '+g.pas.length+' de 2',D.x+16,D.y+D.h/2+5);}}
+  else{TL.botao(B.a,'TIRAR CERCA',g.cer.length>0,'#6d4c41');TL.botao(B.b,'SIMULAR 400',true);const u=TL.usoCerca(g);cx.textAlign='left';cx.fillStyle='#37474f';cx.font='bold 12px system-ui';if(!m){cx.fillText('Cerca: '+u.toFixed(1).replace('.',',')+' de 8 km de pista',D.x+16,D.y+22);cx.fillText('Passagens: '+g.pas.length+' de 3',D.x+16,D.y+42);}else{cx.textAlign='center';cx.fillText('cerca '+u.toFixed(1).replace('.',',')+' de 8 km · passagens '+g.pas.length+' de 3',W/2,D.y-8);}}
+  if(g.res){const r=g.res,mx=Math.max(g.antes,1),y0=m?96:84,c=TL.cartao(y0,176,[[r.ok?'Simulação concluída':'Simulação concluída',28,'bold 16px system-ui',r.ok?'#2e7d32':'#c62828'],['lobos mortos em 400 travessias simuladas',48,'12px system-ui','#546e7a'],['redução: '+Math.round(r.red*100)+'%',126,'bold '+(m?20:22)+'px system-ui','#37474f'],[r.txt,148,'12px system-ui','#546e7a'],['toque para '+(r.ok?'continuar':'mudar a obra'),168,'11px system-ui','#90a4ae']]);
+   const bx=c.x0+92,bw=c.cw-150;cx.textAlign='left';cx.font='12px system-ui';cx.fillStyle='#37474f';cx.fillText('sem obra',c.x0+16,y0+72);rrk(cx,bx,y0+62,bw,14,7,'#c62828');cx.fillText(g.antes,bx+bw+6,y0+73);cx.fillText('com obra',c.x0+16,y0+96);rrk(cx,bx,y0+86,Math.max(4,bw*g.depois/mx),14,7,'#2e7d32');cx.fillText(g.depois,bx+Math.max(4,bw*g.depois/mx)+6,y0+97);}
+  else if(!g.sim&&S.g.msgT<=0)TL.rotulo(F.tipo==='pass'?(m?'Toque na pista para pôr passagens.':'Toque na pista para construir as 2 passagens.'):(m?'Arraste na pista: cerca. Toque: passagem.':'Arraste ao longo da pista para pôr cerca. Toque para pôr ou tirar passagem.'),D.y-(m&&F.tipo==='cerca'?62:40));}
+ FS.hud(g,'#7a2a0c');};
+TL.tex=function(t,c){return cache('tlcel'+t,c,c,k=>{const R=rng(t==='nat'?3:9);if(t==='soja'){k.fillStyle='#a3bd55';k.fillRect(0,0,c,c);k.strokeStyle='rgba(70,100,30,.45)';k.lineWidth=1.4;for(let y=2;y<c;y+=4){k.beginPath();k.moveTo(0,y);k.lineTo(c,y);k.stroke();}}
+ else if(t==='nat'){k.fillStyle='#7f9446';k.fillRect(0,0,c,c);for(let i=0;i<12;i++)TL.copa(k,R()*c,R()*c,3+R()*4.5,R()<.5?'#89a650':'#6f8f3e','#2f4d22');}
+ else{k.fillStyle='#d2c98e';k.fillRect(0,0,c,c);k.strokeStyle='rgba(120,100,60,.25)';for(let y=3;y<c;y+=6){k.beginPath();k.moveTo(0,y);k.lineTo(c,y);k.stroke();}for(let i=0;i<5;i++)TL.copa(k,4+R()*(c-8),4+R()*(c-8),2+R()*2.2,'#a6d56c','#4f8a32');}});};
+TL.drawCorr=function(g){const m=MOB(),D=TL.dock(),c=g.c;cx.fillStyle='#d9cfa6';cx.fillRect(0,0,W,H);
+ for(let r=0;r<g.nr;r++)for(let q=0;q<g.nc;q++){const t=g.cel[r][q],x=g.ox+q*c,y=g.oy+r*c;if(t==='road'||t==='pas'){cx.fillStyle='#5b5e60';cx.fillRect(x,y+c*.2,c,c*.6);cx.fillStyle='#f2c230';cx.fillRect(x+2,y+c/2-1,c*.4,2);continue;}cx.drawImage(TL.tex(t,c),x,y);}
+ const pq=g.ox+g.pq*c,ry=g.oy+g.rr*c;cx.strokeStyle='#4e342e';cx.lineWidth=2;for(const sg of [0,1]){cx.beginPath();cx.moveTo(g.ox,ry+c*.2+sg*c*.6);cx.lineTo(g.ox+g.nc*c,ry+c*.2+sg*c*.6);cx.stroke();}
+ rrk(cx,pq+c*.2,ry+c*.05,c*.6,c*.9,4,'rgba(60,60,60,.6)');cx.strokeStyle='#2e7d32';cx.lineWidth=2;cx.strokeRect(pq+c*.2,ry+c*.05,c*.6,c*.9);
+ cx.strokeStyle='rgba(255,255,255,.35)';cx.lineWidth=1;for(let r=0;r<=g.nr;r++){cx.beginPath();cx.moveTo(g.ox,g.oy+r*c);cx.lineTo(g.ox+g.nc*c,g.oy+r*c);cx.stroke();}for(let q=0;q<=g.nc;q++){cx.beginPath();cx.moveTo(g.ox+q*c,g.oy);cx.lineTo(g.ox+q*c,g.oy+g.nr*c);cx.stroke();}
+ cx.font='bold 11px system-ui';cx.textAlign='left';for(const [t,y] of [['mata do norte',g.oy+14],['mata do sul',g.oy+(g.nr-1)*c+14]]){const w=cx.measureText(t).width+12;rrk(cx,g.ox+4,y-11,w,16,8,'rgba(255,255,255,.9)');cx.fillStyle='#33691e';cx.fillText(t,g.ox+10,y+1);}
+ for(const s of g.semen||[]){if(s.t<0)continue;const a=Math.min(1,s.t/1.5);cx.globalAlpha=a;TL.lobeira(g.ox+s.q*c+c/2,g.oy+s.r*c+c/2,.55+a*.2,a>.8);cx.globalAlpha=1;}
+ if(g.sim&&g.cam){const p=g.cam,u=g.st/.22,i=Math.min(p.length-1,Math.floor(u)),f=u-i,j=Math.min(p.length-1,i+1);cx.strokeStyle='rgba(192,70,27,.7)';cx.lineWidth=3;cx.setLineDash([5,4]);cx.beginPath();p.forEach(([r,q],n)=>{const x=g.ox+q*c+c/2,y=g.oy+r*c+c/2;n?cx.lineTo(x,y):cx.moveTo(x,y);});cx.stroke();cx.setLineDash([]);
+  const x=g.ox+(p[i][1]+(p[j][1]-p[i][1])*f)*c+c/2,y=g.oy+(p[i][0]+(p[j][0]-p[i][0])*f)*c+c/2;loboTop(cx,x,y,m?44:52,Math.atan2(p[j][0]-p[i][0],p[j][1]-p[i][1]+1e-6),g.t,i<p.length-1);}
+ {const lg2=[['nat','Cerrado'],['soja','soja'],['rest','restaurado']];let lx=W-10;cx.font='11px system-ui';cx.textAlign='left';for(let i=2;i>=0;i--){const [t,n]=lg2[i],w=cx.measureText(n).width+30;lx-=w;cx.drawImage(TL.tex(t,g.c),0,0,g.c,g.c,lx,g.oy-24,14,14);cx.fillStyle='#37474f';cx.fillText(n,lx+18,g.oy-13);}}
+ TL.painel(D);const B=TL.btCorr();TL.botao(B.a,'LIMPAR',g.usado>0,'#6d4c41');TL.botao(B.b,'SOLTAR O LOBO',!g.sim);
+ cx.textAlign=m?'center':'left';cx.fillStyle='#37474f';cx.font='bold 12px system-ui';const tx='mudas: '+g.usado+' de '+g.orc+' quadros';if(m)cx.fillText(tx,W/2,D.y-8);else cx.fillText(tx,D.x+16,D.y+D.h/2+5);
+ if(g.res)TL.cartao(m?110:96,104,[['O lobo atravessou!',32,'bold 17px system-ui','#2e7d32'],['Pelo caminho ficaram sementes de lobeira.',58,'12px system-ui','#546e7a'],['corredores feitos: '+g.ok+' de '+FASES[S.f].meta,78,'12px system-ui','#546e7a'],['toque para continuar',96,'11px system-ui','#90a4ae']]);
+ else if(!g.sim&&S.g.msgT<=0)TL.rotulo(m?'Toque na soja para restaurar.':'Toque nos quadros de soja para restaurar o Cerrado.',D.y-(m?62:40));};
 const PERG=[
- {q:'Para que serve uma passagem de fauna numa estrada?',o:['Deixar os animais atravessarem sem serem atropelados','Guardar as máquinas da lavoura','Servir de abrigo para os carros']},
- {q:'O que é um corredor ecológico?',o:['Uma faixa de vegetação que liga dois pedaços de mata','Uma estrada larga para os animais correrem','Um muro que separa a mata da lavoura']},
- {q:'Em qual bioma vive o lobo-guará?',o:['Cerrado','Pampa','Mata dos Cocais']}
-];
+ {q:'Qual fruto do Cerrado é tão comido pelo lobo-guará que leva o nome dele?',o:['Lobeira','Pequi','Buriti']},
+ {q:'Para escolher onde fazer obras contra atropelamento, o que se procura nos dados?',o:['Os trechos com mais mortes por km','Os trechos com menos carros','O meio exato da rodovia']},
+ {q:'Na revisão de 50 estudos, qual foi o efeito das passagens de fauna sem cerca?',o:['Nenhum efeito detectável','Redução de 83%','Aumento das mortes']},
+ {q:'Por que o fim da cerca pede cuidado?',o:['O animal segue a cerca e cruza onde ela acaba','A cerca atrai os carros para o acostamento','O lobo pula a cerca no meio do trecho']},
+ {q:'Como o lobo-guará ajuda o Cerrado a voltar?',o:['Espalha sementes de lobeira nas fezes','Poliniza as flores do buriti','Abre lagoas cavando tocas']}];
 function pergunta(){
  const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
  $('tela').innerHTML=`<div class="card"><h2>Pergunta da fase</h2><p style="margin:6px 0 4px">${P.q}</p><p class="small">Acerto +20, erro −10.</p><div class="ops">${ops.map((o,i)=>`<button data-i="${i}">${o.t}</button>`).join('')}</div><div id="pf"></div></div>`;
@@ -196,11 +469,11 @@ function pergunta(){
   $('bn').onclick=()=>{S.tot+=S.fp;S.fp=0;if(S.f===FASES.length-1)final(true);else{S.f++;fase();}};});
 }
 function final(tudo){
- S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
- $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Lobo em segurança':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
+ S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?FASES.length+' fases':'Fase '+(S.f+1);
+ $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Engenheira da travessia!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
  <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
- <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Andrade, B. R. (2020), Conectando a Estação Ecológica de Águas Emendadas: proposta de corredores ecológicos para o lobo-guará, dissertação UnB; Physis Terrae, proposta de corredores para o lobo-guará no Distrito Federal: espécie endêmica do Cerrado e quase ameaçada; Olarte Jimenez (2012), dissertação UFMG: área de vida de 54,72 ± 29,04 km² em lobos-guará da Serra da Canastra. Pistas, veículos e pontos são regras do jogo.</div></div>`;
+ <div class="small" style="margin-top:12px;text-align:left">Fontes: Rytwinski et al. (2016), How effective is road mitigation at reducing road-kill? A meta-analysis, PLoS ONE 11(11): e0166941 (50 estudos; cercas com passagens reduziram 83% dos atropelamentos de grandes mamíferos; passagens sem cerca não tiveram efeito detectável; animais seguem a cerca e cruzam no fim dela); Paula et al. (2013), Avaliação do risco de extinção do lobo-guará Chrysocyon brachyurus no Brasil, Biodiversidade Brasileira 3(1) (Vulnerável; ocorre principalmente no Cerrado e no Pampa); Revista Pesquisa FAPESP, A dieta equilibrada do lobo-guará, estudo de J. C. Motta-Junior (lobeira, gabiroba e pequenos roedores entre os itens mais comidos; sementes passam intactas e germinam); Veloso (2019), Dieta e dispersão de sementes de lobeira pelo lobo-guará, dissertação UFU (sementes das fezes germinaram mais que as do fruto). Mapa de 12 km, veredas, trilhas sorteadas, risco de 40% ao cruzar o asfalto, uso de 30% da passagem sem cerca, cerca para 8 km de pista, passagem achada a até 1 km dentro da cerca, regra de no máximo um quadro de soja seguido, trânsito e pontos são regras do jogo.</div></div>`;
  $('bS').onclick=()=>salvar(nivel);
 }
 const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
@@ -209,7 +482,7 @@ const GAME_ID="corredor-do-lobo";let db=null,fs=null,salvo=false;
 async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
 async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
  $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
-window.__a={get S(){return S},update,parar,G,inp};
+window.__a={get S(){return S},update,parar,G,inp,tec};
 inicio();
 </script>
 </body>
