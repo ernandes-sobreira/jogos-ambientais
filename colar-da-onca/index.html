@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Siga a Onça</title>
 <style>
-:root{--main:#ef6c00;--deep:#bf5000;--soft:#fff3e6;--line:#ffe0c2;--ink:#2b1c0e;--mut:#6e5a46}
+:root{--main:#ff8f00;--deep:#bf360c;--soft:#fff8e1;--line:#ffecb3;--ink:#10212b;--mut:#4d6370}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
 .wrap{max-width:780px;margin:0 auto;padding:12px 14px 40px}
@@ -43,7 +43,7 @@ canvas{width:100%;max-width:760px;margin:0 auto;display:block;border:2px solid v
 <a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
 <header>
   <h1>Siga a Onça</h1>
-  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1/3</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF">Fase 1</span><span class="pill" id="hP">0 pts</span><span class="pill" id="hR"></span><span class="pill" id="hV"></span><span class="pill" id="hT"></span></div>
 </header>
 <main id="tela"></main>
 <div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
@@ -117,7 +117,7 @@ let S,cv,cx,raf=null,last=0,W=720,H=460,inp={x:null,y:null,down:false,tap:null},
 const MOB=()=>W<520;
 function rrect(x,y,w,h,r,cor){cx.fillStyle=cor;cx.beginPath();cx.roundRect(x,y,w,h,r);cx.fill();}
 function sombra(x,y,rx,ry){cx.fillStyle='rgba(0,0,0,.12)';cx.beginPath();cx.ellipse(x,y,rx,ry,0,0,7);cx.fill();}
-function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/3';$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
+function hud(){$('hud').style.display='flex';$('hF').textContent='Fase '+(S.f+1)+'/'+G.FASES.length;$('hP').textContent=(S.tot+S.fp)+' pts';const g=S.g;
  if(g&&!g.fim){const [a,m]=G.meta(g);$('hR').textContent=G.rotulo+' '+a+'/'+m;$('hV').textContent=G.vidas?'Vidas '+'●'.repeat(Math.max(0,g.vidas)):'';$('hT').textContent=G.semTempo?'':Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s';}
  ['hR','hV','hT'].forEach(k=>$(k).style.display=$(k).textContent?'':'none');}
 function inicio(){parar();$('hud').style.display='none';$('rankBox').style.display='block';
@@ -151,40 +151,206 @@ function terminar(){const g=S.g;if(g.fim)return;g.fim=true;parar();const F=G.FAS
  <p class="small" style="margin-top:6px">${ok?G.FASES[S.f].fato:G.dicaErro}</p>
  <div class="row" style="justify-content:center;margin-top:14px">${ok?'<button class="btn grande" id="bq">Pergunta rápida</button>':'<button class="btn grande" id="br">Jogar de novo</button><button class="btn ghost" id="be">Encerrar</button>'}</div></div>`;
  if(ok)$('bq').onclick=pergunta;else{$('br').onclick=fase;$('be').onclick=()=>{S.tot+=Math.max(0,S.fp);S.fp=0;final(false);};}}
-/* Colares GPS registram a posição da onça de tempos em tempos (Revista Pesquisa FAPESP); a área de vida pode ser desenhada como o menor polígono que envolve os pontos. Caminho da onça é sorteado pelo jogo. */
-const G={titulo:'Siga a Onça',rotulo:'Pontos de GPS',vidas:0,
- resumo:'Pesquisadores colocam colares com GPS em onças-pintadas do Pantanal. Cada ponto mostra por onde a onça passou. Juntando os pontos, descobrimos a área de vida dela.',
- como:[['Arraste','Leve a antena até perto da onça.'],['Sinal','Com a onça dentro do círculo, o colar manda um ponto de GPS: +5.'],['No fim','O jogo desenha a área de vida com os seus pontos.']],
- dica:'Arraste a antena e mantenha a onça dentro do círculo.',dicaErro:'Fique sempre perto da onça: fora do círculo não chega sinal.',
- FASES:[{nome:'Onça tranquila',dur:40,meta:20,v:50,metaTxt:'receber 20 pontos de GPS em 40 s.',txt:'A onça anda devagar pela mata e pelos campos.',fato:'O colar GPS registra a posição da onça várias vezes por dia, mesmo quando ninguém está vendo.'},
-  {nome:'Onça andarilha',dur:45,meta:26,v:80,metaTxt:'receber 26 pontos de GPS em 45 s.',txt:'Ela anda mais rápido e muda de direção. Na água a antena fica mais lenta.',fato:'Com os pontos, os cientistas desenham a área de vida: o menor polígono que envolve todas as posições.'},
-  {nome:'Noite de caça',dur:45,meta:30,v:105,metaTxt:'receber 30 pontos de GPS em 45 s.',txt:'A onça corre atrás de presas. Não a perca de vista.',fato:'Saber a área de vida mostra quanto espaço a onça precisa para sobreviver e onde proteger a mata.'}],
- init(g){g.ox=W*.6;g.oy=H*.5;g.oa=rr(0,7);g.ax=W*.3;g.ay=H*.5;g.pts=[];g.tick=0;g.lagos=[[W*.3,H*.3,70,40],[W*.75,H*.75,80,45]];g.matas=[];for(let i=0;i<14;i++)g.matas.push([rr(0,W),rr(0,H),rr(20,40)]);g.f=0;},
- meta(g){return [g.pts.length,FASES[S.f].meta];},cedo(g){return g.pts.length>=FASES[S.f].meta;},
- update(g,dt){const F=FASES[S.f];g.f+=dt;if(Math.random()<dt*.9)g.oa+=rr(-1.4,1.4);g.ox+=Math.cos(g.oa)*F.v*dt;g.oy+=Math.sin(g.oa)*F.v*dt;
-  if(g.ox<40||g.ox>W-40){g.oa=Math.PI-g.oa;g.ox=Math.max(40,Math.min(W-40,g.ox));}if(g.oy<60||g.oy>H-40){g.oa=-g.oa;g.oy=Math.max(60,Math.min(H-40,g.oy));}
-  const naAgua=g.lagos.some(l=>((g.ax-l[0])/l[2])**2+((g.ay-l[1])/l[3])**2<1);const k=naAgua?2:7;
-  if(inp.down&&inp.x!=null){g.ax+=(inp.x-g.ax)*Math.min(1,dt*k);g.ay+=(inp.y-g.ay)*Math.min(1,dt*k);}
-  const kx=(tec.ArrowRight?1:0)-(tec.ArrowLeft?1:0),ky=(tec.ArrowDown?1:0)-(tec.ArrowUp?1:0);g.ax+=kx*(naAgua?90:220)*dt;g.ay+=ky*(naAgua?90:220)*dt;
-  const dentro=Math.hypot(g.ox-g.ax,g.oy-g.ay)<(MOB()?90:110);g.dentro=dentro;g.tick-=dt;
-  if(dentro&&g.tick<=0){g.pts.push([g.ox,g.oy]);g.tick=1.1;ganha(5,g.ox,g.oy-20);}},
- draw(g){cx.fillStyle='#e6efc9';cx.fillRect(0,0,W,H);for(const m of g.matas){cx.fillStyle='#a5c77f';cx.beginPath();cx.arc(m[0],m[1],m[2],0,7);cx.arc(m[0]+m[2]*.7,m[1]+m[2]*.3,m[2]*.8,0,7);cx.fill();}
-  for(const l of g.lagos){cx.fillStyle='#9fd3e6';cx.beginPath();cx.ellipse(l[0],l[1],l[2],l[3],0,0,7);cx.fill();}
-  if(g.pts.length>2){const h=hull(g.pts.map(([x,y])=>({x,y})));cx.fillStyle='rgba(255,152,0,.15)';cx.strokeStyle='#ff9800';cx.lineWidth=2;cx.beginPath();h.forEach((p,i)=>i?cx.lineTo(p.x,p.y):cx.moveTo(p.x,p.y));cx.closePath();cx.fill();cx.stroke();}
-  for(const [x,y] of g.pts){cx.fillStyle='#e65100';cx.beginPath();cx.arc(x,y,4,0,7);cx.fill();}
-  sombra(g.ox,g.oy+16,30,6);oncaSil(cx,g.ox,g.oy,1.4,Math.cos(g.oa)>=0?1:-1);
-  const r=MOB()?90:110;cx.strokeStyle=g.dentro?'rgba(46,125,50,.8)':'rgba(198,40,40,.7)';cx.lineWidth=3;cx.setLineDash([8,6]);cx.beginPath();cx.arc(g.ax,g.ay,r,0,7);cx.stroke();cx.setLineDash([]);
-  cx.fillStyle='#37474f';cx.fillRect(g.ax-2,g.ay-24,4,26);cx.strokeStyle='#37474f';cx.lineWidth=3;cx.beginPath();cx.moveTo(g.ax-14,g.ay-24);cx.lineTo(g.ax+14,g.ay-24);cx.moveTo(g.ax-10,g.ay-17);cx.lineTo(g.ax+10,g.ay-17);cx.stroke();
-  rrect(W-140,H-40,130,30,15,'rgba(255,255,255,.92)');cx.fillStyle=g.dentro?'#2e7d32':'#c62828';cx.font='bold 13px system-ui';cx.textAlign='center';cx.fillText(g.dentro?'Sinal: forte':'Sinal: perdido',W-75,H-20);},
- capa(k,w,h){const o=cx;cx=k;k.fillStyle='#e6efc9';k.fillRect(0,0,w,h);const pts=[[140,60],[260,40],[380,80],[460,140],[330,180],[190,160]];k.fillStyle='rgba(255,152,0,.2)';k.strokeStyle='#ff9800';k.lineWidth=3;k.beginPath();pts.forEach((p,i)=>i?k.lineTo(...p):k.moveTo(...p));k.closePath();k.fill();k.stroke();for(const p of pts){k.fillStyle='#e65100';k.beginPath();k.arc(p[0],p[1],6,0,7);k.fill();}oncaSil(k,320,115,2.2,1);cx=o;}
-};
-function hull(P){const p=P.slice().sort((a,b)=>a.x-b.x||a.y-b.y);const cr=(o,a,b)=>(a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x);const lo=[],up=[];for(const q of p){while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],q)<=0)lo.pop();lo.push(q);}for(const q of p.slice().reverse()){while(up.length>=2&&cr(up[up.length-2],up[up.length-1],q)<=0)up.pop();up.push(q);}return lo.slice(0,-1).concat(up.slice(0,-1));}
+/* ---------- arte vetorial compartilhada ---------- */
+beep=function(){};
+function rng(s){s=s%2147483647;if(s<=0)s+=2147483646;return()=>{s=s*16807%2147483647;return(s-1)/2147483646;};}
+function lg(k,x0,y0,x1,y1,st){const g=k.createLinearGradient(x0,y0,x1,y1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+function rg(k,x,y,r0,r1,st){const g=k.createRadialGradient(x,y,r0,x,y,r1);st.forEach((c,i)=>g.addColorStop(i/(st.length-1),c));return g;}
+const CACHE={};
+function cache(key,w,h,fn){const id=key+'_'+w+'x'+h;if(!CACHE[id]){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);CACHE[id]=c;}return CACHE[id];}
+function ceu(k,w,h,cs){k.fillStyle=lg(k,0,0,0,h,cs);k.fillRect(0,0,w,h);}
+function sol(k,x,y,r,c){k.fillStyle=rg(k,x,y,0,r*4,[c,'rgba(255,255,255,0)']);k.fillRect(x-r*4,y-r*4,r*8,r*8);k.fillStyle=c;k.beginPath();k.arc(x,y,r,0,7);k.fill();}
+function nuvem(k,x,y,s,a){k.fillStyle='rgba(255,255,255,'+(a||.8)+')';for(const [dx,dy,r] of [[0,0,1],[1.1,.15,.8],[-1,.2,.75],[.5,-.45,.7],[-.4,-.35,.6]]){k.beginPath();k.arc(x+dx*s,y+dy*s,r*s,0,7);k.fill();}k.fillRect(x-1.7*s,y+.2*s,3.6*s,.8*s);}
+function serra(k,w,y,amp,cor,seed){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,y+amp*2);let x=0;k.lineTo(0,y);while(x<w+40){x+=30+r()*50;k.lineTo(x,y-r()*amp);}k.lineTo(w,y+amp*4);k.lineTo(0,y+amp*4);k.fill();}
+function matas(k,w,y,amp,cor,seed,base){const r=rng(seed);k.fillStyle=cor;k.beginPath();k.moveTo(0,base);k.lineTo(0,y);let x=0;while(x<w+30){const rr=8+r()*amp;k.arc(x+rr,y-r()*amp*.6,rr,Math.PI,0);x+=rr*1.6;}k.lineTo(w,base);k.closePath();k.fill();}
+function capim(k,x0,y0,w,h,cor,seed,n){const r=rng(seed);k.strokeStyle=cor;k.lineCap='round';for(let i=0;i<n;i++){const x=x0+r()*w,y=y0+r()*h,l=4+r()*10;k.lineWidth=1+r()*1.2;for(let j=-1;j<=1;j++){k.beginPath();k.moveTo(x,y);k.quadraticCurveTo(x+j*3,y-l*.6,x+j*5+r()*2,y-l);k.stroke();}}}
+function copa(k,x,y,r,cs,seed){const R=rng(seed);const pts=[];for(let i=0;i<9;i++){const a=R()*Math.PI*2,d=R()*r*.55;pts.push([x+Math.cos(a)*d,y+Math.sin(a)*d*.7,r*(.35+R()*.3)]);}
+ k.fillStyle=cs[0];for(const [a,b,c] of pts){k.beginPath();k.arc(a+c*.12,b+c*.18,c,0,7);k.fill();}
+ k.fillStyle=cs[1];for(const [a,b,c] of pts){k.beginPath();k.arc(a,b,c*.92,0,7);k.fill();}
+ k.fillStyle=cs[2];for(const [a,b,c] of pts){k.beginPath();k.arc(a-c*.25,b-c*.3,c*.5,0,7);k.fill();}}
+function tronco(k,x,y0,y1,w0,w1,c1,c2){k.fillStyle=lg(k,x-w0,0,x+w0,0,[c2,c1,c1,c2]);k.beginPath();k.moveTo(x-w0,y0);k.lineTo(x-w1,y1);k.lineTo(x+w1,y1);k.lineTo(x+w0,y0);k.fill();k.strokeStyle='rgba(0,0,0,.12)';k.lineWidth=1;for(let y=y1+8;y<y0;y+=11){const t=(y-y1)/(y0-y1),ww=w1+(w0-w1)*t;k.beginPath();k.moveTo(x-ww*.6,y);k.quadraticCurveTo(x,y+3,x+ww*.5,y-1);k.stroke();}}
+function palmeira(k,x,y,h,lean,cfr,ctr,seed,nf){const R=rng(seed);const tx=x+lean,ty=y-h;k.strokeStyle=ctr;k.lineCap='round';for(let i=0;i<14;i++){const t0=i/14,t1=(i+1)/14;k.lineWidth=h*.05*(1-t0*.35);const xa=x+lean*t0*t0,ya=y-h*t0,xb=x+lean*t1*t1,yb=y-h*t1;k.beginPath();k.moveTo(xa,ya);k.lineTo(xb,yb);k.stroke();}
+ k.strokeStyle='rgba(0,0,0,.15)';k.lineWidth=1;for(let i=1;i<14;i++){const t=i/14,xa=x+lean*t*t,ya=y-h*t;k.beginPath();k.moveTo(xa-h*.022,ya);k.lineTo(xa+h*.022,ya);k.stroke();}
+ nf=nf||9;for(let f=0;f<nf;f++){const a=-Math.PI/2+(f-(nf-1)/2)*(2.6/nf)+(R()-.5)*.2,L=h*(.38+R()*.12),dr=.55+R()*.25;const ex=tx+Math.cos(a)*L,ey=ty+Math.sin(a)*L*.55+L*dr*.5;const mx=tx+Math.cos(a)*L*.5,my=ty+Math.sin(a)*L*.5-L*.12;
+  k.strokeStyle=cfr[0];k.lineWidth=2;k.beginPath();k.moveTo(tx,ty);k.quadraticCurveTo(mx,my,ex,ey);k.stroke();
+  for(let j=1;j<16;j++){const t=j/16,px=(1-t)*(1-t)*tx+2*(1-t)*t*mx+t*t*ex,py=(1-t)*(1-t)*ty+2*(1-t)*t*my+t*t*ey;const ll=L*.16*(1-t*.5);k.strokeStyle=cfr[j%2];k.lineWidth=1.6;k.beginPath();k.moveTo(px,py);k.lineTo(px+Math.cos(a+1.6)*ll*.5,py+ll);k.moveTo(px,py);k.lineTo(px+Math.cos(a-1.6)*ll*.5,py+ll*.9);k.stroke();}}}
+function sombraE(k,x,y,rx,ry,a){k.fillStyle='rgba(20,30,20,'+(a||.18)+')';k.beginPath();k.ellipse(x,y,rx,ry,0,0,7);k.fill();}
+function vinheta(k,w,h){k.fillStyle=rg(k,w/2,h/2,Math.min(w,h)*.45,Math.max(w,h)*.8,['rgba(0,0,0,0)','rgba(0,0,0,.18)']);k.fillRect(0,0,w,h);}
+function rrk(k,x,y,w,h,r,c){k.fillStyle=c;k.beginPath();k.roundRect(x,y,w,h,r);k.fill();}
+/* figura humana: o={pele,camisa,calca,chapeu,passo,bracoE,bracoD} ângulos em rad a partir de baixo */
+function pessoa(k,x,y,s,o){o=o||{};const p=o.passo||0;k.save();k.translate(x,y);k.scale(s*(o.dir||1),s);k.lineCap='round';k.lineJoin='round';
+ const pl=Math.sin(p)*.35;k.strokeStyle=o.calca||'#37474f';k.lineWidth=7;k.beginPath();k.moveTo(-3,-38);k.lineTo(-3+Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18,0);k.stroke();k.beginPath();k.moveTo(3,-38);k.lineTo(3-Math.sin(pl)*20,-38+Math.cos(pl)*20);k.lineTo(3-Math.sin(pl)*20-Math.sin(pl*.5)*18,0);k.stroke();
+ k.fillStyle='#3e2723';k.beginPath();k.ellipse(-3+Math.sin(pl)*20+Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.ellipse(3-Math.sin(pl)*20-Math.sin(pl*.5)*18+3,0,6,3,0,0,7);k.fill();
+ k.fillStyle=o.camisa||'#1e88e5';k.beginPath();k.moveTo(-9,-40);k.lineTo(-10,-68);k.quadraticCurveTo(0,-74,10,-68);k.lineTo(9,-40);k.closePath();k.fill();k.fillStyle='rgba(0,0,0,.12)';k.fillRect(2,-68,7,28);
+ const be=o.bracoE!==undefined?o.bracoE:-pl*.8,bd=o.bracoD!==undefined?o.bracoD:pl*.8;k.strokeStyle=o.camisa||'#1e88e5';k.lineWidth=6;
+ for(const [sx,a] of [[-8,be],[8,bd]]){k.beginPath();k.moveTo(sx,-66);const ex=sx+Math.sin(a)*14,ey=-66+Math.cos(a)*14;k.lineTo(ex,ey);k.stroke();k.strokeStyle=o.pele||'#c68b59';k.beginPath();k.moveTo(ex,ey);k.lineTo(ex+Math.sin(a*1.15)*13,ey+Math.cos(a*1.15)*13);k.stroke();k.strokeStyle=o.camisa||'#1e88e5';}
+ k.fillStyle=o.pele||'#c68b59';k.fillRect(-3,-76,6,6);k.beginPath();k.ellipse(0,-83,7.5,8.5,0,0,7);k.fill();
+ if(o.chapeu!==false){k.fillStyle=o.chapeu||'#795548';k.beginPath();k.ellipse(0,-88,15,3.5,0,0,7);k.fill();k.beginPath();k.moveTo(-8,-88);k.quadraticCurveTo(-7,-99,0,-99);k.quadraticCurveTo(7,-99,8,-88);k.fill();k.fillStyle='rgba(0,0,0,.25)';k.fillRect(-8,-91,16,2.5);}
+ k.restore();}
+/* boi nelore em perfil, olhando para +x */
+function boi(k,x,y,s,dir,cor,p){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#ece6da';p=p||0;
+ const pern=[[-26,0],[-18,Math.PI],[18,Math.PI],[26,0]];
+ for(let i=0;i<4;i++){const [lx,ph]=pern[i];const a=Math.sin(p+ph)*.3;k.strokeStyle=i==1||i==2?shade(c,-.12):c;k.lineCap='round';k.lineWidth=6.5;k.beginPath();k.moveTo(lx,-24);k.lineTo(lx+Math.sin(a)*9,-10);k.lineTo(lx+Math.sin(a)*7,2);k.stroke();k.fillStyle='#3e2723';k.fillRect(lx+Math.sin(a)*7-3.5,1,7,3);}
+ k.fillStyle=c;k.beginPath();k.moveTo(-34,-40);k.quadraticCurveTo(-38,-24,-30,-20);k.quadraticCurveTo(0,-14,26,-20);k.quadraticCurveTo(34,-26,32,-40);k.quadraticCurveTo(28,-50,20,-54);k.quadraticCurveTo(12,-56,8,-48);k.quadraticCurveTo(-10,-46,-28,-48);k.quadraticCurveTo(-34,-46,-34,-40);k.fill();
+ k.fillStyle=lg(k,0,-50,0,-18,['rgba(255,255,255,.18)','rgba(0,0,0,0)','rgba(60,40,20,.22)']);k.fill();
+ k.fillStyle=c;k.beginPath();k.moveTo(26,-44);k.quadraticCurveTo(38,-44,44,-38);k.lineTo(54,-24);k.quadraticCurveTo(56,-18,51,-17);k.quadraticCurveTo(46,-18,42,-24);k.quadraticCurveTo(34,-26,28,-22);k.fill();
+ k.beginPath();k.moveTo(28,-26);k.quadraticCurveTo(34,-14,30,-12);k.quadraticCurveTo(24,-16,22,-24);k.fill();
+ k.fillStyle=shade(c,-.35);k.beginPath();k.ellipse(52,-19,3.4,2.6,.4,0,7);k.fill();k.fillStyle='#1b1b1b';k.beginPath();k.arc(44,-34,1.8,0,7);k.fill();
+ k.fillStyle=shade(c,-.08);k.beginPath();k.ellipse(38,-41,8,2.8,.5,0,7);k.fill();k.strokeStyle='#cfc4b0';k.lineWidth=2.4;k.lineCap='round';k.beginPath();k.moveTo(41,-44);k.quadraticCurveTo(44,-49,42,-52);k.stroke();
+ k.strokeStyle=c;k.lineWidth=2.2;k.beginPath();k.moveTo(-34,-42);k.quadraticCurveTo(-40,-28,-37,-14);k.stroke();k.fillStyle='#4e342e';k.beginPath();k.ellipse(-37,-13,2.2,4.5,0,0,7);k.fill();
+ k.restore();}
+function shade(hex,f){let n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;const t=f<0?0:255,p=Math.abs(f);r=Math.round((t-r)*p+r);g=Math.round((t-g)*p+g);b=Math.round((t-b)*p+b);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+function cavalo(k,x,y,s,dir,p,cor){k.save();k.translate(x,y);k.scale(s*dir,s);const c=cor||'#8d5a3b';k.strokeStyle=c;k.lineCap='round';k.lineWidth=6;
+ for(const [lx,ph] of [[-20,0],[-12,Math.PI],[18,Math.PI],[26,0]]){const a=Math.sin(p+ph)*.45;k.beginPath();k.moveTo(lx,-22);k.lineTo(lx+Math.sin(a)*10,-8);k.lineTo(lx+Math.sin(a)*8,4);k.stroke();}
+ k.fillStyle=c;k.beginPath();k.ellipse(3,-30,28,12,0,0,7);k.fill();k.beginPath();k.moveTo(22,-36);k.quadraticCurveTo(30,-56,40,-58);k.lineTo(50,-48);k.quadraticCurveTo(44,-44,38,-46);k.lineTo(30,-26);k.fill();
+ k.fillStyle='#3e2723';k.beginPath();k.moveTo(24,-40);k.quadraticCurveTo(30,-60,40,-60);k.lineTo(36,-56);k.quadraticCurveTo(30,-52,28,-36);k.fill();k.beginPath();k.moveTo(-24,-34);k.quadraticCurveTo(-38,-26,-34,-6);k.quadraticCurveTo(-30,-22,-22,-28);k.fill();
+ k.fillStyle='rgba(0,0,0,.15)';k.beginPath();k.ellipse(3,-23,24,4,0,0,7);k.fill();k.fillStyle='#5d4037';k.fillRect(-8,-44,22,6);k.restore();}
+function cavaleiro(k,x,y,s,dir,p,o){cavalo(k,x,y,s,dir,p,o&&o.cor);k.save();k.translate(x,y);k.scale(s*dir,s);pessoa(k,2,-30,.62,Object.assign({passo:0,bracoE:.9,bracoD:1.3,calca:'#4e342e'},o||{}));k.restore();}
+/* tela cheia genérica para os jogos do motor arcade */
+const FS={on:false};
+(function(){const st=document.createElement('style');st.textContent='.fsmode{position:fixed!important;inset:0!important;z-index:9999!important;background:#fff!important;margin:0!important;padding:0!important;border-radius:0!important;max-width:none!important;width:100vw!important;height:100dvh!important;border:0!important}.fsmode canvas{width:100vw!important;height:100dvh!important;max-width:none!important;border:0!important;border-radius:0!important}.fsmode p.small{display:none}.fsmode .fsrow{position:fixed;top:48px;right:8px;z-index:10000;margin:0!important}.fsmode .fsrow .btn{padding:6px 14px;font-size:13px}';document.head.appendChild(st);
+ document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&FS.on)FS.set(false);});addEventListener('resize',()=>{if(FS.on)setTimeout(FS.ajusta,50);});})();
+FS.ajusta=function(){const c=$('cv');if(!c)return;if(FS.on){W=Math.round(innerWidth);H=Math.round(innerHeight);}else{if(c.clientWidth<520){W=420;H=560;}else{W=720;H=460;}}c.width=W;c.height=H;cx=c.getContext('2d');if(G.reajusta)G.reajusta(S.g);};
+FS.set=function(on){const c=$('cv');if(!c)return;const card=c.parentNode;FS.on=on;const b=$('btfs');if(b)b.textContent=on?'Sair':'Tela cheia';
+ if(on){card.classList.add('fsmode');try{const r=document.documentElement.requestFullscreen;if(r)r.call(document.documentElement).catch(()=>{});}catch(e){}}
+ else{card.classList.remove('fsmode');try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}}
+ setTimeout(FS.ajusta,80);};
+FS.botao=()=>'<div class="row fsrow" style="justify-content:center;margin-top:8px"><button class="btn ghost" id="btfs" onclick="FS.set(!FS.on)">Tela cheia</button></div>';
+FS.ligar=()=>{if(FS.on){const c=$('cv');c.parentNode.classList.add('fsmode');const b=$('btfs');if(b)b.textContent='Sair';FS.ajusta();}};
+FS.hud=(g,cor)=>{if(!FS.on||!g)return;const [a,m2]=G.meta(g);const t='Fase '+(S.f+1)+'/'+G.FASES.length+'  ·  '+(S.tot+S.fp)+' pts  ·  '+G.rotulo+' '+a+'/'+m2+(G.semTempo?'':'  ·  '+Math.max(0,Math.ceil(G.FASES[S.f].dur-g.t))+' s');cx.font='bold 13px system-ui';const w=cx.measureText(t).width+24;rrk(cx,10,48,w,26,13,'rgba(255,255,255,.95)');cx.fillStyle=cor||'#37474f';cx.textAlign='left';cx.fillText(t,22,66);};
+/* Siga a Onça, versão 2. Telemetria de onça-pintada no Pantanal.
+VHF: antena Yagi direcional e triangulação por azimutes. GPS: colar com posições a cada quatro horas (Revista Pesquisa FAPESP).
+Área de vida pelo mínimo polígono convexo. Cavalcanti & Gese (2009): 10 onças com GPS no Pantanal sul, 11.787 localizações, áreas de vida de 34,1 a 262,9 km² (kernel 90%), maiores na seca que na cheia.
+Mapa, caminhos, erro aceito, escala do mapa e pontos são regras do jogo. */
+const ON={};
+Object.defineProperty(ON,'KM',{get(){return W<H*.9?18:30;}});ON.k=()=>W/ON.KM;ON.px=(x,y)=>({x:x*ON.k(),y:y*ON.k()});ON.km=(x,y)=>({x:x/ON.k(),y:y/ON.k()});ON.hkm=()=>H/ON.k();
+ON.elev=(x,y)=>Math.sin(x*.31+1.3)*.9+Math.sin(y*.42+.4)*.7+Math.sin((x+y)*.19+2)*.8+Math.sin(x*.77-y*.53)*.35+Math.sin(x*.12-y*.27+3)*.6;
+ON.mata=(x,y)=>ON.elev(x,y)>1.05;ON.baia=(x,y)=>ON.elev(x,y)<-1.65;ON.alaga=(x,y)=>ON.elev(x,y)<-.2&&!ON.mata(x,y);
+ON.F=[{tipo:'tri',n:3,mov:0},{tipo:'gps',n:1},{tipo:'sazo',n:2},{tipo:'tri',n:3,mov:1}];
+const G={titulo:'Siga a Onça',get rotulo(){return {tri:'Localizações',gps:'Área de vida',sazo:'Áreas de vida'}[ON.F[S?S.f:0].tipo];},vidas:0,semTempo:1,
+ resumo:'No Pantanal, pesquisadores acompanham onças-pintadas com colares de rádio e de GPS. Você vai localizar a onça pela antena, juntar as posições do GPS e desenhar a área de vida dela.',
+ como:[['Antena','Toque numa estação para ir até ela. Arraste o dedo para girar a antena e ache o sinal mais forte. Registre o azimute.'],['Triangular','Com dois ou três azimutes, as linhas se cruzam onde a onça está.'],['Área de vida','Toque nos pontos de GPS mais de fora, um após o outro, até fechar o polígono.']],
+ get dica(){return ['Gire a antena devagar e registre quando a barra de sinal estiver no máximo.','Toque nos pontos de fora, dando a volta, e feche no primeiro ponto.','Na cheia, o campo alaga e a onça fica nas cordilheiras de mata.','À noite a onça anda. Faça os azimutes rápido.'][S?S.f:0];},
+ dicaErro:'Use pelo menos dois azimutes de estações bem separadas e registre no sinal máximo.',
+ FASES:[{nome:'Antena e azimute',dur:999,meta:3,metaTxt:'localizar a onça 3 vezes com erro menor que 1,5 km.',txt:'A onça usa um colar de rádio. Vá até as estações, gire a antena e registre o azimute do sinal mais forte. As linhas se cruzam onde ela está.',fato:'A antena Yagi é direcional: o sinal é mais forte quando ela aponta para o animal. Com azimutes de dois ou mais lugares, as linhas se cruzam na posição do animal. Isso é a triangulação.'},
+  {nome:'Colar GPS',dur:999,meta:1,metaTxt:'desenhar a área de vida que envolve todos os pontos.',txt:'Agora a onça tem colar GPS, que grava uma posição a cada quatro horas. Veja os pontos chegarem e desenhe o menor polígono que envolve todos.',fato:'O menor polígono convexo que envolve todas as posições é uma forma simples de estimar a área de vida. No Pantanal sul, onças com GPS tiveram áreas de vida de 34 a 263 km².'},
+  {nome:'Seca e cheia',dur:999,meta:2,metaTxt:'desenhar a área de vida na seca e na cheia.',txt:'Os pontos da seca chegam primeiro. Depois o campo alaga, e chegam os pontos da cheia. Desenhe as duas áreas de vida e compare.',fato:'No estudo com onças de GPS no Pantanal sul, as áreas de vida da seca foram em geral maiores que as da cheia. Na cheia, a água cobre os campos e as onças usam mais as áreas altas.'},
+  {nome:'Rádio à noite',dur:999,meta:3,metaTxt:'localizar a onça andando 3 vezes com erro menor que 1,5 km.',txt:'À noite a onça caça e anda enquanto você troca de estação. Quanto mais tempo entre um azimute e outro, maior o erro. Seja rápido.',fato:'Na triangulação, a onça pode se mover entre um azimute e outro. Por isso o colar GPS, que grava a posição sozinho, mudou o estudo de animais que andam muito.'}],
+ init(g){g.ok=0;g.lb=[];g.part=[];g.msgK='';const F=ON.F[S.f];if(F.tipo==='tri')ON.novaTri(g);else ON.novoGps(g);},
+ meta(g){return [g.ok,FASES[S.f].meta];},cedo(g){return g.ok>=FASES[S.f].meta&&g.pronto;},
+ update(g,dt){g.lb=g.lb.filter(l=>(l.t-=dt)>0);if(ON.F[S.f].tipo==='tri')ON.upTri(g,dt);else ON.upGps(g,dt);},
+ draw(g){ON.draw(g);},botoes(){return FS.botao();},ligar(){FS.ligar();},reajusta(g){},
+ capa(k,w,h){const o=cx,oW=W,oH=H;cx=k;W=w;H=h;k.drawImage(ON.mapa(w,h,0),0,0);k.fillStyle='rgba(255,255,255,.35)';k.fillRect(0,0,w,h);oncaR(k,w*.5,h*.62,w*.42,0,1);
+  k.fillStyle='rgba(230,81,0,.9)';for(const [a,b] of [[.2,.25],[.32,.18],[.44,.3],[.6,.2],[.75,.28],[.82,.4]]){k.beginPath();k.arc(w*a,h*b,5,0,7);k.fill();}cx=o;W=oW;H=oH;}};
 const FASES=G.FASES;
+/* ---------- mapa visto de cima ---------- */
+ON.mapa=function(w,h,cheia){return cache('onmap'+cheia+'_'+w+'x'+h,w,h,k=>{const kk=w/ON.KM,R=rng(7),st=Math.max(3,Math.round(w/180));const lw=Math.ceil(w/st),lh=Math.ceil(h/st),lc=document.createElement('canvas');lc.width=lw;lc.height=lh;const kl=lc.getContext('2d');
+ for(let y=0;y<h;y+=st)for(let x=0;x<w;x+=st){const X=x/kk,Y=y/kk,e=ON.elev(X,Y);let c;
+  if(e<-1.65)c=cheia?[118,170,190]:[140,190,205];else if(cheia&&e<-.2)c=[150+e*20,196+e*10,205];else if(e>1.05)c=[78-Math.min(30,(e-1.05)*22),116-Math.min(30,(e-1.05)*18),62];else if(e>.75)c=[150,170,104];else c=[200+e*12,206+e*10,150+e*14];
+  const n=(R()-.5)*6;kl.fillStyle='rgb('+Math.round(c[0]+n)+','+Math.round(c[1]+n)+','+Math.round(c[2]+n*.6)+')';kl.fillRect(x/st,y/st,1,1);}
+ k.imageSmoothingEnabled=true;k.imageSmoothingQuality='high';k.drawImage(lc,0,0,lw*st,lh*st);
+ /* copas nas matas */for(let i=0;i<w*h/220;i++){const x=R()*w,y=R()*h,e=ON.elev(x/kk,y/kk);if(e>1.1){k.fillStyle=R()<.5?'rgba(40,80,35,.35)':'rgba(120,160,90,.3)';k.beginPath();k.arc(x,y,2+R()*3.5,0,7);k.fill();}else if(e<-1.65&&!cheia&&R()<.25){k.fillStyle='rgba(80,140,70,.6)';k.beginPath();k.arc(x,y,1.5+R()*2.5,0,7);k.fill();}}
+ /* rio */k.strokeStyle=cheia?'#6fa5bb':'#7fb3c8';k.lineWidth=Math.max(3,kk*.25);k.lineCap='round';k.beginPath();for(let i=0;i<=60;i++){const t=i/60,x=(2+t*27)*kk,y=(ON.hkm()*.82+Math.sin(t*9)*1.4+Math.sin(t*23)*.5)*kk;i?k.lineTo(x,y):k.moveTo(x,y);}k.stroke();
+ /* estrada e sede */k.strokeStyle='rgba(150,110,70,.85)';k.lineWidth=Math.max(2,kk*.12);k.setLineDash([]);k.beginPath();k.moveTo(0,ON.hkm()*.18*kk);k.lineTo(w,ON.hkm()*.3*kk);k.stroke();
+ const sx=w*.08,sy=ON.hkm()*.2*kk;k.fillStyle='#d7ccc8';k.fillRect(sx-8,sy-6,16,12);k.fillStyle='#8d6e63';k.fillRect(sx-9,sy-8,18,3);k.font='bold 10px system-ui';k.fillStyle='#4e342e';k.textAlign='left';k.fillText('sede da fazenda',sx+12,sy+4);
+ /* escala */const sb=5*kk;k.fillStyle='rgba(255,255,255,.85)';k.fillRect(w-sb-26,h-28,sb+16,20);k.fillStyle='#37474f';k.fillRect(w-sb-18,h-14,sb,3);k.fillRect(w-sb-18,h-18,2,8);k.fillRect(w-18,h-18,2,8);k.font='10px system-ui';k.textAlign='center';k.fillText('5 km',w-18-sb/2,h-17);
+ /* norte */k.fillStyle='rgba(255,255,255,.85)';k.beginPath();k.arc(24,h-30,14,0,7);k.fill();k.fillStyle='#37474f';k.beginPath();k.moveTo(24,h-42);k.lineTo(29,h-28);k.lineTo(24,h-31);k.lineTo(19,h-28);k.fill();k.font='bold 9px system-ui';k.fillText('N',24,h-18);});};
+/* onça de perfil, deitada (0) ou andando (1) */
+function oncaR(k,x,y,L,pose,dir){k.save();k.translate(x,y);k.scale(dir||1,1);const s=L/200;k.scale(s,s);const R=rng(3);
+ const corpo=()=>{k.beginPath();k.moveTo(-70,-12);k.bezierCurveTo(-60,-46,20,-50,52,-34);k.bezierCurveTo(66,-28,70,-14,64,0);k.bezierCurveTo(40,14,-20,16,-58,8);k.bezierCurveTo(-74,4,-76,-4,-70,-12);k.closePath();};
+ k.fillStyle='rgba(60,40,20,.15)';k.beginPath();k.ellipse(0,pose?48:22,96,9,0,0,7);k.fill();
+ /* cauda */k.strokeStyle='#c98a3a';k.lineWidth=11;k.lineCap='round';k.beginPath();k.moveTo(-66,-10);k.bezierCurveTo(-100,-4,-112,pose?30:14,-96,pose?44:18);k.stroke();k.strokeStyle='#2b1b0e';k.lineWidth=3;for(let i=0;i<4;i++){const t=.45+i*.15,px=-66-40*t+10*t*t,py=-10+(pose?50:26)*t*t;k.beginPath();k.arc(px,py,5.6,0,Math.PI*2);k.stroke();}
+ /* pernas */const perna=(px,py,ang,c)=>{k.save();k.translate(px,py);k.rotate(ang);k.fillStyle=c;k.beginPath();k.moveTo(-9,0);k.lineTo(9,0);k.lineTo(7,pose?40:16);k.quadraticCurveTo(10,pose?48:22,0,pose?48:22);k.lineTo(-9,pose?46:20);k.closePath();k.fill();k.restore();};
+ if(pose){perna(-44,0,.25,'#b8782e');perna(38,0,-.2,'#b8782e');}else{perna(-40,6,1.35,'#c6863a');perna(44,6,1.2,'#c6863a');}
+ corpo();k.fillStyle=lg(k,0,-48,0,16,['#d39a48','#e2ad5c','#f2dcb0']);k.fill();k.save();corpo();k.clip();
+ k.fillStyle='rgba(255,240,215,.7)';k.beginPath();k.ellipse(0,12,70,14,0,0,7);k.fill();
+ for(let i=0;i<46;i++){const px=-64+R()*124,py=-40+R()*44,r=4+R()*4.5;k.strokeStyle='#2b1b0e';k.lineWidth=2.2;k.beginPath();for(let a=0;a<6;a++){const an=a/6*Math.PI*2+R()*.4,rr2=r*(.8+R()*.4);a?k.lineTo(px+Math.cos(an)*rr2,py+Math.sin(an)*rr2*.8):k.moveTo(px+Math.cos(an)*rr2,py+Math.sin(an)*rr2*.8);}k.closePath();k.fillStyle='rgba(176,108,40,.55)';k.fill();k.stroke();if(R()<.6){k.fillStyle='#2b1b0e';k.beginPath();k.arc(px,py,1.3,0,7);k.fill();}}
+ k.fillStyle='rgba(255,255,255,.12)';k.beginPath();k.ellipse(-4,-34,50,8,-.05,0,7);k.fill();k.restore();
+ if(pose){perna(-30,4,-.1,'#d29548');perna(50,2,.15,'#d29548');}else{perna(-26,10,1.45,'#d9a050');perna(56,8,1.3,'#d9a050');}
+ /* cabeça */k.save();k.translate(64,-30);k.rotate(pose?0:.08);k.fillStyle=lg(k,0,-24,0,20,['#d6a04e','#e6b363','#f4e2bd']);k.beginPath();k.ellipse(10,0,26,22,0,0,7);k.fill();
+ k.fillStyle='#e6b363';k.beginPath();k.ellipse(30,6,13,11,0,0,7);k.fill();k.fillStyle='#f6ead0';k.beginPath();k.ellipse(32,12,11,7,0,0,7);k.fill();
+ k.fillStyle='#d39a48';k.beginPath();k.moveTo(-6,-16);k.lineTo(-2,-30);k.lineTo(8,-19);k.fill();k.fillStyle='#2b1b0e';k.beginPath();k.moveTo(-4,-18);k.lineTo(-2,-27);k.lineTo(4,-20);k.fill();
+ k.fillStyle='#3e2a14';k.beginPath();k.ellipse(40,3,4,3,0,0,7);k.fill();k.fillStyle='#e8c34a';k.beginPath();k.ellipse(20,-6,4.5,3.2,0,0,7);k.fill();k.fillStyle='#1a1008';k.beginPath();k.ellipse(21,-6,1.4,2.8,0,0,7);k.fill();
+ k.fillStyle='#2b1b0e';for(let i=0;i<10;i++){k.beginPath();k.arc(-6+R()*26,-14+R()*14,1.4+R()*1.4,0,7);k.fill();}k.strokeStyle='rgba(60,40,20,.6)';k.lineWidth=1.4;k.beginPath();k.moveTo(36,12);k.quadraticCurveTo(30,18,24,15);k.stroke();k.restore();k.restore();}
+/* ---------- triangulação ---------- */
+ON.novaTri=function(g){const hk=ON.hkm();let ox,oy,t=0;do{ox=ON.KM*(.2+Math.random()*.6);oy=hk*.25+Math.random()*hk*.5;t++;}while(!ON.mata(ox,oy)&&t<200);g.on={x:ox,y:oy,a:Math.random()*7};g.est=[];const a0=Math.random()*7;
+ for(let i=0;i<3;i++){const a=a0+i*2.1+(Math.random()-.5)*.5,d=ON.KM*(.17+Math.random()*.1);let x=Math.max(1.5,Math.min(ON.KM-1.5,ox+Math.cos(a)*d)),y=Math.max(1.5,Math.min(hk-2.5,oy+Math.sin(a)*d));if(ON.baia(x,y)){x+=1.5;}g.est.push({x,y,feito:0});}
+ g.car={x:g.est[0].x+2,y:g.est[0].y+2,st:-1,mov:0};g.ant=0;g.az=[];g.res=null;g.tl=ON.F[S.f].mov?32:0;g.pronto=false;};
+ON.sinal=function(g){if(g.car.st<0||g.car.mov)return 0;const dx=g.on.x-g.car.x,dy=g.on.y-g.car.y,d=Math.hypot(dx,dy),a=Math.atan2(dy,dx);let da=Math.abs(((g.ant-a)+Math.PI*3)%(Math.PI*2)-Math.PI);const c=Math.max(0,Math.cos(da));return Math.min(1,Math.pow(c,8)*(1/(1+d/18))+(da>2.4?.06:0)+Math.random()*.03);};
+ON.bt=function(){const m=MOB(),bw=m?150:170,bh=42,y=H-bh-10;return {reg:{x:W-bw-10,y,w:bw,h:bh},calc:{x:W-2*bw-20,y,w:bw,h:bh}};};
+ON.upTri=function(g,dt){const F=ON.F[S.f],car=g.car;if(g.res){g.res.t+=dt;if(inp.tap&&g.res.t>.8){inp.tap=null;if(g.ok>=FASES[S.f].meta){g.pronto=true;}else ON.novaTri(g);}return;}
+ if(F.mov){const o=g.on;o.a+=(Math.random()-.5)*dt*1.2;const nx=o.x+Math.cos(o.a)*.22*dt,ny=o.y+Math.sin(o.a)*.22*dt;if(nx<2||nx>ON.KM-2||ny<2||ny>ON.hkm()-2||ON.baia(nx,ny))o.a+=Math.PI*.6;else{o.x=nx;o.y=ny;}g.tl-=dt;if(g.tl<=0&&!g.res){ON.calcula(g,true);return;}}
+ if(car.mov){car.t+=dt/car.dur;const e=g.est[car.st];car.x=car.x0+(e.x-car.x0)*Math.min(1,car.t);car.y=car.y0+(e.y-car.y0)*Math.min(1,car.t);if(car.t>=1){car.mov=0;g.ant=Math.atan2(g.on.y-car.y,g.on.x-car.x)+(Math.random()<.5?1:-1)*(1+Math.random()*1.5);}return;}
+ const B=ON.bt(),inB=(b,p)=>p&&p.x>b.x&&p.x<b.x+b.w&&p.y>b.y&&p.y<b.y+b.h;
+ if(inp.tap){const tp=inp.tap;if(inB(B.reg,tp)){if(car.st>=0&&!g.est[car.st].feito){g.az.push({x:car.x,y:car.y,a:g.ant,s:ON.sinal(g)});g.est[car.st].feito=1;ganha(3,W-90,H-70);if(g.az.length===3)ON.calcula(g);}inp.tap=null;return;}
+  if(inB(B.calc,tp)){if(g.az.length>=2)ON.calcula(g);else msg('Registre pelo menos dois azimutes.');inp.tap=null;return;}
+  for(let i=0;i<3;i++){const e=g.est[i],P=ON.px(e.x,e.y);if(Math.hypot(tp.x-P.x,tp.y-P.y)<26&&i!==car.st&&!e.feito){car.mov=1;car.t=0;car.x0=car.x;car.y0=car.y;car.st=i;car.dur=.5+Math.hypot(e.x-car.x,e.y-car.y)*.06;inp.tap=null;return;}}}
+ if(inp.down&&inp.x!==null&&car.st>=0){const P=ON.px(car.x,car.y);if(Math.hypot(inp.x-P.x,inp.y-P.y)>18&&!(inB(B.reg,inp)||inB(B.calc,inp)))g.ant=Math.atan2(inp.y-P.y,inp.x-P.x);}
+ g.sig=ON.sinal(g);g.sigMax=Math.max(g.sigMax||0,g.sig);};
+ON.calcula=function(g,tempo){if(g.az.length<2){g.res={t:0,falhou:1,txt:tempo?'O tempo acabou antes de dois azimutes.':'Faltam azimutes.'};ganha(-5,W/2,H/2);return;}
+ let A=0,B=0,C=0,D=0,E=0;for(const z of g.az){const nx=-Math.sin(z.a),ny=Math.cos(z.a),c=nx*z.x+ny*z.y;A+=nx*nx;B+=nx*ny;C+=ny*ny;D+=nx*c;E+=ny*c;}const det=A*C-B*B;let px,py;if(Math.abs(det)<1e-6){px=g.az[0].x;py=g.az[0].y;}else{px=(D*C-B*E)/det;py=(A*E-B*D)/det;}
+ const err=Math.hypot(px-g.on.x,py-g.on.y);const ok=err<1.5;g.res={t:0,px,py,err,ok};if(ok){g.ok++;ganha(err<.7?20:12,ON.px(px,py).x,ON.px(px,py).y);}else ganha(-5,ON.px(px,py).x,ON.px(px,py).y);};
+/* ---------- GPS e área de vida ---------- */
+ON.trilha=function(n,cx0,cy0,raio,cheia){const pts=[];let x=cx0,y=cy0,a=Math.random()*7;const hk=ON.hkm();for(let i=0;i<n*6;i++){a+=(Math.random()-.5)*1.4;const dx=cx0-x,dy=cy0-y;const pull=Math.hypot(dx,dy)/raio;a+=Math.atan2(Math.sin(Math.atan2(dy,dx)-a),Math.cos(Math.atan2(dy,dx)-a))*.25*pull;
+ const st=.35+Math.random()*.5;let nx=x+Math.cos(a)*st,ny=y+Math.sin(a)*st;if(nx<1||nx>ON.KM-1||ny<1||ny>hk-1||ON.baia(nx,ny)||(cheia&&ON.alaga(nx,ny)&&Math.random()<.9)){a+=Math.PI*.7;continue;}x=nx;y=ny;if(i%6===0)pts.push({x,y});}return pts.slice(0,n);};
+ON.novoGps=function(g){const F=ON.F[S.f],hk=ON.hkm();let cx0,cy0,t=0;do{cx0=ON.KM*(.32+Math.random()*.36);cy0=hk*.35+Math.random()*hk*.3;t++;}while(!ON.mata(cx0,cy0)&&t<300);g.c0={x:cx0,y:cy0};g.rodada=0;ON.rodada(g);};
+ON.rodada=function(g){const F=ON.F[S.f],cheia=F.tipo==='sazo'&&g.rodada===1;g.cheia=cheia;g.pts=ON.trilha(60,g.c0.x,g.c0.y,cheia?3.6:5.8,cheia);g.vis=0;g.tv=0;g.poly=[];g.fech=0;g.res=null;g.pronto=false;msg(cheia?'Chegou a cheia. Os campos alagaram.':F.tipo==='sazo'?'Pontos da seca chegando do colar.':'Pontos chegando do colar GPS.');};
+ON.hull=function(P){const p=P.slice().sort((a,b)=>a.x-b.x||a.y-b.y);const cr=(o,a,b)=>(a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x);const lo=[],up=[];for(const q of p){while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],q)<=0)lo.pop();lo.push(q);}for(let i=p.length-1;i>=0;i--){const q=p[i];while(up.length>=2&&cr(up[up.length-2],up[up.length-1],q)<=0)up.pop();up.push(q);}up.pop();lo.pop();return lo.concat(up);};
+ON.area=P=>{let a=0;for(let i=0;i<P.length;i++){const p=P[i],q=P[(i+1)%P.length];a+=p.x*q.y-q.x*p.y;}return Math.abs(a)/2;};
+ON.dentro=function(P,q){let c=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const a=P[i],b=P[j];if((a.y>q.y)!==(b.y>q.y)&&q.x<(b.x-a.x)*(q.y-a.y)/(b.y-a.y)+a.x)c=!c;}if(c)return true;for(let i=0;i<P.length;i++){const a=P[i],b=P[(i+1)%P.length],dx=b.x-a.x,dy=b.y-a.y,l=dx*dx+dy*dy||1;let t=((q.x-a.x)*dx+(q.y-a.y)*dy)/l;t=Math.max(0,Math.min(1,t));if(Math.hypot(q.x-a.x-t*dx,q.y-a.y-t*dy)<.12)return true;}return false;};
+ON.btG=function(){const m=MOB(),bw=m?110:130,bh=40,y=H-bh-10;return {desf:{x:W-2*bw-20,y,w:bw,h:bh},limp:{x:W-bw-10,y,w:bw,h:bh}};};
+ON.upGps=function(g,dt){const F=ON.F[S.f];if(g.vis<g.pts.length){g.tv+=dt;g.vis=Math.min(g.pts.length,Math.floor(g.tv*8));return;}
+ if(g.res){g.res.t+=dt;if(inp.tap&&g.res.t>.8){inp.tap=null;if(g.res.ok){if(F.tipo==='sazo'&&g.rodada===0){g.areaSeca=g.res.area;g.rodada=1;ON.rodada(g);}else{if(F.tipo==='sazo')g.areaCheia=g.res.area;g.pronto=true;}}else{g.res=null;g.fech=0;}}return;}
+ const B=ON.btG(),inB=(b,p)=>p&&p.x>b.x&&p.x<b.x+b.w&&p.y>b.y&&p.y<b.y+b.h;if(!inp.tap)return;const tp=inp.tap;inp.tap=null;
+ if(inB(B.desf,tp)){g.poly.pop();return;}if(inB(B.limp,tp)){g.poly=[];return;}
+ let best=-1,bd=24;g.pts.forEach((p,i)=>{const P=ON.px(p.x,p.y),d=Math.hypot(P.x-tp.x,P.y-tp.y);if(d<bd){bd=d;best=i;}});if(best<0)return;
+ if(g.poly.length>=3&&best===g.poly[0]){const P=g.poly.map(i=>g.pts[i]),fora=g.pts.filter(q=>!ON.dentro(P,q)).length,area=ON.area(P),ah=ON.area(ON.hull(g.pts));
+  if(fora===0){g.ok++;g.res={t:0,ok:1,area,ah};ganha(20,W/2,H/2);}else{g.res={t:0,ok:0,fora};ganha(-5,W/2,H/2);}return;}
+ if(!g.poly.includes(best))g.poly.push(best);};
+/* ---------- desenho ---------- */
+ON.draw=function(g){const m=MOB(),F=ON.F[S.f];cx.drawImage(ON.mapa(W,H,g.cheia?1:0),0,0);
+ const lab=t=>{cx.font='bold 13px system-ui';const w=Math.min(W-16,cx.measureText(t).width+28);rrk(cx,W/2-w/2,H-(F.tipo==='tri'?100:96),w,30,15,'rgba(255,255,255,.96)');cx.strokeStyle='#e65100';cx.lineWidth=2;cx.beginPath();cx.roundRect(W/2-w/2,H-(F.tipo==='tri'?100:96),w,30,15);cx.stroke();cx.fillStyle='#bf360c';cx.textAlign='center';cx.fillText(t,W/2,H-(F.tipo==='tri'?80:76));};
+ if(F.tipo==='tri'){const car=g.car;
+  for(const z of g.az){const P=ON.px(z.x,z.y),L=Math.hypot(W,H);cx.strokeStyle='rgba(230,81,0,.85)';cx.lineWidth=2;cx.setLineDash([8,5]);cx.beginPath();cx.moveTo(P.x,P.y);cx.lineTo(P.x+Math.cos(z.a)*L,P.y+Math.sin(z.a)*L);cx.stroke();cx.setLineDash([]);}
+  g.est.forEach((e,i)=>{const P=ON.px(e.x,e.y);rrk(cx,P.x-16,P.y-16,32,32,8,e.feito?'rgba(255,224,178,.95)':'rgba(255,255,255,.92)');cx.strokeStyle='#e65100';cx.lineWidth=2;cx.beginPath();cx.roundRect(P.x-16,P.y-16,32,32,8);cx.stroke();cx.fillStyle='#bf360c';cx.font='bold 14px system-ui';cx.textAlign='center';cx.fillText(e.feito?'✓':String.fromCharCode(65+i),P.x,P.y+5);});
+  const P=ON.px(car.x,car.y);if(car.st>=0&&!car.mov){const s=g.sig||0;for(let r=0;r<3;r++){cx.fillStyle='rgba(230,81,0,'+(.10+s*.25-r*.04)+')';cx.beginPath();cx.moveTo(P.x,P.y);cx.arc(P.x,P.y,70+r*40,g.ant-.22-r*.04,g.ant+.22+r*.04);cx.closePath();cx.fill();}
+   cx.save();cx.translate(P.x,P.y);cx.rotate(g.ant);cx.strokeStyle='#37474f';cx.lineWidth=3;cx.beginPath();cx.moveTo(0,0);cx.lineTo(34,0);cx.stroke();cx.lineWidth=2;for(let i=0;i<4;i++){cx.beginPath();cx.moveTo(10+i*7,-8+i);cx.lineTo(10+i*7,8-i);cx.stroke();}cx.restore();}
+  cx.save();cx.translate(P.x,P.y);cx.rotate(car.mov?Math.atan2(g.est[car.st].y-car.y0,g.est[car.st].x-car.x0):-.3);cx.fillStyle='#eceff1';rrk(cx,-11,-7,22,14,3,'#eceff1');cx.fillStyle='#455a64';cx.fillRect(2,-6,7,12);cx.fillStyle='#263238';cx.fillRect(-9,-8,5,2);cx.fillRect(-9,6,5,2);cx.fillRect(4,-8,5,2);cx.fillRect(4,6,5,2);cx.restore();
+  if(F.mov&&!g.res){const t='tempo: '+Math.max(0,Math.ceil(g.tl))+' s';cx.font='bold 14px system-ui';const tw=cx.measureText(t).width+22;rrk(cx,W-tw-10,FS.on?84:10,tw,28,14,'#e65100');cx.fillStyle='#fff';cx.textAlign='center';cx.fillText(t,W-tw/2-10,(FS.on?84:10)+19);}
+  /* medidor de sinal */const mw=m?160:200,mx=10,my=FS.on?84:10;rrk(cx,mx,my,mw,64,12,'rgba(255,255,255,.95)');cx.textAlign='left';cx.fillStyle='#37474f';cx.font='bold 12px system-ui';cx.fillText('Sinal do colar (VHF)',mx+10,my+17);rrk(cx,mx+10,my+26,mw-20,14,7,'#eceff1');const sg=g.sig||0;rrk(cx,mx+10,my+26,(mw-20)*sg,14,7,sg>.8?'#2e7d32':sg>.4?'#f9a825':'#ef6c00');
+  cx.font='11px system-ui';cx.fillStyle='#607d8b';cx.fillText('azimutes registrados: '+g.az.length+' de 3',mx+10,my+56);
+  const B=ON.bt();rrk(cx,B.reg.x,B.reg.y,B.reg.w,B.reg.h,12,car.st>=0&&!car.mov&&!g.est[car.st].feito?'#e65100':'#cfd8dc');cx.fillStyle='#fff';cx.font='bold 13px system-ui';cx.textAlign='center';cx.fillText('REGISTRAR AZIMUTE',B.reg.x+B.reg.w/2,B.reg.y+26);
+  rrk(cx,B.calc.x,B.calc.y,B.calc.w,B.calc.h,12,g.az.length>=2?'#6d4c41':'#cfd8dc');cx.fillStyle='#fff';cx.fillText('CALCULAR POSIÇÃO',B.calc.x+B.calc.w/2,B.calc.y+26);
+  if(g.res){const r=g.res;if(!r.falhou){const Q=ON.px(r.px,r.py),O=ON.px(g.on.x,g.on.y);cx.strokeStyle='#37474f';cx.lineWidth=1.5;cx.setLineDash([4,4]);cx.beginPath();cx.moveTo(Q.x,Q.y);cx.lineTo(O.x,O.y);cx.stroke();cx.setLineDash([]);
+    cx.strokeStyle=r.ok?'#2e7d32':'#c62828';cx.lineWidth=3;cx.beginPath();cx.arc(Q.x,Q.y,10,0,7);cx.stroke();cx.beginPath();cx.moveTo(Q.x-14,Q.y);cx.lineTo(Q.x+14,Q.y);cx.moveTo(Q.x,Q.y-14);cx.lineTo(Q.x,Q.y+14);cx.stroke();
+    cx.fillStyle='rgba(255,255,255,.9)';cx.beginPath();cx.arc(O.x,O.y,36,0,7);cx.fill();cx.strokeStyle="#ff8f00";cx.lineWidth=2;cx.stroke();oncaR(cx,O.x,O.y+8,66,0,1);}
+   const cw=Math.min(W-20,m?340:420),x0=W/2-cw/2,y0=H*.18;rrk(cx,x0,y0,cw,r.falhou?90:150,16,'rgba(255,255,255,.97)');cx.strokeStyle='#e65100';cx.lineWidth=2;cx.beginPath();cx.roundRect(x0,y0,cw,r.falhou?90:150,16);cx.stroke();cx.textAlign='center';
+   if(r.falhou){cx.fillStyle='#c62828';cx.font='bold 15px system-ui';cx.fillText(r.txt,W/2,y0+36);cx.font='12px system-ui';cx.fillStyle='#78909c';cx.fillText('toque para tentar outra localização',W/2,y0+66);}
+   else{cx.fillStyle=r.ok?'#2e7d32':'#c62828';cx.font='bold 17px system-ui';cx.fillText(r.ok?'Onça localizada!':'Longe demais',W/2,y0+30);cx.fillStyle='#37474f';cx.font='bold '+(m?20:24)+'px system-ui';cx.fillText('erro: '+r.err.toFixed(2).replace('.',',')+' km',W/2,y0+66);
+    cx.font='12px system-ui';cx.fillStyle='#607d8b';cx.fillText(r.ok?'A cruz marca o cruzamento das linhas. A onça estava no círculo.':'Erro aceito: menos de 1,5 km. Gire até o sinal máximo.',W/2,y0+94,cw-20);cx.fillText('localizações certas: '+g.ok+' de '+FASES[S.f].meta,W/2,y0+116);cx.fillStyle='#78909c';cx.font='11px system-ui';cx.fillText('toque para continuar',W/2,y0+138);}}
+  else if(S.g.msgT<=0)lab(car.st<0?'Toque numa estação (A, B ou C).':car.mov?'Indo para a estação…':g.est[car.st].feito?'Escolha outra estação.':(m?'Gire a antena e registre no máximo.':'Arraste o dedo para girar a antena e registre no sinal máximo.'));}
+ else{const pts=g.pts,cor=g.cheia?'#1565c0':'#e65100';
+  if(g.vis>1){cx.strokeStyle=g.cheia?'rgba(21,101,192,.35)':'rgba(230,81,0,.35)';cx.lineWidth=1.5;cx.beginPath();for(let i=0;i<g.vis;i++){const P=ON.px(pts[i].x,pts[i].y);i?cx.lineTo(P.x,P.y):cx.moveTo(P.x,P.y);}cx.stroke();}
+  if(g.poly.length){cx.fillStyle=g.cheia?'rgba(21,101,192,.15)':'rgba(230,81,0,.15)';cx.strokeStyle=cor;cx.lineWidth=2.5;cx.beginPath();g.poly.forEach((i,k)=>{const P=ON.px(pts[i].x,pts[i].y);k?cx.lineTo(P.x,P.y):cx.moveTo(P.x,P.y);});if(g.res&&g.res.ok)cx.closePath();cx.fill();cx.stroke();}
+  if(g.areaSeca&&g.cheia){const H0=ON.hull(g.ptsSeca||[]);}
+  for(let i=0;i<g.vis;i++){const P=ON.px(pts[i].x,pts[i].y),inP=g.poly.includes(i);cx.fillStyle=inP?'#fff':cor;cx.strokeStyle=cor;cx.lineWidth=2;cx.beginPath();cx.arc(P.x,P.y,inP?6:4.5,0,7);cx.fill();cx.stroke();}
+  if(g.poly.length>=3&&!g.res){const P=ON.px(pts[g.poly[0]].x,pts[g.poly[0]].y);cx.strokeStyle='#2e7d32';cx.lineWidth=2;cx.beginPath();cx.arc(P.x,P.y,12+Math.sin(g.t*6)*2,0,7);cx.stroke();}
+  if(g.vis<pts.length){const d=Math.floor(g.vis/6)+1;const t='colar GPS · dia '+d+' · '+g.vis+' posições';cx.font='bold 13px system-ui';const tw=cx.measureText(t).width+22;rrk(cx,W-tw-10,FS.on?84:10,tw,28,14,cor);cx.fillStyle='#fff';cx.textAlign='center';cx.fillText(t,W-tw/2-10,(FS.on?84:10)+19);}
+  else{const B=ON.btG();for(const [b,t] of [[B.desf,'DESFAZER'],[B.limp,'LIMPAR']]){rrk(cx,b.x,b.y,b.w,b.h,12,'#6d4c41');cx.fillStyle='#fff';cx.font='bold 13px system-ui';cx.textAlign='center';cx.fillText(t,b.x+b.w/2,b.y+25);}
+   if(!g.res&&S.g.msgT<=0)lab(g.poly.length<3?'Toque nos pontos de fora, dando a volta.':(m?'Feche no primeiro ponto (verde).':'Continue e feche tocando no primeiro ponto (círculo verde).'));}
+  if(F.tipo==='sazo'){const t=g.cheia?'CHEIA':'SECA';cx.font='bold 14px system-ui';const tw=cx.measureText(t).width+24;rrk(cx,10,FS.on?84:10,tw,28,14,cor);cx.fillStyle='#fff';cx.textAlign='center';cx.fillText(t,10+tw/2,(FS.on?84:10)+19);}
+  if(g.res){const r=g.res,cw=Math.min(W-20,m?340:420),x0=W/2-cw/2,y0=H*.16,ch=r.ok?(F.tipo==='sazo'&&g.rodada===1?190:150):100;rrk(cx,x0,y0,cw,ch,16,'rgba(255,255,255,.97)');cx.strokeStyle=cor;cx.lineWidth=2;cx.beginPath();cx.roundRect(x0,y0,cw,ch,16);cx.stroke();cx.textAlign='center';
+   if(!r.ok){cx.fillStyle='#c62828';cx.font='bold 16px system-ui';cx.fillText(r.fora+(r.fora>1?' pontos ficaram':' ponto ficou')+' de fora',W/2,y0+36);cx.font='12px system-ui';cx.fillStyle='#607d8b';cx.fillText('A área de vida precisa envolver todas as posições. Toque para ajustar.',W/2,y0+64,cw-20);}
+   else{cx.fillStyle='#2e7d32';cx.font='bold 16px system-ui';cx.fillText('Área de vida '+(F.tipo==='sazo'?(g.cheia?'na cheia':'na seca'):'')+' desenhada',W/2,y0+30);cx.fillStyle='#37474f';cx.font='bold '+(m?22:26)+'px system-ui';cx.fillText(Math.round(r.area)+' km²',W/2,y0+66);cx.font='12px system-ui';cx.fillStyle='#607d8b';cx.fillText('mínimo polígono convexo com '+pts.length+' posições de GPS',W/2,y0+90,cw-20);
+    if(F.tipo==='sazo'&&g.rodada===1){const a1=g.areaSeca,a2=r.area,mx=Math.max(a1,a2),bx=x0+70,bw=cw-110;cx.textAlign='left';cx.font='12px system-ui';cx.fillStyle='#37474f';cx.fillText('seca',x0+20,y0+118);rrk(cx,bx,y0+108,bw*a1/mx,12,6,'#e65100');cx.fillText(Math.round(a1)+' km²',bx+bw*a1/mx+6,y0+119);cx.fillText('cheia',x0+20,y0+140);rrk(cx,bx,y0+130,bw*a2/mx,12,6,'#1565c0');cx.fillText(Math.round(a2)+' km²',bx+bw*a2/mx+6,y0+141);cx.textAlign='center';}
+    cx.fillStyle='#78909c';cx.font='11px system-ui';cx.fillText('toque para continuar',W/2,y0+ch-12);}}}
+ for(const l of g.lb){cx.font='bold 12px system-ui';const w=cx.measureText(l.tx).width+14;rrk(cx,l.x-w/2,l.y-14,w,22,11,'rgba(255,255,255,.95)');cx.fillStyle=l.c;cx.textAlign='center';cx.fillText(l.tx,l.x,l.y+2);}
+ FS.hud(g,'#bf360c');};
 const PERG=[
- {q:'Para que serve o colar com GPS colocado na onça?',o:['Registrar por onde a onça anda','Impedir que a onça cace o gado','Dar comida para a onça']},
- {q:'Como se desenha a área de vida com os pontos de GPS?',o:['Ligando os pontos de fora num polígono que envolve todos','Fazendo um quadrado do tamanho da tela','Contando só o ponto onde a onça dormiu']},
- {q:'Por que é importante conhecer a área de vida da onça?',o:['Para saber quanto espaço ela precisa e onde proteger','Para saber a cor das pintas dela','Para descobrir a idade exata da onça']}
-];
+ {q:'Para que serve a antena Yagi na telemetria por rádio?',o:['Achar a direção do sinal do colar','Gravar a posição por satélite','Medir a temperatura da onça']},
+ {q:'O que é a área de vida estimada pelo mínimo polígono convexo?',o:['O menor polígono que envolve as posições','A distância que a onça anda num dia','O local onde ela foi capturada']},
+ {q:'No estudo do Pantanal sul, quando as áreas de vida foram em geral maiores?',o:['Na seca','Na cheia','Não houve diferença']},
+ {q:'Por que a triangulação erra mais com a onça andando à noite?',o:['Ela muda de lugar entre os azimutes','A antena não funciona no escuro','O sinal de rádio some à noite']}];
 function pergunta(){
  const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
  $('tela').innerHTML=`<div class="card"><h2>Pergunta da fase</h2><p style="margin:6px 0 4px">${P.q}</p><p class="small">Acerto +20, erro −10.</p><div class="ops">${ops.map((o,i)=>`<button data-i="${i}">${o.t}</button>`).join('')}</div><div id="pf"></div></div>`;
@@ -194,11 +360,11 @@ function pergunta(){
   $('bn').onclick=()=>{S.tot+=S.fp;S.fp=0;if(S.f===FASES.length-1)final(true);else{S.f++;fase();}};});
 }
 function final(tudo){
- S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?'3 fases':'Fase '+(S.f+1);
- $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Rastreador de onças':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
+ S.g=null;parar();$('rankBox').style.display='block';const nivel=tudo?FASES.length+' fases':'Fase '+(S.f+1);
+ $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Rastreadora de onças!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
  <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
- <div class="small" style="margin-top:12px;text-align:left">📚 Fontes: Revista Pesquisa FAPESP, Mapeamento com GPS revela papel das florestas na conservação de onças-pintadas: colares GPS registram posições a cada quatro horas; Agência FAPESP: 44 onças monitoradas com colar GPS entre 1998 e 2016, 21 delas no Pantanal; International Journal of Geographical Information Science 32(11), 2018: o Mínimo Polígono Convexo é o menor polígono convexo que envolve os pontos de localização. O caminho da onça e os pontos são simulados pelo jogo.</div></div>`;
+ <div class="small" style="margin-top:12px;text-align:left">Fontes: Cavalcanti & Gese (2009), Spatial ecology and social interactions of jaguars (Panthera onca) in the southern Pantanal, Brazil, Journal of Mammalogy (10 onças com colar GPS, 11.787 localizações, áreas de vida de 34,1 a 262,9 km² pelo kernel de 90%, maiores na seca que na cheia); Morato et al. (2016), PLoS ONE, área de vida de 44 onças com GPS em cinco biomas (machos com áreas maiores e trajetos mais direcionais); Revista Pesquisa FAPESP, Mapeamento com GPS revela papel das florestas na conservação de onças-pintadas (colares GPS com registro a cada quatro horas) e Quantos filhotes tem uma onça (colar com timer que cai por volta de 1,5 ano depois); Wildlife radio telemetry (antena Yagi direcional e triangulação). Mapa, escala (30 km de largura), caminhos sorteados, intensidade do sinal, erro aceito de 1,5 km, velocidade da onça à noite, tempos e pontos são regras do jogo.</div></div>`;
  $('bS').onclick=()=>salvar(nivel);
 }
 const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
@@ -207,7 +373,7 @@ const GAME_ID="colar-da-onca";let db=null,fs=null,salvo=false;
 async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
 async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
  $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
-window.__a={get S(){return S},update,parar,G,inp};
+window.__a={get S(){return S},update,parar,G,inp,tec};
 inicio();
 </script>
 </body>
