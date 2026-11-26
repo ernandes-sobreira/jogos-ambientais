@@ -234,17 +234,25 @@ function painel(c,x,y,w,h){c.fillStyle='rgba(255,255,255,.95)';c.beginPath();c.r
 function texto(c,t,x,y,w,lh){const ws=t.split(' ');let l='';for(const p of ws){if(c.measureText(l+p).width>w){c.fillText(l,x,y);y+=lh;l='';}l+=p+' ';}c.fillText(l,x,y);return y;}
 /* ---------- FASE 1 ---------- */
 const ACH=[['folhas','Folhas e galhos','Boiam e são grandes. Separa com grade ou peneira.',[190,88]],['areia','Areia','Pesada, vai para o fundo. Separa deixando descansar: decantação.',[190,285]],['barro','Barro fino','Fica boiando e deixa a água turva. Precisa de coagulante e filtro.',[130,185]],['micro','Micróbios','Invisíveis a olho nu. Precisa de cloro para matar.',[250,150]]];
-function f1(){G={t:0,lx:520,ly:200,drag:false,ach:{},hold:0};telaJogo('🔎 Olhe a água','0 de 4');
- const BX=60,BY=50,BW=250,BH=250;
- G.desenha=c=>{c.fillStyle='#f3f8fb';c.fillRect(0,0,W,H);bequer(c,BX,BY,BW,BH,55,{areia:22,folhas:[{x:60,r:.3},{x:150,r:-.4},{x:200,r:.1}]});
-  c.save();c.beginPath();c.arc(G.lx,G.ly,48,0,7);c.clip();c.fillStyle='rgba(255,255,255,.35)';c.fillRect(G.lx-50,G.ly-50,100,100);
-  const dentro=G.lx>BX&&G.lx<BX+BW&&G.ly>BY+30&&G.ly<BY+BH;if(dentro){c.fillStyle='rgba(160,120,74,.45)';for(let i=0;i<40;i++){c.beginPath();c.arc(G.lx-45+sr(i)*90,G.ly-45+sr(i+3)*90,1.6,0,7);c.fill();}for(let i=0;i<6;i++)microbio(c,G.lx-35+sr(i*7)*70,G.ly-35+sr(i*5)*70,1.4,i%2,G.t);}c.restore();lupa(c,G.lx,G.ly,48);
-  painel(c,380,30,370,300);c.fillStyle='#263238';c.font='800 16px system-ui';c.textAlign='left';c.fillText('📒 O que tem na água',396,56);let y=86;
-  ACH.forEach(([k,n,d])=>{const ok=G.ach[k];c.fillStyle=ok?'#0277bd':'#b0bec5';c.font='800 14px system-ui';c.fillText((ok?'✅ ':'⬜ ')+(ok?n:'???'),396,y);if(ok){c.fillStyle='#455a64';c.font='600 12px system-ui';y=texto(c,d,418,y+18,320,15);}y+=30;});
-  if(G.hold>0&&G.alvo){c.strokeStyle='#0288d1';c.lineWidth=4;c.beginPath();c.arc(G.lx,G.ly,54,-Math.PI/2,-Math.PI/2+G.hold/0.8*6.28);c.stroke();}};
- G.upd=dt=>{const a=ACH.find(([k,,,[x,y]])=>!G.ach[k]&&Math.hypot(G.lx-x,G.ly-y)<40);G.alvo=a;if(a){G.hold+=dt;if(G.hold>.8){G.ach[a[0]]=1;G.hold=0;const n=Object.keys(G.ach).length;$('info').textContent=`${n} de 4`;acao(`Achou: ${a[1]}.`);if(n===4&&!G.fim){G.fim=1;setTimeout(()=>fimFase(150,true,'A água do rio é uma mistura heterogênea: folhas, areia, barro fino e micróbios. Cada parte tem um tamanho e um peso diferentes, e por isso cada uma precisa de um jeito diferente de ser separada.','Por que não dá para tirar os micróbios com uma peneira?'),1200);}}}else G.hold=0;};
- ptr((x,y)=>{if(Math.hypot(x-G.lx,y-G.ly)<70)G.drag=true;},'pointerdown');ptr((x,y)=>{if(G.drag){G.lx=clamp(x,40,360);G.ly=clamp(y,40,340);}});ptr(()=>G.drag=false,'pointerup');
- acao('Arraste a lupa pelo copo e pare em cima de cada coisa: na superfície, no meio, no fundo e bem no centro.');rodar();}
+function f1(){G={t:0,ach:{},sel:null,selT:0};telaJogo('🔎 Olhe a água','0 de 4');
+ const BX=40,BY=50,BW=230,BH=250,ZX=335,ZY=190,ZR=58;
+ const zoom=(c,k)=>{c.save();c.beginPath();c.arc(ZX,ZY,ZR,0,7);c.clip();c.fillStyle=k==='folhas'?'#cfe8f3':corAgua(55);c.fillRect(ZX-ZR,ZY-ZR,ZR*2,ZR*2);
+  if(k==='folhas'){[[-22,-10,.4],[14,-18,-.3],[0,14,.1],[24,16,.7]].forEach(([dx,dy,r])=>{c.save();c.translate(ZX+dx,ZY+dy);c.rotate(r);c.fillStyle='#6d8b3a';c.beginPath();c.ellipse(0,0,20,8,0,0,7);c.fill();c.strokeStyle='#4e6b25';c.lineWidth=1.5;c.beginPath();c.moveTo(-18,0);c.lineTo(18,0);c.stroke();c.restore();});}
+  if(k==='barro'){c.fillStyle='#8d6e4e';for(let n=0;n<70;n++){c.beginPath();c.arc(ZX-ZR+sr(n)*ZR*2,ZY-ZR+sr(n+7)*ZR*2,1.4+sr(n+2),0,7);c.fill();}}
+  if(k==='micro'){c.fillStyle='#e1f5fe';c.fillRect(ZX-ZR,ZY-ZR,ZR*2,ZR*2);for(let n=0;n<7;n++)microbio(c,ZX-38+sr(n*5)*76,ZY-38+sr(n*3+1)*76,2.4,n%2,G.t);}
+  if(k==='areia'){for(let n=0;n<16;n++){c.fillStyle=['#d7b98e','#c9a46b','#e2c79c'][n%3];c.beginPath();c.ellipse(ZX-40+sr(n)*80,ZY-40+sr(n+4)*80,9+sr(n+1)*5,7+sr(n+2)*4,sr(n)*3,0,7);c.fill();c.strokeStyle='#a88758';c.lineWidth=1;c.stroke();}}
+  c.restore();c.strokeStyle='#455a64';c.lineWidth=6;c.beginPath();c.arc(ZX,ZY,ZR,0,7);c.stroke();c.strokeStyle='#5d4037';c.lineWidth=9;c.lineCap='round';c.beginPath();c.moveTo(ZX+ZR*.72,ZY+ZR*.72);c.lineTo(ZX+ZR*1.15,ZY+ZR*1.15);c.stroke();c.lineCap='butt';};
+ G.desenha=c=>{c.fillStyle='#f3f8fb';c.fillRect(0,0,W,H);bequer(c,BX,BY,BW,BH,55,{areia:22,folhas:[{x:50,r:.3},{x:120,r:-.4},{x:180,r:.1}]});
+  ACH.forEach(([k,,,[x,y]])=>{const ok=G.ach[k];const pul=1+.15*Math.sin(G.t*5);c.fillStyle=ok?'rgba(46,125,50,.9)':'rgba(255,255,255,.95)';c.beginPath();c.arc(x,y,22*(ok?1:pul),0,7);c.fill();c.strokeStyle=ok?'#2e7d32':'#0288d1';c.lineWidth=3;c.stroke();
+   c.font="20px system-ui";c.textAlign="center";c.fillStyle="#fff";c.fillText(ok?'✓':'🔎',x,y+6);});
+  if(G.sel){const a=ACH.find(q=>q[0]===G.sel);c.strokeStyle='rgba(2,136,209,.6)';c.lineWidth=2;c.setLineDash([5,4]);c.beginPath();c.moveTo(a[3][0],a[3][1]);c.lineTo(ZX-ZR,ZY);c.stroke();c.setLineDash([]);zoom(c,G.sel);
+   c.fillStyle='#01579b';c.font='800 14px system-ui';c.textAlign='center';c.fillText(a[1],ZX,ZY+ZR+38);}
+  else{c.fillStyle='#90a4ae';c.font='700 13px system-ui';c.textAlign='center';c.fillText('toque numa 🔎',ZX,ZY+4);c.strokeStyle='#cfd8dc';c.lineWidth=4;c.beginPath();c.arc(ZX,ZY,ZR,0,7);c.stroke();}
+  painel(c,420,30,330,300);c.fillStyle='#263238';c.font='800 16px system-ui';c.textAlign='left';c.fillText('📒 O que tem na água',436,56);let y=86;
+  ACH.forEach(([k,n,d])=>{const ok=G.ach[k];c.fillStyle=ok?'#0277bd':'#b0bec5';c.font='800 14px system-ui';c.fillText((ok?'✅ ':'⬜ ')+(ok?n:'???'),436,y);if(ok){c.fillStyle='#455a64';c.font='600 12px system-ui';y=texto(c,d,458,y+18,280,15);}y+=30;});};
+ G.tap=(x,y)=>{const a=ACH.find(([k,,,[hx,hy]])=>Math.hypot(x-hx,y-hy)<42);if(!a)return;G.sel=a[0];if(!G.ach[a[0]]){G.ach[a[0]]=1;const n=Object.keys(G.ach).length;$('info').textContent=`${n} de 4`;acao(`${a[1]}: ${a[2]}`);
+  if(n===4&&!G.fim){G.fim=1;setTimeout(()=>fimFase(150,true,'A água do rio é uma mistura heterogênea: folhas, areia, barro fino e micróbios. Cada parte tem um tamanho e um peso diferentes, e por isso cada uma precisa de um jeito diferente de ser separada.','Por que não dá para tirar os micróbios com uma peneira?'),2200);}}};
+ acao('Toque nas 4 lupas que piscam no copo para ver de perto o que tem na água.');rodar();}
 /* ---------- FASE 2 ---------- */
 function f2(){G={t:0,min:0,alvo:0,tent:0};telaJogo('⏳ Deixe descansar','');const TEMPOS=[0,1,2,5,10,20,30,60];
  const est=m=>({areia:Math.min(1,m/2),silte:Math.min(1,m/20),turb:8+40*(1-Math.min(1,m/2))*.4+30*(1-Math.min(1,m/20))+22});
