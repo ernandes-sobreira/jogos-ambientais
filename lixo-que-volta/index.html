@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lixo que Volta</title>
+<style>
+:root{--main:#2e7d32;--deep:#1b5e20;--soft:#e8f5e9;--line:#c8e6c9;--ink:#10212b;--mut:#4d6370;--co2:#e53935;--ch4:#ef6c00;--ok:#2e7d32;--bad:#c62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:820px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep);letter-spacing:-.01em}
+h2{font-size:1.2rem;color:var(--deep);margin-bottom:6px;letter-spacing:-.01em}
+h3{font-size:1rem;color:var(--deep);margin:14px 0 6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 12px;font-weight:700;font-size:.86rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.card{border:2px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:var(--deep)}.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.btn.sm{padding:9px 14px;font-size:.92rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas.cena{width:100%;height:auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff;margin-top:10px}
+.top{justify-content:space-between}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--main);color:#fff;border-radius:14px;padding:8px 14px;font-weight:800;font-size:1.05rem}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.tool{border:2px solid var(--line);background:#fff;color:var(--deep);border-radius:12px;padding:9px 12px;font-weight:700;font-family:inherit;font-size:.92rem;cursor:pointer;touch-action:manipulation}
+.tool.on{border-color:var(--main);background:var(--soft)}
+.tool:disabled{opacity:.4}
+.mets{display:grid;gap:8px;margin-top:10px}
+.met{display:grid;grid-template-columns:92px 1fr 52px;gap:8px;align-items:center;font-weight:700;font-size:.9rem}
+.met .bar{position:relative;height:18px;background:#f1f4f5;border-radius:99px;overflow:hidden}
+.met .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;transition:width .15s}
+.met .alvo{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--ink);border-radius:2px}
+.met .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--mut)}
+.met.co2 .fill{background:var(--co2)}.met.ch4 .fill{background:var(--ch4)}
+.saldo .bar{background:linear-gradient(90deg,#e8f5e9 50%,#ffebee 50%)}
+.saldo .zero{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:var(--ink)}
+.saldo .fill{border-radius:0}
+.obj{display:flex;gap:10px;align-items:flex-start;background:#fff8e1;border:2px solid #ffe082;border-radius:14px;padding:10px 12px;margin-top:10px;font-size:.95rem}
+.obj b{color:#8d6e00;white-space:nowrap}
+.acao{display:flex;gap:10px;align-items:center;background:var(--soft);border-left:5px solid var(--main);border-radius:0 12px 12px 0;padding:9px 12px;margin-top:8px;font-weight:600;font-size:.95rem;min-height:42px}
+.acao .dedo{font-size:1.25rem;animation:pulo 1s ease-in-out infinite}
+@keyframes pulo{50%{transform:translateX(4px)}}
+.help{width:34px;height:34px;border-radius:50%;border:2px solid var(--main);background:#fff;color:var(--deep);font-weight:800;font-size:1rem;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(16,33,43,.35);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal .card{max-width:460px;width:100%}
+.intro{text-align:center;padding:26px 18px}
+.intro .ic{font-size:3rem;line-height:1}
+.intro .n{color:var(--mut);font-weight:700;font-size:.85rem;margin-top:8px}
+.passos{display:grid;gap:8px;margin:16px auto;max-width:420px;text-align:left}
+.passos div{display:flex;gap:12px;align-items:center;background:var(--soft);border-radius:12px;padding:10px 14px;font-weight:600}
+.passos b{font-size:1.3rem;min-width:1.6em;text-align:center}
+.res{text-align:center}
+.res .big{font-size:2.6rem;font-weight:800;color:var(--deep);line-height:1.1}
+.res .ok{color:var(--ok);font-weight:800}.res .no{color:var(--bad);font-weight:800}
+.pensa{background:var(--soft);border-radius:14px;padding:12px 14px;margin:14px auto;max-width:520px;text-align:left}
+.pensa b{color:var(--deep)}
+.boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.box{border:2px dashed var(--line);border-radius:14px;padding:10px;min-height:110px;cursor:pointer}
+.box h4{font-size:.92rem;color:var(--deep);margin-bottom:6px}
+.box.alvo{border-color:var(--main);background:var(--soft)}
+.cards{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;min-height:48px}
+.ct{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 11px;font-weight:700;font-size:.9rem;cursor:pointer;box-shadow:0 2px 0 var(--line);font-family:inherit;color:var(--ink);transition:transform .5s}
+.ct.sel{border-color:var(--main);background:var(--soft);transform:translateY(-2px)}
+.ct.certo{border-color:var(--ok);background:#e8f5e9}.ct.errado{border-color:var(--bad);background:#ffebee}
+.ct.movido{animation:voa .8s ease}
+@keyframes voa{0%{transform:translateY(-30px) scale(1.1);opacity:.3}100%{transform:none;opacity:1}}
+.capa{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+.capa canvas{width:100%;height:auto;display:block;border-radius:16px;background:var(--soft)}
+.opts{display:grid;gap:8px;margin-top:6px}
+.opts .l{font-size:.8rem;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.sw{display:flex;gap:6px;flex-wrap:wrap}
+.sw button{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--line);cursor:pointer}
+.sw button.on{box-shadow:0 0 0 3px var(--deep)}
+.sw .tx{width:auto;height:auto;border-radius:10px;padding:6px 10px;font-weight:700;font-size:.85rem;background:#fff;color:var(--deep);font-family:inherit;border:0}
+input.nome{border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit;width:100%}
+input[type=range]{width:100%;accent-color:var(--main)}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:6px}
+.tab th{text-align:left;background:var(--soft);color:var(--deep);padding:7px 6px}
+.tab td{border-bottom:1px solid var(--line);padding:7px 6px;vertical-align:top}
+.guia p,.guia li{font-size:.95rem;margin-bottom:6px}
+.guia ul,.guia ol{padding-left:20px}
+.hab{border-left:5px solid var(--main);background:var(--soft);padding:10px 14px;border-radius:0 12px 12px 0;font-size:.95rem}
+.ref li{font-size:.86rem;color:var(--mut)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+.rel{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center}
+.rel canvas{width:120px;height:120px;border-radius:50%;background:var(--soft)}
+.mini{width:100%;max-width:420px;height:auto;display:block;margin:10px auto 0}
+@media (max-width:620px){.wrap{padding:10px 8px 30px}.card{padding:12px;border-radius:16px}.capa{grid-template-columns:1fr}.met{grid-template-columns:70px 1fr 44px;font-size:.82rem}.chip{font-size:.95rem}.rel{grid-template-columns:80px 1fr}.rel canvas{width:80px;height:80px}}
+@media print{a.hub,header .hud,.ranking,.noprint{display:none!important}.card{border:1px solid #ccc;break-inside:avoid}body{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>Lixo que Volta</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF"></span><span class="pill" id="hP"></span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const W=760,H=372;
+function hex(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mix(a,b,t){const A=hex(a),B=hex(b);return`rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`;}
+
+/* ================= AVATAR ================= */
+const PELES=['#f6d3b8','#e3b18b','#c68a5e','#94603e','#5d3b26'];
+const CABS=['#1b1b1b','#4e342e','#8d6e63','#d4a85a','#b5532f'];
+const CAMISAS=['#00838f','#2e7d32','#f9a825','#c62828','#6a1b9a','#37474f'];
+const ESTILOS=[['curto','Curto'],['cacheado','Cacheado'],['longo','Longo'],['coque','Coque'],['raspado','Raspado']];
+const CHAPEUS=[['nenhum','Sem'],['bone','Boné'],['campo','Chapéu']];
+let A={pele:2,cab:0,estilo:'cacheado',camisa:0,chapeu:'campo',nome:''};
+try{const s=JSON.parse(localStorage.getItem('bc_avatar')||'null');if(s)A=Object.assign(A,s);}catch(e){}
+function salvaA(){try{localStorage.setItem('bc_avatar',JSON.stringify(A));}catch(e){}}
+function avatar(c,x,y,s,a,prancheta){
+ c.save();c.translate(x,y);c.scale(s,s);
+ const pele=PELES[a.pele],cab=CABS[a.cab],cam=CAMISAS[a.camisa];
+ if(a.estilo==='longo'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-39,12.5,15,0,0,7);c.fill();c.fillRect(-12.5,-40,25,22);}
+ if(a.estilo==='cacheado'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-40,15,14.5,0,0,7);c.fill();}
+ c.fillStyle=cam;c.beginPath();c.moveTo(-16,0);c.quadraticCurveTo(-17,-21,-6,-25);c.lineTo(6,-25);c.quadraticCurveTo(17,-21,16,0);c.closePath();c.fill();
+ c.fillStyle='rgba(0,0,0,.12)';c.fillRect(-1,-24,2,24);
+ c.fillStyle=pele;c.fillRect(-3.5,-29,7,6);
+ if(prancheta){c.fillStyle='#8d6e63';c.fillRect(4,-19,13,16);c.fillStyle='#fff';c.fillRect(5.5,-17,10,12);c.strokeStyle='#90a4ae';c.lineWidth=.8;for(let i=0;i<4;i++){c.beginPath();c.moveTo(7,-14+i*2.6);c.lineTo(14,-14+i*2.6);c.stroke();}}
+ c.strokeStyle=cam;c.lineWidth=6;c.lineCap='round';c.beginPath();c.moveTo(-11,-20);c.lineTo(-4,-9);c.stroke();
+ c.fillStyle=pele;c.beginPath();c.arc(-3,-8,3,0,7);c.fill();
+ c.fillStyle=pele;c.beginPath();c.ellipse(0,-39,9.5,11,0,0,7);c.fill();
+ c.beginPath();c.arc(-9.4,-38,2.3,0,7);c.arc(9.4,-38,2.3,0,7);c.fill();
+ c.fillStyle=cab;
+ if(a.estilo==='curto'){c.beginPath();c.ellipse(0,-44.5,10,6.8,0,Math.PI,0);c.fill();c.fillRect(-10,-46,2.8,7);c.fillRect(7.2,-46,2.8,7);}
+ if(a.estilo==='cacheado'){for(let i=0;i<13;i++){const an=Math.PI*(.8+i*1.4/12);c.beginPath();c.arc(Math.cos(an)*12,-41+Math.sin(an)*11.5,4.2,0,7);c.fill();}}
+ if(a.estilo==='longo'){c.beginPath();c.ellipse(0,-44.5,10.6,7.2,0,Math.PI,0);c.fill();}
+ if(a.estilo==='coque'){c.beginPath();c.ellipse(0,-44.5,10,6.4,0,Math.PI,0);c.fill();c.beginPath();c.arc(0,-53,5.2,0,7);c.fill();}
+ if(a.estilo==='raspado'){c.globalAlpha=.5;c.beginPath();c.ellipse(0,-44,9.8,6.2,0,Math.PI,0);c.fill();c.globalAlpha=1;}
+ c.fillStyle='#2b2a26';c.beginPath();c.arc(-3.4,-39,1.25,0,7);c.arc(3.4,-39,1.25,0,7);c.fill();
+ c.strokeStyle='#2b2a26';c.lineWidth=1;c.beginPath();c.arc(0,-35.6,2.6,.25,Math.PI-.25);c.stroke();
+ if(a.chapeu==='bone'){c.fillStyle=cam;c.beginPath();c.ellipse(0,-46,10.6,5.8,0,Math.PI,0);c.fill();c.fillRect(-10.6,-47,21.2,2.6);c.beginPath();c.ellipse(8.5,-46.2,8,2.2,0,0,7);c.fill();}
+ if(a.chapeu==='campo'){c.fillStyle='#d7c49e';c.beginPath();c.ellipse(0,-46,16.5,3.6,0,0,7);c.fill();c.beginPath();c.ellipse(0,-48,9.2,6.4,0,Math.PI,0);c.fill();c.fillStyle='#8d6e63';c.fillRect(-9.2,-49,18.4,1.9);}
+ c.restore();
+}
+function pernas(c,x,y,s,a){c.save();c.translate(x,y);c.scale(s,s);c.fillStyle='#455a64';c.fillRect(-11,0,9,20);c.fillRect(2,0,9,20);c.fillStyle='#3e2723';c.fillRect(-12,18,11,4);c.fillRect(1,18,11,4);c.restore();}
+
+/* ================= CENA ================= */
+const CORES={main:'#2e7d32',deep:'#1b5e20'};
+function sr(n){const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+function syncMol(){}function partic(){}
+/* ===== ITENS ===== */
+const ITEM={
+ pet:{n:'Garrafa PET',m:'plastico',dens:1.38,mag:0},
+ sac:{n:'Sacola plástica',m:'plastico',dens:.93,mag:0},
+ pote:{n:'Pote de margarina',m:'plastico',dens:.9,mag:0},
+ alu:{n:'Lata de alumínio',m:'metal',dens:2.7,mag:0},
+ aco:{n:'Lata de aço',m:'metal',dens:7.8,mag:1},
+ vid:{n:'Garrafa de vidro',m:'vidro',dens:2.5,mag:0},
+ cxa:{n:'Caixa de papelão',m:'papel',dens:.7,mag:0},
+ jor:{n:'Jornal',m:'papel',dens:.7,mag:0},
+ ban:{n:'Casca de banana',m:'organico',dens:1,mag:0},
+ maca:{n:'Resto de maçã',m:'organico',dens:1,mag:0},
+ pil:{n:'Pilha',m:'perigoso',dens:3,mag:1},
+ lam:{n:'Lâmpada fluorescente',m:'perigoso',dens:2.5,mag:0}};
+const LIX={papel:['Papel','#1e63c4'],plastico:['Plástico','#d32f2f'],vidro:['Vidro','#2e7d32'],metal:['Metal','#f9b800'],organico:['Orgânico','#6d4c2f'],perigoso:['Perigoso','#ef6c00']};
+function rr2(c,x,y,w,h,r){c.beginPath();c.roundRect(x,y,w,h,r);}
+function itemArt(c,x,y,s,k,rot){c.save();c.translate(x,y);c.rotate(rot||0);c.scale(s,s);c.lineJoin='round';
+ const sh=(a)=>{c.fillStyle=`rgba(0,0,0,${a||.12})`;c.beginPath();c.ellipse(0,22,18,3.5,0,0,7);c.fill();};
+ if(k==='pet'){sh();const g=c.createLinearGradient(-10,0,10,0);g.addColorStop(0,'rgba(120,190,230,.75)');g.addColorStop(.35,'rgba(225,245,255,.9)');g.addColorStop(1,'rgba(90,160,210,.8)');c.fillStyle=g;
+  c.beginPath();c.moveTo(-4,-26);c.lineTo(4,-26);c.lineTo(4,-22);c.quadraticCurveTo(10,-18,10,-8);c.lineTo(10,16);c.quadraticCurveTo(10,21,5,21);c.lineTo(-5,21);c.quadraticCurveTo(-10,21,-10,16);c.lineTo(-10,-8);c.quadraticCurveTo(-10,-18,-4,-22);c.closePath();c.fill();c.strokeStyle='rgba(40,100,150,.6)';c.lineWidth=1;c.stroke();
+  c.fillStyle='#1565c0';rr2(c,-5,-31,10,6,2);c.fill();c.fillStyle='#e53935';c.fillRect(-10,-2,20,9);c.fillStyle='#fff';c.font='bold 5px sans-serif';c.textAlign='center';c.fillText('ÁGUA',0,4.5);
+  c.strokeStyle='rgba(255,255,255,.8)';c.lineWidth=1.5;c.beginPath();c.moveTo(-6,-10);c.lineTo(-6,16);c.stroke();}
+ else if(k==='sac'){sh(.08);const g=c.createLinearGradient(0,-20,0,20);g.addColorStop(0,'#ffffff');g.addColorStop(1,'#dfe6ea');c.fillStyle=g;c.beginPath();c.moveTo(-15,-8);c.quadraticCurveTo(-18,10,-12,19);c.quadraticCurveTo(0,23,12,19);c.quadraticCurveTo(18,8,14,-8);c.lineTo(9,-9);c.quadraticCurveTo(9,-22,4,-22);c.quadraticCurveTo(2,-12,3,-8);c.lineTo(-3,-8);c.quadraticCurveTo(-2,-12,-4,-22);c.quadraticCurveTo(-9,-22,-9,-9);c.closePath();c.fill();c.strokeStyle='#9fb0ba';c.lineWidth=1;c.stroke();
+  c.strokeStyle='rgba(120,140,150,.5)';c.beginPath();c.moveTo(-8,0);c.quadraticCurveTo(-4,8,-6,16);c.moveTo(6,-2);c.quadraticCurveTo(2,6,5,14);c.stroke();c.fillStyle='#43a047';c.font='bold 6px sans-serif';c.textAlign='center';c.fillText('MERCADO',0,7);}
+ else if(k==='pote'){sh();const g=c.createLinearGradient(-15,0,15,0);g.addColorStop(0,'#f2e7b7');g.addColorStop(.4,'#fffbe6');g.addColorStop(1,'#e6d89b');c.fillStyle=g;c.beginPath();c.moveTo(-16,-6);c.lineTo(16,-6);c.lineTo(13,18);c.quadraticCurveTo(0,21,-13,18);c.closePath();c.fill();c.strokeStyle='#bfae68';c.lineWidth=1;c.stroke();
+  c.fillStyle='#fbc02d';c.beginPath();c.ellipse(0,-7,17,5,0,0,7);c.fill();c.strokeStyle='#c49000';c.stroke();c.fillStyle='#2e7d32';c.beginPath();c.ellipse(0,6,8,5,0,0,7);c.fill();c.fillStyle='#fff';c.font='bold 5px sans-serif';c.textAlign='center';c.fillText('MARG.',0,8);}
+ else if(k==='alu'||k==='aco'){sh();const alu=k==='alu';const g=c.createLinearGradient(-11,0,11,0);g.addColorStop(0,alu?'#9aa5ad':'#7c858b');g.addColorStop(.3,'#f4f6f7');g.addColorStop(.6,alu?'#c8d0d5':'#b4bbbf');g.addColorStop(1,alu?'#7c878e':'#5f676c');c.fillStyle=g;
+  rr2(c,-11,-20,22,40,4);c.fill();c.strokeStyle='rgba(0,0,0,.35)';c.lineWidth=1;c.stroke();
+  if(alu){c.fillStyle='#c62828';c.fillRect(-11,-11,22,20);c.fillStyle='rgba(255,255,255,.35)';c.fillRect(-6,-11,3,20);c.fillStyle='#fff';c.font='bold 6px sans-serif';c.textAlign='center';c.fillText('COLA',0,2);c.fillStyle='#b0bec5';c.beginPath();c.ellipse(0,-20,10,3,0,0,7);c.fill();c.fillStyle='#78909c';c.fillRect(-3,-22,6,2.5);}
+  else{c.fillStyle='#fff3e0';c.fillRect(-11,-12,22,22);c.fillStyle='#e65100';c.beginPath();c.arc(0,-1,6,0,7);c.fill();c.fillStyle='#2e7d32';c.fillRect(-2,-9,4,4);c.strokeStyle='rgba(0,0,0,.25)';for(const yy of[-17,-14,13,16]){c.beginPath();c.moveTo(-11,yy);c.lineTo(11,yy);c.stroke();}c.fillStyle='#455a64';c.font='bold 4.5px sans-serif';c.textAlign='center';c.fillText('MILHO',0,9);}}
+ else if(k==='vid'){sh();const g=c.createLinearGradient(-10,0,10,0);g.addColorStop(0,'#1b5e20');g.addColorStop(.35,'#66bb6a');g.addColorStop(1,'#1b5e20');c.fillStyle=g;c.globalAlpha=.92;c.beginPath();c.moveTo(-3,-30);c.lineTo(3,-30);c.lineTo(3,-16);c.quadraticCurveTo(10,-10,10,-2);c.lineTo(10,19);c.quadraticCurveTo(0,22,-10,19);c.lineTo(-10,-2);c.quadraticCurveTo(-10,-10,-3,-16);c.closePath();c.fill();c.globalAlpha=1;c.strokeStyle='#0d3b12';c.lineWidth=1;c.stroke();
+  c.fillStyle='#fdf5e2';c.fillRect(-10,0,20,11);c.fillStyle='#8d6e63';c.font='bold 4.5px sans-serif';c.textAlign='center';c.fillText('SUCO',0,7.5);c.fillStyle='#c9a227';c.fillRect(-3.5,-32,7,4);c.strokeStyle='rgba(255,255,255,.6)';c.lineWidth=1.6;c.beginPath();c.moveTo(-6,-6);c.lineTo(-6,17);c.stroke();}
+ else if(k==='cxa'){sh();c.fillStyle='#c8955a';c.beginPath();c.moveTo(-18,-8);c.lineTo(10,-8);c.lineTo(18,-14);c.lineTo(-10,-14);c.closePath();c.fill();c.fillStyle='#b07d45';c.beginPath();c.moveTo(10,-8);c.lineTo(18,-14);c.lineTo(18,12);c.lineTo(10,18);c.closePath();c.fill();c.fillStyle='#d9a96c';c.fillRect(-18,-8,28,26);c.strokeStyle='#8a5d2c';c.lineWidth=1;c.strokeRect(-18,-8,28,26);c.fillStyle='rgba(255,255,255,.55)';c.fillRect(-18,-2,28,4);c.strokeStyle='#5d4037';c.beginPath();c.moveTo(-10,6);c.lineTo(-4,12);c.lineTo(2,6);c.stroke();}
+ else if(k==='jor'){sh(.1);c.fillStyle='#e9e6dc';c.beginPath();c.moveTo(-18,-14);c.lineTo(16,-16);c.lineTo(18,14);c.lineTo(-16,16);c.closePath();c.fill();c.strokeStyle='#a8a395';c.lineWidth=1;c.stroke();c.fillStyle='#37474f';c.fillRect(-14,-11,26,4);c.fillStyle='#90a4ae';for(let i=0;i<5;i++)c.fillRect(-14,-4+i*3.6,12,1.4);for(let i=0;i<5;i++)c.fillRect(1,-4+i*3.6,12,1.4);c.fillStyle='#b0bec5';c.fillRect(1,-4,12,8);}
+ else if(k==='ban'){sh(.1);c.fillStyle='#f4c430';c.strokeStyle='#8a6a10';c.lineWidth=1;[[-.9,-14],[.1,-16],[1.1,-13]].forEach(([a,l])=>{c.save();c.rotate(a);c.beginPath();c.moveTo(-3,0);c.quadraticCurveTo(-6,l*.6,-1,l*1.2);c.quadraticCurveTo(4,l*.6,3,0);c.closePath();c.fill();c.stroke();c.fillStyle='#6d4c2f';c.beginPath();c.arc(-1,l*1.15,1.4,0,7);c.fill();c.fillStyle='#f4c430';c.restore();});
+  c.fillStyle='#fff6d0';c.beginPath();c.ellipse(0,2,5,4,0,0,7);c.fill();c.fillStyle='#5d4037';c.fillRect(-1.5,4,3,6);c.fillStyle='#6d4c2f';for(let i=0;i<5;i++){c.beginPath();c.arc(-8+i*4,-8+(i%2)*6,.9,0,7);c.fill();}}
+ else if(k==='maca'){sh(.1);c.fillStyle='#e53935';c.beginPath();c.arc(-6,0,10,Math.PI*.5,Math.PI*1.5);c.lineTo(-2,-10);c.quadraticCurveTo(-6,0,-2,10);c.closePath();c.fill();c.beginPath();c.arc(6,0,10,-Math.PI*.5,Math.PI*.5);c.lineTo(2,10);c.quadraticCurveTo(6,0,2,-10);c.closePath();c.fill();c.fillStyle='#fff3d6';c.beginPath();c.moveTo(-2,-10);c.quadraticCurveTo(-7,0,-2,10);c.lineTo(2,10);c.quadraticCurveTo(7,0,2,-10);c.closePath();c.fill();c.fillStyle='#4e342e';c.beginPath();c.ellipse(0,-2,1.2,2.4,0,0,7);c.ellipse(0,4,1.2,2.4,0,0,7);c.fill();c.strokeStyle='#5d4037';c.lineWidth=2;c.beginPath();c.moveTo(0,-10);c.lineTo(1,-16);c.stroke();c.fillStyle='#43a047';c.beginPath();c.ellipse(5,-15,4,2,-.5,0,7);c.fill();}
+ else if(k==='pil'){sh();const g=c.createLinearGradient(-8,0,8,0);g.addColorStop(0,'#212121');g.addColorStop(.4,'#5c5c5c');g.addColorStop(1,'#111');c.fillStyle=g;rr2(c,-8,-18,16,36,3);c.fill();c.fillStyle='#f9a825';c.fillRect(-8,-18,16,12);c.fillStyle='#bdbdbd';c.fillRect(-3,-22,6,4);c.fillStyle='#fff';c.font='bold 7px sans-serif';c.textAlign='center';c.fillText('+',0,-9);c.fillText('AA',0,8);}
+ else if(k==='lam'){sh(.1);c.lineCap='round';for(let r=0;r<4;r++){c.strokeStyle='#90a4ae';c.lineWidth=7;c.beginPath();c.ellipse(0,-18+r*6.5,8,3,0,Math.PI*.05,Math.PI*1.95);c.stroke();c.strokeStyle='#fbfcfc';c.lineWidth=5;c.stroke();}c.strokeStyle='rgba(150,160,165,.6)';c.lineWidth=1;for(let r=0;r<4;r++){c.beginPath();c.ellipse(0,-18+r*6.5,10.6,4.6,0,Math.PI*.1,Math.PI*.9);c.stroke();}c.lineCap='butt';
+  c.fillStyle='#eceff1';rr2(c,-9,4,18,7,2);c.fill();c.strokeStyle='#b0bec5';c.stroke();c.fillStyle='#9e9e9e';rr2(c,-6,11,12,9,2);c.fill();c.strokeStyle='#616161';for(const yy of[14,17]){c.beginPath();c.moveTo(-6,yy);c.lineTo(6,yy);c.stroke();}c.fillStyle='#424242';c.beginPath();c.arc(0,21,2.5,0,7);c.fill();}
+ c.restore();}
+function lixeira(c,x,y,w,cat,aberta){const[n,cor]=LIX[cat];c.save();c.translate(x,y);c.fillStyle='rgba(0,0,0,.15)';c.beginPath();c.ellipse(0,w*.62+4,w*.48,5,0,0,7);c.fill();
+ const g=c.createLinearGradient(-w/2,0,w/2,0);g.addColorStop(0,cor);g.addColorStop(.45,mixC(cor,'#ffffff',.25));g.addColorStop(1,mixC(cor,'#000000',.25));c.fillStyle=g;c.beginPath();c.moveTo(-w*.45,-w*.2);c.lineTo(w*.45,-w*.2);c.lineTo(w*.38,w*.62);c.lineTo(-w*.38,w*.62);c.closePath();c.fill();
+ c.strokeStyle='rgba(0,0,0,.2)';c.lineWidth=2;for(let i=-1;i<=1;i++){c.beginPath();c.moveTo(i*w*.18,-w*.05);c.lineTo(i*w*.15,w*.5);c.stroke();}
+ c.fillStyle=mixC(cor,'#000000',.15);rr2(c,-w*.52,-w*.32-(aberta?6:0),w*1.04,w*.14,4);c.fill();c.fillStyle='#fff';c.beginPath();c.arc(0,w*.2,w*.17,0,7);c.fill();c.fillStyle=cor;c.font=`bold ${w*.2}px sans-serif`;c.textAlign='center';c.fillText('♻',0,w*.27);
+ c.fillStyle='#263238';c.font='800 14px system-ui';c.fillText(n,0,w*.62+22);c.restore();}
+function mixC(a,b,t){const h=s=>[1,3,5].map(i=>parseInt(s.slice(i,i+2),16));const A=h(a),B=h(b);return`rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`;}
+function galpao(c,t){const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,'#eef3f5');g.addColorStop(1,'#d9e2e6');c.fillStyle=g;c.fillRect(0,0,W,H);
+ c.strokeStyle='#c3ced3';c.lineWidth=2;for(let x=0;x<W;x+=80){c.beginPath();c.moveTo(x,0);c.lineTo(x,120);c.stroke();}c.fillStyle='#cfd9dd';c.fillRect(0,118,W,6);
+ c.fillStyle='#b8c4c9';c.fillRect(0,250,W,H-250);c.fillStyle='rgba(255,255,255,.25)';for(let x=0;x<W;x+=60)c.fillRect(x,250,2,H-250);}
+function esteira(c,y,t,x0,x1){x0=x0||0;x1=x1||W;c.fillStyle='#37474f';rr2(c,x0,y-10,x1-x0,22,11);c.fill();c.fillStyle='#263238';c.fillRect(x0+10,y-6,x1-x0-20,14);c.strokeStyle='#4f6470';c.lineWidth=2;const off=(t*60)%24;for(let x=x0+10-off+24;x<x1-10;x+=24){c.beginPath();c.moveTo(x,y-6);c.lineTo(x,y+8);c.stroke();}
+ c.fillStyle='#78909c';for(let x=x0+20;x<x1;x+=90){c.fillRect(x,y+12,6,26);}c.fillStyle='#90a4ae';c.beginPath();c.arc(x0+11,y+1,10,0,7);c.arc(x1-11,y+1,10,0,7);c.fill();}
+
+function drawCena(c,G){if(G.desenha)G.desenha(c);}
+/* ================= TELA / LOOP ================= */
+let G=null,S=null,raf=0,ultimo=0,cx=null;
+function laco(ts){const dt=Math.min(.05,(ts-ultimo)/1000||0);ultimo=ts;if(G){G.t+=dt;if(G.upd)G.upd(dt);syncMol(G,dt);partic(G,dt);if(cx)drawCena(cx,G);if(G.extra)G.extra(cx);}raf=requestAnimationFrame(laco);}
+function parar(){cancelAnimationFrame(raf);raf=0;}
+function rodar(){parar();ultimo=performance.now();raf=requestAnimationFrame(laco);}
+function hud(){$('hud').style.display='flex';$('hF').textContent=`Fase ${S.f+1} de ${FASES.length}`;$('hP').textContent=`${Math.max(0,S.tot+S.fp)} pts`;}
+function telaJogo(chip,info){
+ const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><span class="chip" id="chip">${chip}</span><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="acao"><span class="dedo">👉</span><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});
+}
+function acao(t){const e=$('acao');if(e&&e.innerHTML!==t)e.innerHTML=t;}
+function ajuda(){const F=FASES[S.f],d=document.createElement('div');d.className='modal';
+ d.innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn">Entendi</button></div>`;
+ d.onclick=e=>{if(e.target===d||e.target.tagName==='BUTTON')d.remove();};document.body.appendChild(d);}
+function medidor(id,rot,cls,max,alvo){const a=alvo!=null?`<span class="alvo" style="left:${alvo/max*100}%"></span>`:'';return`<div class="met ${cls}" id="${id}" data-max="${max}"><span>${rot}</span><div class="bar"><span class="fill"></span>${a}</div><span class="v"></span></div>`;}
+function poeMed(id,v){const e=$(id);if(!e)return;const m=+e.dataset.max;e.querySelector('.fill').style.width=clamp(v/m*100,0,100)+'%';e.querySelector('.v').textContent=Math.round(v);}
+function poeSaldo(v,max){const e=$('mSaldo');if(!e)return;const f=e.querySelector('.fill'),p=clamp(Math.abs(v)/max*50,0,50);if(v<0){f.style.left=(50-p)+'%';f.style.width=p+'%';f.style.background='#43a047';}else{f.style.left='50%';f.style.width=p+'%';f.style.background='#e53935';}e.querySelector('.v').textContent=(v>0?'+':'')+Math.round(v);}
+
+/* ================= FASES ================= */
+const FASES=[
+ {nome:'Esteira da cooperativa',ic:'♻️',obj:'Separar o lixo que passa na esteira, cada item na lixeira certa. Acerte pelo menos 14 de 18.',passos:[['✋','Arraste o item até a lixeira'],['🎨','Cada cor é um tipo de material'],['⏩','A esteira vai acelerando']],ini:()=>f1()},
+ {nome:'Máquina de separar',ic:'🧲',obj:'Montar a máquina na ordem certa para separar aço, alumínio, papel, pote e garrafa PET.',passos:[['🧲','Ímã puxa o que tem ferro'],['🌀','Corrente de Foucault empurra alumínio'],['💨','Vento sopra o papel · 💧 Água: o leve boia']],ini:()=>f2()},
+ {nome:'Caixa térmica do peixe',ic:'🧊',obj:'Escolher o recheio da caixa: gelo por 8 horas, caixa com até 5 kg, e material que a cidade consegue reaproveitar.',passos:[['🧱','Escolha o material do recheio'],['📏','Escolha a espessura'],['▶','Teste por 12 horas']],ini:()=>f3()},
+ {nome:'Para onde foi o plástico?',ic:'🔮',obj:'Prever que parte de todo o lixo plástico já feito no mundo foi reciclada e que parte foi queimada.',passos:[['🔢','Faça suas duas previsões'],['▶','Veja as 100 garrafas caírem'],['📊','Compare com o estudo']],ini:()=>f4()},
+ {nome:'Plano da coleta',ic:'🗺️',obj:'Com 10 fichas, recuperar pelo menos 1,8 t de recicláveis por semana com no máximo 25% de rejeito.',passos:[['🚛','Coleta porta a porta: 3 fichas'],['📦','Ponto de entrega: 1 ficha'],['📣','Campanha no bairro: 1 ficha, menos rejeito']],ini:()=>f5()}
+];
+function intro(){parar();G=null;cx=null;hud();const F=FASES[S.f];$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><div class="n">FASE ${S.f+1} DE ${FASES.length}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left;max-width:420px;margin:12px auto 0"><b>🎯 Objetivo</b><span>${F.obj}</span></div>
+ <div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn" id="bGo">Começar</button></div>`;
+ $('bGo').onclick=()=>{S.fp=0;F.ini();};}
+function fimFase(pts,ok,oque,pergunta,extraHtml){
+ parar();pts=Math.max(0,Math.round(pts));S.fp=0;S.tot+=pts;S.res[S.f]={pts,ok,oque};hud();
+ $('tela').innerHTML=`<div class="card res"><div class="small">${FASES[S.f].ic} ${FASES[S.f].nome}</div><div class="big">+${pts}</div>
+ <p class="${ok?'ok':'no'}">${ok?'Meta cumprida':'Meta não cumprida'}</p>${extraHtml||''}
+ <div class="pensa"><b>O que aconteceu:</b> ${oque}</div><div class="pensa"><b>Pergunta para a turma:</b> ${pergunta}</div>
+ <div class="row" style="justify-content:center"><button class="btn" id="bNx">${S.f<FASES.length-1?'Próxima fase':'Ver relatório'}</button></div></div>`;
+ $('bNx').onclick=()=>{S.f++;if(S.f<FASES.length)intro();else relatorio();};
+}
+const f1x=v=>v.toFixed(1).replace('.',',');
+function ptr(fn,ev){const cv=$('cv');cv.style.touchAction='none';cv.addEventListener(ev||'pointermove',e=>{const r=cv.getBoundingClientRect();fn((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height,e);});}
+function painel(c,x,y,w,h){c.fillStyle='rgba(255,255,255,.94)';c.beginPath();c.roundRect(x,y,w,h,10);c.fill();}
+/* ---------- FASE 1: ESTEIRA ---------- */
+const CATS=Object.keys(LIX);const binX=i=>68+i*125;
+function f1(){const ks=Object.keys(ITEM);const fila=[];for(let i=0;i<18;i++)fila.push(ks[i%ks.length]);fila.sort(()=>Math.random()-.5);
+ G={t:0,fila,its:[],drag:null,ok:0,err:0,perd:0,acc:1,feitos:0,fx:[]};telaJogo('♻️ Esteira','0 de 18');
+ G.desenha=c=>{galpao(c,G.t);esteira(c,168,G.t*(.7+G.feitos/18));
+  CATS.forEach((k,i)=>lixeira(c,binX(i),280,70,k,G.drag&&Math.abs(G.drag.x-binX(i))<55&&G.drag.y>200));
+  for(const it of G.its)if(it!==G.drag)itemArt(c,it.x,it.y,1.55,it.k,it.rot||0);
+  if(G.drag)itemArt(c,G.drag.x,G.drag.y,1.75,G.drag.k,0);
+  for(const f of G.fx){c.globalAlpha=1-f.t;c.fillStyle=f.cor;c.font='800 18px system-ui';c.textAlign='center';c.fillText(f.txt,f.x,f.y-f.t*30);c.globalAlpha=1;}
+  painel(c,10,10,300,34);c.fillStyle='#263238';c.font='800 17px system-ui';c.textAlign='left';c.fillText(`✅ ${G.ok}   ❌ ${G.err}   ⬇️ perdidos ${G.perd}`,22,33);
+  if(G.drag){const it=ITEM[G.drag.k];painel(c,330,10,420,34);c.fillStyle='#263238';c.font='700 15px system-ui';c.fillText(it.n,342,33);}};
+ const solta=(x,y)=>{const d=G.drag;G.drag=null;if(!d)return;if(y>205){const i=CATS.findIndex((k,i)=>Math.abs(x-binX(i))<58);if(i>=0){const certo=ITEM[d.k].m===CATS[i];
+  if(certo){G.ok++;G.fx.push({x:binX(i),y:220,t:0,txt:'+1',cor:'#2e7d32'});G.its=G.its.filter(o=>o!==d);G.feitos++;acao(`${ITEM[d.k].n}: ${LIX[CATS[i]][0].toLowerCase()}. Certo!`);}
+  else{G.err++;G.fx.push({x:binX(i),y:220,t:0,txt:'✗',cor:'#c62828'});const certa=LIX[ITEM[d.k].m][0];acao(`${ITEM[d.k].n} não vai em ${LIX[CATS[i]][0].toLowerCase()}. Vai em ${certa.toLowerCase()}.`);d.y=136;}return;}}d.y=136;};
+ ptr((x,y)=>{let b=null,bd=40;for(const it of G.its){const dd=Math.hypot(it.x-x,it.y-y);if(dd<bd){bd=dd;b=it;}}if(b){G.drag=b;b.x=x;b.y=y;}},'pointerdown');
+ ptr((x,y)=>{if(G.drag){G.drag.x=x;G.drag.y=y;}});ptr((x,y)=>solta(x,y),'pointerup');
+ G.upd=dt=>{if(G.fim)return;const v=45+G.t*1.6;G.acc+=dt;const gap=Math.max(1.1,2.3-G.t*.03);
+  if(G.fila.length&&G.acc>gap){G.acc=0;G.its.push({k:G.fila.pop(),x:-30,y:136,rot:(Math.random()-.5)*.3});}
+  for(const it of G.its){if(it===G.drag)continue;it.x+=v*dt;if(it.x>W+25){it.morto=1;G.perd++;G.feitos++;G.fx.push({x:W-40,y:120,t:0,txt:'perdido',cor:'#ef6c00'});}}
+  G.its=G.its.filter(o=>!o.morto);G.fx=G.fx.filter(f=>(f.t+=dt)<1);$('info').textContent=`${G.ok+G.perd+0} de 18`;
+  if(!G.fila.length&&!G.its.length){G.fim=1;const ok=G.ok>=14;setTimeout(()=>fimFase(G.ok*10-G.err*3,ok,`Você acertou ${G.ok} de 18, com ${G.err} erros e ${G.perd} perdidos. Cada material tem uma cor de lixeira no Brasil. Pilha e lâmpada fluorescente têm metais tóxicos e não vão no lixo comum.`,'Por que separar em casa ajuda tanto o trabalho dos catadores?'),600);}};
+ acao('Arraste cada item da esteira até a lixeira certa.');rodar();}
+/* ---------- FASE 2: MÁQUINA ---------- */
+const EST={ima:['🧲','Ímã'],fou:['🌀','Foucault'],ven:['💨','Vento'],agu:['💧','Água']};
+const stX=i=>150+i*150;
+function f2(){G={t:0,slots:[],run:false,its:[],tent:0,res:null};telaJogo('🧲 Máquina de separar','4 estações');
+ const mix=['aco','alu','pet','pote','jor','cxa','aco','alu','pet','pote','jor','cxa'];
+ const reset=()=>{G.its=mix.map((k,i)=>({k,x:-40-i*48,y:180,st:-1,mol:false,dx:0,dy:0}));G.out={};G.jam=false;};reset();
+ G.desenha=c=>{galpao(c,G.t);esteira(c,200,G.run?G.t:0,0,W);
+  for(let i=0;i<4;i++){const x=stX(i),k=G.slots[i];c.fillStyle=k?'#eceff1':'rgba(255,255,255,.5)';c.strokeStyle=k?'#455a64':'#90a4ae';c.lineWidth=2;c.setLineDash(k?[]:[6,5]);c.beginPath();c.roundRect(x-48,60,96,96,12);c.fill();c.stroke();c.setLineDash([]);
+   c.fillStyle='#263238';c.textAlign='center';if(k){c.font='38px system-ui';c.fillText(EST[k][0],x,112);c.font='800 15px system-ui';c.fillText(EST[k][1],x,145);}else{c.font='800 16px system-ui';c.fillText(`${i+1}º`,x,114);}
+   c.fillStyle='#cfd8dc';c.beginPath();c.roundRect(x-40,250,80,62,8);c.fill();c.strokeStyle='#90a4ae';c.stroke();
+   (G.out[i]||[]).forEach((o,j)=>itemArt(c,x-24+(j%3)*24,282-Math.floor(j/3)*12,.75,o.k,0));}
+  c.fillStyle='#cfd8dc';c.beginPath();c.roundRect(W-58,250,52,62,8);c.fill();c.fillStyle='#263238';c.font='700 12px system-ui';c.textAlign='center';c.fillText('sobra',W-32,328);(G.out[4]||[]).forEach((o,j)=>itemArt(c,W-44+(j%2)*26,282-Math.floor(j/2)*12,.75,o.k,0));
+  for(const it of G.its)if(it.st<0)itemArt(c,it.x,it.y,1.1,it.k,0);
+  if(G.jam){c.fillStyle='rgba(198,40,40,.9)';c.beginPath();c.roundRect(200,150,360,60,12);c.fill();c.fillStyle='#fff';c.font='800 18px system-ui';c.textAlign='center';c.fillText('⚠️ Máquina travou!',380,177);c.font='600 14px system-ui';c.fillText('Lata de aço grudou no rotor do Foucault',380,198);}};
+ const pega=(k,e)=>{const it=ITEM[k];if(e==='ima')return it.mag===1;if(e==='fou')return k==='alu';if(e==='ven')return it.m==='papel';if(e==='agu')return it.dens<1;return false;};
+ G.upd=dt=>{if(!G.run)return;let vivo=0;for(const it of G.its){if(it.st>=0)continue;vivo++;it.x+=90*dt;
+   for(let i=0;i<4;i++){if(Math.abs(it.x-stX(i))<4&&it.last!==i){it.last=i;const e=G.slots[i];
+    if(e==='fou'&&ITEM[it.k].mag){G.jam=true;G.run=false;setTimeout(fimRodada,1400);return;}
+    if(e==='agu'&&ITEM[it.k].m==='papel')it.mol=true;
+    if(pega(it.k,e)){it.st=i;(G.out[i]=G.out[i]||[]).push(it);}}}
+   if(it.x>W-40){it.st=4;(G.out[4]=G.out[4]||[]).push(it);}}
+  if(!vivo){G.run=false;setTimeout(fimRodada,700);}};
+ const fimRodada=()=>{G.tent++;const ord=G.slots;const ok=!G.jam&&ord.indexOf('ima')<ord.indexOf('fou')&&ord.indexOf('ven')<ord.indexOf('agu');
+  if(ok)fimFase(Math.max(60,180-30*(G.tent-1)),true,'Ímã antes do Foucault: o aço sai primeiro e não trava o rotor. Vento antes da água: o papel sai seco e mantém valor. A água separa pela densidade: o pote de polipropileno boia e a garrafa PET afunda e segue até o fim.','Que propriedade de cada material a máquina usou para separar?');
+  else{acao(G.jam?'Travou: o aço precisa sair antes do Foucault. Monte de novo.':'O papel passou pela água e molhou. Papel molhado perde valor. Monte de novo.');G.slots=[];reset();ctrl();}};
+ const ctrl=()=>{$('ctrl').innerHTML=Object.keys(EST).map(k=>`<button class="tool" data-e="${k}" ${G.slots.includes(k)?'disabled style="opacity:.4"':''}>${EST[k][0]} ${EST[k][1]}</button>`).join('')+`<button class="btn ghost sm" id="bL">Limpar</button><button class="btn sm" id="bR" ${G.slots.length<4?'disabled':''}>▶ Ligar</button>`;
+  document.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{if(G.slots.length<4&&!G.run){G.slots.push(b.dataset.e);ctrl();}});
+  $('bL').onclick=()=>{if(!G.run){G.slots=[];ctrl();}};$('bR').onclick=()=>{if(G.slots.length===4&&!G.run){reset();G.run=true;acao('Máquina ligada.');$('ctrl').innerHTML='';}};};
+ ctrl();acao('Toque nas 4 estações na ordem em que a esteira deve passar por elas.');rodar();}
+/* ---------- FASE 3: CAIXA TÉRMICA ---------- */
+const MAT3={eps:['Isopor',.035,25,false,'#f5f5f5'],pu:['Espuma PU',.025,35,false,'#ffe082'],cor:['Cortiça',.040,200,true,'#b98552'],mad:['Madeira',.13,500,true,'#a1887f'],alu:['Alumínio',205,2700,true,'#cfd8dc']};
+function f3(){G={t:0,m:'eps',cm:3,run:0,tent:0};telaJogo('🧊 Caixa térmica','meta: 8 h');
+ const calc=()=>{const[n,k,d,ok]=MAT3[G.m];const h=Math.min(48,10*(G.cm/3)*(.035/k));const kg=1+d*G.cm/150;return{h,kg,ok,n,k,d};};
+ G.desenha=c=>{c.fillStyle='#f3f7f9';c.fillRect(0,0,W,H);const r=calc(),cor=MAT3[G.m][4];const x=90,y=80,w=300,h=220,e=Math.max(4,G.cm*9);
+  c.fillStyle='rgba(0,0,0,.08)';c.beginPath();c.ellipse(x+w/2,y+h+12,w*.55,10,0,0,7);c.fill();
+  c.fillStyle='#1976d2';c.beginPath();c.roundRect(x,y,w,h,12);c.fill();c.fillStyle=cor;c.fillRect(x+8,y+8,w-16,h-16);
+  if(G.m==='cor'){c.fillStyle='rgba(90,50,20,.35)';for(let i=0;i<220;i++){c.beginPath();c.arc(x+8+((i*37)%(w-16)),y+8+((i*53)%(h-16)),1.2,0,7);c.fill();}}
+  if(G.m==='mad'){c.strokeStyle='rgba(80,50,30,.35)';for(let i=0;i<14;i++){c.beginPath();c.moveTo(x+8,y+14+i*14);c.bezierCurveTo(x+100,y+8+i*14,x+200,y+20+i*14,x+w-8,y+14+i*14);c.stroke();}}
+  if(G.m==='eps'){c.strokeStyle='rgba(180,190,195,.6)';for(let i=0;i<90;i++){c.beginPath();c.arc(x+12+((i*41)%(w-24)),y+12+((i*29)%(h-24)),4,0,7);c.stroke();}}
+  c.fillStyle='#e3f2fd';c.fillRect(x+8+e,y+8+e,w-16-2*e,h-16-2*e);
+  const frac=G.run?Math.max(0,1-(G.run*12/12)/ (r.h/12)):1;const ib=Math.ceil(9*frac);for(let i=0;i<9;i++){const ix=x+8+e+16+(i%3)*((w-16-2*e-40)/3),iy=y+h-8-e-26-Math.floor(i/3)*26;if(i<ib){c.fillStyle='rgba(200,230,250,.95)';c.strokeStyle='#90caf9';c.lineWidth=1.5;c.beginPath();c.roundRect(ix,iy,22,22,4);c.fill();c.stroke();}}
+  if(G.run)c.fillStyle='rgba(66,165,245,.35)',c.fillRect(x+8+e,y+h-8-e-(1-frac)*30,w-16-2*e,(1-frac)*30);
+  c.fillStyle='#263238';c.font='800 16px system-ui';c.textAlign='center';c.fillText(`recheio: ${r.n}, ${G.cm} cm`,x+w/2,y-12);
+  const tx=430;painel(c,tx,40,320,250);c.fillStyle='#263238';c.textAlign='left';c.font='800 18px system-ui';c.fillText(r.n,tx+16,72);c.font='600 14px system-ui';
+  c.fillText(`Condutividade térmica: ${String(r.k).replace('.',',')} W/m·K`,tx+16,98);c.fillText(`Densidade: ${r.d} kg/m³`,tx+16,120);
+  const hh=G.run?Math.min(r.h,G.run*12):null;c.font='800 17px system-ui';
+  c.fillStyle=r.h>=8?'#2e7d32':'#c62828';c.fillText(`🧊 Gelo dura: ${G.run>=1||!G.run?f1x(r.h)+' h':f1x(hh)+' h...'}`,tx+16,156);
+  c.fillStyle=r.kg<=5.001?'#2e7d32':'#c62828';c.fillText(`⚖️ Caixa: ${f1x(r.kg)} kg (até 5)`,tx+16,184);
+  c.fillStyle=r.ok?'#2e7d32':'#c62828';c.fillText(r.ok?'♻️ A cidade reaproveita':'🚫 Sem destino na cidade',tx+16,212);
+  if(G.run){c.fillStyle='#455a64';c.font='800 15px system-ui';c.fillText(`⏱️ ${Math.min(12,Math.round(G.run*12))} de 12 horas`,tx+16,250);}};
+ G.upd=dt=>{if(G.run&&G.run<1){G.run=Math.min(1,G.run+dt/3);if(G.run>=1)G.cb&&G.cb();}};
+ const ctrl=()=>{$('ctrl').innerHTML=`<div style="width:100%"><div class="row" style="gap:6px;flex-wrap:wrap">${Object.keys(MAT3).map(k=>`<button class="tool" data-m="${k}" style="${G.m===k?'background:var(--main);color:#fff':''}">${MAT3[k][0]}</button>`).join('')}</div>
+  <div class="row top" style="margin-top:8px"><b>📏 Espessura</b><span class="pill">${G.cm} cm</span></div><input type="range" id="re" min="1" max="6" step="1" value="${G.cm}"></div><button class="btn sm" id="bR">▶ Testar 12 h</button>`;
+  document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{G.m=b.dataset.m;G.run=0;ctrl();});$('re').oninput=e=>{G.cm=+e.target.value;G.run=0;$('ctrl').querySelector('.pill').textContent=G.cm+' cm';};
+  $('bR').onclick=()=>{G.tent++;G.run=.001;G.cb=()=>{G.cb=null;const r=calc(),a=r.h>=8,b=r.kg<=5.001,d=r.ok;
+   if(a&&b&&d)fimFase(Math.max(60,180-20*(G.tent-1)),true,`Cortiça com ${G.cm} cm segurou o gelo por ${f1x(r.h)} h e a caixa ficou com ${f1x(r.kg)} kg. Isopor e espuma isolam melhor e são mais leves, mas aqui não têm destino. Madeira e alumínio conduzem calor demais.`,'Qual propriedade faz um material ser bom isolante térmico?');
+   else acao(`${a?'✅':'❌'} gelo ${f1x(r.h)} h · ${b?'✅':'❌'} ${f1x(r.kg)} kg · ${d?'✅':'❌'} destino na cidade`);};};};
+ ctrl();acao('Escolha o recheio e a espessura. Depois aperte <b>▶ Testar</b>.');rodar();}
+/* ---------- FASE 4: PARA ONDE FOI ---------- */
+function f4(){G={t:0,rec:30,que:20,gs:[],fase:0};telaJogo('🔮 Para onde foi o plástico?','previsão');
+ const ALV=[['Reciclado',9,'#2e7d32'],['Queimado',12,'#ef6c00'],['Aterro ou natureza',79,'#6d4c41']];
+ G.desenha=c=>{c.fillStyle='#f3f7f9';c.fillRect(0,0,W,H);c.fillStyle='#263238';c.font='800 17px system-ui';c.textAlign='left';c.fillText('100 garrafas = todo o lixo plástico do mundo até 2015',16,28);
+  ALV.forEach(([n,v,cor],i)=>{const x=60+i*235;c.fillStyle=cor;c.globalAlpha=.12;c.beginPath();c.roundRect(x,148,200,212,14);c.fill();c.globalAlpha=1;c.strokeStyle=cor;c.lineWidth=3;c.stroke();c.fillStyle=cor;c.font='800 16px system-ui';c.textAlign='center';c.fillText(n,x+100,172);
+   const cnt=G.gs.filter(g=>g.d===i&&g.chegou).length;if(G.fase>=1){c.font='800 28px system-ui';c.fillText(cnt+'%',x+100,204);}
+   if(G.fase===0){c.fillStyle='#546e7a';c.font='600 13px system-ui';c.fillText(i===0?`sua previsão: ${G.rec}%`:i===1?`sua previsão: ${G.que}%`:`sobra: ${Math.max(0,100-G.rec-G.que)}%`,x+100,196);}});
+  for(const g of G.gs)itemArt(c,g.x,g.y,.55,'pet',g.r);};
+ G.upd=dt=>{if(G.fase!==1)return;let pend=0;for(const g of G.gs){if(g.t0>G.t){pend++;continue;}const u=Math.min(1,(G.t-g.t0)/.8);g.x=g.sx+(g.tx-g.sx)*u;g.y=g.sy+(g.ty-g.sy)*u*u;if(u>=1)g.chegou=1;else pend++;}if(!pend){G.fase=2;G.cb&&G.cb();}};
+ const ctrl=()=>{$('ctrl').innerHTML=`<div style="width:100%;display:grid;gap:6px"><div class="row top"><b>♻️ Quanto foi reciclado?</b><span class="pill" id="pr">${G.rec}%</span></div><input type="range" id="rr" min="0" max="80" step="1" value="${G.rec}">
+  <div class="row top"><b>🔥 Quanto foi queimado?</b><span class="pill" id="pq">${G.que}%</span></div><input type="range" id="rq" min="0" max="80" step="1" value="${G.que}"></div><button class="btn sm" id="bR">▶ Ver</button>`;
+  $('rr').oninput=e=>{G.rec=+e.target.value;$('pr').textContent=G.rec+'%';};$('rq').oninput=e=>{G.que=+e.target.value;$('pq').textContent=G.que+'%';};
+  $('bR').onclick=()=>{$('ctrl').innerHTML='';G.fase=1;let i=0;const dest=[];for(let k=0;k<9;k++)dest.push(0);for(let k=0;k<12;k++)dest.push(1);for(let k=0;k<79;k++)dest.push(2);dest.sort(()=>Math.random()-.5);
+   dest.forEach((d,j)=>{const n=G.gs.length;const per=[0,0,0];G.gs.push({d,sx:rr(80,680),sy:60,x:0,y:-40,t0:G.t+j*.04,r:rr(-1,1)});});
+   const idx=[0,0,0];G.gs.forEach(g=>{const k=idx[g.d]++;g.tx=60+g.d*235+12+(k%16)*11.5;g.ty=336-Math.floor(k/16)*22;});
+   G.cb=()=>{const er=Math.abs(G.rec-9)+Math.abs(G.que-12);const pts=Math.max(20,180-er*4);fimFase(pts,er<=15,`Até 2015, só 9% de todo o lixo plástico já feito no mundo foi reciclado. 12% foi queimado e 79% foi para aterros ou ficou no ambiente. Você previu ${G.rec}% reciclado e ${G.que}% queimado.`,'Se tão pouco é reciclado, o que mais precisa mudar além de separar o lixo em casa?');};};};
+ ctrl();acao('Faça suas previsões e aperte <b>▶ Ver</b>.');rodar();}
+/* ---------- FASE 5: PLANO DA COLETA ---------- */
+const BAI=[['Centro',4],['Cavalhada',3],['Jardim',3],['Vila',2],['Ponte',1],['Chácaras',1]];
+function f5(){G={t:0,a:[0,0,0,0,0,0],cp:[0,0,0,0,0,0],tent:0};telaJogo('🗺️ Plano da coleta','');
+ const pos=i=>[110+(i%3)*270,95+Math.floor(i/3)*150];
+ const calc=()=>{let rec=0,col=0,cus=0;G.a.forEach((a,i)=>{const g=BAI[i][1],cp=G.cp[i];cus+=[0,1,3][a]+cp;const cap=[.05,.25,.6][a]+(cp&&a>0?.1:0);const r=g*.3*cap;rec+=r;col+=r/(1-(cp?.15:.35));});return{rec,rej:col?(col-rec)/col:0,cus};};
+ const inf=()=>{const r=calc();$('info').textContent=`🎟️ ${10-r.cus} fichas`;};
+ G.desenha=c=>{c.fillStyle='#e8f5e9';c.fillRect(0,0,W,H);c.strokeStyle='#cfd8dc';c.lineWidth=16;c.beginPath();c.moveTo(0,172);c.lineTo(W,172);c.moveTo(245,0);c.lineTo(245,H);c.moveTo(515,0);c.lineTo(515,H);c.stroke();
+  BAI.forEach(([n,g],i)=>{const[x,y]=pos(i);const a=G.a[i];c.fillStyle='rgba(255,255,255,.85)';c.beginPath();c.roundRect(x-95,y-60,190,118,14);c.fill();c.strokeStyle=a===2?'#2e7d32':a===1?'#1e63c4':'#b0bec5';c.lineWidth=3;c.stroke();
+   for(let h=0;h<g*2;h++){const hx=x-80+(h%4)*24,hy=y-40+Math.floor(h/4)*24;c.fillStyle='#ffe0b2';c.fillRect(hx,hy,16,12);c.fillStyle=['#c62828','#6d4c41','#1565c0'][h%3];c.beginPath();c.moveTo(hx-3,hy);c.lineTo(hx+8,hy-8);c.lineTo(hx+19,hy);c.fill();}
+   c.fillStyle='#263238';c.font='800 15px system-ui';c.textAlign='left';c.fillText(n,x-84,y+42);c.font='600 12px system-ui';c.fillText(`${g} t de lixo/semana`,x-84,y+55);
+   c.font='30px system-ui';c.textAlign='center';c.fillText(a===2?'🚛':a===1?'📦':'·',x+58,y-12);c.globalAlpha=G.cp[i]?1:.25;c.fillText('📣',x+58,y+34);c.globalAlpha=1;});
+  const r=calc();painel(c,10,H-40,W-20,32);c.fillStyle='#263238';c.font='800 16px system-ui';c.textAlign='left';
+  c.fillStyle=r.rec>=1.8?'#2e7d32':'#c62828';c.fillText(`♻️ Recuperado: ${f1x(r.rec)} t/sem (meta 1,8)`,22,H-18);c.fillStyle=r.rej<=.25?'#2e7d32':'#c62828';c.fillText(`🗑️ Rejeito: ${Math.round(r.rej*100)}% (até 25%)`,330,H-18);c.fillStyle=r.cus<=10?'#263238':'#c62828';c.fillText(`🎟️ ${r.cus}/10`,600,H-18);};
+ G.tap=(x,y)=>{BAI.forEach((b,i)=>{const[px,py]=pos(i);if(Math.abs(x-(px+58))<26&&Math.abs(y-(py+24))<22){G.cp[i]^=1;if(calc().cus>10){G.cp[i]^=1;acao('Fichas acabaram.');}inf();return;}
+  if(Math.abs(x-px)<95&&y>py-60&&y<py+10){const ant=G.a[i];G.a[i]=(G.a[i]+1)%3;if(calc().cus>10){G.a[i]=0;if(calc().cus>10)G.a[i]=ant;acao('Fichas acabaram.');}inf();}});};
+ $('ctrl').innerHTML=`<button class="btn sm" id="bR">Conferir</button>`;$('mets').innerHTML=`<div class="pensa" style="margin:0;max-width:none">Toque no bairro para trocar: nada → 📦 ponto de entrega → 🚛 porta a porta. Toque no 📣 para fazer campanha.</div>`;
+ $('bR').onclick=()=>{G.tent++;const r=calc(),a=r.rec>=1.8,b=r.rej<=.25,d=r.cus<=10;
+  if(a&&b&&d)fimFase(Math.max(70,200-20*(G.tent-1)),true,`Recuperou ${f1x(r.rec)} t por semana com ${Math.round(r.rej*100)}% de rejeito. Porta a porta rende mais nos bairros que geram mais lixo. A campanha faz as pessoas separarem melhor e reduz o rejeito.`,'Quem faz a coleta seletiva funcionar na sua cidade, e como essas pessoas são pagas?');
+  else acao(`${a?'✅':'❌'} recuperado ${f1x(r.rec)} t · ${b?'✅':'❌'} rejeito ${Math.round(r.rej*100)}%`);};
+ inf();acao('Toque nos bairros para escolher a coleta e no 📣 para campanha.');rodar();}
+/* ================= INICIO / AVATAR ================= */
+function inicio(){parar();G=null;cx=null;$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><div class="capa"><canvas id="cA" width="560" height="560"></canvas>
+ <div><h2>Monte seu pesquisador</h2><div class="opts">
+ <div class="l">Pele</div><div class="sw" id="sP">${PELES.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.pele===i?'on':''}" aria-label="pele ${i+1}"></button>`).join('')}</div>
+ <div class="l">Cabelo</div><div class="sw" id="sE">${ESTILOS.map(([k,t])=>`<button class="tx ${A.estilo===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <div class="sw" id="sC">${CABS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.cab===i?'on':''}" aria-label="cor ${i+1}"></button>`).join('')}</div>
+ <div class="l">Camiseta</div><div class="sw" id="sT">${CAMISAS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.camisa===i?'on':''}" aria-label="camiseta ${i+1}"></button>`).join('')}</div>
+ <div class="l">Chapéu</div><div class="sw" id="sH">${CHAPEUS.map(([k,t])=>`<button class="tx ${A.chapeu===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <input class="nome" id="iN" maxlength="20" placeholder="Seu nome" value="${esc(A.nome)}">
+ </div></div></div>
+ <div class="row" style="margin-top:14px"><button class="btn" id="bJ">▶ Jogar as 5 fases</button><button class="btn ghost" id="bG">📘 Guia do professor</button></div>
+ <p class="small" style="margin-top:10px">Ciências da Natureza · Ensino Médio · BNCC EM13CNT307</p></div>`;
+ const pinta=()=>{const c=$('cA').getContext('2d');c.clearRect(0,0,560,560);c.fillStyle='#e8f5e9';c.fillRect(0,0,560,560);c.fillStyle='#c8e6c9';c.beginPath();c.arc(280,600,260,0,7);c.fill();avatar(c,280,560,6.4,A,true);};
+ pinta();
+ const liga=(id,f)=>document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{f(b);salvaA();document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b));pinta();});
+ liga('sP',b=>A.pele=+b.dataset.i);liga('sC',b=>A.cab=+b.dataset.i);liga('sT',b=>A.camisa=+b.dataset.i);liga('sE',b=>A.estilo=b.dataset.k);liga('sH',b=>A.chapeu=b.dataset.k);
+ $('iN').oninput=e=>{A.nome=e.target.value;salvaA();};
+ $('bJ').onclick=novo;$('bG').onclick=guia;
+}
+function novo(){S={f:0,tot:0,fp:0,res:[],fichas:0};salvo=false;intro();}
+function relatorio(){parar();G=null;cx=null;$('rankBox').style.display='block';const nome=A.nome.trim()||'Pesquisador';
+ $('tela').innerHTML=`<div class="card"><div class="rel"><canvas id="cR" width="240" height="240"></canvas><div><div class="small">Relatório de campo</div><h2>${esc(nome)}</h2><div class="big" style="font-size:2rem;font-weight:800;color:var(--deep)">${S.tot} pts</div></div></div>
+ <table class="tab" style="margin-top:12px"><tr><th>Fase</th><th>Pontos</th><th>Meta</th></tr>${FASES.map((F,i)=>{const r=S.res[i]||{pts:0,ok:false};return`<tr><td>${F.ic} ${F.nome}</td><td>${r.pts}</td><td>${r.ok?'✓':'✗'}</td></tr>`;}).join('')}</table>
+ <div class="pensa"><b>Para escrever no caderno:</b> escolha um objeto de casa e diga de que material ele é, que propriedade ajuda a separá-lo e para onde ele vai.</div>
+ <div class="savebox noprint"><input id="pName" maxlength="20" value="${esc(nome)}"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row noprint" style="margin-top:12px"><button class="btn ghost" id="bI">🖨️ Imprimir relatório</button><button class="btn ghost" id="bN">Jogar de novo</button><button class="btn ghost" id="bV">Início</button></div></div>`;
+ const c=$('cR').getContext('2d');c.fillStyle='#e8f5e9';c.fillRect(0,0,240,240);avatar(c,120,240,3.2,A,true);
+ $('bS').onclick=()=>salvar('5 fases');$('bI').onclick=()=>window.print();$('bN').onclick=novo;$('bV').onclick=inicio;
+}
+
+/* ================= GUIA DO PROFESSOR ================= */
+function guia(){parar();$('hud').style.display='none';$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card guia">
+ <div class="row top noprint"><button class="btn ghost sm" id="bVt">← Voltar</button><button class="btn sm" id="bPr">🖨️ Imprimir guia</button></div>
+ <h2 style="margin-top:10px">Guia do professor · Lixo que Volta</h2>
+ <p class="small">Ensino Médio · Ciências da Natureza e suas Tecnologias · Química, Física e Geografia</p>
+ <h3>Habilidade da BNCC</h3>
+ <div class="hab"><b>EM13CNT307.</b> Analisar as propriedades dos materiais para avaliar a adequação de seu uso em diferentes aplicações (industriais, cotidianas, arquitetônicas ou tecnológicas) e/ou propor soluções seguras e sustentáveis considerando seu contexto local e cotidiano.</div>
+ <h3>Objetivos da aula</h3>
+ <ul><li>Classificar resíduos pelo material de que são feitos.</li><li>Usar propriedades (magnetismo, condutividade elétrica, densidade, condutividade térmica) para separar e escolher materiais.</li><li>Propor soluções de coleta para o contexto do próprio bairro.</li></ul>
+ <h3>Roteiro de 50 minutos</h3>
+ <table class="tab"><tr><th>Tempo</th><th>O que fazer</th></tr>
+ <tr><td>5 min</td><td>Pergunte: o que acontece com o lixo depois que o caminhão passa?</td></tr>
+ <tr><td>25 min</td><td>Alunos jogam em duplas e anotam as propriedades usadas em cada fase.</td></tr>
+ <tr><td>15 min</td><td>Discussão com as perguntas de cada fase.</td></tr>
+ <tr><td>5 min</td><td>Cada dupla escreve a frase do relatório de campo.</td></tr></table>
+ <h3>Fase por fase</h3>
+ <table class="tab"><tr><th>Fase</th><th>O aluno faz</th><th>Pergunta para a turma</th><th>O que explicar</th></tr>
+ <tr><td>1. Esteira da cooperativa</td><td>Arrasta itens para as lixeiras</td><td>Por que separar em casa ajuda?</td><td>Cores da coleta seletiva da Resolução CONAMA 275/2001. Pilhas e lâmpadas fluorescentes têm metais tóxicos.</td></tr>
+ <tr><td>2. Máquina de separar</td><td>Monta a ordem das estações</td><td>Que propriedade cada estação usa?</td><td>Ferromagnetismo, correntes induzidas no alumínio, massa e área para o vento, densidade na água (PP boia, PET afunda).</td></tr>
+ <tr><td>3. Caixa térmica do peixe</td><td>Escolhe material e espessura</td><td>O que faz um bom isolante?</td><td>Condutividade térmica baixa e espessura. Peso depende da densidade. Destino depende da cidade.</td></tr>
+ <tr><td>4. Para onde foi o plástico?</td><td>Prevê o destino do plástico</td><td>O que precisa mudar além de separar?</td><td>Até 2015, 9% reciclado, 12% queimado, 79% em aterros ou no ambiente (Geyer et al., 2017).</td></tr>
+ <tr><td>5. Plano da coleta</td><td>Distribui coleta e campanhas</td><td>Quem faz a coleta funcionar?</td><td>Coleta seletiva, rejeito e o papel dos catadores, previsto na Lei 12.305/2010.</td></tr></table>
+ <h3>Avaliação</h3>
+ <p>Use o relatório de campo impresso e a frase escrita por cada dupla. Todos os instrumentos têm o mesmo peso. Observe se o aluno justifica cada escolha por uma propriedade do material.</p>
+ <h3>Sequência de 3 aulas</h3>
+ <ol><li><b>Aula 1.</b> Jogo completo e discussão.</li><li><b>Aula 2.</b> Experimento: ímã, copo d'água e pedaços de embalagens para testar quais boiam e quais são atraídos.</li><li><b>Aula 3.</b> As duplas mapeiam pontos de entrega e cooperativas do bairro e propõem melhorias.</li></ol>
+ <h3>Cuidado ao explicar</h3>
+ <p>As condutividades térmicas e densidades da fase 3 são valores aproximados de tabela. As horas de gelo, o peso da caixa, o destino de cada material na cidade e os números da fase 5 são de um modelo simples. A cidade do jogo é inventada: em cada município o destino do isopor e da espuma muda. Os percentuais da fase 4 são dados reais de Geyer et al. (2017).</p>
+ <h3>Referências</h3>
+ <ul class="ref">
+ <li>Brasil. Lei 12.305, de 2 de agosto de 2010. Institui a Política Nacional de Resíduos Sólidos.</li>
+ <li>Conama. Resolução 275, de 25 de abril de 2001. Estabelece o código de cores para os diferentes tipos de resíduos.</li>
+ <li>Geyer R., Jambeck J.R., Law K.L. 2017. Production, use, and fate of all plastics ever made. Science Advances 3: e1700782. doi:10.1126/sciadv.1700782</li></ul>
+ </div>`;
+ $('bVt').onclick=inicio;$('bPr').onclick=()=>window.print();
+}
+
+/* ================= RANKING ================= */
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="lixo-que-volta";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__a={get S(){return S},get G(){return G},FASES,inicio,novo,intro,guia};
+inicio();
+</script>
+</body>
+</html>
