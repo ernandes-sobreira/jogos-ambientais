@@ -451,7 +451,7 @@ TC.drawMundo=function(g){const m=MOB(),cam=TC.camx(g),nv=TC.nivel(g),gy=g.gy;cx.
  if(g.marca){cx.setLineDash([8,6]);cx.strokeStyle='#1565c0';cx.lineWidth=2;cx.beginPath();cx.moveTo(cam,g.marca);cx.lineTo(cam+W,g.marca);cx.stroke();cx.setLineDash([]);cx.font='bold 11px system-ui';const t='marca da cheia máxima';const tw=cx.measureText(t).width+12;rrk(cx,cam+W-tw-10,g.marca-22,tw,18,9,'rgba(255,255,255,.92)');cx.fillStyle='#1565c0';cx.textAlign='left';cx.fillText(t,cam+W-tw-4,g.marca-9);}
  for(const mu of g.mudas){if(mu.afog)continue;const s=Math.min(1,mu.t/1.2);cx.strokeStyle='#5d7a3a';cx.lineWidth=2;cx.beginPath();cx.moveTo(mu.x,mu.y);cx.lineTo(mu.x,mu.y-16*s);cx.stroke();cx.save();cx.translate(mu.x,mu.y-16*s);for(let j=0;j<5;j++){cx.rotate(1.256);cx.fillStyle='#7cb342';cx.beginPath();cx.ellipse(0,-4*s,1.8*s,4*s,0,0,7);cx.fill();}cx.restore();rrk(cx,mu.x-2,mu.y-2,4,4,2,'#33691e');}
  for(const c of g.cai){cx.fillStyle='#151515';cx.beginPath();cx.ellipse(c.x,c.y,2.6,3.4,0,0,7);cx.fill();}
- TC.mira(g);const tu=g.tu;tucanoR(cx,tu.x,tu.y,m?.82:.85,tu.fl,tu.dir);
+ TC.mira(g);const tu=g.tu;tucanoR(cx,tu.x,tu.y,m?.9:1.05,tu.fl,tu.dir);
  for(const l of g.lb){cx.font='bold 11px system-ui';const w=cx.measureText(l.tx).width+12;const lx=Math.max(cam+w/2+4,Math.min(cam+W-w/2-4,l.x));rrk(cx,lx-w/2,l.y-12,w,18,9,'rgba(255,255,255,.95)');cx.fillStyle=l.c;cx.textAlign='center';cx.fillText(l.tx,lx,l.y+1);}
  cx.restore();
  if(TC.calor(g)){cx.fillStyle='rgba(255,183,77,.12)';cx.fillRect(0,0,W,H);}};
@@ -474,6 +474,37 @@ TC._draw2=TC.draw;TC.draw=function(g){if(TC.F[S.f].tipo==='bico')return TC._draw
 G.capa=function(k,w,h){const o=cx,oW=W,oH=H,semS=!S;if(semS)S={f:0};const oS=S.f;cx=k;W=w;H=h;S.f=0;const g={t:0,lb:[],bar:[],cad:[0,1,2].map(()=>({n:0,ok:0})),mudas:[],cai:[]};TC.mundo(g);g.tu={x:g.maes[0].x+g.maes[0].h*.45,y:h*.3,fl:1,dir:1};g.tu.x=Math.min(g.tu.x,g.WW);
  const cam0=g.maes[0].x-w*.4;g.tu.x=cam0+w*.62;TC.drawMundo(g);cx=o;W=oW;H=oH;S.f=oS;if(semS)S=undefined;};
 G.como=[['Voar','Arraste o dedo e o tucano voa até lá. A tela acompanha o tucano pela paisagem.'],['Comer','Pouse nos frutos abertos do manduvi. Cabem 3 sementes no papo.'],['Plantar','A semente sai sozinha depois de alguns segundos. A linha tracejada mostra onde cai e a chance de vingar.'],['Anotar','O caderno mostra quantas mudas vingaram em cada distância da mãe.']];
+/* tucano-toco redesenhado: bico laranja com mancha preta na ponta, pele laranja em volta do olho com anel azul, garganta branca, cobertoras brancas sobre a cauda e vermelhas sob a cauda */
+function tucanoR(k,x,y,s,fl,dir){k.save();k.translate(x,y);k.scale(s*(dir||1),s);const a=Math.sin(fl||0);
+ const preto=(x0,y0,x1,y1)=>{const g=k.createLinearGradient(x0,y0,x1,y1);g.addColorStop(0,'#2b2f36');g.addColorStop(.5,'#121417');g.addColorStop(1,'#050506');return g;};
+ const asa=(perto)=>{k.save();k.translate(0,-3);const fy=Math.abs(a)<.2?(a<0?-.2:.2):a;k.rotate(perto?0:.12);k.scale(1,fy*(perto?1:.8));
+  k.fillStyle=perto?preto(0,-30,-30,0):'#0c0d10';k.beginPath();k.moveTo(8,0);k.quadraticCurveTo(2,-14,-12,-24);
+  /* primárias separadas em dedos */const tips=[[-14,-27],[-20,-27],[-26,-25],[-31,-21],[-34,-16]];let px=-12,py=-24;for(const [tx,ty] of tips){k.quadraticCurveTo(px-1,py-3,tx,ty);k.quadraticCurveTo(tx+1,ty+3,tx+2,ty+4);px=tx;py=ty;}
+  k.quadraticCurveTo(-30,-8,-22,-2);for(let i=0;i<4;i++){k.quadraticCurveTo(-19+i*6,1,-16+i*6,-1);}k.lineTo(8,2);k.closePath();k.fill();
+  if(perto){k.strokeStyle='rgba(120,140,170,.35)';k.lineWidth=.8;for(let i=0;i<5;i++){k.beginPath();k.moveTo(-4-i*2,-6-i);k.lineTo(-14-i*4,-20-i);k.stroke();}k.fillStyle='rgba(255,255,255,.08)';k.beginPath();k.ellipse(-2,-8,9,4,-.7,0,7);k.fill();}
+  k.restore();};
+ asa(false);
+ /* cauda longa com cobertoras */k.fillStyle=preto(-30,-6,-58,8);k.beginPath();k.moveTo(-22,-5);k.quadraticCurveTo(-42,-9,-58,-6);k.lineTo(-59,0);k.lineTo(-57,6);k.quadraticCurveTo(-40,8,-22,6);k.closePath();k.fill();
+ k.strokeStyle='rgba(90,100,120,.4)';k.lineWidth=.7;for(const yy of [-3,0,3]){k.beginPath();k.moveTo(-26,yy);k.lineTo(-56,yy*1.6);k.stroke();}
+ k.fillStyle='#f4f1e8';k.beginPath();k.ellipse(-22,-6,6,3,.1,0,7);k.fill();
+ k.fillStyle='#d3202a';k.beginPath();k.ellipse(-21,7,6,3.2,-.1,0,7);k.fill();k.fillStyle='rgba(255,120,120,.5)';k.beginPath();k.ellipse(-22,6,3,1.2,0,0,7);k.fill();
+ /* corpo */k.fillStyle=preto(-10,-12,0,14);k.beginPath();k.ellipse(-3,1,24,12.5,-.06,0,7);k.fill();
+ k.fillStyle='rgba(140,170,220,.12)';k.beginPath();k.ellipse(-6,-6,14,4,-.1,0,7);k.fill();
+ /* pés recolhidos */k.strokeStyle='#5d6d86';k.lineWidth=1.6;k.lineCap='round';k.beginPath();k.moveTo(-5,11);k.lineTo(-11,13.5);k.moveTo(-2,11);k.lineTo(-8,14);k.stroke();
+ /* garganta branca com borda amarelada */const gb=k.createLinearGradient(10,-6,14,12);gb.addColorStop(0,'#fffdf4');gb.addColorStop(.75,'#f8f0d8');gb.addColorStop(1,'#f1d98a');k.fillStyle=gb;k.beginPath();k.moveTo(8,-6);k.quadraticCurveTo(22,-6,22,2);k.quadraticCurveTo(20,11,9,12);k.quadraticCurveTo(4,4,8,-6);k.fill();
+ k.strokeStyle='rgba(200,40,40,.55)';k.lineWidth=1.2;k.beginPath();k.moveTo(9,12);k.quadraticCurveTo(17,12,21,6);k.stroke();
+ /* cabeça */k.fillStyle=preto(10,-16,20,0);k.beginPath();k.moveTo(6,-4);k.quadraticCurveTo(8,-16,17,-15);k.quadraticCurveTo(24,-14,24,-6);k.lineTo(21,-3);k.quadraticCurveTo(14,-6,6,-4);k.fill();
+ /* bico */const bx=21,by=-6;const gr=k.createLinearGradient(bx,by-8,bx+42,by+6);gr.addColorStop(0,'#ffd23f');gr.addColorStop(.35,'#ffab2e');gr.addColorStop(.75,'#f57c1f');gr.addColorStop(1,'#e2541b');
+ k.fillStyle=gr;k.beginPath();k.moveTo(bx,by-7);k.bezierCurveTo(bx+14,by-12,bx+34,by-10,bx+43,by+1);k.quadraticCurveTo(bx+44,by+4,bx+41,by+4);k.bezierCurveTo(bx+30,by+5,bx+14,by+10,bx,by+11);k.closePath();k.fill();
+ /* mandíbula inferior mais clara */k.fillStyle='rgba(255,236,170,.35)';k.beginPath();k.moveTo(bx+2,by+4);k.bezierCurveTo(bx+16,by+3,bx+30,by+2,bx+41,by+3.5);k.bezierCurveTo(bx+30,by+5,bx+14,by+10,bx,by+10.5);k.closePath();k.fill();
+ /* linha vermelha no dorso do bico */k.strokeStyle='rgba(214,52,28,.75)';k.lineWidth=1.6;k.beginPath();k.moveTo(bx+2,by-7);k.bezierCurveTo(bx+14,by-11.5,bx+30,by-9.5,bx+38,by-4);k.stroke();
+ /* mancha preta na ponta */k.fillStyle='#111';k.beginPath();k.moveTo(bx+33,by-6.5);k.quadraticCurveTo(bx+41,by-4,bx+43,by+1);k.quadraticCurveTo(bx+44,by+4,bx+41,by+4);k.quadraticCurveTo(bx+36,by+3.2,bx+33,by+3);k.quadraticCurveTo(bx+30,by-2,bx+33,by-6.5);k.fill();
+ /* comissura serrilhada */k.strokeStyle='rgba(120,45,10,.6)';k.lineWidth=.9;k.beginPath();k.moveTo(bx+1,by+3.5);for(let i=1;i<=16;i++){const xx=bx+1+i*2,yy=by+3.5-i*.06+(i%2?.6:-.2);k.lineTo(xx,yy);}k.stroke();
+ /* faixa preta na base do bico */k.strokeStyle='#0b0b0b';k.lineWidth=1.8;k.beginPath();k.moveTo(bx,by-7);k.quadraticCurveTo(bx-1.5,by+2,bx,by+11);k.stroke();
+ k.fillStyle='rgba(255,255,255,.28)';k.beginPath();k.ellipse(bx+14,by-6,9,1.6,-.12,0,7);k.fill();
+ /* olho: pele laranja, anel azul */k.fillStyle='#f39a2b';k.beginPath();k.ellipse(15,-8,5.8,5,0,0,7);k.fill();k.fillStyle='#2f7fd6';k.beginPath();k.arc(15.5,-8,3.3,0,7);k.fill();k.fillStyle='#120b06';k.beginPath();k.arc(15.7,-8,2.1,0,7);k.fill();k.fillStyle='#fff';k.beginPath();k.arc(16.4,-8.8,.7,0,7);k.fill();
+ asa(true);
+ k.restore();}
 function pergunta(){
  const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
  $('tela').innerHTML=`<div class="card"><h2>Pergunta da fase</h2><p style="margin:6px 0 4px">${P.q}</p><p class="small">Acerto +20, erro −10.</p><div class="ops">${ops.map((o,i)=>`<button data-i="${i}">${o.t}</button>`).join('')}</div><div id="pf"></div></div>`;
