@@ -260,6 +260,7 @@ function pequizeiro(k,x,y,h,seed){const R=rng(seed||3);k.save();k.translate(x,y)
 Gribel & Hay (1993, J. Trop. Ecol.): flores em pincel, polinizadas sobretudo por Glossophaga soricina e Anoura geoffroyi; autocompatível, mas forma mais frutos com pólen de outra árvore; frutificação natural de 3,1%.
 Embrapa (Espécies Arbóreas Brasileiras, vol. 3): 2 ou 3 flores por cacho abrem no início de cada noite. FAPESP: néctar máximo perto da alvorada, quando abelhas e beija-flores também visitam.
 Melo (2001, Rev. Brasil. Biol.): 13 espécies de aves visitaram as flores de dia.
+Collevatti, Grattapaglia e Hay (2001, Heredity 86: 60-67): cruzamento entre aparentados atribuído ao voo curto dos morcegos, que ficam muito tempo na mesma árvore ou grupo de árvores.
 Energia, gasto de voo, néctar, distâncias e pontos são regras do jogo. */
 const PQ={};
 PQ.F=[{tipo:'nec',n:3},{tipo:'cruz',n:3},{tipo:'alva',n:4},{tipo:'iso',n:4}];
@@ -271,7 +272,7 @@ const G={titulo:'Morcego do Pequi',get rotulo(){return ['Visitas','Pólen cruzad
  FASES:[{nome:'Flores da noite',dur:50,meta:10,metaTxt:'beber o néctar de 10 flores antes do fim da noite.',txt:'Escureceu e as flores do pequizeiro abriram. Voe até as flores creme e beba o néctar. Voar gasta energia, e o néctar devolve.',fato:'A cada noite só 2 ou 3 flores de cada cacho do pequizeiro se abrem. Elas são grandes, cor de creme e têm um pincel de estames.'},
   {nome:'Pólen de outra árvore',dur:55,meta:8,metaTxt:'fazer 8 polinizações com pólen de outra árvore.',txt:'Ao beber, o morcego sai com pólen no pelo. Leve esse pólen para uma flor de outra árvore. Pólen da mesma árvore vale pouco.',fato:'O pequizeiro aceita o próprio pólen, mas forma muito mais frutos quando o pólen vem de outra árvore.'},
   {nome:'Antes do sol',dur:55,meta:9,metaTxt:'fazer 9 polinizações cruzadas antes do sol nascer.',txt:'Perto da alvorada o néctar fica mais farto. Mas abelhas e beija-flores chegam e esvaziam as flores. Seja rápido.',fato:'Perto da alvorada o néctar chega ao máximo, e abelhas e beija-flores também visitam as flores. De dia, várias espécies de aves bebem esse néctar.'},
-  {nome:'Árvore isolada',dur:60,meta:3,metaTxt:'polinizar 3 flores da árvore isolada com pólen de outra árvore.',txt:'Um pequizeiro ficou sozinho no meio do pasto. Sem visita de morcego vindo de outra árvore, ele quase não dá fruto. Cruze o pasto com energia de sobra.',fato:'Mesmo com as visitas, só cerca de 3 em cada 100 flores do pequizeiro viram fruto. Árvores isoladas recebem menos pólen de outras árvores.'}],
+  {nome:'Árvore isolada',dur:60,meta:3,metaTxt:'polinizar 3 flores da árvore isolada com pólen de outra árvore.',txt:'Um pequizeiro ficou sozinho no meio do pasto. Os morcegos do pequi voam pouco e passam muito tempo nas mesmas árvores. Leve pólen de outra árvore até ele, com energia de sobra para cruzar o pasto.',fato:'Os morcegos do pequi voam pouco e ficam muito tempo na mesma árvore ou no mesmo grupo de árvores. Por isso muitos cruzamentos acontecem entre vizinhos aparentados. Mesmo com visitas, só cerca de 3 em cada 100 flores viram fruto.'}],
  init(g){g.ok=0;g.vis=0;g.lb=[];const F=PQ.F[S.f];PQ.monta(g);g.bat={x:W*.5,y:H*.2,e:.8,pol:null,fl:0,a:0};g.alvo=null;g.beb=null;g.comp=[];g.desc=0;g.tc=3;},
  meta(g){return [g.ok,FASES[S.f].meta];},cedo(g){return g.ok>=FASES[S.f].meta;},
  update(g,dt){PQ.up(g,dt);},draw(g){PQ.draw(g);},botoes(){return FS.botao();},ligar(){FS.ligar();},reajusta(g){if(g&&g.arv)PQ.monta(g,true);},
@@ -279,21 +280,27 @@ const G={titulo:'Morcego do Pequi',get rotulo(){return ['Visitas','Pólen cruzad
 const FASES=G.FASES;
 PQ.chao=()=>PQ.dock().y-4;
 PQ.dock=()=>{const m=MOB();return {x:8,y:H-(m?58:54)-8,w:W-16,h:m?58:54,m};};
-PQ.monta=function(g,mant){const F=PQ.F[S.f],n=F.n,base=PQ.chao(),m=MOB(),port=H>W*1.2,hh=Math.min(H*(port?.42:.5),W*(port?.62:.3));const xs=[];
- if(F.tipo==='iso'){const x0=W*(m?.2:.14);xs.push(x0,x0+W*(m?.3:.2),x0+W*(m?.15:.1));xs.push(W*(m?.84:.88));}else for(let i=0;i<n;i++)xs.push(W*(i+.5)/n);
- const old=mant?g.arv:null;if(F.tipo==='iso'&&port){xs.length=0;xs.push(W*.2,W*.62,W*.4,W*.7);}
- g.port=port;g.arv=xs.map((x,i)=>({x,y:F.tipo==='iso'&&port&&i===3?H*.5:base-(port&&F.tipo!=='iso'?(i%2)*H*.24:(F.tipo==='iso'&&i===2?H*(port?.14:.2):(i%2)*8)),h:hh*(F.tipo==='iso'&&i===2?.85:F.tipo==='iso'&&port&&i===3?.6:1)*(.92+((i*7)%3)*.05),seed:11+i*7,id:String.fromCharCode(65+i),iso:F.tipo==='iso'&&i===3}));
+/* árvores sem se sobrepor: a copa tem cerca de 1,3 h de largura e 1 h de altura */
+PQ.monta=function(g,mant){const F=PQ.F[S.f],n=F.n,base=PQ.chao(),port=H>W*1.15,topo=(FS.on?84:10)+40,iso=F.tipo==='iso';const L=[];
+ const fit=(k,alt)=>Math.min(alt,W/k/1.2);
+ if(!port){if(iso){const h=Math.min(fit(4.6,9e9),(base-topo)*.7);[.12,.28,.44].forEach(f=>L.push({x:W*f,y:base,h}));L.push({x:W*.85,y:base,h:h*.92,iso:1});}
+  else{const h=Math.min(fit(n,9e9),(base-topo)*.72);for(let i=0;i<n;i++)L.push({x:W*(i+.5)/n,y:base-(i%2)*10,h:h*(.94+((i*7)%3)*.04)});}}
+ else{const y2=base,y1=topo+(base-topo)*.5;
+  if(iso){const h=Math.min(fit(3,9e9),(y2-y1)*.85);[.17,.5,.83].forEach(f=>L.push({x:W*f,y:y2,h}));L.push({x:W*.66,y:y1,h:h*1.05,iso:1});}
+  else{const fr=Math.ceil(n/2),bk=n-fr,h=Math.min(fit(2,9e9),(y2-y1)*.9);const bh=Math.min(h*.9,(y1-topo)*.95);
+   for(let j=0;j<bk;j++)L.push({x:W*(j+.5)/bk+(bk===1?W*.12:0),y:y1,h:bh});for(let j=0;j<fr;j++)L.push({x:W*(j+.5)/fr,y:y2,h});}}
+ g.port=port;g.arv=L.map((a,i)=>({x:a.x,y:a.y,h:a.h,seed:11+i*7,id:String.fromCharCode(65+i),iso:!!a.iso}));
  g.fl=[];g.arv.forEach((a,i)=>{const R=rng(a.seed+3);const c=document.createElement('canvas');const ramos=pequizeiro(c.getContext('2d'),a.x,a.y,a.h,a.seed);
-  ramos.forEach(([x,y],j)=>{const abertas=2+(R()<.5?1:0);for(let q=0;q<3;q++){const an=-1.2+q*1.2+(R()-.5)*.4,d=a.h*.06;g.fl.push({x:x+Math.cos(an)*d,y:y-a.h*.03+Math.sin(an)*d*.6,arv:i,ab:q<abertas?1:0,nec:.5+R()*.4,pol:null,vis:0,t:0});}});});
- if(old){/* mantém o estado das flores se o número bater */}};
-PQ.ceu=function(k,w,h,alva){const a=Math.max(0,Math.min(1,alva));const top=a<.5?['#d9d6ef','#ebe4f2']:['#e5dff0','#f7e5d6'];const gr=k.createLinearGradient(0,0,0,h);gr.addColorStop(0,top[0]);gr.addColorStop(.6,top[1]);gr.addColorStop(1,a>.5?'#fbe7c8':'#f3ecdc');k.fillStyle=gr;k.fillRect(0,0,w,h);
- if(a<.7){k.globalAlpha=1-a;k.fillStyle='#fffdf2';k.beginPath();k.arc(w*.82,h*.16,Math.min(w,h)*.05,0,7);k.fill();k.fillStyle='rgba(255,253,242,.35)';k.beginPath();k.arc(w*.82,h*.16,Math.min(w,h)*.09,0,7);k.fill();k.globalAlpha=1;}
+  ramos.forEach(([x,y],j)=>{const abertas=2+(R()<.5?1:0);for(let q=0;q<3;q++){const an=-1.2+q*1.2+(R()-.5)*.4,d=a.h*.06;g.fl.push({x:x+Math.cos(an)*d,y:y-a.h*.03+Math.sin(an)*d*.6,arv:i,ab:q<abertas?1:0,nec:.5+R()*.4,pol:null,vis:0,t:0});}});});};
+PQ.ceu=function(k,w,h,alva,hz){const hy=hz||h*.8;const a=Math.max(0,Math.min(1,alva));const top=a<.5?['#cfd0ec','#e6e1f1']:['#e5dff0','#f7e5d6'];const gr=k.createLinearGradient(0,0,0,h);gr.addColorStop(0,top[0]);gr.addColorStop(.6,top[1]);gr.addColorStop(1,a>.5?'#fbe7c8':'#f3ecdc');k.fillStyle=gr;k.fillRect(0,0,w,h);
+ if(a<.7){k.globalAlpha=1-a;const mx=w*.82,my=h*.15,mr=Math.min(w,h)*.045;k.fillStyle='rgba(255,253,235,.25)';k.beginPath();k.arc(mx,my,mr*1.5,0,7);k.fill();k.save();k.beginPath();k.arc(mx,my,mr,0,7);k.clip();k.beginPath();k.rect(mx-mr*2,my-mr*2,mr*4,mr*4);k.arc(mx+mr*.55,my-mr*.25,mr*.88,0,7);k.fillStyle='#fffbe8';k.fill('evenodd');k.restore();
+  const R0=rng(77);for(let i=0;i<40;i++){const sx=R0()*w,sy=R0()*h*.45,sr=.8+R0()*1.4;k.fillStyle='rgba(110,100,170,'+(.25+R0()*.3)+')';k.beginPath();k.moveTo(sx,sy-sr*2);k.lineTo(sx+sr*.5,sy);k.lineTo(sx,sy+sr*2);k.lineTo(sx-sr*.5,sy);k.closePath();k.fill();k.beginPath();k.moveTo(sx-sr*2,sy);k.lineTo(sx,sy+sr*.5);k.lineTo(sx+sr*2,sy);k.lineTo(sx,sy-sr*.5);k.closePath();k.fill();}k.globalAlpha=1;}
  if(a>.4){k.globalAlpha=(a-.4)/.6;const sg=k.createRadialGradient(w*.1,h*.86,0,w*.1,h*.86,w*.5);sg.addColorStop(0,'rgba(255,200,130,.55)');sg.addColorStop(1,'rgba(255,200,130,0)');k.fillStyle=sg;k.fillRect(0,0,w,h);k.globalAlpha=1;}
- /* horizonte com cerrado distante e chão */const R=rng(4);k.fillStyle='#b9c3a0';k.beginPath();k.moveTo(0,h*.8);for(let x=0;x<=w;x+=w/40)k.lineTo(x,h*.8-R()*h*.04-Math.sin(x*.01)*h*.015);k.lineTo(w,h);k.lineTo(0,h);k.fill();
- const gy=(typeof S!=='undefined'&&S&&S.g)?PQ.chao():h*.86;k.fillStyle='#c9c08a';k.fillRect(0,gy-h*.04,w,h);k.fillStyle='rgba(120,110,60,.25)';for(let i=0;i<w/3;i++){const x=R()*w,y=h*.86+R()*h*.14;k.fillRect(x,y,1,-3-R()*5);}};
-PQ.fundo=function(g){const a=PQ.alva(g);return cache('pqfundo'+S.f+'_'+Math.round(a*8),W,H,k=>{PQ.ceu(k,W,H,a/1);
- if(PQ.F[S.f].tipo==='iso'){const R=rng(9);if(g.port){k.fillStyle='#cdbf85';k.fillRect(0,H*.47,W,H);k.fillStyle='rgba(120,110,60,.2)';for(let i=0;i<W;i++)k.fillRect(R()*W,H*.47+R()*H*.5,1,-3);}else{k.fillStyle='#d2c58a';k.fillRect(W*.45,H*.86,W*.32,H*.14);}for(let i=0;i<4;i++){const x=g.port?W*(.15+R()*.7):W*(.5+R()*.22),y=g.port?H*(.55+R()*.08):H*(.88+R()*.06);k.fillStyle='#f4f1ea';k.beginPath();k.ellipse(x,y,10,5,0,0,7);k.fill();k.fillStyle='#e8e2d6';k.beginPath();k.ellipse(x+9,y-2,4,3,0,0,7);k.fill();k.fillStyle='#8d8270';k.fillRect(x-7,y+3,2,6);k.fillRect(x+5,y+3,2,6);}
-  k.font='600 12px system-ui';k.textAlign='center';k.fillStyle='rgba(255,255,255,.85)';const t='pasto';const tw=k.measureText(t).width+14;const px=g.port?W*.3:W*.6,py=g.port?H*.52:H*.83;k.fillRect(px-tw/2,py-13,tw,18);k.fillStyle='#6d6a3a';k.fillText(t,px,py);}
+ /* horizonte com cerrado distante e chão */const R=rng(4);k.fillStyle='#b9c3a0';k.beginPath();k.moveTo(0,hy);for(let x=0;x<=w;x+=w/40)k.lineTo(x,hy-R()*h*.04-Math.sin(x*.01)*h*.015);k.lineTo(w,h);k.lineTo(0,h);k.fill();
+ const gy=(typeof S!=='undefined'&&S&&S.g)?PQ.chao():h*.86;if(hz){const fg=k.createLinearGradient(0,hy,0,h);fg.addColorStop(0,'#d6cc98');fg.addColorStop(1,'#c4b978');k.fillStyle=fg;k.fillRect(0,hy,w,h);}k.fillStyle='#c9c08a';k.fillRect(0,gy-h*.04,w,h);k.fillStyle='rgba(120,110,60,.25)';for(let i=0;i<w/3;i++){const x=R()*w,y=h*.86+R()*h*.14;k.fillRect(x,y,1,-3-R()*5);}};
+PQ.fundo=function(g){const a=PQ.alva(g);return cache('pqfundo'+S.f+'_'+Math.round(a*8)+(g.port?'p':''),W,H,k=>{PQ.ceu(k,W,H,a/1,g.port?Math.min(...g.arv.map(t=>t.y))+4:0);
+ if(PQ.F[S.f].tipo==='iso'){const R=rng(9);if(g.port){const yb=g.arv[3].y;k.fillStyle='#cdbf85';k.fillRect(0,yb-6,W,H);k.fillStyle='rgba(120,110,60,.2)';for(let i=0;i<W;i++)k.fillRect(R()*W,yb+R()*(H-yb),1,-3);}else{k.fillStyle='#d2c58a';k.fillRect(W*.45,H*.86,W*.32,H*.14);}for(let i=0;i<4;i++){const x=g.port?W*(.06+R()*.4):W*(.5+R()*.22),y=g.port?g.arv[3].y+26+R()*26:H*(.88+R()*.06);k.fillStyle='#f4f1ea';k.beginPath();k.ellipse(x,y,10,5,0,0,7);k.fill();k.fillStyle='#e8e2d6';k.beginPath();k.ellipse(x+9,y-2,4,3,0,0,7);k.fill();k.fillStyle='#8d8270';k.fillRect(x-7,y+3,2,6);k.fillRect(x+5,y+3,2,6);}
+  k.font='600 12px system-ui';k.textAlign='center';k.fillStyle='rgba(255,255,255,.85)';const t='pasto';const tw=k.measureText(t).width+14;const px=g.port?W*.25:W*.63,py=g.port?g.arv[3].y+18:H*.83;k.fillRect(px-tw/2,py-13,tw,18);k.fillStyle='#6d6a3a';k.fillText(t,px,py);}
  const ord=g.arv.slice().sort((p,q)=>p.y-q.y);for(const t of ord)pequizeiro(k,t.x,t.y,t.h,t.seed);});};
 PQ.alva=g=>PQ.F[S.f].tipo==='alva'?Math.min(1,Math.max(0,(g.t/FASES[S.f].dur-.35)/.6)):Math.min(.35,g.t/FASES[S.f].dur*.35);
 PQ.up=function(g,dt){const F=PQ.F[S.f],b=g.bat,sp=(MOB()?190:240)*Math.max(.8,Math.min(1.2,W/800));b.fl+=dt*(g.beb?28:14);g.lb=g.lb.filter(l=>(l.t-=dt)>0);
@@ -308,10 +315,11 @@ PQ.up=function(g,dt){const F=PQ.F[S.f],b=g.bat,sp=(MOB()?190:240)*Math.max(.8,Ma
  /* competidores na alvorada */if(F.tipo==='alva'&&PQ.alva(g)>.35){g.tc-=dt;if(g.tc<=0){const livres=g.fl.filter(f=>f.ab&&!f.vis&&!g.comp.some(c=>c.f===f));if(livres.length){const f=livres[Math.floor(Math.random()*livres.length)],bf=Math.random()<.5;g.comp.push({f,x:bf?-20:W+20,y:H*(.2+Math.random()*.3),bf,t:0});}g.tc=1.6-PQ.alva(g)*.8;}
   for(const c of g.comp){const dx=c.f.x-c.x,dy=c.f.y-c.y,d=Math.hypot(dx,dy);if(d>4){const s=Math.min(d,(c.bf?160:110)*dt);c.x+=dx/d*s;c.y+=dy/d*s;}else{c.t+=dt;if(c.t>1.2&&!c.f.vis){c.f.vis=2;c.f.nec=0;c.fim=1;g.lb.push({x:c.f.x,y:c.f.y-18,tx:c.bf?'beija-flor bebeu':'abelha bebeu',t:1.4,c:'#8d6e63'});}}}
   g.comp=g.comp.filter(c=>!c.fim);}};
+PQ.rot=(g,f,tx,c)=>{g.lb=g.lb.filter(l=>Math.hypot(l.x-f.x,l.y-(f.y-62))>70);g.lb.push({x:f.x,y:f.y-62,tx,t:1.3,c});};
 PQ.visita=function(g,f){const b=g.bat,F=PQ.F[S.f],a=g.arv[f.arv];f.vis=1;g.vis++;b.e=Math.min(1,b.e+.18+f.nec*.22);const nec=f.nec;f.nec=0;
  if(F.tipo==='nec'){g.ok++;ganha(5+Math.round(nec*5),f.x,f.y-14);}
- else{if(b.pol&&b.pol!==a.id){f.pol='x';ganha(15,f.x,f.y-14);if(F.tipo!=='iso'||a.iso){g.ok++;}g.lb.push({x:f.x,y:f.y-28,tx:'pólen da árvore '+b.pol,t:1.3,c:'#2e7d32'});}
-  else if(b.pol===a.id){f.pol='s';ganha(2,f.x,f.y-14);g.lb.push({x:f.x,y:f.y-28,tx:'pólen da mesma árvore',t:1.3,c:'#8d6e63'});}
+ else{if(b.pol&&b.pol!==a.id){f.pol='x';ganha(15,f.x,f.y-14);if(F.tipo!=='iso'||a.iso){g.ok++;}PQ.rot(g,f,'pólen da árvore '+b.pol,'#2e7d32');}
+  else if(b.pol===a.id){f.pol='s';ganha(2,f.x,f.y-14);PQ.rot(g,f,'pólen da mesma árvore','#8d6e63');}
   else ganha(3,f.x,f.y-14);}
  b.pol=a.id;};
 PQ.draw=function(g){const F=PQ.F[S.f],m=MOB(),b=g.bat,D=PQ.dock();cx.drawImage(PQ.fundo(g),0,0);
@@ -323,8 +331,8 @@ PQ.draw=function(g){const F=PQ.F[S.f],m=MOB(),b=g.bat,D=PQ.dock();cx.drawImage(P
  for(const c of g.comp){if(c.bf){cx.save();cx.translate(c.x,c.y);cx.fillStyle='#2e7d6b';cx.beginPath();cx.ellipse(0,0,7,3.5,0,0,7);cx.fill();cx.strokeStyle='#263238';cx.lineWidth=1.2;cx.beginPath();cx.moveTo(6,0);cx.lineTo(13,1);cx.stroke();cx.fillStyle='rgba(120,160,150,.6)';cx.beginPath();cx.ellipse(-1,-5,3,7,Math.sin(g.t*60)*.5,0,7);cx.fill();cx.restore();}
   else{cx.fillStyle='#4e342e';cx.beginPath();cx.ellipse(c.x,c.y,4,2.6,0,0,7);cx.fill();cx.fillStyle='#fbc02d';cx.fillRect(c.x-1,c.y-2.5,1.5,5);cx.fillStyle='rgba(255,255,255,.7)';cx.beginPath();cx.ellipse(c.x,c.y-4,3,2,Math.sin(g.t*70),0,7);cx.fill();}}
  if(g.alvo){cx.strokeStyle='rgba(90,102,28,.7)';cx.lineWidth=2;cx.beginPath();cx.arc(g.alvo.x,g.alvo.y,7,0,7);cx.stroke();}
- if(g.desc>0){cx.save();cx.translate(b.x,b.y);cx.rotate(3.14);morcegoR(cx,0,0,m?.32:.38,0,1);cx.restore();}else morcegoR(cx,b.x,b.y,m?.42:.5,b.fl,b.dir||1);
- if(b.pol&&!g.desc){cx.fillStyle='#e9c74a';cx.beginPath();cx.arc(b.x,b.y-14,6.5,0,7);cx.fill();cx.fillStyle='#5a661c';cx.font='bold 9px system-ui';cx.textAlign='center';cx.fillText(b.pol,b.x,b.y-10.5);}
+ if(g.desc>0){cx.save();cx.translate(b.x,b.y);cx.rotate(3.14);morcegoR(cx,0,0,m?.32:.38,0,1);cx.restore();}else{const gl=cx.createRadialGradient(b.x,b.y,4,b.x,b.y,m?34:42);gl.addColorStop(0,'rgba(255,252,235,.75)');gl.addColorStop(1,'rgba(255,252,235,0)');cx.fillStyle=gl;cx.beginPath();cx.arc(b.x,b.y,m?34:42,0,7);cx.fill();morcegoR(cx,b.x,b.y,m?.5:.6,b.fl,b.dir||1);}
+ if(b.pol&&!g.desc){cx.fillStyle='#e9c74a';cx.beginPath();cx.arc(b.x,b.y-20,7.5,0,7);cx.fill();cx.fillStyle='#5a661c';cx.font='bold 10px system-ui';cx.textAlign='center';cx.fillText(b.pol,b.x,b.y-16.5);}
  if(g.beb){cx.strokeStyle='#5a661c';cx.lineWidth=3;cx.beginPath();cx.arc(g.beb.f.x,g.beb.f.y,16,-1.57,-1.57+6.283*g.beb.t/.7);cx.stroke();}
  for(const l of g.lb){cx.font='bold 11px system-ui';const w=cx.measureText(l.tx).width+12;rrk(cx,l.x-w/2,l.y-12,w,18,9,'rgba(255,255,255,.95)');cx.fillStyle=l.c;cx.textAlign='center';cx.fillText(l.tx,l.x,l.y+1);}
  /* painel */cx.fillStyle='rgba(0,0,0,.12)';cx.beginPath();cx.roundRect(D.x,D.y+3,D.w,D.h,16);cx.fill();rrk(cx,D.x,D.y,D.w,D.h,16,'rgba(255,255,255,.96)');
@@ -337,7 +345,7 @@ const PERG=[
  {q:'Quem são os principais polinizadores das flores do pequizeiro?',o:['Morcegos que bebem néctar','Borboletas diurnas','O vento da tarde']},
  {q:'Quando o pequizeiro forma mais frutos?',o:['Com pólen de outra árvore','Com pólen da mesma flor','Sem nenhum pólen']},
  {q:'Quem também visita as flores do pequi perto da alvorada?',o:['Abelhas e beija-flores','Só corujas','Ninguém, as flores fecham']},
- {q:'Por que um pequizeiro isolado no pasto dá menos fruto?',o:['Recebe menos pólen de outras árvores','Tem flores maiores','Floresce de dia']}];
+ {q:'Por que é difícil o pólen de outra árvore chegar a um pequizeiro isolado?',o:['Os morcegos voam pouco entre as árvores','As flores dele só abrem de dia','O vento do pasto leva o pólen embora']}];
 function pergunta(){
  const P=PERG[S.f],ops=shuf(P.o.map((t,i)=>({t,c:i===0})));
  $('tela').innerHTML=`<div class="card"><h2>Pergunta da fase</h2><p style="margin:6px 0 4px">${P.q}</p><p class="small">Acerto +20, erro −10.</p><div class="ops">${ops.map((o,i)=>`<button data-i="${i}">${o.t}</button>`).join('')}</div><div id="pf"></div></div>`;
@@ -351,7 +359,7 @@ function final(tudo){
  $('tela').innerHTML=`<div class="card" style="text-align:center"><h2>${tudo?'Polinizador do Cerrado!':'Fim de jogo'}</h2><div class="big">${S.tot} pts</div>
  <div class="savebox"><input id="pName" maxlength="20" placeholder="Seu nome"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
  <div class="row" style="justify-content:center;margin-top:12px"><button class="btn ghost" onclick="inicio()">Jogar de novo</button></div>
- <div class="small" style="margin-top:12px;text-align:left">Fontes: Gribel & Hay (1993), Pollination ecology of Caryocar brasiliense (Caryocaraceae) in Central Brazil cerrado vegetation, Journal of Tropical Ecology 9(2): 199-211 (flores grandes em pincel, polinizadas sobretudo pelos morcegos Glossophaga soricina e Anoura geoffroyi; autocompatível, mas forma mais frutos com pólen de outra árvore; frutificação natural de 3,1%); Embrapa, Espécies Arbóreas Brasileiras, vol. 3, Pequizeiro (2 ou 3 flores por cacho abrem no início de cada noite); Revista Pesquisa FAPESP, Pequi-anão em zona de transição do Cerrado (néctar máximo perto da alvorada, quando abelhas e beija-flores também visitam); Melo (2001), Diurnal bird visiting of Caryocar brasiliense in Central Brazil, Revista Brasileira de Biologia 61(2) (13 espécies de aves visitaram as flores). Energia, gasto de voo, néctar, distâncias, competidores e pontos são regras do jogo.</div></div>`;
+ <div class="small" style="margin-top:12px;text-align:left">Fontes: Gribel & Hay (1993), Pollination ecology of Caryocar brasiliense (Caryocaraceae) in Central Brazil cerrado vegetation, Journal of Tropical Ecology 9(2): 199-211 (flores grandes em pincel, polinizadas sobretudo pelos morcegos Glossophaga soricina e Anoura geoffroyi; autocompatível, mas forma mais frutos com pólen de outra árvore; frutificação natural de 3,1%); Embrapa, Espécies Arbóreas Brasileiras, vol. 3, Pequizeiro (2 ou 3 flores por cacho abrem no início de cada noite); Revista Pesquisa FAPESP, Pequi-anão em zona de transição do Cerrado (néctar máximo perto da alvorada, quando abelhas e beija-flores também visitam); Melo (2001), Diurnal bird visiting of Caryocar brasiliense in Central Brazil, Revista Brasileira de Biologia 61(2) (13 espécies de aves visitaram as flores); Collevatti, Grattapaglia e Hay (2001), High resolution microsatellite based analysis of the mating system allows the detection of significant biparental inbreeding in Caryocar brasiliense, Heredity 86: 60-67 (cruzamento entre aparentados atribuído ao voo curto dos morcegos polinizadores, que ficam muito tempo na mesma árvore ou grupo de árvores). Energia, gasto de voo, néctar, distâncias, competidores e pontos são regras do jogo.</div></div>`;
  $('bS').onclick=()=>salvar(nivel);
 }
 const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
