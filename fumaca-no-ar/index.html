@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fumaça no Ar</title>
+<style>
+:root{--main:#d84315;--deep:#9f0000;--soft:#fbe9e7;--line:#ffccbc;--ink:#10212b;--mut:#4d6370;--co2:#e53935;--ch4:#ef6c00;--ok:#2e7d32;--bad:#c62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:820px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep);letter-spacing:-.01em}
+h2{font-size:1.2rem;color:var(--deep);margin-bottom:6px;letter-spacing:-.01em}
+h3{font-size:1rem;color:var(--deep);margin:14px 0 6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 12px;font-weight:700;font-size:.86rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.card{border:2px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:var(--deep)}.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.btn.sm{padding:9px 14px;font-size:.92rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas.cena{width:100%;height:auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff;margin-top:10px}
+.top{justify-content:space-between}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--main);color:#fff;border-radius:14px;padding:8px 14px;font-weight:800;font-size:1.05rem}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.tool{border:2px solid var(--line);background:#fff;color:var(--deep);border-radius:12px;padding:9px 12px;font-weight:700;font-family:inherit;font-size:.92rem;cursor:pointer;touch-action:manipulation}
+.tool.on{border-color:var(--main);background:var(--soft)}
+.tool:disabled{opacity:.4}
+.mets{display:grid;gap:8px;margin-top:10px}
+.met{display:grid;grid-template-columns:92px 1fr 52px;gap:8px;align-items:center;font-weight:700;font-size:.9rem}
+.met .bar{position:relative;height:18px;background:#f1f4f5;border-radius:99px;overflow:hidden}
+.met .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;transition:width .15s}
+.met .alvo{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--ink);border-radius:2px}
+.met .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--mut)}
+.met.co2 .fill{background:var(--co2)}.met.ch4 .fill{background:var(--ch4)}
+.saldo .bar{background:linear-gradient(90deg,#e8f5e9 50%,#ffebee 50%)}
+.saldo .zero{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:var(--ink)}
+.saldo .fill{border-radius:0}
+.obj{display:flex;gap:10px;align-items:flex-start;background:#fff8e1;border:2px solid #ffe082;border-radius:14px;padding:10px 12px;margin-top:10px;font-size:.95rem}
+.obj b{color:#8d6e00;white-space:nowrap}
+.acao{display:flex;gap:10px;align-items:center;background:var(--soft);border-left:5px solid var(--main);border-radius:0 12px 12px 0;padding:9px 12px;margin-top:8px;font-weight:600;font-size:.95rem;min-height:42px}
+.acao .dedo{font-size:1.25rem;animation:pulo 1s ease-in-out infinite}
+@keyframes pulo{50%{transform:translateX(4px)}}
+.help{width:34px;height:34px;border-radius:50%;border:2px solid var(--main);background:#fff;color:var(--deep);font-weight:800;font-size:1rem;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(16,33,43,.35);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal .card{max-width:460px;width:100%}
+.intro{text-align:center;padding:26px 18px}
+.intro .ic{font-size:3rem;line-height:1}
+.intro .n{color:var(--mut);font-weight:700;font-size:.85rem;margin-top:8px}
+.passos{display:grid;gap:8px;margin:16px auto;max-width:420px;text-align:left}
+.passos div{display:flex;gap:12px;align-items:center;background:var(--soft);border-radius:12px;padding:10px 14px;font-weight:600}
+.passos b{font-size:1.3rem;min-width:1.6em;text-align:center}
+.res{text-align:center}
+.res .big{font-size:2.6rem;font-weight:800;color:var(--deep);line-height:1.1}
+.res .ok{color:var(--ok);font-weight:800}.res .no{color:var(--bad);font-weight:800}
+.pensa{background:var(--soft);border-radius:14px;padding:12px 14px;margin:14px auto;max-width:520px;text-align:left}
+.pensa b{color:var(--deep)}
+.boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.box{border:2px dashed var(--line);border-radius:14px;padding:10px;min-height:110px;cursor:pointer}
+.box h4{font-size:.92rem;color:var(--deep);margin-bottom:6px}
+.box.alvo{border-color:var(--main);background:var(--soft)}
+.cards{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;min-height:48px}
+.ct{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 11px;font-weight:700;font-size:.9rem;cursor:pointer;box-shadow:0 2px 0 var(--line);font-family:inherit;color:var(--ink);transition:transform .5s}
+.ct.sel{border-color:var(--main);background:var(--soft);transform:translateY(-2px)}
+.ct.certo{border-color:var(--ok);background:#e8f5e9}.ct.errado{border-color:var(--bad);background:#ffebee}
+.ct.movido{animation:voa .8s ease}
+@keyframes voa{0%{transform:translateY(-30px) scale(1.1);opacity:.3}100%{transform:none;opacity:1}}
+.capa{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+.capa canvas{width:100%;height:auto;display:block;border-radius:16px;background:var(--soft)}
+.opts{display:grid;gap:8px;margin-top:6px}
+.opts .l{font-size:.8rem;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.sw{display:flex;gap:6px;flex-wrap:wrap}
+.sw button{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--line);cursor:pointer}
+.sw button.on{box-shadow:0 0 0 3px var(--deep)}
+.sw .tx{width:auto;height:auto;border-radius:10px;padding:6px 10px;font-weight:700;font-size:.85rem;background:#fff;color:var(--deep);font-family:inherit;border:0}
+input.nome{border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit;width:100%}
+input[type=range]{width:100%;accent-color:var(--main)}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:6px}
+.tab th{text-align:left;background:var(--soft);color:var(--deep);padding:7px 6px}
+.tab td{border-bottom:1px solid var(--line);padding:7px 6px;vertical-align:top}
+.guia p,.guia li{font-size:.95rem;margin-bottom:6px}
+.guia ul,.guia ol{padding-left:20px}
+.hab{border-left:5px solid var(--main);background:var(--soft);padding:10px 14px;border-radius:0 12px 12px 0;font-size:.95rem}
+.ref li{font-size:.86rem;color:var(--mut)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+.rel{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center}
+.rel canvas{width:120px;height:120px;border-radius:50%;background:var(--soft)}
+.mini{width:100%;max-width:420px;height:auto;display:block;margin:10px auto 0}
+@media (max-width:620px){.wrap{padding:10px 8px 30px}.card{padding:12px;border-radius:16px}.capa{grid-template-columns:1fr}.met{grid-template-columns:70px 1fr 44px;font-size:.82rem}.chip{font-size:.95rem}.rel{grid-template-columns:80px 1fr}.rel canvas{width:80px;height:80px}}
+@media print{a.hub,header .hud,.ranking,.noprint{display:none!important}.card{border:1px solid #ccc;break-inside:avoid}body{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>Fumaça no Ar</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF"></span><span class="pill" id="hP"></span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const W=760,H=372;
+function hex(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mix(a,b,t){const A=hex(a),B=hex(b);return`rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`;}
+
+/* ================= AVATAR ================= */
+const PELES=['#f6d3b8','#e3b18b','#c68a5e','#94603e','#5d3b26'];
+const CABS=['#1b1b1b','#4e342e','#8d6e63','#d4a85a','#b5532f'];
+const CAMISAS=['#00838f','#2e7d32','#f9a825','#c62828','#6a1b9a','#37474f'];
+const ESTILOS=[['curto','Curto'],['cacheado','Cacheado'],['longo','Longo'],['coque','Coque'],['raspado','Raspado']];
+const CHAPEUS=[['nenhum','Sem'],['bone','Boné'],['campo','Chapéu']];
+let A={pele:2,cab:0,estilo:'cacheado',camisa:0,chapeu:'campo',nome:''};
+try{const s=JSON.parse(localStorage.getItem('bc_avatar')||'null');if(s)A=Object.assign(A,s);}catch(e){}
+function salvaA(){try{localStorage.setItem('bc_avatar',JSON.stringify(A));}catch(e){}}
+function avatar(c,x,y,s,a,prancheta){
+ c.save();c.translate(x,y);c.scale(s,s);
+ const pele=PELES[a.pele],cab=CABS[a.cab],cam=CAMISAS[a.camisa];
+ if(a.estilo==='longo'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-39,12.5,15,0,0,7);c.fill();c.fillRect(-12.5,-40,25,22);}
+ if(a.estilo==='cacheado'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-40,15,14.5,0,0,7);c.fill();}
+ c.fillStyle=cam;c.beginPath();c.moveTo(-16,0);c.quadraticCurveTo(-17,-21,-6,-25);c.lineTo(6,-25);c.quadraticCurveTo(17,-21,16,0);c.closePath();c.fill();
+ c.fillStyle='rgba(0,0,0,.12)';c.fillRect(-1,-24,2,24);
+ c.fillStyle=pele;c.fillRect(-3.5,-29,7,6);
+ if(prancheta){c.fillStyle='#8d6e63';c.fillRect(4,-19,13,16);c.fillStyle='#fff';c.fillRect(5.5,-17,10,12);c.strokeStyle='#90a4ae';c.lineWidth=.8;for(let i=0;i<4;i++){c.beginPath();c.moveTo(7,-14+i*2.6);c.lineTo(14,-14+i*2.6);c.stroke();}}
+ c.strokeStyle=cam;c.lineWidth=6;c.lineCap='round';c.beginPath();c.moveTo(-11,-20);c.lineTo(-4,-9);c.stroke();
+ c.fillStyle=pele;c.beginPath();c.arc(-3,-8,3,0,7);c.fill();
+ c.fillStyle=pele;c.beginPath();c.ellipse(0,-39,9.5,11,0,0,7);c.fill();
+ c.beginPath();c.arc(-9.4,-38,2.3,0,7);c.arc(9.4,-38,2.3,0,7);c.fill();
+ c.fillStyle=cab;
+ if(a.estilo==='curto'){c.beginPath();c.ellipse(0,-44.5,10,6.8,0,Math.PI,0);c.fill();c.fillRect(-10,-46,2.8,7);c.fillRect(7.2,-46,2.8,7);}
+ if(a.estilo==='cacheado'){for(let i=0;i<13;i++){const an=Math.PI*(.8+i*1.4/12);c.beginPath();c.arc(Math.cos(an)*12,-41+Math.sin(an)*11.5,4.2,0,7);c.fill();}}
+ if(a.estilo==='longo'){c.beginPath();c.ellipse(0,-44.5,10.6,7.2,0,Math.PI,0);c.fill();}
+ if(a.estilo==='coque'){c.beginPath();c.ellipse(0,-44.5,10,6.4,0,Math.PI,0);c.fill();c.beginPath();c.arc(0,-53,5.2,0,7);c.fill();}
+ if(a.estilo==='raspado'){c.globalAlpha=.5;c.beginPath();c.ellipse(0,-44,9.8,6.2,0,Math.PI,0);c.fill();c.globalAlpha=1;}
+ c.fillStyle='#2b2a26';c.beginPath();c.arc(-3.4,-39,1.25,0,7);c.arc(3.4,-39,1.25,0,7);c.fill();
+ c.strokeStyle='#2b2a26';c.lineWidth=1;c.beginPath();c.arc(0,-35.6,2.6,.25,Math.PI-.25);c.stroke();
+ if(a.chapeu==='bone'){c.fillStyle=cam;c.beginPath();c.ellipse(0,-46,10.6,5.8,0,Math.PI,0);c.fill();c.fillRect(-10.6,-47,21.2,2.6);c.beginPath();c.ellipse(8.5,-46.2,8,2.2,0,0,7);c.fill();}
+ if(a.chapeu==='campo'){c.fillStyle='#d7c49e';c.beginPath();c.ellipse(0,-46,16.5,3.6,0,0,7);c.fill();c.beginPath();c.ellipse(0,-48,9.2,6.4,0,Math.PI,0);c.fill();c.fillStyle='#8d6e63';c.fillRect(-9.2,-49,18.4,1.9);}
+ c.restore();
+}
+function pernas(c,x,y,s,a){c.save();c.translate(x,y);c.scale(s,s);c.fillStyle='#455a64';c.fillRect(-11,0,9,20);c.fillRect(2,0,9,20);c.fillStyle='#3e2723';c.fillRect(-12,18,11,4);c.fillRect(1,18,11,4);c.restore();}
+
+/* ================= CENA ================= */
+const CORES={main:'#d84315',deep:'#9f0000'};
+function sr(n){const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+function syncMol(){}function partic(){}
+/* ===== CENÁRIO FUMAÇA ===== */
+function mixC(a,b,t){const h=s=>[1,3,5].map(i=>parseInt(s.slice(i,i+2),16));const A=h(a),B=h(b);return`rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`;}
+function corPM(v){return v<=15?'#43a047':v<=50?'#f9a825':v<=100?'#ef6c00':v<=150?'#d32f2f':'#7b1fa2';}
+function ceuFumaca(c,t,turvo){const g=c.createLinearGradient(0,0,0,250);g.addColorStop(0,mixC('#8fd3f4','#c9b49a',turvo));g.addColorStop(1,mixC('#eaf6fb','#efe0cc',turvo));c.fillStyle=g;c.fillRect(0,0,W,H);
+ const sx=640,sy=55;c.fillStyle=`rgba(255,${Math.round(210-90*turvo)},${Math.round(80-60*turvo)},.9)`;c.beginPath();c.arc(sx,sy,22,0,7);c.fill();c.fillStyle=`rgba(255,180,80,${.25*turvo})`;c.beginPath();c.arc(sx,sy,40,0,7);c.fill();}
+function chao(c,y){const g=c.createLinearGradient(0,y,0,H);g.addColorStop(0,'#b5c98a');g.addColorStop(1,'#93a96a');c.fillStyle=g;c.fillRect(0,y,W,H-y);}
+function arvoreF(c,x,y,s,seed){c.fillStyle='#6d4c41';c.fillRect(x-2*s,y-18*s,4*s,18*s);const g=['#2e7d32','#388e3c','#1b5e20','#43a047'];for(let k=0;k<7;k++){c.fillStyle=g[k%4];c.beginPath();c.arc(x+(sr(seed+k)-.5)*20*s,y-22*s-sr(seed+k+9)*14*s,(7+sr(seed+k+3)*5)*s,0,7);c.fill();}}
+function arvoreQueimada(c,x,y,s){c.strokeStyle='#3e2723';c.lineWidth=3*s;c.beginPath();c.moveTo(x,y);c.lineTo(x,y-26*s);c.moveTo(x,y-16*s);c.lineTo(x-8*s,y-24*s);c.moveTo(x,y-20*s);c.lineTo(x+9*s,y-30*s);c.stroke();}
+function chama(c,x,y,s,t){for(let k=0;k<3;k++){const h=(22-k*6)*s*(1+.15*Math.sin(t*9+k+x));c.fillStyle=['#ff6f00','#ffa000','#ffeb3b'][k];c.beginPath();c.moveTo(x-(9-k*2.5)*s,y);c.quadraticCurveTo(x-(8-k*2)*s,y-h*.6,x+Math.sin(t*7+x)*2*s,y-h);c.quadraticCurveTo(x+(8-k*2)*s,y-h*.6,x+(9-k*2.5)*s,y);c.fill();}}
+function predio(c,x,y,w,h,cor){c.fillStyle=cor;c.fillRect(x,y-h,w,h);c.fillStyle='rgba(255,255,255,.7)';for(let yy=y-h+8;yy<y-8;yy+=14)for(let xx=x+6;xx<x+w-8;xx+=12)c.fillRect(xx,yy,6,7);}
+function escola(c,x,y){c.fillStyle='#ffe0b2';c.fillRect(x-46,y-44,92,44);c.fillStyle='#c62828';c.beginPath();c.moveTo(x-52,y-44);c.lineTo(x,y-70);c.lineTo(x+52,y-44);c.fill();c.fillStyle='#8d6e63';c.fillRect(x-8,y-24,16,24);c.fillStyle='#90caf9';c.fillRect(x-38,y-36,16,12);c.fillRect(x+22,y-36,16,12);c.fillStyle='#263238';c.font='800 9px system-ui';c.textAlign='center';c.fillText('ESCOLA',x,y-48);c.strokeStyle='#455a64';c.lineWidth=1.5;c.beginPath();c.moveTo(x+40,y-44);c.lineTo(x+40,y-84);c.stroke();c.fillStyle='#43a047';c.fillRect(x+40,y-84,14,9);}
+function feira(c,x,y){[['#e53935',-30],['#fdd835',0],['#1e88e5',30]].forEach(([cor,dx])=>{c.fillStyle='#795548';c.fillRect(x+dx-13,y-30,2,30);c.fillRect(x+dx+11,y-30,2,30);c.fillStyle=cor;c.beginPath();c.moveTo(x+dx-16,y-30);c.lineTo(x+dx,y-42);c.lineTo(x+dx+16,y-30);c.fill();c.fillStyle='#d7ccc8';c.fillRect(x+dx-12,y-14,24,6);});c.fillStyle='#e53935';c.beginPath();c.arc(x-30,y-17,3,0,7);c.fill();c.fillStyle='#ff9800';c.beginPath();c.arc(x,y-17,3,0,7);c.fill();}
+function carro(c,x,y,cor,dir){c.save();c.translate(x,y);c.scale(dir||1,1);c.fillStyle=cor;c.beginPath();c.roundRect(-20,-15,40,11,4);c.fill();c.beginPath();c.roundRect(-11,-24,22,10,5);c.fill();c.fillStyle='#bbdefb';c.fillRect(-8,-22,7,7);c.fillRect(2,-22,7,7);c.fillStyle='#263238';c.beginPath();c.arc(-11,-4,4.5,0,7);c.arc(11,-4,4.5,0,7);c.fill();c.restore();}
+function sensor(c,x,y,v,s){s=s||1;c.save();c.translate(x,y);c.scale(s,s);c.fillStyle='rgba(0,0,0,.18)';c.beginPath();c.ellipse(0,26,20,4,0,0,7);c.fill();c.fillStyle='#eceff1';c.beginPath();c.roundRect(-18,-22,36,44,7);c.fill();c.strokeStyle='#546e7a';c.lineWidth=2;c.stroke();
+ c.fillStyle='#263238';c.beginPath();c.roundRect(-13,-16,26,16,3);c.fill();c.fillStyle=v==null?'#80cbc4':corPM(v);c.font='800 9px monospace';c.textAlign='center';c.fillText(v==null?'--':Math.round(v),0,-4);
+ c.fillStyle='#90a4ae';for(let i=0;i<4;i++)c.fillRect(-12+i*7,6,4,10);c.fillStyle='#43a047';c.beginPath();c.arc(12,14,2.5,0,7);c.fill();c.strokeStyle='#546e7a';c.lineWidth=2;c.beginPath();c.moveTo(0,-22);c.lineTo(0,-30);c.stroke();c.fillStyle='#ef5350';c.beginPath();c.arc(0,-31,2.5,0,7);c.fill();c.restore();}
+function fumacaParticulas(G,fonteX,fonteY,vento,taxa,dt){if(!G.fum)G.fum=[];G.facc=(G.facc||0)+dt*taxa;while(G.facc>1){G.facc--;G.fum.push({x:fonteX+rr(-30,30),y:fonteY,r:rr(14,24),vx:vento*rr(.8,1.2),vy:-rr(6,16),a:rr(.16,.26),age:0});}
+ for(const p of G.fum){p.age+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy*=.99;p.r+=dt*7;if(p.y<70){p.vy=Math.abs(p.vy)*.3;}}G.fum=G.fum.filter(p=>p.x<W+80&&p.age<20);}
+function desenhaFumaca(c,G){for(const p of (G.fum||[])){const a=p.a*Math.max(0,1-p.age/20);const g=c.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r);g.addColorStop(0,`rgba(110,100,95,${a})`);g.addColorStop(1,'rgba(110,100,95,0)');c.fillStyle=g;c.beginPath();c.arc(p.x,p.y,p.r,0,7);c.fill();}}
+/* vias aéreas */
+const VIA=[[150,120],[168,138],[176,170],[178,205],[178,232],[200,262],[232,286],[268,300]];
+function viasAereas(c,t){c.save();
+ // cabeça
+ c.fillStyle='#ffe0cc';c.strokeStyle='#d7a98c';c.lineWidth=2;c.beginPath();c.moveTo(120,40);c.bezierCurveTo(200,20,240,70,220,120);c.lineTo(212,150);c.lineTo(196,150);c.lineTo(196,175);c.lineTo(160,175);c.lineTo(160,152);c.bezierCurveTo(130,150,118,130,128,118);c.lineTo(112,112);c.lineTo(126,96);c.bezierCurveTo(106,80,104,55,120,40);c.closePath();c.fill();c.stroke();
+ // corpo / pulmões
+ c.fillStyle='#ffe0cc';c.beginPath();c.roundRect(80,175,220,190,40);c.fill();c.stroke();
+ const lung=(x,dir)=>{const g=c.createRadialGradient(x,262,10,x,262,70);g.addColorStop(0,'#f8bbd0');g.addColorStop(1,'#e57373');c.fillStyle=g;c.beginPath();c.moveTo(x,205);c.bezierCurveTo(x+dir*70,200,x+dir*78,300,x+dir*58,340);c.bezierCurveTo(x+dir*30,352,x+dir*6,340,x,320);c.closePath();c.fill();c.strokeStyle='#c2185b';c.lineWidth=1.5;c.stroke();};
+ lung(170,-1);lung(188,1);
+ // cavidade nasal e garganta
+ c.strokeStyle='#c96d5a';c.lineWidth=9;c.lineCap='round';c.beginPath();c.moveTo(128,112);c.quadraticCurveTo(150,104,166,122);c.quadraticCurveTo(178,140,178,175);c.stroke();
+ c.strokeStyle='#e0e0e0';c.lineWidth=11;c.beginPath();c.moveTo(179,175);c.lineTo(179,230);c.stroke();c.strokeStyle='#bdbdbd';c.lineWidth=1;for(let y=180;y<230;y+=5){c.beginPath();c.moveTo(173,y);c.lineTo(185,y);c.stroke();}
+ c.strokeStyle='#d81b60';c.lineWidth=5;const br=(x0,y0,a,l,d)=>{if(d>4)return;const x1=x0+Math.cos(a)*l,y1=y0+Math.sin(a)*l;c.lineWidth=5-d;c.beginPath();c.moveTo(x0,y0);c.lineTo(x1,y1);c.stroke();br(x1,y1,a-.45,l*.72,d+1);br(x1,y1,a+.45,l*.72,d+1);};
+ br(179,230,Math.PI*.78,30,0);br(179,230,Math.PI*.22,30,0);c.lineCap='butt';
+ // lupa alvéolos
+ c.strokeStyle='#90a4ae';c.lineWidth=1.5;c.setLineDash([4,4]);c.beginPath();c.moveTo(232,286);c.lineTo(300,300);c.stroke();c.setLineDash([]);
+ c.fillStyle='#fff';c.beginPath();c.arc(345,300,48,0,7);c.fill();c.strokeStyle='#78909c';c.lineWidth=3;c.stroke();
+ c.save();c.beginPath();c.arc(345,300,46,0,7);c.clip();c.fillStyle='#fce4ec';c.fillRect(290,250,110,100);for(let i=0;i<14;i++){const ax=310+(i%4)*22+(Math.floor(i/4)%2)*11,ay=268+Math.floor(i/4)*20;c.fillStyle='#f48fb1';c.beginPath();c.arc(ax,ay,10,0,7);c.fill();c.strokeStyle='#e91e63';c.lineWidth=1;c.stroke();c.strokeStyle='rgba(198,40,40,.6)';c.beginPath();c.arc(ax,ay,6,0,4);c.stroke();}c.restore();
+ c.fillStyle='#455a64';c.font='700 11px system-ui';c.textAlign='center';c.fillText('alvéolos',345,362);
+ c.textAlign='left';c.fillText('nariz',70,110);c.fillText('garganta',196,160);c.fillText('traqueia',190,205);c.fillText('brônquios',236,250);c.restore();}
+/* máscaras */
+function rosto(c,x,y,s,m){c.save();c.translate(x,y);c.scale(s,s);c.fillStyle='#ffd9bf';c.beginPath();c.ellipse(0,0,32,40,0,0,7);c.fill();c.fillStyle='#4e342e';c.beginPath();c.ellipse(0,-26,34,20,0,Math.PI,0);c.fill();c.fillStyle='#263238';c.beginPath();c.arc(-11,-6,3,0,7);c.arc(11,-6,3,0,7);c.fill();
+ if(m==='nada'){c.strokeStyle='#bf6f5a';c.lineWidth=2;c.beginPath();c.arc(0,16,8,.2,Math.PI-.2);c.stroke();}
+ else if(m==='pano'){c.fillStyle='#7e57c2';c.beginPath();c.moveTo(-26,2);c.quadraticCurveTo(0,-4,26,2);c.lineTo(22,26);c.quadraticCurveTo(0,36,-22,26);c.closePath();c.fill();c.fillStyle='rgba(255,255,255,.35)';for(let i=0;i<10;i++){c.beginPath();c.arc(-16+(i%5)*8,10+Math.floor(i/5)*9,2,0,7);c.fill();}c.strokeStyle='#5e35b1';c.lineWidth=1.5;c.beginPath();c.moveTo(-26,4);c.lineTo(-34,-4);c.moveTo(26,4);c.lineTo(34,-4);c.stroke();}
+ else if(m==='cir'){c.fillStyle='#81d4fa';c.beginPath();c.roundRect(-26,0,52,28,4);c.fill();c.strokeStyle='#4fc3f7';c.lineWidth=1.2;for(const yy of[8,14,20]){c.beginPath();c.moveTo(-26,yy);c.lineTo(26,yy);c.stroke();}c.strokeStyle='#fff';c.lineWidth=1.5;c.beginPath();c.moveTo(-26,4);c.lineTo(-34,-4);c.moveTo(-26,24);c.lineTo(-34,30);c.moveTo(26,4);c.lineTo(34,-4);c.moveTo(26,24);c.lineTo(34,30);c.stroke();c.fillStyle='rgba(255,255,255,.0)';}
+ else{c.fillStyle='#f5f5f5';c.beginPath();c.moveTo(-24,0);c.quadraticCurveTo(0,-10,24,0);c.quadraticCurveTo(28,24,0,34);c.quadraticCurveTo(-28,24,-24,0);c.fill();c.strokeStyle='#bdbdbd';c.lineWidth=1.5;c.stroke();c.beginPath();c.moveTo(0,-6);c.lineTo(0,34);c.stroke();c.strokeStyle='#1565c0';c.lineWidth=2;c.beginPath();c.moveTo(-24,2);c.lineTo(-34,-14);c.moveTo(24,2);c.lineTo(34,-14);c.stroke();c.fillStyle='#78909c';c.fillRect(-8,-6,16,3);
+  if(m==='pffm'){c.strokeStyle='#e53935';c.lineWidth=2;c.setLineDash([3,3]);c.beginPath();c.moveTo(-26,2);c.lineTo(-30,16);c.moveTo(26,2);c.lineTo(30,16);c.stroke();c.setLineDash([]);}}
+ c.restore();}
+
+function drawCena(c,G){if(G.desenha)G.desenha(c);}
+/* ================= TELA / LOOP ================= */
+let G=null,S=null,raf=0,ultimo=0,cx=null;
+function laco(ts){const dt=Math.min(.05,(ts-ultimo)/1000||0);ultimo=ts;if(G){G.t+=dt;if(G.upd)G.upd(dt);syncMol(G,dt);partic(G,dt);if(cx)drawCena(cx,G);if(G.extra)G.extra(cx);}raf=requestAnimationFrame(laco);}
+function parar(){cancelAnimationFrame(raf);raf=0;}
+function rodar(){parar();ultimo=performance.now();raf=requestAnimationFrame(laco);}
+function hud(){$('hud').style.display='flex';$('hF').textContent=`Fase ${S.f+1} de ${FASES.length}`;$('hP').textContent=`${Math.max(0,S.tot+S.fp)} pts`;}
+function telaJogo(chip,info){
+ const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><span class="chip" id="chip">${chip}</span><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="acao"><span class="dedo">👉</span><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});
+}
+function acao(t){const e=$('acao');if(e&&e.innerHTML!==t)e.innerHTML=t;}
+function ajuda(){const F=FASES[S.f],d=document.createElement('div');d.className='modal';
+ d.innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn">Entendi</button></div>`;
+ d.onclick=e=>{if(e.target===d||e.target.tagName==='BUTTON')d.remove();};document.body.appendChild(d);}
+function medidor(id,rot,cls,max,alvo){const a=alvo!=null?`<span class="alvo" style="left:${alvo/max*100}%"></span>`:'';return`<div class="met ${cls}" id="${id}" data-max="${max}"><span>${rot}</span><div class="bar"><span class="fill"></span>${a}</div><span class="v"></span></div>`;}
+function poeMed(id,v){const e=$(id);if(!e)return;const m=+e.dataset.max;e.querySelector('.fill').style.width=clamp(v/m*100,0,100)+'%';e.querySelector('.v').textContent=Math.round(v);}
+function poeSaldo(v,max){const e=$('mSaldo');if(!e)return;const f=e.querySelector('.fill'),p=clamp(Math.abs(v)/max*50,0,50);if(v<0){f.style.left=(50-p)+'%';f.style.width=p+'%';f.style.background='#43a047';}else{f.style.left='50%';f.style.width=p+'%';f.style.background='#e53935';}e.querySelector('.v').textContent=(v>0?'+':'')+Math.round(v);}
+
+/* ================= FASES ================= */
+const FASES=[
+ {nome:'Sensor na mão',ic:'📟',obj:'Levar o sensor de ar a 5 lugares da cidade num dia de queimada e descobrir para onde a fumaça vai.',passos:[['✋','Arraste o sensor até um lugar'],['📟','Leia o MP2,5'],['🌬️','Repare no vento']],ini:()=>f1()},
+ {nome:'Até onde a partícula vai?',ic:'🫁',obj:'Achar o maior tamanho de partícula que consegue chegar até os alvéolos do pulmão.',passos:[['📏','Escolha o tamanho da partícula'],['😮‍💨','Aperte Inspirar'],['🔎','Veja onde ela para']],ini:()=>f2()},
+ {nome:'Aula de educação física',ic:'🏃',obj:'Marcar a aula num horário e lugar com MP2,5 até 35 e temperatura até 33°C.',passos:[['🕘','Escolha o horário'],['🏟️','Quadra aberta ou ginásio'],['⚖️','Cedo tem fumaça, tarde tem calor']],ini:()=>f3()},
+ {nome:'Qual máscara protege?',ic:'😷',obj:'Prever quais máscaras deixam passar menos fumaça, e testar.',passos:[['👆','Toque da que mais protege para a que menos protege'],['▶','Teste com fumaça'],['🧔','Depois, uma previsão sobre ajuste']],ini:()=>f4()},
+ {nome:'Plano da cidade',ic:'🗺️',obj:'Com 12 fichas, deixar todos os lugares com exposição até 40.',passos:[['🏠','Sala limpa (filtro e vedação): 3 fichas, só lugar fechado'],['😷','PFF2 para todos: 2 fichas, não serve para bebês'],['👆','Toque num lugar para trocar a ação']],ini:()=>f5()}
+];
+function intro(){parar();G=null;cx=null;hud();const F=FASES[S.f];$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><div class="n">FASE ${S.f+1} DE ${FASES.length}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left;max-width:420px;margin:12px auto 0"><b>🎯 Objetivo</b><span>${F.obj}</span></div>
+ <div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn" id="bGo">Começar</button></div>`;
+ $('bGo').onclick=()=>{S.fp=0;F.ini();};}
+function fimFase(pts,ok,oque,pergunta,extraHtml){
+ parar();pts=Math.max(0,Math.round(pts));S.fp=0;S.tot+=pts;S.res[S.f]={pts,ok,oque};hud();
+ $('tela').innerHTML=`<div class="card res"><div class="small">${FASES[S.f].ic} ${FASES[S.f].nome}</div><div class="big">+${pts}</div>
+ <p class="${ok?'ok':'no'}">${ok?'Meta cumprida':'Meta não cumprida'}</p>${extraHtml||''}
+ <div class="pensa"><b>O que aconteceu:</b> ${oque}</div><div class="pensa"><b>Pergunta para a turma:</b> ${pergunta}</div>
+ <div class="row" style="justify-content:center"><button class="btn" id="bNx">${S.f<FASES.length-1?'Próxima fase':'Ver relatório'}</button></div></div>`;
+ $('bNx').onclick=()=>{S.f++;if(S.f<FASES.length)intro();else relatorio();};
+}
+const f1x=v=>v.toFixed(1).replace('.',',');
+function ptr(fn,ev){const cv=$('cv');cv.style.touchAction='none';cv.addEventListener(ev||'pointermove',e=>{const r=cv.getBoundingClientRect();fn((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height,e);});}
+function painel(c,x,y,w,h){c.fillStyle='rgba(255,255,255,.94)';c.beginPath();c.roundRect(x,y,w,h,10);c.fill();}
+/* ---------- FASE 1 ---------- */
+const LUG=[['escola','Escola',200],['feira','Feira',330],['rua','Avenida',460],['rio','Beira do rio',590],['mata','Mata',700]];
+const pmX=(x,k)=>12+160*Math.exp(-(x-120)/250)+(k==='rua'?15:0);
+function f1(){G={t:0,sx:380,sy:340,drag:false,med:{}};telaJogo('📟 Sensor na mão','0 de 5');const Y0=275;
+ G.desenha=c=>{ceuFumaca(c,G.t,.55);chao(c,Y0);
+  for(let i=0;i<6;i++)arvoreQueimada(c,20+i*18,Y0,1);for(let i=0;i<5;i++)chama(c,24+i*20,Y0,1.2,G.t+i);
+  c.fillStyle='#4e342e';c.font='800 12px system-ui';c.textAlign='left';c.fillText('🔥 pasto queimando',8,Y0+20);
+  escola(c,200,Y0);feira(c,330,Y0);c.fillStyle='#78909c';c.fillRect(410,Y0,100,14);c.fillStyle='#fff';for(let x=414;x<510;x+=20)c.fillRect(x,Y0+6,10,2);carro(c,430+(G.t*40)%80,Y0+12,'#e53935',1);carro(c,500-(G.t*30)%80,Y0+12,'#1e88e5',-1);
+  c.fillStyle='#4fc3f7';c.fillRect(545,Y0,90,H-Y0);c.strokeStyle='rgba(255,255,255,.6)';for(let k=0;k<3;k++){c.beginPath();c.moveTo(550,Y0+12+k*20);c.lineTo(630,Y0+12+k*20);c.stroke();}
+  for(let i=0;i<5;i++)arvoreF(c,655+i*22,Y0,1.2,i*5);
+  predio(c,250,Y0,30,70,'#b0bec5');predio(c,520,Y0,24,55,'#cfd8dc');
+  const hz=c.createLinearGradient(0,0,W,0);hz.addColorStop(0,'rgba(120,100,85,.35)');hz.addColorStop(1,'rgba(120,100,85,.06)');c.fillStyle=hz;c.fillRect(0,60,W,Y0-60);desenhaFumaca(c,G);
+  c.fillStyle='rgba(255,255,255,.9)';c.beginPath();c.roundRect(560,92,190,30,8);c.fill();c.fillStyle='#37474f';c.font='800 14px system-ui';c.textAlign='left';c.fillText('🌬️ vento →',572,112);const ax=660+((G.t*40)%60);c.strokeStyle='#37474f';c.lineWidth=2;c.beginPath();c.moveTo(ax,107);c.lineTo(ax+18,107);c.lineTo(ax+12,102);c.moveTo(ax+18,107);c.lineTo(ax+12,112);c.stroke();
+  LUG.forEach(([k,n,x])=>{c.fillStyle='rgba(255,255,255,.85)';c.font='800 12px system-ui';c.textAlign='center';const tw=c.measureText(n).width+12;c.beginPath();c.roundRect(x-tw/2,Y0+24,tw,18,6);c.fill();c.fillStyle='#263238';c.fillText(n,x,Y0+37);
+   if(G.med[k]!=null){const v=G.med[k];c.fillStyle=corPM(v);c.beginPath();c.roundRect(x-34,Y0-118,68,28,8);c.fill();c.fillStyle='#fff';c.font='800 15px system-ui';c.fillText(Math.round(v)+' µg/m³',x,Y0-99);}});
+  painel(c,10,10,330,46);c.fillStyle='#263238';c.font='800 15px system-ui';c.textAlign='left';c.fillText('MP2,5: partículas de até 2,5 µm',22,30);c.font='600 12px system-ui';c.fillText('A OMS recomenda média de 24 h até 15 µg/m³',22,48);
+  const v=G.drag?pmX(G.sx):null;sensor(c,G.sx,G.sy,v,1.3);};
+ G.upd=dt=>fumacaParticulas(G,70,Y0-24,40,10,dt);for(let k=0;k<200;k++)fumacaParticulas(G,70,Y0-24,40,10,.05);
+ ptr((x,y)=>{if(Math.hypot(x-G.sx,y-G.sy)<40)G.drag=true;},'pointerdown');ptr((x,y)=>{if(G.drag){G.sx=clamp(x,20,740);G.sy=clamp(y,150,350);}});
+ ptr((x,y)=>{if(!G.drag)return;G.drag=false;const l=LUG.find(([,,lx])=>Math.abs(G.sx-lx)<55);if(l){const[k,n,lx]=l;G.sx=lx;G.sy=Y0+2;const v=pmX(lx,k);const nova=G.med[k]==null;G.med[k]=v;const q=Object.keys(G.med).length;$('info').textContent=`${q} de 5`;acao(`${n}: ${Math.round(v)} µg/m³.`);
+  if(q===5&&nova)setTimeout(()=>fimFase(150,true,'Perto do fogo e na direção do vento, o MP2,5 passou de 100 µg/m³. Longe do fogo caiu, mas ficou acima do recomendado em todos os lugares. A fumaça viaja com o vento e chega a quem nunca viu o fogo.','Por que um bairro longe da queimada também respira fumaça?'),1300);}},'pointerup');
+ acao('Arraste o sensor até um lugar da cidade e solte para medir.');rodar();}
+/* ---------- FASE 2 ---------- */
+const TAM=[100,50,20,10,5,2.5,1,.3];
+function f2(){G={t:0,i:0,an:null,tent:0,par:null};telaJogo('🫁 Até onde a partícula vai?','alvo: alvéolos');
+ const para=s=>s>10?1:s>2.5?5:7;const nome=['','nariz','','','','brônquios','','alvéolos'];
+ G.desenha=c=>{c.fillStyle='#f7f9fb';c.fillRect(0,0,W,H);viasAereas(c,G.t);
+  const s=TAM[G.i];painel(c,430,30,320,170);c.fillStyle='#263238';c.font='800 17px system-ui';c.textAlign='left';c.fillText('Tamanho da partícula',446,58);
+  c.font='800 30px system-ui';c.fillText(String(s).replace('.',',')+' µm',446,98);c.font='600 13px system-ui';c.fillStyle='#546e7a';c.fillText('1 µm = um milésimo de milímetro',446,122);
+  const r=Math.max(1.5,Math.min(40,s*.4));c.fillStyle='#6d4c41';c.beginPath();c.arc(680,90,r,0,7);c.fill();c.strokeStyle='#bdbdbd';c.lineWidth=1;c.beginPath();c.moveTo(600,150);c.lineTo(740,150);c.stroke();c.fillStyle='#546e7a';c.font='600 11px system-ui';c.textAlign='center';c.fillText('partícula (fora de escala)',680,168);
+  if(G.par){const p=G.par;c.fillStyle='#4e342e';c.beginPath();c.arc(p.x,p.y,Math.max(3,Math.min(9,s*.12)),0,7);c.fill();c.strokeStyle='rgba(255,255,255,.8)';c.lineWidth=1.5;c.stroke();if(p.fim&&p.alv){c.fillStyle='#4e342e';c.beginPath();c.arc(352,296,4,0,7);c.fill();}}
+  painel(c,430,220,320,60);c.fillStyle='#263238';c.font='800 15px system-ui';c.textAlign='left';c.fillText(G.par&&G.par.fim?`Parou: ${nome[G.par.st]}`:'Aperte Inspirar',446,256);};
+ G.upd=dt=>{const p=G.par;if(!p||p.fim)return;p.u+=dt*2.2;const k=Math.floor(p.u);if(k>=p.st){p.x=VIA[p.st][0];p.y=VIA[p.st][1];p.fim=true;p.alv=p.st===7;G.cb&&G.cb();return;}const f=p.u-k;p.x=VIA[k][0]+(VIA[k+1][0]-VIA[k][0])*f;p.y=VIA[k][1]+(VIA[k+1][1]-VIA[k][1])*f;};
+ const ctrl=()=>{$('ctrl').innerHTML=`<div style="width:100%;display:grid;gap:6px"><div class="row top"><b>📏 Tamanho</b><span class="pill">${String(TAM[G.i]).replace('.',',')} µm</span></div><input type="range" id="rt" min="0" max="7" step="1" value="${G.i}"></div><button class="btn sm" id="bR">😮‍💨 Inspirar</button>`;
+  $('rt').oninput=e=>{G.i=+e.target.value;G.par=null;ctrl();};
+  $('bR').onclick=()=>{if(G.par&&!G.par.fim)return;G.tent++;const s=TAM[G.i];G.par={x:VIA[0][0],y:VIA[0][1],u:0,st:para(s)};
+   G.cb=()=>{G.cb=null;const st=G.par.st;if(st!==7)acao(`${String(s).replace('.',',')} µm parou no${st===1?' nariz':'s brônquios'}. Tente uma partícula menor.`);
+    else if(s<2.5)acao(`${String(s).replace('.',',')} µm chegou aos alvéolos. Será que uma maior também chega?`);
+    else setTimeout(()=>fimFase(Math.max(60,170-15*(G.tent-1)),true,'Partículas maiores que 10 µm ficam no nariz e na garganta. Entre 10 e 2,5 µm param nos brônquios. As de 2,5 µm ou menos chegam aos alvéolos, onde o ar passa para o sangue. Por isso o MP2,5 da fumaça é tão perigoso.','Por que a fumaça de queimada faz mal ao coração, e não só ao pulmão?'),900);};};};
+ ctrl();acao('Escolha o tamanho e aperte <b>Inspirar</b>.');rodar();}
+/* ---------- FASE 3 ---------- */
+const PMh=h=>20+140*Math.exp(-(((h-6)/3)**2)),Th=h=>24+12*Math.sin(Math.PI*(h-6)/16);
+function f3(){G={t:0,h:8,lug:'quadra',tent:0};telaJogo('🏃 Educação física','1 aula');
+ const val=()=>{const pm=PMh(G.h)*(G.lug==='gin'?.7:1),T=Th(G.h)+(G.lug==='gin'?0:1.5);return{pm,T};};
+ G.desenha=c=>{c.fillStyle='#fff';c.fillRect(0,0,W,H);const x0=60,x1=520,y0=320,y1=60,hx=h=>x0+(h-7)/10*(x1-x0);
+  c.strokeStyle='#eceff1';c.lineWidth=1;for(let h=7;h<=17;h++){c.beginPath();c.moveTo(hx(h),y1);c.lineTo(hx(h),y0);c.stroke();c.fillStyle='#607d8b';c.font='12px system-ui';c.textAlign='center';c.fillText(h+'h',hx(h),y0+16);}
+  const ypm=v=>y0-v/160*(y0-y1),yT=v=>y0-(v-20)/20*(y0-y1);
+  c.fillStyle='rgba(239,108,0,.08)';c.fillRect(x0,ypm(160),x1-x0,ypm(35)-ypm(160));
+  c.strokeStyle='#6d4c41';c.lineWidth=3;c.beginPath();for(let h=7;h<=17;h+=.1)c.lineTo(hx(h),ypm(PMh(h)*(G.lug==='gin'?.7:1)));c.stroke();
+  c.strokeStyle='#e53935';c.lineWidth=3;c.beginPath();for(let h=7;h<=17;h+=.1)c.lineTo(hx(h),yT(Th(h)+(G.lug==='gin'?0:1.5)));c.stroke();
+  c.setLineDash([5,4]);c.lineWidth=1.5;c.strokeStyle='#6d4c41';c.beginPath();c.moveTo(x0,ypm(35));c.lineTo(x1,ypm(35));c.stroke();c.strokeStyle='#e53935';c.beginPath();c.moveTo(x0,yT(33));c.lineTo(x1,yT(33));c.stroke();c.setLineDash([]);
+  c.font='800 13px system-ui';c.textAlign='left';c.fillStyle='#6d4c41';c.fillText('MP2,5',x0+4,y1-8);c.fillStyle='#e53935';c.fillText('Temperatura',x0+70,y1-8);
+  c.fillStyle='rgba(21,101,192,.15)';c.fillRect(hx(G.h),y1,(x1-x0)/10,y0-y1);c.strokeStyle='#1565c0';c.lineWidth=2;c.strokeRect(hx(G.h),y1,(x1-x0)/10,y0-y1);
+  const v=val();painel(c,540,60,210,200);c.fillStyle='#263238';c.font='800 16px system-ui';c.fillText(`Aula às ${G.h}h`,556,88);c.fillText(G.lug==='gin'?'🏛️ Ginásio':'☀️ Quadra aberta',556,112);
+  c.fillStyle=v.pm<=35?'#2e7d32':'#c62828';c.font='800 18px system-ui';c.fillText(`MP2,5: ${Math.round(v.pm)}`,556,152);c.font='600 12px system-ui';c.fillText('meta até 35 µg/m³',556,168);
+  c.fillStyle=v.T<=33?'#2e7d32':'#c62828';c.font='800 18px system-ui';c.fillText(`${f1x(v.T)}°C`,556,206);c.font='600 12px system-ui';c.fillText('meta até 33°C',556,222);};
+ const ctrl=()=>{$('ctrl').innerHTML=`<div style="width:100%;display:grid;gap:6px"><div class="row top"><b>🕘 Horário</b><span class="pill">${G.h}h</span></div><input type="range" id="rh" min="7" max="16" step="1" value="${G.h}">
+  <div class="row"><button class="tool" id="bQ" style="${G.lug==='quadra'?'background:var(--main);color:#fff':''}">☀️ Quadra aberta</button><button class="tool" id="bG" style="${G.lug==='gin'?'background:var(--main);color:#fff':''}">🏛️ Ginásio</button></div></div><button class="btn sm" id="bR">Marcar a aula</button>`;
+  $('rh').oninput=e=>{G.h=+e.target.value;$('ctrl').querySelector('.pill').textContent=G.h+'h';};$('bQ').onclick=()=>{G.lug='quadra';ctrl();};$('bG').onclick=()=>{G.lug='gin';ctrl();};
+  $('bR').onclick=()=>{G.tent++;const v=val(),a=v.pm<=35,b=v.T<=33;
+   if(a&&b)fimFase(Math.max(60,180-20*(G.tent-1)),true,`Às ${G.h}h no ginásio, o MP2,5 ficou em ${Math.round(v.pm)} e a temperatura em ${f1x(v.T)}°C. De manhã cedo a fumaça fica presa perto do chão. À tarde ela se espalha, mas o calor sobe. O ginásio fechado segura parte da fumaça e protege do sol.`,'Por que exercício físico em dia de fumaça é pior do que ficar parado?');
+   else acao(`${a?'✅':'❌'} MP2,5 ${Math.round(v.pm)} · ${b?'✅':'❌'} ${f1x(v.T)}°C. Tente outro horário ou lugar.`);};};
+ ctrl();acao('Escolha o horário e o lugar e aperte <b>Marcar a aula</b>.');rodar();}
+/* ---------- FASE 4 ---------- */
+const MASC={nada:['Sem máscara',1],pano:['Pano',.7],cir:['Cirúrgica',.45],pff:['PFF2 bem ajustada',.06],pffm:['PFF2 com folga',.4]};
+function f4(){G={t:0,ord:[],run:0,par:[],cont:{},show:['nada','pano','cir','pff']};telaJogo('😷 Qual máscara?','previsão');
+ const fx=i=>110+i*180;
+ G.desenha=c=>{c.fillStyle='#f3f1ee';c.fillRect(0,0,W,H);c.fillStyle='rgba(110,100,95,.12)';c.fillRect(0,0,W,150);
+  G.show.forEach((m,i)=>{rosto(c,fx(i),230,1.3,m);c.fillStyle='#263238';c.font='800 14px system-ui';c.textAlign='center';c.fillText(MASC[m][0],fx(i),305);
+   const pos=G.ord.indexOf(m);if(pos>=0&&!G.run){c.fillStyle='#1565c0';c.beginPath();c.arc(fx(i)+46,180,14,0,7);c.fill();c.fillStyle='#fff';c.font='800 15px system-ui';c.fillText(pos+1,fx(i)+46,185);}
+   if(G.run){const n=G.cont[m]||0;c.fillStyle=n>40?'#c62828':n>15?'#ef6c00':'#2e7d32';c.font='800 18px system-ui';c.fillText(`passou: ${n}`,fx(i),335);}});
+  for(const p of G.par){c.fillStyle=`rgba(90,80,75,${p.ok?.8:.5})`;c.beginPath();c.arc(p.x,p.y,2.4,0,7);c.fill();}
+  painel(c,10,10,420,30);c.fillStyle='#263238';c.font='800 14px system-ui';c.textAlign='left';c.fillText(G.run?'100 partículas de fumaça para cada rosto':'Toque nos rostos: 1 = protege mais',22,30);};
+ G.upd=dt=>{if(!G.run)return;G.run+=dt;if(G.run<3.5)for(const m of G.show)for(let k=0;k<2;k++){if((G.cont['_'+m]||0)>=100)continue;G.cont['_'+m]=(G.cont['_'+m]||0)+1;G.par.push({m,x:fx(G.show.indexOf(m))+rr(-30,30),y:20+rr(0,30),vy:rr(90,130),ok:Math.random()<MASC[m][1]});}
+  for(const p of G.par){p.y+=p.vy*dt;if(!p.ok&&p.y>200){p.morto=1;}if(p.ok&&p.y>232&&!p.cont){p.cont=1;G.cont[p.m]=(G.cont[p.m]||0)+1;p.morto=1;}}G.par=G.par.filter(p=>!p.morto);
+  if(G.run>5&&!G.par.length&&!G.feito){G.feito=1;G.cb&&G.cb();}};
+ G.tap=(x,y)=>{if(G.run)return;const i=G.show.findIndex((m,i)=>Math.abs(x-fx(i))<70&&y>150&&y<320);if(i<0)return;const m=G.show[i];if(G.ord.includes(m))G.ord=G.ord.filter(o=>o!==m);else G.ord.push(m);
+  $('ctrl').innerHTML=G.ord.length===4?`<button class="btn sm" id="bR">▶ Testar com fumaça</button>`:'';if(G.ord.length===4)$('bR').onclick=testa;};
+ const testa=()=>{$('ctrl').innerHTML='';G.run=.001;const certo=['pff','cir','pano','nada'];const ac=G.ord.filter((m,i)=>m===certo[i]).length;G.p1=ac*20;S.fp=G.p1;hud();acao('Veja quantas partículas passam.');
+  G.cb=()=>{acao(`Você acertou ${ac} de 4 posições. Agora: e a PFF2 com folga no rosto?`);
+   const Q=[['igual','Protege igual à PFF2 ajustada, porque o filtro é o mesmo'],['cir','Protege mais ou menos como a cirúrgica'],['nada','Protege menos que ficar sem máscara']];
+   $('ctrl').innerHTML=`<div style="width:100%"><b>Uma PFF2 com folga dos lados, por barba ou tamanho errado, protege quanto?</b><div style="display:grid;gap:6px;margin-top:6px">${Q.map(([k,t])=>`<button class="tool" style="text-align:left" data-q="${k}">${t}</button>`).join('')}</div></div>`;
+   document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{const ok=b.dataset.q==='cir';G.show=['nada','cir','pff','pffm'];G.cont={};G.par=[];G.run=.001;G.feito=0;$('ctrl').innerHTML='';
+    G.cb=()=>fimFase(G.p1+(ok?80:0),ok&&ac>=2,`A PFF2 bem ajustada segurou quase toda a fumaça. Com folga, o ar entra pelos lados sem passar pelo filtro e a proteção cai muito. O pano e a cirúrgica deixam passar boa parte das partículas finas.`,'Por que o ajuste no rosto importa tanto quanto o material da máscara?');});};};
+ acao('Toque nos 4 rostos em ordem, do que mais protege para o que menos protege.');rodar();}
+/* ---------- FASE 5 ---------- */
+const LOC=[['creche','🧸 Creche',90,true,[110,110]],['escola','🏫 Escola',110,true,[380,110]],['asilo','👵 Lar de idosos',70,true,[650,110]],['feira','🧺 Feira',80,false,[245,250]],['posto','🏥 Posto de saúde',60,true,[515,250]]];
+function f5(){G={t:0,a:{},tent:0};telaJogo('🗺️ Plano da cidade','');LOC.forEach(l=>G.a[l[0]]=0);
+ const ACAO=[['nada','—',0,1],['sala','🏠 Sala limpa',3,.3],['pff','😷 PFF2',2,.5]];
+ const exp=l=>l[2]*ACAO[G.a[l[0]]][3],custo=()=>LOC.reduce((s,l)=>s+ACAO[G.a[l[0]]][2],0);
+ const inf=()=>{$('info').textContent=`🎟️ ${12-custo()} fichas`;};
+ G.desenha=c=>{c.fillStyle='#ece7df';c.fillRect(0,0,W,H);const g=c.createLinearGradient(0,0,W,0);g.addColorStop(0,'rgba(110,100,95,.35)');g.addColorStop(1,'rgba(110,100,95,.08)');c.fillStyle=g;c.fillRect(0,0,W,H);
+  c.strokeStyle='#d7ccc8';c.lineWidth=18;c.beginPath();c.moveTo(0,182);c.lineTo(W,182);c.stroke();
+  LOC.forEach(l=>{const[k,n,e0,indoor,[x,y]]=l;const e=exp(l);const a=ACAO[G.a[k]];c.fillStyle='rgba(255,255,255,.95)';c.beginPath();c.roundRect(x-100,y-70,200,128,14);c.fill();c.strokeStyle=e<=40?'#2e7d32':'#c62828';c.lineWidth=3;c.stroke();
+   c.fillStyle='#263238';c.font='800 16px system-ui';c.textAlign='center';c.fillText(n,x,y-46);c.font='600 12px system-ui';c.fillStyle='#607d8b';c.fillText(indoor?'lugar fechado':'ao ar livre',x,y-30);
+   c.font='800 15px system-ui';c.fillStyle='#37474f';c.fillText(a[1]+(a[2]?` (${a[2]})`:''),x,y-6);
+   c.fillStyle='#eceff1';c.beginPath();c.roundRect(x-80,y+14,160,14,6);c.fill();c.fillStyle=e<=40?'#43a047':'#e53935';c.beginPath();c.roundRect(x-80,y+14,160*Math.min(1,e/120),14,6);c.fill();c.fillStyle='#263238';c.fillRect(x-80+160*40/120,y+10,2,22);
+   c.font='800 13px system-ui';c.fillStyle='#263238';c.fillText(`exposição ${Math.round(e)} (até 40)`,x,y+46);});
+  painel(c,10,H-38,W-20,30);c.fillStyle='#263238';c.font='800 15px system-ui';c.textAlign='left';const ok=LOC.filter(l=>exp(l)<=40).length;c.fillText(`✅ ${ok} de 5 lugares protegidos · 🎟️ ${custo()} de 12 fichas`,22,H-17);};
+ G.tap=(x,y)=>{const l=LOC.find(l=>Math.abs(x-l[4][0])<100&&Math.abs(y-l[4][1]+6)<64);if(!l)return;const k=l[0];let n=G.a[k];for(let i=0;i<3;i++){n=(n+1)%3;if(n===1&&!l[3]){acao('Sala limpa só funciona em lugar fechado.');continue;}if(n===2&&k==='creche'){acao('PFF2 não serve para bebês e crianças pequenas.');continue;}G.a[k]=n;if(custo()>12){acao('Não há fichas para essa ação.');continue;}break;}
+  if(custo()>12)G.a[k]=0;inf();};
+ $('ctrl').innerHTML=`<button class="btn sm" id="bR">Conferir</button>`;
+ $('bR').onclick=()=>{G.tent++;const ok=LOC.every(l=>exp(l)<=40)&&custo()<=12;
+  if(ok)fimFase(Math.max(70,200-20*(G.tent-1)),true,'Creche e escola precisam de sala limpa: crianças pequenas não usam PFF2 e passam o dia ali. Para idosos, feira e posto, a PFF2 resolve com menos fichas. Proteger quem é mais sensível vem primeiro.','Quem na sua família é mais sensível à fumaça, e o que dá para fazer em casa?');
+  else acao(`${LOC.filter(l=>exp(l)>40).map(l=>l[1]).join(', ')} ainda acima de 40.`);};
+ inf();acao('Toque em cada lugar para escolher a ação.');rodar();}
+/* ================= INICIO / AVATAR ================= */
+function inicio(){parar();G=null;cx=null;$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><div class="capa"><canvas id="cA" width="560" height="560"></canvas>
+ <div><h2>Monte seu pesquisador</h2><div class="opts">
+ <div class="l">Pele</div><div class="sw" id="sP">${PELES.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.pele===i?'on':''}" aria-label="pele ${i+1}"></button>`).join('')}</div>
+ <div class="l">Cabelo</div><div class="sw" id="sE">${ESTILOS.map(([k,t])=>`<button class="tx ${A.estilo===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <div class="sw" id="sC">${CABS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.cab===i?'on':''}" aria-label="cor ${i+1}"></button>`).join('')}</div>
+ <div class="l">Camiseta</div><div class="sw" id="sT">${CAMISAS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.camisa===i?'on':''}" aria-label="camiseta ${i+1}"></button>`).join('')}</div>
+ <div class="l">Chapéu</div><div class="sw" id="sH">${CHAPEUS.map(([k,t])=>`<button class="tx ${A.chapeu===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <input class="nome" id="iN" maxlength="20" placeholder="Seu nome" value="${esc(A.nome)}">
+ </div></div></div>
+ <div class="row" style="margin-top:14px"><button class="btn" id="bJ">▶ Jogar as 5 fases</button><button class="btn ghost" id="bG">📘 Guia do professor</button></div>
+ <p class="small" style="margin-top:10px">Ciências da Natureza · Ensino Médio · BNCC EM13CNT306</p></div>`;
+ const pinta=()=>{const c=$('cA').getContext('2d');c.clearRect(0,0,560,560);c.fillStyle='#fbe9e7';c.fillRect(0,0,560,560);c.fillStyle='#ffccbc';c.beginPath();c.arc(280,600,260,0,7);c.fill();avatar(c,280,560,6.4,A,true);};
+ pinta();
+ const liga=(id,f)=>document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{f(b);salvaA();document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b));pinta();});
+ liga('sP',b=>A.pele=+b.dataset.i);liga('sC',b=>A.cab=+b.dataset.i);liga('sT',b=>A.camisa=+b.dataset.i);liga('sE',b=>A.estilo=b.dataset.k);liga('sH',b=>A.chapeu=b.dataset.k);
+ $('iN').oninput=e=>{A.nome=e.target.value;salvaA();};
+ $('bJ').onclick=novo;$('bG').onclick=guia;
+}
+function novo(){S={f:0,tot:0,fp:0,res:[],fichas:0};salvo=false;intro();}
+function relatorio(){parar();G=null;cx=null;$('rankBox').style.display='block';const nome=A.nome.trim()||'Pesquisador';
+ $('tela').innerHTML=`<div class="card"><div class="rel"><canvas id="cR" width="240" height="240"></canvas><div><div class="small">Relatório de campo</div><h2>${esc(nome)}</h2><div class="big" style="font-size:2rem;font-weight:800;color:var(--deep)">${S.tot} pts</div></div></div>
+ <table class="tab" style="margin-top:12px"><tr><th>Fase</th><th>Pontos</th><th>Meta</th></tr>${FASES.map((F,i)=>{const r=S.res[i]||{pts:0,ok:false};return`<tr><td>${F.ic} ${F.nome}</td><td>${r.pts}</td><td>${r.ok?'✓':'✗'}</td></tr>`;}).join('')}</table>
+ <div class="pensa"><b>Para escrever no caderno:</b> explique por que o MP2,5 é perigoso e cite duas formas de se proteger num dia de fumaça.</div>
+ <div class="savebox noprint"><input id="pName" maxlength="20" value="${esc(nome)}"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row noprint" style="margin-top:12px"><button class="btn ghost" id="bI">🖨️ Imprimir relatório</button><button class="btn ghost" id="bN">Jogar de novo</button><button class="btn ghost" id="bV">Início</button></div></div>`;
+ const c=$('cR').getContext('2d');c.fillStyle='#fbe9e7';c.fillRect(0,0,240,240);avatar(c,120,240,3.2,A,true);
+ $('bS').onclick=()=>salvar('5 fases');$('bI').onclick=()=>window.print();$('bN').onclick=novo;$('bV').onclick=inicio;
+}
+
+/* ================= GUIA DO PROFESSOR ================= */
+function guia(){parar();$('hud').style.display='none';$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card guia">
+ <div class="row top noprint"><button class="btn ghost sm" id="bVt">← Voltar</button><button class="btn sm" id="bPr">🖨️ Imprimir guia</button></div>
+ <h2 style="margin-top:10px">Guia do professor · Fumaça no Ar</h2>
+ <p class="small">Ensino Médio · Ciências da Natureza e suas Tecnologias · Biologia, Física e Química</p>
+ <h3>Habilidade da BNCC</h3>
+ <div class="hab"><b>EM13CNT306.</b> Avaliar os riscos envolvidos em atividades cotidianas, aplicando conhecimentos das Ciências da Natureza, para justificar o uso de equipamentos e recursos, bem como comportamentos de segurança, visando à integridade física, individual e coletiva, e socioambiental, podendo fazer uso de dispositivos e aplicativos digitais que viabilizem a estruturação de simulações de tais riscos.</div>
+ <h3>Objetivos da aula</h3>
+ <ul><li>Relacionar o tamanho das partículas com o ponto onde elas param no sistema respiratório.</li><li>Ler medidas de MP2,5 e comparar com a recomendação da OMS.</li><li>Justificar o uso de máscara, ambientes fechados com filtro e mudança de horário em dias de fumaça.</li></ul>
+ <h3>Roteiro de 50 minutos</h3>
+ <table class="tab"><tr><th>Tempo</th><th>O que fazer</th></tr>
+ <tr><td>5 min</td><td>Pergunte: por que o céu fica alaranjado na época de queimadas?</td></tr>
+ <tr><td>25 min</td><td>Alunos jogam em duplas e anotam as medidas de MP2,5.</td></tr>
+ <tr><td>15 min</td><td>Discussão com as perguntas de cada fase.</td></tr>
+ <tr><td>5 min</td><td>Cada dupla escreve a frase do relatório de campo.</td></tr></table>
+ <h3>Fase por fase</h3>
+ <table class="tab"><tr><th>Fase</th><th>O aluno faz</th><th>Pergunta para a turma</th><th>O que explicar</th></tr>
+ <tr><td>1. Sensor na mão</td><td>Mede MP2,5 em 5 lugares</td><td>Por que bairros longe do fogo respiram fumaça?</td><td>Transporte pelo vento e diluição com a distância.</td></tr>
+ <tr><td>2. Até onde a partícula vai?</td><td>Varia o tamanho da partícula</td><td>Por que a fumaça faz mal ao coração?</td><td>Partículas de até 2,5 µm chegam aos alvéolos, onde ocorre a troca com o sangue.</td></tr>
+ <tr><td>3. Aula de educação física</td><td>Escolhe horário e lugar</td><td>Por que exercício em dia de fumaça é pior?</td><td>Fumaça presa perto do chão de manhã, calor à tarde, aumento da ventilação no exercício.</td></tr>
+ <tr><td>4. Qual máscara protege?</td><td>Ordena e testa máscaras</td><td>Por que o ajuste importa?</td><td>Filtração e vedação. Ar que passa pela folga não é filtrado.</td></tr>
+ <tr><td>5. Plano da cidade</td><td>Distribui proteção pelos lugares</td><td>Quem é mais sensível na sua família?</td><td>Grupos sensíveis, proteção coletiva e individual.</td></tr></table>
+ <h3>Avaliação</h3>
+ <p>Use o relatório de campo impresso e a frase escrita por cada dupla. Todos os instrumentos têm o mesmo peso. Observe se o aluno justifica cada medida de proteção com um conhecimento científico.</p>
+ <h3>Sequência de 3 aulas</h3>
+ <ol><li><b>Aula 1.</b> Jogo completo e discussão.</li><li><b>Aula 2.</b> Leitura de dados de um sensor de baixo custo instalado na escola ou de uma plataforma pública de qualidade do ar.</li><li><b>Aula 3.</b> As duplas escrevem um plano de dia de fumaça para a escola.</li></ol>
+ <h3>Cuidado ao explicar</h3>
+ <p>As medidas de MP2,5, as curvas de fumaça e temperatura, a passagem de partículas pelas máscaras e as exposições da fase 5 são de um modelo simples. O que é real: a recomendação da OMS de média de 24 horas até 15 µg/m³ e média anual até 5 µg/m³ (OMS, 2021), e a classificação de partículas por tamanho. A ordem de proteção das máscaras é a esperada, mas os números exatos dependem do modelo e do ajuste.</p>
+ <h3>Referências</h3>
+ <ul class="ref">
+ <li>Oliveira Junior E.S. et al. 2025. Wildfires and their toll on Brazil: who's counting the cost? Perspectives in Ecology and Conservation. doi:10.1016/j.pecon.2025.06.003</li>
+ <li>World Health Organization. 2021. WHO global air quality guidelines: particulate matter (PM2.5 and PM10), ozone, nitrogen dioxide, sulfur dioxide and carbon monoxide. Geneva: WHO.</li></ul>
+ </div>`;
+ $('bVt').onclick=inicio;$('bPr').onclick=()=>window.print();
+}
+
+/* ================= RANKING ================= */
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="fumaca-no-ar";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__a={get S(){return S},get G(){return G},FASES,inicio,novo,intro,guia};
+inicio();
+</script>
+</body>
+</html>
