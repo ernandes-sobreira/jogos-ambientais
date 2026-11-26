@@ -324,7 +324,7 @@ PC.up_escada=function(g,dt){const c=g.cd,L=PC.ladder(g);g.pulso+=dt;if(g.fim2){g
   const ce=PC.cx(c.wy)+PC.lw(c.wy)/2;if(c.wy>=L.y0-20&&c.x>ce-46){g.esc=1;c.wy=Math.max(c.wy,L.y0);}
   g.cam+=(c.wy+120-g.cam)*Math.min(1,dt*3);}
  else{/* dentro da escada */const step=(L.y1-L.y0)/L.deg,ds=Math.floor((c.wy-L.y0)/step);c.x+=(L.x-c.x)*Math.min(1,dt*6);
-  if(inp.down){if(calmo)c.wy+=120*dt;else{c.wy-=90*dt;if(Math.random()<dt*1.6){const v=g.pe.filter(p=>p.ok);if(v.length>8||Math.random()<.5){v[v.length-1].ok=0;g.lb.push({x:L.x,y:PC.sy(g,c.wy),tx:'peixe caiu',t:1,c:'#c62828'});}}}}
+  const piso=L.y0+ds*step+4;if(inp.down){if(calmo)c.wy=Math.min(L.y1,c.wy+135*dt);else{c.wy=Math.max(piso,c.wy-90*dt);if(Math.random()<dt*1.4){const v=g.pe.filter(p=>p.ok);if(v.length>8||Math.random()<.4){v[v.length-1].ok=0;v[v.length-1].t2=0;g.lb.push({x:L.x-40,y:PC.sy(g,c.wy),tx:'peixe caiu',t:1,c:'#c62828'});}}}}
   else c.wy=Math.max(L.y0+ds*step+4,c.wy-10*dt);
   if(Math.random()<dt*.25*(1-(calmo?.6:0))){const v=g.pe.filter(p=>p.ok);if(v.length&&c.wy>L.y0+step*4){v[0].ok=0;g.lb.push({x:L.x-30,y:PC.sy(g,c.wy),tx:'biguá pegou um peixe',t:1.3,c:'#c62828'});}}
   g.cam+=(c.wy+60-g.cam)*Math.min(1,dt*3);
@@ -356,7 +356,7 @@ PC.draw=function(g){const F=PC.F[S.f],m=MOB();PC.rioD(g,F.tipo);
    if(!g.calmo){cx.strokeStyle='rgba(255,255,255,.75)';cx.lineWidth=1.2;for(const dx of [-8,0,8]){cx.beginPath();cx.moveTo(L.x+dx,y+4);cx.lineTo(L.x+dx+Math.sin(g.t*10+dx)*2,y+st-4);cx.stroke();}}}
   /* entrada da escada, embaixo, na margem */const ce=PC.cx(L.y0)+PC.lw(L.y0)/2;cx.fillStyle='#6aa2ad';cx.fillRect(ce-6,ly0-16,L.x-ce+6,16);cx.strokeStyle='#2e7d32';cx.lineWidth=2.5;cx.beginPath();cx.moveTo(ce-30,ly0+18);cx.lineTo(ce-10,ly0+4);cx.lineTo(ce-12,ly0+14);cx.moveTo(ce-10,ly0+4);cx.lineTo(ce-20,ly0+6);cx.stroke();
   const t2='entrada da escada';cx.font='bold 11px system-ui';const tw2=cx.measureText(t2).width+12;const ex=Math.max(tw2/2+6,Math.min(W-tw2/2-6,ce-40));rrk(cx,ex-tw2/2,ly0+20,tw2,18,9,'rgba(255,255,255,.95)');cx.fillStyle='#2e7d32';cx.textAlign='center';cx.fillText(t2,ex,ly0+33);
-  if(g.esc){const t3=g.calmo?'água calma: segure para subir':'água forte: solte e espere';cx.font='bold 12px system-ui';const tw3=cx.measureText(t3).width+20;rrk(cx,W/2-tw3/2,H-96,tw3,28,14,g.calmo?'#2e7d32':'#c62828');cx.fillStyle='#fff';cx.textAlign='center';cx.fillText(t3,W/2,H-77);}
+  if(g.esc){const t3=g.calmo?'água calma: segure para subir':'água forte: solte e espere';cx.font='bold 12px system-ui';const tw3=cx.measureText(t3).width+20;rrk(cx,W/2-tw3/2,H*.5,tw3,28,14,g.calmo?'#2e7d32':'#c62828');const fz=(Math.sin(g.pulso*2.2)+1)/2;rrk(cx,W/2-tw3/2,H*.5+32,tw3,6,3,'rgba(255,255,255,.85)');rrk(cx,W/2-tw3/2,H*.5+32,tw3*fz,6,3,g.calmo?'#2e7d32':'#c62828');cx.fillStyle='#fff';cx.textAlign='center';cx.fillText(t3,W/2,H*.5+19);}
   if(g.ovos){const y=PC.sy(g,L.y1+120);cx.fillStyle='rgba(255,250,225,.9)';for(let i=0;i<40;i++){cx.beginPath();cx.arc(W*.3+((i*37)%(W*.4)),y+((i*23)%60)+Math.min(60,(4-g.fim2)*20),2.5,0,7);cx.fill();}
    const cw=Math.min(W-20,m?340:420);rrk(cx,W/2-cw/2,H*.14,cw,96,14,'rgba(255,255,255,.97)');cx.strokeStyle='#0288d1';cx.lineWidth=2;cx.beginPath();cx.roundRect(W/2-cw/2,H*.14,cw,96,14);cx.stroke();cx.textAlign='center';cx.fillStyle='#01579b';cx.font='bold 15px system-ui';cx.fillText(g.ok+' peixes desovaram no lago',W/2,H*.14+28);cx.font='12px system-ui';cx.fillStyle='#546e7a';cx.fillText('Na água parada os ovos afundam e não descem',W/2,H*.14+52,cw-20);cx.fillText('até as lagoas do berçário. É a armadilha da escada.',W/2,H*.14+70,cw-20);}}
  if(F.tipo==='fiscal'){for(const r of g.redes){if(r.fora)continue;const y=PC.sy(g,r.wy);cx.strokeStyle='rgba(60,60,60,.75)';cx.lineWidth=1;for(let i=0;i<=1;i+=.1){const x=r.x0+(r.x1-r.x0)*i;cx.beginPath();cx.moveTo(x,y-6);cx.lineTo(x,y+6);cx.stroke();}cx.strokeStyle='#424242';cx.lineWidth=2;cx.beginPath();cx.moveTo(r.x0,y-6);cx.lineTo(r.x1,y-6);cx.moveTo(r.x0,y+6);cx.lineTo(r.x1,y+6);cx.stroke();
@@ -381,19 +381,20 @@ PC.cardume=function(g,n,wy,x){g.cd={x,wy,vx:0,vy:0,e:1};g.pe=[];for(let i=0;i<n;
 /* um passo da física de um grupo de peixes que segue o ponto (lx,lwy) */
 PC.grupo=function(g,dt,lst,lx,lwy,o){o=o||{};const sp=(o.sp||200)*Math.max(.8,Math.min(1.2,W/800)),fila=o.fila;let i=0;
  for(const p of lst){if(!p.ok){p.t2=(p.t2||0)+dt;p.wy-=PC.corr(g,p.x,p.wy)*dt*(o.semCorr?0:1)+30*dt;p.a+=dt*2.5;continue;}
-  const tx=fila?lx+Math.sin(g.t*3+i)*3:lx+p.dx,twy=fila?lwy-i*7:lwy+p.dy;i++;
+  let tx=fila?lx+Math.sin(g.t*3+i)*3:lx+p.dx,twy=fila?lwy-i*7:lwy+p.dy;i++;
+  /* na fila da escada, quem ainda não entrou espera dentro do rio, junto à entrada */if(fila&&o.y0!==undefined&&twy<o.y0){twy=o.y0-8-(o.y0-twy)*.6;tx=PC.cx(twy)+PC.lw(twy)/2-16-((i*7)%22);}
   /* vontade de ir para o lugar no cardume, com um vaivém próprio de cada peixe */const nz=Math.sin(g.t*1.3+p.ruido)*14,nz2=Math.cos(g.t*1.7+p.ruido*1.3)*10;
   let ax=(tx+nz-p.x)*3.2-p.vx*1.6,ay=(twy+nz2-p.wy)*3.2-p.vy*1.6;
   /* separação: ninguém encosta em ninguém */for(const q of lst){if(q===p||!q.ok)continue;const dx=p.x-q.x,dy=p.wy-q.wy,d2=dx*dx+dy*dy;if(d2<(fila?60:420)&&d2>.01){const d=Math.sqrt(d2);ax+=dx/d*(fila?60:420)/d*2.2;ay+=dy/d*(fila?60:420)/d*2.2;}}
   p.vx+=ax*dt;p.vy+=ay*dt;const v=Math.hypot(p.vx,p.vy),vm=sp*1.25;if(v>vm){p.vx*=vm/v;p.vy*=vm/v;}
   const cur=o.semCorr?0:PC.corr(g,p.x,p.wy);p.x+=p.vx*dt;p.wy+=p.vy*dt;
-  if(!o.livre){const c=PC.cx(p.wy),h=PC.lw(p.wy)/2-8;if(p.x<c-h){p.x=c-h;p.vx=Math.abs(p.vx)*.3;}if(p.x>c+h){p.x=c+h;p.vx=-Math.abs(p.vx)*.3;}}
+  if(!o.livre||(o.y0!==undefined&&p.wy<o.y0-4)){const c=PC.cx(p.wy),h=PC.lw(p.wy)/2-8;if(p.x<c-h){p.x=c-h;p.vx=Math.abs(p.vx)*.3;}if(p.x>c+h){p.x=c+h;p.vx=-Math.abs(p.vx)*.3;}}
   for(const pd of g.pedras||[]){const dx=p.x-pd.x,dy=p.wy-pd.wy,d=Math.hypot(dx,dy);if(d<pd.r+6){p.x+=dx/d*(pd.r+6-d);p.wy+=dy/d*(pd.r+6-d);}}
   /* rumo: o peixe aponta para onde nada contra a água, e vira aos poucos */const hx=p.vx,hy=p.vy+cur*.6,alvo=Math.atan2(-hy,hx);let da=alvo-p.a;while(da>Math.PI)da-=6.283;while(da<-Math.PI)da+=6.283;p.a+=da*Math.min(1,dt*6);
   /* batida da cauda: mais rápida quando faz força contra a correnteza */p.ph+=dt*(3+Math.hypot(p.vx,p.vy+cur)/22);}};
 PC.peixeD=function(g,p,L){const y=PC.sy(g,p.wy);if(y<-40||y>H+40)return;if(!p.ok){if(p.t2>1.6)return;cx.globalAlpha=Math.max(0,1-p.t2/1.6);curimbataTop(cx,p.x,y,L*.9,p.a,p.ph,0);cx.globalAlpha=1;return;}curimbataTop(cx,p.x,y,L,p.a,p.ph,0);};
 PC._us=PC.up_sobe;PC.up_sobe=function(g,dt){PC._us(g,dt);PC.grupo(g,dt,g.pe,g.cd.x,g.cd.wy,{sp:195});};
-PC._ue=PC.up_escada;PC.up_escada=function(g,dt){PC._ue(g,dt);const L=PC.ladder(g);if(g.esc)PC.grupo(g,dt,g.pe,L.x,g.cd.wy,{sp:160,fila:1,livre:1,semCorr:1});else PC.grupo(g,dt,g.pe,g.cd.x,g.cd.wy,{sp:150});};
+PC._ue=PC.up_escada;PC.up_escada=function(g,dt){PC._ue(g,dt);const L=PC.ladder(g);if(g.esc)PC.grupo(g,dt,g.pe,L.x,g.cd.wy,{sp:160,fila:1,livre:1,semCorr:1,y0:L.y0});else PC.grupo(g,dt,g.pe,g.cd.x,g.cd.wy,{sp:150});};
 PC._uf=PC.up_fiscal;PC.up_fiscal=function(g,dt){PC._uf(g,dt);for(const c of g.cds){if(!c.f){c.f=[];for(let i=0;i<c.n;i++){const p=PC.novoPeixe(c.x+(Math.random()-.5)*30,c.wy-20-Math.random()*40);const an=i*2.39996,r=10*Math.sqrt(i+.5);p.dx=Math.cos(an)*r*1.1;p.dy=Math.sin(an)*r*1.3;c.f.push(p);}}
   let vivos=c.f.filter(p=>p.ok);while(vivos.length>c.n){const p=vivos.pop();p.ok=0;p.t2=0;}PC.grupo(g,dt,c.f,c.x,c.wy,{sp:180});}};
 /* ---------- fase 2: lagoas laterais de verdade, ligadas ao rio por um canal ---------- */
