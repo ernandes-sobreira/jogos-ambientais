@@ -218,10 +218,10 @@ function poeSaldo(v,max){const e=$('mSaldo');if(!e)return;const f=e.querySelecto
 /* ================= FASES ================= */
 const FASES=[
  {nome:'Corrente de contágio',ic:'01',obj:'Espalhar um vírus numa cidade de 150 pessoas e medir, geração por geração, como os casos crescem e depois param.',passos:[['1','Toque em cada pessoa doente (vermelha) para ela contagiar os vizinhos.'],['2','Acompanhe os novos casos de cada geração no gráfico.'],['3','Observe o que acontece quando faltam pessoas para contagiar.']],ini:()=>f1()},
- {nome:'Vacine a cidade',ic:'02',obj:'Com vacinas para 40% da população, impedir que um vírus com R0 = 3, que pode chegar em qualquer ponto, atinja mais de 15 pessoas.',passos:[['1','Arraste o dedo sobre as pessoas para vaciná-las.'],['2','Toque em Chegou o vírus.'],['3','Se o surto passar de 15 casos, refaça a vacinação.']],ini:()=>f2()},
+ {nome:'Vacine a cidade',ic:'02',obj:'Usar vacinas para dividir a cidade em ilhas pequenas de pessoas sem vacina, para que nenhum surto passe de 15 doentes.',passos:[['1','Arraste o dedo sobre as pessoas para vaciná-las.'],['2','Cada cor é uma ilha sem vacina; o número mostra o tamanho.'],['3','Quando nenhuma ilha passar de 15, toque em Chegou o vírus.']],ini:()=>f2()},
  {nome:'O experimento',ic:'03',obj:'Rodar simulações com coberturas vacinais diferentes e descobrir a partir de qual cobertura o surto para.',passos:[['1','Escolha uma cobertura.'],['2','Rode 10 simulações e veja os pontos.'],['3','Marque o limiar e confirme.']],ini:()=>f3()},
  {nome:'Cada doença, uma meta',ic:'04',obj:'Calcular a cobertura vacinal necessária para quatro doenças com R0 medido em estudos científicos.',passos:[['1','Arraste cada doença para cima ou para baixo.'],['2','Use a regra: meta = 1 - 1/R0.'],['3','Solte para conferir.']],ini:()=>f4()},
- {nome:'Quem não pode se vacinar',ic:'05',obj:'Proteger bebês e pessoas imunossuprimidas, que não podem receber a vacina, vacinando quem está ao redor delas.',passos:[['1','Os corações roxos não podem ser vacinados.'],['2','Vacine com o dedo, até 50% da cidade.'],['3','Chegou o vírus: nenhum coração pode adoecer.']],ini:()=>f5()}
+ {nome:'Quem não pode se vacinar',ic:'05',obj:'Proteger bebês e pessoas imunossuprimidas, que não podem receber a vacina, vacinando quem está em volta delas.',passos:[['1','Os corações roxos não podem ser vacinados.'],['2','Faça um anel de vacinados em volta de cada coração.'],['3','Nenhum coração pode ficar na mesma ilha de uma ENTRADA.']],ini:()=>f5()}
 ];
 function telaJogo(chip,info){const F=FASES[S.f];
  $('tela').innerHTML=`<div class="card"><div class="row top"><div><div class="eyebrow">Fase ${S.f+1} de ${FASES.length}</div><div class="titulo" id="chip">${chip}</div></div><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
@@ -274,10 +274,16 @@ function cidade(n,seed,k){const r=RNG(seed),p=[];let tries=0;while(p.length<n&&t
 function desenhaCidade(c,P,o){o=o||{};c.fillStyle='#f8fafc';c.fillRect(TX0-8,TY0-8,TX1-TX0+16,TY1-TY0+16);c.strokeStyle=LINE;c.strokeRect(TX0-7.5,TY0-7.5,TX1-TX0+15,TY1-TY0+15);
  c.strokeStyle='rgba(148,163,184,.25)';c.lineWidth=1;P.forEach((a,i)=>a.nb.forEach(j=>{if(j>i){c.beginPath();c.moveTo(a.x,a.y);c.lineTo(P[j].x,P[j].y);c.stroke();}}));
  if(o.links)o.links.forEach(([i,j,t])=>{c.strokeStyle=`rgba(225,29,72,${Math.max(0,t)})`;c.lineWidth=2;c.beginPath();c.moveTo(P[i].x,P[i].y);c.lineTo(P[j].x,P[j].y);c.stroke();});
- P.forEach((a,i)=>{const pul=a.st==='I'&&o.pulsa?1+.18*Math.sin(G.t*6+i):1;
+ const MS=MOB()?1.35:1;P.forEach((a,i)=>{const pul=(a.st==='I'&&o.pulsa?1+.18*Math.sin(G.t*6+i):1)*MS;
   if(a.vul){c.fillStyle=a.st==='I'?C_I:a.st==='R'?'#fda4af':C_P;c.beginPath();const s=6.5*pul;c.moveTo(a.x,a.y+s);c.bezierCurveTo(a.x-s*1.6,a.y-s*.2,a.x-s*.6,a.y-s*1.4,a.x,a.y-s*.5);c.bezierCurveTo(a.x+s*.6,a.y-s*1.4,a.x+s*1.6,a.y-s*.2,a.x,a.y+s);c.fill();return;}
   c.fillStyle=a.st==='I'?C_I:a.st==='R'?C_R:a.vac?C_V:C_S;c.beginPath();c.arc(a.x,a.y-2.5*pul,3*pul,0,7);c.fill();c.beginPath();c.ellipse(a.x,a.y+3.5*pul,4.4*pul,3.6*pul,0,Math.PI,0);c.fill();
   if(a.vac){c.strokeStyle=C_V;c.lineWidth=1.5;c.beginPath();c.arc(a.x,a.y,8.5,0,7);c.stroke();}});}
+const MOB=()=>window.innerWidth<600;
+function ilhas(P){const id=new Array(P.length).fill(-1),cs=[];P.forEach((a,i)=>{if(a.vac||id[i]>=0)return;const st=[i],c=[];id[i]=cs.length;while(st.length){const u=st.pop();c.push(u);P[u].nb.forEach(v=>{if(!P[v].vac&&id[v]<0){id[v]=cs.length;st.push(v);}});}cs.push(c);});return{id,cs};}
+const PAL=['#fde68a','#bbf7d0','#bfdbfe','#fbcfe8','#ddd6fe','#fed7aa','#a5f3fc','#d9f99d','#fecaca','#e9d5ff'];
+function halos(c,P,isl,lim){const big=Math.max(0,...isl.cs.map(x=>x.length));isl.cs.forEach((cc,k)=>{const grande=cc.length>lim;c.fillStyle=grande?'rgba(225,29,72,.22)':PAL[k%PAL.length];cc.forEach(i=>{c.beginPath();c.arc(P[i].x,P[i].y,11,0,7);c.fill();});
+ if(cc.length>=4){const cx2=cc.reduce((s,i)=>s+P[i].x,0)/cc.length,cy2=cc.reduce((s,i)=>s+P[i].y,0)/cc.length;c.fillStyle=grande?C_I:'#334155';c.font='800 11px system-ui';c.textAlign='center';c.fillText(cc.length,cx2,cy2-12);}});return big;}
+function desenhaCidadeSemFundo(c,P,o){const fr=c.fillRect;c.fillRect=()=>{};const sr=c.strokeRect;c.strokeRect=()=>{};desenhaCidade(c,P,o);c.fillRect=fr;c.strokeRect=sr;}
 function legenda(c,x,y,itens){itens.forEach(([cor,t],k)=>{c.fillStyle=cor;c.beginPath();c.arc(x+5,y+k*18-4,5,0,7);c.fill();c.fillStyle=INK;c.font='500 10px system-ui';c.textAlign='left';c.fillText(t,x+16,y+k*18);});}
 function barrasG(c,x,y,w,h,vals,rot,cor){c.fillStyle='#fff';c.fillRect(x,y,w,h);c.strokeStyle=LINE;c.strokeRect(x+.5,y+.5,w-1,h-1);c.fillStyle=INK;c.font='800 9.5px system-ui';c.textAlign='left';c.fillText(rot,x+8,y+15);
  const mx=Math.max(1,...vals),n=Math.max(vals.length,6),bw=(w-24)/n;vals.forEach((v,i)=>{const bh=(h-46)*v/mx;c.fillStyle=cor||C_I;c.fillRect(x+12+i*bw+2,y+h-22-bh,bw-4,bh);c.fillStyle=INK;c.font='700 8.5px system-ui';c.textAlign='center';c.fillText(v,x+12+i*bw+bw/2,y+h-26-bh);c.fillStyle=MUT;c.font='600 8px system-ui';c.fillText(i,x+12+i*bw+bw/2,y+h-10);});}
@@ -295,36 +301,41 @@ function f1(){FSC=1.25;const P=cidade(150,7,5);const r=RNG(3);G={t:0,P,ger:[1],a
  const avanca=()=>{G.gen++;G.ger.push(G.prox.length);G.atual=G.prox;G.prox=[];$('info').textContent=`geração ${G.gen}`;
   if(!G.atual.length||G.gen>=12){G.fim=1;const tot=G.ger.reduce((a,b)=>a+b,0);acao(`O surto acabou na geração ${G.gen}: ${tot} de 150 pessoas adoeceram. Veja no gráfico a subida rápida e a queda.`);
    botao('Ver a explicação',()=>fimFase(170+Math.min(30,G.gen*3),true,`No começo, cada doente contagiou até 3 vizinhos, e os casos de cada geração quase triplicaram: 1, 3, 9... Esse crescimento por multiplicação é chamado de exponencial, como as potências de 3. Mas a cidade é finita. Quando a maioria já tinha adoecido ou ficado imune, os doentes passaram a encontrar menos gente para contagiar, e o surto parou sozinho, depois de atingir ${tot} das 150 pessoas.`,'Se cada doente contagiasse só 1 pessoa, o que aconteceria com o número de casos?'));}
-  else acao(`Geração ${G.gen}: ${G.atual.length} ${G.atual.length>1?'novos doentes':'novo doente'}. Toque em cada um${G.gen>=2?' ou use Espalhar todos':''}.`);
-  if(G.gen>=2&&!G.fim)$('ctrl').innerHTML='<button class="btn ghost" id="bTd">Espalhar todos desta geração</button>';if(G.fim)return;const b=$('bTd');if(b)b.onclick=()=>{G.atual.slice().forEach(espalha);};};
+  else acao(`Geração ${G.gen}: ${G.atual.length} ${G.atual.length>1?'novos doentes':'novo doente'}. Toque perto de cada um ou use o botão Espalhar todos.`);
+  if(G.gen>=1&&!G.fim)$('ctrl').innerHTML='<button class="btn" id="bTd">Espalhar todos desta geração</button>';if(G.fim)return;const b=$('bTd');if(b)b.onclick=()=>{G.atual.slice().forEach(espalha);};};
  G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);desenhaCidade(c,P,{pulsa:true,links:G.links.map(([i,j])=>[i,j,.35])});
   painelR(c,20,320);rotulo(c,492,40,'Casos novos por geração');barrasG(c,488,50,248,150,G.ger,'',C_I);
   const S=P.filter(a=>a.st==='S').length,tot=G.ger.reduce((a,b)=>a+b,0);linhaM(c,492,224,'Já adoeceram',`${tot}`,C_I);linhaM(c,492,248,'Ainda suscetíveis',`${S}`);
   legenda(c,494,282,[[C_I,'doente agora (toque)'],[C_R,'já se recuperou'],[C_S,'suscetível']]);};
  G.upd=()=>{};
- ptr((x,y)=>{if(G.fim)return;let b=-1,bd=16;G.atual.forEach(i=>{const d=Math.hypot(x-P[i].x,y-P[i].y);if(d<bd&&P[i].st==='I'){bd=d;b=i;}});if(b>=0)espalha(b);},'pointerdown');
- acao('Uma pessoa chegou doente na cidade. Toque nela (vermelha) para ver quem ela contagia.');rodar();}
+ ptr((x,y)=>{if(G.fim)return;let b=-1,bd=1e9;G.atual.forEach(i=>{const d=Math.hypot(x-P[i].x,y-P[i].y);if(d<bd&&P[i].st==='I'){bd=d;b=i;}});if(b>=0)espalha(b);},'pointerdown');
+ acao('Uma pessoa chegou doente na cidade. Toque em qualquer lugar perto dela (vermelha) para ver quem ela contagia.');rodar();}
 
 /* pintura de vacinas */
 function pincel(P,max,ok){G.brush=false;ptr((x,y)=>{if(!ok())return;G.brush=true;pinta(x,y);},'pointerdown');ptr((x,y)=>{if(G.brush&&ok())pinta(x,y);});ptr(()=>{G.brush=false;},'pointerup');
- function pinta(x,y){P.forEach(a=>{if(!a.vac&&!a.vul&&Math.hypot(a.x-x,a.y-y)<16&&P.filter(b=>b.vac).length<max)a.vac=true;});}}
+ function pinta(x,y){const R=MOB()?26:18;P.forEach(a=>{if(Math.hypot(a.x-x,a.y-y)>=R||a.vul)return;if(G.apaga)a.vac=false;else if(!a.vac&&P.filter(b=>b.vac).length<max)a.vac=true;});}}
 /* ---------- FASE 2 ---------- */
-function f2(){FSC=1.25;const P=cidade(150,19,5);const MAX=60;G={t:0,P,fase:'pintar',tent:0,fim:0,res:null,anim:0};telaJogo('Vacine a cidade','0% vacinados');
- G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);const lk=G.res?G.res.links.filter(l=>l[2]<=G.anim).map(([i,j])=>[i,j,.6]):[];
-  if(G.res){P.forEach(a=>{a._st=a.st;});P.forEach(a=>{if(a.g>=0&&a.g>G.anim)a.st='S';});}desenhaCidade(c,P,{links:lk});if(G.res)P.forEach(a=>{a.st=a._st;});
-  const nv=P.filter(a=>a.vac).length;painelR(c,20,320);rotulo(c,492,40,'Vacinas');linhaM(c,492,64,'Vacinados',`${nv} de 150 (${Math.round(nv/1.5)}%)`,C_V);linhaM(c,492,88,'Vacinas restantes',`${MAX-nv}`);
-  c.fillStyle='#e2e8f0';c.fillRect(492,98,240,8);c.fillStyle=C_V;c.fillRect(492,98,240*nv/150,8);c.fillStyle=INK;c.fillRect(492+240*.4,94,2,16);
-  c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';quebra(c,'Vírus com R0 = 3: num grupo sem imunidade, cada doente contagia em média 3 pessoas. Meta: no máximo 15 doentes.',492,126,240,13);
-  if(G.res){const n=Math.min(G.res.ger.length-1,Math.floor(G.anim));const tot=G.res.ger.slice(0,n+1).reduce((a,b)=>a+b,0);linhaM(c,492,206,'Doentes',`${tot}`,tot>15?C_I:'#15803d');barrasG(c,488,218,248,112,G.res.ger.slice(0,n+1),'Casos por geração',C_I);}
-  else legenda(c,494,214,[[C_V,'vacinado (imune)'],[C_S,'sem vacina']]);};
- G.upd=dt=>{if(G.res&&G.anim<G.res.ger.length)G.anim+=dt*1.6;$('info').textContent=`${Math.round(P.filter(a=>a.vac).length/1.5)}% vacinados`;};
+function botoesPincel(onVirus,txtV){$('ctrl').innerHTML=`<button class="btn ghost" id="bMd">Modo: vacinar</button><button class="btn ghost" id="bLp">Limpar</button><button class="btn" id="bVr">${txtV||'Chegou o vírus'}</button>`;
+ $('bMd').onclick=()=>{G.apaga=!G.apaga;$('bMd').textContent=G.apaga?'Modo: desfazer':'Modo: vacinar';};$('bLp').onclick=()=>G.P.forEach(a=>a.vac=false);$('bVr').onclick=onVirus;}
+function anima(c,P){if(!G.res)return[];P.forEach(a=>{a._st=a.st;});P.forEach(a=>{if(a.g>=0&&a.g>G.anim)a.st='S';});return G.res.links.filter(l=>l[2]<=G.anim).map(([i,j])=>[i,j,.7]);}
+function f2(){FSC=1.25;const P=cidade(150,19,5);const MAX=75,LIM=15;G={t:0,P,fase:'pintar',tent:0,fim:0,res:null,anim:0,apaga:false};telaJogo('Vacine a cidade','maior ilha: 150');
+ G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);const isl=ilhas(P);c.fillStyle='#f8fafc';c.fillRect(TX0-8,TY0-8,TX1-TX0+16,TY1-TY0+16);
+  const lk=anima(c,P);const big=G.res?0:halos(c,P,isl,LIM);desenhaCidadeSemFundo(c,P,{links:lk});if(G.res)P.forEach(a=>{a.st=a._st;});
+  const nv=P.filter(a=>a.vac).length,b2=Math.max(0,...isl.cs.map(x=>x.length));painelR(c,20,320);rotulo(c,492,40,'Quebre a cidade em ilhas');
+  linhaM(c,492,64,'Vacinas usadas',`${nv} de ${MAX}`,C_V);linhaM(c,492,88,'Maior ilha',`${b2} pessoas`,b2<=LIM?'#15803d':C_I);
+  c.fillStyle='#e2e8f0';c.fillRect(492,98,240,10);c.fillStyle=b2<=LIM?'#16a34a':C_I;c.fillRect(492,98,240*Math.min(1,b2/150),10);c.fillStyle=INK;c.fillRect(492+240*LIM/150,94,2,18);
+  c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';quebra(c,'Cada cor é uma ilha de pessoas sem vacina ligadas entre si. O vírus anda dentro da ilha, mas não atravessa quem está vacinado. Meta: nenhuma ilha com mais de 15 pessoas.',492,126,236,13);
+  if(G.res){const n=Math.min(G.res.ger.length-1,Math.floor(G.anim));const tot=G.res.ger.slice(0,n+1).reduce((a,b)=>a+b,0);linhaM(c,492,232,'Doentes',`${tot}`,tot>LIM?C_I:'#15803d');}
+  else legenda(c,494,232,[[C_V,'vacinado'],['#fde68a','ilha pequena (ok)'],['#fca5a5','ilha grande demais']]);};
+ G.upd=dt=>{if(G.res&&G.anim<G.res.ger.length)G.anim+=dt*1.6;$('info').textContent=`maior ilha: ${Math.max(0,...ilhas(P).cs.map(x=>x.length))}`;};
  pincel(P,MAX,()=>G.fase==='pintar');
- const ctrl=()=>{$('ctrl').innerHTML='<button class="btn ghost" id="bLp">Limpar vacinas</button><button class="btn" id="bVr">Chegou o vírus</button>';$('bLp').onclick=()=>P.forEach(a=>a.vac=false);
-  $('bVr').onclick=()=>{G.fase='surto';G.tent++;$('ctrl').innerHTML='';const rr=RNG(11+G.tent*31),INI=[0,1,2].map(()=>Math.floor(rr()*150));G.res=surto(P,3,100+G.tent,INI);G.anim=0;const tot=G.res.ger.reduce((a,b)=>a+b,0);
-   setTimeout(()=>{if(tot<=15){G.fim=1;acao(`Surto contido: ${tot} ${tot===1?'pessoa adoeceu':'pessoas adoeceram'}, com ${Math.round(P.filter(a=>a.vac).length/1.5)}% da cidade vacinada.`);
-     botao('Ver a explicação',()=>fimFase(Math.max(80,200-25*(G.tent-1)),true,'As pessoas vacinadas não adoecem e também não passam o vírus adiante. Quando muitas pessoas em volta de um doente estão imunes, o vírus não encontra caminho e a corrente de contágio se quebra. Por isso a vacina protege quem tomou e também quem está perto. Onde ficam grupos sem vacina, o vírus encontra corredores e o surto escapa. Nesta cidade, cada pessoa só encontra os vizinhos, então barreiras bem posicionadas seguraram o surto com 40% de vacinados; numa cidade onde todos se encontram, como na próxima fase, seria preciso mais.','Por que um bairro inteiro sem vacina é mais perigoso do que pessoas sem vacina espalhadas pela cidade?'));}
-    else{acao(`O surto escapou: ${tot} pessoas adoeceram. Procure os corredores de pessoas sem vacina e refaça a vacinação.`);$('ctrl').innerHTML='<button class="btn" id="bRf">Refazer a vacinação</button>';$('bRf').onclick=()=>{G.res=null;P.forEach(a=>{a.st='S';a.g=-1;});G.fase='pintar';ctrl();};}},Math.min(9000,G.res.ger.length/1.6*1000+400));};};
- ctrl();acao('Arraste o dedo sobre as pessoas para vaciná-las. Você tem vacinas para 60 pessoas (40%), e o vírus pode chegar em qualquer ponto. Depois toque em Chegou o vírus.');rodar();}
+ const virus=()=>{const isl=ilhas(P),b2=Math.max(0,...isl.cs.map(x=>x.length));G.fase='surto';G.tent++;$('ctrl').innerHTML='';
+  const sus=P.map((a,i)=>i).filter(i=>!P[i].vac),rr=RNG(11+G.tent*31),ini=isl.cs.length?isl.cs.slice().sort((a,b)=>b.length-a.length)[0][Math.floor(rr()*isl.cs[0].length)%isl.cs.slice().sort((a,b)=>b.length-a.length)[0].length]:sus[0];
+  G.res=surto(P,3,100+G.tent,[ini]);G.anim=0;const tot=G.res.ger.reduce((a,b)=>a+b,0);
+  setTimeout(()=>{if(b2<=LIM){G.fim=1;acao(`Funcionou! O vírus entrou na maior ilha e adoeceu ${tot} ${tot===1?'pessoa':'pessoas'}. As vacinas formaram muros que ele não atravessou.`);
+    botao('Ver a explicação',()=>fimFase(Math.max(80,200-20*(G.tent-1)),true,'As pessoas vacinadas não adoecem e também não passam o vírus adiante. Elas funcionam como muros: o vírus só consegue andar dentro de um grupo de pessoas sem vacina ligadas entre si. Quando a cidade fica dividida em ilhas pequenas, qualquer surto fica preso numa delas. Na vida real é parecido: bairros, escolas ou famílias inteiras sem vacina viram corredores para a doença, e é ali que os surtos começam.','Por que um bairro inteiro sem vacina é mais perigoso do que pessoas sem vacina espalhadas pela cidade?'));}
+   else{acao(`O vírus entrou na maior ilha, de ${b2} pessoas, e adoeceu ${tot}. Use as vacinas para cortar as ilhas vermelhas em pedaços menores.`);$('ctrl').innerHTML='<button class="btn" id="bRf">Voltar a vacinar</button>';$('bRf').onclick=()=>{G.res=null;P.forEach(a=>{a.st='S';a.g=-1;});G.fase='pintar';botoesPincel(virus);};}},Math.min(8000,G.res.ger.length/1.6*1000+400));};
+ botoesPincel(virus);acao('Arraste o dedo para vacinar (até 75 pessoas, metade da cidade). Faça muros de vacinados que dividam a cidade em ilhas de no máximo 15 pessoas sem vacina.');rodar();}
 
 /* ---------- FASE 3 ---------- */
 function f3(){FSC=1.25;G={t:0,cov:30,pts:[],drag:false,lim:null,fase:'rodar',fim:0,seed:500};telaJogo('O experimento','0 simulações');
@@ -376,22 +387,24 @@ function f4(){FSC=1.25;G={t:0,y:[50,50,50,50],ok:[0,0,0,0],drag:-1,erros:0,fim:0
 
 /* ---------- FASE 5 ---------- */
 function f5(){FSC=1.25;const P=cidade(150,41,5);const r=RNG(13);const vul=[];while(vul.length<8){const i=Math.floor(r()*150);if(!vul.includes(i)&&P[i].x>80&&P[i].x<420)vul.push(i);}vul.forEach(i=>P[i].vul=true);
- const MAX=75;G={t:0,P,fase:'pintar',tent:0,fim:0,res:null,anim:0};telaJogo('Quem não pode se vacinar','0% vacinados');
- const longe=P.map((a,i)=>[i,Math.min(...vul.map(v=>Math.hypot(a.x-P[v].x,a.y-P[v].y)))]).filter(q=>q[1]>90&&!P[q[0]].vul);const INI=[0,1,2,3].map(k=>longe[Math.floor(r()*longe.length)][0]);
- G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);const lk=G.res?G.res.links.filter(l=>l[2]<=G.anim).map(([i,j])=>[i,j,.6]):[];
-  if(G.res){P.forEach(a=>{a._st=a.st;});P.forEach(a=>{if(a.g>=0&&a.g>G.anim)a.st='S';});}desenhaCidade(c,P,{links:lk});if(G.res)P.forEach(a=>{a.st=a._st;});
-  const nv=P.filter(a=>a.vac).length;painelR(c,20,320);rotulo(c,492,40,'Proteção coletiva');linhaM(c,492,64,'Vacinados',`${nv} de 150 (${Math.round(nv/1.5)}%)`,C_V);linhaM(c,492,88,'Vacinas restantes',`${MAX-nv}`);
-  c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';quebra(c,'Os corações roxos são bebês pequenos demais para a vacina e pessoas com o sistema imune enfraquecido. O vírus (R0 = 3) chegará por 4 pessoas longe deles.',492,112,236,13);
-  if(G.res){const n=Math.min(G.res.ger.length-1,Math.floor(G.anim));const tot=G.res.ger.slice(0,n+1).reduce((a,b)=>a+b,0);const vi=vul.filter(i=>P[i].g>=0&&P[i].g<=G.anim).length;linhaM(c,492,206,'Doentes',`${tot}`);linhaM(c,492,230,'Corações atingidos',`${vi} de 8`,vi?C_I:'#15803d');}
-  else legenda(c,494,214,[[C_P,'não pode ser vacinado'],[C_V,'vacinado'],[C_S,'sem vacina']]);};
- G.upd=dt=>{if(G.res&&G.anim<G.res.ger.length)G.anim+=dt*1.6;$('info').textContent=`${Math.round(P.filter(a=>a.vac).length/1.5)}% vacinados`;};
+ const MAX=60;G={t:0,P,fase:'pintar',tent:0,fim:0,res:null,anim:0,apaga:false};telaJogo('Quem não pode se vacinar','corações em perigo');
+ const longe=P.map((a,i)=>[i,Math.min(...vul.map(v=>Math.hypot(a.x-P[v].x,a.y-P[v].y)))]).filter(q=>q[1]>90&&!P[q[0]].vul).sort((a,b)=>b[1]-a[1]);const DOOR=[];longe.forEach(q=>{if(DOOR.length<4&&DOOR.every(d=>Math.hypot(P[d].x-P[q[0]].x,P[d].y-P[q[0]].y)>120))DOOR.push(q[0]);});
+ const perigo=()=>{const isl=ilhas(P);return vul.filter(v=>DOOR.some(d=>!P[d].vac&&isl.id[d]===isl.id[v]));};
+ G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);const isl=ilhas(P),pg=perigo();c.fillStyle='#f8fafc';c.fillRect(TX0-8,TY0-8,TX1-TX0+16,TY1-TY0+16);
+  if(!G.res){isl.cs.forEach(cc=>{const temD=cc.some(i=>DOOR.includes(i)),temV=cc.some(i=>P[i].vul);c.fillStyle=temD&&temV?'rgba(225,29,72,.25)':temV?'#ede9fe':'#f1f5f9';cc.forEach(i=>{c.beginPath();c.arc(P[i].x,P[i].y,11,0,7);c.fill();});});}
+  const lk=anima(c,P);desenhaCidadeSemFundo(c,P,{links:lk});if(G.res)P.forEach(a=>{a.st=a._st;});
+  DOOR.forEach(d=>{const a=P[d];c.strokeStyle=C_I;c.lineWidth=2;c.setLineDash([3,2]);c.beginPath();c.arc(a.x,a.y,13,0,7);c.stroke();c.setLineDash([]);c.fillStyle=C_I;c.font='800 9px system-ui';c.textAlign='center';c.fillText('ENTRADA',a.x,a.y-16);});
+  const nv=P.filter(a=>a.vac).length;painelR(c,20,320);rotulo(c,492,40,'Proteção coletiva');linhaM(c,492,64,'Vacinas usadas',`${nv} de ${MAX}`,C_V);linhaM(c,492,88,'Corações em perigo',`${pg.length} de 8`,pg.length?C_I:'#15803d');
+  c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';quebra(c,'Corações roxos: bebês pequenos demais para a vacina e pessoas com o sistema imune enfraquecido. O vírus chega pelas 4 entradas. Um coração está em perigo se está na mesma ilha (vermelha) que uma entrada.',492,112,236,13);
+  if(G.res){const n=Math.min(G.res.ger.length-1,Math.floor(G.anim));const tot=G.res.ger.slice(0,n+1).reduce((a,b)=>a+b,0);const vi=vul.filter(i=>P[i].g>=0&&P[i].g<=G.anim).length;linhaM(c,492,232,'Doentes',`${tot}`);linhaM(c,492,256,'Corações atingidos',`${vi} de 8`,vi?C_I:'#15803d');}
+  else legenda(c,494,232,[[C_P,'não pode ser vacinado'],[C_V,'vacinado'],['#fca5a5','ilha com entrada e coração']]);};
+ G.upd=dt=>{if(G.res&&G.anim<G.res.ger.length)G.anim+=dt*1.6;$('info').textContent=`${perigo().length} em perigo`;};
  pincel(P,MAX,()=>G.fase==='pintar');
- const ctrl=()=>{$('ctrl').innerHTML='<button class="btn ghost" id="bLp">Limpar vacinas</button><button class="btn" id="bVr">Chegou o vírus</button>';$('bLp').onclick=()=>P.forEach(a=>a.vac=false);
-  $('bVr').onclick=()=>{G.fase='surto';G.tent++;$('ctrl').innerHTML='';G.res=surto(P,3,300+G.tent,INI);G.anim=0;const vi=vul.filter(i=>P[i].g>=0).length,tot=G.res.ger.reduce((a,b)=>a+b,0);
-   setTimeout(()=>{if(vi===0){G.fim=1;acao(`Nenhum coração foi atingido. ${tot} pessoas adoeceram, mas a corrente não chegou até quem não pode se vacinar.`);
-     botao('Ver a explicação',()=>fimFase(Math.max(80,200-25*(G.tent-1)),true,'Algumas pessoas não podem receber certas vacinas: bebês abaixo da idade indicada, pessoas em tratamento de câncer, transplantados e outras com o sistema imune enfraquecido. Elas dependem de quem está em volta. Quando os vizinhos, a família e os colegas estão vacinados, o vírus não tem por onde chegar até elas. Vacinar é um cuidado individual e também um compromisso com quem é mais vulnerável.','Quem, na nossa família ou escola, depende da vacinação dos outros para ficar protegido?'));}
-    else{acao(`${vi} ${vi>1?'corações foram atingidos':'coração foi atingido'}. Vacine primeiro quem está em volta deles, formando um escudo, e tente de novo.`);$('ctrl').innerHTML='<button class="btn" id="bRf">Refazer a vacinação</button>';$('bRf').onclick=()=>{G.res=null;P.forEach(a=>{a.st='S';a.g=-1;});G.fase='pintar';ctrl();};}},Math.min(9000,G.res.ger.length/1.6*1000+400));};};
- ctrl();acao('Você tem vacinas para metade da cidade. Vacine de modo a proteger os corações roxos, que não podem receber a vacina.');rodar();}
+ const virus=()=>{const pg=perigo();G.fase='surto';G.tent++;$('ctrl').innerHTML='';G.res=surto(P,3,300+G.tent,DOOR);G.anim=0;const vi=vul.filter(i=>P[i].g>=0).length,tot=G.res.ger.reduce((a,b)=>a+b,0);
+  setTimeout(()=>{if(vi===0){G.fim=1;acao(`Nenhum coração foi atingido. ${tot} pessoas adoeceram perto das entradas, mas a corrente não chegou até quem não pode se vacinar.`);
+    botao('Ver a explicação',()=>fimFase(Math.max(80,200-20*(G.tent-1)),true,'Algumas pessoas não podem receber certas vacinas: bebês abaixo da idade indicada, pessoas em tratamento de câncer, transplantados e outras com o sistema imune enfraquecido. Elas dependem de quem está em volta. Quando os vizinhos, a família e os colegas estão vacinados, o vírus não tem por onde chegar até elas. Vacinar é um cuidado individual e também um compromisso com quem é mais vulnerável.','Quem, na nossa família ou escola, depende da vacinação dos outros para ficar protegido?'));}
+   else{acao(`${vi} ${vi>1?'corações foram atingidos':'coração foi atingido'}. Dica: vacine as pessoas logo em volta de cada coração, formando um anel.`);$('ctrl').innerHTML='<button class="btn" id="bRf">Voltar a vacinar</button>';$('bRf').onclick=()=>{G.res=null;P.forEach(a=>{a.st='S';a.g=-1;});G.fase='pintar';botoesPincel(virus);};}},Math.min(8000,G.res.ger.length/1.6*1000+400));};
+ botoesPincel(virus);acao('Vacine (até 60 pessoas) de modo que nenhum coração roxo fique na mesma ilha que uma ENTRADA do vírus. Dica: faça um anel de vacinados em volta de cada coração.');rodar();}
 
 const _fimFase=fimFase;
 fimFase=function(pts,ok,oque,perg,extra){let img='';try{const cv=$('cv');if(cv)img=`<img alt="Resultado da fase" src="${cv.toDataURL('image/png')}" style="display:block;width:100%;max-width:640px;margin:12px auto;border:1px solid var(--line);border-radius:10px">`;}catch(e){}
@@ -457,7 +470,7 @@ function guia(){parar();$('hud').style.display='none';$('rankBox').style.display
  <h3>Fase por fase</h3>
  <table class="tab"><tr><th>Fase</th><th>O aluno faz</th><th>Para discutir</th><th>Conceitos</th></tr>
  <tr><td>1. Corrente de contágio</td><td>Espalha o vírus e mede casos por geração</td><td>E se cada doente contagiasse 1 pessoa?</td><td>Crescimento exponencial, saturação.</td></tr>
- <tr><td>2. Vacine a cidade</td><td>Distribui vacinas para 40% e testa o surto</td><td>Por que bolsões sem vacina são perigosos?</td><td>Imunidade coletiva, rede de contatos.</td></tr>
+ <tr><td>2. Vacine a cidade</td><td>Divide a cidade em ilhas com muros de vacinados</td><td>Por que bolsões sem vacina são perigosos?</td><td>Imunidade coletiva, rede de contatos.</td></tr>
  <tr><td>3. O experimento</td><td>Roda simulações e acha o limiar</td><td>Por que repetir as simulações?</td><td>Experimento, variabilidade, limiar.</td></tr>
  <tr><td>4. Cada doença, uma meta</td><td>Calcula a meta para quatro doenças</td><td>Por que o sarampo volta primeiro?</td><td>R0, porcentagem, escala logarítmica.</td></tr>
  <tr><td>5. Quem não pode se vacinar</td><td>Vacina para proteger pessoas vulneráveis</td><td>Quem depende da nossa vacina?</td><td>Proteção coletiva, ética.</td></tr></table>
