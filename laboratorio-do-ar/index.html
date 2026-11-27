@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Laboratório do Ar</title>
+<style>
+:root{--main:#4338ca;--deep:#312e81;--soft:#eef0fb;--line:#dcdff0;--ink:#10212b;--mut:#4d6370;--co2:#e53935;--ch4:#ef6c00;--ok:#2e7d32;--bad:#c62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:820px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep);letter-spacing:-.01em}
+h2{font-size:1.2rem;color:var(--deep);margin-bottom:6px;letter-spacing:-.01em}
+h3{font-size:1rem;color:var(--deep);margin:14px 0 6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 12px;font-weight:700;font-size:.86rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.card{border:2px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:var(--deep)}.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.btn.sm{padding:9px 14px;font-size:.92rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas.cena{width:100%;height:auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff;margin-top:10px}
+.top{justify-content:space-between}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--main);color:#fff;border-radius:14px;padding:8px 14px;font-weight:800;font-size:1.05rem}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.tool{border:2px solid var(--line);background:#fff;color:var(--deep);border-radius:12px;padding:9px 12px;font-weight:700;font-family:inherit;font-size:.92rem;cursor:pointer;touch-action:manipulation}
+.tool.on{border-color:var(--main);background:var(--soft)}
+.tool:disabled{opacity:.4}
+.mets{display:grid;gap:8px;margin-top:10px}
+.met{display:grid;grid-template-columns:92px 1fr 52px;gap:8px;align-items:center;font-weight:700;font-size:.9rem}
+.met .bar{position:relative;height:18px;background:#f1f4f5;border-radius:99px;overflow:hidden}
+.met .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;transition:width .15s}
+.met .alvo{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--ink);border-radius:2px}
+.met .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--mut)}
+.met.co2 .fill{background:var(--co2)}.met.ch4 .fill{background:var(--ch4)}
+.saldo .bar{background:linear-gradient(90deg,#e8f5e9 50%,#ffebee 50%)}
+.saldo .zero{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:var(--ink)}
+.saldo .fill{border-radius:0}
+.obj{display:flex;gap:10px;align-items:flex-start;background:#fff8e1;border:2px solid #ffe082;border-radius:14px;padding:10px 12px;margin-top:10px;font-size:.95rem}
+.obj b{color:#8d6e00;white-space:nowrap}
+.acao{display:flex;gap:10px;align-items:center;background:var(--soft);border-left:5px solid var(--main);border-radius:0 12px 12px 0;padding:9px 12px;margin-top:8px;font-weight:600;font-size:.95rem;min-height:64px}@media(max-width:640px){.acao{min-height:5.4em}}
+.acao .dedo{font-size:1.25rem;animation:pulo 1s ease-in-out infinite}
+@keyframes pulo{50%{transform:translateX(4px)}}
+.help{width:34px;height:34px;border-radius:50%;border:2px solid var(--main);background:#fff;color:var(--deep);font-weight:800;font-size:1rem;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(16,33,43,.35);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal .card{max-width:460px;width:100%}
+.intro{text-align:center;padding:26px 18px}
+.intro .ic{font-size:3rem;line-height:1}
+.intro .n{color:var(--mut);font-weight:700;font-size:.85rem;margin-top:8px}
+.passos{display:grid;gap:8px;margin:16px auto;max-width:420px;text-align:left}
+.passos div{display:flex;gap:12px;align-items:center;background:var(--soft);border-radius:12px;padding:10px 14px;font-weight:600}
+.passos b{font-size:1.3rem;min-width:1.6em;text-align:center}
+.res{text-align:center}
+.res .big{font-size:2.6rem;font-weight:800;color:var(--deep);line-height:1.1}
+.res .ok{color:var(--ok);font-weight:800}.res .no{color:var(--bad);font-weight:800}
+.pensa{background:var(--soft);border-radius:14px;padding:12px 14px;margin:14px auto;max-width:520px;text-align:left}
+.pensa b{color:var(--deep)}
+.boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.box{border:2px dashed var(--line);border-radius:14px;padding:10px;min-height:110px;cursor:pointer}
+.box h4{font-size:.92rem;color:var(--deep);margin-bottom:6px}
+.box.alvo{border-color:var(--main);background:var(--soft)}
+.cards{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;min-height:48px}
+.ct{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 11px;font-weight:700;font-size:.9rem;cursor:pointer;box-shadow:0 2px 0 var(--line);font-family:inherit;color:var(--ink);transition:transform .5s}
+.ct.sel{border-color:var(--main);background:var(--soft);transform:translateY(-2px)}
+.ct.certo{border-color:var(--ok);background:#e8f5e9}.ct.errado{border-color:var(--bad);background:#ffebee}
+.ct.movido{animation:voa .8s ease}
+@keyframes voa{0%{transform:translateY(-30px) scale(1.1);opacity:.3}100%{transform:none;opacity:1}}
+.capa{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+.capa canvas{width:100%;height:auto;display:block;border-radius:16px;background:var(--soft)}
+.opts{display:grid;gap:8px;margin-top:6px}
+.opts .l{font-size:.8rem;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.sw{display:flex;gap:6px;flex-wrap:wrap}
+.sw button{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--line);cursor:pointer}
+.sw button.on{box-shadow:0 0 0 3px var(--deep)}
+.sw .tx{width:auto;height:auto;border-radius:10px;padding:6px 10px;font-weight:700;font-size:.85rem;background:#fff;color:var(--deep);font-family:inherit;border:0}
+input.nome{border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit;width:100%}
+input[type=range]{width:100%;accent-color:var(--main)}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:6px}
+.tab th{text-align:left;background:var(--soft);color:var(--deep);padding:7px 6px}
+.tab td{border-bottom:1px solid var(--line);padding:7px 6px;vertical-align:top}
+.guia p,.guia li{font-size:.95rem;margin-bottom:6px}
+.guia ul,.guia ol{padding-left:20px}
+.hab{border-left:5px solid var(--main);background:var(--soft);padding:10px 14px;border-radius:0 12px 12px 0;font-size:.95rem}
+.ref li{font-size:.86rem;color:var(--mut)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+.rel{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center}
+.rel canvas{width:120px;height:120px;border-radius:50%;background:var(--soft)}
+.mini{width:100%;max-width:420px;height:auto;display:block;margin:10px auto 0}
+@media (max-width:620px){.wrap{padding:10px 8px 30px}.card{padding:12px;border-radius:16px}.capa{grid-template-columns:1fr}.met{grid-template-columns:70px 1fr 44px;font-size:.82rem}.chip{font-size:.95rem}.rel{grid-template-columns:80px 1fr}.rel canvas{width:80px;height:80px}}
+@media print{a.hub,header .hud,.ranking,.noprint{display:none!important}.card{border:1px solid #ccc;break-inside:avoid}body{font-size:12px}}
+
+/* ===== pele profissional ===== */
+:root{--main:#4338ca;--deep:#312e81;--soft:#eef0fb;--line:#dcdff0;--ink:#1f2421;--mut:#5f6b66;--ok:#2f6b3a;--bad:#b3261e}
+body{background:#f6f7f5;color:var(--ink);-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px}
+h1{font-size:1.35rem;font-weight:750;letter-spacing:-.015em;color:var(--ink)}
+h2{color:var(--ink);font-weight:750}
+h3{color:var(--deep);font-size:.95rem;text-transform:uppercase;letter-spacing:.04em}
+a.hub{color:var(--mut);font-weight:600}
+.card{border:1px solid var(--line);border-radius:10px;box-shadow:0 1px 2px rgba(16,24,20,.05)}
+.pill{border-radius:4px;background:#fff;border:1px solid var(--line);color:var(--ink);font-weight:600}
+.btn{border-radius:6px;font-weight:650;padding:11px 20px;letter-spacing:.01em}
+.btn.ghost{border:1px solid var(--line);color:var(--ink)}
+.btn.ghost:hover{background:var(--soft)}
+.tool{border:1px solid var(--line);border-radius:6px;font-weight:600;color:var(--ink)}
+.tool.on{border-color:var(--main);background:var(--soft);box-shadow:inset 0 0 0 1px var(--main)}
+.eyebrow{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.titulo{font-size:1.15rem;font-weight:750;color:var(--ink);letter-spacing:-.01em}
+.obj{background:#fafbfa;border:1px solid var(--line);border-left:3px solid var(--main);border-radius:6px;font-size:.92rem}
+.obj b{color:var(--deep);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding-top:2px}
+.acao{background:#fff;border:1px solid var(--line);border-left:3px solid var(--ink);border-radius:6px;font-weight:500;font-size:.93rem}
+canvas.cena{border:1px solid var(--line);border-radius:8px;background:#fbfcfb}
+.help{border:1px solid var(--line);color:var(--ink);font-weight:700}
+.intro .ic{font-size:2.6rem;font-weight:800;color:var(--main);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.passos div{background:#fafbfa;border:1px solid var(--line);border-radius:6px;font-weight:500}
+.passos b{font-size:.85rem;color:#fff;background:var(--main);border-radius:4px;min-width:1.7em;padding:2px 0}
+.res .big{color:var(--ink)}
+.pensa{background:#fafbfa;border:1px solid var(--line);border-radius:6px}
+.pensa b{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}
+.hab{border-left:3px solid var(--main);border-radius:0 6px 6px 0}
+.tab th{background:#f2f5f3;color:var(--ink);font-size:.82rem}
+.ranking{border:1px solid var(--line);border-radius:10px}
+.ranking h3{background:var(--ink);text-transform:none;letter-spacing:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>Laboratório do Ar</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF"></span><span class="pill" id="hP"></span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const W=760,H=372;
+function hex(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mix(a,b,t){const A=hex(a),B=hex(b);return`rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`;}
+
+/* ================= AVATAR ================= */
+const PELES=['#f6d3b8','#e3b18b','#c68a5e','#94603e','#5d3b26'];
+const CABS=['#1b1b1b','#4e342e','#8d6e63','#d4a85a','#b5532f'];
+const CAMISAS=['#00838f','#2e7d32','#f9a825','#c62828','#6a1b9a','#37474f'];
+const ESTILOS=[['curto','Curto'],['cacheado','Cacheado'],['longo','Longo'],['coque','Coque'],['raspado','Raspado']];
+const CHAPEUS=[['nenhum','Sem'],['bone','Boné'],['campo','Chapéu']];
+let A={pele:2,cab:0,estilo:'cacheado',camisa:0,chapeu:'campo',nome:''};
+try{const s=JSON.parse(localStorage.getItem('bc_avatar')||'null');if(s)A=Object.assign(A,s);}catch(e){}
+function salvaA(){try{localStorage.setItem('bc_avatar',JSON.stringify(A));}catch(e){}}
+function avatar(c,x,y,s,a,prancheta){
+ c.save();c.translate(x,y);c.scale(s,s);
+ const pele=PELES[a.pele],cab=CABS[a.cab],cam=CAMISAS[a.camisa];
+ if(a.estilo==='longo'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-39,12.5,15,0,0,7);c.fill();c.fillRect(-12.5,-40,25,22);}
+ if(a.estilo==='cacheado'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-40,15,14.5,0,0,7);c.fill();}
+ c.fillStyle=cam;c.beginPath();c.moveTo(-16,0);c.quadraticCurveTo(-17,-21,-6,-25);c.lineTo(6,-25);c.quadraticCurveTo(17,-21,16,0);c.closePath();c.fill();
+ c.fillStyle='rgba(0,0,0,.12)';c.fillRect(-1,-24,2,24);
+ c.fillStyle=pele;c.fillRect(-3.5,-29,7,6);
+ if(prancheta){c.fillStyle='#8d6e63';c.fillRect(4,-19,13,16);c.fillStyle='#fff';c.fillRect(5.5,-17,10,12);c.strokeStyle='#90a4ae';c.lineWidth=.8;for(let i=0;i<4;i++){c.beginPath();c.moveTo(7,-14+i*2.6);c.lineTo(14,-14+i*2.6);c.stroke();}}
+ c.strokeStyle=cam;c.lineWidth=6;c.lineCap='round';c.beginPath();c.moveTo(-11,-20);c.lineTo(-4,-9);c.stroke();
+ c.fillStyle=pele;c.beginPath();c.arc(-3,-8,3,0,7);c.fill();
+ c.fillStyle=pele;c.beginPath();c.ellipse(0,-39,9.5,11,0,0,7);c.fill();
+ c.beginPath();c.arc(-9.4,-38,2.3,0,7);c.arc(9.4,-38,2.3,0,7);c.fill();
+ c.fillStyle=cab;
+ if(a.estilo==='curto'){c.beginPath();c.ellipse(0,-44.5,10,6.8,0,Math.PI,0);c.fill();c.fillRect(-10,-46,2.8,7);c.fillRect(7.2,-46,2.8,7);}
+ if(a.estilo==='cacheado'){for(let i=0;i<13;i++){const an=Math.PI*(.8+i*1.4/12);c.beginPath();c.arc(Math.cos(an)*12,-41+Math.sin(an)*11.5,4.2,0,7);c.fill();}}
+ if(a.estilo==='longo'){c.beginPath();c.ellipse(0,-44.5,10.6,7.2,0,Math.PI,0);c.fill();}
+ if(a.estilo==='coque'){c.beginPath();c.ellipse(0,-44.5,10,6.4,0,Math.PI,0);c.fill();c.beginPath();c.arc(0,-53,5.2,0,7);c.fill();}
+ if(a.estilo==='raspado'){c.globalAlpha=.5;c.beginPath();c.ellipse(0,-44,9.8,6.2,0,Math.PI,0);c.fill();c.globalAlpha=1;}
+ c.fillStyle='#2b2a26';c.beginPath();c.arc(-3.4,-39,1.25,0,7);c.arc(3.4,-39,1.25,0,7);c.fill();
+ c.strokeStyle='#2b2a26';c.lineWidth=1;c.beginPath();c.arc(0,-35.6,2.6,.25,Math.PI-.25);c.stroke();
+ if(a.chapeu==='bone'){c.fillStyle=cam;c.beginPath();c.ellipse(0,-46,10.6,5.8,0,Math.PI,0);c.fill();c.fillRect(-10.6,-47,21.2,2.6);c.beginPath();c.ellipse(8.5,-46.2,8,2.2,0,0,7);c.fill();}
+ if(a.chapeu==='campo'){c.fillStyle='#d7c49e';c.beginPath();c.ellipse(0,-46,16.5,3.6,0,0,7);c.fill();c.beginPath();c.ellipse(0,-48,9.2,6.4,0,Math.PI,0);c.fill();c.fillStyle='#8d6e63';c.fillRect(-9.2,-49,18.4,1.9);}
+ c.restore();
+}
+function pernas(c,x,y,s,a){c.save();c.translate(x,y);c.scale(s,s);c.fillStyle='#455a64';c.fillRect(-11,0,9,20);c.fillRect(2,0,9,20);c.fillStyle='#3e2723';c.fillRect(-12,18,11,4);c.fillRect(1,18,11,4);c.restore();}
+
+/* ================= CENA ================= */
+const CORES={main:'#4338ca',deep:'#312e81'};
+function sr(n){const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+function syncMol(){}function partic(){}
+function drawCena(c,G){if(G.desenha)G.desenha(c);}
+/* ================= TELA / LOOP ================= */
+let G=null,S=null,raf=0,ultimo=0,cx=null;
+function laco(ts){const dt=Math.min(.05,(ts-ultimo)/1000||0);ultimo=ts;if(G){G.t+=dt;if(G.upd)G.upd(dt);syncMol(G,dt);partic(G,dt);if(cx)drawCena(cx,G);if(G.extra)G.extra(cx);}raf=requestAnimationFrame(laco);}
+function parar(){cancelAnimationFrame(raf);raf=0;}
+function rodar(){parar();ultimo=performance.now();raf=requestAnimationFrame(laco);}
+function hud(){$('hud').style.display='flex';$('hF').textContent=`Fase ${S.f+1} de ${FASES.length}`;$('hP').textContent=`${Math.max(0,S.tot+S.fp)} pts`;}
+function telaJogo(chip,info){
+ const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><span class="chip" id="chip">${chip}</span><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="acao"><span class="dedo">👉</span><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});
+}
+function acao(t){const e=$('acao');if(e&&e.innerHTML!==t)e.innerHTML=t;}
+function ajuda(){const F=FASES[S.f],d=document.createElement('div');d.className='modal';
+ d.innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn">Entendi</button></div>`;
+ d.onclick=e=>{if(e.target===d||e.target.tagName==='BUTTON')d.remove();};document.body.appendChild(d);}
+function medidor(id,rot,cls,max,alvo){const a=alvo!=null?`<span class="alvo" style="left:${alvo/max*100}%"></span>`:'';return`<div class="met ${cls}" id="${id}" data-max="${max}"><span>${rot}</span><div class="bar"><span class="fill"></span>${a}</div><span class="v"></span></div>`;}
+function poeMed(id,v){const e=$(id);if(!e)return;const m=+e.dataset.max;e.querySelector('.fill').style.width=clamp(v/m*100,0,100)+'%';e.querySelector('.v').textContent=Math.round(v);}
+function poeSaldo(v,max){const e=$('mSaldo');if(!e)return;const f=e.querySelector('.fill'),p=clamp(Math.abs(v)/max*50,0,50);if(v<0){f.style.left=(50-p)+'%';f.style.width=p+'%';f.style.background='#43a047';}else{f.style.left='50%';f.style.width=p+'%';f.style.background='#e53935';}e.querySelector('.v').textContent=(v>0?'+':'')+Math.round(v);}
+
+/* ================= FASES ================= */
+const FASES=[
+ {nome:'Cem partículas de ar',ic:'01',obj:'Montar uma amostra de 100 partículas de ar seco com a proporção certa de cada gás.',passos:[['1','Arraste as divisórias da barra.'],['2','A amostra de 100 partículas acompanha a barra.'],['3','Solte para conferir.']],ini:()=>f1()},
+ {nome:'Procurando o CO2',ic:'02',obj:'Estimar quantas moléculas de ar existem para cada molécula de gás carbônico.',passos:[['1','Arraste o controle.'],['2','O campo mostra a amostra com uma única molécula de CO2.'],['3','Solte para conferir.']],ini:()=>f2()},
+ {nome:'A curva de Mauna Loa',ic:'03',obj:'Ler a série de CO2 medida desde 1959 e achar quando e quanto ela mais subiu.',passos:[['1','Arraste o cursor pelos anos.'],['2','Depois arraste a janela de 10 anos.'],['3','Solte para conferir.']],ini:()=>f3()},
+ {nome:'Balanço do carbono',ic:'04',obj:'Descobrir quanto do carbono emitido em 2023 ficou no ar depois que oceano e vegetação absorveram uma parte.',passos:[['1','Leia o que entrou e o que saiu.'],['2','Arraste o nível da atmosfera.'],['3','Solte para conferir.']],ini:()=>f4()},
+ {nome:'Quem mexe no ar',ic:'05',obj:'Classificar 8 fenômenos: natural ou humano, e se põe ou tira CO2 do ar.',passos:[['1','Leia o fenômeno do cartão.'],['2','Toque no quadrante certo.'],['3','Erro não avança e o jogo explica.']],ini:()=>f5()}
+];
+function telaJogo(chip,info){const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><div><div class="eyebrow">Fase ${S.f+1} de ${FASES.length}</div><div class="titulo" id="chip">${chip}</div></div><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>Objetivo</b><span>${F.obj}</span></div><div class="acao"><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});}
+function intro(){parar();G=null;cx=null;hud();const F=FASES[S.f];$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><div class="n">FASE ${S.f+1} DE ${FASES.length}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left;max-width:460px;margin:12px auto 0"><b>Objetivo</b><span>${F.obj}</span></div>
+ <div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn" id="bGo">Começar</button></div>`;
+ $('bGo').onclick=()=>{S.fp=0;F.ini();};}
+function fimFase(pts,ok,oque,pergunta,extraHtml){
+ parar();pts=Math.max(0,Math.round(pts));S.fp=0;S.tot+=pts;S.res[S.f]={pts,ok,oque};hud();
+ $('tela').innerHTML=`<div class="card res"><div class="eyebrow">Fase ${S.f+1} · ${FASES[S.f].nome}</div><div class="big">+${pts}</div>
+ <p class="${ok?'ok':'no'}">${ok?'Meta cumprida':'Meta não cumprida'}</p>${extraHtml||''}
+ <div class="pensa"><b>Síntese</b><br>${oque}</div><div class="pensa"><b>Para discutir</b><br>${pergunta}</div>
+ <div class="row" style="justify-content:center"><button class="btn" id="bNx">${S.f<FASES.length-1?'Próxima fase':'Ver relatório'}</button></div></div>`;
+ $('bNx').onclick=()=>{S.f++;if(S.f<FASES.length)intro();else relatorio();};}
+function ptr(fn,ev){const cv=$('cv');cv.style.touchAction='none';cv.addEventListener(ev||'pointermove',e=>{const r=cv.getBoundingClientRect();fn((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height,e);});}
+function opcoes(perg,ops,cb){$('ctrl').innerHTML=`<div style="width:100%"><b>${perg}</b><div style="display:grid;gap:6px;margin-top:8px">${ops.map((t,i)=>`<button class="tool" style="text-align:left" data-o="${i}">${t}</button>`).join('')}</div></div>`;
+ document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-o]').forEach(x=>x.classList.toggle('on',x===b));cb(+b.dataset.o,b);});}
+const f1x=v=>(Math.round(v*10)/10).toFixed(1).replace('.',',');
+const INK='#1f2421',MUT='#5f6b66',LINE='#dfe3e0',ACC='#4338ca',ACC2='#312e81',BLUE='#2563a8';
+const ajuste=(xs,ys)=>{const n=xs.length,mx=xs.reduce((a,b)=>a+b)/n,my=ys.reduce((a,b)=>a+b)/n;let sxy=0,sxx=0;xs.forEach((x,i)=>{sxy+=(x-mx)*(ys[i]-my);sxx+=(x-mx)**2;});const b=sxy/sxx;return{b,a:my-b*mx};};
+function eixos(c,o){const{x0,y0,w,h,xmin,xmax,ymin,ymax,xt,yt,xf,yf,titulo}=o;const X=v=>x0+(v-xmin)/(xmax-xmin)*w,Y=v=>y0+h-(v-ymin)/(ymax-ymin)*h;
+ c.fillStyle='#fff';c.fillRect(x0,y0,w,h);c.strokeStyle='#eef0ee';c.lineWidth=1;c.font='500 10.5px system-ui';c.fillStyle=MUT;
+ yt.forEach(v=>{c.beginPath();c.moveTo(x0,Y(v)+.5);c.lineTo(x0+w,Y(v)+.5);c.stroke();c.textAlign='right';c.fillText(yf?yf(v):v,x0-6,Y(v)+3.5);});
+ xt.forEach(v=>{c.textAlign='center';c.fillText(xf?xf(v):v,X(v),y0+h+14);c.fillStyle=MUT;c.fillRect(X(v)-.5,y0+h,1,4);});
+ c.strokeStyle=INK;c.lineWidth=1;c.beginPath();c.moveTo(x0,y0);c.lineTo(x0,y0+h);c.lineTo(x0+w,y0+h);c.stroke();
+ if(titulo){c.fillStyle=INK;c.font='700 11px system-ui';c.textAlign='left';c.fillText(titulo.toUpperCase(),x0,y0-10);}return{X,Y};}
+function painelR(c,y,h){c.fillStyle='#fff';c.fillRect(478,y,268,h);c.strokeStyle=LINE;c.lineWidth=1;c.strokeRect(478.5,y+.5,267,h-1);}
+function rotulo(c,x,y,t,cor){c.fillStyle=cor||MUT;c.font='700 10px system-ui';c.textAlign='left';c.fillText(t.toUpperCase(),x,y);}
+function linhaM(c,x,y,lab,val,cor){c.font='500 12.5px system-ui';c.fillStyle=INK;c.textAlign='left';c.fillText(lab,x,y);c.font='700 12.5px system-ui';c.textAlign='right';c.fillStyle=cor||INK;c.fillText(val,x+240,y);c.strokeStyle='#f0f2f0';c.lineWidth=1;c.beginPath();c.moveTo(x,y+6);c.lineTo(x+240,y+6);c.stroke();}
+function fonte(c,t){c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';c.fillText(t,24,H-8);}
+
+const ptrU=fn=>ptr(fn,'pointerup');
+const GAS=[{k:'N2',n:'Nitrogênio',cor:'#2563eb'},{k:'O2',n:'Oxigênio',cor:'#dc2626'},{k:'Ar',n:'Argônio',cor:'#7c3aed'},{k:'CO2',n:'Gás carbônico',cor:'#d97706'}];
+const SR=n=>{let s=n;return()=>(s=(s*16807)%2147483647)/2147483647;};
+/* ---------- FASE 1 ---------- */
+function f1(){G={t:0,d:[25,50,75],drag:-1,tent:0,fim:0};telaJogo('Cem partículas de ar','amostra');
+ const BX=40,BW=420,BY=300,cnt=()=>[G.d[0],G.d[1]-G.d[0],G.d[2]-G.d[1],100-G.d[2]];
+ const ord=(()=>{const r=SR(7),a=[...Array(100).keys()];for(let i=99;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;})();
+ G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);const n=cnt();
+  c.fillStyle='#fff';c.fillRect(40,30,420,240);c.strokeStyle=LINE;c.strokeRect(40.5,30.5,419,239);rotulo(c,52,48,'Amostra de 100 partículas de ar seco',INK);
+  const gid=[];n.forEach((v,g)=>{for(let i=0;i<v;i++)gid.push(g);});
+  ord.forEach((p,q)=>{const g=gid[q],col=p%20,row=Math.floor(p/20),x=62+col*19.6,y=70+row*40+(col%2)*12;c.fillStyle=GAS[g].cor;c.beginPath();c.arc(x,y,6.5,0,7);c.fill();});
+  let x=BX;n.forEach((v,g)=>{const w=BW*v/100;c.fillStyle=GAS[g].cor;c.fillRect(x,BY,w,26);if(w>26){c.fillStyle='#fff';c.font='700 11px system-ui';c.textAlign='center';c.fillText(v,x+w/2,BY+17);}x+=w;});
+  c.strokeStyle=INK;c.lineWidth=1;c.strokeRect(BX+.5,BY+.5,BW-1,25);
+  G.d.forEach((d,i)=>{const xx=BX+BW*d/100;c.fillStyle='#fff';c.strokeStyle=INK;c.lineWidth=2;c.beginPath();c.roundRect(xx-6,BY-8,12,42,4);c.fill();c.stroke();c.fillStyle=INK;c.fillRect(xx-1,BY+6,2,14);});
+  c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';c.fillText('0',BX,BY+42);c.textAlign='right';c.fillText('100 partículas',BX+BW,BY+42);
+  painelR(c,20,320);rotulo(c,492,40,'Sua amostra');GAS.forEach((g,i)=>{c.fillStyle=g.cor;c.beginPath();c.arc(497,60+i*24,5,0,7);c.fill();linhaM(c,508,64+i*24,'',`${n[i]} de 100`);c.fillStyle=INK;c.font='500 12.5px system-ui';c.textAlign='left';c.fillText(`${g.n} (${g.k})`,508,64+i*24);});
+  if(G.fim){rotulo(c,492,176,'Ar seco real (NASA)');linhaM(c,492,200,'Nitrogênio','78,08%');linhaM(c,492,224,'Oxigênio','20,95%');linhaM(c,492,248,'Argônio','0,93%');linhaM(c,492,272,'Gás carbônico','0,042%',ACC);}
+  else{c.fillStyle=MUT;c.font='500 11px system-ui';c.textAlign='left';['Ar seco é o ar sem vapor de água.','Cada bolinha representa 1% das','partículas da amostra.'].forEach((t,i)=>c.fillText(t,492,184+i*16));}
+  fonte(c,'Composição do ar seco: NASA Earth Fact Sheet.');};
+ G.upd=()=>{};
+ const val=x=>clamp(Math.round((x-BX)/BW*100),0,100);
+ ptr((x,y)=>{if(G.fim)return;if(y>BY-24&&y<BY+50){let b=-1,bd=1e9;G.d.forEach((d,i)=>{const dd=Math.abs(BX+BW*d/100-x);if(dd<bd){bd=dd;b=i;}});if(bd<40)G.drag=b;}},'pointerdown');
+ ptr(x=>{if(G.drag<0)return;const i=G.drag,lo=i?G.d[i-1]:0,hi=i<2?G.d[i+1]:100;G.d[i]=clamp(val(x),lo,hi);});
+ ptrU(()=>{if(G.drag<0)return;G.drag=-1;G.tent++;const[n,o,a,c2]=cnt();
+  if(n>=77&&n<=79&&o>=20&&o<=22&&a===1&&c2===0){G.fim=1;acao('Amostra correta. O gás carbônico não ganhou nenhuma partícula: ele é tão raro que não chega a 1 em 100.');
+   setTimeout(()=>fimFase(Math.max(80,200-12*(G.tent-1)),true,'O ar é uma mistura de gases, e não uma substância única. No ar seco, cerca de 78 de cada 100 partículas são de nitrogênio, 21 de oxigênio e quase 1 de argônio. O gás carbônico, que tanto se discute nas mudanças climáticas, representa apenas 0,042% das partículas. Mesmo raro, ele retém calor, e pequenas mudanças na sua quantidade alteram o clima.','Se o gás carbônico é tão raro, por que pequenas mudanças nele importam tanto?'),2600);return;}
+  const dica=c2>0?`Gás carbônico com ${c2} de 100 é demais: ele é muito mais raro.`:a!==1?'O argônio fica perto de 1 em cada 100 partículas.':n<77||n>79?(n<77?'Ainda falta nitrogênio: ele é o gás mais comum do ar.':'Nitrogênio demais.'):(o<20?'Falta oxigênio.':'Oxigênio demais.');acao(dica);});
+ acao('Arraste as três divisórias da barra para formar 100 partículas de ar seco.');rodar();}
+
+/* ---------- FASE 2 ---------- */
+function f2(){G={t:0,v:2,drag:false,tent:0,fim:0};telaJogo('Procurando o CO2','estimativa');
+ const SX=60,SW=380,SY=318,N=()=>Math.round(10**G.v),PPM=421.08,REAL=Math.round(1e6/PPM),P59=315.98;
+ const pts=(()=>{const r=SR(11),a=[];for(let i=0;i<9000;i++)a.push([44+r()*412,34+r()*236]);return a;})();
+ G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);const n=N();
+  c.fillStyle='#fff';c.fillRect(40,30,420,244);c.strokeStyle=LINE;c.strokeRect(40.5,30.5,419,243);
+  const m=Math.min(n,9000),s=n>3000?1.4:n>600?2:n>120?3:5;c.fillStyle='rgba(37,99,235,.55)';for(let i=1;i<m;i++){const p=pts[i];c.fillRect(p[0]-s/2,p[1]-s/2,s,s);}
+  c.fillStyle=GAS[3].cor;c.strokeStyle='#fff';c.lineWidth=2;c.beginPath();c.arc(250,150,7,0,7);c.fill();c.stroke();c.strokeStyle=GAS[3].cor;c.lineWidth=1.5;c.beginPath();c.arc(250,150,13,0,7);c.stroke();
+  c.fillStyle=INK;c.font='700 11px system-ui';c.textAlign='left';c.fillText(n>9000?`mostrando 9.000 de ${n.toLocaleString('pt-BR')}`:'',52,264);
+  c.fillStyle='#eef0ee';c.fillRect(SX,SY-3,SW,6);const kx=SX+SW*(G.v-1)/3;c.fillStyle=ACC;c.fillRect(SX,SY-3,kx-SX,6);
+  [10,100,1000,10000].forEach((t,i)=>{c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='center';c.fillText(t.toLocaleString('pt-BR'),SX+SW*i/3,SY+22);});
+  c.fillStyle='#fff';c.strokeStyle=ACC;c.lineWidth=3;c.beginPath();c.arc(kx,SY,10,0,7);c.fill();c.stroke();
+  painelR(c,20,320);rotulo(c,492,40,'Sua estimativa');linhaM(c,492,64,'Partículas de ar por CO2',n.toLocaleString('pt-BR'),ACC);linhaM(c,492,88,'Equivale a',`${Math.round(1e6/n).toLocaleString('pt-BR')} ppm`);
+  c.fillStyle=MUT;c.font='500 10.5px system-ui';c.textAlign='left';['ppm: partes por milhão. 1 molécula de CO2','em cada 1 milhão de partículas = 1 ppm.'].forEach((t,i)=>c.fillText(t,492,114+i*14));
+  if(G.fim){rotulo(c,492,166,'Mauna Loa (NOAA)');linhaM(c,492,190,'1959',`${f1x(P59)} ppm`);linhaM(c,492,214,'Ar por CO2 em 1959',Math.round(1e6/P59).toLocaleString('pt-BR'));linhaM(c,492,238,'2023',`${f1x(PPM)} ppm`,ACC2);linhaM(c,492,262,'Ar por CO2 em 2023',REAL.toLocaleString('pt-BR'),ACC2);}
+  fonte(c,'Dados: NOAA, Observatório de Mauna Loa, média anual de 2023.');};
+ G.upd=()=>{};
+ const val=x=>clamp(1+(x-SX)/SW*3,1,4);
+ ptr((x,y)=>{if(G.fim)return;if(y>SY-30&&y<SY+30){G.drag=true;G.v=val(x);}},'pointerdown');ptr(x=>{if(G.drag)G.v=val(x);});
+ ptrU(()=>{if(!G.drag)return;G.drag=false;G.tent++;const n=N();
+  if(n>=1800&&n<=3200){G.fim=1;acao(`Boa estimativa. Em 2023, havia 1 molécula de CO2 para cada ${REAL.toLocaleString('pt-BR')} partículas de ar, ou 421 ppm.`);
+   setTimeout(()=>fimFase(Math.max(80,200-15*(G.tent-1)),true,`Em 2023, o ar de Mauna Loa tinha em média 421 partes por milhão de gás carbônico: uma molécula em cada ${REAL.toLocaleString('pt-BR')}. Em 1959 eram 316 ppm, uma em cada ${Math.round(1e6/P59).toLocaleString('pt-BR')}. A diferença parece pequena, mas representa um aumento de um terço na quantidade desse gás no ar em 64 anos.`,'Como alguém consegue medir uma coisa tão rara quanto uma molécula em cada 2.400?'),2800);}
+  else acao(n<1800?`${n.toLocaleString('pt-BR')} partículas para cada CO2 daria ${Math.round(1e6/n).toLocaleString('pt-BR')} ppm. Isso é CO2 demais: o gás é mais raro.`:`${n.toLocaleString('pt-BR')} partículas para cada CO2 daria só ${Math.round(1e6/n)} ppm. Há mais CO2 que isso.`);});
+ acao('Arraste o controle até achar quantas partículas de ar existem para cada molécula de CO2 (a bolinha laranja).');rodar();}
+
+/* ---------- FASE 3 ---------- */
+const AN3=[],CO2A=[315.98,316.91,317.64,318.45,318.99,319.62,320.04,321.37,322.18,323.05,324.62,325.68,326.32,327.46,329.68,330.19,331.13,332.03,333.84,335.41,336.84,338.76,340.12,341.48,343.15,344.87,346.35,347.61,349.31,351.69,353.2,354.45,355.7,356.54,357.21,358.96,360.97,362.74,363.88,366.84,368.54,369.71,371.32,373.45,375.98,377.7,379.98,382.09,384.02,385.83,387.64,390.1,391.85,394.06,396.74,398.81,401.01,404.41,406.76,408.72,411.65,414.21,416.41,418.53,421.08];
+for(let a=1959;a<=2023;a++)AN3.push(a);
+function f3(){G={t:0,a:1990,j:1960,etapa:0,drag:false,tent:0,pts:0,fim:0};telaJogo('A curva de Mauna Loa','passou de 400');
+ const O={x0:56,y0:38,w:400,h:270,xmin:1958,xmax:2024,ymin:310,ymax:430,xt:[1960,1970,1980,1990,2000,2010,2020],yt:[310,340,370,400,430],titulo:'CO2 no ar, ppm · Mauna Loa, média anual'};
+ const v=a=>CO2A[a-1959],sub=j=>v(j+10)-v(j);let MX=0,JM=0;for(let j=1959;j<=2013;j++)if(sub(j)>MX){MX=sub(j);JM=j;}
+ G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);const{X,Y}=eixos(c,O);
+  if(G.etapa>=1){c.fillStyle='rgba(67,56,202,.10)';c.fillRect(X(G.j),O.y0,X(G.j+10)-X(G.j),O.h);c.strokeStyle=ACC;c.lineWidth=1.5;[G.j,G.j+10].forEach(a=>{c.beginPath();c.moveTo(X(a),Y(v(a)));c.lineTo(X(a),O.y0+O.h);c.stroke();});
+   c.fillStyle=ACC;c.beginPath();c.roundRect(X(G.j+5)-34,O.y0+O.h+20,68,20,4);c.fill();c.fillStyle='#fff';c.font='700 11px system-ui';c.textAlign='center';c.fillText(`${G.j} a ${G.j+10}`,X(G.j+5),O.y0+O.h+34);}
+  c.strokeStyle='rgba(31,36,33,.35)';c.setLineDash([3,3]);c.beginPath();c.moveTo(O.x0,Y(400));c.lineTo(O.x0+O.w,Y(400));c.stroke();c.setLineDash([]);c.fillStyle=MUT;c.font='600 10px system-ui';c.textAlign='left';c.fillText('400 ppm',O.x0+4,Y(400)-4);
+  c.strokeStyle=ACC;c.lineWidth=2.2;c.beginPath();AN3.forEach((a,i)=>i?c.lineTo(X(a),Y(CO2A[i])):c.moveTo(X(a),Y(CO2A[i])));c.stroke();
+  AN3.forEach((a,i)=>{c.fillStyle=a===G.a&&G.etapa===0?ACC2:'#fff';c.strokeStyle=ACC;c.lineWidth=1.2;c.beginPath();c.arc(X(a),Y(CO2A[i]),2.4,0,7);c.fill();c.stroke();});
+  if(G.etapa===0){const cx2=X(G.a);c.strokeStyle=INK;c.lineWidth=1;c.setLineDash([4,3]);c.beginPath();c.moveTo(cx2,O.y0);c.lineTo(cx2,O.y0+O.h);c.stroke();c.setLineDash([]);c.fillStyle=INK;c.beginPath();c.roundRect(cx2-24,O.y0+O.h+20,48,20,4);c.fill();c.fillStyle='#fff';c.font='700 11px system-ui';c.textAlign='center';c.fillText(G.a,cx2,O.y0+O.h+34);}
+  painelR(c,20,300);
+  if(G.etapa===0){rotulo(c,492,40,'Leitura do cursor');linhaM(c,492,64,'Ano',`${G.a}`);linhaM(c,492,88,'CO2 médio',`${f1x(v(G.a))} ppm`,ACC2);rotulo(c,492,124,'Tarefa');c.fillStyle=INK;c.font='600 12px system-ui';c.textAlign='left';c.fillText('Primeiro ano com média acima',492,146);c.fillText('de 400 ppm.',492,162);}
+  else{rotulo(c,492,40,'Janela de 10 anos');linhaM(c,492,64,'Início',`${G.j}: ${f1x(v(G.j))} ppm`);linhaM(c,492,88,'Fim',`${G.j+10}: ${f1x(v(G.j+10))} ppm`);linhaM(c,492,112,'Aumento',`+${f1x(sub(G.j))} ppm`,ACC2);
+   rotulo(c,492,148,'Tarefa');c.fillStyle=INK;c.font='600 12px system-ui';c.textAlign='left';c.fillText('Achar os 10 anos com o maior',492,170);c.fillText('aumento de CO2.',492,186);
+   if(G.fim){linhaM(c,492,220,'1959 a 1969',`+${f1x(sub(1959))} ppm`);linhaM(c,492,244,`${JM} a ${JM+10}`,`+${f1x(MX)} ppm`,ACC2);}}
+  fonte(c,'Dados: NOAA Global Monitoring Laboratory e Scripps, Mauna Loa, 1959 a 2023.');};
+ G.upd=()=>{};
+ const ano=x=>clamp(Math.round(1958+(x-O.x0)/O.w*66),1959,2023);
+ ptr((x,y)=>{if(G.fim)return;if(x>O.x0-10&&x<O.x0+O.w+10&&y>O.y0-10&&y<O.y0+O.h+60){G.drag=true;if(G.etapa===0)G.a=ano(x);else G.j=clamp(ano(x)-5,1959,2013);}},'pointerdown');
+ ptr(x=>{if(!G.drag)return;if(G.etapa===0)G.a=ano(x);else G.j=clamp(ano(x)-5,1959,2013);});
+ ptrU(()=>{if(!G.drag)return;G.drag=false;G.tent++;
+  if(G.etapa===0){if(G.a===2015){G.etapa=1;G.pts+=G.tent<=2?80:40;G.tent=0;$('info').textContent='maior subida';acao('Correto: 2015, com 401 ppm. Agora arraste a janela azul e ache os 10 anos em que o CO2 mais subiu.');}
+   else acao(v(G.a)>=400?`${G.a}: ${f1x(v(G.a))} ppm. Já passa de 400, mas houve um ano anterior que também passou.`:`${G.a}: ${f1x(v(G.a))} ppm. Ainda abaixo de 400.`);}
+  else{if(sub(G.j)>=MX-.3){G.fim=1;G.pts+=G.tent<=3?100:50;acao(`Correto: de ${G.j} a ${G.j+10} o CO2 subiu ${f1x(sub(G.j))} ppm. De 1959 a 1969, a subida tinha sido de ${f1x(sub(1959))} ppm.`);
+    setTimeout(()=>fimFase(G.pts+20,true,`Desde 1959, o Observatório de Mauna Loa, no Havaí, mede o CO2 do ar longe de cidades e florestas. A média anual passou de 316 ppm em 1959 para 421 ppm em 2023, e cruzou 400 ppm pela primeira vez em 2015. A curva não só sobe: ela sobe cada vez mais rápido. Nos anos 1960 o aumento foi de cerca de 9 ppm por década; na década mais recente, de mais de ${Math.floor(MX)} ppm.`,'Por que o observatório que mede o CO2 do planeta fica no alto de um vulcão, no meio do oceano?'),2800);}
+   else acao(`De ${G.j} a ${G.j+10}: +${f1x(sub(G.j))} ppm. Existe uma janela com aumento maior.`);}});
+ acao('Arraste o cursor e solte no primeiro ano em que a média passou de 400 ppm.');rodar();}
+
+/* ---------- FASE 4 ---------- */
+function f4(){G={t:0,v:11.1,drag:false,tent:0,fim:0,k:0};telaJogo('Balanço do carbono','2023');
+ const FL=[{n:'Queima de combustíveis fósseis',v:10.1,s:1},{n:'Mudança no uso da terra',v:1.0,s:1},{n:'Absorvido pelo oceano',v:2.9,s:-1},{n:'Absorvido pela vegetação',v:2.3,s:-1}];
+ const AX=170,AY=40,AW=140,AH=230,Yv=v=>AY+AH-v/12*AH;
+ G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);
+  c.fillStyle='#fff';c.fillRect(AX,AY,AW,AH);c.strokeStyle=INK;c.lineWidth=1;c.strokeRect(AX+.5,AY+.5,AW-1,AH-1);rotulo(c,AX,AY-10,'Atmosfera',INK);
+  for(let g=0;g<=12;g+=2){c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='right';c.fillText(g,AX-6,Yv(g)+3);c.strokeStyle='#eef0ee';c.beginPath();c.moveTo(AX,Yv(g)+.5);c.lineTo(AX+AW,Yv(g)+.5);c.stroke();}
+  c.fillStyle='rgba(67,56,202,.20)';c.fillRect(AX+1,Yv(G.v),AW-2,AY+AH-Yv(G.v)-1);c.strokeStyle=ACC;c.lineWidth=3;c.beginPath();c.moveTo(AX,Yv(G.v));c.lineTo(AX+AW,Yv(G.v));c.stroke();
+  c.fillStyle=ACC;c.beginPath();c.roundRect(AX+AW/2-34,Yv(G.v)-11,68,22,11);c.fill();c.fillStyle='#fff';c.font='700 11px system-ui';c.textAlign='center';c.fillText(`${f1x(G.v)} GtC`,AX+AW/2,Yv(G.v)+4);
+  if(G.fim){c.strokeStyle=ACC2;c.setLineDash([5,4]);c.lineWidth=1.5;c.beginPath();c.moveTo(AX-8,Yv(5.9));c.lineTo(AX+AW+8,Yv(5.9));c.stroke();c.setLineDash([]);}
+  const seta=(x1,y1,x2,y2,w,cor)=>{c.strokeStyle=cor;c.fillStyle=cor;c.lineWidth=w;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();const a=Math.atan2(y2-y1,x2-x1);c.beginPath();c.moveTo(x2+Math.cos(a)*8,y2+Math.sin(a)*8);c.lineTo(x2+Math.cos(a+2.4)*(8+w),y2+Math.sin(a+2.4)*(8+w));c.lineTo(x2+Math.cos(a-2.4)*(8+w),y2+Math.sin(a-2.4)*(8+w));c.fill();};
+  FL.forEach((f,i)=>{const w=2+f.v*1.4;if(f.s>0){const y=100+i*100;seta(40,y,AX-14,y,w,'#9a3412');c.fillStyle=INK;c.font='600 10.5px system-ui';c.textAlign='left';c.fillText(f.n.split(' ').slice(0,2).join(' '),24,y-w/2-20);c.fillText(f.n.split(' ').slice(2).join(' '),24,y-w/2-7);c.font='700 11px system-ui';c.fillText(`+${f1x(f.v)}`,24,y+w/2+14);}
+   else{const y=100+(i-2)*100;seta(AX+AW+6,y,452,y,w,'#2f6b3a');c.fillStyle=INK;c.font='600 10.5px system-ui';c.textAlign='right';c.fillText(f.n,456,y-w/2-8);c.font='700 11px system-ui';c.fillText(`-${f1x(f.v)}`,456,y+w/2+14);}});
+  painelR(c,20,320);rotulo(c,492,40,'Carbono em 2023, GtC');linhaM(c,492,64,'Entrou na atmosfera','11,1','#9a3412');linhaM(c,492,88,'Saiu para oceano e plantas','5,2','#2f6b3a');linhaM(c,492,112,'Seu nível',f1x(G.v),ACC);
+  c.fillStyle=MUT;c.font='500 10.5px system-ui';c.textAlign='left';['GtC: bilhões de toneladas de carbono.'].forEach((t,i)=>c.fillText(t,492,138+i*14));
+  if(G.fim){rotulo(c,492,170,'Global Carbon Budget');linhaM(c,492,194,'Ficou no ar','5,9 GtC',ACC2);linhaM(c,492,218,'Em concentração','+2,8 ppm',ACC2);linhaM(c,492,242,'Parte que ficou no ar','53%',ACC2);}
+  fonte(c,'Dados: Global Carbon Budget 2024 (Friedlingstein et al., 2025), valores de 2023.');};
+ G.upd=()=>{};
+ const val=y=>clamp(Math.round((AY+AH-y)/AH*120)/10,0,12);
+ ptr((x,y)=>{if(G.fim)return;if(x>AX-20&&x<AX+AW+20&&y>AY-20&&y<AY+AH+20){G.drag=true;G.v=val(y);}},'pointerdown');ptr((x,y)=>{if(G.drag)G.v=val(y);});
+ ptrU(()=>{if(!G.drag)return;G.drag=false;G.tent++;
+  if(Math.abs(G.v-5.9)<=.3){G.fim=1;acao('Correto. Entraram 11,1 bilhões de toneladas de carbono e 5,2 foram absorvidas. Ficaram 5,9 no ar, o que elevou o CO2 em cerca de 2,8 ppm em um ano.');
+   setTimeout(()=>fimFase(Math.max(80,200-20*(G.tent-1)),true,'Em 2023, as atividades humanas lançaram 11,1 bilhões de toneladas de carbono no ar, quase todo vindo da queima de combustíveis fósseis e uma parte do desmatamento e de outras mudanças no uso da terra. Oceano e vegetação absorveram 5,2. O restante, 5,9, ficou na atmosfera. Por isso a curva de Mauna Loa sobe: a natureza remove só uma parte do que é emitido.','O que aconteceria com a curva de Mauna Loa se as florestas deixassem de absorver carbono?'),2800);}
+  else acao(G.v>5.9?`${f1x(G.v)} é demais: lembre de descontar o que o oceano e a vegetação absorveram.`:`${f1x(G.v)} é pouco: o que entrou foi 11,1 e o que saiu, 5,2.`);});
+ acao('Arraste o nível da atmosfera até a quantidade de carbono que ficou no ar em 2023.');rodar();}
+
+/* ---------- FASE 5 ---------- */
+const FEN=[{t:'Uma queimada para abrir pasto',o:'H',e:'+',m:'A queima libera o carbono guardado nas plantas como CO2.'},
+ {t:'Uma floresta fazendo fotossíntese',o:'N',e:'-',m:'As plantas retiram CO2 do ar para produzir açúcares.'},
+ {t:'Um ônibus movido a diesel',o:'H',e:'+',m:'A combustão do diesel produz CO2.'},
+ {t:'Um vulcão em erupção',o:'N',e:'+',m:'Vulcões liberam CO2, mas as atividades humanas emitem mais de 100 vezes o que eles emitem por ano.'},
+ {t:'A água do oceano dissolvendo gás',o:'N',e:'-',m:'O oceano absorve parte do CO2 do ar, e por isso a água fica mais ácida.'},
+ {t:'Uma área degradada sendo reflorestada',o:'H',e:'-',m:'Árvores plantadas crescem retirando CO2 do ar.'},
+ {t:'Folhas caídas se decompondo no solo',o:'N',e:'+',m:'Fungos e bactérias respiram e devolvem o carbono ao ar como CO2.'},
+ {t:'Uma usina queimando carvão',o:'H',e:'+',m:'Carvão é combustível fóssil; queimá-lo libera CO2.'}];
+function f5(){const r=SR(5),ord=[...FEN.keys()].sort(()=>r()-.5);G={t:0,q:0,ord,erros:0,flash:null,fim:0};telaJogo('Quem mexe no ar','1 / 8');
+ const QX=56,QY=140,QW=250,QH=86,Q=[['N','+'],['N','-'],['H','+'],['H','-']],qx=i=>QX+120+(i%2)*(QW+10),qy=i=>QY+Math.floor(i/2)*(QH+10);
+ G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);const it=FEN[G.ord[Math.min(G.q,7)]];
+  if(!G.fim){c.fillStyle='#fff';c.fillRect(160,20,410,72);c.strokeStyle=INK;c.lineWidth=1.5;c.strokeRect(160.5,20.5,409,71);rotulo(c,176,42,'Fenômeno '+(G.q+1)+' de 8',ACC);c.fillStyle=INK;c.font='700 20px system-ui';c.textAlign='left';c.fillText(it.t,176,76);}
+  else{c.fillStyle=INK;c.font='700 15px system-ui';c.textAlign='center';c.fillText('Todos os fenômenos classificados.',365,62);}
+  c.fillStyle=MUT;c.font='700 10px system-ui';c.textAlign='center';c.fillText('PÕE CO2 NO AR',qx(0)+QW/2,QY-10);c.fillText('TIRA CO2 DO AR',qx(1)+QW/2,QY-10);
+  c.textAlign='right';c.fillText('NATURAL',QX+110,qy(0)+QH/2+4);c.fillText('HUMANO',QX+110,qy(2)+QH/2+4);
+  Q.forEach((q,i)=>{const x=qx(i),y=qy(i),fl=G.flash&&G.flash.i===i;c.fillStyle=fl?(G.flash.ok?'#e8f2ea':'#fbeaea'):'#fff';c.fillRect(x,y,QW,QH);c.strokeStyle=fl?(G.flash.ok?'#2f6b3a':'#b3261e'):LINE;c.lineWidth=fl?2:1;c.strokeRect(x+.5,y+.5,QW-1,QH-1);
+   const ds=FEN.filter((f,k)=>G.ord.indexOf(k)<G.q&&f.o===q[0]&&f.e===q[1]);c.font='500 11.5px system-ui';c.textAlign='left';c.fillStyle=INK;ds.forEach((f,k)=>c.fillText('· '+f.t,x+8,y+20+k*20));});
+  fonte(c,'Comparação com vulcões: Gerlach (2011).');};
+ G.upd=dt=>{if(G.flash&&(G.flash.t-=dt)<0)G.flash=null;};
+ ptr((x,y)=>{if(G.fim)return;const i=Q.findIndex((q,k)=>x>qx(k)&&x<qx(k)+QW&&y>qy(k)&&y<qy(k)+QH);if(i<0)return;const it=FEN[G.ord[G.q]],ok=Q[i][0]===it.o&&Q[i][1]===it.e;G.flash={i,ok,t:.6};
+  if(ok){G.q++;acao(`${it.t}: ${it.o==='N'?'natural':'humano'}, ${it.e==='+'?'põe':'tira'} CO2. ${it.m}`);$('info').textContent=`${Math.min(G.q+1,8)} / 8`;
+   if(G.q===8){G.fim=1;setTimeout(()=>fimFase(Math.max(60,200-15*G.erros),true,'A natureza sempre pôs e tirou CO2 do ar: a respiração, a decomposição e os vulcões liberam o gás, enquanto a fotossíntese e o oceano o retiram. Por milhares de anos essas trocas ficaram quase equilibradas. As atividades humanas somaram fontes novas, como a queima de combustíveis fósseis e o desmatamento, que alteram a composição do ar mais rápido do que os sumidouros conseguem compensar.','Que fenômeno da lista acontece perto da nossa escola?'),2600);}}
+  else{G.erros++;const d=Q[i][0]!==it.o?(it.o==='N'?'Esse fenômeno acontece sem ação humana.':'Esse fenômeno depende de uma ação humana.'):(it.e==='+'?'Esse fenômeno libera CO2 no ar.':'Esse fenômeno retira CO2 do ar.');acao(d);}},'pointerdown');
+ acao('Leia o fenômeno e toque no quadrante certo: natural ou humano, põe ou tira CO2 do ar.');rodar();}
+
+/* ================= INICIO / AVATAR ================= */
+function inicio(){parar();G=null;cx=null;$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><div class="capa"><canvas id="cA" width="560" height="560"></canvas>
+ <div><h2>Seu perfil de pesquisador</h2><div class="opts">
+ <div class="l">Pele</div><div class="sw" id="sP">${PELES.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.pele===i?'on':''}" aria-label="pele ${i+1}"></button>`).join('')}</div>
+ <div class="l">Cabelo</div><div class="sw" id="sE">${ESTILOS.map(([k,t])=>`<button class="tx ${A.estilo===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <div class="sw" id="sC">${CABS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.cab===i?'on':''}" aria-label="cor ${i+1}"></button>`).join('')}</div>
+ <div class="l">Camiseta</div><div class="sw" id="sT">${CAMISAS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.camisa===i?'on':''}" aria-label="camiseta ${i+1}"></button>`).join('')}</div>
+ <div class="l">Chapéu</div><div class="sw" id="sH">${CHAPEUS.map(([k,t])=>`<button class="tx ${A.chapeu===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <input class="nome" id="iN" maxlength="20" placeholder="Seu nome" value="${esc(A.nome)}">
+ </div></div></div>
+ <div class="row" style="margin-top:14px"><button class="btn" id="bJ">Iniciar as 5 fases</button><button class="btn ghost" id="bG">Guia do professor</button></div>
+ <p class="small" style="margin-top:10px">Ciências · 7º ano · BNCC EF07CI12</p></div>`;
+ const pinta=()=>{const c=$('cA').getContext('2d');c.clearRect(0,0,560,560);c.fillStyle='#eef0fb';c.fillRect(0,0,560,560);c.fillStyle='#d9dcf5';c.beginPath();c.arc(280,600,260,0,7);c.fill();avatar(c,280,560,6.4,A,true);};
+ pinta();
+ const liga=(id,f)=>document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{f(b);salvaA();document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b));pinta();});
+ liga('sP',b=>A.pele=+b.dataset.i);liga('sC',b=>A.cab=+b.dataset.i);liga('sT',b=>A.camisa=+b.dataset.i);liga('sE',b=>A.estilo=b.dataset.k);liga('sH',b=>A.chapeu=b.dataset.k);
+ $('iN').oninput=e=>{A.nome=e.target.value;salvaA();};
+ $('bJ').onclick=novo;$('bG').onclick=guia;
+}
+function novo(){S={f:0,tot:0,fp:0,res:[],fichas:0};salvo=false;intro();}
+function relatorio(){parar();G=null;cx=null;$('rankBox').style.display='block';const nome=A.nome.trim()||'Pesquisador';
+ $('tela').innerHTML=`<div class="card"><div class="rel"><canvas id="cR" width="240" height="240"></canvas><div><div class="small">Relatório de campo</div><h2>${esc(nome)}</h2><div class="big" style="font-size:2rem;font-weight:800;color:var(--deep)">${S.tot} pts</div></div></div>
+ <table class="tab" style="margin-top:12px"><tr><th>Fase</th><th>Pontos</th><th>Meta</th></tr>${FASES.map((F,i)=>{const r=S.res[i]||{pts:0,ok:false};return`<tr><td>${F.ic} ${F.nome}</td><td>${r.pts}</td><td>${r.ok?'✓':'✗'}</td></tr>`;}).join('')}</table>
+ <div class="pensa"><b>Para escrever no caderno:</b> explique por que o ar é uma mistura e cite um número que mostra como a quantidade de gás carbônico mudou.</div>
+ <div class="savebox noprint"><input id="pName" maxlength="20" value="${esc(nome)}"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row noprint" style="margin-top:12px"><button class="btn ghost" id="bI">Imprimir relatório</button><button class="btn ghost" id="bN">Jogar de novo</button><button class="btn ghost" id="bV">Início</button></div></div>`;
+ const c=$('cR').getContext('2d');c.fillStyle='#eef0fb';c.fillRect(0,0,240,240);avatar(c,120,240,3.2,A,true);
+ $('bS').onclick=()=>salvar('5 fases');$('bI').onclick=()=>window.print();$('bN').onclick=novo;$('bV').onclick=inicio;
+}
+
+/* ================= GUIA DO PROFESSOR ================= */
+function guia(){parar();$('hud').style.display='none';$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card guia">
+ <div class="row top noprint"><button class="btn ghost sm" id="bVt">← Voltar</button><button class="btn sm" id="bPr">Imprimir guia</button></div>
+ <h2 style="margin-top:10px">Guia do professor · Laboratório do Ar</h2>
+ <p class="small">Ensino Fundamental · 7º ano · Ciências</p>
+ <h3>Habilidade da BNCC</h3>
+ <div class="hab"><b>EF07CI12.</b> Demonstrar que o ar é uma mistura de gases, identificando sua composição, e discutir fenômenos naturais ou antrópicos que podem alterar essa composição.</div>
+ <h3>Objetivos da aula</h3>
+ <ul><li>Reconhecer o ar como mistura e estimar a proporção dos seus principais gases.</li><li>Entender a unidade ppm e a raridade do gás carbônico no ar.</li><li>Ler a série de CO2 de Mauna Loa e perceber que a subida está acelerando.</li><li>Relacionar emissões e absorções de carbono com o aumento do CO2 no ar.</li><li>Classificar fenômenos naturais e humanos que alteram a composição do ar.</li></ul>
+ <h3>Roteiro de 50 minutos</h3>
+ <table class="tab"><tr><th>Tempo</th><th>O que fazer</th></tr>
+ <tr><td>5 min</td><td>Pergunte: de que é feito o ar que respiramos? Anote as respostas no quadro.</td></tr>
+ <tr><td>25 min</td><td>Alunos jogam em duplas.</td></tr>
+ <tr><td>15 min</td><td>Discussão com as perguntas de cada fase e comparação com as respostas iniciais.</td></tr>
+ <tr><td>5 min</td><td>Cada dupla escreve a frase do relatório de campo.</td></tr></table>
+ <h3>Fase por fase</h3>
+ <table class="tab"><tr><th>Fase</th><th>O aluno faz</th><th>Para discutir</th><th>Conceitos</th></tr>
+ <tr><td>1. Cem partículas de ar</td><td>Divide 100 partículas entre nitrogênio, oxigênio, argônio e gás carbônico</td><td>Por que um gás tão raro pesa tanto no clima?</td><td>Mistura, proporção, ar seco.</td></tr>
+ <tr><td>2. Procurando o CO2</td><td>Estima quantas partículas de ar há para cada molécula de CO2</td><td>Como se mede algo tão raro?</td><td>Partes por milhão (ppm).</td></tr>
+ <tr><td>3. A curva de Mauna Loa</td><td>Acha o ano em que o CO2 passou de 400 ppm e a década de maior subida</td><td>Por que medir no alto de um vulcão no oceano?</td><td>Série temporal, aceleração.</td></tr>
+ <tr><td>4. Balanço do carbono</td><td>Calcula o carbono que ficou no ar em 2023</td><td>E se as florestas deixassem de absorver?</td><td>Fontes, sumidouros, balanço.</td></tr>
+ <tr><td>5. Quem mexe no ar</td><td>Classifica 8 fenômenos em natural ou humano e em põe ou tira CO2</td><td>Qual deles acontece perto da escola?</td><td>Fotossíntese, respiração, combustão, decomposição.</td></tr></table>
+ <h3>Avaliação</h3>
+ <p>Use o relatório de campo impresso e a frase escrita por cada dupla. Todos os instrumentos têm o mesmo peso. Observe se o aluno explica a diferença entre um gás abundante e um gás que, mesmo raro, altera o clima.</p>
+ <h3>Sequência de 3 aulas</h3>
+ <ol><li><b>Aula 1.</b> Jogo completo e discussão.</li><li><b>Aula 2.</b> Experimento da vela acesa sob um copo invertido, discutindo o que a combustão consome e o que ela produz.</li><li><b>Aula 3.</b> Levantamento das fontes de CO2 do bairro da escola e proposta de uma ação para reduzi-las.</li></ol>
+ <h3>Cuidados na mediação</h3>
+ <p>A amostra de 100 partículas da fase 1 arredonda a composição real: o argônio tem 0,93% e o gás carbônico 0,042%. A fase 1 trata de ar seco; o ar real tem também vapor de água, em quantidade variável. Na fase 4, os números são do ano de 2023 e têm incerteza: a absorção pela vegetação, por exemplo, foi estimada em 2,3 ± 1,0 bilhões de toneladas de carbono.</p>
+ <h3>De onde vêm os números</h3>
+ <p><b>Fase 1.</b> Composição do ar seco segundo a NASA: 78,08% de nitrogênio, 20,95% de oxigênio, 9.340 ppm de argônio e cerca de 420 ppm de gás carbônico.</p>
+ <p><b>Fases 2 e 3.</b> Médias anuais de CO2 do Observatório de Mauna Loa, Havaí, de 1959 a 2023, publicadas pelo Laboratório de Monitoramento Global da NOAA com a Scripps Institution of Oceanography. Em 2023, a média foi de 421,08 ppm.</p>
+ <p><b>Fase 4.</b> Global Carbon Budget 2024: em 2023, emissões fósseis de 10,1 GtC, mudança no uso da terra 1,0 GtC, absorção pelo oceano 2,9 GtC, absorção pela vegetação 2,3 GtC e aumento na atmosfera de 5,9 GtC, ou 2,79 ppm.</p>
+ <p><b>Fase 5.</b> A comparação entre vulcões e atividades humanas vem de Gerlach (2011), que estimou as emissões humanas em mais de 100 vezes as vulcânicas.</p>
+ <h3>Referências</h3>
+ <ul class="ref">
+ <li>Friedlingstein P, et al. Global Carbon Budget 2024. Earth System Science Data, 17:965-1039, 2025. doi:10.5194/essd-17-965-2025</li>
+ <li>Gerlach T. Volcanic versus anthropogenic carbon dioxide. Eos, Transactions American Geophysical Union, 92(24):201-202, 2011. doi:10.1029/2011EO240001</li>
+ <li>NOAA Global Monitoring Laboratory. Mauna Loa CO2 annual mean data. gml.noaa.gov/ccgg/trends</li>
+ <li>Williams DR. Earth Fact Sheet. NASA Space Science Data Coordinated Archive. nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html</li></ul>
+ </div>`;
+ $('bVt').onclick=inicio;$('bPr').onclick=()=>window.print();
+}
+
+/* ================= RANKING ================= */
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="laboratorio-do-ar";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__a={get S(){return S},get G(){return G},FASES,inicio,novo,intro,guia};
+inicio();
+</script>
+</body>
+</html>
