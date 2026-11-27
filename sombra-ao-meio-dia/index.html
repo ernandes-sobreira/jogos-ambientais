@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sombra ao Meio-Dia</title>
+<style>
+:root{--main:#a16207;--deep:#713f12;--soft:#fbf6ea;--line:#e8dfc9;--ink:#10212b;--mut:#4d6370;--co2:#e53935;--ch4:#ef6c00;--ok:#2e7d32;--bad:#c62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:820px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep);letter-spacing:-.01em}
+h2{font-size:1.2rem;color:var(--deep);margin-bottom:6px;letter-spacing:-.01em}
+h3{font-size:1rem;color:var(--deep);margin:14px 0 6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 12px;font-weight:700;font-size:.86rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.card{border:2px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:var(--deep)}.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.btn.sm{padding:9px 14px;font-size:.92rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas.cena{width:100%;height:auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff;margin-top:10px}
+.top{justify-content:space-between}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--main);color:#fff;border-radius:14px;padding:8px 14px;font-weight:800;font-size:1.05rem}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.tool{border:2px solid var(--line);background:#fff;color:var(--deep);border-radius:12px;padding:9px 12px;font-weight:700;font-family:inherit;font-size:.92rem;cursor:pointer;touch-action:manipulation}
+.tool.on{border-color:var(--main);background:var(--soft)}
+.tool:disabled{opacity:.4}
+.mets{display:grid;gap:8px;margin-top:10px}
+.met{display:grid;grid-template-columns:92px 1fr 52px;gap:8px;align-items:center;font-weight:700;font-size:.9rem}
+.met .bar{position:relative;height:18px;background:#f1f4f5;border-radius:99px;overflow:hidden}
+.met .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;transition:width .15s}
+.met .alvo{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--ink);border-radius:2px}
+.met .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--mut)}
+.met.co2 .fill{background:var(--co2)}.met.ch4 .fill{background:var(--ch4)}
+.saldo .bar{background:linear-gradient(90deg,#e8f5e9 50%,#ffebee 50%)}
+.saldo .zero{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:var(--ink)}
+.saldo .fill{border-radius:0}
+.obj{display:flex;gap:10px;align-items:flex-start;background:#fff8e1;border:2px solid #ffe082;border-radius:14px;padding:10px 12px;margin-top:10px;font-size:.95rem}
+.obj b{color:#8d6e00;white-space:nowrap}
+.acao{display:flex;gap:10px;align-items:center;background:var(--soft);border-left:5px solid var(--main);border-radius:0 12px 12px 0;padding:9px 12px;margin-top:8px;font-weight:600;font-size:.95rem;min-height:64px}@media(max-width:640px){.acao{min-height:5.4em}}
+.acao .dedo{font-size:1.25rem;animation:pulo 1s ease-in-out infinite}
+@keyframes pulo{50%{transform:translateX(4px)}}
+.help{width:34px;height:34px;border-radius:50%;border:2px solid var(--main);background:#fff;color:var(--deep);font-weight:800;font-size:1rem;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(16,33,43,.35);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal .card{max-width:460px;width:100%}
+.intro{text-align:center;padding:26px 18px}
+.intro .ic{font-size:3rem;line-height:1}
+.intro .n{color:var(--mut);font-weight:700;font-size:.85rem;margin-top:8px}
+.passos{display:grid;gap:8px;margin:16px auto;max-width:420px;text-align:left}
+.passos div{display:flex;gap:12px;align-items:center;background:var(--soft);border-radius:12px;padding:10px 14px;font-weight:600}
+.passos b{font-size:1.3rem;min-width:1.6em;text-align:center}
+.res{text-align:center}
+.res .big{font-size:2.6rem;font-weight:800;color:var(--deep);line-height:1.1}
+.res .ok{color:var(--ok);font-weight:800}.res .no{color:var(--bad);font-weight:800}
+.pensa{background:var(--soft);border-radius:14px;padding:12px 14px;margin:14px auto;max-width:520px;text-align:left}
+.pensa b{color:var(--deep)}
+.boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.box{border:2px dashed var(--line);border-radius:14px;padding:10px;min-height:110px;cursor:pointer}
+.box h4{font-size:.92rem;color:var(--deep);margin-bottom:6px}
+.box.alvo{border-color:var(--main);background:var(--soft)}
+.cards{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;min-height:48px}
+.ct{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 11px;font-weight:700;font-size:.9rem;cursor:pointer;box-shadow:0 2px 0 var(--line);font-family:inherit;color:var(--ink);transition:transform .5s}
+.ct.sel{border-color:var(--main);background:var(--soft);transform:translateY(-2px)}
+.ct.certo{border-color:var(--ok);background:#e8f5e9}.ct.errado{border-color:var(--bad);background:#ffebee}
+.ct.movido{animation:voa .8s ease}
+@keyframes voa{0%{transform:translateY(-30px) scale(1.1);opacity:.3}100%{transform:none;opacity:1}}
+.capa{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+.capa canvas{width:100%;height:auto;display:block;border-radius:16px;background:var(--soft)}
+.opts{display:grid;gap:8px;margin-top:6px}
+.opts .l{font-size:.8rem;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.sw{display:flex;gap:6px;flex-wrap:wrap}
+.sw button{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--line);cursor:pointer}
+.sw button.on{box-shadow:0 0 0 3px var(--deep)}
+.sw .tx{width:auto;height:auto;border-radius:10px;padding:6px 10px;font-weight:700;font-size:.85rem;background:#fff;color:var(--deep);font-family:inherit;border:0}
+input.nome{border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit;width:100%}
+input[type=range]{width:100%;accent-color:var(--main)}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:6px}
+.tab th{text-align:left;background:var(--soft);color:var(--deep);padding:7px 6px}
+.tab td{border-bottom:1px solid var(--line);padding:7px 6px;vertical-align:top}
+.guia p,.guia li{font-size:.95rem;margin-bottom:6px}
+.guia ul,.guia ol{padding-left:20px}
+.hab{border-left:5px solid var(--main);background:var(--soft);padding:10px 14px;border-radius:0 12px 12px 0;font-size:.95rem}
+.ref li{font-size:.86rem;color:var(--mut)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+.rel{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center}
+.rel canvas{width:120px;height:120px;border-radius:50%;background:var(--soft)}
+.mini{width:100%;max-width:420px;height:auto;display:block;margin:10px auto 0}
+@media (max-width:620px){.wrap{padding:10px 8px 30px}.card{padding:12px;border-radius:16px}.capa{grid-template-columns:1fr}.met{grid-template-columns:70px 1fr 44px;font-size:.82rem}.chip{font-size:.95rem}.rel{grid-template-columns:80px 1fr}.rel canvas{width:80px;height:80px}}
+@media print{a.hub,header .hud,.ranking,.noprint{display:none!important}.card{border:1px solid #ccc;break-inside:avoid}body{font-size:12px}}
+
+/* ===== pele profissional ===== */
+:root{--main:#a16207;--deep:#713f12;--soft:#fbf6ea;--line:#e8dfc9;--ink:#1f2421;--mut:#5f6b66;--ok:#2f6b3a;--bad:#b3261e}
+body{background:#f6f7f5;color:var(--ink);-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px}
+h1{font-size:1.35rem;font-weight:750;letter-spacing:-.015em;color:var(--ink)}
+h2{color:var(--ink);font-weight:750}
+h3{color:var(--deep);font-size:.95rem;text-transform:uppercase;letter-spacing:.04em}
+a.hub{color:var(--mut);font-weight:600}
+.card{border:1px solid var(--line);border-radius:10px;box-shadow:0 1px 2px rgba(16,24,20,.05)}
+.pill{border-radius:4px;background:#fff;border:1px solid var(--line);color:var(--ink);font-weight:600}
+.btn{border-radius:6px;font-weight:650;padding:11px 20px;letter-spacing:.01em}
+.btn.ghost{border:1px solid var(--line);color:var(--ink)}
+.btn.ghost:hover{background:var(--soft)}
+.tool{border:1px solid var(--line);border-radius:6px;font-weight:600;color:var(--ink)}
+.tool.on{border-color:var(--main);background:var(--soft);box-shadow:inset 0 0 0 1px var(--main)}
+.eyebrow{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.titulo{font-size:1.15rem;font-weight:750;color:var(--ink);letter-spacing:-.01em}
+.obj{background:#fafbfa;border:1px solid var(--line);border-left:3px solid var(--main);border-radius:6px;font-size:.92rem}
+.obj b{color:var(--deep);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding-top:2px}
+.acao{background:#fff;border:1px solid var(--line);border-left:3px solid var(--ink);border-radius:6px;font-weight:500;font-size:.93rem}
+canvas.cena{border:1px solid var(--line);border-radius:8px;background:#fbfcfb}
+.help{border:1px solid var(--line);color:var(--ink);font-weight:700}
+.intro .ic{font-size:2.6rem;font-weight:800;color:var(--main);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.passos div{background:#fafbfa;border:1px solid var(--line);border-radius:6px;font-weight:500}
+.passos b{font-size:.85rem;color:#fff;background:var(--main);border-radius:4px;min-width:1.7em;padding:2px 0}
+.res .big{color:var(--ink)}
+.pensa{background:#fafbfa;border:1px solid var(--line);border-radius:6px}
+.pensa b{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}
+.hab{border-left:3px solid var(--main);border-radius:0 6px 6px 0}
+.tab th{background:#f2f5f3;color:var(--ink);font-size:.82rem}
+.ranking{border:1px solid var(--line);border-radius:10px}
+.ranking h3{background:var(--ink);text-transform:none;letter-spacing:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>Sombra ao Meio-Dia</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF"></span><span class="pill" id="hP"></span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const W=760,H=372;
+function hex(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mix(a,b,t){const A=hex(a),B=hex(b);return`rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`;}
+
+/* ================= AVATAR ================= */
+const PELES=['#f6d3b8','#e3b18b','#c68a5e','#94603e','#5d3b26'];
+const CABS=['#1b1b1b','#4e342e','#8d6e63','#d4a85a','#b5532f'];
+const CAMISAS=['#00838f','#2e7d32','#f9a825','#c62828','#6a1b9a','#37474f'];
+const ESTILOS=[['curto','Curto'],['cacheado','Cacheado'],['longo','Longo'],['coque','Coque'],['raspado','Raspado']];
+const CHAPEUS=[['nenhum','Sem'],['bone','Boné'],['campo','Chapéu']];
+let A={pele:2,cab:0,estilo:'cacheado',camisa:0,chapeu:'campo',nome:''};
+try{const s=JSON.parse(localStorage.getItem('bc_avatar')||'null');if(s)A=Object.assign(A,s);}catch(e){}
+function salvaA(){try{localStorage.setItem('bc_avatar',JSON.stringify(A));}catch(e){}}
+function avatar(c,x,y,s,a,prancheta){
+ c.save();c.translate(x,y);c.scale(s,s);
+ const pele=PELES[a.pele],cab=CABS[a.cab],cam=CAMISAS[a.camisa];
+ if(a.estilo==='longo'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-39,12.5,15,0,0,7);c.fill();c.fillRect(-12.5,-40,25,22);}
+ if(a.estilo==='cacheado'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-40,15,14.5,0,0,7);c.fill();}
+ c.fillStyle=cam;c.beginPath();c.moveTo(-16,0);c.quadraticCurveTo(-17,-21,-6,-25);c.lineTo(6,-25);c.quadraticCurveTo(17,-21,16,0);c.closePath();c.fill();
+ c.fillStyle='rgba(0,0,0,.12)';c.fillRect(-1,-24,2,24);
+ c.fillStyle=pele;c.fillRect(-3.5,-29,7,6);
+ if(prancheta){c.fillStyle='#8d6e63';c.fillRect(4,-19,13,16);c.fillStyle='#fff';c.fillRect(5.5,-17,10,12);c.strokeStyle='#90a4ae';c.lineWidth=.8;for(let i=0;i<4;i++){c.beginPath();c.moveTo(7,-14+i*2.6);c.lineTo(14,-14+i*2.6);c.stroke();}}
+ c.strokeStyle=cam;c.lineWidth=6;c.lineCap='round';c.beginPath();c.moveTo(-11,-20);c.lineTo(-4,-9);c.stroke();
+ c.fillStyle=pele;c.beginPath();c.arc(-3,-8,3,0,7);c.fill();
+ c.fillStyle=pele;c.beginPath();c.ellipse(0,-39,9.5,11,0,0,7);c.fill();
+ c.beginPath();c.arc(-9.4,-38,2.3,0,7);c.arc(9.4,-38,2.3,0,7);c.fill();
+ c.fillStyle=cab;
+ if(a.estilo==='curto'){c.beginPath();c.ellipse(0,-44.5,10,6.8,0,Math.PI,0);c.fill();c.fillRect(-10,-46,2.8,7);c.fillRect(7.2,-46,2.8,7);}
+ if(a.estilo==='cacheado'){for(let i=0;i<13;i++){const an=Math.PI*(.8+i*1.4/12);c.beginPath();c.arc(Math.cos(an)*12,-41+Math.sin(an)*11.5,4.2,0,7);c.fill();}}
+ if(a.estilo==='longo'){c.beginPath();c.ellipse(0,-44.5,10.6,7.2,0,Math.PI,0);c.fill();}
+ if(a.estilo==='coque'){c.beginPath();c.ellipse(0,-44.5,10,6.4,0,Math.PI,0);c.fill();c.beginPath();c.arc(0,-53,5.2,0,7);c.fill();}
+ if(a.estilo==='raspado'){c.globalAlpha=.5;c.beginPath();c.ellipse(0,-44,9.8,6.2,0,Math.PI,0);c.fill();c.globalAlpha=1;}
+ c.fillStyle='#2b2a26';c.beginPath();c.arc(-3.4,-39,1.25,0,7);c.arc(3.4,-39,1.25,0,7);c.fill();
+ c.strokeStyle='#2b2a26';c.lineWidth=1;c.beginPath();c.arc(0,-35.6,2.6,.25,Math.PI-.25);c.stroke();
+ if(a.chapeu==='bone'){c.fillStyle=cam;c.beginPath();c.ellipse(0,-46,10.6,5.8,0,Math.PI,0);c.fill();c.fillRect(-10.6,-47,21.2,2.6);c.beginPath();c.ellipse(8.5,-46.2,8,2.2,0,0,7);c.fill();}
+ if(a.chapeu==='campo'){c.fillStyle='#d7c49e';c.beginPath();c.ellipse(0,-46,16.5,3.6,0,0,7);c.fill();c.beginPath();c.ellipse(0,-48,9.2,6.4,0,Math.PI,0);c.fill();c.fillStyle='#8d6e63';c.fillRect(-9.2,-49,18.4,1.9);}
+ c.restore();
+}
+function pernas(c,x,y,s,a){c.save();c.translate(x,y);c.scale(s,s);c.fillStyle='#455a64';c.fillRect(-11,0,9,20);c.fillRect(2,0,9,20);c.fillStyle='#3e2723';c.fillRect(-12,18,11,4);c.fillRect(1,18,11,4);c.restore();}
+
+/* ================= CENA ================= */
+const CORES={main:'#a16207',deep:'#713f12'};
+function sr(n){const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+function syncMol(){}function partic(){}
+function drawCena(c,G){if(G.desenha)G.desenha(c);}
+/* ================= TELA / LOOP ================= */
+let G=null,S=null,raf=0,ultimo=0,cx=null;
+function laco(ts){const dt=Math.min(.05,(ts-ultimo)/1000||0);ultimo=ts;if(G){G.t+=dt;if(G.upd)G.upd(dt);syncMol(G,dt);partic(G,dt);if(cx)drawCena(cx,G);if(G.extra)G.extra(cx);}raf=requestAnimationFrame(laco);}
+function parar(){cancelAnimationFrame(raf);raf=0;}
+function rodar(){parar();ultimo=performance.now();raf=requestAnimationFrame(laco);}
+function hud(){$('hud').style.display='flex';$('hF').textContent=`Fase ${S.f+1} de ${FASES.length}`;$('hP').textContent=`${Math.max(0,S.tot+S.fp)} pts`;}
+function telaJogo(chip,info){
+ const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><span class="chip" id="chip">${chip}</span><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="acao"><span class="dedo">👉</span><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});
+}
+function acao(t){const e=$('acao');if(e&&e.innerHTML!==t)e.innerHTML=t;}
+function ajuda(){const F=FASES[S.f],d=document.createElement('div');d.className='modal';
+ d.innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn">Entendi</button></div>`;
+ d.onclick=e=>{if(e.target===d||e.target.tagName==='BUTTON')d.remove();};document.body.appendChild(d);}
+function medidor(id,rot,cls,max,alvo){const a=alvo!=null?`<span class="alvo" style="left:${alvo/max*100}%"></span>`:'';return`<div class="met ${cls}" id="${id}" data-max="${max}"><span>${rot}</span><div class="bar"><span class="fill"></span>${a}</div><span class="v"></span></div>`;}
+function poeMed(id,v){const e=$(id);if(!e)return;const m=+e.dataset.max;e.querySelector('.fill').style.width=clamp(v/m*100,0,100)+'%';e.querySelector('.v').textContent=Math.round(v);}
+function poeSaldo(v,max){const e=$('mSaldo');if(!e)return;const f=e.querySelector('.fill'),p=clamp(Math.abs(v)/max*50,0,50);if(v<0){f.style.left=(50-p)+'%';f.style.width=p+'%';f.style.background='#43a047';}else{f.style.left='50%';f.style.width=p+'%';f.style.background='#e53935';}e.querySelector('.v').textContent=(v>0?'+':'')+Math.round(v);}
+
+/* ================= FASES ================= */
+const FASES=[
+ {nome:'A sombra do meio-dia',ic:'01',obj:'Posicionar o Sol ao meio-dia em Cuiabá em três datas do ano e ver a sombra de uma vara de 1 metro.',passos:[['1','Leia sobre qual latitude o Sol está a pino.'],['2','Arraste o Sol pelo arco do céu.'],['3','Solte para conferir.']],ini:()=>f1()},
+ {nome:'Sol a pino',ic:'02',obj:'Encontrar os dois dias do ano em que a vara não faz sombra ao meio-dia em Cuiabá.',passos:[['1','Arraste o controle das datas.'],['2','Observe o tamanho e o lado da sombra.'],['3','Solte no dia sem sombra.']],ini:()=>f2()},
+ {nome:'A volta ao Sol',ic:'03',obj:'Levar a Terra, com o eixo inclinado, até as posições da órbita que explicam as estações.',passos:[['1','Arraste a Terra pela órbita.'],['2','O globo mostra como a luz chega.'],['3','Solte na posição pedida.']],ini:()=>f3()},
+ {nome:'A luz que chega ao chão',ic:'04',obj:'Comparar a luz do Sol no topo da atmosfera com a medida pela estação do INMET em Cuiabá.',passos:[['1','Leia as duas séries do gráfico.'],['2','Toque no mês pedido.'],['3','O painel mostra os números de cada mês.']],ini:()=>f4()},
+ {nome:'O calor de setembro',ic:'05',obj:'Descobrir em que mês Cuiabá é mais quente e mais seca, e por que não é quando o Sol está mais alto.',passos:[['1','Arraste o cursor pelos meses.'],['2','Solte no mês pedido.'],['3','Compare com as fases anteriores.']],ini:()=>f5()}
+];
+function telaJogo(chip,info){const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><div><div class="eyebrow">Fase ${S.f+1} de ${FASES.length}</div><div class="titulo" id="chip">${chip}</div></div><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>Objetivo</b><span>${F.obj}</span></div><div class="acao"><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});}
+function intro(){parar();G=null;cx=null;hud();const F=FASES[S.f];$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><div class="n">FASE ${S.f+1} DE ${FASES.length}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left;max-width:460px;margin:12px auto 0"><b>Objetivo</b><span>${F.obj}</span></div>
+ <div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn" id="bGo">Começar</button></div>`;
+ $('bGo').onclick=()=>{S.fp=0;F.ini();};}
+function fimFase(pts,ok,oque,pergunta,extraHtml){
+ parar();pts=Math.max(0,Math.round(pts));S.fp=0;S.tot+=pts;S.res[S.f]={pts,ok,oque};hud();
+ $('tela').innerHTML=`<div class="card res"><div class="eyebrow">Fase ${S.f+1} · ${FASES[S.f].nome}</div><div class="big">+${pts}</div>
+ <p class="${ok?'ok':'no'}">${ok?'Meta cumprida':'Meta não cumprida'}</p>${extraHtml||''}
+ <div class="pensa"><b>Síntese</b><br>${oque}</div><div class="pensa"><b>Para discutir</b><br>${pergunta}</div>
+ <div class="row" style="justify-content:center"><button class="btn" id="bNx">${S.f<FASES.length-1?'Próxima fase':'Ver relatório'}</button></div></div>`;
+ $('bNx').onclick=()=>{S.f++;if(S.f<FASES.length)intro();else relatorio();};}
+function ptr(fn,ev){const cv=$('cv');cv.style.touchAction='none';cv.addEventListener(ev||'pointermove',e=>{const r=cv.getBoundingClientRect();fn((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height,e);});}
+function opcoes(perg,ops,cb){$('ctrl').innerHTML=`<div style="width:100%"><b>${perg}</b><div style="display:grid;gap:6px;margin-top:8px">${ops.map((t,i)=>`<button class="tool" style="text-align:left" data-o="${i}">${t}</button>`).join('')}</div></div>`;
+ document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-o]').forEach(x=>x.classList.toggle('on',x===b));cb(+b.dataset.o,b);});}
+const f1x=v=>(Math.round(v*10)/10).toFixed(1).replace('.',',');
+const INK='#1f2421',MUT='#5f6b66',LINE='#dfe3e0',ACC='#a16207',ACC2='#713f12',BLUE='#2563a8';
+const ajuste=(xs,ys)=>{const n=xs.length,mx=xs.reduce((a,b)=>a+b)/n,my=ys.reduce((a,b)=>a+b)/n;let sxy=0,sxx=0;xs.forEach((x,i)=>{sxy+=(x-mx)*(ys[i]-my);sxx+=(x-mx)**2;});const b=sxy/sxx;return{b,a:my-b*mx};};
+function eixos(c,o){const{x0,y0,w,h,xmin,xmax,ymin,ymax,xt,yt,xf,yf,titulo}=o;const X=v=>x0+(v-xmin)/(xmax-xmin)*w,Y=v=>y0+h-(v-ymin)/(ymax-ymin)*h;
+ c.fillStyle='#fff';c.fillRect(x0,y0,w,h);c.strokeStyle='#eef0ee';c.lineWidth=1;c.font='500 10.5px system-ui';c.fillStyle=MUT;
+ yt.forEach(v=>{c.beginPath();c.moveTo(x0,Y(v)+.5);c.lineTo(x0+w,Y(v)+.5);c.stroke();c.textAlign='right';c.fillText(yf?yf(v):v,x0-6,Y(v)+3.5);});
+ xt.forEach(v=>{c.textAlign='center';c.fillText(xf?xf(v):v,X(v),y0+h+14);c.fillStyle=MUT;c.fillRect(X(v)-.5,y0+h,1,4);});
+ c.strokeStyle=INK;c.lineWidth=1;c.beginPath();c.moveTo(x0,y0);c.lineTo(x0,y0+h);c.lineTo(x0+w,y0+h);c.stroke();
+ if(titulo){c.fillStyle=INK;c.font='700 11px system-ui';c.textAlign='left';c.fillText(titulo.toUpperCase(),x0,y0-10);}return{X,Y};}
+function painelR(c,y,h){c.fillStyle='#fff';c.fillRect(478,y,268,h);c.strokeStyle=LINE;c.lineWidth=1;c.strokeRect(478.5,y+.5,267,h-1);}
+function rotulo(c,x,y,t,cor){c.fillStyle=cor||MUT;c.font='700 10px system-ui';c.textAlign='left';c.fillText(t.toUpperCase(),x,y);}
+function linhaM(c,x,y,lab,val,cor){c.font='500 12.5px system-ui';c.fillStyle=INK;c.textAlign='left';c.fillText(lab,x,y);c.font='700 12.5px system-ui';c.textAlign='right';c.fillStyle=cor||INK;c.fillText(val,x+240,y);c.strokeStyle='#f0f2f0';c.lineWidth=1;c.beginPath();c.moveTo(x,y+6);c.lineTo(x+240,y+6);c.stroke();}
+function fonte(c,t){c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';c.fillText(t,24,H-8);}
+
+const ptrU=fn=>ptr(fn,'pointerup');
+const LAT=-15.56,SUN='#f59e0b',MESES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const DECL=J=>{const g=2*Math.PI*(J-1)/365;return 180/Math.PI*(0.006918-0.399912*Math.cos(g)+0.070257*Math.sin(g)-0.006758*Math.cos(2*g)+0.000907*Math.sin(2*g)-0.002697*Math.cos(3*g)+0.00148*Math.sin(3*g));};
+const ELEV=J=>90-Math.abs(LAT-DECL(J));
+const LADO=J=>DECL(J)>LAT?'N':'S';
+const DATA=J=>{const d=new Date(2023,0,J);return d.getDate()+' '+MESES[d.getMonth()];};
+const g1=v=>(Math.round(v*10)/10).toFixed(1).replace('.',',');
+const latTxt=v=>`${g1(Math.abs(v))}° ${v>=0?'N':'S'}`;
+/* cena da vara: chão em GY, vara em VX, 1 m = 100 px, arco do céu de raio RA */
+const GY=290,VX=230,RA=190;
+function cenaVara(c,elev,lado,mostraSombra){
+ c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);const g=c.createLinearGradient(0,20,0,GY);g.addColorStop(0,'#eaf2fb');g.addColorStop(1,'#fbfaf6');c.fillStyle=g;c.fillRect(20,20,440,GY-20);
+ c.fillStyle='#e9e4d8';c.fillRect(20,GY,440,34);c.strokeStyle='#b7ab90';c.lineWidth=1.5;c.beginPath();c.moveTo(20,GY);c.lineTo(460,GY);c.stroke();
+ c.strokeStyle='rgba(161,98,7,.25)';c.setLineDash([4,4]);c.lineWidth=1.2;c.beginPath();c.arc(VX,GY,RA,Math.PI,2*Math.PI);c.stroke();c.setLineDash([]);
+ c.fillStyle=MUT;c.font='700 11px system-ui';c.textAlign='left';c.fillText('NORTE',26,GY+24);c.textAlign='right';c.fillText('SUL',454,GY+24);
+ for(let m=-0.8;m<=0.81;m+=0.2){const x=VX+m*100;c.fillStyle='#b7ab90';c.fillRect(x-.5,GY,1,6);}
+ c.fillStyle=MUT;c.font='500 9.5px system-ui';c.textAlign='center';[-0.8,-0.4,0.4,0.8].forEach(m=>c.fillText(g1(Math.abs(m)).replace(',0','')+' m',VX+m*100,GY+16));
+ const a=(lado==='N'?elev:180-elev)*Math.PI/180,sx=VX-Math.cos(a)*RA,sy=GY-Math.sin(a)*RA;
+ if(mostraSombra){const L=elev>89.9?0:100/Math.tan(elev*Math.PI/180),dir=lado==='N'?1:-1;c.fillStyle='rgba(31,36,33,.55)';c.fillRect(Math.min(VX,VX+dir*L),GY-3,Math.abs(L),6);
+  c.strokeStyle='rgba(245,158,11,.35)';c.lineWidth=1;c.setLineDash([3,4]);c.beginPath();c.moveTo(sx,sy);c.lineTo(VX+dir*L,GY);c.stroke();c.setLineDash([]);}
+ c.fillStyle='#5b4636';c.fillRect(VX-2.5,GY-100,5,100);c.fillStyle=MUT;c.font='600 10px system-ui';c.textAlign='left';c.fillText('vara de 1 m',VX+8,GY-92);
+ const rg=c.createRadialGradient(sx,sy,2,sx,sy,26);rg.addColorStop(0,'rgba(245,158,11,.55)');rg.addColorStop(1,'rgba(245,158,11,0)');c.fillStyle=rg;c.beginPath();c.arc(sx,sy,26,0,7);c.fill();
+ c.fillStyle=SUN;c.strokeStyle='#fff';c.lineWidth=2;c.beginPath();c.arc(sx,sy,12,0,7);c.fill();c.stroke();
+ return{sx,sy};}
+const somb=(e,l)=>e>89.9?0:(1/Math.tan(e*Math.PI/180));
+
+/* ---------- FASE 1 ---------- */
+function f1(){const DIAS=[{J:172,n:'21 de junho'},{J:80,n:'21 de março'},{J:355,n:'21 de dezembro'}];
+ G={t:0,k:0,phi:90,drag:false,tent:0,pts:0,fim:0,ok:0};telaJogo('A sombra do meio-dia','1 / 3');
+ const alvo=()=>{const J=DIAS[G.k].J;return LADO(J)==='N'?ELEV(J):180-ELEV(J);};
+ const cur=()=>G.phi<=90?{e:G.phi,l:'N'}:{e:180-G.phi,l:'S'};
+ G.desenha=c=>{const s=cur();cenaVara(c,s.e,s.l,true);const J=DIAS[G.k].J;
+  painelR(c,20,320);rotulo(c,492,40,`${DIAS[G.k].n} · data ${G.k+1} de 3`,ACC);
+  linhaM(c,492,64,'Cuiabá',latTxt(LAT));linhaM(c,492,88,'Sol a pino sobre',latTxt(DECL(J)),ACC2);
+  c.fillStyle=MUT;c.font='500 10.5px system-ui';c.textAlign='left';['Altura do Sol ao meio-dia = 90° menos a','distância entre as duas latitudes. O Sol','fica do lado (norte ou sul) dessa latitude.'].forEach((t,i)=>c.fillText(t,492,112+i*14));
+  rotulo(c,492,170,'Seu Sol');linhaM(c,492,194,'Altura',`${Math.round(s.e)}°`);linhaM(c,492,218,'Lado do céu',s.l==='N'?'norte':'sul');linhaM(c,492,242,'Sombra da vara',`${g1(somb(s.e)).replace('.',',')} m`);
+  if(G.ok){linhaM(c,492,276,'Altura certa',`${g1(ELEV(J))}°`,'#2f6b3a');}
+  fonte(c,'Declinação do Sol: Spencer (1971). Latitude da estação A901 do INMET.');};
+ G.upd=()=>{};
+ const ang=(x,y)=>clamp(Math.atan2(GY-y,VX-x)*180/Math.PI,4,176);
+ ptr((x,y)=>{if(G.fim||G.ok)return;if(y<GY+10&&Math.hypot(x-VX,y-GY)>RA-60&&Math.hypot(x-VX,y-GY)<RA+50){G.drag=true;G.phi=ang(x,y);}},'pointerdown');
+ ptr((x,y)=>{if(G.drag)G.phi=ang(x,y);});
+ ptrU(()=>{if(!G.drag)return;G.drag=false;G.tent++;const d=G.phi-alvo(),J=DIAS[G.k].J;
+  if(Math.abs(d)<=2.5){G.ok=1;G.pts+=G.tent<=2?60:30;G.tent=0;const e=ELEV(J);acao(`Correto: em ${DIAS[G.k].n} o Sol fica a ${Math.round(e)}° ao ${LADO(J)==='N'?'norte':'sul'}, e a sombra da vara mede ${g1(somb(e))} m apontando para o ${LADO(J)==='N'?'sul':'norte'}.`);
+   setTimeout(()=>{if(G.k<2){G.k++;G.ok=0;G.phi=90;$('info').textContent=`${G.k+1} / 3`;acao(`Agora ${DIAS[G.k].n}. Veja sobre qual latitude o Sol está a pino.`);}
+    else{G.fim=1;fimFase(G.pts+20,true,'Ao meio-dia, a altura do Sol depende da distância entre a nossa latitude e a latitude onde o Sol está a pino naquele dia. Em junho o Sol está a pino no Hemisfério Norte, fica baixo e ao norte de Cuiabá, e a sombra é longa. Em dezembro ele está a pino a 23,4° S, quase em cima de Cuiabá, e a sombra quase some. Essa mudança acontece porque o eixo da Terra é inclinado em relação à órbita.','Em que época do ano a sombra da escola no pátio, ao meio-dia, é mais comprida?');}},2600);}
+  else{const s=cur(),lc=LADO(J);acao(s.l!==lc?`Lado errado: neste dia o Sol a pino está ${lc==='N'?'ao norte':'ao sul'} de Cuiabá.`:d*(lc==='N'?1:-1)>0?'O Sol está alto demais.':'O Sol está baixo demais.');}});
+ acao('Arraste o Sol pelo arco até a posição do meio-dia em 21 de junho. Use o painel para calcular a altura.');rodar();}
+
+/* ---------- FASE 2 ---------- */
+function f2(){G={t:0,J:15,drag:false,tent:0,pts:0,fim:0,ach:[]};telaJogo('Sol a pino','0 / 2');
+ const SX=40,SW=420,SY=345;const Jx=J=>SX+(J-1)/364*SW;
+ G.desenha=c=>{const e=ELEV(G.J),l=LADO(G.J);cenaVara(c,e,l,true);
+  c.fillStyle='#eef0ee';c.fillRect(SX,SY-3,SW,6);MESES.forEach((m,i)=>{const J=[1,32,60,91,121,152,182,213,244,274,305,335][i];c.fillStyle=MUT;c.font='600 9px system-ui';c.textAlign='left';c.fillText(m,Jx(J)+2,SY+15);c.fillRect(Jx(J),SY-6,1,12);});
+  G.ach.forEach(J=>{c.fillStyle='#2f6b3a';c.beginPath();c.arc(Jx(J),SY,6,0,7);c.fill();});
+  c.fillStyle='#fff';c.strokeStyle=ACC;c.lineWidth=3;c.beginPath();c.arc(Jx(G.J),SY,9,0,7);c.fill();c.stroke();
+  painelR(c,20,320);rotulo(c,492,40,'Meio-dia em Cuiabá');linhaM(c,492,64,'Data',DATA(G.J));linhaM(c,492,88,'Sol a pino sobre',latTxt(DECL(G.J)),ACC2);linhaM(c,492,112,'Altura do Sol',`${g1(e)}°`);
+  linhaM(c,492,136,'Sombra',e>=89?'quase nenhuma':`${g1(somb(e))} m para o ${l==='N'?'sul':'norte'}`);
+  rotulo(c,492,172,'Dias sem sombra encontrados');G.ach.forEach((J,i)=>linhaM(c,492,196+i*24,`${i+1}º dia`,DATA(J),'#2f6b3a'));
+  c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';c.fillText('Declinação do Sol: Spencer (1971).',492,326);};
+ G.upd=()=>{};
+ const dia=x=>clamp(Math.round(1+(x-SX)/SW*364),1,365);
+ ptr((x,y)=>{if(G.fim)return;if(y>SY-26&&y<SY+26){G.drag=true;G.J=dia(x);}},'pointerdown');ptr(x=>{if(G.drag)G.J=dia(x);});
+ ptrU(()=>{if(!G.drag)return;G.drag=false;G.tent++;const e=ELEV(G.J);
+  if(e>=89&&!G.ach.some(J=>Math.abs(J-G.J)<40)){G.ach.push(G.J);G.pts+=G.tent<=3?80:40;G.tent=0;$('info').textContent=`${G.ach.length} / 2`;
+   if(G.ach.length===1)acao(`Isso: em ${DATA(G.J)} o Sol passa praticamente a pino sobre Cuiabá e a vara não faz sombra ao meio-dia. Existe outro dia assim no ano.`);
+   else{G.fim=1;acao(`Os dois dias: perto de ${DATA(G.ach[0])} e de ${DATA(G.ach[1])}.`);setTimeout(()=>fimFase(G.pts+20,true,'Cuiabá fica entre o Equador e o Trópico de Capricórnio, na zona tropical. Por isso, duas vezes por ano o Sol passa exatamente sobre a cidade ao meio-dia: no começo de novembro, quando vai para o sul, e no começo de fevereiro, quando volta para o norte. Nesses dias, objetos verticais quase não fazem sombra. Em lugares fora dos trópicos isso nunca acontece.','Por que em Porto Alegre, fora da zona tropical, a vara sempre faz sombra ao meio-dia?'),2800);}}
+  else if(e>=89)acao('Esse dia você já achou. Procure o outro.');
+  else acao(`${DATA(G.J)}: sombra de ${g1(somb(e))} m para o ${LADO(G.J)==='N'?'sul':'norte'}. ${LADO(G.J)==='N'?'O Sol ainda está ao norte da cidade.':'O Sol já passou para o sul da cidade.'}`);});
+ acao('Arraste o controle das datas e solte num dia em que a vara não faz sombra ao meio-dia.');rodar();}
+
+/* ---------- FASE 3 ---------- */
+function f3(){G={t:0,th:60,drag:false,tent:0,pts:0,fim:0,k:0};telaJogo('A volta ao Sol','1 / 3');
+ const OX=230,OY=178,RX=170,RY=120;const dayOf=th=>((Math.round(172+th/360*365.25)-1)%365+365)%365+1;
+ const TAR=[{n:'Leve a Terra ao início do inverno do Hemisfério Sul (Sol mais baixo ao meio-dia em Cuiabá).',J:172},{n:'Leve a Terra ao início do verão do Hemisfério Sul.',J:355},{n:'Leve a Terra a um dia em que o Sol passa a pino sobre Cuiabá.',J:[38,309]}];
+ const thOf=J=>((J-172)/365.25*360+360)%360;
+ G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);c.fillStyle='#0f172a08';c.fillRect(20,20,440,320);
+  c.strokeStyle='rgba(31,36,33,.25)';c.lineWidth=1.2;c.setLineDash([4,4]);c.beginPath();c.ellipse(OX,OY,RX,RY,0,0,7);c.stroke();c.setLineDash([]);
+  const rg=c.createRadialGradient(OX,OY,4,OX,OY,40);rg.addColorStop(0,'rgba(245,158,11,.9)');rg.addColorStop(1,'rgba(245,158,11,0)');c.fillStyle=rg;c.beginPath();c.arc(OX,OY,40,0,7);c.fill();c.fillStyle=SUN;c.beginPath();c.arc(OX,OY,18,0,7);c.fill();
+  [[0,'jun'],[90,'set'],[180,'dez'],[270,'mar']].forEach(([a,t])=>{const r=a*Math.PI/180;c.fillStyle=MUT;c.font='600 10px system-ui';c.textAlign='center';c.fillText(t,OX+Math.cos(r)*(RX+18),OY-Math.sin(r)*(RY+14)+4);});
+  const r=G.th*Math.PI/180,ex=OX+Math.cos(r)*RX,ey=OY-Math.sin(r)*RY;
+  c.fillStyle='#7cb8f7';c.beginPath();c.arc(ex,ey,13,0,7);c.fill();const as=Math.atan2(OY-ey,OX-ex);c.fillStyle='#1e3a8a';c.beginPath();c.arc(ex,ey,13,as+Math.PI/2,as+Math.PI*1.5);c.fill();
+  c.strokeStyle=INK;c.lineWidth=2;c.beginPath();c.moveTo(ex+9,ey);c.lineTo(ex-16,ey);c.stroke();c.fillStyle=INK;c.beginPath();c.moveTo(ex-20,ey);c.lineTo(ex-13,ey-4);c.lineTo(ex-13,ey+4);c.fill();
+  c.font='700 9px system-ui';c.textAlign='center';c.fillText('N',ex-27,ey+3);
+  c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';c.fillText('A seta é o eixo da Terra visto de cima: aponta sempre para o mesmo lado.',26,334);
+  const J=dayOf(G.th),dec=DECL(J);
+  painelR(c,20,320);rotulo(c,492,40,`Tarefa ${G.k+1} de 3`,ACC);c.fillStyle=INK;c.font='600 11.5px system-ui';c.textAlign='left';
+  const words=TAR[Math.min(G.k,2)].n.split(' ');let line='',yy=58;words.forEach(w=>{if(c.measureText(line+w).width>236){c.fillText(line,492,yy);line='';yy+=15;}line+=w+' ';});c.fillText(line,492,yy);
+  /* globo de lado */const gx=612,gy=172,gr=44,til=dec*Math.PI/180;
+  c.fillStyle='rgba(245,158,11,.18)';c.fillRect(492,gy-50,30,100);for(let k=-2;k<=2;k++){c.strokeStyle=SUN;c.lineWidth=1.5;c.beginPath();c.moveTo(498,gy+k*18);c.lineTo(gx-gr-6,gy+k*18);c.stroke();}
+  c.save();c.translate(gx,gy);c.fillStyle='#dbeafe';c.beginPath();c.arc(0,0,gr,0,7);c.fill();c.fillStyle='rgba(30,64,175,.35)';c.beginPath();c.arc(0,0,gr,Math.PI/2,Math.PI*1.5,true);c.fill();
+  c.rotate(-til);c.strokeStyle=INK;c.lineWidth=1.5;c.beginPath();c.moveTo(0,-gr-10);c.lineTo(0,gr+10);c.stroke();c.strokeStyle='rgba(31,36,33,.4)';c.lineWidth=1;c.beginPath();c.moveTo(-gr,0);c.lineTo(gr,0);c.stroke();
+  const ly=-Math.sin(LAT*Math.PI/180)*gr,lx=-Math.cos(LAT*Math.PI/180)*gr;c.fillStyle='#b3261e';c.beginPath();c.arc(lx,ly,4,0,7);c.fill();c.restore();
+  c.fillStyle=MUT;c.font='600 9.5px system-ui';c.textAlign='center';c.fillText('globo visto de lado, luz vinda da esquerda',gx-6,gy+gr+16);c.fillStyle='#b3261e';c.fillText('● Cuiabá',gx+56,gy-gr+4);
+  linhaM(c,492,252,'Data',DATA(J));linhaM(c,492,276,'Sol a pino sobre',latTxt(dec),ACC2);linhaM(c,492,300,'Altura ao meio-dia',`${Math.round(ELEV(J))}°`);
+  fonte(c,'Órbita fora de escala. Datas pela declinação do Sol (Spencer, 1971).');};
+ G.upd=()=>{};
+ const thx=(x,y)=>((Math.atan2(-(y-OY)/RY,(x-OX)/RX)*180/Math.PI)+360)%360;
+ ptr((x,y)=>{if(G.fim)return;const r=G.th*Math.PI/180;if(Math.hypot(x-(OX+Math.cos(r)*RX),y-(OY-Math.sin(r)*RY))<40||(x<460&&Math.abs(Math.hypot((x-OX)/RX,(y-OY)/RY)-1)<.3)){G.drag=true;G.th=thx(x,y);}},'pointerdown');
+ ptr((x,y)=>{if(G.drag)G.th=thx(x,y);});
+ ptrU(()=>{if(!G.drag)return;G.drag=false;G.tent++;const t=TAR[G.k],alvos=[].concat(t.J),J=dayOf(G.th),dif=Math.min(...alvos.map(a=>{const d=Math.abs(thOf(a)-G.th);return Math.min(d,360-d);}));
+  if(dif<=12){G.pts+=G.tent<=2?60:30;G.tent=0;const msgs=['Correto: em 21 de junho o polo Norte se inclina para o Sol. O Hemisfério Sul recebe a luz mais inclinada e tem o inverno.','Correto: em 21 de dezembro o polo Sul se inclina para o Sol. É o início do verão no Hemisfério Sul.',`Correto: perto de ${DATA(J)} o Sol fica a pino exatamente sobre a latitude de Cuiabá.`];acao(msgs[G.k]);
+   if(G.k<2){G.k++;$('info').textContent=`${G.k+1} / 3`;}else{G.fim=1;setTimeout(()=>fimFase(G.pts+20,true,'As estações não acontecem porque a Terra fica mais perto ou mais longe do Sol. O eixo da Terra é inclinado cerca de 23,4° e aponta sempre para o mesmo lado durante a volta ao Sol. Em junho, o Hemisfério Norte fica voltado para o Sol; em dezembro, o Hemisfério Sul. Em Cuiabá, perto dos trópicos, o Sol fica mais alto entre novembro e fevereiro, e passa a pino duas vezes.','Se o eixo da Terra não fosse inclinado, ainda haveria estações do ano?'),2800);}}
+  else acao(`${DATA(J)}: ainda não. ${G.k===0?'Procure a posição em que o polo Norte fica voltado para o Sol.':G.k===1?'Procure a posição em que o polo Sul fica voltado para o Sol.':'O Sol precisa ficar a pino sobre 15,6° S. Veja o painel.'}`);});
+ acao('Arraste a Terra pela órbita e solte na posição pedida no painel.');rodar();}
+
+/* ---------- FASE 4 ---------- */
+const RA_M=[40.9,39.8,37.1,32.8,28.6,26.5,27.4,30.9,35.3,38.7,40.4,41.0];
+const RS_M=[19.9,20.0,18.5,18.1,16.6,15.9,18.4,19.0,19.5,20.6,22.3,20.9];
+const ND_R=[118,82,92,80,123,114,122,122,125,151,145,138];
+function f4(){G={t:0,sel:-1,k:0,tent:0,pts:0,fim:0};telaJogo('A luz que chega ao chão','1 / 2');
+ const O={x0:56,y0:38,w:400,h:270,xmin:0,xmax:12,ymin:0,ymax:45,xt:[],yt:[0,10,20,30,40],titulo:'Energia do Sol por dia, MJ/m² · Cuiabá'};
+ const bx=i=>O.x0+6+i*(O.w/12);const TAR=['Toque no mês em que mais luz do Sol chegou ao chão de Cuiabá.','Toque no mês em que as nuvens e o ar barraram a maior parte da luz (menor porcentagem que chega ao chão).'];
+ const frac=i=>RS_M[i]/RA_M[i];const ALV=[RS_M.indexOf(Math.max(...RS_M)),[...Array(12).keys()].reduce((a,b)=>frac(b)<frac(a)?b:a,0)];
+ G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);const{Y}=eixos(c,O);const bw=O.w/12-12;
+  for(let i=0;i<12;i++){const x=bx(i);c.strokeStyle=SUN;c.lineWidth=1.5;c.setLineDash([3,2]);c.strokeRect(x+.5,Y(RA_M[i]),bw,O.y0+O.h-Y(RA_M[i]));c.setLineDash([]);
+   c.fillStyle=i===G.sel?ACC2:'rgba(161,98,7,.75)';c.fillRect(x+3,Y(RS_M[i]),bw-6,O.y0+O.h-Y(RS_M[i]));c.fillStyle=MUT;c.font='600 9.5px system-ui';c.textAlign='center';c.fillText(MESES[i],x+bw/2,O.y0+O.h+14);}
+  painelR(c,20,320);rotulo(c,492,40,`Tarefa ${Math.min(G.k+1,2)} de 2`,ACC);c.fillStyle=INK;c.font='600 11.5px system-ui';c.textAlign='left';
+  const words=TAR[Math.min(G.k,1)].split(' ');let line='',yy=58;words.forEach(w=>{if(c.measureText(line+w).width>236){c.fillText(line,492,yy);line='';yy+=15;}line+=w+' ';});c.fillText(line,492,yy);
+  c.strokeStyle=SUN;c.setLineDash([3,2]);c.strokeRect(492.5,110.5,14,10);c.setLineDash([]);c.fillStyle=INK;c.font='500 11px system-ui';c.fillText('No topo da atmosfera (calculado)',512,120);c.fillStyle='rgba(161,98,7,.75)';c.fillRect(492,128,14,10);c.fillStyle=INK;c.fillText('Medida no chão (INMET)',512,137);
+  if(G.sel>=0){const i=G.sel;rotulo(c,492,170,MESES[i]);linhaM(c,492,194,'Topo da atmosfera',`${g1(RA_M[i])} MJ/m²`);linhaM(c,492,218,'No chão',`${g1(RS_M[i])} MJ/m²`,ACC2);linhaM(c,492,242,'Chegou ao chão',`${Math.round(frac(i)*100)}%`,ACC2);linhaM(c,492,266,'Dias medidos',`${ND_R[i]}`);}
+  fonte(c,'Chão: INMET A901, 2019 a 2023. Topo: equação da FAO-56 (Allen et al., 1998).');};
+ G.upd=()=>{};
+ ptr((x,y)=>{if(G.fim)return;if(y<O.y0||y>O.y0+O.h+20||x<O.x0||x>O.x0+O.w)return;const i=clamp(Math.floor((x-O.x0)/(O.w/12)),0,11);G.sel=i;G.tent++;
+  if(i===ALV[G.k]){G.pts+=G.tent<=2?90:45;G.tent=0;if(G.k===0){G.k=1;$('info').textContent='2 / 2';acao(`Correto: novembro, com ${g1(RS_M[i])} MJ/m² por dia. Repare que dezembro tem mais luz no topo da atmosfera, mas menos no chão.`);}
+   else{G.fim=1;acao(`Correto: em ${['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'][i]} só ${Math.round(frac(i)*100)}% da luz do topo chegou ao chão. Em julho chegaram ${Math.round(frac(6)*100)}%.`);
+    setTimeout(()=>fimFase(G.pts+20,true,`No topo da atmosfera, Cuiabá recebe mais energia do Sol entre novembro e janeiro, quando o Sol está mais alto e os dias são mais longos. No chão, porém, o mês com mais luz medida foi novembro, e não dezembro ou janeiro. Na estação chuvosa as nuvens barram cerca de metade da luz. Na estação seca o céu fica limpo e chega uma fração maior, mesmo com o Sol mais baixo.`,'Por que uma placa solar produz menos energia num dia nublado de janeiro do que num dia limpo de agosto?'),2800);}}
+  else acao(`${MESES[i]}: ${g1(RS_M[i])} MJ/m² no chão, ${Math.round(frac(i)*100)}% do topo da atmosfera. ${G.k===0?'Procure a barra cheia mais alta.':'Procure o mês com a menor porcentagem.'}`);},'pointerdown');
+ acao('Toque nos meses do gráfico para ver os números no painel. Responda a tarefa do painel tocando no mês certo.');rodar();}
+
+/* ---------- FASE 5 ---------- */
+const TX_M=[33.2,32.8,33.3,32.7,31.8,31.3,33.8,35.6,37.7,36.5,34.9,34.5],UM_M=[46.7,48.9,46.2,46.6,36.6,35.8,22.1,20.0,22.9,31.2,34.5,40.1],ND_T=[70,50,61,111,109,104,118,119,94,52,26,34];
+function f5(){G={t:0,m:5,drag:false,k:0,tent:0,pts:0,fim:0};telaJogo('O calor de setembro','mês mais quente');
+ const O={x0:56,y0:38,w:400,h:270,xmin:-.5,xmax:11.5,ymin:28,ymax:40,xt:[],yt:[28,30,32,34,36,38,40],yf:v=>v+'°',titulo:'Cuiabá: máxima diária média e umidade mínima'};
+ G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);const{X,Y}=eixos(c,O);const Yu=u=>O.y0+O.h-(u-10)/50*O.h;
+  c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';[10,20,30,40,50,60].forEach(u=>c.fillText(u+'%',O.x0+O.w+4,Yu(u)+3));
+  MESES.forEach((m,i)=>{c.fillStyle=i===G.m?INK:MUT;c.font='600 9.5px system-ui';c.textAlign='center';c.fillText(m,X(i),O.y0+O.h+14);});
+  c.strokeStyle='#2563eb';c.lineWidth=2;c.setLineDash([5,3]);c.beginPath();UM_M.forEach((u,i)=>i?c.lineTo(X(i),Yu(u)):c.moveTo(X(i),Yu(u)));c.stroke();c.setLineDash([]);
+  c.strokeStyle='#c2410c';c.lineWidth=2.5;c.beginPath();TX_M.forEach((t,i)=>i?c.lineTo(X(i),Y(t)):c.moveTo(X(i),Y(t)));c.stroke();TX_M.forEach((t,i)=>{c.fillStyle='#fff';c.strokeStyle='#c2410c';c.lineWidth=1.5;c.beginPath();c.arc(X(i),Y(t),3,0,7);c.fill();c.stroke();});
+  c.fillStyle='rgba(245,158,11,.13)';c.fillRect(X(9.5),O.y0,X(11.5)-X(9.5),O.h);c.fillRect(X(-.5),O.y0,X(1.5)-X(-.5),O.h);c.fillStyle='#a16207';c.font='600 9.5px system-ui';c.textAlign='center';c.fillText('Sol mais alto',X(10.5),O.y0+12);c.fillText('Sol mais alto',X(.5),O.y0+12);
+  const cx2=X(G.m);c.strokeStyle=INK;c.lineWidth=1;c.setLineDash([4,3]);c.beginPath();c.moveTo(cx2,O.y0);c.lineTo(cx2,O.y0+O.h);c.stroke();c.setLineDash([]);c.fillStyle=INK;c.beginPath();c.roundRect(cx2-22,O.y0+O.h+20,44,20,4);c.fill();c.fillStyle='#fff';c.font='700 11px system-ui';c.fillText(MESES[G.m],cx2,O.y0+O.h+34);
+  painelR(c,20,320);rotulo(c,492,40,'Leitura do cursor');linhaM(c,492,64,'Mês',MESES[G.m]);linhaM(c,492,88,'Máxima média',`${g1(TX_M[G.m])} °C`,'#c2410c');linhaM(c,492,112,'Umidade mínima média',`${g1(UM_M[G.m])}%`,'#2563eb');linhaM(c,492,136,'Dias completos',`${ND_T[G.m]}`);
+  rotulo(c,492,172,'Tarefa');c.fillStyle=INK;c.font='600 12px system-ui';c.textAlign='left';c.fillText(G.k===0?'Ache o mês mais quente.':'Ache o mês mais seco do ar.',492,194);
+  c.fillStyle='#c2410c';c.fillRect(492,222,14,3);c.fillStyle=INK;c.font='500 11px system-ui';c.fillText('Máxima média (°C, eixo esquerdo)',512,227);c.strokeStyle='#2563eb';c.setLineDash([5,3]);c.lineWidth=2;c.beginPath();c.moveTo(492,244);c.lineTo(506,244);c.stroke();c.setLineDash([]);c.fillText('Umidade mínima (%, eixo direito)',512,248);
+  fonte(c,'Dados: INMET A901 Cuiabá, dias completos de 2019 a 2023.');};
+ G.upd=()=>{};
+ const mes=x=>clamp(Math.round((x-O.x0)/O.w*12-.5),0,11);
+ ptr((x,y)=>{if(G.fim)return;if(x>O.x0-10&&x<O.x0+O.w+10&&y>O.y0-10&&y<O.y0+O.h+60){G.drag=true;G.m=mes(x);}},'pointerdown');ptr(x=>{if(G.drag)G.m=mes(x);});
+ ptrU(()=>{if(!G.drag)return;G.drag=false;G.tent++;
+  if(G.k===0){if(G.m===8){G.k=1;G.pts+=G.tent<=2?90:45;G.tent=0;$('info').textContent='mês mais seco';acao('Correto: setembro, com máxima média de 37,7 °C, mesmo com o Sol ainda longe de ficar a pino. Agora ache o mês em que o ar fica mais seco.');}
+   else acao(`${MESES[G.m]}: ${g1(TX_M[G.m])} °C. Há um mês mais quente.`);}
+  else{if(G.m===7){G.fim=1;G.pts+=G.tent<=2?90:45;acao('Correto: agosto, com umidade mínima média de 20%. O ar mais seco vem logo antes do mês mais quente.');
+    setTimeout(()=>fimFase(G.pts+20,true,'Em Cuiabá, o mês mais quente não é dezembro, quando o Sol está mais alto, e sim setembro. No fim da estação seca o céu está limpo, quase toda a luz chega ao chão e o solo seco esquenta mais, porque há pouca água para evaporar. Quando as chuvas começam, as nuvens e a umidade do solo seguram a temperatura. O clima de um lugar depende do Sol, mas também das nuvens e da água.','O que muda no calor da cidade quando a primeira chuva forte cai em outubro?'),2800);}
+   else acao(`${MESES[G.m]}: umidade mínima de ${g1(UM_M[G.m])}%. Procure o ponto mais baixo da linha azul.`);}});
+ acao('Arraste o cursor pelos meses e solte no mês mais quente do ano.');rodar();}
+
+/* ================= INICIO / AVATAR ================= */
+function inicio(){parar();G=null;cx=null;$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><div class="capa"><canvas id="cA" width="560" height="560"></canvas>
+ <div><h2>Seu perfil de pesquisador</h2><div class="opts">
+ <div class="l">Pele</div><div class="sw" id="sP">${PELES.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.pele===i?'on':''}" aria-label="pele ${i+1}"></button>`).join('')}</div>
+ <div class="l">Cabelo</div><div class="sw" id="sE">${ESTILOS.map(([k,t])=>`<button class="tx ${A.estilo===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <div class="sw" id="sC">${CABS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.cab===i?'on':''}" aria-label="cor ${i+1}"></button>`).join('')}</div>
+ <div class="l">Camiseta</div><div class="sw" id="sT">${CAMISAS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.camisa===i?'on':''}" aria-label="camiseta ${i+1}"></button>`).join('')}</div>
+ <div class="l">Chapéu</div><div class="sw" id="sH">${CHAPEUS.map(([k,t])=>`<button class="tx ${A.chapeu===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <input class="nome" id="iN" maxlength="20" placeholder="Seu nome" value="${esc(A.nome)}">
+ </div></div></div>
+ <div class="row" style="margin-top:14px"><button class="btn" id="bJ">Iniciar as 5 fases</button><button class="btn ghost" id="bG">Guia do professor</button></div>
+ <p class="small" style="margin-top:10px">Ciências · 8º ano · BNCC EF08CI13</p></div>`;
+ const pinta=()=>{const c=$('cA').getContext('2d');c.clearRect(0,0,560,560);c.fillStyle='#fbf6ea';c.fillRect(0,0,560,560);c.fillStyle='#f1e3bf';c.beginPath();c.arc(280,600,260,0,7);c.fill();avatar(c,280,560,6.4,A,true);};
+ pinta();
+ const liga=(id,f)=>document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{f(b);salvaA();document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b));pinta();});
+ liga('sP',b=>A.pele=+b.dataset.i);liga('sC',b=>A.cab=+b.dataset.i);liga('sT',b=>A.camisa=+b.dataset.i);liga('sE',b=>A.estilo=b.dataset.k);liga('sH',b=>A.chapeu=b.dataset.k);
+ $('iN').oninput=e=>{A.nome=e.target.value;salvaA();};
+ $('bJ').onclick=novo;$('bG').onclick=guia;
+}
+function novo(){S={f:0,tot:0,fp:0,res:[],fichas:0};salvo=false;intro();}
+function relatorio(){parar();G=null;cx=null;$('rankBox').style.display='block';const nome=A.nome.trim()||'Pesquisador';
+ $('tela').innerHTML=`<div class="card"><div class="rel"><canvas id="cR" width="240" height="240"></canvas><div><div class="small">Relatório de campo</div><h2>${esc(nome)}</h2><div class="big" style="font-size:2rem;font-weight:800;color:var(--deep)">${S.tot} pts</div></div></div>
+ <table class="tab" style="margin-top:12px"><tr><th>Fase</th><th>Pontos</th><th>Meta</th></tr>${FASES.map((F,i)=>{const r=S.res[i]||{pts:0,ok:false};return`<tr><td>${F.ic} ${F.nome}</td><td>${r.pts}</td><td>${r.ok?'✓':'✗'}</td></tr>`;}).join('')}</table>
+ <div class="pensa"><b>Para escrever no caderno:</b> explique com suas palavras por que existem estações do ano e por que setembro é o mês mais quente de Cuiabá.</div>
+ <div class="savebox noprint"><input id="pName" maxlength="20" value="${esc(nome)}"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row noprint" style="margin-top:12px"><button class="btn ghost" id="bI">Imprimir relatório</button><button class="btn ghost" id="bN">Jogar de novo</button><button class="btn ghost" id="bV">Início</button></div></div>`;
+ const c=$('cR').getContext('2d');c.fillStyle='#fbf6ea';c.fillRect(0,0,240,240);avatar(c,120,240,3.2,A,true);
+ $('bS').onclick=()=>salvar('5 fases');$('bI').onclick=()=>window.print();$('bN').onclick=novo;$('bV').onclick=inicio;
+}
+
+/* ================= GUIA DO PROFESSOR ================= */
+function guia(){parar();$('hud').style.display='none';$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card guia">
+ <div class="row top noprint"><button class="btn ghost sm" id="bVt">← Voltar</button><button class="btn sm" id="bPr">Imprimir guia</button></div>
+ <h2 style="margin-top:10px">Guia do professor · Sombra ao Meio-Dia</h2>
+ <p class="small">Ensino Fundamental · 8º ano · Ciências</p>
+ <h3>Habilidade da BNCC</h3>
+ <div class="hab"><b>EF08CI13.</b> Representar os movimentos de rotação e translação da Terra e analisar o papel da inclinação do eixo de rotação da Terra em relação à sua órbita na ocorrência das estações do ano, com a utilização de modelos tridimensionais.</div>
+ <h3>Objetivos da aula</h3>
+ <ul><li>Relacionar a altura do Sol ao meio-dia com a latitude e a data.</li><li>Reconhecer que, na zona tropical, o Sol passa a pino duas vezes por ano.</li><li>Explicar as estações pela inclinação do eixo da Terra, e não pela distância ao Sol.</li><li>Comparar a luz calculada no topo da atmosfera com a medida no chão.</li><li>Perceber que o mês mais quente de Cuiabá depende também das nuvens e da seca.</li></ul>
+ <h3>Roteiro de 50 minutos</h3>
+ <table class="tab"><tr><th>Tempo</th><th>O que fazer</th></tr>
+ <tr><td>5 min</td><td>Pergunte: por que existe verão e inverno? Anote as hipóteses, inclusive a da distância ao Sol.</td></tr>
+ <tr><td>25 min</td><td>Alunos jogam em duplas.</td></tr>
+ <tr><td>15 min</td><td>Discussão com as perguntas de cada fase e retorno às hipóteses iniciais.</td></tr>
+ <tr><td>5 min</td><td>Cada dupla escreve a frase do relatório de campo.</td></tr></table>
+ <h3>Fase por fase</h3>
+ <table class="tab"><tr><th>Fase</th><th>O aluno faz</th><th>Para discutir</th><th>Conceitos</th></tr>
+ <tr><td>1. A sombra do meio-dia</td><td>Posiciona o Sol em 21 de junho, 21 de março e 21 de dezembro</td><td>Quando a sombra da escola é mais comprida?</td><td>Altura do Sol, latitude, sombra.</td></tr>
+ <tr><td>2. Sol a pino</td><td>Encontra os dois dias sem sombra ao meio-dia</td><td>Por que isso nunca acontece em Porto Alegre?</td><td>Zona tropical, Trópico de Capricórnio.</td></tr>
+ <tr><td>3. A volta ao Sol</td><td>Leva a Terra às posições dos solstícios e do Sol a pino</td><td>Sem eixo inclinado haveria estações?</td><td>Translação, inclinação do eixo.</td></tr>
+ <tr><td>4. A luz que chega ao chão</td><td>Compara luz no topo da atmosfera e no chão</td><td>Placa solar em janeiro nublado e agosto limpo.</td><td>Radiação, nuvens.</td></tr>
+ <tr><td>5. O calor de setembro</td><td>Encontra o mês mais quente e o mais seco</td><td>O que muda com a primeira chuva?</td><td>Clima, estação seca e chuvosa.</td></tr></table>
+ <h3>Avaliação</h3>
+ <p>Use o relatório de campo impresso e a frase escrita por cada dupla. Todos os instrumentos têm o mesmo peso. Observe se o aluno abandona a ideia de que as estações vêm da distância entre a Terra e o Sol.</p>
+ <h3>Sequência de 3 aulas</h3>
+ <ol><li><b>Aula 1.</b> Jogo completo e discussão.</li><li><b>Aula 2.</b> Gnômon no pátio: uma vara vertical de 1 m, com a sombra marcada ao meio-dia uma vez por semana durante um mês.</li><li><b>Aula 3.</b> Modelo tridimensional com lanterna e bola de isopor espetada num palito inclinado, reproduzindo as posições da fase 3.</li></ol>
+ <h3>Cuidados na mediação</h3>
+ <p>O meio-dia do jogo é o meio-dia solar, quando o Sol cruza o meridiano. Em Cuiabá ele acontece perto das 11h45 a 12h05 do relógio, conforme a época. A órbita da fase 3 está fora de escala: a órbita real é quase um círculo. Nas fases 4 e 5, a estação do INMET teve falhas, e por isso o número de dias usados varia de mês para mês; o painel mostra esse número.</p>
+ <h3>De onde vêm os números</h3>
+ <p><b>Fases 1 a 3.</b> A latitude onde o Sol está a pino em cada dia (declinação solar) foi calculada pela série de Spencer (1971). A altura do Sol ao meio-dia é 90° menos a diferença entre essa latitude e a de Cuiabá, 15,56° S, posição da estação A901 do INMET.</p>
+ <p><b>Fase 4.</b> Luz medida no chão: soma diária da radiação global da estação A901 do INMET em Cuiabá, média por mês dos dias completos de 2019 a 2023. Luz no topo da atmosfera: equação da radiação extraterrestre do manual FAO-56 (Allen et al., 1998), calculada para a latitude de Cuiabá.</p>
+ <p><b>Fase 5.</b> Maior temperatura horária e menor umidade horária de cada dia, média por mês, nos dias com as 24 horas registradas pela estação A901 de 2019 a 2023.</p>
+ <h3>Referências</h3>
+ <ul class="ref">
+ <li>Allen RG, Pereira LS, Raes D, Smith M. Crop evapotranspiration: guidelines for computing crop water requirements. FAO Irrigation and Drainage Paper 56. FAO, Roma, 1998.</li>
+ <li>Spencer JW. Fourier series representation of the position of the sun. Search, 2(5):172, 1971.</li>
+ <li>INMET. Dados horários da estação automática A901, Cuiabá.</li></ul>
+ </div>`;
+ $('bVt').onclick=inicio;$('bPr').onclick=()=>window.print();
+}
+
+/* ================= RANKING ================= */
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="sombra-ao-meio-dia";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__a={get S(){return S},get G(){return G},FASES,inicio,novo,intro,guia};
+inicio();
+</script>
+</body>
+</html>
