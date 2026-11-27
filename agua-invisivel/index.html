@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Água Invisível</title>
+<style>
+:root{--main:#0369a1;--deep:#0c4a6e;--soft:#eaf5fb;--line:#d3e6f0;--ink:#10212b;--mut:#4d6370;--co2:#e53935;--ch4:#ef6c00;--ok:#2e7d32;--bad:#c62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:820px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep);letter-spacing:-.01em}
+h2{font-size:1.2rem;color:var(--deep);margin-bottom:6px;letter-spacing:-.01em}
+h3{font-size:1rem;color:var(--deep);margin:14px 0 6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 12px;font-weight:700;font-size:.86rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.card{border:2px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:var(--deep)}.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.btn.sm{padding:9px 14px;font-size:.92rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas.cena{width:100%;height:auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff;margin-top:10px}
+.top{justify-content:space-between}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--main);color:#fff;border-radius:14px;padding:8px 14px;font-weight:800;font-size:1.05rem}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.tool{border:2px solid var(--line);background:#fff;color:var(--deep);border-radius:12px;padding:9px 12px;font-weight:700;font-family:inherit;font-size:.92rem;cursor:pointer;touch-action:manipulation}
+.tool.on{border-color:var(--main);background:var(--soft)}
+.tool:disabled{opacity:.4}
+.mets{display:grid;gap:8px;margin-top:10px}
+.met{display:grid;grid-template-columns:92px 1fr 52px;gap:8px;align-items:center;font-weight:700;font-size:.9rem}
+.met .bar{position:relative;height:18px;background:#f1f4f5;border-radius:99px;overflow:hidden}
+.met .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;transition:width .15s}
+.met .alvo{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--ink);border-radius:2px}
+.met .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--mut)}
+.met.co2 .fill{background:var(--co2)}.met.ch4 .fill{background:var(--ch4)}
+.saldo .bar{background:linear-gradient(90deg,#e8f5e9 50%,#ffebee 50%)}
+.saldo .zero{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:var(--ink)}
+.saldo .fill{border-radius:0}
+.obj{display:flex;gap:10px;align-items:flex-start;background:#fff8e1;border:2px solid #ffe082;border-radius:14px;padding:10px 12px;margin-top:10px;font-size:.95rem}
+.obj b{color:#8d6e00;white-space:nowrap}
+.acao{display:flex;gap:10px;align-items:center;background:var(--soft);border-left:5px solid var(--main);border-radius:0 12px 12px 0;padding:9px 12px;margin-top:8px;font-weight:600;font-size:.95rem;min-height:64px}@media(max-width:640px){.acao{min-height:5.4em}}
+.acao .dedo{font-size:1.25rem;animation:pulo 1s ease-in-out infinite}
+@keyframes pulo{50%{transform:translateX(4px)}}
+.help{width:34px;height:34px;border-radius:50%;border:2px solid var(--main);background:#fff;color:var(--deep);font-weight:800;font-size:1rem;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(16,33,43,.35);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal .card{max-width:460px;width:100%}
+.intro{text-align:center;padding:26px 18px}
+.intro .ic{font-size:3rem;line-height:1}
+.intro .n{color:var(--mut);font-weight:700;font-size:.85rem;margin-top:8px}
+.passos{display:grid;gap:8px;margin:16px auto;max-width:420px;text-align:left}
+.passos div{display:flex;gap:12px;align-items:center;background:var(--soft);border-radius:12px;padding:10px 14px;font-weight:600}
+.passos b{font-size:1.3rem;min-width:1.6em;text-align:center}
+.res{text-align:center}
+.res .big{font-size:2.6rem;font-weight:800;color:var(--deep);line-height:1.1}
+.res .ok{color:var(--ok);font-weight:800}.res .no{color:var(--bad);font-weight:800}
+.pensa{background:var(--soft);border-radius:14px;padding:12px 14px;margin:14px auto;max-width:520px;text-align:left}
+.pensa b{color:var(--deep)}
+.boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.box{border:2px dashed var(--line);border-radius:14px;padding:10px;min-height:110px;cursor:pointer}
+.box h4{font-size:.92rem;color:var(--deep);margin-bottom:6px}
+.box.alvo{border-color:var(--main);background:var(--soft)}
+.cards{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;min-height:48px}
+.ct{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 11px;font-weight:700;font-size:.9rem;cursor:pointer;box-shadow:0 2px 0 var(--line);font-family:inherit;color:var(--ink);transition:transform .5s}
+.ct.sel{border-color:var(--main);background:var(--soft);transform:translateY(-2px)}
+.ct.certo{border-color:var(--ok);background:#e8f5e9}.ct.errado{border-color:var(--bad);background:#ffebee}
+.ct.movido{animation:voa .8s ease}
+@keyframes voa{0%{transform:translateY(-30px) scale(1.1);opacity:.3}100%{transform:none;opacity:1}}
+.capa{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+.capa canvas{width:100%;height:auto;display:block;border-radius:16px;background:var(--soft)}
+.opts{display:grid;gap:8px;margin-top:6px}
+.opts .l{font-size:.8rem;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.sw{display:flex;gap:6px;flex-wrap:wrap}
+.sw button{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--line);cursor:pointer}
+.sw button.on{box-shadow:0 0 0 3px var(--deep)}
+.sw .tx{width:auto;height:auto;border-radius:10px;padding:6px 10px;font-weight:700;font-size:.85rem;background:#fff;color:var(--deep);font-family:inherit;border:0}
+input.nome{border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit;width:100%}
+input[type=range]{width:100%;accent-color:var(--main)}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:6px}
+.tab th{text-align:left;background:var(--soft);color:var(--deep);padding:7px 6px}
+.tab td{border-bottom:1px solid var(--line);padding:7px 6px;vertical-align:top}
+.guia p,.guia li{font-size:.95rem;margin-bottom:6px}
+.guia ul,.guia ol{padding-left:20px}
+.hab{border-left:5px solid var(--main);background:var(--soft);padding:10px 14px;border-radius:0 12px 12px 0;font-size:.95rem}
+.ref li{font-size:.86rem;color:var(--mut)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+.rel{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center}
+.rel canvas{width:120px;height:120px;border-radius:50%;background:var(--soft)}
+.mini{width:100%;max-width:420px;height:auto;display:block;margin:10px auto 0}
+@media (max-width:620px){.wrap{padding:10px 8px 30px}.card{padding:12px;border-radius:16px}.capa{grid-template-columns:1fr}.met{grid-template-columns:70px 1fr 44px;font-size:.82rem}.chip{font-size:.95rem}.rel{grid-template-columns:80px 1fr}.rel canvas{width:80px;height:80px}}
+@media print{a.hub,header .hud,.ranking,.noprint{display:none!important}.card{border:1px solid #ccc;break-inside:avoid}body{font-size:12px}}
+
+/* ===== pele profissional ===== */
+:root{--main:#0369a1;--deep:#0c4a6e;--soft:#eaf5fb;--line:#d3e6f0;--ink:#1f2421;--mut:#5f6b66;--ok:#2f6b3a;--bad:#b3261e}
+body{background:#f6f7f5;color:var(--ink);-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px}
+h1{font-size:1.35rem;font-weight:750;letter-spacing:-.015em;color:var(--ink)}
+h2{color:var(--ink);font-weight:750}
+h3{color:var(--deep);font-size:.95rem;text-transform:uppercase;letter-spacing:.04em}
+a.hub{color:var(--mut);font-weight:600}
+.card{border:1px solid var(--line);border-radius:10px;box-shadow:0 1px 2px rgba(16,24,20,.05)}
+.pill{border-radius:4px;background:#fff;border:1px solid var(--line);color:var(--ink);font-weight:600}
+.btn{border-radius:6px;font-weight:650;padding:11px 20px;letter-spacing:.01em}
+.btn.ghost{border:1px solid var(--line);color:var(--ink)}
+.btn.ghost:hover{background:var(--soft)}
+.tool{border:1px solid var(--line);border-radius:6px;font-weight:600;color:var(--ink)}
+.tool.on{border-color:var(--main);background:var(--soft);box-shadow:inset 0 0 0 1px var(--main)}
+.eyebrow{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.titulo{font-size:1.15rem;font-weight:750;color:var(--ink);letter-spacing:-.01em}
+.obj{background:#fafbfa;border:1px solid var(--line);border-left:3px solid var(--main);border-radius:6px;font-size:.92rem}
+.obj b{color:var(--deep);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding-top:2px}
+.acao{background:#fff;border:1px solid var(--line);border-left:3px solid var(--ink);border-radius:6px;font-weight:500;font-size:.93rem}
+canvas.cena{border:1px solid var(--line);border-radius:8px;background:#fbfcfb}
+.help{border:1px solid var(--line);color:var(--ink);font-weight:700}
+.intro .ic{font-size:2.6rem;font-weight:800;color:var(--main);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.passos div{background:#fafbfa;border:1px solid var(--line);border-radius:6px;font-weight:500}
+.passos b{font-size:.85rem;color:#fff;background:var(--main);border-radius:4px;min-width:1.7em;padding:2px 0}
+.res .big{color:var(--ink)}
+.pensa{background:#fafbfa;border:1px solid var(--line);border-radius:6px}
+.pensa b{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}
+.hab{border-left:3px solid var(--main);border-radius:0 6px 6px 0}
+.tab th{background:#f2f5f3;color:var(--ink);font-size:.82rem}
+.ranking{border:1px solid var(--line);border-radius:10px}
+.ranking h3{background:var(--ink);text-transform:none;letter-spacing:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>Água Invisível</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF"></span><span class="pill" id="hP"></span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const W=760,H=372;
+function hex(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mix(a,b,t){const A=hex(a),B=hex(b);return`rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`;}
+
+/* ================= AVATAR ================= */
+const PELES=['#f6d3b8','#e3b18b','#c68a5e','#94603e','#5d3b26'];
+const CABS=['#1b1b1b','#4e342e','#8d6e63','#d4a85a','#b5532f'];
+const CAMISAS=['#00838f','#2e7d32','#f9a825','#c62828','#6a1b9a','#37474f'];
+const ESTILOS=[['curto','Curto'],['cacheado','Cacheado'],['longo','Longo'],['coque','Coque'],['raspado','Raspado']];
+const CHAPEUS=[['nenhum','Sem'],['bone','Boné'],['campo','Chapéu']];
+let A={pele:2,cab:0,estilo:'cacheado',camisa:0,chapeu:'campo',nome:''};
+try{const s=JSON.parse(localStorage.getItem('bc_avatar')||'null');if(s)A=Object.assign(A,s);}catch(e){}
+function salvaA(){try{localStorage.setItem('bc_avatar',JSON.stringify(A));}catch(e){}}
+function avatar(c,x,y,s,a,prancheta){
+ c.save();c.translate(x,y);c.scale(s,s);
+ const pele=PELES[a.pele],cab=CABS[a.cab],cam=CAMISAS[a.camisa];
+ if(a.estilo==='longo'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-39,12.5,15,0,0,7);c.fill();c.fillRect(-12.5,-40,25,22);}
+ if(a.estilo==='cacheado'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-40,15,14.5,0,0,7);c.fill();}
+ c.fillStyle=cam;c.beginPath();c.moveTo(-16,0);c.quadraticCurveTo(-17,-21,-6,-25);c.lineTo(6,-25);c.quadraticCurveTo(17,-21,16,0);c.closePath();c.fill();
+ c.fillStyle='rgba(0,0,0,.12)';c.fillRect(-1,-24,2,24);
+ c.fillStyle=pele;c.fillRect(-3.5,-29,7,6);
+ if(prancheta){c.fillStyle='#8d6e63';c.fillRect(4,-19,13,16);c.fillStyle='#fff';c.fillRect(5.5,-17,10,12);c.strokeStyle='#90a4ae';c.lineWidth=.8;for(let i=0;i<4;i++){c.beginPath();c.moveTo(7,-14+i*2.6);c.lineTo(14,-14+i*2.6);c.stroke();}}
+ c.strokeStyle=cam;c.lineWidth=6;c.lineCap='round';c.beginPath();c.moveTo(-11,-20);c.lineTo(-4,-9);c.stroke();
+ c.fillStyle=pele;c.beginPath();c.arc(-3,-8,3,0,7);c.fill();
+ c.fillStyle=pele;c.beginPath();c.ellipse(0,-39,9.5,11,0,0,7);c.fill();
+ c.beginPath();c.arc(-9.4,-38,2.3,0,7);c.arc(9.4,-38,2.3,0,7);c.fill();
+ c.fillStyle=cab;
+ if(a.estilo==='curto'){c.beginPath();c.ellipse(0,-44.5,10,6.8,0,Math.PI,0);c.fill();c.fillRect(-10,-46,2.8,7);c.fillRect(7.2,-46,2.8,7);}
+ if(a.estilo==='cacheado'){for(let i=0;i<13;i++){const an=Math.PI*(.8+i*1.4/12);c.beginPath();c.arc(Math.cos(an)*12,-41+Math.sin(an)*11.5,4.2,0,7);c.fill();}}
+ if(a.estilo==='longo'){c.beginPath();c.ellipse(0,-44.5,10.6,7.2,0,Math.PI,0);c.fill();}
+ if(a.estilo==='coque'){c.beginPath();c.ellipse(0,-44.5,10,6.4,0,Math.PI,0);c.fill();c.beginPath();c.arc(0,-53,5.2,0,7);c.fill();}
+ if(a.estilo==='raspado'){c.globalAlpha=.5;c.beginPath();c.ellipse(0,-44,9.8,6.2,0,Math.PI,0);c.fill();c.globalAlpha=1;}
+ c.fillStyle='#2b2a26';c.beginPath();c.arc(-3.4,-39,1.25,0,7);c.arc(3.4,-39,1.25,0,7);c.fill();
+ c.strokeStyle='#2b2a26';c.lineWidth=1;c.beginPath();c.arc(0,-35.6,2.6,.25,Math.PI-.25);c.stroke();
+ if(a.chapeu==='bone'){c.fillStyle=cam;c.beginPath();c.ellipse(0,-46,10.6,5.8,0,Math.PI,0);c.fill();c.fillRect(-10.6,-47,21.2,2.6);c.beginPath();c.ellipse(8.5,-46.2,8,2.2,0,0,7);c.fill();}
+ if(a.chapeu==='campo'){c.fillStyle='#d7c49e';c.beginPath();c.ellipse(0,-46,16.5,3.6,0,0,7);c.fill();c.beginPath();c.ellipse(0,-48,9.2,6.4,0,Math.PI,0);c.fill();c.fillStyle='#8d6e63';c.fillRect(-9.2,-49,18.4,1.9);}
+ c.restore();
+}
+function pernas(c,x,y,s,a){c.save();c.translate(x,y);c.scale(s,s);c.fillStyle='#455a64';c.fillRect(-11,0,9,20);c.fillRect(2,0,9,20);c.fillStyle='#3e2723';c.fillRect(-12,18,11,4);c.fillRect(1,18,11,4);c.restore();}
+
+/* ================= CENA ================= */
+const CORES={main:'#0369a1',deep:'#0c4a6e'};
+function sr(n){const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+function syncMol(){}function partic(){}
+function drawCena(c,G){if(G.desenha)G.desenha(c);}
+/* ================= TELA / LOOP ================= */
+let G=null,S=null,raf=0,ultimo=0,cx=null;
+function laco(ts){const dt=Math.min(.05,(ts-ultimo)/1000||0);ultimo=ts;if(G){G.t+=dt;if(G.upd)G.upd(dt);syncMol(G,dt);partic(G,dt);if(cx)drawCena(cx,G);if(G.extra)G.extra(cx);}raf=requestAnimationFrame(laco);}
+function parar(){cancelAnimationFrame(raf);raf=0;}
+function rodar(){parar();ultimo=performance.now();raf=requestAnimationFrame(laco);}
+function hud(){$('hud').style.display='flex';$('hF').textContent=`Fase ${S.f+1} de ${FASES.length}`;$('hP').textContent=`${Math.max(0,S.tot+S.fp)} pts`;}
+function telaJogo(chip,info){
+ const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><span class="chip" id="chip">${chip}</span><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="acao"><span class="dedo">👉</span><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});
+}
+function acao(t){const e=$('acao');if(e&&e.innerHTML!==t)e.innerHTML=t;}
+function ajuda(){const F=FASES[S.f],d=document.createElement('div');d.className='modal';
+ d.innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn">Entendi</button></div>`;
+ d.onclick=e=>{if(e.target===d||e.target.tagName==='BUTTON')d.remove();};document.body.appendChild(d);}
+function medidor(id,rot,cls,max,alvo){const a=alvo!=null?`<span class="alvo" style="left:${alvo/max*100}%"></span>`:'';return`<div class="met ${cls}" id="${id}" data-max="${max}"><span>${rot}</span><div class="bar"><span class="fill"></span>${a}</div><span class="v"></span></div>`;}
+function poeMed(id,v){const e=$(id);if(!e)return;const m=+e.dataset.max;e.querySelector('.fill').style.width=clamp(v/m*100,0,100)+'%';e.querySelector('.v').textContent=Math.round(v);}
+function poeSaldo(v,max){const e=$('mSaldo');if(!e)return;const f=e.querySelector('.fill'),p=clamp(Math.abs(v)/max*50,0,50);if(v<0){f.style.left=(50-p)+'%';f.style.width=p+'%';f.style.background='#43a047';}else{f.style.left='50%';f.style.width=p+'%';f.style.background='#e53935';}e.querySelector('.v').textContent=(v>0?'+':'')+Math.round(v);}
+
+/* ================= FASES ================= */
+const FASES=[
+ {nome:'Para onde vai a água',ic:'01',obj:'Dividir a água retirada dos rios do Brasil entre os principais usos, na proporção certa.',passos:[['1','Segure o dedo sobre uma caixa para encher.'],['2','Segure sobre o registro de baixo para esvaziar.'],['3','Quando as 100 partes estiverem distribuídas, o jogo confere.']],ini:()=>f1()},
+ {nome:'Escada da pegada hídrica',ic:'02',obj:'Ordenar alimentos pela quantidade de água usada para produzir 1 kg de cada um.',passos:[['1','Um alimento chega por vez.'],['2','Arraste e solte no degrau certo da escada.'],['3','O valor aparece quando a posição está certa.']],ini:()=>f2()},
+ {nome:'O cardápio da cantina',ic:'03',obj:'Reduzir pela metade a água escondida nos almoços da semana sem tirar a carne bovina do cardápio.',passos:[['1','Toque num dia para trocar a proteína.'],['2','Acompanhe o total da semana.'],['3','O jogo confere a cada troca.']],ini:()=>f3()},
+ {nome:'Caça-vazamentos',ic:'04',obj:'Com verba limitada, consertar vazamentos até a perda de água da rede cair de 35% para 25%.',passos:[['1','Toque num vazamento para consertar.'],['2','Cada conserto gasta verba.'],['3','Toque de novo para desfazer.']],ini:()=>f4()},
+ {nome:'O caminho da gota',ic:'05',obj:'Seguir uma gota de Cáceres e outra de Sinop pelos rios até o oceano.',passos:[['1','Comece pela cidade indicada.'],['2','Toque no próximo rio ou lugar do caminho.'],['3','A gota só desce o rio.']],ini:()=>f5()}
+];
+function telaJogo(chip,info){const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><div><div class="eyebrow">Fase ${S.f+1} de ${FASES.length}</div><div class="titulo" id="chip">${chip}</div></div><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>Objetivo</b><span>${F.obj}</span></div><div class="acao"><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});}
+function intro(){parar();G=null;cx=null;hud();const F=FASES[S.f];$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><div class="n">FASE ${S.f+1} DE ${FASES.length}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left;max-width:460px;margin:12px auto 0"><b>Objetivo</b><span>${F.obj}</span></div>
+ <div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn" id="bGo">Começar</button></div>`;
+ $('bGo').onclick=()=>{S.fp=0;F.ini();};}
+function fimFase(pts,ok,oque,pergunta,extraHtml){
+ parar();pts=Math.max(0,Math.round(pts));S.fp=0;S.tot+=pts;S.res[S.f]={pts,ok,oque};hud();
+ $('tela').innerHTML=`<div class="card res"><div class="eyebrow">Fase ${S.f+1} · ${FASES[S.f].nome}</div><div class="big">+${pts}</div>
+ <p class="${ok?'ok':'no'}">${ok?'Meta cumprida':'Meta não cumprida'}</p>${extraHtml||''}
+ <div class="pensa"><b>Síntese</b><br>${oque}</div><div class="pensa"><b>Para discutir</b><br>${pergunta}</div>
+ <div class="row" style="justify-content:center"><button class="btn" id="bNx">${S.f<FASES.length-1?'Próxima fase':'Ver relatório'}</button></div></div>`;
+ $('bNx').onclick=()=>{S.f++;if(S.f<FASES.length)intro();else relatorio();};}
+function ptr(fn,ev){const cv=$('cv');cv.style.touchAction='none';cv.addEventListener(ev||'pointermove',e=>{const r=cv.getBoundingClientRect();fn((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height,e);});}
+function opcoes(perg,ops,cb){$('ctrl').innerHTML=`<div style="width:100%"><b>${perg}</b><div style="display:grid;gap:6px;margin-top:8px">${ops.map((t,i)=>`<button class="tool" style="text-align:left" data-o="${i}">${t}</button>`).join('')}</div></div>`;
+ document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-o]').forEach(x=>x.classList.toggle('on',x===b));cb(+b.dataset.o,b);});}
+const f1x=v=>(Math.round(v*10)/10).toFixed(1).replace('.',',');
+const INK='#1f2421',MUT='#5f6b66',LINE='#dfe3e0',ACC='#0369a1',ACC2='#0c4a6e',BLUE='#2563a8';
+const ajuste=(xs,ys)=>{const n=xs.length,mx=xs.reduce((a,b)=>a+b)/n,my=ys.reduce((a,b)=>a+b)/n;let sxy=0,sxx=0;xs.forEach((x,i)=>{sxy+=(x-mx)*(ys[i]-my);sxx+=(x-mx)**2;});const b=sxy/sxx;return{b,a:my-b*mx};};
+function eixos(c,o){const{x0,y0,w,h,xmin,xmax,ymin,ymax,xt,yt,xf,yf,titulo}=o;const X=v=>x0+(v-xmin)/(xmax-xmin)*w,Y=v=>y0+h-(v-ymin)/(ymax-ymin)*h;
+ c.fillStyle='#fff';c.fillRect(x0,y0,w,h);c.strokeStyle='#eef0ee';c.lineWidth=1;c.font='500 10.5px system-ui';c.fillStyle=MUT;
+ yt.forEach(v=>{c.beginPath();c.moveTo(x0,Y(v)+.5);c.lineTo(x0+w,Y(v)+.5);c.stroke();c.textAlign='right';c.fillText(yf?yf(v):v,x0-6,Y(v)+3.5);});
+ xt.forEach(v=>{c.textAlign='center';c.fillText(xf?xf(v):v,X(v),y0+h+14);c.fillStyle=MUT;c.fillRect(X(v)-.5,y0+h,1,4);});
+ c.strokeStyle=INK;c.lineWidth=1;c.beginPath();c.moveTo(x0,y0);c.lineTo(x0,y0+h);c.lineTo(x0+w,y0+h);c.stroke();
+ if(titulo){c.fillStyle=INK;c.font='700 11px system-ui';c.textAlign='left';c.fillText(titulo.toUpperCase(),x0,y0-10);}return{X,Y};}
+function painelR(c,y,h){c.fillStyle='#fff';c.fillRect(478,y,268,h);c.strokeStyle=LINE;c.lineWidth=1;c.strokeRect(478.5,y+.5,267,h-1);}
+function rotulo(c,x,y,t,cor){c.fillStyle=cor||MUT;c.font='700 10px system-ui';c.textAlign='left';c.fillText(t.toUpperCase(),x,y);}
+function linhaM(c,x,y,lab,val,cor){c.font='500 12.5px system-ui';c.fillStyle=INK;c.textAlign='left';c.fillText(lab,x,y);c.font='700 12.5px system-ui';c.textAlign='right';c.fillStyle=cor||INK;c.fillText(val,x+240,y);c.strokeStyle='#f0f2f0';c.lineWidth=1;c.beginPath();c.moveTo(x,y+6);c.lineTo(x+240,y+6);c.stroke();}
+function fonte(c,t){c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';c.fillText(t,24,H-8);}
+
+const ptrU=fn=>ptr(fn,'pointerup');
+const AZ='#0ea5e9',AZ2='#0369a1';
+const nf=v=>Math.round(v).toLocaleString('pt-BR');
+function quebra(c,t,x,y,w,lh){const ws=t.split(' ');let l='';for(const p of ws){if(c.measureText(l+p).width>w&&l){c.fillText(l,x,y);l='';y+=lh;}l+=p+' ';}c.fillText(l,x,y);return y;}
+
+/* ---------- FASE 1 ---------- */
+const USOS=[{n:'Irrigação',v:50.5,cor:'#16a34a'},{n:'Abastecimento urbano',v:23.9,cor:'#0284c7'},{n:'Indústria',v:9.4,cor:'#7c3aed'},{n:'Outros usos',v:16.2,cor:'#a16207',s:'animais, rural, termelétricas, mineração'}];
+function f1(){G={t:0,q:[0,0,0,0],hold:-1,mode:0,av:0,tent:0,fim:0,px:0,py:0};telaJogo('Para onde vai a água','0 / 100');
+ const TX=i=>40+i*108,TY=106,TW=88,TH=178;const tot=()=>Math.round(G.q.reduce((a,b)=>a+b,0));
+ const st=i=>{const d=Math.round(G.q[i])-USOS[i].v;return Math.abs(d)<=5?0:d<0?-1:1;};
+ G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);const T=tot();
+  c.fillStyle='#e0f2fe';c.fillRect(40,16,412,20);c.fillStyle=AZ2;c.fillRect(40,16,412*(1-T/100),20);c.fillStyle=T>60?INK:'#fff';c.font='700 11px system-ui';c.textAlign='center';c.fillText(`Água a distribuir: ${100-T} de 100 partes`,246,30);
+  USOS.forEach((u,i)=>{const x=TX(i);c.strokeStyle=INK;c.lineWidth=1.5;c.strokeRect(x+.5,TY+.5,TW,TH);const h=TH*G.q[i]/100*1.6;const hh=Math.min(TH,h);
+   const g=c.createLinearGradient(0,TY+TH-hh,0,TY+TH);g.addColorStop(0,'#7dd3fc');g.addColorStop(1,AZ2);c.fillStyle=g;c.fillRect(x+2,TY+TH-hh+1,TW-3,hh-1);
+   if(G.hold===i&&G.mode>0){c.fillStyle=AZ;c.fillRect(x+TW/2-3,TY-26,6,TH-hh+26);}
+   c.fillStyle=u.cor;c.fillRect(x,TY-34,TW+1,6);c.fillStyle=INK;c.font='700 11px system-ui';c.textAlign='center';quebra(c,u.n,x+TW/2,TY-46,TW,12);
+   c.fillStyle=hh>40?'#fff':INK;c.font='800 16px system-ui';c.fillText(Math.round(G.q[i]),x+TW/2,TY+TH-Math.max(8,hh/2-6));
+   c.fillStyle='#64748b';c.beginPath();c.roundRect(x+TW/2-28,TY+TH+6,56,18,4);c.fill();c.fillStyle='#fff';c.font='700 9.5px system-ui';c.fillText('esvaziar',x+TW/2,TY+TH+18);
+   if(G.av){const s=st(i);c.fillStyle=s===0?'#2f6b3a':'#b3261e';c.font='700 10.5px system-ui';c.fillText(s===0?'✓ perto':s<0?'↑ falta':'↓ sobra',x+TW/2,TY+TH+38);}});
+  painelR(c,20,320);rotulo(c,492,40,'Retirada de água no Brasil');c.fillStyle=INK;c.font='500 11px system-ui';c.textAlign='left';
+  quebra(c,'Em 2022 foram retirados dos rios e poços do país 2.035 metros cúbicos por segundo. Cada parte vale 1% desse total.',492,60,240,15);
+  c.fillStyle=MUT;c.font='500 10.5px system-ui';quebra(c,'Segure o dedo sobre a caixa para encher. Segure sobre "esvaziar" para tirar água.',492,128,240,14);
+  if(G.fim){rotulo(c,492,176,'ANA, Conjuntura 2023',ACC);USOS.forEach((u,i)=>linhaM(c,492,200+i*24,u.n,`${String(u.v).replace('.',',')}%`,u.cor));}
+  else if(G.av){c.fillStyle=G.fim?'#e8f2ea':'#fbeaea';c.fillRect(479,292,266,46);c.fillStyle='#b3261e';c.font='800 13px system-ui';c.textAlign='center';c.fillText('AINDA NÃO ESTÁ CERTO',612,312);c.font='600 10.5px system-ui';c.fillText(`${[0,1,2,3].filter(i=>st(i)===0).length} de 4 usos perto do real (até 5 partes)`,612,328);}
+  fonte(c,'Dados: ANA, Conjuntura dos Recursos Hídricos no Brasil 2023, ano de 2022.');};
+ G.upd=dt=>{if(G.fim||G.hold<0)return;const i=G.hold;if(G.mode>0){const add=Math.min(dt*14,100-tot()-(tot()%1?0:0));if(100-G.q.reduce((a,b)=>a+b,0)>0)G.q[i]=Math.min(100,G.q[i]+Math.min(dt*14,100-G.q.reduce((a,b)=>a+b,0)));}else G.q[i]=Math.max(0,G.q[i]-dt*14);$('info').textContent=`${tot()} / 100`;};
+ const qual=(x,y)=>{for(let i=0;i<4;i++){const xx=TX(i);if(x>xx-6&&x<xx+TW+6){if(y>TY-60&&y<TY+TH)return[i,1];if(y>=TY+TH&&y<TY+TH+34)return[i,-1];}}return[-1,0];};
+ ptr((x,y)=>{if(G.fim)return;const[i,m]=qual(x,y);G.hold=i;G.mode=m;},'pointerdown');
+ ptr((x,y)=>{if(G.hold<0)return;const[i,m]=qual(x,y);G.hold=i;G.mode=m;});
+ ptrU(()=>{if(G.hold<0&&G.mode===0)return;G.hold=-1;G.mode=0;G.q=G.q.map(v=>Math.round(v));
+  if(tot()<100){acao(`Ainda há ${100-tot()} partes para distribuir.`);return;}G.av=1;G.tent++;
+  if([0,1,2,3].every(i=>st(i)===0)){G.fim=1;acao('Correto. A irrigação retira metade da água do país; o abastecimento das cidades, cerca de um quarto.');
+   setTimeout(()=>fimFase(Math.max(80,200-15*(G.tent-1)),true,'Em 2022, o Brasil retirou de rios, lagos e poços cerca de 2.035 metros cúbicos de água por segundo. Metade foi para a irrigação das lavouras, quase um quarto para abastecer as cidades e cerca de 9% para a indústria. A água da torneira de casa é só uma parte do uso total, e grande parte da água do país está escondida nos alimentos que comemos.','Por que a maior parte da água retirada dos rios vai para a agricultura e não para as cidades?'),2800);}
+  else{const i=[0,1,2,3].find(k=>st(k)!==0);acao(`Ainda não. ${USOS[i].n}: ${st(i)<0?'falta água':'tem água demais'}. Ajuste e solte de novo.`);}});
+ acao('Distribua as 100 partes de água entre os quatro usos. Segure o dedo sobre uma caixa para enchê-la.');rodar();}
+
+/* ---------- FASE 2 ---------- */
+const PEG=[{n:'Leite',v:1000},{n:'Soja',v:2100},{n:'Ovo',v:3300},{n:'Feijão e outras leguminosas',v:4000},{n:'Carne de frango',v:4300},{n:'Carne de porco',v:6000},{n:'Carne de carneiro',v:10400},{n:'Carne bovina',v:15400}];
+function f2(){const ord=[4,1,7,0,5,2,6,3];G={t:0,k:0,ord,lad:[],carry:null,erros:0,fim:0,flash:0};telaJogo('Escada da pegada hídrica','1 / 8');
+ const LX=60,LW=330,LY0=320,LH=30;const slotY=j=>LY0-j*LH;const gapOf=(y,n)=>clamp(Math.round((LY0-13-(y-49))/LH),0,n);
+ G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);c.fillStyle='#fff';c.fillRect(40,20,380,330);c.strokeStyle=LINE;c.strokeRect(40.5,20.5,379,329);
+  rotulo(c,52,38,'Litros de água por kg, do menor (embaixo) para o maior (em cima)',INK);
+  const n=G.lad.length;let gap=-1;if(G.carry&&G.carry.x<440)gap=gapOf(G.carry.y,n);
+  let pos=0;for(let j=0;j<=n;j++){if(j===gap){c.strokeStyle=AZ;c.setLineDash([4,3]);c.lineWidth=1.5;c.strokeRect(LX+.5,slotY(pos)-LH+6.5,LW,LH-8);c.setLineDash([]);pos++;}if(j<n){const it=PEG[G.lad[j]],y=slotY(pos);const w=LW*Math.log10(it.v/500)/Math.log10(16000/500);c.fillStyle='#e0f2fe';c.fillRect(LX,y-LH+6,LW,LH-8);c.fillStyle='#7dd3fc';c.fillRect(LX,y-LH+6,w,LH-8);c.fillStyle=INK;c.font='600 11.5px system-ui';c.textAlign='left';c.fillText(it.n,LX+8,y-LH/2+6);c.textAlign='right';c.font='700 11.5px system-ui';c.fillText(`${nf(it.v)} L`,LX+LW-8,y-LH/2+6);pos++;}}
+  if(G.flash>0){c.fillStyle=`rgba(179,38,30,${G.flash})`;c.fillRect(40,20,380,330);}
+  painelR(c,20,320);rotulo(c,492,40,'Chegou para a escada');
+  if(G.k<8){const it=PEG[G.ord[G.k]];if(!G.carry){c.fillStyle='#fff';c.strokeStyle=INK;c.lineWidth=1.5;c.beginPath();c.roundRect(500,60,224,48,8);c.fill();c.stroke();c.fillStyle=INK;c.font='700 13px system-ui';c.textAlign='center';c.fillText(it.n,612,82);c.fillStyle=MUT;c.font='500 10px system-ui';c.fillText('arraste para a escada',612,98);}}
+  c.fillStyle=MUT;c.font='500 10.5px system-ui';c.textAlign='left';quebra(c,'Pegada hídrica: toda a água usada para produzir o alimento, incluindo a chuva que molhou a lavoura e a água para o pasto e a ração dos animais.',492,140,240,14);
+  rotulo(c,492,236,'Erros');c.fillStyle=INK;c.font='700 14px system-ui';c.fillText(G.erros,492,256);
+  if(G.carry){const it=PEG[G.ord[G.k]];c.save();c.shadowColor='rgba(0,0,0,.2)';c.shadowBlur=10;c.fillStyle='#fff';c.beginPath();c.roundRect(G.carry.x-100,G.carry.y-66,200,34,6);c.fill();c.restore();c.strokeStyle=AZ2;c.lineWidth=1.5;c.beginPath();c.roundRect(G.carry.x-100,G.carry.y-66,200,34,6);c.stroke();c.fillStyle=INK;c.font='700 12.5px system-ui';c.textAlign='center';c.fillText(it.n,G.carry.x,G.carry.y-44);}
+  fonte(c,'Médias mundiais: Mekonnen e Hoekstra (2010, 2012). Barras em escala logarítmica.');};
+ G.upd=dt=>{if(G.flash>0)G.flash=Math.max(0,G.flash-dt*.8);};
+ ptr((x,y)=>{if(G.fim||G.k>=8)return;if(x>490&&y>50&&y<120)G.carry={x,y};},'pointerdown');
+ ptr((x,y)=>{if(G.carry){G.carry.x=x;G.carry.y=y;}});
+ ptrU((x,y)=>{if(!G.carry)return;const yy=G.carry.y,xx=G.carry.x;G.carry=null;if(xx>440)return;const n=G.lad.length,gap=gapOf(yy,n),id=G.ord[G.k],v=PEG[id].v;
+  const ok=(gap===0||PEG[G.lad[gap-1]].v<=v)&&(gap===n||PEG[G.lad[gap]].v>=v);
+  if(ok){G.lad.splice(gap,0,id);G.k++;$('info').textContent=`${Math.min(G.k+1,8)} / 8`;acao(`${PEG[id].n}: cerca de ${nf(v)} litros de água por quilo.`);
+   if(G.k===8){G.fim=1;setTimeout(()=>fimFase(Math.max(60,200-15*G.erros),true,'Produzir 1 kg de carne bovina exige, em média no mundo, cerca de 15 mil litros de água, quase todos usados no pasto e na ração. O frango usa cerca de 4.300 litros e a soja, 2.100. Essa água não aparece na conta de casa, mas sai das chuvas, dos rios e dos aquíferos. Mato Grosso, grande produtor de soja e carne, exporta muita água escondida nesses produtos.','Que alimento do nosso almoço tem a maior pegada hídrica?'),2600);}}
+  else{G.erros++;G.flash=.25;const acima=gap<n?PEG[G.lad[gap]]:null,abaixo=gap>0?PEG[G.lad[gap-1]]:null;acao(abaixo&&abaixo.v>v?`${PEG[id].n} usa menos água que ${abaixo.n}. Coloque mais embaixo.`:`${PEG[id].n} usa mais água que ${acima.n}. Coloque mais em cima.`);}});
+ acao('Arraste o alimento do painel e solte na posição certa da escada. O primeiro pode ir em qualquer lugar.');rodar();}
+
+/* ---------- FASE 3 ---------- */
+const PROT=[{n:'Carne bovina',p:'150 g',L:2310,cor:'#b91c1c'},{n:'Carne de porco',p:'150 g',L:900,cor:'#db2777'},{n:'Frango',p:'150 g',L:645,cor:'#d97706'},{n:'Ovos',p:'2 ovos, 100 g',L:330,cor:'#ca8a04'}];
+function f3(){G={t:0,d:[0,0,0,0,0],fim:0,tr:0,flash:[-1,0]};telaJogo('O cardápio da cantina','semana');
+ const DIAS=['Segunda','Terça','Quarta','Quinta','Sexta'],BX=i=>34+i*86,BY=70,BW=78,BH=150,TOT0=5*2310,META=TOT0/2;
+ const tot=()=>G.d.reduce((s,k)=>s+PROT[k].L,0),boi=()=>G.d.filter(k=>k===0).length;
+ G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);
+  DIAS.forEach((d,i)=>{const x=BX(i),p=PROT[G.d[i]],fl=G.flash[0]===i;c.fillStyle='#fff';c.fillRect(x,BY,BW,BH);c.strokeStyle=fl?AZ2:LINE;c.lineWidth=fl?2:1;c.strokeRect(x+.5,BY+.5,BW-1,BH-1);
+   c.fillStyle=MUT;c.font='700 10px system-ui';c.textAlign='center';c.fillText(d.toUpperCase(),x+BW/2,BY+18);
+   c.fillStyle='#f1f5f9';c.beginPath();c.ellipse(x+BW/2,BY+62,30,22,0,0,7);c.fill();c.strokeStyle='#cbd5e1';c.stroke();c.fillStyle=p.cor;c.beginPath();c.ellipse(x+BW/2,BY+62,15,10,0,0,7);c.fill();
+   c.fillStyle=INK;c.font='700 11px system-ui';quebra(c,p.n,x+BW/2,BY+104,BW-8,13);c.fillStyle=MUT;c.font='500 9.5px system-ui';c.fillText(p.p,x+BW/2,BY+130);c.fillStyle=AZ2;c.font='800 11.5px system-ui';c.fillText(`${nf(p.L)} L`,x+BW/2,BY+145);});
+  const T=tot(),fx=34,fw=422,fy=250;c.fillStyle='#e0f2fe';c.fillRect(fx,fy,fw,22);c.fillStyle=T<=META?'#16a34a':AZ2;c.fillRect(fx,fy,fw*T/TOT0,22);c.strokeStyle=INK;c.lineWidth=2;c.beginPath();c.moveTo(fx+fw/2,fy-6);c.lineTo(fx+fw/2,fy+28);c.stroke();
+  c.fillStyle=INK;c.font='700 11px system-ui';c.textAlign='left';c.fillText(`Água escondida na semana: ${nf(T)} L`,fx,fy-10);c.textAlign='center';c.fillStyle=MUT;c.font='600 10px system-ui';c.fillText(`meta: ${nf(META)} L`,fx+fw/2,fy+42);
+  painelR(c,20,320);rotulo(c,492,40,'Regras');c.fillStyle=INK;c.font='500 11px system-ui';c.textAlign='left';
+  quebra(c,'A cantina serve carne bovina todos os dias. Troque pratos até a água escondida da semana cair pela metade, mantendo carne bovina em pelo menos um dia.',492,60,240,15);
+  linhaM(c,492,150,'Total da semana',`${nf(T)} L`,T<=META?'#2f6b3a':INK);linhaM(c,492,174,'Dias com carne bovina',`${boi()}`,boi()>=1?INK:'#b3261e');linhaM(c,492,198,'Trocas feitas',`${G.tr}`);
+  c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';quebra(c,'Água por porção = pegada por kg × peso da porção. As porções são escolhas do jogo.',492,230,240,13);
+  fonte(c,'Pegadas por kg: Mekonnen e Hoekstra (2010).');};
+ G.upd=dt=>{if(G.flash[1]>0)G.flash[1]-=dt;else G.flash[0]=-1;};
+ ptr((x,y)=>{if(G.fim)return;for(let i=0;i<5;i++){if(x>BX(i)&&x<BX(i)+BW&&y>BY&&y<BY+BH){G.d[i]=(G.d[i]+1)%4;G.tr++;G.flash=[i,.3];const T=tot();
+   if(T<=META&&boi()>=1){G.fim=1;acao(`Meta cumprida: ${nf(T)} litros na semana, menos da metade dos ${nf(TOT0)} do cardápio original, com carne bovina em ${boi()} ${boi()>1?'dias':'dia'}.`);
+    setTimeout(()=>fimFase(Math.max(80,200-4*Math.max(0,G.tr-6)),true,'Um bife de 150 g esconde cerca de 2.300 litros de água; a mesma porção de frango, cerca de 650. Trocar alguns pratos da semana reduz muito a água usada para produzir a comida, sem tirar nenhum alimento do cardápio. Essa é uma das formas de consumo consciente de água que não depende só de fechar a torneira.','Que outras trocas no cardápio da cantina economizariam água?'),2800);}
+   else if(boi()===0)acao('A carne bovina precisa ficar em pelo menos um dia.');else acao(`${DIAS[i]}: ${PROT[G.d[i]].n}. Total da semana: ${nf(T)} L. Faltam ${nf(T-META)} L para a meta.`);return;}}},'pointerdown');
+ acao('Toque num dia para trocar a proteína do almoço.');rodar();}
+
+/* ---------- FASE 4 ---------- */
+const VAZ=[{x:110,y:110,l:9,c:8},{x:300,y:96,l:7,c:5},{x:400,y:190,l:6,c:3},{x:170,y:230,l:4,c:2},{x:260,y:300,l:3,c:1},{x:80,y:300,l:3,c:1},{x:350,y:290,l:2,c:1},{x:220,y:160,l:1,c:1}];
+function f4(){G={t:0,fx:[],fim:0,tent:0};telaJogo('Caça-vazamentos','perda 35%');
+ const VERBA=6,perda=()=>35-G.fx.reduce((s,i)=>s+VAZ[i].l,0),gasto=()=>G.fx.reduce((s,i)=>s+VAZ[i].c,0);
+ const CANOS=[[[40,110],[440,110]],[[110,110],[110,300]],[[110,300],[440,300]],[[300,110],[300,300]],[[300,190],[440,190]],[[110,230],[300,230]],[[60,300],[110,300]],[[220,110],[220,230]]];
+ G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);c.fillStyle='#f5f3ee';c.fillRect(20,20,440,320);
+  c.fillStyle=INK;c.font='700 10px system-ui';c.textAlign='left';c.fillText('ESTAÇÃO DE TRATAMENTO',28,72);c.fillStyle=AZ2;c.fillRect(22,100,20,20);
+  c.lineCap='round';CANOS.forEach(([a,b])=>{c.strokeStyle='#94a3b8';c.lineWidth=10;c.beginPath();c.moveTo(...a);c.lineTo(...b);c.stroke();c.strokeStyle=AZ;c.lineWidth=5;c.beginPath();c.moveTo(...a);c.lineTo(...b);c.stroke();});
+  [[440,110],[440,190],[440,300]].forEach(([x,y])=>{c.fillStyle='#e2e8f0';c.fillRect(x-4,y-18,22,22);c.fillStyle='#64748b';c.beginPath();c.moveTo(x-6,y-18);c.lineTo(x+7,y-28);c.lineTo(x+20,y-18);c.fill();});
+  VAZ.forEach((v,i)=>{const ok=G.fx.includes(i);if(ok){c.fillStyle='#16a34a';c.beginPath();c.arc(v.x,v.y,9,0,7);c.fill();c.strokeStyle='#fff';c.lineWidth=2;c.beginPath();c.moveTo(v.x-4,v.y);c.lineTo(v.x-1,v.y+3);c.lineTo(v.x+4,v.y-3);c.stroke();}
+   else{const r=4+v.l*1.6,ph=(G.t*4+i)%1;for(let k=0;k<3;k++){const pp=(ph+k/3)%1;c.fillStyle=`rgba(14,165,233,${1-pp})`;c.beginPath();c.arc(v.x+(k-1)*r*.6*pp,v.y-4-pp*r*1.6,2.4+r*.12,0,7);c.fill();}c.fillStyle='rgba(14,165,233,.25)';c.beginPath();c.ellipse(v.x,v.y+8,r*1.2,r*.45,0,0,7);c.fill();}
+   c.fillStyle='#fff';c.strokeStyle=ok?'#16a34a':INK;c.lineWidth=1;c.beginPath();c.roundRect(v.x+12,v.y-26,52,28,4);c.fill();c.stroke();c.fillStyle=INK;c.font='700 10px system-ui';c.textAlign='left';c.fillText(`−${v.l}%`,v.x+16,v.y-14);c.fillStyle=MUT;c.font='600 9.5px system-ui';c.fillText(`R$ ${v.c} mil`,v.x+16,v.y-3);});
+  const P=perda(),Gt=gasto();painelR(c,20,320);rotulo(c,492,40,'Rede de distribuição');linhaM(c,492,64,'Perda de água',`${P}%`,P<=25?'#2f6b3a':'#b3261e');linhaM(c,492,88,'Verba usada',`R$ ${Gt} de ${VERBA} mil`,Gt>VERBA?'#b3261e':INK);linhaM(c,492,112,'Meta de perda','25%');
+  c.fillStyle='#eef0ee';c.fillRect(492,126,240,10);c.fillStyle=P<=25?'#16a34a':'#ef4444';c.fillRect(492,126,240*P/35,10);c.fillStyle=INK;c.fillRect(492+240*25/35,122,2,18);
+  c.fillStyle=MUT;c.font='500 10.5px system-ui';c.textAlign='left';quebra(c,'No Brasil, cerca de 35% da água tratada se perde antes de chegar às casas. A meta federal é chegar a 25%. Os vazamentos e custos desta rede são ilustrativos.',492,160,240,14);
+  fonte(c,'Perdas no Brasil em 2022: Instituto Trata Brasil, com dados do SNIS.');};
+ G.upd=()=>{};
+ ptr((x,y)=>{if(G.fim)return;const i=VAZ.findIndex(v=>Math.hypot(x-v.x,y-v.y)<22||(x>v.x+10&&x<v.x+66&&y>v.y-28&&y<v.y+4));if(i<0)return;
+  if(G.fx.includes(i)){G.fx=G.fx.filter(k=>k!==i);acao('Conserto desfeito: a verba voltou.');return;}
+  if(gasto()+VAZ[i].c>VERBA){acao(`Sem verba para este conserto: custa R$ ${VAZ[i].c} mil e restam R$ ${VERBA-gasto()} mil. Desfaça outro conserto tocando nele.`);return;}
+  G.fx.push(i);G.tent++;$('info').textContent=`perda ${perda()}%`;
+  if(perda()<=25){G.fim=1;acao(`Meta atingida: perda de ${perda()}% com R$ ${gasto()} mil.`);setTimeout(()=>fimFase(Math.max(80,200-10*Math.max(0,G.tent-2)),true,'Em 2022, o Brasil perdeu cerca de 35% da água tratada na rede, entre vazamentos, ligações irregulares e erros de medição. Reduzir perdas é uma forma de aumentar a água disponível sem tirar mais do rio. Com pouca verba, compensa começar pelos vazamentos que perdem mais água para cada real gasto.','Quem deve pagar o conserto dos vazamentos da rede da cidade?'),2800);}
+  else acao(`Consertado: perda caiu para ${perda()}%. Verba restante: R$ ${VERBA-gasto()} mil.`);},'pointerdown');
+ acao('Toque nos vazamentos para consertar. A perda precisa chegar a 25% sem passar da verba.');rodar();}
+
+/* ---------- FASE 5 ---------- */
+const NOS={sinop:{x:262,y:222,n:'Sinop'},tp:{x:282,y:162,n:'Rio Teles Pires'},tap:{x:232,y:104,n:'Rio Tapajós'},ama:{x:290,y:50,n:'Rio Amazonas',ly:-12,a:'c'},atN:{x:416,y:56,n:'Oceano Atlântico',ly:-14,a:'c'},arag:{x:392,y:178,n:'Rio Araguaia',a:'l'},toc:{x:402,y:110,n:'Rio Tocantins',a:'l'},
+ cac:{x:96,y:272,n:'Cáceres'},par:{x:96,y:318,n:'Rio Paraguai',ly:20,a:'c'},cba:{x:196,y:280,n:'Rio Cuiabá'},parana:{x:236,y:330,n:'Rio Paraná',ly:16,a:'c'},prata:{x:336,y:330,n:'Rio da Prata',ly:16,a:'c'},atS:{x:416,y:306,n:'Oceano Atlântico',ly:-14,a:'c'}};
+const LIG=[['sinop','tp'],['tp','tap'],['tap','ama'],['ama','atN'],['arag','toc'],['toc','atN'],['cac','par'],['cba','par'],['par','parana'],['parana','prata'],['prata','atS']];
+const ROTAS=[['cac','par','parana','prata','atS'],['sinop','tp','tap','ama','atN']];
+function f5(){G={t:0,r:0,k:1,erros:0,fim:0,gota:0};telaJogo('O caminho da gota','gota 1 de 2');
+ G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);c.fillStyle='#f0f7fb';c.fillRect(20,20,440,330);
+  c.strokeStyle='rgba(31,36,33,.25)';c.setLineDash([6,5]);c.lineWidth=1.2;c.beginPath();c.moveTo(20,250);c.bezierCurveTo(150,236,300,262,460,244);c.stroke();c.setLineDash([]);c.fillStyle=MUT;c.font='600 9.5px system-ui';c.textAlign='left';c.fillText('BACIA AMAZÔNICA',26,240);c.fillText('BACIA DO PRATA',26,262);c.textAlign='right';c.fillText('divisor de águas',454,240);
+  LIG.forEach(([a,b])=>{c.strokeStyle='#93c5fd';c.lineWidth=4;c.beginPath();c.moveTo(NOS[a].x,NOS[a].y);c.lineTo(NOS[b].x,NOS[b].y);c.stroke();});
+  for(let r=0;r<=G.r&&r<2;r++){const R=ROTAS[r],k=r<G.r?R.length:G.k;c.strokeStyle=AZ2;c.lineWidth=5;c.beginPath();for(let j=0;j<k;j++){const p=NOS[R[j]];j?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y);}c.stroke();}
+  Object.entries(NOS).forEach(([id,p])=>{const cid=['sinop','cac'].includes(id);c.fillStyle=cid?'#b91c1c':id.startsWith('at')?AZ2:'#fff';c.strokeStyle=AZ2;c.lineWidth=2;c.beginPath();c.arc(p.x,p.y,cid?7:8,0,7);c.fill();c.stroke();
+   c.fillStyle=INK;c.font=(cid?'800 ':'600 ')+'10.5px system-ui';const al=p.a||'r';c.textAlign=al==='c'?'center':al==='l'?'right':'left';c.fillText(p.n,p.x+(al==='c'?0:al==='l'?-12:12),p.y+(p.ly||4));});
+  if(G.r<2){const R=ROTAS[G.r],p=NOS[R[G.k-1]];const b=Math.sin(G.t*5)*2;c.fillStyle=AZ;c.beginPath();c.moveTo(p.x,p.y-20+b);c.quadraticCurveTo(p.x+8,p.y-8+b,p.x,p.y-4+b);c.quadraticCurveTo(p.x-8,p.y-8+b,p.x,p.y-20+b);c.fill();}
+  painelR(c,20,320);rotulo(c,492,40,G.r<2?`Gota ${G.r+1} de 2`:'Concluído',ACC);c.fillStyle=INK;c.font='600 11.5px system-ui';c.textAlign='left';
+  quebra(c,G.r===0?'Uma gota de chuva cai em Cáceres. Por quais rios ela passa até chegar ao oceano?':G.r===1?'Agora uma gota cai em Sinop, no norte de Mato Grosso. Qual é o caminho dela?':'As duas gotas chegaram ao oceano por bacias diferentes.',492,60,240,15);
+  rotulo(c,492,130,'Caminho até agora');if(G.r<2)ROTAS[G.r].slice(0,G.k).forEach((id,j)=>{c.fillStyle=INK;c.font='500 11px system-ui';c.fillText(`${j+1}. ${NOS[id].n}`,492,150+j*16);});
+  c.fillStyle=MUT;c.font='500 10px system-ui';quebra(c,'Esquema simplificado, fora de escala.',492,300,240,13);
+  fonte(c,'Rede de rios simplificada. Divisão hidrográfica: ANA.');};
+ G.upd=()=>{};
+ ptr((x,y)=>{if(G.fim||G.r>=2)return;const id=Object.keys(NOS).find(k=>Math.hypot(x-NOS[k].x,y-NOS[k].y)<20);if(!id)return;const R=ROTAS[G.r],certo=R[G.k];
+  if(id===certo){G.k++;if(G.k===R.length){G.r++;G.k=1;if(G.r===1){$('info').textContent='gota 2 de 2';acao('A gota de Cáceres desceu o Paraguai, entrou no Paraná e chegou ao Atlântico pelo Rio da Prata, entre Argentina e Uruguai.');}
+    else{G.fim=1;$('info').textContent='concluído';acao('A gota de Sinop desceu o Teles Pires, o Tapajós e o Amazonas até o Atlântico no norte do Brasil.');setTimeout(()=>fimFase(Math.max(60,200-15*G.erros),true,'Mato Grosso fica no encontro de três grandes regiões hidrográficas. A água que cai em Cáceres e Cuiabá corre para o Rio Paraguai, passa pelo Pantanal e segue pela bacia do Prata até o Atlântico Sul. A que cai em Sinop vai para a bacia Amazônica. O que fazemos com a água numa cidade afeta todos os lugares rio abaixo, inclusive em outros países.','Quem vive rio abaixo de Cáceres e depende da água que sai da nossa cidade?'),2800);}}
+   else acao(`${NOS[id].n}: certo. Qual é o próximo trecho?`);}
+  else{G.erros++;const atual=R[G.k-1];acao(id==='cba'?'O Rio Cuiabá deságua no Paraguai: uma gota que já está no Paraguai não sobe por ele.':['arag','toc'].includes(id)?'O Araguaia e o Tocantins formam outra bacia, a leste. Siga os rios ligados a '+NOS[atual].n+'.':`De ${NOS[atual].n} a gota não vai direto para ${NOS[id].n}. Siga a linha do rio.`);}},'pointerdown');
+ acao('Toque, em ordem, nos rios e lugares por onde passa a gota que caiu em Cáceres, até o oceano.');rodar();}
+
+/* ================= INICIO / AVATAR ================= */
+function inicio(){parar();G=null;cx=null;$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><div class="capa"><canvas id="cA" width="560" height="560"></canvas>
+ <div><h2>Seu perfil de pesquisador</h2><div class="opts">
+ <div class="l">Pele</div><div class="sw" id="sP">${PELES.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.pele===i?'on':''}" aria-label="pele ${i+1}"></button>`).join('')}</div>
+ <div class="l">Cabelo</div><div class="sw" id="sE">${ESTILOS.map(([k,t])=>`<button class="tx ${A.estilo===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <div class="sw" id="sC">${CABS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.cab===i?'on':''}" aria-label="cor ${i+1}"></button>`).join('')}</div>
+ <div class="l">Camiseta</div><div class="sw" id="sT">${CAMISAS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.camisa===i?'on':''}" aria-label="camiseta ${i+1}"></button>`).join('')}</div>
+ <div class="l">Chapéu</div><div class="sw" id="sH">${CHAPEUS.map(([k,t])=>`<button class="tx ${A.chapeu===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <input class="nome" id="iN" maxlength="20" placeholder="Seu nome" value="${esc(A.nome)}">
+ </div></div></div>
+ <div class="row" style="margin-top:14px"><button class="btn" id="bJ">Iniciar as 5 fases</button><button class="btn ghost" id="bG">Guia do professor</button></div>
+ <p class="small" style="margin-top:10px">Geografia · 6º ano · BNCC EF06GE12</p></div>`;
+ const pinta=()=>{const c=$('cA').getContext('2d');c.clearRect(0,0,560,560);c.fillStyle='#eaf5fb';c.fillRect(0,0,560,560);c.fillStyle='#cfe7f5';c.beginPath();c.arc(280,600,260,0,7);c.fill();avatar(c,280,560,6.4,A,true);};
+ pinta();
+ const liga=(id,f)=>document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{f(b);salvaA();document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b));pinta();});
+ liga('sP',b=>A.pele=+b.dataset.i);liga('sC',b=>A.cab=+b.dataset.i);liga('sT',b=>A.camisa=+b.dataset.i);liga('sE',b=>A.estilo=b.dataset.k);liga('sH',b=>A.chapeu=b.dataset.k);
+ $('iN').oninput=e=>{A.nome=e.target.value;salvaA();};
+ $('bJ').onclick=novo;$('bG').onclick=guia;
+}
+function novo(){S={f:0,tot:0,fp:0,res:[],fichas:0};salvo=false;intro();}
+function relatorio(){parar();G=null;cx=null;$('rankBox').style.display='block';const nome=A.nome.trim()||'Pesquisador';
+ $('tela').innerHTML=`<div class="card"><div class="rel"><canvas id="cR" width="240" height="240"></canvas><div><div class="small">Relatório de campo</div><h2>${esc(nome)}</h2><div class="big" style="font-size:2rem;font-weight:800;color:var(--deep)">${S.tot} pts</div></div></div>
+ <table class="tab" style="margin-top:12px"><tr><th>Fase</th><th>Pontos</th><th>Meta</th></tr>${FASES.map((F,i)=>{const r=S.res[i]||{pts:0,ok:false};return`<tr><td>${F.ic} ${F.nome}</td><td>${r.pts}</td><td>${r.ok?'✓':'✗'}</td></tr>`;}).join('')}</table>
+ <div class="pensa"><b>Para escrever no caderno:</b> cite um uso da água que você não via antes e uma troca de consumo que economiza água.</div>
+ <div class="savebox noprint"><input id="pName" maxlength="20" value="${esc(nome)}"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row noprint" style="margin-top:12px"><button class="btn ghost" id="bI">Imprimir relatório</button><button class="btn ghost" id="bN">Jogar de novo</button><button class="btn ghost" id="bV">Início</button></div></div>`;
+ const c=$('cR').getContext('2d');c.fillStyle='#eaf5fb';c.fillRect(0,0,240,240);avatar(c,120,240,3.2,A,true);
+ $('bS').onclick=()=>salvar('5 fases');$('bI').onclick=()=>window.print();$('bN').onclick=novo;$('bV').onclick=inicio;
+}
+
+/* ================= GUIA DO PROFESSOR ================= */
+function guia(){parar();$('hud').style.display='none';$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card guia">
+ <div class="row top noprint"><button class="btn ghost sm" id="bVt">← Voltar</button><button class="btn sm" id="bPr">Imprimir guia</button></div>
+ <h2 style="margin-top:10px">Guia do professor · Água Invisível</h2>
+ <p class="small">Ensino Fundamental · 6º ano · Geografia</p>
+ <h3>Habilidade da BNCC</h3>
+ <div class="hab"><b>EF06GE12.</b> Identificar o consumo dos recursos hídricos e o uso das principais bacias hidrográficas no Brasil e no mundo, enfatizando as transformações nos ambientes urbanos.</div>
+ <h3>Objetivos da aula</h3>
+ <ul><li>Reconhecer os principais usos da água retirada no Brasil.</li><li>Compreender a ideia de pegada hídrica e de água escondida nos alimentos.</li><li>Propor trocas de consumo que economizam água.</li><li>Entender as perdas de água tratada na rede urbana.</li><li>Localizar Mato Grosso entre as bacias do Prata e Amazônica.</li></ul>
+ <h3>Roteiro de 50 minutos</h3>
+ <table class="tab"><tr><th>Tempo</th><th>O que fazer</th></tr>
+ <tr><td>5 min</td><td>Pergunte: quem gasta mais água no Brasil, as casas, as fábricas ou as lavouras?</td></tr>
+ <tr><td>25 min</td><td>Alunos jogam em duplas.</td></tr>
+ <tr><td>15 min</td><td>Discussão com as perguntas de cada fase.</td></tr>
+ <tr><td>5 min</td><td>Cada dupla escreve a frase do relatório de campo.</td></tr></table>
+ <h3>Fase por fase</h3>
+ <table class="tab"><tr><th>Fase</th><th>O aluno faz</th><th>Para discutir</th><th>Conceitos</th></tr>
+ <tr><td>1. Para onde vai a água</td><td>Distribui 100 partes da água retirada entre os usos</td><td>Por que a agricultura usa mais?</td><td>Retirada, usos consuntivos.</td></tr>
+ <tr><td>2. Escada da pegada hídrica</td><td>Ordena 8 alimentos pela água usada por kg</td><td>Que alimento do almoço tem maior pegada?</td><td>Pegada hídrica, água virtual.</td></tr>
+ <tr><td>3. O cardápio da cantina</td><td>Troca proteínas para reduzir a água da semana à metade</td><td>Que outras trocas economizam água?</td><td>Consumo consciente.</td></tr>
+ <tr><td>4. Caça-vazamentos</td><td>Escolhe consertos com verba limitada</td><td>Quem paga o conserto da rede?</td><td>Perdas na distribuição, saneamento.</td></tr>
+ <tr><td>5. O caminho da gota</td><td>Segue gotas de Cáceres e Sinop até o oceano</td><td>Quem vive rio abaixo de Cáceres?</td><td>Bacia hidrográfica, divisor de águas.</td></tr></table>
+ <h3>Avaliação</h3>
+ <p>Use o relatório de campo impresso e a frase escrita por cada dupla. Todos os instrumentos têm o mesmo peso. Observe se o aluno diferencia a água usada em casa da água escondida nos produtos.</p>
+ <h3>Sequência de 3 aulas</h3>
+ <ol><li><b>Aula 1.</b> Jogo completo e discussão.</li><li><b>Aula 2.</b> Leitura da conta de água de casa: consumo do mês em metros cúbicos e por pessoa.</li><li><b>Aula 3.</b> Mapa da bacia do Rio Paraguai com os municípios que ficam rio acima e rio abaixo de Cáceres.</li></ol>
+ <h3>Cuidados na mediação</h3>
+ <p>Os valores de pegada hídrica são médias mundiais e incluem a chuva que molhou pastos e lavouras, chamada água verde. Por isso eles não podem ser somados à conta de água de casa. As porções da fase 3 são escolhas do jogo. Na fase 4, os vazamentos e custos da rede são ilustrativos; reais são apenas a perda de cerca de 35% no Brasil e a meta de 25%. O mapa da fase 5 é um esquema simplificado.</p>
+ <h3>De onde vêm os números</h3>
+ <p><b>Fase 1.</b> ANA, Conjuntura dos Recursos Hídricos no Brasil 2023: em 2022, retirada total de 2.035,2 m³/s, com irrigação 50,5%, abastecimento urbano 23,9% e indústria 9,4%. O restante, 16,2%, reúne abastecimento animal e rural, termelétricas e mineração.</p>
+ <p><b>Fases 2 e 3.</b> Pegada hídrica média mundial por quilo: carne bovina 15.400 L, carneiro 10.400 L, porco 6.000 L, frango 4.300 L, ovo 3.300 L e leite 1.000 L (Mekonnen e Hoekstra, 2010 e 2012); soja 2.100 L e leguminosas 4.000 L (Universidade de Twente, divulgação dos mesmos autores, 2011).</p>
+ <p><b>Fase 4.</b> Instituto Trata Brasil, estudo de perdas de água de 2024 com dados do SNIS de 2022: perdas em torno de 35%. Meta de 25% da Portaria nº 490/2021.</p>
+ <h3>Referências</h3>
+ <ul class="ref">
+ <li>Agência Nacional de Águas e Saneamento Básico. Conjuntura dos Recursos Hídricos no Brasil 2023: informe anual. Brasília: ANA, 2024.</li>
+ <li>Mekonnen MM, Hoekstra AY. A global assessment of the water footprint of farm animal products. Ecosystems, 15:401-415, 2012. doi:10.1007/s10021-011-9517-8</li>
+ <li>Mekonnen MM, Hoekstra AY. The green, blue and grey water footprint of farm animals and animal products. Value of Water Research Report Series nº 48. Delft: UNESCO-IHE, 2010.</li>
+ <li>Instituto Trata Brasil. Estudo de perdas de água 2024 (SNIS 2022). São Paulo, 2024.</li></ul>
+ </div>`;
+ $('bVt').onclick=inicio;$('bPr').onclick=()=>window.print();
+}
+
+/* ================= RANKING ================= */
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="agua-invisivel";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__a={get S(){return S},get G(){return G},FASES,inicio,novo,intro,guia};
+inicio();
+</script>
+</body>
+</html>
