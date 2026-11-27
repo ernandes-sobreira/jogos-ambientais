@@ -262,8 +262,10 @@ const ptrU=fn=>ptr(fn,'pointerup');
 const GAS=[{k:'N2',n:'Nitrogênio',cor:'#2563eb'},{k:'O2',n:'Oxigênio',cor:'#dc2626'},{k:'Ar',n:'Argônio',cor:'#7c3aed'},{k:'CO2',n:'Gás carbônico',cor:'#d97706'}];
 const SR=n=>{let s=n;return()=>(s=(s*16807)%2147483647)/2147483647;};
 /* ---------- FASE 1 ---------- */
-function f1(){G={t:0,d:[25,50,75],drag:-1,tent:0,fim:0};telaJogo('Cem partículas de ar','amostra');
+const ALVO1=[[77,79],[20,22],[1,1],[0,0]];
+function f1(){G={t:0,d:[25,50,75],drag:-1,tent:0,fim:0,av:0};telaJogo('Cem partículas de ar','amostra');
  const BX=40,BW=420,BY=300,cnt=()=>[G.d[0],G.d[1]-G.d[0],G.d[2]-G.d[1],100-G.d[2]];
+ const stt=i=>{const v=cnt()[i],[a,b]=ALVO1[i];return v<a?-1:v>b?1:0;};
  const ord=(()=>{const r=SR(7),a=[...Array(100).keys()];for(let i=99;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;})();
  G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);const n=cnt();
   c.fillStyle='#fff';c.fillRect(40,30,420,240);c.strokeStyle=LINE;c.strokeRect(40.5,30.5,419,239);rotulo(c,52,48,'Amostra de 100 partículas de ar seco',INK);
@@ -273,19 +275,28 @@ function f1(){G={t:0,d:[25,50,75],drag:-1,tent:0,fim:0};telaJogo('Cem partícula
   c.strokeStyle=INK;c.lineWidth=1;c.strokeRect(BX+.5,BY+.5,BW-1,25);
   G.d.forEach((d,i)=>{const xx=BX+BW*d/100;c.fillStyle='#fff';c.strokeStyle=INK;c.lineWidth=2;c.beginPath();c.roundRect(xx-6,BY-8,12,42,4);c.fill();c.stroke();c.fillStyle=INK;c.fillRect(xx-1,BY+6,2,14);});
   c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';c.fillText('0',BX,BY+42);c.textAlign='right';c.fillText('100 partículas',BX+BW,BY+42);
-  painelR(c,20,320);rotulo(c,492,40,'Sua amostra');GAS.forEach((g,i)=>{c.fillStyle=g.cor;c.beginPath();c.arc(497,60+i*24,5,0,7);c.fill();linhaM(c,508,64+i*24,'',`${n[i]} de 100`);c.fillStyle=INK;c.font='500 12.5px system-ui';c.textAlign='left';c.fillText(`${g.n} (${g.k})`,508,64+i*24);});
-  if(G.fim){rotulo(c,492,176,'Ar seco real (NASA)');linhaM(c,492,200,'Nitrogênio','78,08%');linhaM(c,492,224,'Oxigênio','20,95%');linhaM(c,492,248,'Argônio','0,93%');linhaM(c,492,272,'Gás carbônico','0,042%',ACC);}
-  else{c.fillStyle=MUT;c.font='500 11px system-ui';c.textAlign='left';['Ar seco é o ar sem vapor de água.','Cada bolinha representa 1% das','partículas da amostra.'].forEach((t,i)=>c.fillText(t,492,184+i*16));}
+  painelR(c,20,320);rotulo(c,492,40,'Sua amostra');
+  GAS.forEach((g,i)=>{const y=64+i*26,s=stt(i);c.fillStyle=g.cor;c.beginPath();c.arc(497,y-4,5,0,7);c.fill();c.fillStyle=INK;c.font='500 12.5px system-ui';c.textAlign='left';c.fillText(g.n,508,y);
+   c.font='700 12.5px system-ui';c.textAlign='right';c.fillStyle=INK;c.fillText(n[i],660,y);
+   if(G.av){c.font='700 11px system-ui';c.fillStyle=s===0?'#2f6b3a':'#b3261e';c.fillText(s===0?'✓ certo':s<0?'↑ falta':'↓ sobra',732,y);}
+   c.strokeStyle='#f0f2f0';c.lineWidth=1;c.beginPath();c.moveTo(492,y+8);c.lineTo(732,y+8);c.stroke();});
+  if(G.fim){rotulo(c,492,184,'Ar seco real (NASA)');linhaM(c,492,206,'Nitrogênio','78,08%');linhaM(c,492,228,'Oxigênio','20,95%');linhaM(c,492,250,'Argônio','0,93%');linhaM(c,492,272,'Gás carbônico','0,042%',ACC);}
+  else{c.fillStyle=MUT;c.font='500 11px system-ui';c.textAlign='left';['Ar seco é o ar sem vapor de água.','Cada bolinha é 1 das 100 partículas.','Ajuste pela régua ou pelos botões'].forEach((t,k)=>c.fillText(t,492,184+k*16));c.fillText('abaixo do jogo.',492,232);}
+  if(G.av){const ok=G.fim;c.fillStyle=ok?'#e8f2ea':'#fbeaea';c.fillRect(479,292,266,46);c.fillStyle=ok?'#2f6b3a':'#b3261e';c.font='800 14px system-ui';c.textAlign='center';c.fillText(ok?'CORRETO: avançando...':'AINDA NÃO ESTÁ CERTO',612,312);c.font='600 10.5px system-ui';c.fillText(ok?'proporção do ar seco montada':`${[0,1,2,3].filter(i=>stt(i)===0).length} de 4 gases certos`,612,328);}
   fonte(c,'Composição do ar seco: NASA Earth Fact Sheet.');};
  G.upd=()=>{};
+ const confere=(conta)=>{if(G.fim)return;G.av=1;if(conta)G.tent++;
+  if([0,1,2,3].every(i=>stt(i)===0)){G.fim=1;$('ctrl').innerHTML='';acao('Correto! O gás carbônico não ganhou nenhuma partícula: ele é tão raro que não chega a 1 em cada 100.');
+   setTimeout(()=>fimFase(Math.max(80,200-8*(G.tent-1)),true,'O ar é uma mistura de gases, e não uma substância única. No ar seco, cerca de 78 de cada 100 partículas são de nitrogênio, 21 de oxigênio e quase 1 de argônio. O gás carbônico, que tanto se discute nas mudanças climáticas, representa apenas 0,042% das partículas. Mesmo raro, ele retém calor, e pequenas mudanças na sua quantidade alteram o clima.','Se o gás carbônico é tão raro, por que pequenas mudanças nele importam tanto?'),2600);return;}
+  const[n,o,a,c2]=cnt();const dica=c2>0?`Ainda não. Gás carbônico com ${c2} de 100 é demais: ele é muito mais raro.`:a!==1?(a>1?`Ainda não. Argônio com ${a} de 100 é demais: ele fica perto de 1 em cada 100.`:'Ainda não. Falta o argônio: ele fica perto de 1 em cada 100.'):(n<77?'Ainda não. Falta nitrogênio: ele é o gás mais comum do ar.':n>79?'Ainda não. Nitrogênio demais.':o<20?'Ainda não. Falta oxigênio.':'Ainda não. Oxigênio demais.');acao(dica);};
+ const setN=(o,a,c2)=>{const n0=100-o-a-c2;if(n0<0||o<0||a<0||c2<0)return;G.d=[n0,n0+o,n0+o+a];confere();};
  const val=x=>clamp(Math.round((x-BX)/BW*100),0,100);
- ptr((x,y)=>{if(G.fim)return;if(y>BY-24&&y<BY+50){let b=-1,bd=1e9;G.d.forEach((d,i)=>{const dd=Math.abs(BX+BW*d/100-x);if(dd<bd){bd=dd;b=i;}});if(bd<40)G.drag=b;}},'pointerdown');
+ ptr((x,y)=>{if(G.fim)return;if(y>BY-24&&y<BY+50){let b=-1,bd=1e9;G.d.forEach((d,i)=>{const dd=Math.abs(BX+BW*d/100-x);if(dd<bd||(dd===bd&&x>BX+BW*d/100)){bd=dd;b=i;}});if(bd<40)G.drag=b;}},'pointerdown');
  ptr(x=>{if(G.drag<0)return;const i=G.drag,lo=i?G.d[i-1]:0,hi=i<2?G.d[i+1]:100;G.d[i]=clamp(val(x),lo,hi);});
- ptrU(()=>{if(G.drag<0)return;G.drag=-1;G.tent++;const[n,o,a,c2]=cnt();
-  if(n>=77&&n<=79&&o>=20&&o<=22&&a===1&&c2===0){G.fim=1;acao('Amostra correta. O gás carbônico não ganhou nenhuma partícula: ele é tão raro que não chega a 1 em 100.');
-   setTimeout(()=>fimFase(Math.max(80,200-12*(G.tent-1)),true,'O ar é uma mistura de gases, e não uma substância única. No ar seco, cerca de 78 de cada 100 partículas são de nitrogênio, 21 de oxigênio e quase 1 de argônio. O gás carbônico, que tanto se discute nas mudanças climáticas, representa apenas 0,042% das partículas. Mesmo raro, ele retém calor, e pequenas mudanças na sua quantidade alteram o clima.','Se o gás carbônico é tão raro, por que pequenas mudanças nele importam tanto?'),2600);return;}
-  const dica=c2>0?`Gás carbônico com ${c2} de 100 é demais: ele é muito mais raro.`:a!==1?'O argônio fica perto de 1 em cada 100 partículas.':n<77||n>79?(n<77?'Ainda falta nitrogênio: ele é o gás mais comum do ar.':'Nitrogênio demais.'):(o<20?'Falta oxigênio.':'Oxigênio demais.');acao(dica);});
- acao('Arraste as três divisórias da barra para formar 100 partículas de ar seco.');rodar();}
+ ptrU(()=>{if(G.drag<0)return;G.drag=-1;confere(1);});
+ $('ctrl').innerHTML=[1,2,3].map(i=>`<span style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:8px;padding:4px 8px;background:#fff"><span style="width:10px;height:10px;border-radius:50%;background:${GAS[i].cor}"></span><b style="font-size:13px">${GAS[i].k}</b><button class="btn ghost sm" data-g="${i}" data-s="-1" aria-label="menos ${GAS[i].n}">−</button><button class="btn ghost sm" data-g="${i}" data-s="1" aria-label="mais ${GAS[i].n}">+</button></span>`).join('')+'<span class="small" style="color:var(--mut)">O nitrogênio fica com o resto.</span>';
+ $('ctrl').querySelectorAll('button').forEach(b=>b.onclick=()=>{if(G.fim)return;const n=cnt(),g=+b.dataset.g,s=+b.dataset.s;n[g]+=s;setN(n[1],n[2],n[3]);});
+ acao('Arraste as divisórias da régua ou use os botões − e + abaixo. A cada ajuste o jogo diz o que está certo e o que falta.');rodar();}
 
 /* ---------- FASE 2 ---------- */
 function f2(){G={t:0,v:2,drag:false,tent:0,fim:0};telaJogo('Procurando o CO2','estimativa');
