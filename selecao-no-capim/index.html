@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seleção no Capim</title>
+<style>
+:root{--main:#4d7c0f;--deep:#365314;--soft:#f1f6e8;--line:#dde8cd;--ink:#10212b;--mut:#4d6370;--co2:#e53935;--ch4:#ef6c00;--ok:#2e7d32;--bad:#c62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:820px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep);letter-spacing:-.01em}
+h2{font-size:1.2rem;color:var(--deep);margin-bottom:6px;letter-spacing:-.01em}
+h3{font-size:1rem;color:var(--deep);margin:14px 0 6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 12px;font-weight:700;font-size:.86rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.card{border:2px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:var(--deep)}.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.btn.sm{padding:9px 14px;font-size:.92rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas.cena{width:100%;height:auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff;margin-top:10px}
+.top{justify-content:space-between}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--main);color:#fff;border-radius:14px;padding:8px 14px;font-weight:800;font-size:1.05rem}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.tool{border:2px solid var(--line);background:#fff;color:var(--deep);border-radius:12px;padding:9px 12px;font-weight:700;font-family:inherit;font-size:.92rem;cursor:pointer;touch-action:manipulation}
+.tool.on{border-color:var(--main);background:var(--soft)}
+.tool:disabled{opacity:.4}
+.mets{display:grid;gap:8px;margin-top:10px}
+.met{display:grid;grid-template-columns:92px 1fr 52px;gap:8px;align-items:center;font-weight:700;font-size:.9rem}
+.met .bar{position:relative;height:18px;background:#f1f4f5;border-radius:99px;overflow:hidden}
+.met .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;transition:width .15s}
+.met .alvo{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--ink);border-radius:2px}
+.met .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--mut)}
+.met.co2 .fill{background:var(--co2)}.met.ch4 .fill{background:var(--ch4)}
+.saldo .bar{background:linear-gradient(90deg,#e8f5e9 50%,#ffebee 50%)}
+.saldo .zero{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:var(--ink)}
+.saldo .fill{border-radius:0}
+.obj{display:flex;gap:10px;align-items:flex-start;background:#fff8e1;border:2px solid #ffe082;border-radius:14px;padding:10px 12px;margin-top:10px;font-size:.95rem}
+.obj b{color:#8d6e00;white-space:nowrap}
+.acao{display:flex;gap:10px;align-items:center;background:var(--soft);border-left:5px solid var(--main);border-radius:0 12px 12px 0;padding:9px 12px;margin-top:8px;font-weight:600;font-size:.95rem;min-height:64px}@media(max-width:640px){.acao{min-height:5.4em}}
+.acao .dedo{font-size:1.25rem;animation:pulo 1s ease-in-out infinite}
+@keyframes pulo{50%{transform:translateX(4px)}}
+.help{width:34px;height:34px;border-radius:50%;border:2px solid var(--main);background:#fff;color:var(--deep);font-weight:800;font-size:1rem;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(16,33,43,.35);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal .card{max-width:460px;width:100%}
+.intro{text-align:center;padding:26px 18px}
+.intro .ic{font-size:3rem;line-height:1}
+.intro .n{color:var(--mut);font-weight:700;font-size:.85rem;margin-top:8px}
+.passos{display:grid;gap:8px;margin:16px auto;max-width:420px;text-align:left}
+.passos div{display:flex;gap:12px;align-items:center;background:var(--soft);border-radius:12px;padding:10px 14px;font-weight:600}
+.passos b{font-size:1.3rem;min-width:1.6em;text-align:center}
+.res{text-align:center}
+.res .big{font-size:2.6rem;font-weight:800;color:var(--deep);line-height:1.1}
+.res .ok{color:var(--ok);font-weight:800}.res .no{color:var(--bad);font-weight:800}
+.pensa{background:var(--soft);border-radius:14px;padding:12px 14px;margin:14px auto;max-width:520px;text-align:left}
+.pensa b{color:var(--deep)}
+.boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.box{border:2px dashed var(--line);border-radius:14px;padding:10px;min-height:110px;cursor:pointer}
+.box h4{font-size:.92rem;color:var(--deep);margin-bottom:6px}
+.box.alvo{border-color:var(--main);background:var(--soft)}
+.cards{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;min-height:48px}
+.ct{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 11px;font-weight:700;font-size:.9rem;cursor:pointer;box-shadow:0 2px 0 var(--line);font-family:inherit;color:var(--ink);transition:transform .5s}
+.ct.sel{border-color:var(--main);background:var(--soft);transform:translateY(-2px)}
+.ct.certo{border-color:var(--ok);background:#e8f5e9}.ct.errado{border-color:var(--bad);background:#ffebee}
+.ct.movido{animation:voa .8s ease}
+@keyframes voa{0%{transform:translateY(-30px) scale(1.1);opacity:.3}100%{transform:none;opacity:1}}
+.capa{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+.capa canvas{width:100%;height:auto;display:block;border-radius:16px;background:var(--soft)}
+.opts{display:grid;gap:8px;margin-top:6px}
+.opts .l{font-size:.8rem;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.sw{display:flex;gap:6px;flex-wrap:wrap}
+.sw button{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--line);cursor:pointer}
+.sw button.on{box-shadow:0 0 0 3px var(--deep)}
+.sw .tx{width:auto;height:auto;border-radius:10px;padding:6px 10px;font-weight:700;font-size:.85rem;background:#fff;color:var(--deep);font-family:inherit;border:0}
+input.nome{border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit;width:100%}
+input[type=range]{width:100%;accent-color:var(--main)}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:6px}
+.tab th{text-align:left;background:var(--soft);color:var(--deep);padding:7px 6px}
+.tab td{border-bottom:1px solid var(--line);padding:7px 6px;vertical-align:top}
+.guia p,.guia li{font-size:.95rem;margin-bottom:6px}
+.guia ul,.guia ol{padding-left:20px}
+.hab{border-left:5px solid var(--main);background:var(--soft);padding:10px 14px;border-radius:0 12px 12px 0;font-size:.95rem}
+.ref li{font-size:.86rem;color:var(--mut)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+.rel{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center}
+.rel canvas{width:120px;height:120px;border-radius:50%;background:var(--soft)}
+.mini{width:100%;max-width:420px;height:auto;display:block;margin:10px auto 0}
+@media (max-width:620px){.wrap{padding:10px 8px 30px}.card{padding:12px;border-radius:16px}.capa{grid-template-columns:1fr}.met{grid-template-columns:70px 1fr 44px;font-size:.82rem}.chip{font-size:.95rem}.rel{grid-template-columns:80px 1fr}.rel canvas{width:80px;height:80px}}
+@media print{a.hub,header .hud,.ranking,.noprint{display:none!important}.card{border:1px solid #ccc;break-inside:avoid}body{font-size:12px}}
+
+/* ===== pele profissional ===== */
+:root{--main:#4d7c0f;--deep:#365314;--soft:#f1f6e8;--line:#dde8cd;--ink:#1f2421;--mut:#5f6b66;--ok:#2f6b3a;--bad:#b3261e}
+body{background:#f6f7f5;color:var(--ink);-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px}
+h1{font-size:1.35rem;font-weight:750;letter-spacing:-.015em;color:var(--ink)}
+h2{color:var(--ink);font-weight:750}
+h3{color:var(--deep);font-size:.95rem;text-transform:uppercase;letter-spacing:.04em}
+a.hub{color:var(--mut);font-weight:600}
+.card{border:1px solid var(--line);border-radius:10px;box-shadow:0 1px 2px rgba(16,24,20,.05)}
+.pill{border-radius:4px;background:#fff;border:1px solid var(--line);color:var(--ink);font-weight:600}
+.btn{border-radius:6px;font-weight:650;padding:11px 20px;letter-spacing:.01em}
+.btn.ghost{border:1px solid var(--line);color:var(--ink)}
+.btn.ghost:hover{background:var(--soft)}
+.tool{border:1px solid var(--line);border-radius:6px;font-weight:600;color:var(--ink)}
+.tool.on{border-color:var(--main);background:var(--soft);box-shadow:inset 0 0 0 1px var(--main)}
+.eyebrow{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.titulo{font-size:1.15rem;font-weight:750;color:var(--ink);letter-spacing:-.01em}
+.obj{background:#fafbfa;border:1px solid var(--line);border-left:3px solid var(--main);border-radius:6px;font-size:.92rem}
+.obj b{color:var(--deep);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding-top:2px}
+.acao{background:#fff;border:1px solid var(--line);border-left:3px solid var(--ink);border-radius:6px;font-weight:500;font-size:.93rem}
+canvas.cena{border:1px solid var(--line);border-radius:8px;background:#fbfcfb}
+.help{border:1px solid var(--line);color:var(--ink);font-weight:700}
+.intro .ic{font-size:2.6rem;font-weight:800;color:var(--main);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.passos div{background:#fafbfa;border:1px solid var(--line);border-radius:6px;font-weight:500}
+.passos b{font-size:.85rem;color:#fff;background:var(--main);border-radius:4px;min-width:1.7em;padding:2px 0}
+.res .big{color:var(--ink)}
+.pensa{background:#fafbfa;border:1px solid var(--line);border-radius:6px}
+.pensa b{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}
+.hab{border-left:3px solid var(--main);border-radius:0 6px 6px 0}
+.tab th{background:#f2f5f3;color:var(--ink);font-size:.82rem}
+.ranking{border:1px solid var(--line);border-radius:10px}
+.ranking h3{background:var(--ink);text-transform:none;letter-spacing:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>Seleção no Capim</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF"></span><span class="pill" id="hP"></span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const W=760,H=372;
+function hex(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mix(a,b,t){const A=hex(a),B=hex(b);return`rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`;}
+
+/* ================= AVATAR ================= */
+const PELES=['#f6d3b8','#e3b18b','#c68a5e','#94603e','#5d3b26'];
+const CABS=['#1b1b1b','#4e342e','#8d6e63','#d4a85a','#b5532f'];
+const CAMISAS=['#00838f','#2e7d32','#f9a825','#c62828','#6a1b9a','#37474f'];
+const ESTILOS=[['curto','Curto'],['cacheado','Cacheado'],['longo','Longo'],['coque','Coque'],['raspado','Raspado']];
+const CHAPEUS=[['nenhum','Sem'],['bone','Boné'],['campo','Chapéu']];
+let A={pele:2,cab:0,estilo:'cacheado',camisa:0,chapeu:'campo',nome:''};
+try{const s=JSON.parse(localStorage.getItem('bc_avatar')||'null');if(s)A=Object.assign(A,s);}catch(e){}
+function salvaA(){try{localStorage.setItem('bc_avatar',JSON.stringify(A));}catch(e){}}
+function avatar(c,x,y,s,a,prancheta){
+ c.save();c.translate(x,y);c.scale(s,s);
+ const pele=PELES[a.pele],cab=CABS[a.cab],cam=CAMISAS[a.camisa];
+ if(a.estilo==='longo'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-39,12.5,15,0,0,7);c.fill();c.fillRect(-12.5,-40,25,22);}
+ if(a.estilo==='cacheado'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-40,15,14.5,0,0,7);c.fill();}
+ c.fillStyle=cam;c.beginPath();c.moveTo(-16,0);c.quadraticCurveTo(-17,-21,-6,-25);c.lineTo(6,-25);c.quadraticCurveTo(17,-21,16,0);c.closePath();c.fill();
+ c.fillStyle='rgba(0,0,0,.12)';c.fillRect(-1,-24,2,24);
+ c.fillStyle=pele;c.fillRect(-3.5,-29,7,6);
+ if(prancheta){c.fillStyle='#8d6e63';c.fillRect(4,-19,13,16);c.fillStyle='#fff';c.fillRect(5.5,-17,10,12);c.strokeStyle='#90a4ae';c.lineWidth=.8;for(let i=0;i<4;i++){c.beginPath();c.moveTo(7,-14+i*2.6);c.lineTo(14,-14+i*2.6);c.stroke();}}
+ c.strokeStyle=cam;c.lineWidth=6;c.lineCap='round';c.beginPath();c.moveTo(-11,-20);c.lineTo(-4,-9);c.stroke();
+ c.fillStyle=pele;c.beginPath();c.arc(-3,-8,3,0,7);c.fill();
+ c.fillStyle=pele;c.beginPath();c.ellipse(0,-39,9.5,11,0,0,7);c.fill();
+ c.beginPath();c.arc(-9.4,-38,2.3,0,7);c.arc(9.4,-38,2.3,0,7);c.fill();
+ c.fillStyle=cab;
+ if(a.estilo==='curto'){c.beginPath();c.ellipse(0,-44.5,10,6.8,0,Math.PI,0);c.fill();c.fillRect(-10,-46,2.8,7);c.fillRect(7.2,-46,2.8,7);}
+ if(a.estilo==='cacheado'){for(let i=0;i<13;i++){const an=Math.PI*(.8+i*1.4/12);c.beginPath();c.arc(Math.cos(an)*12,-41+Math.sin(an)*11.5,4.2,0,7);c.fill();}}
+ if(a.estilo==='longo'){c.beginPath();c.ellipse(0,-44.5,10.6,7.2,0,Math.PI,0);c.fill();}
+ if(a.estilo==='coque'){c.beginPath();c.ellipse(0,-44.5,10,6.4,0,Math.PI,0);c.fill();c.beginPath();c.arc(0,-53,5.2,0,7);c.fill();}
+ if(a.estilo==='raspado'){c.globalAlpha=.5;c.beginPath();c.ellipse(0,-44,9.8,6.2,0,Math.PI,0);c.fill();c.globalAlpha=1;}
+ c.fillStyle='#2b2a26';c.beginPath();c.arc(-3.4,-39,1.25,0,7);c.arc(3.4,-39,1.25,0,7);c.fill();
+ c.strokeStyle='#2b2a26';c.lineWidth=1;c.beginPath();c.arc(0,-35.6,2.6,.25,Math.PI-.25);c.stroke();
+ if(a.chapeu==='bone'){c.fillStyle=cam;c.beginPath();c.ellipse(0,-46,10.6,5.8,0,Math.PI,0);c.fill();c.fillRect(-10.6,-47,21.2,2.6);c.beginPath();c.ellipse(8.5,-46.2,8,2.2,0,0,7);c.fill();}
+ if(a.chapeu==='campo'){c.fillStyle='#d7c49e';c.beginPath();c.ellipse(0,-46,16.5,3.6,0,0,7);c.fill();c.beginPath();c.ellipse(0,-48,9.2,6.4,0,Math.PI,0);c.fill();c.fillStyle='#8d6e63';c.fillRect(-9.2,-49,18.4,1.9);}
+ c.restore();
+}
+function pernas(c,x,y,s,a){c.save();c.translate(x,y);c.scale(s,s);c.fillStyle='#455a64';c.fillRect(-11,0,9,20);c.fillRect(2,0,9,20);c.fillStyle='#3e2723';c.fillRect(-12,18,11,4);c.fillRect(1,18,11,4);c.restore();}
+
+/* ================= CENA ================= */
+const CORES={main:'#4d7c0f',deep:'#365314'};
+function sr(n){const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+function syncMol(){}function partic(){}
+function drawCena(c,G){if(G.desenha)G.desenha(c);}
+/* ================= TELA / LOOP ================= */
+let G=null,S=null,raf=0,ultimo=0,cx=null;
+function laco(ts){const dt=Math.min(.05,(ts-ultimo)/1000||0);ultimo=ts;if(G){G.t+=dt;if(G.upd)G.upd(dt);syncMol(G,dt);partic(G,dt);if(cx)drawCena(cx,G);if(G.extra)G.extra(cx);}raf=requestAnimationFrame(laco);}
+function parar(){cancelAnimationFrame(raf);raf=0;}
+function rodar(){parar();ultimo=performance.now();raf=requestAnimationFrame(laco);}
+function hud(){$('hud').style.display='flex';$('hF').textContent=`Fase ${S.f+1} de ${FASES.length}`;$('hP').textContent=`${Math.max(0,S.tot+S.fp)} pts`;}
+function telaJogo(chip,info){
+ const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><span class="chip" id="chip">${chip}</span><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="acao"><span class="dedo">👉</span><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});
+}
+function acao(t){const e=$('acao');if(e&&e.innerHTML!==t)e.innerHTML=t;}
+function ajuda(){const F=FASES[S.f],d=document.createElement('div');d.className='modal';
+ d.innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn">Entendi</button></div>`;
+ d.onclick=e=>{if(e.target===d||e.target.tagName==='BUTTON')d.remove();};document.body.appendChild(d);}
+function medidor(id,rot,cls,max,alvo){const a=alvo!=null?`<span class="alvo" style="left:${alvo/max*100}%"></span>`:'';return`<div class="met ${cls}" id="${id}" data-max="${max}"><span>${rot}</span><div class="bar"><span class="fill"></span>${a}</div><span class="v"></span></div>`;}
+function poeMed(id,v){const e=$(id);if(!e)return;const m=+e.dataset.max;e.querySelector('.fill').style.width=clamp(v/m*100,0,100)+'%';e.querySelector('.v').textContent=Math.round(v);}
+function poeSaldo(v,max){const e=$('mSaldo');if(!e)return;const f=e.querySelector('.fill'),p=clamp(Math.abs(v)/max*50,0,50);if(v<0){f.style.left=(50-p)+'%';f.style.width=p+'%';f.style.background='#43a047';}else{f.style.left='50%';f.style.width=p+'%';f.style.background='#e53935';}e.querySelector('.v').textContent=(v>0?'+':'')+Math.round(v);}
+
+/* ================= FASES ================= */
+const FASES=[
+ {nome:'Você é o pássaro',ic:'01',obj:'Caçar gafanhotos no capim verde em 15 segundos e ver quais cores escaparam.',passos:[['1','Toque nos gafanhotos que encontrar.'],['2','O tempo é curto: pegue os que você vê primeiro.'],['3','No fim, compare as cores de quem escapou.']],ini:()=>f1()},
+ {nome:'Filhos parecidos com os pais',ic:'02',obj:'Caçar por três gerações e ver a população mudar, porque só os que escapam deixam filhos.',passos:[['1','Cace por 10 segundos.'],['2','Os sobreviventes se reproduzem.'],['3','Repita e acompanhe o gráfico de cores.']],ini:()=>f2()},
+ {nome:'Depois do fogo',ic:'03',obj:'Caçar no campo queimado e ver a cor da população mudar outra vez.',passos:[['1','O capim queimou e o chão ficou preto.'],['2','Cace por três gerações.'],['3','Compare com os dados reais de gafanhotos após incêndios.']],ini:()=>f3()},
+ {nome:'Sem variação não há escolha',ic:'04',obj:'Comparar uma população com cores variadas e outra com todos iguais quando o fogo chega.',passos:[['1','Cace na ilha onde todos são iguais.'],['2','Veja o que aconteceu na ilha com variação.'],['3','Compare quem sobrou.']],ini:()=>f4()},
+ {nome:'Previsão de cientista',ic:'05',obj:'Prever a cor da população depois de cinco gerações num campo parcialmente queimado e testar com uma simulação.',passos:[['1','Arraste as barras com a sua previsão.'],['2','Toque em Simular.'],['3','Compare a previsão com o resultado.']],ini:()=>f5()}
+];
+function telaJogo(chip,info){const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><div><div class="eyebrow">Fase ${S.f+1} de ${FASES.length}</div><div class="titulo" id="chip">${chip}</div></div><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>Objetivo</b><span>${F.obj}</span></div><div class="acao"><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});}
+function intro(){parar();G=null;cx=null;hud();const F=FASES[S.f];$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><div class="n">FASE ${S.f+1} DE ${FASES.length}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left;max-width:460px;margin:12px auto 0"><b>Objetivo</b><span>${F.obj}</span></div>
+ <div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn" id="bGo">Começar</button></div>`;
+ $('bGo').onclick=()=>{S.fp=0;F.ini();};}
+function fimFase(pts,ok,oque,pergunta,extraHtml){
+ parar();pts=Math.max(0,Math.round(pts));S.fp=0;S.tot+=pts;S.res[S.f]={pts,ok,oque};hud();
+ $('tela').innerHTML=`<div class="card res"><div class="eyebrow">Fase ${S.f+1} · ${FASES[S.f].nome}</div><div class="big">+${pts}</div>
+ <p class="${ok?'ok':'no'}">${ok?'Meta cumprida':'Meta não cumprida'}</p>${extraHtml||''}
+ <div class="pensa"><b>Síntese</b><br>${oque}</div><div class="pensa"><b>Para discutir</b><br>${pergunta}</div>
+ <div class="row" style="justify-content:center"><button class="btn" id="bNx">${S.f<FASES.length-1?'Próxima fase':'Ver relatório'}</button></div></div>`;
+ $('bNx').onclick=()=>{S.f++;if(S.f<FASES.length)intro();else relatorio();};}
+function ptr(fn,ev){const cv=$('cv');cv.style.touchAction='none';cv.addEventListener(ev||'pointermove',e=>{const r=cv.getBoundingClientRect();fn((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height,e);});}
+function opcoes(perg,ops,cb){$('ctrl').innerHTML=`<div style="width:100%"><b>${perg}</b><div style="display:grid;gap:6px;margin-top:8px">${ops.map((t,i)=>`<button class="tool" style="text-align:left" data-o="${i}">${t}</button>`).join('')}</div></div>`;
+ document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-o]').forEach(x=>x.classList.toggle('on',x===b));cb(+b.dataset.o,b);});}
+const f1x=v=>(Math.round(v*10)/10).toFixed(1).replace('.',',');
+const INK='#1f2421',MUT='#5f6b66',LINE='#dfe3e0',ACC='#4d7c0f',ACC2='#365314',BLUE='#2563a8';
+const ajuste=(xs,ys)=>{const n=xs.length,mx=xs.reduce((a,b)=>a+b)/n,my=ys.reduce((a,b)=>a+b)/n;let sxy=0,sxx=0;xs.forEach((x,i)=>{sxy+=(x-mx)*(ys[i]-my);sxx+=(x-mx)**2;});const b=sxy/sxx;return{b,a:my-b*mx};};
+function eixos(c,o){const{x0,y0,w,h,xmin,xmax,ymin,ymax,xt,yt,xf,yf,titulo}=o;const X=v=>x0+(v-xmin)/(xmax-xmin)*w,Y=v=>y0+h-(v-ymin)/(ymax-ymin)*h;
+ c.fillStyle='#fff';c.fillRect(x0,y0,w,h);c.strokeStyle='#eef0ee';c.lineWidth=1;c.font='500 10.5px system-ui';c.fillStyle=MUT;
+ yt.forEach(v=>{c.beginPath();c.moveTo(x0,Y(v)+.5);c.lineTo(x0+w,Y(v)+.5);c.stroke();c.textAlign='right';c.fillText(yf?yf(v):v,x0-6,Y(v)+3.5);});
+ xt.forEach(v=>{c.textAlign='center';c.fillText(xf?xf(v):v,X(v),y0+h+14);c.fillStyle=MUT;c.fillRect(X(v)-.5,y0+h,1,4);});
+ c.strokeStyle=INK;c.lineWidth=1;c.beginPath();c.moveTo(x0,y0);c.lineTo(x0,y0+h);c.lineTo(x0+w,y0+h);c.stroke();
+ if(titulo){c.fillStyle=INK;c.font='700 11px system-ui';c.textAlign='left';c.fillText(titulo.toUpperCase(),x0,y0-10);}return{X,Y};}
+function painelR(c,y,h){c.fillStyle='#fff';c.fillRect(478,y,268,h);c.strokeStyle=LINE;c.lineWidth=1;c.strokeRect(478.5,y+.5,267,h-1);}
+function rotulo(c,x,y,t,cor){c.fillStyle=cor||MUT;c.font='700 10px system-ui';c.textAlign='left';c.fillText(t.toUpperCase(),x,y);}
+function linhaM(c,x,y,lab,val,cor){c.font='500 12.5px system-ui';c.fillStyle=INK;c.textAlign='left';c.fillText(lab,x,y);c.font='700 12.5px system-ui';c.textAlign='right';c.fillStyle=cor||INK;c.fillText(val,x+240,y);c.strokeStyle='#f0f2f0';c.lineWidth=1;c.beginPath();c.moveTo(x,y+6);c.lineTo(x+240,y+6);c.stroke();}
+function fonte(c,t){c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';c.fillText(t,24,H-8);}
+
+(()=>{const d=Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype,'font');Object.defineProperty(CanvasRenderingContext2D.prototype,'font',{get(){return d.get.call(this);},set(v){d.set.call(this,String(v).replace(/(\d+(?:\.\d+)?)px/,(m,n)=>(+n*FSC).toFixed(1)+'px'));},configurable:true});})();
+let FSC=1.25;
+const ptrU=fn=>ptr(fn,'pointerup');
+const AZ='#0ea5e9',AZ2='#0369a1';
+const nf=v=>Math.round(v).toLocaleString('pt-BR');
+function quebra(c,t,x,y,w,lh){lh*=FSC;const ws=t.split(' ');let l='';for(const p of ws){if(c.measureText(l+p).width>w&&l){c.fillText(l,x,y);l='';y+=lh;}l+=p+' ';}c.fillText(l,x,y);return y;}
+const COR=['#8cc04c','#6f9a3e','#536f37','#3b4231','#232220'],NOMEC=['verde-claro','verde','oliva','escuro','preto'];
+const RNG=s=>()=>(s=(s*16807)%2147483647)/2147483647;
+let POP=null;
+function fundo(tipo,seed){const cv=document.createElement('canvas');cv.width=W;cv.height=H;const k=cv.getContext('2d'),r=RNG(seed);
+ if(tipo==='verde'){k.fillStyle='#7aa646';k.fillRect(0,0,W,H);for(let i=0;i<2600;i++){const x=r()*W,y=r()*H,l=8+r()*22,a=-Math.PI/2+(r()-.5)*.9;k.strokeStyle=['#5f8a33','#7fb048','#9cc85e','#6e9a3c','#8fbd52','#4f7a2c'][Math.floor(r()*6)];k.lineWidth=1+r()*2;k.beginPath();k.moveTo(x,y);k.lineTo(x+Math.cos(a)*l,y+Math.sin(a)*l);k.stroke();}}
+ else{k.fillStyle='#2b2925';k.fillRect(0,0,W,H);for(let i=0;i<900;i++){const x=r()*W,y=r()*H;k.fillStyle=['#47443d','#1c1b18','#5c5850','#36332d','#222'][Math.floor(r()*5)];k.beginPath();k.ellipse(x,y,2+r()*8,1+r()*4,r()*3,0,7);k.fill();}
+  for(let i=0;i<900;i++){const x=r()*W,y=r()*H,l=4+r()*12,a=-Math.PI/2+(r()-.5)*1.2;k.strokeStyle=['#141311','#2f2c27','#3d3a33'][Math.floor(r()*3)];k.lineWidth=1+r()*1.5;k.beginPath();k.moveTo(x,y);k.lineTo(x+Math.cos(a)*l,y+Math.sin(a)*l);k.stroke();}}
+ return cv;}
+function gafa(c,x,y,cl,a,s){c.save();c.translate(x,y);c.rotate(a);c.scale(s,s);const col=COR[cl];c.fillStyle=col;c.strokeStyle='rgba(0,0,0,.25)';c.lineWidth=.6;
+ c.beginPath();c.ellipse(0,0,11,3.6,0,0,7);c.fill();c.stroke();c.beginPath();c.ellipse(11,-.5,3.2,3,0,0,7);c.fill();
+ c.strokeStyle=col;c.lineWidth=2.2;c.beginPath();c.moveTo(-2,1);c.lineTo(-8,-6);c.lineTo(-14,3);c.stroke();c.lineWidth=1;c.beginPath();c.moveTo(5,2);c.lineTo(7,7);c.moveTo(2,2);c.lineTo(1,7);c.stroke();
+ c.beginPath();c.moveTo(13,-2);c.quadraticCurveTo(19,-9,23,-7);c.stroke();c.restore();}
+function popIni(dist,n,seed){const r=RNG(seed),p=[];let k=0;dist.forEach((q,cl)=>{for(let i=0;i<q;i++)p.push(cl);});while(p.length<n)p.push(Math.floor(r()*5));return p.slice(0,n);}
+function reproduz(sob,n,r){const p=[];for(let i=0;i<n;i++){let c=sob[Math.floor(r()*sob.length)];const u=r();if(u<.08)c=Math.max(0,c-1);else if(u<.16)c=Math.min(4,c+1);p.push(c);}return p;}
+const hist=p=>{const h=[0,0,0,0,0];p.forEach(c=>h[c]++);return h;};
+function graf(c,x,y,w,h,hs,rot,cores){/* hs: lista de histogramas (gerações) */c.fillStyle='#fff';c.fillRect(x,y,w,h);c.strokeStyle=LINE;c.strokeRect(x+.5,y+.5,w-1,h-1);
+ c.fillStyle=INK;c.font='800 10px system-ui';c.textAlign='left';c.fillText(rot,x+10,y+18);const n=hs.length,gw=(w-20)/Math.max(n,1),bh=h-52;
+ hs.forEach((hh,g)=>{const tot=hh.reduce((a,b)=>a+b,0)||1;let yy=y+28;hh.forEach((v,cl)=>{const t=bh*v/tot;c.fillStyle=COR[cl];c.fillRect(x+10+g*gw+4,yy,gw-8,t);yy+=t;});c.fillStyle=MUT;c.font='600 8.5px system-ui';c.textAlign='center';c.fillText(cores?cores[g]:'G'+g,x+10+g*gw+gw/2,y+h-10);});}
+/* motor de caça */
+function caca(o){/* o:{fundo,pop,dur,meta,seed,onEnd} */G.c={...o,t:o.dur,ins:[],pegos:[],fim:false,bico:null,fx:[]};const r=RNG(o.seed);
+ const M=window.innerWidth<600?1.8:1;G.c.M=M;G.c.ins=o.pop.map(cl=>({cl,x:30+r()*(W-60),y:60+r()*(H-80),a:(r()-.5)*1.2,s:(.95+r()*.3)*M,vivo:true,pulo:0}));G.c.bg=fundo(o.fundo,o.seed+3);}
+function cacaDesenha(c){const C=G.c;c.drawImage(C.bg,0,0);C.ins.forEach(i=>{if(!i.vivo)return;gafa(c,i.x,i.y,i.cl,i.a,i.s);});
+ C.fx.forEach(f=>{c.globalAlpha=Math.max(0,f.t);c.fillStyle='#fff';c.strokeStyle='rgba(0,0,0,.5)';c.lineWidth=3;c.font='800 13px system-ui';c.textAlign='center';c.strokeText('pego!',f.x,f.y-10-(1-f.t)*20);c.fillText('pego!',f.x,f.y-10-(1-f.t)*20);c.globalAlpha=1;});
+ c.fillStyle='rgba(255,255,255,.92)';c.beginPath();c.roundRect(10,8,250,40,8);c.fill();c.fillStyle=INK;c.font='800 12px system-ui';c.textAlign='left';c.fillText(`Tempo: ${Math.ceil(Math.max(0,C.t))} s`,22,33);c.fillText(`Pegos: ${C.pegos.length}`,130,33);
+ c.fillStyle='#e5e7eb';c.fillRect(10,48,250,4);c.fillStyle=ACC;c.fillRect(10,48,250*Math.max(0,C.t)/C.dur,4);}
+function cacaUpd(dt){const C=G.c;if(!C||C.fim)return;C.t-=dt;C.fx.forEach(f=>f.t-=dt*1.5);C.fx=C.fx.filter(f=>f.t>0);if(C.t<=0){C.fim=true;C.onEnd(C.ins.filter(i=>i.vivo).map(i=>i.cl),C.pegos);}}
+function cacaToque(x,y){const C=G.c;if(!C||C.fim)return;let b=null,bd=26*(C.M||1);C.ins.forEach(i=>{if(!i.vivo)return;const d=Math.hypot(x-i.x,y-i.y);if(d<bd){bd=d;b=i;}});if(b){b.vivo=false;C.pegos.push(b.cl);C.fx.push({x:b.x,y:b.y,t:1});$('info').textContent=`${C.pegos.length} pegos`;}}
+function cartao(c,titulo,linhas,graf_){c.fillStyle='rgba(15,23,42,.35)';c.fillRect(0,0,W,H);const ch=graf_?300:150;c.fillStyle='#fff';c.beginPath();c.roundRect(150,30,460,ch,12);c.fill();c.fillStyle=ACC2;c.font='800 14px system-ui';c.textAlign='left';c.fillText(titulo,172,62);c.fillStyle=INK;c.font='500 11px system-ui';let y=84;linhas.forEach(t=>{y=quebra(c,t,172,y,420,14)+18;});if(graf_)graf_(y);}
+function barras(c,x,y,w,hs,rotulos){/* barras lado a lado por classe */const bw=w/5;const mx=Math.max(1,...hs.flat());COR.forEach((col,cl)=>{hs.forEach((h,k)=>{const bh=80*h[cl]/mx,xx=x+cl*bw+6+k*(bw-12)/hs.length;c.fillStyle=col;c.globalAlpha=k===0&&hs.length>1?.45:1;c.fillRect(xx,y+90-bh,(bw-12)/hs.length-2,bh);c.globalAlpha=1;c.fillStyle=INK;c.font='700 9px system-ui';c.textAlign='center';c.fillText(h[cl],xx+((bw-12)/hs.length-2)/2,y+86-bh);});c.fillStyle=MUT;c.font='600 8.5px system-ui';c.textAlign='center';c.fillText(w<300?['v.cl.','verde','oliva','esc.','preto'][cl]:NOMEC[cl],x+cl*bw+bw/2,y+104);});
+ if(rotulos){c.font='600 9px system-ui';c.textAlign='left';rotulos.forEach((t,k)=>{c.fillStyle=k===0&&hs.length>1?'rgba(31,36,33,.5)':INK;c.fillText(t,x+k*150,y+122);});}}
+
+/* ---------- FASE 1 ---------- */
+function f1(){FSC=1.25;G={t:0,et:0,fim:0,res:null};telaJogo('Você é o pássaro','0 pegos');const pop=popIni([8,8,8,8,8],40,11);
+ caca({fundo:'verde',pop,dur:15,seed:21,onEnd:(sob,peg)=>{G.res={ini:hist(pop),sob:hist(sob),peg:peg.length};G.et=1;POP=sob;
+  const hs=G.res.sob,top=hs[0]+hs[1],esc=hs[3]+hs[4];acao(`Tempo esgotado: você pegou ${peg.length}. Dos que escaparam, ${top} eram verdes e ${esc} eram escuros.`);
+  setTimeout(()=>fimFase(Math.min(200,60+peg.length*7),true,'Você caçou com os olhos, como um pássaro. Os gafanhotos escuros apareciam no capim verde e foram pegos primeiro. Os verdes, camuflados, escaparam mais. Nenhum gafanhoto mudou de cor: a população mudou porque alguns foram comidos e outros não. Isso é seleção natural agindo sobre variantes de uma mesma espécie.','Por que os gafanhotos verdes escaparam mais, se você não escolheu a cor de propósito?'),5200);}});
+ G.desenha=c=>{cacaDesenha(c);if(G.et===1)cartao(c,'Quem escapou do pássaro',['Cores no início e cores de quem escapou da sua caça.'],y=>barras(c,190,y,380,[G.res.ini,G.res.sob],['antes da caça (claro)','escaparam (forte)']));};
+ G.upd=dt=>cacaUpd(dt);ptr((x,y)=>cacaToque(x,y),'pointerdown');
+ acao('Você é um pássaro com fome. Toque em todos os gafanhotos que conseguir ver em 15 segundos.');rodar();}
+
+/* ---------- geração em série (fases 2 e 3) ---------- */
+function geracoes(nome,fundoT,popIn,seed,fim){let g=0;const hs=[hist(popIn)];let pop=popIn;const r=RNG(seed);G={t:0,et:0,fim:0,hs,g:0,pausa:0};telaJogo(nome,'geração 1 de 3');
+ const prox=()=>{caca({fundo:fundoT,pop,dur:10,seed:seed+g*7,onEnd:(sob,peg)=>{if(sob.length<2)sob=sob.concat(pop.slice(0,2));pop=reproduz(sob,40,r);hs.push(hist(pop));g++;G.g=g;G.et=1;
+   acao(`Geração ${g}: você pegou ${peg.length}. Os ${sob.length} que escaparam tiveram filhotes parecidos com eles. Veja o gráfico.`);
+   setTimeout(()=>{if(g<3){G.et=0;$('info').textContent=`geração ${g+1} de 3`;acao(`Geração ${g+1}: cace de novo os filhotes.`);prox();}else{G.fim=1;POP=pop;fim(hs,pop);}},3600);}});};
+ prox();
+ G.desenha=c=>{cacaDesenha(c);if(G.et===1)cartao(c,`Depois da geração ${G.g}`,['Cada coluna mostra as cores da população: a primeira antes de começar e as outras depois de cada geração.'],y=>graf(c,190,y,380,150,hs,'Cores da população',hs.map((h,k)=>k?`ger. ${k}`:'início')));};
+ G.upd=dt=>cacaUpd(dt);ptr((x,y)=>cacaToque(x,y),'pointerdown');rodar();}
+function f2(){FSC=1.25;const p0=POP&&POP.length>3?reproduz(POP,40,RNG(5)):popIni([8,8,8,8,8],40,5);
+ geracoes('Filhos parecidos com os pais','verde',p0,31,(hs,pop)=>{const h=hs[hs.length-1],v=Math.round(100*(h[0]+h[1])/40);fimFase(Math.min(200,80+v),true,`Depois de três gerações, cerca de ${v}% da população era verde. A cada geração, os gafanhotos que escaparam deixaram filhotes parecidos com eles, com pequenas diferenças. Assim a cor mais camuflada ficou mais comum sem que nenhum gafanhoto mudasse de cor durante a vida.`,'Se os pássaros sumissem do campo, a cor dos gafanhotos ainda mudaria?');});
+ acao('Geração 1: cace por 10 segundos. Quem escapar terá filhotes.');}
+function f3(){FSC=1.25;let p0=popIni([14,12,8,3,3],40,9);
+ geracoes('Depois do fogo','queimado',p0,57,(hs,pop)=>{const h=hs[hs.length-1],v=Math.round(100*(h[3]+h[4])/40),v0=Math.round(100*(hs[0][3]+hs[0][4])/40);fimFase(Math.min(200,80+v),true,`No campo queimado, os escuros passaram de ${v0}% para ${v}% da população em três gerações. Isso já foi medido na natureza: na Suécia, gafanhotos-pigmeus pretos eram cerca de 50% em áreas recém-queimadas e cerca de 9% em áreas sem fogo (Forsman et al., 2011). Em experimentos, pessoas acharam os pretos com mais dificuldade sobre o chão queimado.`,'O que deve acontecer com a cor dos gafanhotos quando o capim verde voltar a crescer?');});
+ acao('O fogo queimou o capim de um campo vizinho, onde ainda havia alguns gafanhotos escuros. Cace por 10 segundos.');}
+
+/* ---------- FASE 4 ---------- */
+function f4(){FSC=1.25;G={t:0,et:0,fim:0};telaJogo('Sem variação não há escolha','ilha B');const popB=Array(30).fill(1);const r=RNG(77);
+ caca({fundo:'queimado',pop:popB,dur:12,seed:91,onEnd:(sob,peg)=>{G.sobB=sob.length;G.pegB=peg.length;
+  /* ilha A simulada com o mesmo pássaro: chance de ser visto cai com a camuflagem */const popA=popIni([6,6,6,6,6],30,3);const vis=[.95,.85,.6,.3,.15];const k=peg.length/30;G.sobA=popA.filter(cl=>r()>vis[cl]*Math.min(1,k*1.3));G.hA=[hist(popA),hist(G.sobA)];G.hB=[hist(popB),hist(sob)];G.et=1;
+  const esc=G.sobA.filter(c=>c>=3).length;acao(`Na ilha B, todos tinham a mesma cor: você pegou ${peg.length} de 30. Na ilha A, com cores variadas, sobraram ${G.sobA.length}, e ${esc} deles eram escuros ou pretos.`);
+  setTimeout(()=>fimFase(Math.min(200,70+peg.length*5),true,'A seleção natural só funciona se houver variação. Na ilha B, todos os gafanhotos tinham a mesma cor verde e ficaram igualmente visíveis no chão queimado; nenhum tinha vantagem, e a população só encolheu. Na ilha A, as diferenças entre irmãos, que surgem na reprodução, deram a alguns a chance de escapar e deixar filhotes. Por isso a variação dentro de uma espécie é tão importante.','Por que espécies com pouca variação correm mais risco quando o ambiente muda de repente?'),6200);}});
+ G.desenha=c=>{cacaDesenha(c);if(G.et===0){c.fillStyle='rgba(255,255,255,.92)';c.beginPath();c.roundRect(W-250,8,240,40,8);c.fill();c.fillStyle=INK;c.font='700 10.5px system-ui';c.textAlign='left';c.fillText('Ilha B: todos têm a mesma cor',W-238,33);}
+  if(G.et===1)cartao(c,'Duas ilhas, o mesmo fogo',['Ilha A tinha cores variadas. Ilha B tinha todos iguais.'],y=>{barras(c,170,y-4,200,G.hA,null);barras(c,390,y-4,200,G.hB,null);c.fillStyle=INK;c.font='800 10px system-ui';c.textAlign='center';c.fillText(`ILHA A: sobraram ${G.sobA.length}`,270,y+132);c.fillText(`ILHA B: sobraram ${G.sobB}`,490,y+132);c.fillStyle=MUT;c.font='600 8.5px system-ui';c.fillText('claro: antes · forte: sobreviventes',380,y+148);});};
+ G.upd=dt=>cacaUpd(dt);ptr((x,y)=>cacaToque(x,y),'pointerdown');
+ acao('Ilha B: todos os gafanhotos nasceram com a mesma cor verde, e o fogo chegou. Cace por 12 segundos.');rodar();}
+
+/* ---------- FASE 5 ---------- */
+function f5(){FSC=1.25;G={t:0,pv:[20,20,20,20,20],drag:-1,et:0,res:null,fim:0,anim:0};telaJogo('Previsão de cientista','previsão');
+ const QUEIMA=.7,GX=60,GW=360,GY=80,GH=200,bx=i=>GX+i*GW/5+10,bw=GW/5-20;const ini=[8,8,8,8,8];
+ const simula=()=>{const r=RNG(123);let pop=popIni(ini,40,4);const vis=fundo=>fundo==='v'?[.15,.25,.45,.7,.85]:[.85,.7,.45,.25,.15];const hs=[hist(pop)];
+  for(let g=0;g<5;g++){const sob=pop.filter(cl=>{const f=r()<QUEIMA?'q':'v';return r()>vis(f)[cl]*.75;});pop=reproduz(sob.length>1?sob:pop,40,r);hs.push(hist(pop));}return hs;};
+ const soma=()=>G.pv.reduce((a,b)=>a+b,0);
+ G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);c.fillStyle='#fff';c.fillRect(30,20,420,330);c.strokeStyle=LINE;c.strokeRect(30.5,20.5,419,329);
+  c.fillStyle=INK;c.font='800 11px system-ui';c.textAlign='left';c.fillText('Sua previsão: % de cada cor após 5 gerações',44,44);
+  c.fillStyle='#e5e7eb';c.fillRect(44,52,392,12);c.fillStyle='#2b2925';c.fillRect(44,52,392*QUEIMA,12);c.fillStyle='#7aa646';c.fillRect(44+392*QUEIMA,52,392*(1-QUEIMA),12);c.fillStyle='#fff';c.font='700 8.5px system-ui';c.fillText('70% do campo queimado',50,62);c.fillStyle=INK;c.textAlign='right';c.fillText('30% verde',432,62);
+  for(let i=0;i<5;i++){const h=GH*G.pv[i]/100;c.fillStyle=COR[i];c.globalAlpha=.9;c.fillRect(bx(i),GY+GH-h,bw,h);c.globalAlpha=1;c.strokeStyle=INK;c.lineWidth=1;c.strokeRect(bx(i)+.5,GY+.5,bw,GH);
+   if(!G.res){c.fillStyle='#fff';c.strokeStyle=INK;c.lineWidth=2;c.beginPath();c.roundRect(bx(i)+bw/2-14,GY+GH-h-7,28,14,7);c.fill();c.stroke();}
+   c.fillStyle=INK;c.font='800 11px system-ui';c.textAlign='center';c.fillText(`${G.pv[i]}%`,bx(i)+bw/2,GY+GH-h-12);c.fillStyle=MUT;c.font='600 9px system-ui';c.fillText(NOMEC[i],bx(i)+bw/2,GY+GH+16);
+   if(G.res){const fin=G.res[G.res.length-1],real=Math.round(100*fin[i]/40)*Math.min(1,G.anim);c.strokeStyle=ACC2;c.lineWidth=3;c.beginPath();c.moveTo(bx(i)-4,GY+GH-GH*real/100);c.lineTo(bx(i)+bw+4,GY+GH-GH*real/100);c.stroke();c.fillStyle=ACC2;c.font='800 10px system-ui';c.fillText(`${Math.round(real)}%`,bx(i)+bw/2,GY+GH+30);}}
+  c.fillStyle=soma()===100?'#2f6b3a':'#b3261e';c.font='700 10.5px system-ui';c.textAlign='left';c.fillText(`Soma: ${soma()}% ${soma()===100?'':'(precisa dar 100%)'}`,44,340);
+  painelR(c,20,320);rotulo(c,492,40,'O campo');c.fillStyle=INK;c.font='500 10.5px system-ui';c.textAlign='left';quebra(c,'Começa com 8 gafanhotos de cada cor. A cada geração, os pássaros caçam; quem está sobre um fundo parecido com a própria cor é menos visto. Quem escapa tem filhotes.',492,60,236,13);
+  if(G.res){graf(c,486,180,256,150,G.res,'Simulação: gerações',G.res.map((h,k)=>k?`${k}`:'0'));}
+  fonte(c,'Simulação simplificada do jogo, inspirada em Forsman et al. (2011) e Cook et al. (2012).');};
+ G.upd=dt=>{if(G.res&&G.anim<1)G.anim+=dt*1.2;};
+ ptr((x,y)=>{if(G.res)return;for(let i=0;i<5;i++)if(x>bx(i)-6&&x<bx(i)+bw+6&&y>GY-20&&y<GY+GH+10){G.drag=i;G.pv[i]=clamp(Math.round((GY+GH-y)/GH*20)*5,0,100);}},'pointerdown');
+ ptr((x,y)=>{if(G.drag>=0)G.pv[G.drag]=clamp(Math.round((GY+GH-y)/GH*20)*5,0,100);});ptrU(()=>{G.drag=-1;});
+ $('ctrl').innerHTML='<button class="btn" id="bSim">Simular 5 gerações</button>';
+ $('bSim').onclick=()=>{if(soma()!==100){acao(`A soma das barras precisa dar 100%. Agora está em ${soma()}%.`);return;}G.res=simula();G.anim=0;$('ctrl').innerHTML='';const fin=G.res[G.res.length-1].map(v=>Math.round(100*v/40));const err=G.pv.reduce((s,v,i)=>s+Math.abs(v-fin[i]),0)/5;
+  acao(`Diferença média entre sua previsão e a simulação: ${Math.round(err)} pontos por cor.`);
+  setTimeout(()=>fimFase(Math.max(60,Math.round(200-4*err)),true,'Com 70% do campo queimado, as cores escuras levam vantagem na maior parte do terreno e se tornam mais comuns, mas as verdes não somem, porque ainda há capim verde onde elas se escondem. Ambientes variados mantêm variação nas populações. Em 2012, a análise do último experimento de Michael Majerus, com 4.864 mariposas soltas em seis anos, mostrou que os pássaros comiam mais as mariposas que contrastavam com o fundo (Cook et al., 2012).','Que outros animais do Pantanal dependem de camuflagem para escapar de predadores?'),4200);};
+ acao('Arraste as barras com a sua previsão para cada cor depois de 5 gerações. A soma precisa dar 100%. Depois toque em Simular.');rodar();}
+
+/* ================= INICIO / AVATAR ================= */
+function inicio(){parar();G=null;cx=null;$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><div class="capa"><canvas id="cA" width="560" height="560"></canvas>
+ <div><h2>Seu perfil de pesquisador</h2><div class="opts">
+ <div class="l">Pele</div><div class="sw" id="sP">${PELES.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.pele===i?'on':''}" aria-label="pele ${i+1}"></button>`).join('')}</div>
+ <div class="l">Cabelo</div><div class="sw" id="sE">${ESTILOS.map(([k,t])=>`<button class="tx ${A.estilo===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <div class="sw" id="sC">${CABS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.cab===i?'on':''}" aria-label="cor ${i+1}"></button>`).join('')}</div>
+ <div class="l">Camiseta</div><div class="sw" id="sT">${CAMISAS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.camisa===i?'on':''}" aria-label="camiseta ${i+1}"></button>`).join('')}</div>
+ <div class="l">Chapéu</div><div class="sw" id="sH">${CHAPEUS.map(([k,t])=>`<button class="tx ${A.chapeu===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <input class="nome" id="iN" maxlength="20" placeholder="Seu nome" value="${esc(A.nome)}">
+ </div></div></div>
+ <div class="row" style="margin-top:14px"><button class="btn" id="bJ">Iniciar as 5 fases</button><button class="btn ghost" id="bG">Guia do professor</button></div>
+ <p class="small" style="margin-top:10px">Ciências · 9º ano · BNCC EF09CI11</p></div>`;
+ const pinta=()=>{const c=$('cA').getContext('2d');c.clearRect(0,0,560,560);c.fillStyle='#f1f6e8';c.fillRect(0,0,560,560);c.fillStyle='#d8e8bf';c.beginPath();c.arc(280,600,260,0,7);c.fill();avatar(c,280,560,6.4,A,true);};
+ pinta();
+ const liga=(id,f)=>document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{f(b);salvaA();document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b));pinta();});
+ liga('sP',b=>A.pele=+b.dataset.i);liga('sC',b=>A.cab=+b.dataset.i);liga('sT',b=>A.camisa=+b.dataset.i);liga('sE',b=>A.estilo=b.dataset.k);liga('sH',b=>A.chapeu=b.dataset.k);
+ $('iN').oninput=e=>{A.nome=e.target.value;salvaA();};
+ $('bJ').onclick=novo;$('bG').onclick=guia;
+}
+function novo(){S={f:0,tot:0,fp:0,res:[],fichas:0};salvo=false;intro();}
+function relatorio(){parar();G=null;cx=null;$('rankBox').style.display='block';const nome=A.nome.trim()||'Pesquisador';
+ $('tela').innerHTML=`<div class="card"><div class="rel"><canvas id="cR" width="240" height="240"></canvas><div><div class="small">Relatório de campo</div><h2>${esc(nome)}</h2><div class="big" style="font-size:2rem;font-weight:800;color:var(--deep)">${S.tot} pts</div></div></div>
+ <table class="tab" style="margin-top:12px"><tr><th>Fase</th><th>Pontos</th><th>Meta</th></tr>${FASES.map((F,i)=>{const r=S.res[i]||{pts:0,ok:false};return`<tr><td>${F.ic} ${F.nome}</td><td>${r.pts}</td><td>${r.ok?'✓':'✗'}</td></tr>`;}).join('')}</table>
+ <div class="pensa"><b>Para escrever no caderno:</b> explique, sem dizer que o animal muda de cor para se proteger, por que os gafanhotos escuros ficaram mais comuns depois do fogo.</div>
+ <div class="savebox noprint"><input id="pName" maxlength="20" value="${esc(nome)}"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row noprint" style="margin-top:12px"><button class="btn ghost" id="bI">Imprimir relatório</button><button class="btn ghost" id="bN">Jogar de novo</button><button class="btn ghost" id="bV">Início</button></div></div>`;
+ const c=$('cR').getContext('2d');c.fillStyle='#f1f6e8';c.fillRect(0,0,240,240);avatar(c,120,240,3.2,A,true);
+ $('bS').onclick=()=>salvar('5 fases');$('bI').onclick=()=>window.print();$('bN').onclick=novo;$('bV').onclick=inicio;
+}
+
+/* ================= GUIA DO PROFESSOR ================= */
+function guia(){parar();$('hud').style.display='none';$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card guia">
+ <div class="row top noprint"><button class="btn ghost sm" id="bVt">← Voltar</button><button class="btn sm" id="bPr">Imprimir guia</button></div>
+ <h2 style="margin-top:10px">Guia do professor · Seleção no Capim</h2>
+ <p class="small">Ensino Fundamental · 9º ano · Ciências</p>
+ <h3>Habilidade da BNCC</h3>
+ <div class="hab"><b>EF09CI11.</b> Discutir a evolução e a diversidade das espécies com base na atuação da seleção natural sobre as variantes de uma mesma espécie, resultantes de processo reprodutivo.</div>
+ <h3>Objetivos da aula</h3>
+ <ul><li>Reconhecer que indivíduos de uma mesma espécie variam.</li><li>Explicar a seleção natural como sobrevivência e reprodução diferenciais, e não como mudança durante a vida.</li><li>Relacionar mudanças no ambiente, como o fogo, com mudanças na população.</li><li>Entender por que a variação é necessária para a seleção agir.</li><li>Fazer e testar uma previsão.</li></ul>
+ <h3>Roteiro de 50 minutos</h3>
+ <table class="tab"><tr><th>Tempo</th><th>O que fazer</th></tr>
+ <tr><td>5 min</td><td>Pergunte: depois de um incêndio, os gafanhotos ficam pretos? Como isso aconteceria?</td></tr>
+ <tr><td>25 min</td><td>Alunos jogam em duplas, alternando quem é o pássaro.</td></tr>
+ <tr><td>15 min</td><td>Discussão com as perguntas de cada fase.</td></tr>
+ <tr><td>5 min</td><td>Cada dupla escreve a frase do relatório de campo.</td></tr></table>
+ <h3>Fase por fase</h3>
+ <table class="tab"><tr><th>Fase</th><th>O aluno faz</th><th>Para discutir</th><th>Conceitos</th></tr>
+ <tr><td>1. Você é o pássaro</td><td>Caça gafanhotos no capim verde</td><td>Por que os verdes escaparam?</td><td>Variação, camuflagem, predação.</td></tr>
+ <tr><td>2. Filhos parecidos com os pais</td><td>Caça por três gerações</td><td>Sem pássaros, a cor mudaria?</td><td>Hereditariedade, seleção natural.</td></tr>
+ <tr><td>3. Depois do fogo</td><td>Caça no campo queimado</td><td>E quando o capim voltar?</td><td>Mudança ambiental, melanismo.</td></tr>
+ <tr><td>4. Sem variação não há escolha</td><td>Compara ilha variada e ilha uniforme</td><td>Pouca variação é um risco?</td><td>Diversidade genética.</td></tr>
+ <tr><td>5. Previsão de cientista</td><td>Prevê e simula cinco gerações</td><td>Que animais do Pantanal se camuflam?</td><td>Hipótese, modelo, ambiente heterogêneo.</td></tr></table>
+ <h3>Avaliação</h3>
+ <p>Use o relatório de campo impresso e a frase escrita por cada dupla. Todos os instrumentos têm o mesmo peso. Observe se o aluno evita a ideia de que o gafanhoto escurece para se proteger.</p>
+ <h3>Sequência de 3 aulas</h3>
+ <ol><li><b>Aula 1.</b> Jogo completo e discussão.</li><li><b>Aula 2.</b> Caça a palitos coloridos no gramado da escola, em grupos, contando quantos de cada cor são encontrados em um minuto.</li><li><b>Aula 3.</b> Leitura comparada de Lamarck e Darwin aplicada ao caso dos gafanhotos após o fogo.</li></ol>
+ <h3>Cuidados na mediação</h3>
+ <p>Os gafanhotos do jogo são fictícios e as cinco cores são uma simplificação. Os resultados das fases 1 a 4 dependem da caça de cada jogador, e o da fase 5 vem de uma simulação simplificada; nenhum desses números é dado de campo. Os dados reais citados são os dos gafanhotos-pigmeus da Suécia e da mariposa Biston betularia da Inglaterra.</p>
+ <h3>De onde vêm os números</h3>
+ <p><b>Fase 3.</b> Forsman et al. (2011) observaram que a forma preta do gafanhoto-pigmeu Tetrix subulata era muito mais frequente em áreas recém-queimadas (cerca de 50%) do que em áreas sem fogo (cerca de 9%), segundo a síntese de Karpestam et al. (2012), que também mostraram que os pretos são mais difíceis de achar sobre o chão queimado.</p>
+ <p><b>Fase 5.</b> Cook et al. (2012) analisaram o último experimento de Michael Majerus, com 4.864 mariposas soltas em seis anos, e encontraram predação maior pelos pássaros sobre as formas que contrastavam com o fundo.</p>
+ <h3>Referências</h3>
+ <ul class="ref">
+ <li>Forsman A, Karlsson M, Wennersten L, Johansson J, Karpestam E. Rapid evolution of fire melanism in replicated populations of pygmy grasshoppers. Evolution, 65(9):2530-2540, 2011. doi:10.1111/j.1558-5646.2011.01324.x</li>
+ <li>Karpestam E, Merilaita S, Forsman A. Reduced predation risk for melanistic pygmy grasshoppers in post-fire environments. Ecology and Evolution, 2(9):2204-2212, 2012. doi:10.1002/ece3.338</li>
+ <li>Cook LM, Grant BS, Saccheri IJ, Mallet J. Selective bird predation on the peppered moth: the last experiment of Michael Majerus. Biology Letters, 8(4):609-612, 2012. doi:10.1098/rsbl.2011.1136</li></ul>
+ </div>`;
+ $('bVt').onclick=inicio;$('bPr').onclick=()=>window.print();
+}
+
+/* ================= RANKING ================= */
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="selecao-no-capim";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__a={get S(){return S},get G(){return G},FASES,inicio,novo,intro,guia};
+inicio();
+</script>
+</body>
+</html>
