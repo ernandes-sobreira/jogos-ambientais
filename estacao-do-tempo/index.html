@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Estação do Tempo</title>
+<style>
+:root{--main:#00838f;--deep:#005662;--soft:#e0f7fa;--line:#b2ebf2;--ink:#10212b;--mut:#4d6370;--co2:#e53935;--ch4:#ef6c00;--ok:#2e7d32;--bad:#c62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:820px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep);letter-spacing:-.01em}
+h2{font-size:1.2rem;color:var(--deep);margin-bottom:6px;letter-spacing:-.01em}
+h3{font-size:1rem;color:var(--deep);margin:14px 0 6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 12px;font-weight:700;font-size:.86rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.card{border:2px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:var(--deep)}.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.btn.sm{padding:9px 14px;font-size:.92rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas.cena{width:100%;height:auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff;margin-top:10px}
+.top{justify-content:space-between}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--main);color:#fff;border-radius:14px;padding:8px 14px;font-weight:800;font-size:1.05rem}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.tool{border:2px solid var(--line);background:#fff;color:var(--deep);border-radius:12px;padding:9px 12px;font-weight:700;font-family:inherit;font-size:.92rem;cursor:pointer;touch-action:manipulation}
+.tool.on{border-color:var(--main);background:var(--soft)}
+.tool:disabled{opacity:.4}
+.mets{display:grid;gap:8px;margin-top:10px}
+.met{display:grid;grid-template-columns:92px 1fr 52px;gap:8px;align-items:center;font-weight:700;font-size:.9rem}
+.met .bar{position:relative;height:18px;background:#f1f4f5;border-radius:99px;overflow:hidden}
+.met .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;transition:width .15s}
+.met .alvo{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--ink);border-radius:2px}
+.met .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--mut)}
+.met.co2 .fill{background:var(--co2)}.met.ch4 .fill{background:var(--ch4)}
+.saldo .bar{background:linear-gradient(90deg,#e8f5e9 50%,#ffebee 50%)}
+.saldo .zero{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:var(--ink)}
+.saldo .fill{border-radius:0}
+.obj{display:flex;gap:10px;align-items:flex-start;background:#fff8e1;border:2px solid #ffe082;border-radius:14px;padding:10px 12px;margin-top:10px;font-size:.95rem}
+.obj b{color:#8d6e00;white-space:nowrap}
+.acao{display:flex;gap:10px;align-items:center;background:var(--soft);border-left:5px solid var(--main);border-radius:0 12px 12px 0;padding:9px 12px;margin-top:8px;font-weight:600;font-size:.95rem;min-height:64px}@media(max-width:640px){.acao{min-height:5.4em}}
+.acao .dedo{font-size:1.25rem;animation:pulo 1s ease-in-out infinite}
+@keyframes pulo{50%{transform:translateX(4px)}}
+.help{width:34px;height:34px;border-radius:50%;border:2px solid var(--main);background:#fff;color:var(--deep);font-weight:800;font-size:1rem;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(16,33,43,.35);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal .card{max-width:460px;width:100%}
+.intro{text-align:center;padding:26px 18px}
+.intro .ic{font-size:3rem;line-height:1}
+.intro .n{color:var(--mut);font-weight:700;font-size:.85rem;margin-top:8px}
+.passos{display:grid;gap:8px;margin:16px auto;max-width:420px;text-align:left}
+.passos div{display:flex;gap:12px;align-items:center;background:var(--soft);border-radius:12px;padding:10px 14px;font-weight:600}
+.passos b{font-size:1.3rem;min-width:1.6em;text-align:center}
+.res{text-align:center}
+.res .big{font-size:2.6rem;font-weight:800;color:var(--deep);line-height:1.1}
+.res .ok{color:var(--ok);font-weight:800}.res .no{color:var(--bad);font-weight:800}
+.pensa{background:var(--soft);border-radius:14px;padding:12px 14px;margin:14px auto;max-width:520px;text-align:left}
+.pensa b{color:var(--deep)}
+.boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.box{border:2px dashed var(--line);border-radius:14px;padding:10px;min-height:110px;cursor:pointer}
+.box h4{font-size:.92rem;color:var(--deep);margin-bottom:6px}
+.box.alvo{border-color:var(--main);background:var(--soft)}
+.cards{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;min-height:48px}
+.ct{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 11px;font-weight:700;font-size:.9rem;cursor:pointer;box-shadow:0 2px 0 var(--line);font-family:inherit;color:var(--ink);transition:transform .5s}
+.ct.sel{border-color:var(--main);background:var(--soft);transform:translateY(-2px)}
+.ct.certo{border-color:var(--ok);background:#e8f5e9}.ct.errado{border-color:var(--bad);background:#ffebee}
+.ct.movido{animation:voa .8s ease}
+@keyframes voa{0%{transform:translateY(-30px) scale(1.1);opacity:.3}100%{transform:none;opacity:1}}
+.capa{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+.capa canvas{width:100%;height:auto;display:block;border-radius:16px;background:var(--soft)}
+.opts{display:grid;gap:8px;margin-top:6px}
+.opts .l{font-size:.8rem;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.sw{display:flex;gap:6px;flex-wrap:wrap}
+.sw button{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--line);cursor:pointer}
+.sw button.on{box-shadow:0 0 0 3px var(--deep)}
+.sw .tx{width:auto;height:auto;border-radius:10px;padding:6px 10px;font-weight:700;font-size:.85rem;background:#fff;color:var(--deep);font-family:inherit;border:0}
+input.nome{border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit;width:100%}
+input[type=range]{width:100%;accent-color:var(--main)}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:6px}
+.tab th{text-align:left;background:var(--soft);color:var(--deep);padding:7px 6px}
+.tab td{border-bottom:1px solid var(--line);padding:7px 6px;vertical-align:top}
+.guia p,.guia li{font-size:.95rem;margin-bottom:6px}
+.guia ul,.guia ol{padding-left:20px}
+.hab{border-left:5px solid var(--main);background:var(--soft);padding:10px 14px;border-radius:0 12px 12px 0;font-size:.95rem}
+.ref li{font-size:.86rem;color:var(--mut)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+.rel{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center}
+.rel canvas{width:120px;height:120px;border-radius:50%;background:var(--soft)}
+.mini{width:100%;max-width:420px;height:auto;display:block;margin:10px auto 0}
+@media (max-width:620px){.wrap{padding:10px 8px 30px}.card{padding:12px;border-radius:16px}.capa{grid-template-columns:1fr}.met{grid-template-columns:70px 1fr 44px;font-size:.82rem}.chip{font-size:.95rem}.rel{grid-template-columns:80px 1fr}.rel canvas{width:80px;height:80px}}
+@media print{a.hub,header .hud,.ranking,.noprint{display:none!important}.card{border:1px solid #ccc;break-inside:avoid}body{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>Estação do Tempo</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF"></span><span class="pill" id="hP"></span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const W=760,H=372;
+function hex(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mix(a,b,t){const A=hex(a),B=hex(b);return`rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`;}
+
+/* ================= AVATAR ================= */
+const PELES=['#f6d3b8','#e3b18b','#c68a5e','#94603e','#5d3b26'];
+const CABS=['#1b1b1b','#4e342e','#8d6e63','#d4a85a','#b5532f'];
+const CAMISAS=['#00838f','#2e7d32','#f9a825','#c62828','#6a1b9a','#37474f'];
+const ESTILOS=[['curto','Curto'],['cacheado','Cacheado'],['longo','Longo'],['coque','Coque'],['raspado','Raspado']];
+const CHAPEUS=[['nenhum','Sem'],['bone','Boné'],['campo','Chapéu']];
+let A={pele:2,cab:0,estilo:'cacheado',camisa:0,chapeu:'campo',nome:''};
+try{const s=JSON.parse(localStorage.getItem('bc_avatar')||'null');if(s)A=Object.assign(A,s);}catch(e){}
+function salvaA(){try{localStorage.setItem('bc_avatar',JSON.stringify(A));}catch(e){}}
+function avatar(c,x,y,s,a,prancheta){
+ c.save();c.translate(x,y);c.scale(s,s);
+ const pele=PELES[a.pele],cab=CABS[a.cab],cam=CAMISAS[a.camisa];
+ if(a.estilo==='longo'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-39,12.5,15,0,0,7);c.fill();c.fillRect(-12.5,-40,25,22);}
+ if(a.estilo==='cacheado'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-40,15,14.5,0,0,7);c.fill();}
+ c.fillStyle=cam;c.beginPath();c.moveTo(-16,0);c.quadraticCurveTo(-17,-21,-6,-25);c.lineTo(6,-25);c.quadraticCurveTo(17,-21,16,0);c.closePath();c.fill();
+ c.fillStyle='rgba(0,0,0,.12)';c.fillRect(-1,-24,2,24);
+ c.fillStyle=pele;c.fillRect(-3.5,-29,7,6);
+ if(prancheta){c.fillStyle='#8d6e63';c.fillRect(4,-19,13,16);c.fillStyle='#fff';c.fillRect(5.5,-17,10,12);c.strokeStyle='#90a4ae';c.lineWidth=.8;for(let i=0;i<4;i++){c.beginPath();c.moveTo(7,-14+i*2.6);c.lineTo(14,-14+i*2.6);c.stroke();}}
+ c.strokeStyle=cam;c.lineWidth=6;c.lineCap='round';c.beginPath();c.moveTo(-11,-20);c.lineTo(-4,-9);c.stroke();
+ c.fillStyle=pele;c.beginPath();c.arc(-3,-8,3,0,7);c.fill();
+ c.fillStyle=pele;c.beginPath();c.ellipse(0,-39,9.5,11,0,0,7);c.fill();
+ c.beginPath();c.arc(-9.4,-38,2.3,0,7);c.arc(9.4,-38,2.3,0,7);c.fill();
+ c.fillStyle=cab;
+ if(a.estilo==='curto'){c.beginPath();c.ellipse(0,-44.5,10,6.8,0,Math.PI,0);c.fill();c.fillRect(-10,-46,2.8,7);c.fillRect(7.2,-46,2.8,7);}
+ if(a.estilo==='cacheado'){for(let i=0;i<13;i++){const an=Math.PI*(.8+i*1.4/12);c.beginPath();c.arc(Math.cos(an)*12,-41+Math.sin(an)*11.5,4.2,0,7);c.fill();}}
+ if(a.estilo==='longo'){c.beginPath();c.ellipse(0,-44.5,10.6,7.2,0,Math.PI,0);c.fill();}
+ if(a.estilo==='coque'){c.beginPath();c.ellipse(0,-44.5,10,6.4,0,Math.PI,0);c.fill();c.beginPath();c.arc(0,-53,5.2,0,7);c.fill();}
+ if(a.estilo==='raspado'){c.globalAlpha=.5;c.beginPath();c.ellipse(0,-44,9.8,6.2,0,Math.PI,0);c.fill();c.globalAlpha=1;}
+ c.fillStyle='#2b2a26';c.beginPath();c.arc(-3.4,-39,1.25,0,7);c.arc(3.4,-39,1.25,0,7);c.fill();
+ c.strokeStyle='#2b2a26';c.lineWidth=1;c.beginPath();c.arc(0,-35.6,2.6,.25,Math.PI-.25);c.stroke();
+ if(a.chapeu==='bone'){c.fillStyle=cam;c.beginPath();c.ellipse(0,-46,10.6,5.8,0,Math.PI,0);c.fill();c.fillRect(-10.6,-47,21.2,2.6);c.beginPath();c.ellipse(8.5,-46.2,8,2.2,0,0,7);c.fill();}
+ if(a.chapeu==='campo'){c.fillStyle='#d7c49e';c.beginPath();c.ellipse(0,-46,16.5,3.6,0,0,7);c.fill();c.beginPath();c.ellipse(0,-48,9.2,6.4,0,Math.PI,0);c.fill();c.fillStyle='#8d6e63';c.fillRect(-9.2,-49,18.4,1.9);}
+ c.restore();
+}
+function pernas(c,x,y,s,a){c.save();c.translate(x,y);c.scale(s,s);c.fillStyle='#455a64';c.fillRect(-11,0,9,20);c.fillRect(2,0,9,20);c.fillStyle='#3e2723';c.fillRect(-12,18,11,4);c.fillRect(1,18,11,4);c.restore();}
+
+/* ================= CENA ================= */
+const CORES={main:'#00838f',deep:'#005662'};
+function sr(n){const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+function syncMol(){}function partic(){}
+/* ===== TEMPO ===== */
+function ceu(c,h,a){const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,a?'#90a4ae':'#bfe6fb');g.addColorStop(1,a?'#cfd8dc':'#f4fbff');c.fillStyle=g;c.fillRect(0,0,W,h);}
+function sol(c,x,y,r){r=r||18;c.fillStyle='rgba(255,213,79,.3)';c.beginPath();c.arc(x,y,r*1.7,0,7);c.fill();c.fillStyle='#ffd54f';c.beginPath();c.arc(x,y,r,0,7);c.fill();}
+function nuvem(c,x,y,s,cor){c.fillStyle=cor||'#fff';c.beginPath();c.arc(x,y,16*s,0,7);c.arc(x+20*s,y-9*s,21*s,0,7);c.arc(x+44*s,y,16*s,0,7);c.rect(x,y,44*s,16*s);c.fill();c.fillStyle='rgba(0,0,0,.05)';c.fillRect(x-4*s,y+10*s,52*s,6*s);}
+function chuva(c,t,x0,x1,y0,y1,n){c.strokeStyle='rgba(41,121,255,.55)';c.lineWidth=2;for(let i=0;i<n;i++){const x=x0+sr(i)*(x1-x0),y=y0+((t*330+sr(i+4)*(y1-y0))%(y1-y0));c.beginPath();c.moveTo(x,y);c.lineTo(x-2,y+10);c.stroke();}}
+function tufo(c,x,y,s,cor){c.strokeStyle=cor||'#558b2f';c.lineWidth=2;c.lineCap='round';for(let k=-2;k<=2;k++){c.beginPath();c.moveTo(x+k*2,y);c.quadraticCurveTo(x+k*3.5,y-6*s,x+k*5.5,y-(11-Math.abs(k)*2)*s);c.stroke();}c.lineCap='butt';}
+function mangueira(c,x,y){c.fillStyle='rgba(0,0,0,.12)';c.beginPath();c.ellipse(x,y+4,70,10,0,0,7);c.fill();c.fillStyle='#6d4c41';c.beginPath();c.moveTo(x-9,y);c.lineTo(x-5,y-80);c.lineTo(x+6,y-80);c.lineTo(x+10,y);c.fill();
+ [[0,-120,50,'#2e7d32'],[-40,-100,36,'#388e3c'],[42,-98,36,'#388e3c'],[-18,-140,32,'#43a047'],[22,-136,30,'#43a047']].forEach(([a,b,r,cor])=>{c.fillStyle=cor;c.beginPath();c.arc(x+a,y+b,r,0,7);c.fill();});
+ c.fillStyle='#ffb300';[[-30,-96],[20,-110],[36,-88],[-8,-128]].forEach(([a,b])=>{c.beginPath();c.ellipse(x+a,y+b,4,5.5,0,0,7);c.fill();});}
+function abrigo(c,x,y){c.fillStyle='rgba(0,0,0,.1)';c.beginPath();c.ellipse(x,y+70,34,5,0,0,7);c.fill();c.fillStyle='#eceff1';c.fillRect(x-24,y+10,5,60);c.fillRect(x+19,y+10,5,60);
+ c.fillStyle='#fff';c.beginPath();c.roundRect(x-32,y-36,64,48,3);c.fill();c.strokeStyle='#b0bec5';c.lineWidth=1.5;c.stroke();for(let k=0;k<6;k++){c.beginPath();c.moveTo(x-28,y-30+k*7);c.lineTo(x+28,y-26+k*7);c.stroke();}
+ c.fillStyle='#fff';c.beginPath();c.moveTo(x-38,y-36);c.lineTo(x,y-48);c.lineTo(x+38,y-36);c.fill();c.stroke();}
+function termometro(c,x,y,s,cor){s=s||1;c.save();c.translate(x,y);c.scale(s,s);c.fillStyle='#fff';c.beginPath();c.roundRect(-5,-30,10,40,5);c.fill();c.strokeStyle='#90a4ae';c.lineWidth=1.5;c.stroke();
+ c.fillStyle=cor||'#e53935';c.fillRect(-2,-16,4,24);c.beginPath();c.arc(0,12,7,0,7);c.fill();c.restore();}
+function pluviometro(c,x,y,s,nivel){s=s||1;c.save();c.translate(x,y);c.scale(s,s);c.fillStyle='rgba(0,0,0,.1)';c.beginPath();c.ellipse(0,30,16,4,0,0,7);c.fill();
+ c.fillStyle='#eceff1';c.fillRect(-12,-14,24,44);c.strokeStyle='#90a4ae';c.lineWidth=1.5;c.strokeRect(-12,-14,24,44);
+ if(nivel){c.fillStyle='#64b5f6';c.fillRect(-11,30-40*nivel,22,40*nivel);}
+ c.fillStyle='#cfd8dc';c.beginPath();c.moveTo(-18,-24);c.lineTo(18,-24);c.lineTo(6,-12);c.lineTo(-6,-12);c.closePath();c.fill();c.stroke();
+ c.strokeStyle='#1565c0';c.lineWidth=1;for(let k=0;k<4;k++){c.beginPath();c.moveTo(6,24-k*10);c.lineTo(12,24-k*10);c.stroke();}c.restore();}
+function anemometro(c,x,y,s,ang){s=s||1;c.save();c.translate(x,y);c.scale(s,s);c.strokeStyle='#607d8b';c.lineWidth=3;c.beginPath();c.moveTo(0,0);c.lineTo(0,26);c.stroke();
+ for(let k=0;k<3;k++){const a=ang+k*2.094,ex=Math.cos(a)*20,ey=Math.sin(a)*6;c.strokeStyle='#78909c';c.lineWidth=2;c.beginPath();c.moveTo(0,0);c.lineTo(ex,ey);c.stroke();c.fillStyle=k?'#90a4ae':'#ef6c00';c.beginPath();c.arc(ex,ey,5.5,0,7);c.fill();}
+ c.fillStyle='#455a64';c.beginPath();c.arc(0,0,3.5,0,7);c.fill();c.restore();}
+function barometro(c,x,y,r,v,min,max,lab,cor){c.save();c.fillStyle='rgba(0,0,0,.08)';c.beginPath();c.arc(x+2,y+4,r+6,0,7);c.fill();
+ const g=c.createRadialGradient(x-r*.3,y-r*.3,2,x,y,r+6);g.addColorStop(0,'#fff');g.addColorStop(1,'#eceff1');c.fillStyle=g;c.beginPath();c.arc(x,y,r+6,0,7);c.fill();c.strokeStyle=cor||'#00838f';c.lineWidth=5;c.stroke();
+ const a0=Math.PI*.75,a1=Math.PI*2.25;c.strokeStyle='#90a4ae';c.lineWidth=1.5;for(let k=0;k<=10;k++){const a=a0+(a1-a0)*k/10,r1=k%5?r-8:r-14;c.beginPath();c.moveTo(x+Math.cos(a)*r1,y+Math.sin(a)*r1);c.lineTo(x+Math.cos(a)*(r-2),y+Math.sin(a)*(r-2));c.stroke();}
+ c.fillStyle='#546e7a';c.font=`700 ${Math.round(r*.2)}px system-ui`;c.textAlign='center';c.fillText(min,x+Math.cos(a0)*(r-24),y+Math.sin(a0)*(r-24)+4);c.fillText(max,x+Math.cos(a1)*(r-24),y+Math.sin(a1)*(r-24)+4);
+ const a=a0+(a1-a0)*clamp((v-min)/(max-min),0,1);c.strokeStyle='#263238';c.lineWidth=3.5;c.lineCap='round';c.beginPath();c.moveTo(x,y);c.lineTo(x+Math.cos(a)*(r-10),y+Math.sin(a)*(r-10));c.stroke();c.lineCap='butt';c.fillStyle='#263238';c.beginPath();c.arc(x,y,5,0,7);c.fill();
+ c.fillStyle='#263238';c.font=`800 ${Math.round(r*.24)}px system-ui`;c.fillText(lab,x,y+r*.55);c.restore();}
+function drawCena(c,G){if(G.desenha)G.desenha(c);}
+/* ================= TELA / LOOP ================= */
+let G=null,S=null,raf=0,ultimo=0,cx=null;
+function laco(ts){const dt=Math.min(.05,(ts-ultimo)/1000||0);ultimo=ts;if(G){G.t+=dt;if(G.upd)G.upd(dt);syncMol(G,dt);partic(G,dt);if(cx)drawCena(cx,G);if(G.extra)G.extra(cx);}raf=requestAnimationFrame(laco);}
+function parar(){cancelAnimationFrame(raf);raf=0;}
+function rodar(){parar();ultimo=performance.now();raf=requestAnimationFrame(laco);}
+function hud(){$('hud').style.display='flex';$('hF').textContent=`Fase ${S.f+1} de ${FASES.length}`;$('hP').textContent=`${Math.max(0,S.tot+S.fp)} pts`;}
+function telaJogo(chip,info){
+ const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><span class="chip" id="chip">${chip}</span><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="acao"><span class="dedo">👉</span><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});
+}
+function acao(t){const e=$('acao');if(e&&e.innerHTML!==t)e.innerHTML=t;}
+function ajuda(){const F=FASES[S.f],d=document.createElement('div');d.className='modal';
+ d.innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn">Entendi</button></div>`;
+ d.onclick=e=>{if(e.target===d||e.target.tagName==='BUTTON')d.remove();};document.body.appendChild(d);}
+function medidor(id,rot,cls,max,alvo){const a=alvo!=null?`<span class="alvo" style="left:${alvo/max*100}%"></span>`:'';return`<div class="met ${cls}" id="${id}" data-max="${max}"><span>${rot}</span><div class="bar"><span class="fill"></span>${a}</div><span class="v"></span></div>`;}
+function poeMed(id,v){const e=$(id);if(!e)return;const m=+e.dataset.max;e.querySelector('.fill').style.width=clamp(v/m*100,0,100)+'%';e.querySelector('.v').textContent=Math.round(v);}
+function poeSaldo(v,max){const e=$('mSaldo');if(!e)return;const f=e.querySelector('.fill'),p=clamp(Math.abs(v)/max*50,0,50);if(v<0){f.style.left=(50-p)+'%';f.style.width=p+'%';f.style.background='#43a047';}else{f.style.left='50%';f.style.width=p+'%';f.style.background='#e53935';}e.querySelector('.v').textContent=(v>0?'+':'')+Math.round(v);}
+
+/* ================= FASES ================= */
+const FASES=[
+ {nome:'Monte a estação',ic:'🛠️',obj:'Instalar os 4 instrumentos da estação meteorológica da escola nos lugares certos.',passos:[['✋','Arraste um instrumento de cima'],['📍','Solte num dos lugares que piscam'],['💬','O jogo explica cada escolha']],ini:()=>f1()},
+ {nome:'Caça-chuva',ic:'🌧️',obj:'Pegar a chuva com a caixa coletora e descobrir quantos milímetros choveu, em 3 rodadas.',passos:[['↔️','Arraste a caixa para baixo da nuvem'],['🫙','Encha o pote até a marca'],['📏','Toque na resposta certa']],ini:()=>f2()},
+ {nome:'Barômetro manda',ic:'🧭',obj:'Ler a pressão e a umidade de 4 dias e prever se vem chuva ou tempo firme.',passos:[['👀','Veja os ponteiros se mexerem'],['🧭','Pressão caindo ou subindo?'],['👆','Toque na sua previsão']],ini:()=>f3()},
+ {nome:'Sensação térmica',ic:'🥵',obj:'Prever o efeito da umidade no calor e escolher um horário seguro para a Educação Física em 2 dias.',passos:[['🔮','Faça a previsão'],['✋','Arraste o bloco da aula pela linha do dia'],['✅','Solte e o jogo calcula a sensação']],ini:()=>f4()},
+ {nome:'Boletim da escola',ic:'📺',obj:'Montar o boletim do tempo com previsão para amanhã, alerta de calor e recado para a escola.',passos:[['📊','Leia o painel da estação'],['👆','Toque em cada quadro para trocar'],['📺','Acerte os 3 e apresente']],ini:()=>f5()}
+];
+function intro(){parar();G=null;cx=null;hud();const F=FASES[S.f];$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><div class="n">FASE ${S.f+1} DE ${FASES.length}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left;max-width:420px;margin:12px auto 0"><b>🎯 Objetivo</b><span>${F.obj}</span></div>
+ <div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn" id="bGo">Começar</button></div>`;
+ $('bGo').onclick=()=>{S.fp=0;F.ini();};}
+function fimFase(pts,ok,oque,pergunta,extraHtml){
+ parar();pts=Math.max(0,Math.round(pts));S.fp=0;S.tot+=pts;S.res[S.f]={pts,ok,oque};hud();
+ $('tela').innerHTML=`<div class="card res"><div class="small">${FASES[S.f].ic} ${FASES[S.f].nome}</div><div class="big">+${pts}</div>
+ <p class="${ok?'ok':'no'}">${ok?'Meta cumprida':'Meta não cumprida'}</p>${extraHtml||''}
+ <div class="pensa"><b>O que aconteceu:</b> ${oque}</div><div class="pensa"><b>Pergunta para a turma:</b> ${pergunta}</div>
+ <div class="row" style="justify-content:center"><button class="btn" id="bNx">${S.f<FASES.length-1?'Próxima fase':'Ver relatório'}</button></div></div>`;
+ $('bNx').onclick=()=>{S.f++;if(S.f<FASES.length)intro();else relatorio();};
+}
+function ptr(fn,ev){const cv=$('cv');cv.style.touchAction='none';cv.addEventListener(ev||'pointermove',e=>{const r=cv.getBoundingClientRect();fn((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height,e);});}
+function painel(c,x,y,w,h){c.save();c.shadowColor='rgba(0,0,0,.08)';c.shadowBlur=8;c.fillStyle='rgba(255,255,255,.96)';c.beginPath();c.roundRect(x,y,w,h,12);c.fill();c.restore();}
+function pulso(c,x,y,r){c.strokeStyle=`rgba(0,131,143,${.45+.35*Math.sin(G.t*5)})`;c.lineWidth=3;c.setLineDash([6,5]);c.beginPath();c.arc(x,y,r,0,7);c.stroke();c.setLineDash([]);}
+function opcoes(perg,ops,cb){$('ctrl').innerHTML=`<div style="width:100%"><b>${perg}</b><div style="display:grid;gap:6px;margin-top:6px">${ops.map((t,i)=>`<button class="tool" style="text-align:left" data-o="${i}">${t}</button>`).join('')}</div></div>`;
+ document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-o]').forEach(x=>x.classList.toggle('on',x===b));cb(+b.dataset.o,b);});}
+function hiC(tc,rh){const T=tc*9/5+32;let H=0.5*(T+61+(T-68)*1.2+rh*0.094);if((H+T)/2>=80){H=-42.379+2.04901523*T+10.14333127*rh-.22475541*T*rh-.00683783*T*T-.05481717*rh*rh+.00122874*T*T*rh+.00085282*T*rh*rh-.00000199*T*T*rh*rh;
+ if(rh<13&&T>=80&&T<=112)H-=((13-rh)/4)*Math.sqrt((17-Math.abs(T-95))/17);if(rh>85&&T>=80&&T<=87)H+=((rh-85)/10)*((87-T)/5);}return(H-32)*5/9;}
+const CAT=[[26.7,'sem alerta','#66bb6a'],[32.2,'cuidado','#fdd835'],[39.4,'cuidado extremo','#fb8c00'],[51.1,'perigo','#e53935'],[999,'perigo extremo','#8e24aa']];
+const cat=h=>CAT.findIndex(k=>h<k[0]);
+const f1x=v=>v.toFixed(1).replace('.',',');
+
+/* ---------- FASE 1 ---------- */
+const SPOTS=[{id:'abrigo',x:470,y:226,n:'abrigo branco'},{id:'parede',x:596,y:200,n:'parede ao sol'},{id:'arvore',x:300,y:300,n:'sombra da mangueira'},{id:'grama',x:664,y:318,n:'gramado aberto'},{id:'mastro',x:724,y:58,n:'alto do mastro'},{id:'telhado',x:180,y:102,n:'beiral do telhado'},{id:'sala',x:96,y:214,n:'dentro da sala'}];
+const INST=[{id:'T',n:'Termômetro',ok:['abrigo'],dica:{parede:'Ao sol e encostado na parede, o termômetro esquenta mais que o ar. Ele mediria a parede, não o ar.',arvore:'A sombra ajuda, mas o padrão é um abrigo branco e ventilado, sobre grama, entre 1,25 e 2 m de altura.',grama:'No chão e ao sol, ele mede o calor da grama e do sol, não do ar.',mastro:'Lá no alto bate sol direto e a altura não é a padrão para temperatura.',telhado:'O telhado esquenta muito ao sol. O termômetro mediria o telhado.',sala:'Dentro da sala ele mede a sala, não o ar de fora.'}},
+ {id:'P',n:'Pluviômetro',ok:['grama'],dica:{abrigo:'Dentro do abrigo a chuva não entra.',parede:'A parede bloqueia parte da chuva que vem inclinada com o vento.',arvore:'A copa da mangueira segura parte da chuva antes de chegar ao pote.',mastro:'No alto, o vento desvia as gotas e o pote pega menos chuva.',telhado:'Perto do telhado a chuva respinga e escorre, e a medida fica errada.',sala:'Dentro da sala não chove.'}},
+ {id:'A',n:'Anemômetro',ok:['mastro'],dica:{abrigo:'Dentro do abrigo quase não venta.',parede:'A parede freia e desvia o vento.',arvore:'A árvore freia o vento perto do chão.',grama:'Perto do chão o vento é mais fraco. O padrão é medir a 10 m de altura, em lugar aberto.',telhado:'O telhado cria redemoinhos e desvia o vento.',sala:'Dentro da sala não tem vento para medir.'}},
+ {id:'B',n:'Barômetro',ok:['sala','abrigo'],dica:{parede:'Funcionaria, mas sol e chuva estragam o aparelho. A pressão é a mesma dentro e fora da sala.',arvore:'Funcionaria, mas ficaria exposto à chuva. A pressão é a mesma dentro da sala.',grama:'Funcionaria, mas ficaria exposto. A pressão do ar é a mesma dentro da sala.',mastro:'Não precisa subir: a pressão quase não muda em poucos metros, e lá em cima ele ficaria exposto.',telhado:'Funcionaria, mas sol e chuva estragam o aparelho. A pressão é a mesma dentro da sala.'}}];
+function desenhaInst(c,id,x,y,s,t){if(id==='T')termometro(c,x,y,s);if(id==='P')pluviometro(c,x,y,s,.35);if(id==='A')anemometro(c,x,y,s,t*6);if(id==='B')barometro(c,x,y,15*s,1013,990,1030,'',null);}
+function f1(){G={t:0,pos:{},carry:null,erros:0,fim:0};telaJogo('🛠️ Monte a estação','0 de 4');
+ const CARD=i=>[250+i*90,40];
+ const escola=c=>{c.fillStyle='rgba(0,0,0,.1)';c.fillRect(24,286,214,8);c.fillStyle='#ffe0b2';c.fillRect(30,120,200,168);c.fillStyle='#ef6c00';c.beginPath();c.moveTo(16,124);c.lineTo(130,78);c.lineTo(244,124);c.closePath();c.fill();
+  c.fillStyle='#fff';c.beginPath();c.roundRect(52,170,88,72,4);c.fill();c.fillStyle='#e1f5fe';c.fillRect(58,176,76,60);c.strokeStyle='#fff';c.lineWidth=3;c.beginPath();c.moveTo(96,176);c.lineTo(96,236);c.stroke();
+  c.fillStyle='#8d6e63';c.fillRect(168,200,40,88);c.fillStyle='#ffca28';c.beginPath();c.arc(200,246,3,0,7);c.fill();c.fillStyle='#e65100';c.font='800 13px system-ui';c.textAlign='center';c.fillText('ESCOLA',130,150);};
+ const parede=c=>{c.fillStyle='#bf5b3c';c.fillRect(566,150,62,110);c.strokeStyle='rgba(255,255,255,.35)';c.lineWidth=1;for(let r=0;r<11;r++){c.beginPath();c.moveTo(566,160+r*10);c.lineTo(628,160+r*10);c.stroke();for(let k=0;k<4;k++){const xx=566+(r%2?8:0)+k*16;c.beginPath();c.moveTo(xx,150+r*10);c.lineTo(xx,160+r*10);c.stroke();}}};
+ G.desenha=c=>{ceu(c,262);sol(c,640,40,20);nuvem(c,70,46,.9);c.fillStyle='#9ccc65';c.fillRect(0,262,W,H-262);c.fillStyle='#8bc34a';c.fillRect(0,262,W,6);for(let x=10;x<W;x+=26)tufo(c,x,300+((x*7)%60),.9,'#7cb342');
+  escola(c);mangueira(c,300,300);parede(c);abrigo(c,470,226);
+  c.fillStyle='#78909c';c.fillRect(721,62,5,244);c.fillStyle='#546e7a';c.fillRect(712,300,23,8);
+  SPOTS.forEach(s=>{const usado=Object.values(G.pos).includes(s.id);if(G.carry&&!usado)pulso(c,s.x,s.y,24);});
+  Object.entries(G.pos).forEach(([id,sp])=>{const s=SPOTS.find(q=>q.id===sp);desenhaInst(c,id,s.x,s.y-(id==='A'?6:0),1.15,G.t);});
+  if(Object.keys(G.pos).length<4)painel(c,200,6,370,70);INST.forEach((it,i)=>{if(G.pos[it.id]||(G.carry&&G.carry.id===it.id))return;const[x,y]=CARD(i);c.fillStyle='#e0f7fa';c.beginPath();c.roundRect(x-40,y-30,80,62,10);c.fill();desenhaInst(c,it.id,x,y-6,it.id==='B'?1.1:.9,G.t);c.fillStyle='#005662';c.font='800 11px system-ui';c.textAlign='center';c.fillText(it.n,x,y+26);});
+  if(G.carry){const{x,y,id}=G.carry;desenhaInst(c,id,x,y-50,1.4,G.t);c.fillStyle='rgba(0,0,0,.65)';c.font='800 13px system-ui';c.textAlign='center';c.fillText(INST.find(q=>q.id===id).n,x,y-14);}};
+ G.upd=()=>{};
+ ptr((x,y)=>{if(G.fim)return;INST.forEach((it,i)=>{const[cx2,cy2]=CARD(i);if(!G.pos[it.id]&&Math.abs(x-cx2)<44&&Math.abs(y-cy2)<34)G.carry={id:it.id,x,y};});},'pointerdown');
+ ptr((x,y)=>{if(G.carry){G.carry.x=x;G.carry.y=y;}});
+ ptr((x,y)=>{if(!G.carry)return;const it=INST.find(q=>q.id===G.carry.id);G.carry=null;const px=x,py=y-50;
+  let best=null,bd=60;SPOTS.forEach(s=>{const d=Math.hypot(s.x-px,s.y-py);if(d<bd&&!Object.values(G.pos).includes(s.id)){bd=d;best=s;}});if(!best)return;
+  if(it.ok.includes(best.id)){G.pos[it.id]=best.id;const n=Object.keys(G.pos).length;$('info').textContent=`${n} de 4`;
+   acao({T:'✅ Termômetro no abrigo branco: sombra, ventilação e altura certa, sobre a grama.',P:'✅ Pluviômetro no gramado aberto, longe da árvore, da parede e do telhado.',A:'✅ Anemômetro no alto do mastro, acima dos obstáculos.',B:'✅ Barômetro protegido. A pressão do ar é a mesma dentro e fora.'}[it.id]);
+   if(n===4){G.fim=1;setTimeout(()=>fimFase(Math.max(60,180-G.erros*15),true,'Cada instrumento precisa de um lugar que represente o ar livre. O termômetro fica num abrigo branco e ventilado, longe do sol direto, a uma altura entre 1,25 e 2 m. O pluviômetro fica em área aberta, longe de árvores e telhados. O anemômetro fica no alto, porque perto do chão os obstáculos freiam o vento. O barômetro pode ficar protegido, porque a pressão é a mesma dentro e fora da sala.','Onde, na nossa escola, seria um bom lugar para um pluviômetro?'),1600);}}
+  else{G.erros++;acao(`❌ ${it.n}, ${best.n}: ${it.dica[best.id]}`);}},'pointerup');
+ acao('Arraste cada instrumento de cima e solte no lugar onde ele mede melhor.');rodar();}
+
+/* ---------- FASE 2 ---------- */
+const RODADAS=[{a:1,L:8,w:120,ops:['0,8 mm','8 mm','80 mm'],ok:1},{a:2,L:10,w:180,ops:['20 mm','10 mm','5 mm'],ok:2},{a:.5,L:2,w:70,ops:['4 mm','1 mm','2 mm'],ok:0}];
+function f2(){G={t:0,r:0,L:0,bx:200,drag:false,fase:'pegar',tent:0,pts:0,cx:400};telaJogo('🌧️ Caça-chuva','rodada 1 de 3');
+ const R=()=>RODADAS[G.r],JAR=[620,150,74,180];
+ const sobre=()=>{const w=R().w;return Math.max(0,Math.min(G.bx+w/2,G.cx+70)-Math.max(G.bx-w/2,G.cx-70))/w;};
+ G.desenha=c=>{ceu(c,H,G.fase==='pegar');c.fillStyle='#a5d6a7';c.fillRect(0,330,W,42);
+  const cx2=G.cx;if(G.fase==='pegar'){chuva(c,G.t,cx2-70,cx2+70,92,330,46);}nuvem(c,cx2-60,62,1.6,'#eceff1');nuvem(c,cx2-90,80,1.1,'#cfd8dc');
+  const w=R().w,x=G.bx,y=262;c.fillStyle='rgba(0,0,0,.12)';c.beginPath();c.ellipse(x,y+66,w*.55,6,0,0,7);c.fill();
+  c.fillStyle='#78909c';c.fillRect(x-3,y+18,6,48);
+  c.fillStyle='#b0bec5';c.beginPath();c.moveTo(x-w/2,y);c.lineTo(x+w/2,y);c.lineTo(x+w/2-10,y+20);c.lineTo(x-w/2+10,y+20);c.closePath();c.fill();c.strokeStyle='#546e7a';c.lineWidth=2;c.stroke();
+  const lv=Math.min(1,G.L/R().L);c.fillStyle='rgba(100,181,246,.8)';c.fillRect(x-w/2+12,y+14,(w-24),5*lv+1);
+  c.fillStyle='#005662';c.font='800 15px system-ui';c.textAlign='center';c.fillText(`${f1x(R().a).replace(',0','')} m²`,x,y-8);
+  if(G.fase==='pegar'&&!G.mexeu){c.fillStyle='#00838f';c.font='800 13px system-ui';c.fillText('↔️ arraste a caixa',x,y+90);}
+  c.strokeStyle='#90a4ae';c.lineWidth=4;c.beginPath();c.moveTo(x,y+60);c.quadraticCurveTo(x,y+70,Math.min(x+30,JAR[0]),y+70);c.lineTo(JAR[0]-30,y+70);c.stroke();
+  const[jx,jy,jw,jh]=JAR;painel(c,jx-46,jy-56,jw+92,jh+80);c.save();c.beginPath();c.roundRect(jx,jy,jw,jh,[6,6,12,12]);c.clip();c.fillStyle='#f5fbfd';c.fillRect(jx,jy,jw,jh);const top=12;
+  const hh=(jh-top)*(G.L/12);c.fillStyle='#64b5f6';c.fillRect(jx,jy+jh-hh,jw,hh);c.restore();c.strokeStyle='#546e7a';c.lineWidth=2;c.beginPath();c.roundRect(jx,jy,jw,jh,[6,6,12,12]);c.stroke();
+  c.fillStyle='#37474f';c.font='700 11px system-ui';c.textAlign='right';for(let k=0;k<=12;k+=2){const yy=jy+jh-(jh-top)*k/12;c.beginPath();c.moveTo(jx+jw-12,yy);c.lineTo(jx+jw,yy);c.stroke();c.fillText(k+' L',jx-4,yy+4);}
+  const ty=jy+jh-(jh-top)*R().L/12;c.strokeStyle='#e65100';c.setLineDash([5,4]);c.lineWidth=2;c.beginPath();c.moveTo(jx-2,ty);c.lineTo(jx+jw+8,ty);c.stroke();c.setLineDash([]);c.fillStyle='#e65100';c.textAlign='left';c.font='800 12px system-ui';c.fillText('meta',jx+jw+10,ty+4);
+  c.fillStyle='#005662';c.font='800 14px system-ui';c.textAlign='center';c.fillText(`🫙 ${f1x(Math.min(G.L,R().L))} litros`,jx+jw/2,jy-26);};
+ G.upd=dt=>{if(G.fase!=='pegar')return;G.cx=320+150*Math.sin(G.t*.55)+40*Math.sin(G.t*1.7);const s=sobre();G.L=Math.min(R().L,G.L+dt*s*R().a*1.6);
+  if(G.L>=R().L){G.fase='perg';pergunta();}};
+ const pergunta=()=>{const r=R();acao(`Parou de chover. Caíram ${r.L} litros numa caixa de ${f1x(r.a).replace(',0','')} m². Quantos milímetros choveu?`);let t=0;
+  opcoes('Toque na resposta:',r.ops,(o)=>{t++;if(o===r.ok){G.pts+=t===1?50:20;$('ctrl').innerHTML='';acao(`✅ Isso: ${r.L} litros ÷ ${f1x(r.a).replace(',0','')} m² = ${r.ops[r.ok]}. 1 litro espalhado em 1 m² forma 1 mm de água.`);
+    setTimeout(()=>{G.r++;if(G.r>=3){fimFase(G.pts+30,true,'O pluviômetro mede a altura da lâmina de água que a chuva deixaria num chão plano, sem escorrer nem infiltrar. Um litro de água espalhado em 1 metro quadrado forma uma lâmina de 1 milímetro. Por isso dividimos os litros pela área da boca do coletor. Assim, caixas de tamanhos diferentes dão a mesma medida para a mesma chuva.','Se o pluviômetro da escola marcou 30 mm, quantos litros caíram num pátio de 100 m²?');return;}
+     G.L=0;G.fase='pegar';$('info').textContent=`rodada ${G.r+1} de 3`;acao(G.r===1?'Agora a caixa é maior: 2 m². Pegue a chuva de novo.':'Agora um coletor pequeno, de 0,5 m². Pegue a chuva.');},2600);}
+   else acao('Ainda não. Pense: 1 litro em 1 m² dá 1 mm. Se a área dobra, a mesma água fica mais rasa.');});};
+ const mover=x=>{G.bx=clamp(x,70,500);G.mexeu=1;};
+ ptr((x,y)=>{if(Math.abs(x-G.bx)<R().w/2+40&&y>200){G.drag=true;G.dx=G.bx-x;}},'pointerdown');ptr((x)=>{if(G.drag)mover(x+G.dx);});ptr(()=>G.drag=false,'pointerup');
+ acao('A nuvem anda. Arraste a caixa coletora para ficar embaixo da chuva até o pote encher na marca.');rodar();}
+
+/* ---------- FASE 3 ---------- */
+const DIAS3=[{p:[1016,1009],u:[55,86],ceu:'nuv',ok:1,txt:'Dia 1'},{p:[1006,1014],u:[90,58],ceu:'limpa',ok:0,txt:'Dia 2'},{p:[1014,1007],u:[58,82],ceu:'limpa',ok:1,txt:'Dia 3'},{p:[1007,1015],u:[84,52],ceu:'nuv',ok:0,txt:'Dia 4'}];
+function f3(){G={t:0,d:0,k:0,pts:0,tent:0,fim:0};telaJogo('🧭 Barômetro manda','dia 1 de 4');
+ const D=()=>DIAS3[G.d];
+ G.desenha=c=>{c.fillStyle='#f3fafb';c.fillRect(0,0,W,H);const d=D(),k=Math.min(1,G.k),p=d.p[0]+(d.p[1]-d.p[0])*k,u=d.u[0]+(d.u[1]-d.u[0])*k;
+  painel(c,20,16,470,340);c.fillStyle='#005662';c.font='800 18px system-ui';c.textAlign='left';c.fillText(`📅 ${d.txt}: de manhã até a tarde`,40,46);
+  barometro(c,140,190,92,p,980,1040,'hPa','#00838f');c.fillStyle='#263238';c.font='800 22px system-ui';c.textAlign='center';c.fillText(`${Math.round(p)}`,140,322);
+  const seta=d.p[1]<d.p[0];c.fillStyle=seta?'#e53935':'#2e7d32';c.font='800 16px system-ui';c.fillText(k>.15?(seta?'▼ caindo':'▲ subindo'):'',140,346);
+  barometro(c,370,190,72,u,0,100,'%','#0288d1');c.fillStyle='#263238';c.font='800 20px system-ui';c.fillText(`💧 ${Math.round(u)}%`,370,300);c.font='800 13px system-ui';c.fillStyle='#546e7a';c.fillText('umidade do ar',370,322);
+  const us=d.u[1]>d.u[0];c.fillStyle=us?'#0288d1':'#ef6c00';c.font='800 16px system-ui';c.fillText(k>.15?(us?'▲ subindo':'▼ secando'):'',370,346);
+  c.save();c.beginPath();c.roundRect(510,16,232,340,14);c.clip();ceu(c,H,d.ceu==='nuv');c.fillStyle='#a5d6a7';c.fillRect(510,300,232,60);
+  if(d.ceu==='nuv'){nuvem(c,540,90,1.2,'#eceff1');nuvem(c,620,130,1.4,'#cfd8dc');nuvem(c,560,180,1,'#eceff1');}else{sol(c,640,90,26);nuvem(c,560,170,.7);}
+  c.restore();c.strokeStyle='#b2ebf2';c.lineWidth=3;c.beginPath();c.roundRect(510,16,232,340,14);c.stroke();c.fillStyle='#005662';c.font='800 14px system-ui';c.fillText('🪟 o céu agora',626,342);};
+ G.upd=dt=>{if(G.k<1)G.k+=dt*.45;};
+ const dia=()=>{G.k=0;$('info').textContent=`dia ${G.d+1} de 4`;let t=0;
+  acao(G.d===0?'Regra dos observadores do tempo: pressão caindo com umidade subindo costuma anunciar chuva. Pressão subindo com ar secando, tempo firme.':G.d===2?'Atenção: olhe os instrumentos, não só o céu.':'Veja os ponteiros e faça a previsão para a noite.');
+  opcoes('Previsão para a noite:',['☀️ Tempo firme','🌧️ Chuva chegando'],(o)=>{t++;G.tent++;if(o===D().ok){G.pts+=t===1?45:15;$('ctrl').innerHTML='';
+    acao(['✅ Pressão caindo e ar cada vez mais úmido: o tempo vai virar.','✅ Pressão subindo e ar secando: tempo firme, mesmo depois de um dia úmido.','✅ O céu ainda está azul, mas a pressão caiu e a umidade subiu. A chuva vem chegando.','✅ Ainda tem nuvens, mas a pressão sobe e o ar seca. Elas vão se desfazer.'][G.d]);
+    setTimeout(()=>{G.d++;if(G.d>=4){fimFase(G.pts+20,true,'A pressão do ar é o peso da coluna de ar sobre nós. Quando ela cai e a umidade sobe, é comum que o ar esteja subindo e formando nuvens de chuva. Quando a pressão sobe e o ar seca, o tempo tende a ficar firme. Os instrumentos mostram a mudança antes de o céu mudar. Os serviços de meteorologia juntam medidas das estações, imagens de satélite e modelos de computador para fazer a previsão.','Por que um céu azul de manhã não garante uma tarde sem chuva?');return;}dia();},2400);}
+   else acao(G.d>=2?'Olhe de novo os ponteiros: o céu engana, os instrumentos não.':'Olhe a seta da pressão e a da umidade.');});};
+ dia();rodar();}
+
+/* ---------- FASE 4 ---------- */
+const DIA4=[{n:'Dia seco',T:[24,26,28,30,32,34,35,36,36,35,33],U:[60,52,45,38,32,28,25,22,20,22,26]},{n:'Dia úmido',T:[25,27,29,31,32,33,33,34,33,32,30],U:[90,85,78,70,65,62,60,58,60,65,72]}];
+function f4(){G={t:0,fase:0,d:0,bx:380,drag:false,feito:[],pts:0,tent:0};telaJogo('🥵 Sensação térmica','previsão');
+ const X=i=>70+i*62,BY=316;
+ G.desenha=c=>{c.fillStyle='#fffaf3';c.fillRect(0,0,W,H);const D=DIA4[G.d];
+  painel(c,14,10,732,50);c.fillStyle='#005662';c.font='800 16px system-ui';c.textAlign='left';c.fillText(G.fase===0?'🥵 Calor e umidade':`📅 ${D.n} (exemplo) · temperatura e umidade de hora em hora`,28,41);
+  if(G.fase===0){const a=hiC(34,80),b=hiC(34,30);[[200,'Ar úmido',80,a],[560,'Ar seco',30,b]].forEach(([x,n,u,h])=>{painel(c,x-150,80,300,240);c.fillStyle='#263238';c.font='800 20px system-ui';c.textAlign='center';c.fillText(n,x,116);
+    termometro(c,x-60,200,2.2);c.font='800 30px system-ui';c.fillText('34 °C',x+40,190);c.font='800 20px system-ui';c.fillStyle='#0288d1';c.fillText(`💧 ${u}%`,x+40,226);
+    if(G.rev){const k=cat(h);c.fillStyle=CAT[k][2];c.beginPath();c.roundRect(x-120,260,240,44,10);c.fill();c.fillStyle='#fff';c.font='800 17px system-ui';c.fillText(`sente como ${Math.round(h)} °C`,x,288);}});return;}
+  for(let i=0;i<11;i++){const x=X(i),t=D.T[i],u=D.U[i],h=(t-20)*9;c.fillStyle='#ffccbc';c.beginPath();c.roundRect(x-20,BY-h,40,h,[8,8,0,0]);c.fill();c.fillStyle='#bf360c';c.font='800 14px system-ui';c.textAlign='center';c.fillText(t+'°',x,BY-h-24);
+   c.fillStyle='#0288d1';c.font='700 12px system-ui';c.fillText(u+'%',x,BY-h-8);c.fillStyle='#455a64';c.font='800 13px system-ui';c.fillText((7+i)+'h',x,BY+18);
+   const f=G.feito.find(q=>q.d===G.d&&q.i===i);if(f){const k=cat(f.h);c.fillStyle=CAT[k][2];c.beginPath();c.roundRect(x-26,BY+26,52,22,6);c.fill();c.fillStyle=k===1?'#263238':'#fff';c.font='800 11px system-ui';c.fillText(Math.round(f.h)+'°',x,BY+41);}}
+  c.strokeStyle='#90a4ae';c.lineWidth=2;c.beginPath();c.moveTo(36,BY);c.lineTo(728,BY);c.stroke();
+  const bx=G.bx;c.save();c.shadowColor='rgba(0,0,0,.2)';c.shadowBlur=10;c.fillStyle='#00838f';c.beginPath();c.roundRect(bx-30,72,60,46,10);c.fill();c.restore();c.fillStyle='#fff';c.font='22px system-ui';c.textAlign='center';c.fillText('⚽',bx,98);c.font='800 10px system-ui';c.fillText('Ed. Física',bx,112);
+  c.strokeStyle='rgba(0,131,143,.5)';c.setLineDash([4,4]);c.beginPath();c.moveTo(bx,118);c.lineTo(bx,BY);c.stroke();c.setLineDash([]);
+  if(!G.mexeu){c.fillStyle='#00838f';c.font='800 13px system-ui';c.fillText('↔️ arraste e solte',bx,136);}
+  c.textAlign='left';c.font='700 11px system-ui';let lx=420;[[1,'cuidado'],[2,'cuidado extremo'],[3,'perigo']].forEach(([k,n])=>{c.fillStyle=CAT[k][2];c.fillRect(lx,BY+38,10,10);c.fillStyle='#455a64';c.fillText(n,lx+14,BY+47);lx+=k===2?118:80;});};
+ G.upd=()=>{};
+ const soltar=()=>{const i=clamp(Math.round((G.bx-70)/62),0,10);G.bx=X(i);const D=DIA4[G.d],h=hiC(D.T[i],D.U[i]),k=cat(h);G.tent++;
+  if(!G.feito.find(q=>q.d===G.d&&q.i===i))G.feito.push({d:G.d,i,h});
+  if(h<32.2){G.pts+=G.tent<=2?70:35;acao(`✅ Às ${7+i}h a sensação é de ${Math.round(h)} °C (${CAT[k][1]}). Horário seguro para correr.`);G.tent=0;
+   setTimeout(()=>{if(G.d===0){G.d=1;G.feito=[];G.bx=380;acao('Agora um dia úmido, com temperaturas parecidas. Ache um horário seguro.');}else fimFase(G.pts+(G.p1?40:0),true,'O corpo se resfria quando o suor evapora. Com o ar úmido, o suor evapora pouco e o corpo sente mais calor do que o termômetro mostra. Por isso o dia úmido, com temperaturas até menores, deixou só o começo da manhã seguro. O índice de calor junta temperatura e umidade para estimar essa sensação.','Em que horário a Educação Física da nossa escola acontece nos meses quentes? Seria preciso mudar?');},2400);}
+  else acao(`Às ${7+i}h: ${D.T[i]} °C com ${D.U[i]}% de umidade dá sensação de ${Math.round(h)} °C (${CAT[k][1]}). Procure outro horário.`);};
+ ptr((x,y)=>{if(G.fase===1&&y<150&&Math.abs(x-G.bx)<50){G.drag=true;G.dx=G.bx-x;}else if(G.fase===1&&y>=150){G.drag=true;G.dx=0;G.bx=clamp(x,70,690);}},'pointerdown');
+ ptr((x)=>{if(G.drag){G.bx=clamp(x+G.dx,70,690);G.mexeu=1;}});ptr(()=>{if(G.drag){G.drag=false;soltar();}},'pointerup');
+ opcoes('Dois dias com 34 °C. Em qual o corpo sente mais calor?',['No dia de ar seco (30%)','Nos dois é igual','No dia de ar úmido (80%)'],(o)=>{G.p1=o===2;G.rev=1;$('ctrl').innerHTML='';
+  acao((G.p1?'✅ Boa previsão. ':'')+`Com 80% de umidade, 34 °C parecem ${Math.round(hiC(34,80))} °C. Com 30%, parecem ${Math.round(hiC(34,30))} °C.`);
+  setTimeout(()=>{G.fase=1;$('info').textContent='2 dias';acao('A Educação Física dura 1 hora. Arraste o bloco ⚽ até um horário em que a sensação fique abaixo de "cuidado extremo".');},3600);});
+ acao('Faça sua previsão.');rodar();}
+
+/* ---------- FASE 5 ---------- */
+const SLOTS=[{n:'Amanhã',ops:['☀️ Sol','⛅ Nublado','🌧️ Chuva'],ok:2},{n:'Calor às 14h',ops:['🟢 Sem alerta','🟠 Cuidado extremo','🔴 Perigo'],ok:2},{n:'Recado',ops:['⚽ Ed. Física cedo','⚽ Ed. Física às 14h','🚫 Sem recado'],ok:0}];
+function f5(){const D=DIA4[1];G={t:0,v:[-1,-1,-1],tent:0,fim:0,tv:0};telaJogo('📺 Boletim da escola','0 de 3');
+ const h14=hiC(D.T[7],D.U[7]);const R=i=>[30+i*240,250,220,96];
+ G.desenha=c=>{c.fillStyle='#eef7f8';c.fillRect(0,0,W,H);
+  if(G.tv){c.fillStyle='#263238';c.beginPath();c.roundRect(20,14,720,344,18);c.fill();const g=c.createLinearGradient(0,30,0,340);g.addColorStop(0,'#006064');g.addColorStop(1,'#00838f');c.fillStyle=g;c.beginPath();c.roundRect(34,28,692,316,12);c.fill();
+   avatar(c,180,344,3.1,A,false);c.fillStyle='#fff';c.font='800 22px system-ui';c.textAlign='left';c.fillText('📺 Boletim da Estação da Escola',300,74);
+   SLOTS.forEach((s,i)=>{c.fillStyle='rgba(255,255,255,.95)';c.beginPath();c.roundRect(300,96+i*76,400,62,12);c.fill();c.fillStyle='#005662';c.font='800 14px system-ui';c.fillText(s.n,316,120+i*76);c.fillStyle='#263238';c.font='800 19px system-ui';c.fillText(s.ops[s.ok],316,145+i*76);});return;}
+  painel(c,14,10,732,226);c.fillStyle='#005662';c.font='800 16px system-ui';c.textAlign='left';c.fillText('📊 Painel da estação, hoje',30,38);
+  barometro(c,110,132,62,1004,980,1040,'hPa','#00838f');c.fillStyle='#e53935';c.font='800 14px system-ui';c.textAlign='center';c.fillText('▼ 1012 → 1004',110,222);
+  barometro(c,280,132,62,D.U[1],0,100,'%','#0288d1');c.fillStyle='#0288d1';c.fillText(`▲ umidade alta`,280,222);
+  c.textAlign='left';c.fillStyle='#263238';c.font='800 15px system-ui';c.fillText('Hoje, de hora em hora (exemplo):',380,66);c.font='700 13px system-ui';
+  [0,3,5,7,9].forEach((i,k)=>{c.fillStyle='#455a64';c.fillText(`${7+i}h   ${D.T[i]} °C   💧 ${D.U[i]}%`,392,94+k*26);});
+  c.fillStyle='#546e7a';c.font='700 12px system-ui';c.fillText('Use o que aprendeu: pressão, umidade e sensação térmica.',392,226);
+  SLOTS.forEach((s,i)=>{const[x,y,w,h]=R(i),v=G.v[i];c.save();c.shadowColor='rgba(0,0,0,.1)';c.shadowBlur=8;c.fillStyle=v<0?'#fff':'#e0f7fa';c.beginPath();c.roundRect(x,y,w,h,14);c.fill();c.restore();
+   c.strokeStyle=v<0?'#80deea':'#00838f';c.lineWidth=v<0?2:3;if(v<0)c.setLineDash([6,5]);c.beginPath();c.roundRect(x,y,w,h,14);c.stroke();c.setLineDash([]);
+   c.fillStyle='#005662';c.font='800 14px system-ui';c.textAlign='center';c.fillText(s.n,x+w/2,y+26);c.fillStyle='#263238';c.font=`800 ${v<0?15:17}px system-ui`;c.fillText(v<0?'👆 toque para escolher':s.ops[v],x+w/2,y+64);if(v<0)pulso(c,x+w/2,y+h/2,30);});};
+ G.upd=()=>{};
+ G.tap=(x,y)=>{if(G.fim)return;const i=SLOTS.findIndex((s,i)=>{const[rx,ry,w,h]=R(i);return x>rx&&x<rx+w&&y>ry&&y<ry+h;});if(i<0)return;G.v[i]=(G.v[i]+1)%SLOTS[i].ops.length;G.tent++;
+  const n=G.v.filter(v=>v>=0).length;$('info').textContent=`${n} de 3`;
+  if(n<3){acao(`${SLOTS[i].n}: ${SLOTS[i].ops[G.v[i]]}. Toque de novo para trocar.`);return;}
+  const err=SLOTS.map((s,k)=>G.v[k]===s.ok?null:s.n).filter(Boolean);
+  if(!err.length){G.fim=1;acao('✅ Boletim pronto! No ar...');setTimeout(()=>{G.tv=1;acao('📺 Você apresentou o boletim da escola.');},1200);
+   setTimeout(()=>fimFase(Math.max(80,200-Math.max(0,G.tent-6)*8),true,`O painel mostrava pressão caindo e umidade alta: sinal de chuva chegando. Às 14h, 34 °C com 58% de umidade dão sensação de cerca de ${Math.round(h14)} °C, na faixa de perigo para atividade física longa. Por isso o recado leva a Educação Física para o começo da manhã. Um boletim bom junta várias medidas para orientar decisões.`,'Que decisão da escola poderia mudar com um boletim do tempo feito pelos próprios alunos?'),4200);}
+  else acao(`Ainda não fecha: revise ${err.join(' e ')}. ${err.includes('Calor às 14h')?'Às 14h são 34 °C com 58% de umidade. ':''}`);};
+ acao('Leia o painel e toque em cada quadro de baixo para montar o boletim.');rodar();}
+
+/* ================= INICIO / AVATAR ================= */
+function inicio(){parar();G=null;cx=null;$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><div class="capa"><canvas id="cA" width="560" height="560"></canvas>
+ <div><h2>Monte seu pesquisador</h2><div class="opts">
+ <div class="l">Pele</div><div class="sw" id="sP">${PELES.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.pele===i?'on':''}" aria-label="pele ${i+1}"></button>`).join('')}</div>
+ <div class="l">Cabelo</div><div class="sw" id="sE">${ESTILOS.map(([k,t])=>`<button class="tx ${A.estilo===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <div class="sw" id="sC">${CABS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.cab===i?'on':''}" aria-label="cor ${i+1}"></button>`).join('')}</div>
+ <div class="l">Camiseta</div><div class="sw" id="sT">${CAMISAS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.camisa===i?'on':''}" aria-label="camiseta ${i+1}"></button>`).join('')}</div>
+ <div class="l">Chapéu</div><div class="sw" id="sH">${CHAPEUS.map(([k,t])=>`<button class="tx ${A.chapeu===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <input class="nome" id="iN" maxlength="20" placeholder="Seu nome" value="${esc(A.nome)}">
+ </div></div></div>
+ <div class="row" style="margin-top:14px"><button class="btn" id="bJ">▶ Jogar as 5 fases</button><button class="btn ghost" id="bG">📘 Guia do professor</button></div>
+ <p class="small" style="margin-top:10px">Ciências · 8º ano · BNCC EF08CI15</p></div>`;
+ const pinta=()=>{const c=$('cA').getContext('2d');c.clearRect(0,0,560,560);c.fillStyle='#e0f7fa';c.fillRect(0,0,560,560);c.fillStyle='#b2ebf2';c.beginPath();c.arc(280,600,260,0,7);c.fill();avatar(c,280,560,6.4,A,true);};
+ pinta();
+ const liga=(id,f)=>document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{f(b);salvaA();document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b));pinta();});
+ liga('sP',b=>A.pele=+b.dataset.i);liga('sC',b=>A.cab=+b.dataset.i);liga('sT',b=>A.camisa=+b.dataset.i);liga('sE',b=>A.estilo=b.dataset.k);liga('sH',b=>A.chapeu=b.dataset.k);
+ $('iN').oninput=e=>{A.nome=e.target.value;salvaA();};
+ $('bJ').onclick=novo;$('bG').onclick=guia;
+}
+function novo(){S={f:0,tot:0,fp:0,res:[],fichas:0};salvo=false;intro();}
+function relatorio(){parar();G=null;cx=null;$('rankBox').style.display='block';const nome=A.nome.trim()||'Pesquisador';
+ $('tela').innerHTML=`<div class="card"><div class="rel"><canvas id="cR" width="240" height="240"></canvas><div><div class="small">Relatório de campo</div><h2>${esc(nome)}</h2><div class="big" style="font-size:2rem;font-weight:800;color:var(--deep)">${S.tot} pts</div></div></div>
+ <table class="tab" style="margin-top:12px"><tr><th>Fase</th><th>Pontos</th><th>Meta</th></tr>${FASES.map((F,i)=>{const r=S.res[i]||{pts:0,ok:false};return`<tr><td>${F.ic} ${F.nome}</td><td>${r.pts}</td><td>${r.ok?'✓':'✗'}</td></tr>`;}).join('')}</table>
+ <div class="pensa"><b>Para escrever no caderno:</b> escolha uma medida da estação e explique como ela ajuda a prever o tempo ou a proteger a saúde.</div>
+ <div class="savebox noprint"><input id="pName" maxlength="20" value="${esc(nome)}"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row noprint" style="margin-top:12px"><button class="btn ghost" id="bI">🖨️ Imprimir relatório</button><button class="btn ghost" id="bN">Jogar de novo</button><button class="btn ghost" id="bV">Início</button></div></div>`;
+ const c=$('cR').getContext('2d');c.fillStyle='#e0f7fa';c.fillRect(0,0,240,240);avatar(c,120,240,3.2,A,true);
+ $('bS').onclick=()=>salvar('5 fases');$('bI').onclick=()=>window.print();$('bN').onclick=novo;$('bV').onclick=inicio;
+}
+
+/* ================= GUIA DO PROFESSOR ================= */
+function guia(){parar();$('hud').style.display='none';$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card guia">
+ <div class="row top noprint"><button class="btn ghost sm" id="bVt">← Voltar</button><button class="btn sm" id="bPr">🖨️ Imprimir guia</button></div>
+ <h2 style="margin-top:10px">Guia do professor · Estação do Tempo</h2>
+ <p class="small">Ensino Fundamental · 8º ano · Ciências</p>
+ <h3>Habilidade da BNCC</h3>
+ <div class="hab"><b>EF08CI15.</b> Identificar as principais variáveis envolvidas na previsão do tempo e simular situações nas quais elas possam ser medidas.</div>
+ <h3>Objetivos da aula</h3>
+ <ul><li>Reconhecer temperatura, umidade, pressão, vento e chuva como variáveis do tempo e os instrumentos que as medem.</li><li>Entender por que cada instrumento precisa de um lugar adequado para medir o ar livre.</li><li>Calcular a chuva em milímetros a partir de litros e área.</li><li>Usar a tendência da pressão e da umidade para prever o tempo e a umidade para avaliar a sensação de calor.</li></ul>
+ <h3>Roteiro de 50 minutos</h3>
+ <table class="tab"><tr><th>Tempo</th><th>O que fazer</th></tr>
+ <tr><td>5 min</td><td>Pergunte: como o jornal sabe que vai chover amanhã?</td></tr>
+ <tr><td>25 min</td><td>Alunos jogam em duplas.</td></tr>
+ <tr><td>15 min</td><td>Discussão com as perguntas de cada fase.</td></tr>
+ <tr><td>5 min</td><td>Cada dupla escreve a frase do relatório de campo.</td></tr></table>
+ <h3>Fase por fase</h3>
+ <table class="tab"><tr><th>Fase</th><th>O aluno faz</th><th>Pergunta para a turma</th><th>O que explicar</th></tr>
+ <tr><td>1. Monte a estação</td><td>Instala termômetro, pluviômetro, anemômetro e barômetro</td><td>Onde, na escola, caberia um pluviômetro?</td><td>Abrigo meteorológico, altura de medida, obstáculos.</td></tr>
+ <tr><td>2. Caça-chuva</td><td>Pega chuva com caixas de áreas diferentes e calcula os milímetros</td><td>Quantos litros 30 mm deixam num pátio de 100 m²?</td><td>1 mm de chuva é 1 litro por metro quadrado.</td></tr>
+ <tr><td>3. Barômetro manda</td><td>Lê pressão e umidade de 4 dias e prevê o tempo</td><td>Por que céu azul de manhã não garante tarde seca?</td><td>Pressão atmosférica, tendência, formação de nuvens.</td></tr>
+ <tr><td>4. Sensação térmica</td><td>Prevê o efeito da umidade e escolhe horário seguro para Educação Física</td><td>Seria preciso mudar o horário da Educação Física?</td><td>Evaporação do suor, índice de calor, saúde.</td></tr>
+ <tr><td>5. Boletim da escola</td><td>Monta e apresenta o boletim</td><td>Que decisão da escola poderia usar esse boletim?</td><td>Previsão como síntese de várias medidas.</td></tr></table>
+ <h3>Avaliação</h3>
+ <p>Use o relatório de campo impresso e a frase escrita por cada dupla. Todos os instrumentos têm o mesmo peso. Observe se o aluno relaciona a medida com a decisão, e não apenas repete o nome do instrumento.</p>
+ <h3>Sequência de 3 aulas</h3>
+ <ol><li><b>Aula 1.</b> Jogo completo e discussão.</li><li><b>Aula 2.</b> Construção de um pluviômetro com garrafa PET e cálculo da chuva pela área da boca.</li><li><b>Aula 3.</b> Uma semana de registro diário de temperatura, umidade e chuva no pátio, com previsão feita pela turma.</li></ol>
+ <h3>Cuidado ao explicar</h3>
+ <p>Os valores de pressão, umidade e temperatura das fases 3, 4 e 5 são exemplos criados para o jogo, não medidas de uma estação real. As alturas de medida seguem o guia de instrumentos da Organização Meteorológica Mundial, com temperatura entre 1,25 e 2 m em abrigo e vento a 10 m. A regra da pressão é uma simplificação usada por observadores: a previsão oficial do INMET combina dados de estações, modelos numéricos e imagens de satélite. A sensação térmica é calculada pela equação de Rothfusz usada pelo Serviço Nacional de Meteorologia dos Estados Unidos, baseada no trabalho de Steadman (1979). As faixas de cuidado, cuidado extremo e perigo também são desse serviço e foram convertidas para graus Celsius.</p>
+ <h3>Referências</h3>
+ <ul class="ref">
+ <li>Steadman RG. The assessment of sultriness. Part I: a temperature-humidity index based on human physiology and clothing science. Journal of Applied Meteorology, 18(7):861-873, 1979. doi:10.1175/1520-0450(1979)018&lt;0861:TAOSPI&gt;2.0.CO;2</li>
+ <li>Rothfusz LP. The heat index equation. NWS Southern Region Technical Attachment SR 90-23, 1990.</li>
+ <li>World Meteorological Organization. Guide to Meteorological Instruments and Methods of Observation (WMO-No. 8).</li>
+ <li>INMET. Sobre meteorologia: passos para a elaboração da previsão do tempo. portal.inmet.gov.br</li></ul>
+ </div>`;
+ $('bVt').onclick=inicio;$('bPr').onclick=()=>window.print();
+}
+
+/* ================= RANKING ================= */
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="estacao-do-tempo";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__a={get S(){return S},get G(){return G},FASES,inicio,novo,intro,guia};
+inicio();
+</script>
+</body>
+</html>
