@@ -265,7 +265,7 @@ const AZ='#0ea5e9',AZ2='#0369a1';
 const nf=v=>Math.round(v).toLocaleString('pt-BR');
 function quebra(c,t,x,y,w,lh){lh*=FSC;const ws=t.split(' ');let l='';for(const p of ws){if(c.measureText(l+p).width>w&&l){c.fillText(l,x,y);l='';y+=lh;}l+=p+' ';}c.fillText(l,x,y);return y;}
 const COR=['#8cc04c','#6f9a3e','#536f37','#3b4231','#232220'],NOMEC=['verde-claro','verde','oliva','escuro','preto'];
-function botao(txt,fn){$('ctrl').innerHTML=`<button class="btn" id="bCont">${txt}</button>`;$('bCont').onclick=()=>{$('ctrl').innerHTML='';fn();};}
+function botao(txt,fn){$('ctrl').innerHTML=`<span class="small" style="color:var(--mut)">Analise o gráfico com calma.</span><button class="btn" id="bCont">${txt}</button>`;$('bCont').onclick=()=>{$('ctrl').innerHTML='';fn();};}
 const RNG=s=>()=>(s=(s*16807)%2147483647)/2147483647;
 let POP=null;
 function fundo(tipo,seed){const cv=document.createElement('canvas');cv.width=W;cv.height=H;const k=cv.getContext('2d'),r=RNG(seed);
@@ -292,7 +292,7 @@ function cacaDesenha(c){const C=G.c;c.drawImage(C.bg,0,0);C.ins.forEach(i=>{if(!
  c.fillStyle='#e5e7eb';c.fillRect(10,48,250,4);c.fillStyle=ACC;c.fillRect(10,48,250*Math.max(0,C.t)/C.dur,4);}
 function cacaUpd(dt){const C=G.c;if(!C||C.fim)return;C.t-=dt;C.fx.forEach(f=>f.t-=dt*1.5);C.fx=C.fx.filter(f=>f.t>0);if(C.t<=0){C.fim=true;C.onEnd(C.ins.filter(i=>i.vivo).map(i=>i.cl),C.pegos);}}
 function cacaToque(x,y){const C=G.c;if(!C||C.fim)return;let b=null,bd=26*(C.M||1);C.ins.forEach(i=>{if(!i.vivo)return;const d=Math.hypot(x-i.x,y-i.y);if(d<bd){bd=d;b=i;}});if(b){b.vivo=false;C.pegos.push(b.cl);C.fx.push({x:b.x,y:b.y,t:1});$('info').textContent=`${C.pegos.length} pegos`;}}
-function cartao(c,titulo,linhas,graf_){c.fillStyle='rgba(15,23,42,.35)';c.fillRect(0,0,W,H);const ch=graf_?300:150;c.fillStyle='#fff';c.beginPath();c.roundRect(150,30,460,ch,12);c.fill();c.fillStyle=ACC2;c.font='800 14px system-ui';c.textAlign='left';c.fillText(titulo,172,62);c.fillStyle=MUT;c.font='600 9px system-ui';c.textAlign='right';c.fillText('analise e toque no botão abaixo do jogo',598,62);c.textAlign='left';c.fillStyle=INK;c.font='500 11px system-ui';let y=84;linhas.forEach(t=>{y=quebra(c,t,172,y,420,14)+18;});if(graf_)graf_(y);}
+function cartao(c,titulo,linhas,graf_){c.fillStyle='rgba(15,23,42,.35)';c.fillRect(0,0,W,H);const ch=graf_?300:150;c.fillStyle='#fff';c.beginPath();c.roundRect(150,30,460,ch,12);c.fill();c.fillStyle=ACC2;c.font='800 14px system-ui';c.textAlign='left';c.fillText(titulo,172,62);c.fillStyle=INK;c.font='500 11px system-ui';let y=84;linhas.forEach(t=>{y=quebra(c,t,172,y,420,14)+18;});if(graf_)graf_(y);}
 function barras(c,x,y,w,hs,rotulos){/* barras lado a lado por classe */const bw=w/5;const mx=Math.max(1,...hs.flat());COR.forEach((col,cl)=>{hs.forEach((h,k)=>{const bh=80*h[cl]/mx,xx=x+cl*bw+6+k*(bw-12)/hs.length;c.fillStyle=col;c.globalAlpha=k===0&&hs.length>1?.45:1;c.fillRect(xx,y+90-bh,(bw-12)/hs.length-2,bh);c.globalAlpha=1;c.fillStyle=INK;c.font='700 9px system-ui';c.textAlign='center';c.fillText(h[cl],xx+((bw-12)/hs.length-2)/2,y+86-bh);});c.fillStyle=MUT;c.font='600 8.5px system-ui';c.textAlign='center';c.fillText(w<300?['v.cl.','verde','oliva','esc.','preto'][cl]:NOMEC[cl],x+cl*bw+bw/2,y+104);});
  if(rotulos){c.font='600 9px system-ui';c.textAlign='left';rotulos.forEach((t,k)=>{c.fillStyle=k===0&&hs.length>1?'rgba(31,36,33,.5)':INK;c.fillText(t,x+k*150,y+122);});}}
 
@@ -356,6 +356,11 @@ function f5(){FSC=1.25;G={t:0,pv:[20,20,20,20,20],drag:-1,et:0,res:null,fim:0,an
   acao(`Diferença média entre sua previsão e a simulação: ${Math.round(err)} pontos por cor.`);
   botao('Ver a explicação',()=>fimFase(Math.max(60,Math.round(200-4*err)),true,'Com 70% do campo queimado, as cores escuras levam vantagem na maior parte do terreno e se tornam mais comuns, mas as verdes não somem, porque ainda há capim verde onde elas se escondem. Ambientes variados mantêm variação nas populações. Em 2012, a análise do último experimento de Michael Majerus, com 4.864 mariposas soltas em seis anos, mostrou que os pássaros comiam mais as mariposas que contrastavam com o fundo (Cook et al., 2012).','Que outros animais do Pantanal dependem de camuflagem para escapar de predadores?'));};
  acao('Arraste as barras com a sua previsão para cada cor depois de 5 gerações. A soma precisa dar 100%. Depois toque em Simular.');rodar();}
+
+/* explicação com o gráfico da fase e rolagem até ela */
+const _fimFase=fimFase;
+fimFase=function(pts,ok,oque,perg,extra){let img='';try{const cv=$('cv');if(cv)img=`<img alt="Gráfico da fase" src="${cv.toDataURL('image/png')}" style="display:block;width:100%;max-width:640px;margin:12px auto;border:1px solid var(--line);border-radius:10px">`;}catch(e){}
+ _fimFase(pts,ok,oque,perg,(extra||'')+img);const el=document.querySelector('.card.res');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});};
 
 /* ================= INICIO / AVATAR ================= */
 function inicio(){parar();G=null;cx=null;$('hud').style.display='none';$('rankBox').style.display='block';
