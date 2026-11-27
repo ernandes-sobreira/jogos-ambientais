@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bolhas de Luz</title>
+<style>
+:root{--main:#15803d;--deep:#14532d;--soft:#f0fdf4;--line:#cfe8d6;--ink:#10212b;--mut:#4d6370;--co2:#e53935;--ch4:#ef6c00;--ok:#2e7d32;--bad:#c62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:820px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep);letter-spacing:-.01em}
+h2{font-size:1.2rem;color:var(--deep);margin-bottom:6px;letter-spacing:-.01em}
+h3{font-size:1rem;color:var(--deep);margin:14px 0 6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 12px;font-weight:700;font-size:.86rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.card{border:2px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:var(--deep)}.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.btn.sm{padding:9px 14px;font-size:.92rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas.cena{width:100%;height:auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff;margin-top:10px}
+.top{justify-content:space-between}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--main);color:#fff;border-radius:14px;padding:8px 14px;font-weight:800;font-size:1.05rem}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.tool{border:2px solid var(--line);background:#fff;color:var(--deep);border-radius:12px;padding:9px 12px;font-weight:700;font-family:inherit;font-size:.92rem;cursor:pointer;touch-action:manipulation}
+.tool.on{border-color:var(--main);background:var(--soft)}
+.tool:disabled{opacity:.4}
+.mets{display:grid;gap:8px;margin-top:10px}
+.met{display:grid;grid-template-columns:92px 1fr 52px;gap:8px;align-items:center;font-weight:700;font-size:.9rem}
+.met .bar{position:relative;height:18px;background:#f1f4f5;border-radius:99px;overflow:hidden}
+.met .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;transition:width .15s}
+.met .alvo{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--ink);border-radius:2px}
+.met .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--mut)}
+.met.co2 .fill{background:var(--co2)}.met.ch4 .fill{background:var(--ch4)}
+.saldo .bar{background:linear-gradient(90deg,#e8f5e9 50%,#ffebee 50%)}
+.saldo .zero{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:var(--ink)}
+.saldo .fill{border-radius:0}
+.obj{display:flex;gap:10px;align-items:flex-start;background:#fff8e1;border:2px solid #ffe082;border-radius:14px;padding:10px 12px;margin-top:10px;font-size:.95rem}
+.obj b{color:#8d6e00;white-space:nowrap}
+.acao{display:flex;gap:10px;align-items:center;background:var(--soft);border-left:5px solid var(--main);border-radius:0 12px 12px 0;padding:9px 12px;margin-top:8px;font-weight:600;font-size:.95rem;min-height:64px}@media(max-width:640px){.acao{min-height:5.4em}}
+.acao .dedo{font-size:1.25rem;animation:pulo 1s ease-in-out infinite}
+@keyframes pulo{50%{transform:translateX(4px)}}
+.help{width:34px;height:34px;border-radius:50%;border:2px solid var(--main);background:#fff;color:var(--deep);font-weight:800;font-size:1rem;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(16,33,43,.35);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal .card{max-width:460px;width:100%}
+.intro{text-align:center;padding:26px 18px}
+.intro .ic{font-size:3rem;line-height:1}
+.intro .n{color:var(--mut);font-weight:700;font-size:.85rem;margin-top:8px}
+.passos{display:grid;gap:8px;margin:16px auto;max-width:420px;text-align:left}
+.passos div{display:flex;gap:12px;align-items:center;background:var(--soft);border-radius:12px;padding:10px 14px;font-weight:600}
+.passos b{font-size:1.3rem;min-width:1.6em;text-align:center}
+.res{text-align:center}
+.res .big{font-size:2.6rem;font-weight:800;color:var(--deep);line-height:1.1}
+.res .ok{color:var(--ok);font-weight:800}.res .no{color:var(--bad);font-weight:800}
+.pensa{background:var(--soft);border-radius:14px;padding:12px 14px;margin:14px auto;max-width:520px;text-align:left}
+.pensa b{color:var(--deep)}
+.boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.box{border:2px dashed var(--line);border-radius:14px;padding:10px;min-height:110px;cursor:pointer}
+.box h4{font-size:.92rem;color:var(--deep);margin-bottom:6px}
+.box.alvo{border-color:var(--main);background:var(--soft)}
+.cards{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;min-height:48px}
+.ct{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 11px;font-weight:700;font-size:.9rem;cursor:pointer;box-shadow:0 2px 0 var(--line);font-family:inherit;color:var(--ink);transition:transform .5s}
+.ct.sel{border-color:var(--main);background:var(--soft);transform:translateY(-2px)}
+.ct.certo{border-color:var(--ok);background:#e8f5e9}.ct.errado{border-color:var(--bad);background:#ffebee}
+.ct.movido{animation:voa .8s ease}
+@keyframes voa{0%{transform:translateY(-30px) scale(1.1);opacity:.3}100%{transform:none;opacity:1}}
+.capa{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+.capa canvas{width:100%;height:auto;display:block;border-radius:16px;background:var(--soft)}
+.opts{display:grid;gap:8px;margin-top:6px}
+.opts .l{font-size:.8rem;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.sw{display:flex;gap:6px;flex-wrap:wrap}
+.sw button{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--line);cursor:pointer}
+.sw button.on{box-shadow:0 0 0 3px var(--deep)}
+.sw .tx{width:auto;height:auto;border-radius:10px;padding:6px 10px;font-weight:700;font-size:.85rem;background:#fff;color:var(--deep);font-family:inherit;border:0}
+input.nome{border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit;width:100%}
+input[type=range]{width:100%;accent-color:var(--main)}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:6px}
+.tab th{text-align:left;background:var(--soft);color:var(--deep);padding:7px 6px}
+.tab td{border-bottom:1px solid var(--line);padding:7px 6px;vertical-align:top}
+.guia p,.guia li{font-size:.95rem;margin-bottom:6px}
+.guia ul,.guia ol{padding-left:20px}
+.hab{border-left:5px solid var(--main);background:var(--soft);padding:10px 14px;border-radius:0 12px 12px 0;font-size:.95rem}
+.ref li{font-size:.86rem;color:var(--mut)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+.rel{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center}
+.rel canvas{width:120px;height:120px;border-radius:50%;background:var(--soft)}
+.mini{width:100%;max-width:420px;height:auto;display:block;margin:10px auto 0}
+@media (max-width:620px){.wrap{padding:10px 8px 30px}.card{padding:12px;border-radius:16px}.capa{grid-template-columns:1fr}.met{grid-template-columns:70px 1fr 44px;font-size:.82rem}.chip{font-size:.95rem}.rel{grid-template-columns:80px 1fr}.rel canvas{width:80px;height:80px}}
+@media print{a.hub,header .hud,.ranking,.noprint{display:none!important}.card{border:1px solid #ccc;break-inside:avoid}body{font-size:12px}}
+
+/* ===== pele profissional ===== */
+:root{--main:#15803d;--deep:#14532d;--soft:#f0fdf4;--line:#cfe8d6;--ink:#1f2421;--mut:#5f6b66;--ok:#15803d;--bad:#b3261e}
+body{background:#f6f7f5;color:var(--ink);-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px}
+h1{font-size:1.35rem;font-weight:750;letter-spacing:-.015em;color:var(--ink)}
+h2{color:var(--ink);font-weight:750}
+h3{color:var(--deep);font-size:.95rem;text-transform:uppercase;letter-spacing:.04em}
+a.hub{color:var(--mut);font-weight:600}
+.card{border:1px solid var(--line);border-radius:10px;box-shadow:0 1px 2px rgba(16,24,20,.05)}
+.pill{border-radius:4px;background:#fff;border:1px solid var(--line);color:var(--ink);font-weight:600}
+.btn{border-radius:6px;font-weight:650;padding:11px 20px;letter-spacing:.01em}
+.btn.ghost{border:1px solid var(--line);color:var(--ink)}
+.btn.ghost:hover{background:var(--soft)}
+.tool{border:1px solid var(--line);border-radius:6px;font-weight:600;color:var(--ink)}
+.tool.on{border-color:var(--main);background:var(--soft);box-shadow:inset 0 0 0 1px var(--main)}
+.eyebrow{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.titulo{font-size:1.15rem;font-weight:750;color:var(--ink);letter-spacing:-.01em}
+.obj{background:#fafbfa;border:1px solid var(--line);border-left:3px solid var(--main);border-radius:6px;font-size:.92rem}
+.obj b{color:var(--deep);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding-top:2px}
+.acao{background:#fff;border:1px solid var(--line);border-left:3px solid var(--ink);border-radius:6px;font-weight:500;font-size:.93rem}
+canvas.cena{border:1px solid var(--line);border-radius:8px;background:#fbfcfb}
+.help{border:1px solid var(--line);color:var(--ink);font-weight:700}
+.intro .ic{font-size:2.6rem;font-weight:800;color:var(--main);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.passos div{background:#fafbfa;border:1px solid var(--line);border-radius:6px;font-weight:500}
+.passos b{font-size:.85rem;color:#fff;background:var(--main);border-radius:4px;min-width:1.7em;padding:2px 0}
+.res .big{color:var(--ink)}
+.pensa{background:#fafbfa;border:1px solid var(--line);border-radius:6px}
+.pensa b{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}
+.hab{border-left:3px solid var(--main);border-radius:0 6px 6px 0}
+.tab th{background:#f2f5f3;color:var(--ink);font-size:.82rem}
+.ranking{border:1px solid var(--line);border-radius:10px}
+.ranking h3{background:var(--ink);text-transform:none;letter-spacing:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>Bolhas de Luz</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF"></span><span class="pill" id="hP"></span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const W=760,H=372;
+function hex(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mix(a,b,t){const A=hex(a),B=hex(b);return`rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`;}
+
+/* ================= AVATAR ================= */
+const PELES=['#f6d3b8','#e3b18b','#c68a5e','#94603e','#5d3b26'];
+const CABS=['#1b1b1b','#4e342e','#8d6e63','#d4a85a','#b5532f'];
+const CAMISAS=['#00838f','#2e7d32','#f9a825','#c62828','#6a1b9a','#37474f'];
+const ESTILOS=[['curto','Curto'],['cacheado','Cacheado'],['longo','Longo'],['coque','Coque'],['raspado','Raspado']];
+const CHAPEUS=[['nenhum','Sem'],['bone','Boné'],['campo','Chapéu']];
+let A={pele:2,cab:0,estilo:'cacheado',camisa:0,chapeu:'campo',nome:''};
+try{const s=JSON.parse(localStorage.getItem('bc_avatar')||'null');if(s)A=Object.assign(A,s);}catch(e){}
+function salvaA(){try{localStorage.setItem('bc_avatar',JSON.stringify(A));}catch(e){}}
+function avatar(c,x,y,s,a,prancheta){
+ c.save();c.translate(x,y);c.scale(s,s);
+ const pele=PELES[a.pele],cab=CABS[a.cab],cam=CAMISAS[a.camisa];
+ if(a.estilo==='longo'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-39,12.5,15,0,0,7);c.fill();c.fillRect(-12.5,-40,25,22);}
+ if(a.estilo==='cacheado'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-40,15,14.5,0,0,7);c.fill();}
+ c.fillStyle=cam;c.beginPath();c.moveTo(-16,0);c.quadraticCurveTo(-17,-21,-6,-25);c.lineTo(6,-25);c.quadraticCurveTo(17,-21,16,0);c.closePath();c.fill();
+ c.fillStyle='rgba(0,0,0,.12)';c.fillRect(-1,-24,2,24);
+ c.fillStyle=pele;c.fillRect(-3.5,-29,7,6);
+ if(prancheta){c.fillStyle='#8d6e63';c.fillRect(4,-19,13,16);c.fillStyle='#fff';c.fillRect(5.5,-17,10,12);c.strokeStyle='#90a4ae';c.lineWidth=.8;for(let i=0;i<4;i++){c.beginPath();c.moveTo(7,-14+i*2.6);c.lineTo(14,-14+i*2.6);c.stroke();}}
+ c.strokeStyle=cam;c.lineWidth=6;c.lineCap='round';c.beginPath();c.moveTo(-11,-20);c.lineTo(-4,-9);c.stroke();
+ c.fillStyle=pele;c.beginPath();c.arc(-3,-8,3,0,7);c.fill();
+ c.fillStyle=pele;c.beginPath();c.ellipse(0,-39,9.5,11,0,0,7);c.fill();
+ c.beginPath();c.arc(-9.4,-38,2.3,0,7);c.arc(9.4,-38,2.3,0,7);c.fill();
+ c.fillStyle=cab;
+ if(a.estilo==='curto'){c.beginPath();c.ellipse(0,-44.5,10,6.8,0,Math.PI,0);c.fill();c.fillRect(-10,-46,2.8,7);c.fillRect(7.2,-46,2.8,7);}
+ if(a.estilo==='cacheado'){for(let i=0;i<13;i++){const an=Math.PI*(.8+i*1.4/12);c.beginPath();c.arc(Math.cos(an)*12,-41+Math.sin(an)*11.5,4.2,0,7);c.fill();}}
+ if(a.estilo==='longo'){c.beginPath();c.ellipse(0,-44.5,10.6,7.2,0,Math.PI,0);c.fill();}
+ if(a.estilo==='coque'){c.beginPath();c.ellipse(0,-44.5,10,6.4,0,Math.PI,0);c.fill();c.beginPath();c.arc(0,-53,5.2,0,7);c.fill();}
+ if(a.estilo==='raspado'){c.globalAlpha=.5;c.beginPath();c.ellipse(0,-44,9.8,6.2,0,Math.PI,0);c.fill();c.globalAlpha=1;}
+ c.fillStyle='#2b2a26';c.beginPath();c.arc(-3.4,-39,1.25,0,7);c.arc(3.4,-39,1.25,0,7);c.fill();
+ c.strokeStyle='#2b2a26';c.lineWidth=1;c.beginPath();c.arc(0,-35.6,2.6,.25,Math.PI-.25);c.stroke();
+ if(a.chapeu==='bone'){c.fillStyle=cam;c.beginPath();c.ellipse(0,-46,10.6,5.8,0,Math.PI,0);c.fill();c.fillRect(-10.6,-47,21.2,2.6);c.beginPath();c.ellipse(8.5,-46.2,8,2.2,0,0,7);c.fill();}
+ if(a.chapeu==='campo'){c.fillStyle='#d7c49e';c.beginPath();c.ellipse(0,-46,16.5,3.6,0,0,7);c.fill();c.beginPath();c.ellipse(0,-48,9.2,6.4,0,Math.PI,0);c.fill();c.fillStyle='#8d6e63';c.fillRect(-9.2,-49,18.4,1.9);}
+ c.restore();
+}
+function pernas(c,x,y,s,a){c.save();c.translate(x,y);c.scale(s,s);c.fillStyle='#455a64';c.fillRect(-11,0,9,20);c.fillRect(2,0,9,20);c.fillStyle='#3e2723';c.fillRect(-12,18,11,4);c.fillRect(1,18,11,4);c.restore();}
+
+/* ================= CENA ================= */
+const CORES={main:'#15803d',deep:'#14532d'};
+function sr(n){const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+function syncMol(){}function partic(){}
+function drawCena(c,G){if(G.desenha)G.desenha(c);}
+/* ================= TELA / LOOP ================= */
+let G=null,S=null,raf=0,ultimo=0,cx=null;
+function laco(ts){const dt=Math.min(.05,(ts-ultimo)/1000||0);ultimo=ts;if(G){G.t+=dt;if(G.upd)G.upd(dt);syncMol(G,dt);partic(G,dt);if(cx)drawCena(cx,G);if(G.extra)G.extra(cx);}raf=requestAnimationFrame(laco);}
+function parar(){cancelAnimationFrame(raf);raf=0;}
+function rodar(){parar();ultimo=performance.now();raf=requestAnimationFrame(laco);}
+function hud(){$('hud').style.display='flex';$('hF').textContent=`Fase ${S.f+1} de ${FASES.length}`;$('hP').textContent=`${Math.max(0,S.tot+S.fp)} pts`;}
+function telaJogo(chip,info){
+ const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><span class="chip" id="chip">${chip}</span><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="acao"><span class="dedo">👉</span><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});
+}
+function acao(t){const e=$('acao');if(e&&e.innerHTML!==t)e.innerHTML=t;}
+function ajuda(){const F=FASES[S.f],d=document.createElement('div');d.className='modal';
+ d.innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn">Entendi</button></div>`;
+ d.onclick=e=>{if(e.target===d||e.target.tagName==='BUTTON')d.remove();};document.body.appendChild(d);}
+function medidor(id,rot,cls,max,alvo){const a=alvo!=null?`<span class="alvo" style="left:${alvo/max*100}%"></span>`:'';return`<div class="met ${cls}" id="${id}" data-max="${max}"><span>${rot}</span><div class="bar"><span class="fill"></span>${a}</div><span class="v"></span></div>`;}
+function poeMed(id,v){const e=$(id);if(!e)return;const m=+e.dataset.max;e.querySelector('.fill').style.width=clamp(v/m*100,0,100)+'%';e.querySelector('.v').textContent=Math.round(v);}
+function poeSaldo(v,max){const e=$('mSaldo');if(!e)return;const f=e.querySelector('.fill'),p=clamp(Math.abs(v)/max*50,0,50);if(v<0){f.style.left=(50-p)+'%';f.style.width=p+'%';f.style.background='#43a047';}else{f.style.left='50%';f.style.width=p+'%';f.style.background='#e53935';}e.querySelector('.v').textContent=(v>0?'+':'')+Math.round(v);}
+
+/* ================= FASES ================= */
+const FASES=[
+ {nome:'Conte as bolhas',ic:'01',obj:'Medir a fotossíntese da egéria contando as bolhas de oxigênio que ela solta com a lâmpada em 4 distâncias diferentes.',passos:[['1','Escolha uma distância e acenda a lâmpada.'],['2','Toque em cada bolha antes que ela chegue à superfície.'],['3','Meça as 4 distâncias e veja o gráfico.']],ini:()=>f1()},
+ {nome:'A luz se espalha',ic:'02',obj:'Descobrir como a intensidade da luz cai com a distância, colocando o sensor nos pontos que recebem 25%, 11% e 50% da luz.',passos:[['1','Arraste o sensor pela bancada ou use os botões.'],['2','Observe a mancha de luz se espalhar em quadradinhos.'],['3','Pare quando a leitura bater com o alvo.']],ini:()=>f2()},
+ {nome:'O barril de Liebig',ic:'03',obj:'Encontrar o fator limitante da fotossíntese (luz, gás carbônico ou temperatura) e corrigir só ele, gastando poucos ajustes.',passos:[['1','A água do barril para na tábua mais baixa.'],['2','Ajuste o fator que está limitando.'],['3','Alcance a meta antes de acabarem os ajustes.']],ini:()=>f3()},
+ {nome:'Balança dos átomos',ic:'04',obj:'Equilibrar as equações da fotossíntese e da respiração celular, deixando o mesmo número de átomos de C, H e O dos dois lados.',passos:[['1','Use + e - em cada molécula.'],['2','Olhe as balanças de C, H e O.'],['3','Todas retas: equação equilibrada.']],ini:()=>f4()},
+ {nome:'Dia e noite na baía',ic:'05',obj:'Escolher a cobertura de aguapé de uma baía do Pantanal para que o oxigênio da água não caia abaixo do limite de hipóxia durante a madrugada.',passos:[['1','Ajuste a cobertura de aguapé.'],['2','Toque em Rodar 24 horas e veja a curva.'],['3','Passe no dia de sol e no dia nublado.']],ini:()=>f5()}
+];
+function telaJogo(chip,info){const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><div><div class="eyebrow">Fase ${S.f+1} de ${FASES.length}</div><div class="titulo" id="chip">${chip}</div></div><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>Objetivo</b><span>${F.obj}</span></div><div class="acao"><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});}
+function intro(){parar();G=null;cx=null;hud();const F=FASES[S.f];$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><div class="n">FASE ${S.f+1} DE ${FASES.length}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left;max-width:460px;margin:12px auto 0"><b>Objetivo</b><span>${F.obj}</span></div>
+ <div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn" id="bGo">Começar</button></div>`;
+ $('bGo').onclick=()=>{S.fp=0;F.ini();};}
+function fimFase(pts,ok,oque,pergunta,extraHtml){
+ parar();pts=Math.max(0,Math.round(pts));S.fp=0;S.tot+=pts;S.res[S.f]={pts,ok,oque};hud();
+ $('tela').innerHTML=`<div class="card res"><div class="eyebrow">Fase ${S.f+1} · ${FASES[S.f].nome}</div><div class="big">+${pts}</div>
+ <p class="${ok?'ok':'no'}">${ok?'Meta cumprida':'Meta não cumprida'}</p>${extraHtml||''}
+ <div class="pensa"><b>Síntese</b><br>${oque}</div><div class="pensa"><b>Para discutir</b><br>${pergunta}</div>
+ <div class="row" style="justify-content:center"><button class="btn" id="bNx">${S.f<FASES.length-1?'Próxima fase':'Ver relatório'}</button></div></div>`;
+ $('bNx').onclick=()=>{S.f++;if(S.f<FASES.length)intro();else relatorio();};}
+function ptr(fn,ev){const cv=$('cv');cv.style.touchAction='none';cv.addEventListener(ev||'pointermove',e=>{const r=cv.getBoundingClientRect();fn((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height,e);});}
+function opcoes(perg,ops,cb){$('ctrl').innerHTML=`<div style="width:100%"><b>${perg}</b><div style="display:grid;gap:6px;margin-top:8px">${ops.map((t,i)=>`<button class="tool" style="text-align:left" data-o="${i}">${t}</button>`).join('')}</div></div>`;
+ document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-o]').forEach(x=>x.classList.toggle('on',x===b));cb(+b.dataset.o,b);});}
+const f1x=v=>(Math.round(v*10)/10).toFixed(1).replace('.',',');
+const INK='#1f2421',MUT='#5f6b66',LINE='#dfe3e0',ACC='#15803d',ACC2='#14532d',BLUE='#2563a8';
+const ajuste=(xs,ys)=>{const n=xs.length,mx=xs.reduce((a,b)=>a+b)/n,my=ys.reduce((a,b)=>a+b)/n;let sxy=0,sxx=0;xs.forEach((x,i)=>{sxy+=(x-mx)*(ys[i]-my);sxx+=(x-mx)**2;});const b=sxy/sxx;return{b,a:my-b*mx};};
+function eixos(c,o){const{x0,y0,w,h,xmin,xmax,ymin,ymax,xt,yt,xf,yf,titulo}=o;const X=v=>x0+(v-xmin)/(xmax-xmin)*w,Y=v=>y0+h-(v-ymin)/(ymax-ymin)*h;
+ c.fillStyle='#fff';c.fillRect(x0,y0,w,h);c.strokeStyle='#eef0ee';c.lineWidth=1;c.font='500 10.5px system-ui';c.fillStyle=MUT;
+ yt.forEach(v=>{c.beginPath();c.moveTo(x0,Y(v)+.5);c.lineTo(x0+w,Y(v)+.5);c.stroke();c.textAlign='right';c.fillText(yf?yf(v):v,x0-6,Y(v)+3.5);});
+ xt.forEach(v=>{c.textAlign='center';c.fillText(xf?xf(v):v,X(v),y0+h+14);c.fillStyle=MUT;c.fillRect(X(v)-.5,y0+h,1,4);});
+ c.strokeStyle=INK;c.lineWidth=1;c.beginPath();c.moveTo(x0,y0);c.lineTo(x0,y0+h);c.lineTo(x0+w,y0+h);c.stroke();
+ if(titulo){c.fillStyle=INK;c.font='700 11px system-ui';c.textAlign='left';c.fillText(titulo.toUpperCase(),x0,y0-10);}return{X,Y};}
+function painelR(c,y,h){c.fillStyle='#fff';c.fillRect(478,y,268,h);c.strokeStyle=LINE;c.lineWidth=1;c.strokeRect(478.5,y+.5,267,h-1);}
+function rotulo(c,x,y,t,cor){c.fillStyle=cor||MUT;c.font='700 10px system-ui';c.textAlign='left';c.fillText(t.toUpperCase(),x,y);}
+function linhaM(c,x,y,lab,val,cor){c.font='500 12.5px system-ui';c.fillStyle=INK;c.textAlign='left';c.fillText(lab,x,y);c.font='700 12.5px system-ui';c.textAlign='right';c.fillStyle=cor||INK;c.fillText(val,x+240,y);c.strokeStyle='#f0f2f0';c.lineWidth=1;c.beginPath();c.moveTo(x,y+6);c.lineTo(x+240,y+6);c.stroke();}
+function fonte(c,t){c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';c.fillText(t,24,H-8);}
+
+(()=>{const d=Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype,'font');Object.defineProperty(CanvasRenderingContext2D.prototype,'font',{get(){return d.get.call(this);},set(v){d.set.call(this,String(v).replace(/(\d+(?:\.\d+)?)px/,(m,n)=>(+n*FSC).toFixed(1)+'px'));},configurable:true});})();
+let FSC=1.25;
+const ptrU=fn=>ptr(fn,'pointerup');
+const AZ='#0ea5e9',AZ2='#0369a1';
+const nf=v=>Math.round(v).toLocaleString('pt-BR');
+function quebra(c,t,x,y,w,lh){lh*=FSC;const ws=t.split(' ');let l='';for(const p of ws){if(c.measureText(l+p).width>w&&l){c.fillText(l,x,y);l='';y+=lh;}l+=p+' ';}c.fillText(l,x,y);return y;}
+function botao(txt,fn,extra){$('ctrl').innerHTML=(extra||'')+`<span class="small" style="color:var(--mut)">Analise o resultado com calma.</span><button class="btn" id="bCont">${txt}</button>`;$('bCont').onclick=()=>{$('ctrl').innerHTML='';fn();};}
+const RNG=s=>()=>(s=(s*16807)%2147483647)/2147483647;
+const MOB=()=>window.innerWidth<600;
+const VD='#15803d',VD2='#14532d',BO='#0ea5e9',AM='#f59e0b',VM='#dc2626',CZ='#94a3b8';
+function legenda(c,x,y,itens){itens.forEach(([cor,t],k)=>{c.fillStyle=cor;c.beginPath();c.arc(x+5,y+k*18-4,5,0,7);c.fill();c.fillStyle=INK;c.font='500 10px system-ui';c.textAlign='left';c.fillText(t,x+16,y+k*18);});}
+function selo(c,x,y,ok,t){c.fillStyle=ok?'#dcfce7':'#fee2e2';c.beginPath();c.roundRect(x,y,240,30,6);c.fill();c.fillStyle=ok?VD:'#b91c1c';c.font='800 13px system-ui';c.textAlign='center';c.fillText(t,x+120,y+20);}
+function lampada(c,x,y,on,yb){c.strokeStyle='#64748b';c.lineWidth=4;c.beginPath();c.moveTo(x-12,y);c.lineTo(x-12,yb);c.stroke();c.fillStyle='#64748b';c.fillRect(x-28,yb-5,32,6);
+ if(on){const g=c.createRadialGradient(x+8,y,3,x+8,y,130);g.addColorStop(0,'rgba(250,204,21,.55)');g.addColorStop(1,'rgba(250,204,21,0)');c.fillStyle=g;c.beginPath();c.arc(x+8,y,130,0,7);c.fill();}
+ c.fillStyle='#334155';c.beginPath();c.moveTo(x-16,y-9);c.lineTo(x+2,y-17);c.lineTo(x+2,y+17);c.lineTo(x-16,y+9);c.fill();
+ c.fillStyle=on?'#fde047':'#e5e7eb';c.beginPath();c.arc(x+7,y,9,0,7);c.fill();c.strokeStyle='#a16207';c.lineWidth=1;c.stroke();}
+const qpt=(t,a,b,d)=>[(1-t)**2*a[0]+2*(1-t)*t*b[0]+t*t*d[0],(1-t)**2*a[1]+2*(1-t)*t*b[1]+t*t*d[1]];
+function hastes(x,y,w,h){return[0,1,2].map(s=>{const bx=x+w*(.3+.2*s);return[[bx,y+h],[bx+(s-1)*16,y+h*.6],[bx+(s-1)*8,y+h*.36]];});}
+function bequer(c,x,y,w,h){c.fillStyle='#e0f2fe';c.fillRect(x,y+18,w,h-18);c.fillStyle='#bae6fd';c.fillRect(x,y+18,w,3);
+ hastes(x,y,w,h).forEach(([a,b,d])=>{c.strokeStyle='#166534';c.lineWidth=2.2;c.beginPath();c.moveTo(...a);c.quadraticCurveTo(...b,...d);c.stroke();
+  for(let k=1;k<=10;k++){const[px,py]=qpt(k/10.5,a,b,d);c.fillStyle=k%2?'#16a34a':'#22c55e';[-1,1].forEach(sg=>{c.beginPath();c.ellipse(px+sg*6,py,6,2.2,sg*.5,0,7);c.fill();});}});
+ c.strokeStyle='#94a3b8';c.lineWidth=2;c.beginPath();c.moveTo(x,y);c.lineTo(x,y+h);c.lineTo(x+w,y+h);c.lineTo(x+w,y);c.stroke();}
+function bolhaD(c,b){c.fillStyle='rgba(255,255,255,.85)';c.strokeStyle=BO;c.lineWidth=1.6;c.beginPath();c.arc(b.x,b.y,b.r,0,7);c.fill();c.stroke();c.fillStyle='#fff';c.beginPath();c.arc(b.x-b.r*.35,b.y-b.r*.35,b.r*.3,0,7);c.fill();}
+let DADOS1=null;
+
+/* ---------- FASE 1 ---------- */
+const DIST=[10,15,20,30];
+const nBolhas=d=>{const I=(10/d)**2;return Math.round(75*I/(I+1.5));};
+function f1(){FSC=1.25;G={t:0,d:null,feito:{},bol:[],pops:[],fase:'escolher',ag:[],cont:0,esc:0,n:0,rep:0,fim:0,seed:3};telaJogo('Conte as bolhas','0 de 4 medidas');
+ const BX=250,BY=56,BW=150,BH=280,YB=338;
+ const lx=d=>BX-d*5;
+ const ctrl=()=>{$('ctrl').innerHTML=DIST.map(d=>`<button class="tool${G.d===d?' on':''}" data-d="${d}">${d} cm${G.feito[d]!=null?' (feito)':''}</button>`).join('')+`<button class="btn" id="bAc">Acender a lâmpada</button>`;
+  document.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{G.d=+b.dataset.d;ctrl();acao(`Lâmpada a ${G.d} cm da planta. Toque em Acender e prepare o dedo: conte cada bolha tocando nela.`);});
+  $('bAc').onclick=()=>{if(G.d==null){acao('Primeiro escolha uma distância.');return;}comeca();};};
+ const comeca=()=>{$('ctrl').innerHTML='';G.fase='medir';G.tm=0;G.cont=0;G.esc=0;G.bol=[];G.n=nBolhas(G.d);const r=RNG(G.seed++*97+G.d);
+  G.ag=Array.from({length:G.n},(_,i)=>(i+.2+r()*.6)/G.n*15).sort((a,b)=>a-b);
+  const hs=hastes(BX,BY,BW,BH);G.spawn=()=>{const[a,b,d]=hs[Math.floor(r()*3)];const[px,py]=qpt(.35+r()*.6,a,b,d);const m=MOB();return{x:px+(r()-.5)*10,y:py,r:(7+r()*3)*(m?1.6:1),vy:(46+r()*18)*(m?.8:1),ph:r()*6,vivo:1};};
+  acao('Conte! Toque em cada bolha antes que ela chegue à superfície.');};
+ G.tap=(x,y)=>{if(G.fase!=='medir')return;const R=MOB()?34:24;let m=null,md=R;G.bol.forEach(b=>{if(!b.vivo)return;const dd=Math.hypot(b.x-x,b.y-y);if(dd<md){md=dd;m=b;}});if(m){m.vivo=0;G.cont++;G.pops.push({x:m.x,y:m.y,t:0});}};
+ G.upd=dt=>{G.pops.forEach(p=>p.t+=dt);G.pops=G.pops.filter(p=>p.t<.7);if(G.fase!=='medir')return;G.tm+=dt;
+  while(G.ag.length&&G.ag[0]<=G.tm){G.ag.shift();G.bol.push(G.spawn());}
+  G.bol.forEach(b=>{if(!b.vivo)return;b.y-=b.vy*dt;b.x+=Math.sin(G.t*3+b.ph)*.4;if(b.y<BY+20){b.vivo=0;G.esc++;}});G.bol=G.bol.filter(b=>b.vivo);
+  if(G.tm>=15&&!G.ag.length&&!G.bol.length){G.fase='escolher';
+   if(G.esc>Math.max(1,G.n*.25)){G.rep++;acao(`Você contou ${G.cont}, mas ${G.esc} bolhas escaparam sem toque. Contagem pouco confiável: repita esta distância.`);ctrl();}
+   else{G.feito[G.d]=G.cont;const k=Object.keys(G.feito).length;$('info').textContent=`${k} de 4 medidas`;
+    if(k<4){acao(`Registrado: ${G.cont} bolhas em 15 s a ${G.d} cm. Escolha outra distância.`);G.d=null;ctrl();}
+    else{G.fim=1;DADOS1=DIST.map(d=>[d,G.feito[d]]);acao('As 4 medidas estão no gráfico. Compare a distância 10 cm com a de 30 cm.');
+     botao('Ver a explicação',()=>{const a=G.feito[10],b=G.feito[30];fimFase(Math.max(80,200-15*G.rep),true,`Cada bolha é principalmente oxigênio produzido pela fotossíntese. Com a lâmpada a 10 cm você contou ${a} bolhas em 15 s, e a 30 cm contou ${b}. ${b>0&&a/b>3?`A distância triplicou e a produção caiu cerca de ${Math.round(a/b)} vezes, bem mais do que três.`:'A distância triplicou e a produção caiu.'} A luz é a fonte de energia da fotossíntese: menos luz chegando à folha, menos água quebrada e menos oxigênio liberado. Contar bolhas é um método antigo e simples de medir a taxa de fotossíntese de plantas aquáticas como a egéria (Egeria densa), nativa da América do Sul.`,'Que outros fatores, além da distância da lâmpada, poderiam mudar o número de bolhas nesse experimento?');});}}}};
+ G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);const on=G.fase==='medir';const d=G.d||20;
+  c.fillStyle='#e7e5e4';c.fillRect(20,YB,440,8);lampada(c,lx(d),200,on,YB);bequer(c,BX,BY,BW,BH);
+  c.strokeStyle=INK;c.lineWidth=1;c.beginPath();c.moveTo(lx(d)+7,YB+20);c.lineTo(BX+BW/2,YB+20);c.stroke();[lx(d)+7,BX+BW/2].forEach(x=>{c.beginPath();c.moveTo(x,YB+15);c.lineTo(x,YB+25);c.stroke();});
+  c.fillStyle=INK;c.font='800 11px system-ui';c.textAlign='center';c.fillText(G.d?`${G.d} cm`:'escolha a distância',(lx(d)+BX+BW/2)/2,YB+16);
+  G.bol.forEach(b=>bolhaD(c,b));G.pops.forEach(p=>{c.globalAlpha=1-p.t/.7;c.fillStyle=VD;c.font='800 14px system-ui';c.textAlign='center';c.fillText('+1',p.x,p.y-p.t*30);c.globalAlpha=1;});
+  if(on){c.fillStyle=INK;c.font='800 22px system-ui';c.textAlign='left';c.fillText(`${G.cont}`,BX+BW+14,90);c.font='600 10px system-ui';c.fillStyle=MUT;c.fillText('bolhas contadas',BX+BW+14,104);
+   c.fillText(`tempo: ${Math.max(0,15-G.tm).toFixed(0)} s`,BX+BW+14,122);if(G.esc){c.fillStyle=VM;c.fillText(`escaparam: ${G.esc}`,BX+BW+14,140);}}
+  painelR(c,20,320);rotulo(c,492,40,'Caderno de laboratório');
+  c.font='700 11px system-ui';c.fillStyle=MUT;c.textAlign='left';c.fillText('Distância',492,62);c.textAlign='right';c.fillText('Bolhas em 15 s',732,62);
+  DIST.forEach((dd,i)=>linhaM(c,492,84+i*22,`${dd} cm`,G.feito[dd]!=null?`${G.feito[dd]}`:'...',G.feito[dd]!=null?VD:MUT));
+  const O={x0:520,y0:196,w:204,h:110,xmin:0,xmax:35,ymin:0,ymax:35,xt:[0,10,20,30],yt:[0,10,20,30],titulo:'bolhas × distância (cm)'};const{X,Y}=eixos(c,O);
+  const pts=DIST.filter(dd=>G.feito[dd]!=null).map(dd=>[dd,G.feito[dd]]);
+  if(pts.length>1){c.strokeStyle=VD;c.lineWidth=1.5;c.beginPath();pts.forEach(([x,y],i)=>i?c.lineTo(X(x),Y(y)):c.moveTo(X(x),Y(y)));c.stroke();}
+  pts.forEach(([x,y])=>{c.fillStyle=VD;c.beginPath();c.arc(X(x),Y(Math.min(35,y)),4,0,7);c.fill();});};
+ ctrl();acao('Escolha a distância da lâmpada. Depois acenda e conte as bolhas tocando em cada uma.');rodar();}
+
+/* ---------- FASE 2 ---------- */
+function f2(){FSC=1.25;const ALV=[25,11.1,50];G={t:0,d:40,k:0,ok:false,drag:false,fim:0,graf:false};telaJogo('A luz se espalha','alvo 1 de 3');
+ const L0=60,PX=6,YB=230;const sx=d=>L0+7+d*PX;
+ const leit=()=>100*(10/G.d)**2;
+ const confere=()=>{const a=ALV[G.k],v=leit();G.ok=Math.abs(v-a)/a<=.06;if(G.ok){acao(`Correto! A ${f1x(G.d)} cm o sensor recebe ${f1x(v)}% da luz que recebia a 10 cm.`);$('ctrl').innerHTML=`<button class="btn" id="bNx2">${G.k<2?'Próximo alvo':'Ver o que isso explica'}</button>`;$('bNx2').onclick=prox;}else ctrlM();};
+ const ctrlM=()=>{if($('bMn'))return;$('ctrl').innerHTML='<button class="btn ghost" id="bMn">- 0,5 cm</button><button class="btn ghost" id="bMa">+ 0,5 cm</button>';$('bMn').onclick=()=>{G.d=clamp(G.d-.5,8,62);confere();};$('bMa').onclick=()=>{G.d=clamp(G.d+.5,8,62);confere();};};
+ const prox=()=>{G.k++;G.ok=false;$('ctrl').innerHTML='';if(G.k<3){$('info').textContent=`alvo ${G.k+1} de 3`;acao(`Novo alvo: ${f1x(ALV[G.k])}% da luz. Arraste o sensor.`);ctrlM();return;}
+  G.graf=true;$('info').textContent='análise';const P=(DADOS1||DIST.map(d=>[d,nBolhas(d)])).map(([d,n])=>[100*(10/d)**2,n]);G.P=P;
+  const far=P.filter(p=>p[0]<50),b=far.reduce((s,p)=>s+p[0]*p[1],0)/far.reduce((s,p)=>s+p[0]*p[0],0);G.b=b;const prev=b*100,med=P[0][1];G.sat=med<.85*prev;
+  acao(G.sat?`Com pouca luz os pontos seguem uma reta que passa pela origem. Já a 10 cm a reta previa ${Math.round(prev)} bolhas e você contou ${med}: perto da lâmpada a planta começa a saturar.`:`Os pontos seguem quase uma reta que passa pela origem: mais luz, proporcionalmente mais bolhas.`);
+  botao('Ver a explicação',()=>fimFase(200,true,`A luz sai da lâmpada em todas as direções. Quando a distância dobra, a mesma luz se espalha por uma área 4 vezes maior, e cada quadradinho recebe 1/4 dela. Com o triplo da distância, recebe 1/9. Essa é a lei do inverso do quadrado: intensidade proporcional a 1/d². Quando trocamos a distância pela intensidade de luz, as suas bolhas da fase 1 ficam ${G.sat?'quase em linha reta nas luzes fracas, e o ponto mais iluminado fica abaixo da reta. Ali outro fator começa a limitar a fotossíntese, assunto da próxima fase.':'quase em linha reta: a taxa de fotossíntese cresce na proporção da luz recebida.'}`,'Se uma lâmpada fica a 1 m de uma planta e a outra a 2 m, quantas vezes mais luz a primeira planta recebe?'));};
+ ptr((x,y)=>{if(G.graf||G.ok)return;if(y>YB-120&&y<YB+40&&x>L0+20&&x<470){G.drag=true;G.d=clamp(Math.round((x-L0-7)/PX*2)/2,8,62);}},'pointerdown');
+ ptr(x=>{if(!G.drag||G.graf||G.ok)return;G.d=clamp(Math.round((x-L0-7)/PX*2)/2,8,62);});
+ ptr(()=>{if(G.drag){G.drag=false;confere();}},'pointerup');
+ G.upd=()=>{};
+ G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);
+  if(G.graf){const O={x0:60,y0:44,w:380,h:250,xmin:0,xmax:105,ymin:0,ymax:Math.max(35,...G.P.map(p=>p[1]))+5,xt:[0,25,50,75,100],yt:[0,10,20,30],xf:v=>v+'%',titulo:'bolhas em 15 s × intensidade de luz (10 cm = 100%)'};const{X,Y}=eixos(c,O);
+   c.strokeStyle=VD;c.lineWidth=2;c.setLineDash([6,4]);c.beginPath();c.moveTo(X(0),Y(0));c.lineTo(X(100),Y(Math.min(O.ymax,G.b*100)));c.stroke();c.setLineDash([]);
+   G.P.forEach(([x,y],i)=>{c.fillStyle=VD2;c.beginPath();c.arc(X(x),Y(y),5,0,7);c.fill();c.fillStyle=INK;c.font='700 10px system-ui';c.textAlign='left';c.fillText(`${DIST[i]} cm`,X(x)+8,Y(y)-6);});
+   painelR(c,20,320);rotulo(c,492,40,'Da distância para a luz');c.fillStyle=INK;c.font='500 10.5px system-ui';c.textAlign='left';
+   quebra(c,'Cada ponto é uma medida sua da fase 1. A distância foi trocada pela intensidade: 100 × (10/d)². A linha tracejada passa pela origem e segue os pontos de luz fraca.',492,62,236,14);
+   G.P.forEach(([x,y],i)=>linhaM(c,492,176+i*22,`${DIST[i]} cm: luz ${Math.round(x)}%`,`${y} bolhas`));return;}
+  const d=G.d,xs=sx(d),hy=d*2.6;
+  c.fillStyle='#e7e5e4';c.fillRect(20,YB+30,440,8);
+  c.fillStyle='rgba(250,204,21,.22)';c.beginPath();c.moveTo(L0+8,YB-60);c.lineTo(xs,YB-60-hy/2);c.lineTo(xs,YB-60+hy/2);c.fill();
+  c.strokeStyle='rgba(202,138,4,.5)';c.lineWidth=1;[-1,1].forEach(sg=>{c.beginPath();c.moveTo(L0+8,YB-60);c.lineTo(xs,YB-60+sg*hy/2);c.stroke();});
+  lampada(c,L0,YB-60,true,YB+30);
+  c.fillStyle=G.ok?VD:'#334155';c.beginPath();c.roundRect(xs-5,YB-72,10,24,3);c.fill();c.fillRect(xs-2,YB-48,4,78);c.beginPath();c.roundRect(xs-16,YB+20,32,10,3);c.fill();
+  c.fillStyle=G.ok?VD:INK;c.font='800 12px system-ui';c.textAlign='center';c.fillText(`${f1x(d)} cm`,xs,YB+52);c.fillStyle=MUT;c.font='600 9px system-ui';c.fillText('arraste o sensor',xs,YB+66);
+  for(let k=10;k<=60;k+=10){c.fillStyle=MUT;c.fillRect(sx(k),YB+38,1,5);}
+  painelR(c,20,320);rotulo(c,492,40,'Luxímetro');c.fillStyle=G.ok?VD:INK;c.font='800 26px system-ui';c.textAlign='left';c.fillText(`${f1x(leit())}%`,492,74);
+  c.fillStyle=MUT;c.font='600 10px system-ui';c.fillText(`da luz medida a 10 cm · alvo: ${f1x(ALV[Math.min(2,G.k)])}%`,492,92);
+  const n=d/10,cel=Math.min(18,96/n),gx=492,gy=110;c.strokeStyle='#ca8a04';c.lineWidth=1;c.fillStyle='rgba(250,204,21,.35)';c.fillRect(gx,gy,cel*n,cel*n);
+  for(let i=0;i<=Math.floor(n);i++){c.beginPath();c.moveTo(gx+i*cel,gy);c.lineTo(gx+i*cel,gy+cel*n);c.stroke();c.beginPath();c.moveTo(gx,gy+i*cel);c.lineTo(gx+cel*n,gy+i*cel);c.stroke();}
+  c.fillStyle='#334155';c.fillRect(gx,gy,cel,cel);c.fillStyle=INK;c.font='500 10px system-ui';c.textAlign='left';
+  quebra(c,`A luz que a 10 cm cabia em 1 quadradinho agora se espalha por ${f1x(n)} × ${f1x(n)} = ${f1x(n*n)} quadradinhos. O sensor (escuro) ocupa 1.`,612,118,124,13);
+  if(G.ok)selo(c,492,300,true,'CORRETO');};
+ ctrlM();acao('Arraste o sensor pela bancada até ele receber 25% da luz que recebia a 10 cm.');rodar();}
+
+/* ---------- FASE 3 ---------- */
+const FL=[.1,.3,.5,.7,.85,1],TV=[15,20,25,30,35,40],FT=[.35,.6,.85,1,.7,.3];
+function f3(){FSC=1.25;const DES=[{l:3,c:1,t:3,meta:70,aj:4,min:2,txt:'A lâmpada já está forte. O que mais a planta precisa?'},{l:1,c:4,t:2,meta:80,aj:4,min:3,txt:'Muito gás carbônico e temperatura boa, mas a sala está escura.'},{l:5,c:5,t:5,meta:90,aj:3,min:2,txt:'Luz e gás carbônico no máximo, mas a água está a 40 °C.'}];
+ G={t:0,k:0,gasto:0,perd:0,rest:0,fim:0,ok:false,bol:[],ac:0};telaJogo('O barril de Liebig','desafio 1 de 3');
+ const ini=()=>{const D=DES[G.k];Object.assign(G,{l:D.l,c:D.c,ti:D.t,aj:D.aj,ok:false,usados:0});$('info').textContent=`desafio ${G.k+1} de 3`;acao(`${D.txt} Meta: taxa de ${D.meta}%. Você tem ${D.aj} ajustes.`);ctrl();};
+ const f=()=>[FL[G.l],FL[G.c],FT[G.ti]];const taxa=()=>Math.round(100*Math.min(...f()));
+ const muda=(q,s)=>{if(G.ok||G.aj<=0)return;const lim={l:[0,5],c:[0,5],ti:[0,5]}[q];const nv=G[q]+s;if(nv<lim[0]||nv>lim[1])return;G[q]=nv;G.aj--;G.usados++;G.gasto++;
+  const D=DES[G.k];if(taxa()>=D.meta){G.ok=true;G.perd+=G.usados-D.min;acao(`Correto! Taxa de ${taxa()}%. ${G.usados===D.min?'Você mexeu só no fator limitante.':`Você usou ${G.usados} ajustes; bastavam ${D.min}.`}`);
+   $('ctrl').innerHTML=`<button class="btn" id="bNx3">${G.k<2?'Próximo desafio':'Concluir'}</button>`;$('bNx3').onclick=()=>{G.k++;if(G.k<3)ini();else fecha();};return;}
+  if(G.aj<=0){acao(`Acabaram os ajustes e a taxa ficou em ${taxa()}%. Olhe qual tábua está mais baixa e tente de novo.`);$('ctrl').innerHTML='<button class="btn" id="bRe">Recomeçar o desafio</button>';$('bRe').onclick=()=>{G.rest++;ini();};return;}
+  ctrl();};
+ const ctrl=()=>{$('ctrl').innerHTML=[['l','Luz'],['c','Gás carbônico'],['ti','Temperatura']].map(([q,n])=>`<span style="display:inline-flex;gap:4px;align-items:center;margin-right:8px"><b style="font-size:.9rem">${n}</b><button class="tool" data-q="${q}" data-s="-1">-</button><button class="tool" data-q="${q}" data-s="1">+</button></span>`).join('');
+  document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>muda(b.dataset.q,+b.dataset.s));};
+ const fecha=()=>{G.fim=1;$('ctrl').innerHTML='';acao('Os três desafios foram resolvidos.');botao('Ver a explicação',()=>fimFase(Math.max(80,200-10*G.perd-15*G.rest),true,'Em 1905, Blackman mostrou que a fotossíntese é controlada pelo fator que está em menor oferta, o fator limitante. A ideia vem da lei do mínimo de Liebig: um barril só se enche até a tábua mais baixa. Aumentar a luz não adianta quando falta gás carbônico, e esquentar a água acima da temperatura ótima piora a fotossíntese, porque as enzimas, como a rubisco, perdem eficiência. Na natureza os fatores costumam limitar juntos, mas a regra do mínimo é um bom primeiro modelo.','Numa estufa, por que alguns produtores injetam gás carbônico em vez de só colocar mais lâmpadas?'));};
+ G.upd=dt=>{G.ac+=dt*taxa()/100*6;while(G.ac>1){G.ac--;G.bol.push({x:310+Math.random()*90,y:300,r:4+Math.random()*3,vy:40+Math.random()*20});}G.bol.forEach(b=>b.y-=b.vy*dt);G.bol=G.bol.filter(b=>b.y>130);};
+ G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);const v=f(),mn=Math.min(...v),nm=['LUZ','CO₂','TEMP.'],cor=['#facc15','#94a3b8','#fb923c'];const x0=50,bw=58,yb=320,hm=230;
+  c.fillStyle='rgba(14,165,233,.28)';c.fillRect(x0,yb-hm*mn,bw*3,hm*mn);c.fillStyle='rgba(14,165,233,.5)';c.fillRect(x0,yb-hm*mn,bw*3,3);
+  const lo=mn<1?v.indexOf(mn):-1;c.fillStyle='rgba(14,165,233,.6)';const sx=x0+Math.max(0,lo)*bw+bw/2;if(lo>=0)for(let k=0;k<4;k++){const yy=yb-hm*mn+((G.t*60+k*14)%50);c.beginPath();c.arc(sx+Math.sin(k)*8,yy+4,2.5,0,7);c.fill();}
+  v.forEach((fv,i)=>{const x=x0+i*bw;c.fillStyle=cor[i];c.fillRect(x+3,yb-hm*fv,bw-6,hm*fv);c.strokeStyle=i===lo?VM:'#78350f';c.lineWidth=i===lo?3:1.5;c.strokeRect(x+3,yb-hm*fv,bw-6,hm*fv);
+   c.fillStyle=INK;c.font='800 11px system-ui';c.textAlign='center';c.fillText(nm[i],x+bw/2,yb+16);c.font='600 10px system-ui';c.fillText(`${Math.round(fv*100)}%`,x+bw/2,yb-hm*fv-6);
+   if(i===lo){c.fillStyle=VM;c.font='800 9px system-ui';c.fillText('LIMITANTE',x+bw/2,yb+30);}});
+  c.strokeStyle='#78350f';c.lineWidth=3;c.beginPath();c.moveTo(x0,yb);c.lineTo(x0+bw*3,yb);c.stroke();
+  bequer(c,300,130,120,190);G.bol.forEach(b=>bolhaD(c,b));c.fillStyle=INK;c.font='800 11px system-ui';c.textAlign='center';c.fillText(`${taxa()}% da taxa máxima`,360,346);
+  painelR(c,20,320);const D=DES[Math.min(2,G.k)];rotulo(c,492,40,`Desafio ${Math.min(3,G.k+1)} de 3`);
+  linhaM(c,492,64,'Luz',`nível ${G.l} de 5`);linhaM(c,492,88,'CO₂ (bicarbonato)',`${G.c} colher${G.c===1?'':'es'}`);linhaM(c,492,112,'Temperatura da água',`${TV[G.ti]} °C`);
+  linhaM(c,492,140,'Taxa de fotossíntese',`${taxa()}%`,taxa()>=D.meta?VD:VM);linhaM(c,492,164,'Meta',`${D.meta}%`);linhaM(c,492,188,'Ajustes restantes',`${G.aj}`,G.aj?INK:VM);
+  c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';quebra(c,'O bicarbonato dissolvido na água fornece gás carbônico à planta. Cada tábua mostra quanto aquele fator permite. A água para na tábua mais baixa.',492,212,236,13);
+  if(G.ok)selo(c,492,300,true,'CORRETO');};
+ ini();rodar();}
+
+/* ---------- FASE 4 ---------- */
+const MOL={'CO2':{C:1,O:2,n:'CO₂'},'H2O':{H:2,O:1,n:'H₂O'},'GLI':{C:6,H:12,O:6,n:'C₆H₁₂O₆'},'O2':{O:2,n:'O₂'}};
+const COR_AT={C:'#374151',H:'#e5e7eb',O:'#ef4444'};
+function f4(){FSC=1.25;const R=[{nome:'Fotossíntese',e:['CO2','H2O'],d:['GLI','O2'],seta:'luz e clorofila'},{nome:'Respiração celular',e:['GLI','O2'],d:['CO2','H2O'],seta:'mitocôndria'}];
+ G={t:0,k:0,cf:[1,1,1,1],ok:false,cl:0,fim:0,ang:{C:0,H:0,O:0}};telaJogo('Balança dos átomos','Fotossíntese');
+ const Rd=()=>R[Math.min(1,G.k)];const mols=()=>[...Rd().e,...Rd().d];
+ const conta=lado=>{const t={C:0,H:0,O:0};mols().forEach((m,i)=>{if((i<2)!==(lado==='e'))return;Object.keys(t).forEach(a=>t[a]+=(MOL[m][a]||0)*G.cf[i]);});return t;};
+ const gcd=(a,b)=>b?gcd(b,a%b):a;
+ const confere=()=>{const e=conta('e'),d=conta('d');const eq=['C','H','O'].every(a=>e[a]===d[a]);if(!eq){ctrl();return;}const g=G.cf.reduce(gcd);
+  if(g>1){acao(`Equilibrada! Mas todos os números podem ser divididos por ${g}. Use os menores números possíveis.`);ctrl();return;}
+  G.ok=true;acao(G.k===0?'Correto! 6 CO₂ + 6 H₂O formam 1 glicose e 6 O₂. Nenhum átomo foi criado ou destruído.':'Correto! A respiração é o caminho inverso: a glicose é quebrada com O₂ e devolve CO₂ e água, liberando energia.');
+  $('ctrl').innerHTML=`<button class="btn" id="bNx4">${G.k===0?'Próxima equação':'Concluir'}</button>`;$('bNx4').onclick=()=>{G.k++;if(G.k<2){G.cf=[1,1,1,1];G.ok=false;$('info').textContent=Rd().nome;acao('Agora a respiração celular, que acontece nas células da planta e nas nossas. Equilibre de novo.');ctrl();}else fecha();};};
+ const ctrl=()=>{$('ctrl').innerHTML=mols().map((m,i)=>`<span style="display:inline-flex;gap:4px;align-items:center;margin-right:8px"><b style="font-size:.95rem">${MOL[m].n}</b><button class="tool" data-i="${i}" data-s="-1">-</button><button class="tool" data-i="${i}" data-s="1">+</button></span>`).join('');
+  document.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{if(G.ok)return;const i=+b.dataset.i;G.cf[i]=clamp(G.cf[i]+(+b.dataset.s),1,12);G.cl++;confere();});};
+ const fecha=()=>{G.fim=1;$('ctrl').innerHTML='';acao('As duas equações estão equilibradas.');botao('Ver a explicação',()=>fimFase(G.cl<=40?200:170,true,'Numa reação química os átomos não somem nem aparecem: só trocam de parceiros. Por isso a fotossíntese precisa de 6 CO₂ e 6 H₂O para formar 1 glicose e 6 O₂. A respiração celular faz o caminho inverso e libera a energia guardada na glicose. Em 1941, Ruben e colegas usaram água marcada com o isótopo oxigênio-18 e mostraram que o O₂ liberado vem da água, não do CO₂. Por isso uma forma mais completa da equação é 6 CO₂ + 12 H₂O → C₆H₁₂O₆ + 6 O₂ + 6 H₂O.','Se as plantas também respiram, por que uma floresta ou um lago podem liberar mais oxigênio do que consomem durante o dia?'));};
+ G.upd=dt=>{const e=conta('e'),d=conta('d');['C','H','O'].forEach(a=>{const alvo=clamp((d[a]-e[a])*.06,-.32,.32);G.ang[a]+=(alvo-G.ang[a])*Math.min(1,dt*6);});};
+ G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);const ms=mols();
+  c.fillStyle=INK;c.font='800 17px system-ui';c.textAlign='center';const txt=ms.map((m,i)=>`${G.cf[i]} ${MOL[m].n}`);const s=`${txt[0]} + ${txt[1]}  →  ${txt[2]} + ${txt[3]}`;c.fillText(s,240,48);
+  c.fillStyle=MUT;c.font='600 10px system-ui';c.fillText(Rd().seta,240,66);
+  const e=conta('e'),d=conta('d');['C','H','O'].forEach((a,i)=>{const cx2=84+i*150,cy=170,L=40,an=G.ang[a];const eq=e[a]===d[a];
+   c.fillStyle='#cbd5e1';c.beginPath();c.moveTo(cx2-14,cy+120);c.lineTo(cx2+14,cy+120);c.lineTo(cx2,cy);c.fill();
+   const p1=[cx2-L*Math.cos(an),cy-L*Math.sin(an)],p2=[cx2+L*Math.cos(an),cy+L*Math.sin(an)];c.strokeStyle=eq?VD:'#475569';c.lineWidth=4;c.beginPath();c.moveTo(...p1);c.lineTo(...p2);c.stroke();
+   [[p1,e[a]],[p2,d[a]]].forEach(([p,n])=>{c.strokeStyle='#94a3b8';c.lineWidth=1;c.beginPath();c.moveTo(p[0],p[1]);c.lineTo(p[0]-22,p[1]+34);c.moveTo(p[0],p[1]);c.lineTo(p[0]+22,p[1]+34);c.stroke();
+    c.fillStyle='#f1f5f9';c.beginPath();c.ellipse(p[0],p[1]+36,26,6,0,0,7);c.fill();c.strokeStyle='#94a3b8';c.stroke();
+    const m=Math.min(n,24);for(let k=0;k<m;k++){const col=k%6,row=Math.floor(k/6);c.fillStyle=COR_AT[a];c.beginPath();c.arc(p[0]-16+col*6.4,p[1]+30-row*6.4,3,0,7);c.fill();if(a==='H'){c.strokeStyle='#94a3b8';c.lineWidth=.8;c.stroke();}}
+    c.fillStyle=INK;c.font='800 12px system-ui';c.textAlign='center';c.fillText(n,p[0],p[1]+58);});
+   c.fillStyle=eq?VD:INK;c.font='800 15px system-ui';c.fillText(a,cx2,cy+140);c.font='600 9px system-ui';c.fillStyle=eq?VD:VM;c.fillText(eq?'equilibrado':'desequilibrado',cx2,cy+154);});
+  painelR(c,20,320);rotulo(c,492,40,Rd().nome);c.fillStyle=INK;c.font='500 10.5px system-ui';c.textAlign='left';
+  quebra(c,'Prato da esquerda: átomos dos reagentes. Prato da direita: átomos dos produtos. A balança só fica reta quando os dois lados têm o mesmo número daquele átomo.',492,62,236,14);
+  legenda(c,494,176,[[COR_AT.C,'carbono (C)'],['#cbd5e1','hidrogênio (H)'],[COR_AT.O,'oxigênio (O)']]);linhaM(c,492,252,'Ajustes feitos',`${G.cl}`);
+  if(G.ok)selo(c,492,300,true,'CORRETO');};
+ ctrl();acao('Use + e - nas moléculas até as três balanças ficarem retas.');rodar();}
+
+/* ---------- FASE 5 ---------- */
+const OSAT=7.6,HIPO=2.8;
+function curvaO2(cov,cl){const Pm=4.5,Rp=1.5,Rb=.08,k=.12,dt=.05;let O=6,T=0;const out=[];while(T<126){const h=T%24;const L=h>=6&&h<=18?Math.sin(Math.PI*(h-6)/12):0;O=Math.max(0,O+dt*(cov*(Pm*L*cl-Rp)-Rb+k*(OSAT-O)));if(T>=102)out.push([T-96,O]);T+=dt;}return out;}
+function f5(){FSC=1.25;G={t:0,cov:.8,k:0,anim:-1,cur:null,erros:0,fim:0,ok:false,drag:false};telaJogo('Dia e noite na baía','dia de sol');
+ const CL=[1,.45];const BX0=24,BX1=462;
+ const ctrl=()=>{$('ctrl').innerHTML='<button class="btn ghost" id="bMn">- aguapé</button><button class="btn ghost" id="bMa">+ aguapé</button><button class="btn" id="bRd">Rodar 24 horas</button>';
+  $('bMn').onclick=()=>{G.cov=clamp(Math.round(G.cov*20-1)/20,0,1);G.cur=null;};$('bMa').onclick=()=>{G.cov=clamp(Math.round(G.cov*20+1)/20,0,1);G.cur=null;};$('bRd').onclick=roda;};
+ const roda=()=>{G.cur=curvaO2(G.cov,CL[G.k]);G.anim=0;$('ctrl').innerHTML='';};
+ const julga=()=>{const mn=Math.min(...G.cur.map(p=>p[1])),pc=Math.round(G.cov*100);
+  if(G.cov<.2){G.erros++;acao(`O oxigênio ficou bom, mas com só ${pc}% de aguapé faltam abrigo e alimento para os alevinos. Use pelo menos 20%.`);ctrl();return;}
+  if(mn<HIPO){G.erros++;acao(`Na madrugada o oxigênio caiu para ${f1x(mn)} mg/L, abaixo do limite de hipóxia. Os peixes subiram para buscar ar. Com ${pc}% de aguapé, a respiração da noite gastou mais do que a água repõe.`);ctrl();return;}
+  G.ok=true;if(G.k===0){acao(`Correto! Com ${pc}% de aguapé o mínimo foi ${f1x(mn)} mg/L. Agora chega uma frente fria: dias nublados.`);$('ctrl').innerHTML='<button class="btn" id="bNb">Testar com céu nublado</button>';$('bNb').onclick=()=>{G.k=1;G.ok=false;G.cur=null;$('info').textContent='dia nublado';acao('Céu nublado: menos luz para a fotossíntese. A sua cobertura ainda funciona? Rode ou ajuste antes.');ctrl();};}
+  else{G.fim=1;acao(`Correto! Mesmo nublado, o mínimo foi ${f1x(mn)} mg/L com ${pc}% de aguapé.`);botao('Ver a explicação',()=>fimFase(Math.max(80,200-20*G.erros),true,'De dia, o aguapé e as algas fazem fotossíntese e o oxigênio da água sobe, às vezes acima da saturação. À noite não há fotossíntese, mas plantas, algas, peixes e bactérias continuam respirando, e o oxigênio cai até o amanhecer. Quanto mais biomassa, maior a subida de dia e maior a queda à noite. Em dias nublados a produção diminui e a mesma cobertura pode levar a baía à hipóxia. No Pantanal, a decomposição de muita matéria orgânica na cheia pode deixar a água sem oxigênio e causar mortandade de peixes, fenômeno conhecido como decoada.','Por que a mortandade de peixes por falta de oxigênio costuma ser percebida ao amanhecer, e não à tarde?'));}};
+ ptr((x,y)=>{if(G.anim>=0&&G.anim<1)return;if(y<170&&x<BX1){G.drag=true;G.cov=clamp(Math.round((x-BX0)/(BX1-BX0)*20)/20,0,1);G.cur=null;}},'pointerdown');
+ ptr(x=>{if(!G.drag)return;G.cov=clamp(Math.round((x-BX0)/(BX1-BX0)*20)/20,0,1);G.cur=null;});ptr(()=>{G.drag=false;},'pointerup');
+ G.upd=dt=>{if(G.anim>=0&&G.anim<1){G.anim=Math.min(1,G.anim+dt/6);if(G.anim>=1)julga();}};
+ G.desenha=c=>{c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);const an=G.cur&&G.anim>=0?G.anim:0;const hora=6+24*an;const n=G.cur?Math.floor(an*(G.cur.length-1)):0;const Oat=G.cur?G.cur[n][1]:6;
+  const dia=hora%24>=6&&hora%24<=18;c.fillStyle=dia?(G.k?'#e2e8f0':'#e0f2fe'):'#1e293b';c.fillRect(BX0,20,BX1-BX0,50);
+  const ang=Math.PI*((hora%24)-6)/12;if(dia){c.fillStyle=G.k?'#cbd5e1':'#facc15';c.beginPath();c.arc(BX0+(BX1-BX0)*(1-Math.cos(ang))/2,66-40*Math.sin(ang),10,0,7);c.fill();if(G.k){c.fillStyle='#94a3b8';[0,1,2].forEach(i=>{c.beginPath();c.ellipse(120+i*120,36,40,10,0,0,7);c.fill();});}}
+  else{c.fillStyle='#f8fafc';c.beginPath();c.arc(380,40,8,0,7);c.fill();}
+  c.fillStyle='#7dd3fc';c.fillRect(BX0,70,BX1-BX0,100);
+  const wc=(BX1-BX0)*G.cov;for(let x=BX0;x<BX0+wc;x+=14){c.fillStyle='#16a34a';c.beginPath();c.ellipse(x+7,70,8,5,0,0,7);c.fill();c.fillStyle='#15803d';c.beginPath();c.ellipse(x+5,64,4,6,-.4,0,7);c.fill();c.strokeStyle='#a16207';c.lineWidth=1;c.beginPath();c.moveTo(x+7,74);c.lineTo(x+5,92);c.moveTo(x+7,74);c.lineTo(x+10,90);c.stroke();}
+  const ruim=Oat<HIPO;for(let i=0;i<5;i++){const fx=BX0+40+((G.t*30*(i%2?1:-1)+i*90)%380+380)%380,fy=ruim?80+i*2:110+i*11;c.fillStyle=ruim?'#9ca3af':'#f97316';c.beginPath();c.ellipse(fx,fy,10,4.5,0,0,7);c.fill();c.beginPath();c.moveTo(fx-9,fy);c.lineTo(fx-15,fy-4);c.lineTo(fx-15,fy+4);c.fill();}
+  c.fillStyle=INK;c.font='700 10px system-ui';c.textAlign='left';c.fillText(`aguapé: ${Math.round(G.cov*100)}% (arraste sobre a baía)`,BX0+6,164);
+  const O={x0:56,y0:200,w:400,h:120,xmin:6,xmax:30,ymin:0,ymax:16,xt:[6,12,18,24,30],yt:[0,4,8,12,16],xf:v=>`${v%24}h`,titulo:'oxigênio dissolvido (mg/L) ao longo de 24 h'};const{X,Y}=eixos(c,O);
+  c.setLineDash([5,4]);c.strokeStyle=VM;c.lineWidth=1.5;c.beginPath();c.moveTo(X(6),Y(HIPO));c.lineTo(X(30),Y(HIPO));c.stroke();c.strokeStyle=CZ;c.beginPath();c.moveTo(X(6),Y(OSAT));c.lineTo(X(30),Y(OSAT));c.stroke();c.setLineDash([]);
+  c.fillStyle=VM;c.font='700 9px system-ui';c.textAlign='right';c.fillText('hipóxia',X(30)-2,Y(HIPO)+11);c.fillStyle=MUT;c.fillText('saturação',X(30)-2,Y(OSAT)-3);
+  if(G.cur){c.strokeStyle=BO;c.lineWidth=2.2;c.beginPath();G.cur.slice(0,n+1).forEach(([h,o],i)=>i?c.lineTo(X(h),Y(Math.min(16,o))):c.moveTo(X(h),Y(Math.min(16,o))));c.stroke();}
+  painelR(c,20,320);rotulo(c,492,40,G.k?'Frente fria: céu nublado':'Dia de sol');linhaM(c,492,64,'Cobertura de aguapé',`${Math.round(G.cov*100)}%`);linhaM(c,492,88,'Hora',`${Math.floor(hora%24)}h`);
+  linhaM(c,492,112,'Oxigênio agora',G.cur?`${f1x(Oat)} mg/L`:'...',ruim?VM:INK);
+  if(G.cur&&G.anim>=1){const mn=Math.min(...G.cur.map(p=>p[1])),mx=Math.max(...G.cur.map(p=>p[1]));linhaM(c,492,136,'Mínimo (madrugada)',`${f1x(mn)} mg/L`,mn<HIPO?VM:VD);linhaM(c,492,160,'Máximo (tarde)',`${f1x(mx)} mg/L`);}
+  c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';quebra(c,'Hipóxia: 2 mL/L, cerca de 2,8 mg/L. Saturação a 30 °C: cerca de 7,6 mg/L. Os peixes precisam de abrigo: use pelo menos 20% de aguapé.',492,186,236,13);
+  if(G.ok)selo(c,492,300,true,'CORRETO');};
+ ctrl();acao('Ajuste a cobertura de aguapé e toque em Rodar 24 horas. O oxigênio não pode cair abaixo da linha vermelha.');rodar();}
+
+const _fimFase=fimFase;
+fimFase=function(pts,ok,oque,perg,extra){let img='';try{const cv=$('cv');if(cv)img=`<img alt="Resultado da fase" src="${cv.toDataURL('image/png')}" style="display:block;width:100%;max-width:640px;margin:12px auto;border:1px solid var(--line);border-radius:10px">`;}catch(e){}
+ _fimFase(pts,ok,oque,perg,(extra||'')+img);const el=document.querySelector('.card.res');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});};
+
+/* ================= INICIO / AVATAR ================= */
+function inicio(){parar();G=null;cx=null;$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><div class="capa"><canvas id="cA" width="560" height="560"></canvas>
+ <div><h2>Seu perfil de pesquisador</h2><div class="opts">
+ <div class="l">Pele</div><div class="sw" id="sP">${PELES.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.pele===i?'on':''}" aria-label="pele ${i+1}"></button>`).join('')}</div>
+ <div class="l">Cabelo</div><div class="sw" id="sE">${ESTILOS.map(([k,t])=>`<button class="tx ${A.estilo===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <div class="sw" id="sC">${CABS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.cab===i?'on':''}" aria-label="cor ${i+1}"></button>`).join('')}</div>
+ <div class="l">Camiseta</div><div class="sw" id="sT">${CAMISAS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.camisa===i?'on':''}" aria-label="camiseta ${i+1}"></button>`).join('')}</div>
+ <div class="l">Chapéu</div><div class="sw" id="sH">${CHAPEUS.map(([k,t])=>`<button class="tx ${A.chapeu===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <input class="nome" id="iN" maxlength="20" placeholder="Seu nome" value="${esc(A.nome)}">
+ </div></div></div>
+ <div class="row" style="margin-top:14px"><button class="btn" id="bJ">Iniciar as 5 fases</button><button class="btn ghost" id="bG">Guia do professor</button></div>
+ <p class="small" style="margin-top:10px">Ciências da Natureza e Matemática · 1ª série EM · BNCC EM13CNT202, EM13CNT101, EM13CNT301, EM13MAT510</p></div>`;
+ const pinta=()=>{const c=$('cA').getContext('2d');c.clearRect(0,0,560,560);c.fillStyle='#f0fdf4';c.fillRect(0,0,560,560);c.fillStyle='#cfe8d6';c.beginPath();c.arc(280,600,260,0,7);c.fill();avatar(c,280,560,6.4,A,true);};
+ pinta();
+ const liga=(id,f)=>document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{f(b);salvaA();document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b));pinta();});
+ liga('sP',b=>A.pele=+b.dataset.i);liga('sC',b=>A.cab=+b.dataset.i);liga('sT',b=>A.camisa=+b.dataset.i);liga('sE',b=>A.estilo=b.dataset.k);liga('sH',b=>A.chapeu=b.dataset.k);
+ $('iN').oninput=e=>{A.nome=e.target.value;salvaA();};
+ $('bJ').onclick=novo;$('bG').onclick=guia;
+}
+function novo(){S={f:0,tot:0,fp:0,res:[],fichas:0};salvo=false;intro();}
+function relatorio(){parar();G=null;cx=null;$('rankBox').style.display='block';const nome=A.nome.trim()||'Pesquisador';
+ $('tela').innerHTML=`<div class="card"><div class="rel"><canvas id="cR" width="240" height="240"></canvas><div><div class="small">Relatório de campo</div><h2>${esc(nome)}</h2><div class="big" style="font-size:2rem;font-weight:800;color:var(--deep)">${S.tot} pts</div></div></div>
+ <table class="tab" style="margin-top:12px"><tr><th>Fase</th><th>Pontos</th><th>Meta</th></tr>${FASES.map((F,i)=>{const r=S.res[i]||{pts:0,ok:false};return`<tr><td>${F.ic} ${F.nome}</td><td>${r.pts}</td><td>${r.ok?'✓':'✗'}</td></tr>`;}).join('')}</table>
+ <div class="pensa"><b>Para escrever no caderno:</b> explique, usando um número do seu experimento, por que a distância da lâmpada muda a fotossíntese e o que isso tem a ver com o oxigênio dos peixes.</div>
+ <div class="savebox noprint"><input id="pName" maxlength="20" value="${esc(nome)}"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row noprint" style="margin-top:12px"><button class="btn ghost" id="bI">Imprimir relatório</button><button class="btn ghost" id="bN">Jogar de novo</button><button class="btn ghost" id="bV">Início</button></div></div>`;
+ const c=$('cR').getContext('2d');c.fillStyle='#f0fdf4';c.fillRect(0,0,240,240);avatar(c,120,240,3.2,A,true);
+ $('bS').onclick=()=>salvar('5 fases');$('bI').onclick=()=>window.print();$('bN').onclick=novo;$('bV').onclick=inicio;
+}
+
+/* ================= GUIA DO PROFESSOR ================= */
+function guia(){parar();$('hud').style.display='none';$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card guia">
+ <div class="row top noprint"><button class="btn ghost sm" id="bVt">← Voltar</button><button class="btn sm" id="bPr">Imprimir guia</button></div>
+ <h2 style="margin-top:10px">Guia do professor · Bolhas de Luz</h2>
+ <p class="small">Ensino Médio · 1ª série · Biologia, Química, Física e Matemática, com diálogo com Geografia</p>
+ <h3>Habilidades da BNCC</h3>
+ <div class="hab"><b>EM13CNT202 (Ciências da Natureza).</b> Analisar as diversas formas de manifestação da vida em seus diferentes níveis de organização, bem como as condições ambientais favoráveis e os fatores limitantes a elas, com ou sem o uso de dispositivos e aplicativos digitais (como softwares de simulação e de realidade virtual, entre outros).</div>
+ <div class="hab"><b>EM13CNT101 (Ciências da Natureza).</b> Analisar e representar, com ou sem o uso de dispositivos e de aplicativos digitais específicos, as transformações e conservações em sistemas que envolvam quantidade de matéria, de energia e de movimento para realizar previsões sobre seus comportamentos em situações cotidianas e em processos produtivos que priorizem o desenvolvimento sustentável, o uso consciente dos recursos naturais e a preservação da vida em todas as suas formas.</div>
+ <div class="hab"><b>EM13CNT301 (Ciências da Natureza).</b> Construir questões, elaborar hipóteses, previsões e estimativas, empregar instrumentos de medição e representar e interpretar modelos explicativos, dados e/ou resultados experimentais para construir, avaliar e justificar conclusões no enfrentamento de situações-problema sob uma perspectiva científica.</div>
+ <div class="hab"><b>EM13MAT510 (Matemática).</b> Investigar conjuntos de dados relativos ao comportamento de duas variáveis numéricas, usando ou não tecnologias da informação, e, quando apropriado, levar em conta a variação e utilizar uma reta para descrever a relação observada.</div>
+ <h3>Competências gerais da BNCC mobilizadas</h3>
+ <ul><li><b>2. Pensamento científico, crítico e criativo:</b> medir, repetir medidas ruins, transformar variáveis e comparar com um modelo.</li><li><b>4. Comunicação:</b> ler e construir gráficos, tabelas e equações químicas.</li><li><b>7. Argumentação:</b> explicar a mortandade de peixes ao amanhecer com dados de oxigênio.</li></ul>
+ <h3>Temas contemporâneos transversais</h3>
+ <p>Educação Ambiental (macroárea Meio Ambiente) e Ciência e Tecnologia. A fase 5 traz o Pantanal, o aguapé e a decoada como contexto regional.</p>
+ <h3>Como as áreas se encontram</h3>
+ <table class="tab"><tr><th>Área</th><th>Onde aparece</th></tr>
+ <tr><td>Biologia</td><td>Fotossíntese, respiração celular, fatores limitantes, ecologia de áreas úmidas (fases 1, 3, 4 e 5).</td></tr>
+ <tr><td>Física</td><td>Propagação da luz e lei do inverso do quadrado (fase 2).</td></tr>
+ <tr><td>Química</td><td>Conservação da massa, balanceamento, solubilidade do oxigênio na água (fases 4 e 5).</td></tr>
+ <tr><td>Matemática</td><td>Erro de contagem, troca de variável 1/d², reta pela origem, função periódica (fases 1, 2 e 5).</td></tr>
+ <tr><td>Geografia</td><td>Pulso de inundação do Pantanal e frentes frias (fase 5).</td></tr></table>
+ <h3>Eixo transdisciplinar</h3>
+ <p>A mesma reação aparece em quatro escalas: a bolha na folha, a equação no caderno, o barril de fatores e a baía inteira com peixes. Proponha à turma a pergunta: o oxigênio que respiramos é um problema de Biologia, de Química, de Física ou de todas? A resposta pede as quatro áreas ao mesmo tempo.</p>
+ <h3>Roteiro de 50 minutos</h3>
+ <table class="tab"><tr><th>Tempo</th><th>O que fazer</th></tr>
+ <tr><td>5 min</td><td>Pergunte: de onde vem o oxigênio que respiramos? Registre as hipóteses.</td></tr>
+ <tr><td>30 min</td><td>Alunos jogam em duplas: um conta as bolhas, o outro anota.</td></tr>
+ <tr><td>10 min</td><td>Discussão com as perguntas de cada fase.</td></tr>
+ <tr><td>5 min</td><td>Cada dupla escreve a frase do relatório de campo.</td></tr></table>
+ <h3>Fase por fase</h3>
+ <table class="tab"><tr><th>Fase</th><th>O aluno faz</th><th>Para discutir</th><th>Conceitos</th></tr>
+ <tr><td>1. Conte as bolhas</td><td>Mede a taxa de fotossíntese em 4 distâncias, tocando nas bolhas</td><td>Que outros fatores mudam as bolhas?</td><td>Medição, erro de contagem, repetição.</td></tr>
+ <tr><td>2. A luz se espalha</td><td>Posiciona o sensor em 25%, 11% e 50% da luz e vê os próprios dados em função de 1/d²</td><td>Quantas vezes mais luz a 1 m do que a 2 m?</td><td>Inverso do quadrado, linearização, saturação.</td></tr>
+ <tr><td>3. O barril de Liebig</td><td>Corrige só o fator limitante em 3 desafios</td><td>Por que injetar CO₂ em estufas?</td><td>Lei do mínimo, temperatura ótima, enzimas.</td></tr>
+ <tr><td>4. Balança dos átomos</td><td>Equilibra fotossíntese e respiração</td><td>Por que um lago libera O₂ de dia?</td><td>Conservação da massa, coeficientes.</td></tr>
+ <tr><td>5. Dia e noite na baía</td><td>Escolhe a cobertura de aguapé para evitar hipóxia com sol e com nuvens</td><td>Por que a mortandade aparece ao amanhecer?</td><td>Ciclo diário de O₂, respiração, hipóxia.</td></tr></table>
+ <h3>Avaliação</h3>
+ <p>Use o relatório de campo impresso e a frase escrita por cada dupla. Todos os instrumentos têm o mesmo peso. Observe se o aluno usa um número do próprio experimento (por exemplo, as bolhas a 10 cm e a 30 cm) para justificar uma conclusão.</p>
+ <h3>Sequência de 3 aulas</h3>
+ <ol><li><b>Aula 1.</b> Jogo completo e discussão.</li><li><b>Aula 2.</b> Experimento real com egéria (vendida em lojas de aquário), lâmpada e água com bicarbonato, contando bolhas em 3 distâncias. Compare com o gráfico do jogo.</li><li><b>Aula 3.</b> Leitura sobre a decoada no Pantanal e produção de um texto que explique a mortandade de peixes usando fotossíntese e respiração.</li></ol>
+ <h3>Cuidados na mediação</h3>
+ <p>As bolhas, os fatores do barril e as curvas de oxigênio são modelos simplificados do jogo; os números não são medidas de uma planta ou de uma baía real. As bolhas da egéria não são oxigênio puro, e a contagem é uma medida aproximada. No experimento real, a lâmpada perto do béquer também esquenta a água; use lâmpada de LED ou um recipiente com água entre a lâmpada e a planta. A regra do mínimo de Blackman é uma simplificação: na natureza, luz, CO₂ e temperatura costumam limitar a fotossíntese ao mesmo tempo.</p>
+ <h3>De onde vêm os números</h3>
+ <p><b>Fase 5.</b> Limite de hipóxia de 2 mL/L, cerca de 2,8 mg/L, usado por Diaz e Rosenberg (2008). Saturação de oxigênio em água doce a 30 °C, cerca de 7,6 mg/L (Benson e Krause, 1984). A decoada e os eventos sem oxigênio no Pantanal são descritos por Hamilton e colegas (1997). <b>Fase 4.</b> Origem do O₂ na água: Ruben e colegas (1941). <b>Fase 3.</b> Fatores limitantes: Blackman (1905).</p>
+ <h3>Referências</h3>
+ <ul class="ref">
+ <li>Benson BB, Krause D. The concentration and isotopic fractionation of oxygen dissolved in freshwater and seawater in equilibrium with the atmosphere. Limnology and Oceanography, 29(3):620-632, 1984.</li>
+ <li>Blackman FF. Optima and limiting factors. Annals of Botany, 19(74):281-295, 1905.</li>
+ <li>Diaz RJ, Rosenberg R. Spreading dead zones and consequences for marine ecosystems. Science, 321(5891):926-929, 2008. doi:10.1126/science.1156401</li>
+ <li>Hamilton SK, Sippel SJ, Calheiros DF, Melack JM. An anoxic event and other biogeochemical effects of the Pantanal wetland on the Paraguay River. Limnology and Oceanography, 42(2):257-272, 1997.</li>
+ <li>Ruben S, Randall M, Kamen M, Hyde JL. Heavy oxygen (O18) as a tracer in the study of photosynthesis. Journal of the American Chemical Society, 63(3):877-879, 1941.</li></ul>
+ </div>`;
+ $('bVt').onclick=inicio;$('bPr').onclick=()=>window.print();
+}
+
+/* ================= RANKING ================= */
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="bolhas-de-luz";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__a={get S(){return S},get G(){return G},FASES,inicio,novo,intro,guia};
+inicio();
+</script>
+</body>
+</html>
