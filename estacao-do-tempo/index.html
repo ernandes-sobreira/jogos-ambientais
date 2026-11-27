@@ -214,9 +214,9 @@ function poeSaldo(v,max){const e=$('mSaldo');if(!e)return;const f=e.querySelecto
 const FASES=[
  {nome:'Monte a estação',ic:'🛠️',obj:'Instalar os 4 instrumentos da estação meteorológica da escola nos lugares certos.',passos:[['✋','Arraste um instrumento de cima'],['📍','Solte num dos lugares que piscam'],['💬','O jogo explica cada escolha']],ini:()=>f1()},
  {nome:'Caça-chuva',ic:'🌧️',obj:'Pegar a chuva com a caixa coletora e descobrir quantos milímetros choveu, em 3 rodadas.',passos:[['↔️','Arraste a caixa para baixo da nuvem'],['🫙','Encha o pote até a marca'],['📏','Toque na resposta certa']],ini:()=>f2()},
- {nome:'Barômetro manda',ic:'🧭',obj:'Ler a pressão e a umidade de 4 dias e prever se vem chuva ou tempo firme.',passos:[['👀','Veja os ponteiros se mexerem'],['🧭','Pressão caindo ou subindo?'],['👆','Toque na sua previsão']],ini:()=>f3()},
- {nome:'Sensação térmica',ic:'🥵',obj:'Prever o efeito da umidade no calor e escolher um horário seguro para a Educação Física em 2 dias.',passos:[['🔮','Faça a previsão'],['✋','Arraste o bloco da aula pela linha do dia'],['✅','Solte e o jogo calcula a sensação']],ini:()=>f4()},
- {nome:'Boletim da escola',ic:'📺',obj:'Montar o boletim do tempo com previsão para amanhã, alerta de calor e recado para a escola.',passos:[['📊','Leia o painel da estação'],['👆','Toque em cada quadro para trocar'],['📺','Acerte os 3 e apresente']],ini:()=>f5()}
+ {nome:'Barômetro de Cuiabá',ic:'🧭',obj:'Descobrir a maré do ar e prever a chuva em 5 dias reais da estação do INMET em Cuiabá.',passos:[['🤔','Caia ou não na armadilha da tarde'],['🧭','Compare a pressão com a de ontem'],['🔎','Veja o que aconteceu de verdade']],ini:()=>f3()},
+ {nome:'Sensação térmica',ic:'🥵',obj:'Prever o efeito da umidade no calor e achar um horário seguro para a Educação Física em 2 dias reais de quadras de Cáceres.',passos:[['🔮','Faça a previsão'],['✋','Arraste o bloco da aula pela linha do dia'],['🚫','Se nenhuma hora servir, diga isso']],ini:()=>f4()},
+ {nome:'Boletim da escola',ic:'📺',obj:'Montar o boletim de uma tarde real de Cuiabá e conferir com o que aconteceu.',passos:[['📊','Leia o painel da estação'],['👆','Toque em cada quadro para trocar'],['🔎','Compare com o que aconteceu']],ini:()=>f5()}
 ];
 function intro(){parar();G=null;cx=null;hud();const F=FASES[S.f];$('rankBox').style.display='none';
  $('tela').innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><div class="n">FASE ${S.f+1} DE ${FASES.length}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left;max-width:420px;margin:12px auto 0"><b>🎯 Objetivo</b><span>${F.obj}</span></div>
@@ -303,83 +303,108 @@ function f2(){G={t:0,r:0,L:0,bx:200,drag:false,fase:'pegar',tent:0,pts:0,cx:400}
  acao('A nuvem anda. Arraste a caixa coletora para ficar embaixo da chuva até o pote encher na marca.');rodar();}
 
 /* ---------- FASE 3 ---------- */
-const DIAS3=[{p:[1016,1009],u:[55,86],ceu:'nuv',ok:1,txt:'Dia 1'},{p:[1006,1014],u:[90,58],ceu:'limpa',ok:0,txt:'Dia 2'},{p:[1014,1007],u:[58,82],ceu:'limpa',ok:1,txt:'Dia 3'},{p:[1007,1015],u:[84,52],ceu:'nuv',ok:0,txt:'Dia 4'}];
-function f3(){G={t:0,d:0,k:0,pts:0,tent:0,fim:0};telaJogo('🧭 Barômetro manda','dia 1 de 4');
- const D=()=>DIAS3[G.d];
- G.desenha=c=>{c.fillStyle='#f3fafb';c.fillRect(0,0,W,H);const d=D(),k=Math.min(1,G.k),p=d.p[0]+(d.p[1]-d.p[0])*k,u=d.u[0]+(d.u[1]-d.u[0])*k;
-  painel(c,20,16,470,340);c.fillStyle='#005662';c.font='800 18px system-ui';c.textAlign='left';c.fillText(`📅 ${d.txt}: de manhã até a tarde`,40,46);
-  barometro(c,140,190,92,p,980,1040,'hPa','#00838f');c.fillStyle='#263238';c.font='800 22px system-ui';c.textAlign='center';c.fillText(`${Math.round(p)}`,140,322);
-  const seta=d.p[1]<d.p[0];c.fillStyle=seta?'#e53935':'#2e7d32';c.font='800 16px system-ui';c.fillText(k>.15?(seta?'▼ caindo':'▲ subindo'):'',140,346);
-  barometro(c,370,190,72,u,0,100,'%','#0288d1');c.fillStyle='#263238';c.font='800 20px system-ui';c.fillText(`💧 ${Math.round(u)}%`,370,300);c.font='800 13px system-ui';c.fillStyle='#546e7a';c.fillText('umidade do ar',370,322);
-  const us=d.u[1]>d.u[0];c.fillStyle=us?'#0288d1':'#ef6c00';c.font='800 16px system-ui';c.fillText(k>.15?(us?'▲ subindo':'▼ secando'):'',370,346);
-  c.save();c.beginPath();c.roundRect(510,16,232,340,14);c.clip();ceu(c,H,d.ceu==='nuv');c.fillStyle='#a5d6a7';c.fillRect(510,300,232,60);
-  if(d.ceu==='nuv'){nuvem(c,540,90,1.2,'#eceff1');nuvem(c,620,130,1.4,'#cfd8dc');nuvem(c,560,180,1,'#eceff1');}else{sol(c,640,90,26);nuvem(c,560,170,.7);}
-  c.restore();c.strokeStyle='#b2ebf2';c.lineWidth=3;c.beginPath();c.roundRect(510,16,232,340,14);c.stroke();c.fillStyle='#005662';c.font='800 14px system-ui';c.fillText('🪟 o céu agora',626,342);};
+/* Dados reais: INMET, estação automática A901 Cuiabá, pressão ao nível da estação (hPa), umidade relativa (%), horário de Cuiabá. */
+const MARE=[990.5,990.1,989.8,989.6,989.8,990.2,990.9,991.6,992.3,992.6,992.4,991.9,990.9,989.8,988.7,988.0,987.8,987.9,988.4,989.2,990.0,990.6,990.9,990.8];
+const DIAS3=[{d:'4 dez 2022',p:[985.1,983.2],u:[62,78],ok:1,mm:7.0},{d:'19 ago 2022',p:[991.5,999.7],u:[58,33],ok:0,mm:0},{d:'11 mar 2020',p:[987.6,986.0],u:[34,47],ok:1,mm:1.6},{d:'7 mai 2020',p:[992.2,997.5],u:[86,75],ok:0,mm:0},{d:'9 jan 2019',p:[982.9,980.9],u:[52,66],ok:1,mm:0}];
+function f3(){G={t:0,etapa:0,d:0,k:0,pts:0,fim:0};telaJogo('🧭 Barômetro de Cuiabá','armadilha');
+ const dial=(c,x,y,r,v,min,max,lab,cor)=>barometro(c,x,y,r,v,min,max,lab,cor);
+ const curva=c=>{painel(c,20,16,720,340);c.fillStyle='#005662';c.font='800 17px system-ui';c.textAlign='left';c.fillText('Pressão média em cada hora do dia · Cuiabá, INMET, 2019 a 2023',40,46);
+  const X=h=>80+h*26,Y=p=>320-(p-987)*36;c.strokeStyle='#e0f2f1';c.lineWidth=1;for(let p=988;p<=993;p++){c.beginPath();c.moveTo(70,Y(p));c.lineTo(700,Y(p));c.stroke();c.fillStyle='#78909c';c.font='700 11px system-ui';c.textAlign='right';c.fillText(p,64,Y(p)+4);}
+  c.strokeStyle='#00838f';c.lineWidth=4;c.lineJoin='round';c.beginPath();const n=Math.min(24,Math.floor(G.k*24)+1);for(let h=0;h<n;h++){const x=X(h),y=Y(MARE[h]);h?c.lineTo(x,y):c.moveTo(x,y);}c.stroke();
+  c.fillStyle='#455a64';c.textAlign='center';c.font='700 11px system-ui';for(let h=0;h<24;h+=3)c.fillText(h+'h',X(h),340);
+  if(G.k>.8){c.fillStyle='#e53935';c.font='800 13px system-ui';c.fillText('▼ cai toda tarde',X(13),Y(989)-40);c.fillStyle='#2e7d32';c.fillText('▲ máximo perto das 9h',X(9),Y(992.6)-14);}};
+ G.desenha=c=>{c.fillStyle='#f3fafb';c.fillRect(0,0,W,H);const k=Math.min(1,G.k);
+  if(G.etapa===1){curva(c);return;}
+  if(G.etapa===0){const p=985.2+(980.9-985.2)*k;painel(c,20,16,720,340);c.fillStyle='#005662';c.font='800 18px system-ui';c.textAlign='left';c.fillText('📅 9 jan 2019 · INMET Cuiabá · das 9h às 15h',40,48);
+   dial(c,240,196,110,p,970,1010,'hPa','#00838f');c.fillStyle='#263238';c.font='800 24px system-ui';c.textAlign='center';c.fillText(p.toFixed(1).replace('.',','),240,340);
+   c.fillStyle='#e53935';c.font='800 22px system-ui';c.fillText(k>.2?'▼ caindo':'',520,190);c.fillStyle='#455a64';c.font='700 16px system-ui';c.fillText('9h: 985,2 hPa',520,230);c.fillText(k>.95?'15h: 980,9 hPa':'',520,258);return;}
+  const d=DIAS3[G.d],p=d.p[0]+(d.p[1]-d.p[0])*k,u=d.u[0]+(d.u[1]-d.u[0])*k;
+  painel(c,20,16,720,340);c.fillStyle='#005662';c.font='800 17px system-ui';c.textAlign='left';c.fillText(`📅 ${d.d} · INMET Cuiabá · ontem às 15h → hoje às 15h`,40,46);
+  dial(c,170,186,96,p,970,1010,'hPa','#00838f');c.fillStyle='#263238';c.font='800 22px system-ui';c.textAlign='center';c.fillText(p.toFixed(1).replace('.',','),170,318);
+  const dp=d.p[1]-d.p[0];c.fillStyle=dp<0?'#e53935':'#2e7d32';c.font='800 16px system-ui';c.fillText(k>.2?`${dp<0?'▼':'▲'} ${Math.abs(dp).toFixed(1).replace('.',',')} hPa em 24 h`:'',170,342);
+  dial(c,420,186,80,u,0,100,'%','#0288d1');c.fillStyle='#263238';c.font='800 20px system-ui';c.fillText(`💧 ${Math.round(u)}%`,420,300);
+  const du=d.u[1]-d.u[0];c.fillStyle=du>0?'#0288d1':'#ef6c00';c.font='800 16px system-ui';c.fillText(k>.2?`${du>0?'▲':'▼'} ${Math.abs(du)} pontos`:'',420,342);
+  if(G.rev){c.fillStyle=d.mm>0?'#e3f2fd':'#fff8e1';c.beginPath();c.roundRect(540,90,180,170,14);c.fill();c.fillStyle='#263238';c.font='800 14px system-ui';c.fillText('O que aconteceu',630,118);c.font='44px system-ui';c.fillText(d.mm>0?'🌧️':'🌙',630,176);
+   c.font='800 16px system-ui';c.fillText(d.mm>0?`choveu ${String(d.mm).replace('.',',')} mm`:'não choveu',630,214);c.font='700 12px system-ui';c.fillStyle='#546e7a';c.fillText('das 16h às 3h',630,236);}};
  G.upd=dt=>{if(G.k<1)G.k+=dt*.45;};
- const dia=()=>{G.k=0;$('info').textContent=`dia ${G.d+1} de 4`;let t=0;
-  acao(G.d===0?'Regra dos observadores do tempo: pressão caindo com umidade subindo costuma anunciar chuva. Pressão subindo com ar secando, tempo firme.':G.d===2?'Atenção: olhe os instrumentos, não só o céu.':'Veja os ponteiros e faça a previsão para a noite.');
-  opcoes('Previsão para a noite:',['☀️ Tempo firme','🌧️ Chuva chegando'],(o)=>{t++;G.tent++;if(o===D().ok){G.pts+=t===1?45:15;$('ctrl').innerHTML='';
-    acao(['✅ Pressão caindo e ar cada vez mais úmido: o tempo vai virar.','✅ Pressão subindo e ar secando: tempo firme, mesmo depois de um dia úmido.','✅ O céu ainda está azul, mas a pressão caiu e a umidade subiu. A chuva vem chegando.','✅ Ainda tem nuvens, mas a pressão sobe e o ar seca. Elas vão se desfazer.'][G.d]);
-    setTimeout(()=>{G.d++;if(G.d>=4){fimFase(G.pts+20,true,'A pressão do ar é o peso da coluna de ar sobre nós. Quando ela cai e a umidade sobe, é comum que o ar esteja subindo e formando nuvens de chuva. Quando a pressão sobe e o ar seca, o tempo tende a ficar firme. Os instrumentos mostram a mudança antes de o céu mudar. Os serviços de meteorologia juntam medidas das estações, imagens de satélite e modelos de computador para fazer a previsão.','Por que um céu azul de manhã não garante uma tarde sem chuva?');return;}dia();},2400);}
-   else acao(G.d>=2?'Olhe de novo os ponteiros: o céu engana, os instrumentos não.':'Olhe a seta da pressão e a da umidade.');});};
- dia();rodar();}
+ const trap=()=>{acao('Um observador viu a pressão cair a tarde toda. Ele deve prever chuva para a noite?');
+  opcoes('O que você faria?',['🌧️ Prever chuva: a pressão caiu','🤔 Comparar com ontem, na mesma hora'],(o)=>{if(o===1)G.pts+=50;$('ctrl').innerHTML='';
+   acao((o===1?'✅ Boa desconfiança. ':'Cuidado! ')+'Nesse dia não choveu. Veja por quê: em Cuiabá a pressão sobe de manhã e cai toda tarde, sozinha, uma espécie de maré do ar.');
+   setTimeout(()=>{G.etapa=1;G.k=0;$('info').textContent='maré do ar';$('ctrl').innerHTML='<button class="btn" id="bOk">Entendi: comparar com ontem</button>';$('bOk').onclick=()=>{G.etapa=2;dia();};},2600);});};
+ const dia=()=>{G.k=0;G.rev=0;$('info').textContent=`dia ${G.d+1} de ${DIAS3.length}`;let t=0;
+  acao(G.d===0?'Agora comparando com ontem às 15h. Pressão caindo e ar umedecendo aumentam a chance de chuva. Pressão subindo e ar secando, pouca chance.':'Compare com ontem e faça a previsão para a noite.');
+  opcoes('Previsão para a noite:',['☀️ Pouca chance de chuva','🌧️ Chance de chuva maior'],(o)=>{t++;if(o===DIAS3[G.d].ok){G.pts+=t===1?40:15;$('ctrl').innerHTML='';G.rev=1;const d=DIAS3[G.d];
+    acao(d.ok&&d.mm===0?'✅ Pela regra, a chance subiu. Mas nessa noite não choveu: previsão é chance, não certeza.':d.ok?`✅ E choveu mesmo: ${String(d.mm).replace('.',',')} mm.`:'✅ Pressão subindo e ar secando. A noite ficou seca.');
+    setTimeout(()=>{G.d++;if(G.d>=DIAS3.length){fimFase(G.pts+10,true,'Em Cuiabá, a pressão sobe de manhã e cai à tarde todos os dias, por causa do aquecimento do ar. Por isso, para prever o tempo, o observador compara com o mesmo horário do dia anterior. Nos dados do INMET de Cuiabá de 2019 a 2023, quando a pressão caiu e a umidade subiu em 24 horas, choveu à noite em cerca de 1 a cada 4 dias, mais que o dobro de um dia comum. Quando a pressão subiu e o ar secou, nenhuma das 23 noites teve chuva. A regra ajuda, mas não garante: a previsão oficial junta estações, satélites e modelos de computador.','Por que a previsão do tempo fala em "chance de chuva" e não em certeza?');return;}dia();},3200);}
+   else acao('Olhe as duas setas: a da pressão e a da umidade, comparadas com ontem.');});};
+ trap();rodar();}
 
 /* ---------- FASE 4 ---------- */
-const DIA4=[{n:'Dia seco',T:[24,26,28,30,32,34,35,36,36,35,33],U:[60,52,45,38,32,28,25,22,20,22,26]},{n:'Dia úmido',T:[25,27,29,31,32,33,33,34,33,32,30],U:[90,85,78,70,65,62,60,58,60,65,72]}];
-function f4(){G={t:0,fase:0,d:0,bx:380,drag:false,feito:[],pts:0,tent:0};telaJogo('🥵 Sensação térmica','previsão');
- const X=i=>70+i*62,BY=316;
+/* Dados reais: médias horárias do sensor na quadra descoberta de duas escolas de Cáceres (MT), 2026. */
+const DIA4=[{n:'2 jun 2026 · quadra descoberta',T:[24.1,23.7,23.7,23.4,23.2,22.9,22.5,22.4,22.6,23.0],U:[81,82,83,80,80,79,79,80,80,79],nenhum:false},
+ {n:'21 mai 2026 · quadra descoberta',T:[29.1,31.1,30.8,30.4,30.7,31.0,31.4,31.6,31.7,31.7],U:[72,67,68,70,70,70,70,70,70,70],nenhum:true}];
+function f4(){G={t:0,fase:0,d:0,bx:380,drag:false,feito:[],pts:0,tent:0,fim:0};telaJogo('🥵 Sensação térmica','previsão');
+ const NH=10,X=i=>80+i*66,BY=316;
  G.desenha=c=>{c.fillStyle='#fffaf3';c.fillRect(0,0,W,H);const D=DIA4[G.d];
-  painel(c,14,10,732,50);c.fillStyle='#005662';c.font='800 16px system-ui';c.textAlign='left';c.fillText(G.fase===0?'🥵 Calor e umidade':`📅 ${D.n} (exemplo) · temperatura e umidade de hora em hora`,28,41);
+  painel(c,14,10,732,50);c.fillStyle='#005662';c.font='800 16px system-ui';c.textAlign='left';c.fillText(G.fase===0?'🥵 Mesmo termômetro, sensações diferentes':`📅 ${D.n} · média por hora`,28,41);
   if(G.fase===0){const a=hiC(34,80),b=hiC(34,30);[[200,'Ar úmido',80,a],[560,'Ar seco',30,b]].forEach(([x,n,u,h])=>{painel(c,x-150,80,300,240);c.fillStyle='#263238';c.font='800 20px system-ui';c.textAlign='center';c.fillText(n,x,116);
     termometro(c,x-60,200,2.2);c.font='800 30px system-ui';c.fillText('34 °C',x+40,190);c.font='800 20px system-ui';c.fillStyle='#0288d1';c.fillText(`💧 ${u}%`,x+40,226);
     if(G.rev){const k=cat(h);c.fillStyle=CAT[k][2];c.beginPath();c.roundRect(x-120,260,240,44,10);c.fill();c.fillStyle='#fff';c.font='800 17px system-ui';c.fillText(`sente como ${Math.round(h)} °C`,x,288);}});return;}
-  for(let i=0;i<11;i++){const x=X(i),t=D.T[i],u=D.U[i],h=(t-20)*9;c.fillStyle='#ffccbc';c.beginPath();c.roundRect(x-20,BY-h,40,h,[8,8,0,0]);c.fill();c.fillStyle='#bf360c';c.font='800 14px system-ui';c.textAlign='center';c.fillText(t+'°',x,BY-h-24);
+  for(let i=0;i<NH;i++){const x=X(i),t=D.T[i],u=D.U[i],h=(t-18)*12;c.fillStyle='#ffccbc';c.beginPath();c.roundRect(x-22,BY-h,44,h,[8,8,0,0]);c.fill();c.fillStyle='#bf360c';c.font='800 14px system-ui';c.textAlign='center';c.fillText(String(t).replace('.',',')+'°',x,BY-h-24);
    c.fillStyle='#0288d1';c.font='700 12px system-ui';c.fillText(u+'%',x,BY-h-8);c.fillStyle='#455a64';c.font='800 13px system-ui';c.fillText((7+i)+'h',x,BY+18);
    const f=G.feito.find(q=>q.d===G.d&&q.i===i);if(f){const k=cat(f.h);c.fillStyle=CAT[k][2];c.beginPath();c.roundRect(x-26,BY+26,52,22,6);c.fill();c.fillStyle=k===1?'#263238':'#fff';c.font='800 11px system-ui';c.fillText(Math.round(f.h)+'°',x,BY+41);}}
-  c.strokeStyle='#90a4ae';c.lineWidth=2;c.beginPath();c.moveTo(36,BY);c.lineTo(728,BY);c.stroke();
-  const bx=G.bx;c.save();c.shadowColor='rgba(0,0,0,.2)';c.shadowBlur=10;c.fillStyle='#00838f';c.beginPath();c.roundRect(bx-30,72,60,46,10);c.fill();c.restore();c.fillStyle='#fff';c.font='22px system-ui';c.textAlign='center';c.fillText('⚽',bx,98);c.font='800 10px system-ui';c.fillText('Ed. Física',bx,112);
-  c.strokeStyle='rgba(0,131,143,.5)';c.setLineDash([4,4]);c.beginPath();c.moveTo(bx,118);c.lineTo(bx,BY);c.stroke();c.setLineDash([]);
-  if(!G.mexeu){c.fillStyle='#00838f';c.font='800 13px system-ui';c.fillText('↔️ arraste e solte',bx,136);}
-  c.textAlign='left';c.font='700 11px system-ui';let lx=420;[[1,'cuidado'],[2,'cuidado extremo'],[3,'perigo']].forEach(([k,n])=>{c.fillStyle=CAT[k][2];c.fillRect(lx,BY+38,10,10);c.fillStyle='#455a64';c.fillText(n,lx+14,BY+47);lx+=k===2?118:80;});};
+  c.strokeStyle='#90a4ae';c.lineWidth=2;c.beginPath();c.moveTo(44,BY);c.lineTo(728,BY);c.stroke();
+  if(!G.fim){const bx=G.bx;c.save();c.shadowColor='rgba(0,0,0,.2)';c.shadowBlur=10;c.fillStyle='#00838f';c.beginPath();c.roundRect(bx-30,72,60,46,10);c.fill();c.restore();c.fillStyle='#fff';c.font='22px system-ui';c.textAlign='center';c.fillText('⚽',bx,98);c.font='800 10px system-ui';c.fillText('Ed. Física',bx,112);
+   c.strokeStyle='rgba(0,131,143,.5)';c.setLineDash([4,4]);c.beginPath();c.moveTo(bx,118);c.lineTo(bx,BY);c.stroke();c.setLineDash([]);
+   if(!G.mexeu){c.fillStyle='#00838f';c.font='800 13px system-ui';c.fillText('↔️ arraste e solte',bx,136);}}
+  if(G.fase===1){c.textAlign='left';c.font='700 11px system-ui';let lx=470;[[1,'cuidado'],[2,'cuidado extremo'],[3,'perigo']].forEach(([k,n])=>{c.fillStyle=CAT[k][2];c.fillRect(lx,30,10,10);c.fillStyle='#455a64';c.fillText(n,lx+14,39);lx+=k===2?112:76;});}};
  G.upd=()=>{};
- const soltar=()=>{const i=clamp(Math.round((G.bx-70)/62),0,10);G.bx=X(i);const D=DIA4[G.d],h=hiC(D.T[i],D.U[i]),k=cat(h);G.tent++;
+ const passa=msg=>{G.fim=1;$('ctrl').innerHTML='';acao(msg);
+  setTimeout(()=>{if(G.d===0){G.d=1;G.feito=[];G.bx=380;G.fim=0;G.tent=0;ctrlNenhum();acao('Agora um dia de maio na quadra de outra escola. Ache um horário seguro, se houver.');}
+   else fimFase(G.pts+(G.p1?40:0),true,'O corpo se resfria quando o suor evapora. Com o ar úmido, o suor evapora pouco e o corpo sente mais calor do que o termômetro mostra. Nos dados reais de 21 de maio, a quadra ficou acima de 29 °C com cerca de 70% de umidade o dia inteiro, e nenhuma hora ficou abaixo de "cuidado extremo". Em dias assim, a escola precisa trocar a atividade, levar para um lugar mais fresco ou reduzir o esforço, com água à vontade.','Em que horário a Educação Física da nossa escola acontece nos meses quentes? Seria preciso mudar?');},2600);};
+ const ctrlNenhum=()=>{$('ctrl').innerHTML='<button class="btn ghost" id="bNen">🚫 Nenhum horário é seguro hoje</button>';$('bNen').onclick=()=>{G.tent++;
+  if(DIA4[G.d].nenhum){G.pts+=G.tent<=4?80:40;passa('✅ Isso: neste dia nenhuma hora ficou abaixo de cuidado extremo. A aula precisa mudar: atividade leve, na sombra ou na sala, com água.');}
+  else acao('Neste dia existe horário seguro. Arraste o bloco ⚽ e teste.');};};
+ const soltar=()=>{const i=clamp(Math.round((G.bx-80)/66),0,NH-1);G.bx=X(i);const D=DIA4[G.d],h=hiC(D.T[i],D.U[i]),k=cat(h);G.tent++;
   if(!G.feito.find(q=>q.d===G.d&&q.i===i))G.feito.push({d:G.d,i,h});
-  if(h<32.2){G.pts+=G.tent<=2?70:35;acao(`✅ Às ${7+i}h a sensação é de ${Math.round(h)} °C (${CAT[k][1]}). Horário seguro para correr.`);G.tent=0;
-   setTimeout(()=>{if(G.d===0){G.d=1;G.feito=[];G.bx=380;acao('Agora um dia úmido, com temperaturas parecidas. Ache um horário seguro.');}else fimFase(G.pts+(G.p1?40:0),true,'O corpo se resfria quando o suor evapora. Com o ar úmido, o suor evapora pouco e o corpo sente mais calor do que o termômetro mostra. Por isso o dia úmido, com temperaturas até menores, deixou só o começo da manhã seguro. O índice de calor junta temperatura e umidade para estimar essa sensação.','Em que horário a Educação Física da nossa escola acontece nos meses quentes? Seria preciso mudar?');},2400);}
-  else acao(`Às ${7+i}h: ${D.T[i]} °C com ${D.U[i]}% de umidade dá sensação de ${Math.round(h)} °C (${CAT[k][1]}). Procure outro horário.`);};
- ptr((x,y)=>{if(G.fase===1&&y<150&&Math.abs(x-G.bx)<50){G.drag=true;G.dx=G.bx-x;}else if(G.fase===1&&y>=150){G.drag=true;G.dx=0;G.bx=clamp(x,70,690);}},'pointerdown');
- ptr((x)=>{if(G.drag){G.bx=clamp(x+G.dx,70,690);G.mexeu=1;}});ptr(()=>{if(G.drag){G.drag=false;soltar();}},'pointerup');
+  if(h<32.2){G.pts+=G.tent<=2?70:35;passa(`✅ Às ${7+i}h a sensação era de ${Math.round(h)} °C (${CAT[k][1]}). ${G.d===0?'Num dia frio como este, qualquer hora serve.':''}`);}
+  else acao(`Às ${7+i}h: ${String(D.T[i]).replace('.',',')} °C com ${D.U[i]}% de umidade, sensação de ${Math.round(h)} °C (${CAT[k][1]}). ${G.feito.filter(q=>q.d===G.d).length>=3?'Talvez nenhum horário sirva hoje.':'Procure outro horário.'}`);};
+ ptr((x,y)=>{if(G.fase!==1||G.fim)return;if(y<150&&Math.abs(x-G.bx)<50){G.drag=true;G.dx=G.bx-x;}else if(y>=150){G.drag=true;G.dx=0;G.bx=clamp(x,80,X(NH-1));}},'pointerdown');
+ ptr((x)=>{if(G.drag){G.bx=clamp(x+G.dx,80,X(NH-1));G.mexeu=1;}});ptr(()=>{if(G.drag){G.drag=false;soltar();}},'pointerup');
  opcoes('Dois dias com 34 °C. Em qual o corpo sente mais calor?',['No dia de ar seco (30%)','Nos dois é igual','No dia de ar úmido (80%)'],(o)=>{G.p1=o===2;G.rev=1;$('ctrl').innerHTML='';
   acao((G.p1?'✅ Boa previsão. ':'')+`Com 80% de umidade, 34 °C parecem ${Math.round(hiC(34,80))} °C. Com 30%, parecem ${Math.round(hiC(34,30))} °C.`);
-  setTimeout(()=>{G.fase=1;$('info').textContent='2 dias';acao('A Educação Física dura 1 hora. Arraste o bloco ⚽ até um horário em que a sensação fique abaixo de "cuidado extremo".');},3600);});
+  setTimeout(()=>{G.fase=1;$('info').textContent='2 dias reais';ctrlNenhum();acao('Dados reais medidos na quadra de escolas de Cáceres. A aula dura 1 hora: arraste o bloco ⚽ até um horário com sensação abaixo de "cuidado extremo".');},3600);});
  acao('Faça sua previsão.');rodar();}
 
 /* ---------- FASE 5 ---------- */
-const SLOTS=[{n:'Amanhã',ops:['☀️ Sol','⛅ Nublado','🌧️ Chuva'],ok:2},{n:'Calor às 14h',ops:['🟢 Sem alerta','🟠 Cuidado extremo','🔴 Perigo'],ok:2},{n:'Recado',ops:['⚽ Ed. Física cedo','⚽ Ed. Física às 14h','🚫 Sem recado'],ok:0}];
-function f5(){const D=DIA4[1];G={t:0,v:[-1,-1,-1],tent:0,fim:0,tv:0};telaJogo('📺 Boletim da escola','0 de 3');
- const h14=hiC(D.T[7],D.U[7]);const R=i=>[30+i*240,250,220,96];
+/* Dados reais: INMET A901 Cuiabá, 2 e 3 de dezembro de 2019. */
+const B5={T:[28.0,30.4,33.2,34.0],U:[70,60,48,44],H:['7h','9h','12h','14h'],pOntem:989.3,pHoje:986.2,uOntem:46,uHoje:44};
+const SLOTS=[{n:'Hoje à noite',ops:['☀️ Pouca chance de chuva','🌧️ Chance de chuva maior'],ok:1},{n:'Calor às 14h',ops:['🟢 Sem alerta','🟠 Cuidado extremo','🔴 Perigo'],ok:1},{n:'Recado',ops:['⚽ Ed. Física cedo','⚽ Ed. Física às 14h','🚫 Sem recado'],ok:0}];
+function f5(){G={t:0,v:[-1,-1,-1],tent:0,fim:0,tv:0};telaJogo('📺 Boletim da escola','0 de 3');
+ const h14=hiC(34.0,44);const R=i=>[30+i*240,250,220,96];
  G.desenha=c=>{c.fillStyle='#eef7f8';c.fillRect(0,0,W,H);
   if(G.tv){c.fillStyle='#263238';c.beginPath();c.roundRect(20,14,720,344,18);c.fill();const g=c.createLinearGradient(0,30,0,340);g.addColorStop(0,'#006064');g.addColorStop(1,'#00838f');c.fillStyle=g;c.beginPath();c.roundRect(34,28,692,316,12);c.fill();
-   avatar(c,180,344,3.1,A,false);c.fillStyle='#fff';c.font='800 22px system-ui';c.textAlign='left';c.fillText('📺 Boletim da Estação da Escola',300,74);
-   SLOTS.forEach((s,i)=>{c.fillStyle='rgba(255,255,255,.95)';c.beginPath();c.roundRect(300,96+i*76,400,62,12);c.fill();c.fillStyle='#005662';c.font='800 14px system-ui';c.fillText(s.n,316,120+i*76);c.fillStyle='#263238';c.font='800 19px system-ui';c.fillText(s.ops[s.ok],316,145+i*76);});return;}
-  painel(c,14,10,732,226);c.fillStyle='#005662';c.font='800 16px system-ui';c.textAlign='left';c.fillText('📊 Painel da estação, hoje',30,38);
-  barometro(c,110,132,62,1004,980,1040,'hPa','#00838f');c.fillStyle='#e53935';c.font='800 14px system-ui';c.textAlign='center';c.fillText('▼ 1012 → 1004',110,222);
-  barometro(c,280,132,62,D.U[1],0,100,'%','#0288d1');c.fillStyle='#0288d1';c.fillText(`▲ umidade alta`,280,222);
-  c.textAlign='left';c.fillStyle='#263238';c.font='800 15px system-ui';c.fillText('Hoje, de hora em hora (exemplo):',380,66);c.font='700 13px system-ui';
-  [0,3,5,7,9].forEach((i,k)=>{c.fillStyle='#455a64';c.fillText(`${7+i}h   ${D.T[i]} °C   💧 ${D.U[i]}%`,392,94+k*26);});
-  c.fillStyle='#546e7a';c.font='700 12px system-ui';c.fillText('Use o que aprendeu: pressão, umidade e sensação térmica.',392,226);
+   avatar(c,180,344,3.1,A,false);c.fillStyle='#fff';c.font='800 20px system-ui';c.textAlign='left';c.fillText('📺 Boletim · 3 dez 2019, 14h',300,62);
+   SLOTS.forEach((s,i)=>{c.fillStyle='rgba(255,255,255,.95)';c.beginPath();c.roundRect(300,78+i*62,400,52,12);c.fill();c.fillStyle='#005662';c.font='800 13px system-ui';c.fillText(s.n,316,98+i*62);c.fillStyle='#263238';c.font='800 17px system-ui';c.fillText(s.ops[s.ok],316,120+i*62);});
+   if(G.tv>1){c.fillStyle='#fff59d';c.beginPath();c.roundRect(300,270,400,62,12);c.fill();c.fillStyle='#263238';c.font='800 14px system-ui';c.fillText('🔎 O que aconteceu de verdade (INMET):',316,292);c.font='700 13px system-ui';c.fillText('chuva de 6,2 mm às 15h e de 15,4 mm às 18h',316,316);}return;}
+  painel(c,14,10,732,226);c.fillStyle='#005662';c.font='800 16px system-ui';c.textAlign='left';c.fillText('📊 Estação INMET de Cuiabá · 3 de dezembro de 2019, 14h',30,38);
+  barometro(c,110,132,62,B5.pHoje,970,1010,'hPa','#00838f');c.fillStyle='#e53935';c.font='800 13px system-ui';c.textAlign='center';c.fillText('ontem 14h: 989,3',110,212);c.fillText('hoje 14h: 986,2 ▼',110,228);
+  barometro(c,280,132,62,B5.uHoje,0,100,'%','#0288d1');c.fillStyle='#0288d1';c.fillText('ontem 14h: 46%',280,212);c.fillText('hoje 14h: 44%',280,228);
+  c.textAlign='left';c.fillStyle='#263238';c.font='800 15px system-ui';c.fillText('Hoje até agora:',380,66);c.font='700 14px system-ui';
+  B5.H.forEach((h,k)=>{c.fillStyle='#455a64';c.fillText(`${h}   ${String(B5.T[k]).replace('.',',')} °C   💧 ${B5.U[k]}%`,392,96+k*28);});
+  c.fillStyle='#546e7a';c.font='700 12px system-ui';c.fillText('Use pressão comparada com ontem e sensação térmica.',392,224);
   SLOTS.forEach((s,i)=>{const[x,y,w,h]=R(i),v=G.v[i];c.save();c.shadowColor='rgba(0,0,0,.1)';c.shadowBlur=8;c.fillStyle=v<0?'#fff':'#e0f7fa';c.beginPath();c.roundRect(x,y,w,h,14);c.fill();c.restore();
    c.strokeStyle=v<0?'#80deea':'#00838f';c.lineWidth=v<0?2:3;if(v<0)c.setLineDash([6,5]);c.beginPath();c.roundRect(x,y,w,h,14);c.stroke();c.setLineDash([]);
-   c.fillStyle='#005662';c.font='800 14px system-ui';c.textAlign='center';c.fillText(s.n,x+w/2,y+26);c.fillStyle='#263238';c.font=`800 ${v<0?15:17}px system-ui`;c.fillText(v<0?'👆 toque para escolher':s.ops[v],x+w/2,y+64);if(v<0)pulso(c,x+w/2,y+h/2,30);});};
+   c.fillStyle='#005662';c.font='800 14px system-ui';c.textAlign='center';c.fillText(s.n,x+w/2,y+26);c.fillStyle='#263238';c.font=`800 ${v<0?15:16}px system-ui`;c.fillText(v<0?'👆 toque para escolher':s.ops[v],x+w/2,y+64);if(v<0)pulso(c,x+w/2,y+h/2,30);});};
  G.upd=()=>{};
  G.tap=(x,y)=>{if(G.fim)return;const i=SLOTS.findIndex((s,i)=>{const[rx,ry,w,h]=R(i);return x>rx&&x<rx+w&&y>ry&&y<ry+h;});if(i<0)return;G.v[i]=(G.v[i]+1)%SLOTS[i].ops.length;G.tent++;
   const n=G.v.filter(v=>v>=0).length;$('info').textContent=`${n} de 3`;
   if(n<3){acao(`${SLOTS[i].n}: ${SLOTS[i].ops[G.v[i]]}. Toque de novo para trocar.`);return;}
   const err=SLOTS.map((s,k)=>G.v[k]===s.ok?null:s.n).filter(Boolean);
-  if(!err.length){G.fim=1;acao('✅ Boletim pronto! No ar...');setTimeout(()=>{G.tv=1;acao('📺 Você apresentou o boletim da escola.');},1200);
-   setTimeout(()=>fimFase(Math.max(80,200-Math.max(0,G.tent-6)*8),true,`O painel mostrava pressão caindo e umidade alta: sinal de chuva chegando. Às 14h, 34 °C com 58% de umidade dão sensação de cerca de ${Math.round(h14)} °C, na faixa de perigo para atividade física longa. Por isso o recado leva a Educação Física para o começo da manhã. Um boletim bom junta várias medidas para orientar decisões.`,'Que decisão da escola poderia mudar com um boletim do tempo feito pelos próprios alunos?'),4200);}
-  else acao(`Ainda não fecha: revise ${err.join(' e ')}. ${err.includes('Calor às 14h')?'Às 14h são 34 °C com 58% de umidade. ':''}`);};
- acao('Leia o painel e toque em cada quadro de baixo para montar o boletim.');rodar();}
+  if(!err.length){G.fim=1;acao('✅ Boletim pronto! No ar...');setTimeout(()=>{G.tv=1;acao('📺 Você apresentou o boletim. Agora veja o que aconteceu de verdade.');},1200);setTimeout(()=>{G.tv=2;},3000);
+   setTimeout(()=>fimFase(Math.max(80,200-Math.max(0,G.tent-6)*8),true,`O painel mostrava a pressão 3,1 hPa abaixo da de ontem no mesmo horário, sinal de que a chance de chuva aumentou. Às 14h, 34 °C com 44% de umidade dão sensação de cerca de ${Math.round(h14)} °C, na faixa de cuidado extremo. Às 7h, 28 °C com 70% davam cerca de ${Math.round(hiC(28,70))} °C, abaixo dessa faixa, por isso a Educação Física cedo. E a chuva veio mesmo: o INMET registrou 6,2 mm às 15h e 15,4 mm às 18h.`,'Que decisão da escola poderia mudar com um boletim do tempo feito pelos próprios alunos?'),6000);}
+  else acao(`Ainda não fecha: revise ${err.join(' e ')}. ${err.includes('Calor às 14h')?'Às 14h são 34 °C com 44% de umidade. ':''}${err.includes('Hoje à noite')?'Compare a pressão de hoje com a de ontem, no mesmo horário. ':''}`);};
+ acao('Dados reais de uma tarde em Cuiabá. Leia o painel e toque em cada quadro de baixo para montar o boletim.');rodar();}
 
 /* ================= INICIO / AVATAR ================= */
 function inicio(){parar();G=null;cx=null;$('hud').style.display='none';$('rankBox').style.display='block';
@@ -432,20 +457,26 @@ function guia(){parar();$('hud').style.display='none';$('rankBox').style.display
  <table class="tab"><tr><th>Fase</th><th>O aluno faz</th><th>Pergunta para a turma</th><th>O que explicar</th></tr>
  <tr><td>1. Monte a estação</td><td>Instala termômetro, pluviômetro, anemômetro e barômetro</td><td>Onde, na escola, caberia um pluviômetro?</td><td>Abrigo meteorológico, altura de medida, obstáculos.</td></tr>
  <tr><td>2. Caça-chuva</td><td>Pega chuva com caixas de áreas diferentes e calcula os milímetros</td><td>Quantos litros 30 mm deixam num pátio de 100 m²?</td><td>1 mm de chuva é 1 litro por metro quadrado.</td></tr>
- <tr><td>3. Barômetro manda</td><td>Lê pressão e umidade de 4 dias e prevê o tempo</td><td>Por que céu azul de manhã não garante tarde seca?</td><td>Pressão atmosférica, tendência, formação de nuvens.</td></tr>
- <tr><td>4. Sensação térmica</td><td>Prevê o efeito da umidade e escolhe horário seguro para Educação Física</td><td>Seria preciso mudar o horário da Educação Física?</td><td>Evaporação do suor, índice de calor, saúde.</td></tr>
- <tr><td>5. Boletim da escola</td><td>Monta e apresenta o boletim</td><td>Que decisão da escola poderia usar esse boletim?</td><td>Previsão como síntese de várias medidas.</td></tr></table>
+ <tr><td>3. Barômetro de Cuiabá</td><td>Cai ou não na armadilha da pressão da tarde e prevê 5 noites reais</td><td>Por que a previsão fala em chance e não em certeza?</td><td>Maré do ar, tendência de 24 horas, probabilidade.</td></tr>
+ <tr><td>4. Sensação térmica</td><td>Prevê o efeito da umidade e busca horário seguro em 2 dias medidos em quadras de Cáceres</td><td>Seria preciso mudar o horário da Educação Física?</td><td>Evaporação do suor, índice de calor, saúde.</td></tr>
+ <tr><td>5. Boletim da escola</td><td>Monta o boletim de uma tarde real e confere com a chuva que caiu</td><td>Que decisão da escola poderia usar esse boletim?</td><td>Previsão como síntese de várias medidas.</td></tr></table>
  <h3>Avaliação</h3>
  <p>Use o relatório de campo impresso e a frase escrita por cada dupla. Todos os instrumentos têm o mesmo peso. Observe se o aluno relaciona a medida com a decisão, e não apenas repete o nome do instrumento.</p>
  <h3>Sequência de 3 aulas</h3>
  <ol><li><b>Aula 1.</b> Jogo completo e discussão.</li><li><b>Aula 2.</b> Construção de um pluviômetro com garrafa PET e cálculo da chuva pela área da boca.</li><li><b>Aula 3.</b> Uma semana de registro diário de temperatura, umidade e chuva no pátio, com previsão feita pela turma.</li></ol>
+ <h3>De onde vêm os dados</h3>
+ <p><b>Fases 3 e 5.</b> Dados horários da estação automática do INMET em Cuiabá (A901), de 2019 a 2023, com pressão ao nível da estação, umidade, temperatura e chuva, no horário de Cuiabá. A curva da maré do ar é a média de cada hora nesses anos: cerca de 992,6 hPa às 9h e 987,8 hPa às 16h. Em todos os 984 dias completos da série, a pressão das 15h ficou abaixo da das 9h. Comparando o mesmo horário de dois dias seguidos (15h), quando a pressão caiu mais de 1 hPa e a umidade subiu mais de 5 pontos, choveu de 16h às 3h em 24% de 21 dias, contra 9% em todos os 984 dias completos. Quando a pressão subiu mais de 1 hPa e a umidade caiu mais de 5 pontos, não choveu em nenhum dos 23 dias. São poucos casos, por isso o jogo fala em chance.</p>
+ <p><b>Fase 4.</b> Médias de cada hora de sensores portáteis instalados nas quadras descobertas de duas escolas de Cáceres em 2026 (2 de junho e 21 de maio), do levantamento do professor Ernandes Sobreira (UNEMAT). Escolhi dias em que o gás carbônico ficou perto do nível do ar livre, sinal de que o sensor estava ao ar livre.</p>
+ <p><b>Fase 2.</b> Os litros e áreas são exercícios de cálculo, não medidas.</p>
  <h3>Cuidado ao explicar</h3>
- <p>Os valores de pressão, umidade e temperatura das fases 3, 4 e 5 são exemplos criados para o jogo, não medidas de uma estação real. As alturas de medida seguem o guia de instrumentos da Organização Meteorológica Mundial, com temperatura entre 1,25 e 2 m em abrigo e vento a 10 m. A regra da pressão é uma simplificação usada por observadores: a previsão oficial do INMET combina dados de estações, modelos numéricos e imagens de satélite. A sensação térmica é calculada pela equação de Rothfusz usada pelo Serviço Nacional de Meteorologia dos Estados Unidos, baseada no trabalho de Steadman (1979). As faixas de cuidado, cuidado extremo e perigo também são desse serviço e foram convertidas para graus Celsius.</p>
+ <p>As alturas de medida seguem o guia de instrumentos da Organização Meteorológica Mundial, com temperatura entre 1,25 e 2 m em abrigo e vento a 10 m. A previsão oficial do INMET combina dados de estações, modelos numéricos e imagens de satélite, e não apenas a pressão. A sensação térmica usa a equação de Rothfusz do Serviço Nacional de Meteorologia dos Estados Unidos, baseada em Steadman (1979). O mesmo índice é usado em estudos brasileiros, como o de Lima Júnior et al. (2025) em Fortaleza, mas não foi ajustado especificamente para a população brasileira. As faixas de cuidado, cuidado extremo e perigo são desse serviço, convertidas para graus Celsius.</p>
  <h3>Referências</h3>
  <ul class="ref">
  <li>Steadman RG. The assessment of sultriness. Part I: a temperature-humidity index based on human physiology and clothing science. Journal of Applied Meteorology, 18(7):861-873, 1979. doi:10.1175/1520-0450(1979)018&lt;0861:TAOSPI&gt;2.0.CO;2</li>
  <li>Rothfusz LP. The heat index equation. NWS Southern Region Technical Attachment SR 90-23, 1990.</li>
  <li>World Meteorological Organization. Guide to Meteorological Instruments and Methods of Observation (WMO-No. 8).</li>
+ <li>Lima Júnior AF, Gomes FIBP, Zanella ME. O Índice de Calor (HI) na cidade de Fortaleza, Ceará. Sociedade &amp; Natureza, 37:e73091, 2025. doi:10.14393/SN-v37-2025-73091</li>
+ <li>INMET. Dados horários da estação automática A901, Cuiabá, 2019 a 2023.</li>
  <li>INMET. Sobre meteorologia: passos para a elaboração da previsão do tempo. portal.inmet.gov.br</li></ul>
  </div>`;
  $('bVt').onclick=inicio;$('bPr').onclick=()=>window.print();
