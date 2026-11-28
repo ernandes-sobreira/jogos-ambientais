@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Composteira da Escola</title>
+<style>
+:root{--main:#4d7c0f;--deep:#365314;--soft:#f7fee7;--line:#d9f99d;--ink:#10212b;--mut:#4d6370;--co2:#e53935;--ch4:#ef6c00;--ok:#2e7d32;--bad:#c62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:820px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep);letter-spacing:-.01em}
+h2{font-size:1.2rem;color:var(--deep);margin-bottom:6px;letter-spacing:-.01em}
+h3{font-size:1rem;color:var(--deep);margin:14px 0 6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 12px;font-weight:700;font-size:.86rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.card{border:2px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:var(--deep)}.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.btn.sm{padding:9px 14px;font-size:.92rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas.cena{width:100%;height:auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff;margin-top:10px}
+.top{justify-content:space-between}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--main);color:#fff;border-radius:14px;padding:8px 14px;font-weight:800;font-size:1.05rem}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.tool{border:2px solid var(--line);background:#fff;color:var(--deep);border-radius:12px;padding:9px 12px;font-weight:700;font-family:inherit;font-size:.92rem;cursor:pointer;touch-action:manipulation}
+.tool.on{border-color:var(--main);background:var(--soft)}
+.tool:disabled{opacity:.4}
+.mets{display:grid;gap:8px;margin-top:10px}
+.met{display:grid;grid-template-columns:92px 1fr 52px;gap:8px;align-items:center;font-weight:700;font-size:.9rem}
+.met .bar{position:relative;height:18px;background:#f1f4f5;border-radius:99px;overflow:hidden}
+.met .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;transition:width .15s}
+.met .alvo{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--ink);border-radius:2px}
+.met .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--mut)}
+.met.co2 .fill{background:var(--co2)}.met.ch4 .fill{background:var(--ch4)}
+.saldo .bar{background:linear-gradient(90deg,#e8f5e9 50%,#ffebee 50%)}
+.saldo .zero{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:var(--ink)}
+.saldo .fill{border-radius:0}
+.obj{display:flex;gap:10px;align-items:flex-start;background:#fff8e1;border:2px solid #ffe082;border-radius:14px;padding:10px 12px;margin-top:10px;font-size:.95rem}
+.obj b{color:#8d6e00;white-space:nowrap}
+.acao{display:flex;gap:10px;align-items:center;background:var(--soft);border-left:5px solid var(--main);border-radius:0 12px 12px 0;padding:9px 12px;margin-top:8px;font-weight:600;font-size:.95rem;min-height:64px}@media(max-width:640px){.acao{min-height:5.4em}}
+.acao .dedo{font-size:1.25rem;animation:pulo 1s ease-in-out infinite}
+@keyframes pulo{50%{transform:translateX(4px)}}
+.help{width:34px;height:34px;border-radius:50%;border:2px solid var(--main);background:#fff;color:var(--deep);font-weight:800;font-size:1rem;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(16,33,43,.35);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal .card{max-width:460px;width:100%}
+.intro{text-align:center;padding:26px 18px}
+.intro .ic{font-size:3rem;line-height:1}
+.intro .n{color:var(--mut);font-weight:700;font-size:.85rem;margin-top:8px}
+.passos{display:grid;gap:8px;margin:16px auto;max-width:420px;text-align:left}
+.passos div{display:flex;gap:12px;align-items:center;background:var(--soft);border-radius:12px;padding:10px 14px;font-weight:600}
+.passos b{font-size:1.3rem;min-width:1.6em;text-align:center}
+.res{text-align:center}
+.res .big{font-size:2.6rem;font-weight:800;color:var(--deep);line-height:1.1}
+.res .ok{color:var(--ok);font-weight:800}.res .no{color:var(--bad);font-weight:800}
+.pensa{background:var(--soft);border-radius:14px;padding:12px 14px;margin:14px auto;max-width:520px;text-align:left}
+.pensa b{color:var(--deep)}
+.boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.box{border:2px dashed var(--line);border-radius:14px;padding:10px;min-height:110px;cursor:pointer}
+.box h4{font-size:.92rem;color:var(--deep);margin-bottom:6px}
+.box.alvo{border-color:var(--main);background:var(--soft)}
+.cards{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;min-height:48px}
+.ct{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 11px;font-weight:700;font-size:.9rem;cursor:pointer;box-shadow:0 2px 0 var(--line);font-family:inherit;color:var(--ink);transition:transform .5s}
+.ct.sel{border-color:var(--main);background:var(--soft);transform:translateY(-2px)}
+.ct.certo{border-color:var(--ok);background:#e8f5e9}.ct.errado{border-color:var(--bad);background:#ffebee}
+.ct.movido{animation:voa .8s ease}
+@keyframes voa{0%{transform:translateY(-30px) scale(1.1);opacity:.3}100%{transform:none;opacity:1}}
+.capa{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+.capa canvas{width:100%;height:auto;display:block;border-radius:16px;background:var(--soft)}
+.opts{display:grid;gap:8px;margin-top:6px}
+.opts .l{font-size:.8rem;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.sw{display:flex;gap:6px;flex-wrap:wrap}
+.sw button{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--line);cursor:pointer}
+.sw button.on{box-shadow:0 0 0 3px var(--deep)}
+.sw .tx{width:auto;height:auto;border-radius:10px;padding:6px 10px;font-weight:700;font-size:.85rem;background:#fff;color:var(--deep);font-family:inherit;border:0}
+input.nome{border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit;width:100%}
+input[type=range]{width:100%;accent-color:var(--main)}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:6px}
+.tab th{text-align:left;background:var(--soft);color:var(--deep);padding:7px 6px}
+.tab td{border-bottom:1px solid var(--line);padding:7px 6px;vertical-align:top}
+.guia p,.guia li{font-size:.95rem;margin-bottom:6px}
+.guia ul,.guia ol{padding-left:20px}
+.hab{border-left:5px solid var(--main);background:var(--soft);padding:10px 14px;border-radius:0 12px 12px 0;font-size:.95rem}
+.ref li{font-size:.86rem;color:var(--mut)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+.rel{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center}
+.rel canvas{width:120px;height:120px;border-radius:50%;background:var(--soft)}
+.mini{width:100%;max-width:420px;height:auto;display:block;margin:10px auto 0}
+@media (max-width:620px){.wrap{padding:10px 8px 30px}.card{padding:12px;border-radius:16px}.capa{grid-template-columns:1fr}.met{grid-template-columns:70px 1fr 44px;font-size:.82rem}.chip{font-size:.95rem}.rel{grid-template-columns:80px 1fr}.rel canvas{width:80px;height:80px}}
+@media print{a.hub,header .hud,.ranking,.noprint{display:none!important}.card{border:1px solid #ccc;break-inside:avoid}body{font-size:12px}}
+
+/* ===== pele profissional ===== */
+:root{--main:#4d7c0f;--deep:#365314;--soft:#f7fee7;--line:#d9f99d;--ink:#1f2421;--mut:#5f6b66;--ok:#15803d;--bad:#b3261e}
+body{background:#f6f7f5;color:var(--ink);-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px}
+h1{font-size:1.35rem;font-weight:750;letter-spacing:-.015em;color:var(--ink)}
+h2{color:var(--ink);font-weight:750}
+h3{color:var(--deep);font-size:.95rem;text-transform:uppercase;letter-spacing:.04em}
+a.hub{color:var(--mut);font-weight:600}
+.card{border:1px solid var(--line);border-radius:10px;box-shadow:0 1px 2px rgba(16,24,20,.05)}
+.pill{border-radius:4px;background:#fff;border:1px solid var(--line);color:var(--ink);font-weight:600}
+.btn{border-radius:6px;font-weight:650;padding:11px 20px;letter-spacing:.01em}
+.btn.ghost{border:1px solid var(--line);color:var(--ink)}
+.btn.ghost:hover{background:var(--soft)}
+.tool{border:1px solid var(--line);border-radius:6px;font-weight:600;color:var(--ink)}
+.tool.on{border-color:var(--main);background:var(--soft);box-shadow:inset 0 0 0 1px var(--main)}
+.eyebrow{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.titulo{font-size:1.15rem;font-weight:750;color:var(--ink);letter-spacing:-.01em}
+.obj{background:#fafbfa;border:1px solid var(--line);border-left:3px solid var(--main);border-radius:6px;font-size:.92rem}
+.obj b{color:var(--deep);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding-top:2px}
+.acao{background:#fff;border:1px solid var(--line);border-left:3px solid var(--ink);border-radius:6px;font-weight:500;font-size:.93rem}
+canvas.cena{border:1px solid var(--line);border-radius:8px;background:#fbfcfb}
+.help{border:1px solid var(--line);color:var(--ink);font-weight:700}
+.intro .ic{font-size:2.6rem;font-weight:800;color:var(--main);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.passos div{background:#fafbfa;border:1px solid var(--line);border-radius:6px;font-weight:500}
+.passos b{font-size:.85rem;color:#fff;background:var(--main);border-radius:4px;min-width:1.7em;padding:2px 0}
+.res .big{color:var(--ink)}
+.pensa{background:#fafbfa;border:1px solid var(--line);border-radius:6px}
+.pensa b{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}
+.hab{border-left:3px solid var(--main);border-radius:0 6px 6px 0}
+.tab th{background:#f2f5f3;color:var(--ink);font-size:.82rem}
+.ranking{border:1px solid var(--line);border-radius:10px}
+.ranking h3{background:var(--ink);text-transform:none;letter-spacing:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>Composteira da Escola</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF"></span><span class="pill" id="hP"></span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const W=760,H=372;
+function hex(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mix(a,b,t){const A=hex(a),B=hex(b);return`rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`;}
+
+/* ================= AVATAR ================= */
+const PELES=['#f6d3b8','#e3b18b','#c68a5e','#94603e','#5d3b26'];
+const CABS=['#1b1b1b','#4e342e','#8d6e63','#d4a85a','#b5532f'];
+const CAMISAS=['#00838f','#2e7d32','#f9a825','#c62828','#6a1b9a','#37474f'];
+const ESTILOS=[['curto','Curto'],['cacheado','Cacheado'],['longo','Longo'],['coque','Coque'],['raspado','Raspado']];
+const CHAPEUS=[['nenhum','Sem'],['bone','Boné'],['campo','Chapéu']];
+let A={pele:2,cab:0,estilo:'cacheado',camisa:0,chapeu:'campo',nome:''};
+try{const s=JSON.parse(localStorage.getItem('bc_avatar')||'null');if(s)A=Object.assign(A,s);}catch(e){}
+function salvaA(){try{localStorage.setItem('bc_avatar',JSON.stringify(A));}catch(e){}}
+function avatar(c,x,y,s,a,prancheta){
+ c.save();c.translate(x,y);c.scale(s,s);
+ const pele=PELES[a.pele],cab=CABS[a.cab],cam=CAMISAS[a.camisa];
+ if(a.estilo==='longo'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-39,12.5,15,0,0,7);c.fill();c.fillRect(-12.5,-40,25,22);}
+ if(a.estilo==='cacheado'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-40,15,14.5,0,0,7);c.fill();}
+ c.fillStyle=cam;c.beginPath();c.moveTo(-16,0);c.quadraticCurveTo(-17,-21,-6,-25);c.lineTo(6,-25);c.quadraticCurveTo(17,-21,16,0);c.closePath();c.fill();
+ c.fillStyle='rgba(0,0,0,.12)';c.fillRect(-1,-24,2,24);
+ c.fillStyle=pele;c.fillRect(-3.5,-29,7,6);
+ if(prancheta){c.fillStyle='#8d6e63';c.fillRect(4,-19,13,16);c.fillStyle='#fff';c.fillRect(5.5,-17,10,12);c.strokeStyle='#90a4ae';c.lineWidth=.8;for(let i=0;i<4;i++){c.beginPath();c.moveTo(7,-14+i*2.6);c.lineTo(14,-14+i*2.6);c.stroke();}}
+ c.strokeStyle=cam;c.lineWidth=6;c.lineCap='round';c.beginPath();c.moveTo(-11,-20);c.lineTo(-4,-9);c.stroke();
+ c.fillStyle=pele;c.beginPath();c.arc(-3,-8,3,0,7);c.fill();
+ c.fillStyle=pele;c.beginPath();c.ellipse(0,-39,9.5,11,0,0,7);c.fill();
+ c.beginPath();c.arc(-9.4,-38,2.3,0,7);c.arc(9.4,-38,2.3,0,7);c.fill();
+ c.fillStyle=cab;
+ if(a.estilo==='curto'){c.beginPath();c.ellipse(0,-44.5,10,6.8,0,Math.PI,0);c.fill();c.fillRect(-10,-46,2.8,7);c.fillRect(7.2,-46,2.8,7);}
+ if(a.estilo==='cacheado'){for(let i=0;i<13;i++){const an=Math.PI*(.8+i*1.4/12);c.beginPath();c.arc(Math.cos(an)*12,-41+Math.sin(an)*11.5,4.2,0,7);c.fill();}}
+ if(a.estilo==='longo'){c.beginPath();c.ellipse(0,-44.5,10.6,7.2,0,Math.PI,0);c.fill();}
+ if(a.estilo==='coque'){c.beginPath();c.ellipse(0,-44.5,10,6.4,0,Math.PI,0);c.fill();c.beginPath();c.arc(0,-53,5.2,0,7);c.fill();}
+ if(a.estilo==='raspado'){c.globalAlpha=.5;c.beginPath();c.ellipse(0,-44,9.8,6.2,0,Math.PI,0);c.fill();c.globalAlpha=1;}
+ c.fillStyle='#2b2a26';c.beginPath();c.arc(-3.4,-39,1.25,0,7);c.arc(3.4,-39,1.25,0,7);c.fill();
+ c.strokeStyle='#2b2a26';c.lineWidth=1;c.beginPath();c.arc(0,-35.6,2.6,.25,Math.PI-.25);c.stroke();
+ if(a.chapeu==='bone'){c.fillStyle=cam;c.beginPath();c.ellipse(0,-46,10.6,5.8,0,Math.PI,0);c.fill();c.fillRect(-10.6,-47,21.2,2.6);c.beginPath();c.ellipse(8.5,-46.2,8,2.2,0,0,7);c.fill();}
+ if(a.chapeu==='campo'){c.fillStyle='#d7c49e';c.beginPath();c.ellipse(0,-46,16.5,3.6,0,0,7);c.fill();c.beginPath();c.ellipse(0,-48,9.2,6.4,0,Math.PI,0);c.fill();c.fillStyle='#8d6e63';c.fillRect(-9.2,-49,18.4,1.9);}
+ c.restore();
+}
+function pernas(c,x,y,s,a){c.save();c.translate(x,y);c.scale(s,s);c.fillStyle='#455a64';c.fillRect(-11,0,9,20);c.fillRect(2,0,9,20);c.fillStyle='#3e2723';c.fillRect(-12,18,11,4);c.fillRect(1,18,11,4);c.restore();}
+
+/* ================= CENA ================= */
+const CORES={main:'#4d7c0f',deep:'#365314'};
+function sr(n){const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+function syncMol(){}function partic(){}
+function drawCena(c,G){if(G.desenha)G.desenha(c);}
+/* ================= TELA / LOOP ================= */
+let G=null,S=null,raf=0,ultimo=0,cx=null;
+function laco(ts){const dt=Math.min(.05,(ts-ultimo)/1000||0);ultimo=ts;if(G){G.t+=dt;if(G.upd)G.upd(dt);syncMol(G,dt);partic(G,dt);if(cx)drawCena(cx,G);if(G.extra)G.extra(cx);}raf=requestAnimationFrame(laco);}
+function parar(){cancelAnimationFrame(raf);raf=0;}
+function rodar(){parar();ultimo=performance.now();raf=requestAnimationFrame(laco);}
+function hud(){$('hud').style.display='flex';$('hF').textContent=`Fase ${S.f+1} de ${FASES.length}`;$('hP').textContent=`${Math.max(0,S.tot+S.fp)} pts`;}
+function telaJogo(chip,info){
+ const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><span class="chip" id="chip">${chip}</span><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="acao"><span class="dedo">👉</span><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});
+}
+function acao(t){const e=$('acao');if(e&&e.innerHTML!==t)e.innerHTML=t;}
+function ajuda(){const F=FASES[S.f],d=document.createElement('div');d.className='modal';
+ d.innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn">Entendi</button></div>`;
+ d.onclick=e=>{if(e.target===d||e.target.tagName==='BUTTON')d.remove();};document.body.appendChild(d);}
+function medidor(id,rot,cls,max,alvo){const a=alvo!=null?`<span class="alvo" style="left:${alvo/max*100}%"></span>`:'';return`<div class="met ${cls}" id="${id}" data-max="${max}"><span>${rot}</span><div class="bar"><span class="fill"></span>${a}</div><span class="v"></span></div>`;}
+function poeMed(id,v){const e=$(id);if(!e)return;const m=+e.dataset.max;e.querySelector('.fill').style.width=clamp(v/m*100,0,100)+'%';e.querySelector('.v').textContent=Math.round(v);}
+function poeSaldo(v,max){const e=$('mSaldo');if(!e)return;const f=e.querySelector('.fill'),p=clamp(Math.abs(v)/max*50,0,50);if(v<0){f.style.left=(50-p)+'%';f.style.width=p+'%';f.style.background='#43a047';}else{f.style.left='50%';f.style.width=p+'%';f.style.background='#e53935';}e.querySelector('.v').textContent=(v>0?'+':'')+Math.round(v);}
+
+/* ================= FASES ================= */
+const FASES=[
+ {nome:'O que apodrece?',ic:'01',obj:'Enterrar cinco materiais em potes com terra úmida e observar, semana a semana, quanto sobra de cada um.',passos:[['1','Assista à explicação da professora.'],['2','Registre sua hipótese.'],['3','A cada semana, toque nos 5 potes para desenterrar e anotar.']],ini:()=>f1()},
+ {nome:'Seco, úmido ou encharcado?',ic:'02',obj:'Preparar três potes com quantidades diferentes de água e descobrir em qual a casca de banana se decompõe mais rápido.',passos:[['1','Regue cada pote até a umidade pedida.'],['2','Passe 4 semanas.'],['3','Compare o que sobrou e o cheiro.']],ini:()=>f2()},
+ {nome:'Verdes e marrons',ic:'03',obj:'Acertar a receita da composteira misturando restos verdes (úmidos) e marrons (secos) até o ponto de equilíbrio.',passos:[['1','Leia o problema de cada composteira.'],['2','Acrescente baldes verdes ou marrons.'],['3','Deixe o ponteiro na faixa verde.']],ini:()=>f3()},
+ {nome:'Lupa na composteira',ic:'04',obj:'Usar a lupa e o microscópio para encontrar os 8 seres vivos que trabalham na composteira.',passos:[['1','Arraste a lupa sobre a composteira.'],['2','Toque no bichinho quando ele aparecer.'],['3','Use o microscópio para ver o que a lupa não mostra.']],ini:()=>f4()},
+ {nome:'O lixo da escola',ic:'05',obj:'Separar os resíduos do lanche da escola entre composteira, reciclagem e rejeito, e comparar o que iria para o aterro antes e depois.',passos:[['1','Leia o resíduo que aparece.'],['2','Toque no destino certo.'],['3','Veja o gráfico do antes e depois.']],ini:()=>f5()}
+];
+function telaJogo(chip,info){const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><div><div class="eyebrow">Fase ${S.f+1} de ${FASES.length}</div><div class="titulo" id="chip">${chip}</div></div><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>Objetivo</b><span>${F.obj}</span></div><div class="acao"><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});}
+function intro(){parar();G=null;cx=null;hud();const F=FASES[S.f];$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><div class="n">FASE ${S.f+1} DE ${FASES.length}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left;max-width:460px;margin:12px auto 0"><b>Objetivo</b><span>${F.obj}</span></div>
+ <div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn" id="bGo">Começar</button></div>`;
+ $('bGo').onclick=()=>{S.fp=0;F.ini();};}
+function fimFase(pts,ok,oque,pergunta,extraHtml){
+ parar();pts=Math.max(0,Math.round(pts));S.fp=0;S.tot+=pts;S.res[S.f]={pts,ok,oque};hud();
+ $('tela').innerHTML=`<div class="card res"><div class="eyebrow">Fase ${S.f+1} · ${FASES[S.f].nome}</div><div class="big">+${pts}</div>
+ <p class="${ok?'ok':'no'}">${ok?'Meta cumprida':'Meta não cumprida'}</p>${extraHtml||''}
+ <div class="pensa"><b>Síntese</b><br>${oque}</div><div class="pensa"><b>Para discutir</b><br>${pergunta}</div>
+ <div class="row" style="justify-content:center"><button class="btn" id="bNx">${S.f<FASES.length-1?'Próxima fase':'Ver relatório'}</button></div></div>`;
+ $('bNx').onclick=()=>{S.f++;if(S.f<FASES.length)intro();else relatorio();};}
+function ptr(fn,ev){const cv=$('cv');cv.style.touchAction='none';cv.addEventListener(ev||'pointermove',e=>{const r=cv.getBoundingClientRect();fn((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height,e);});}
+function opcoes(perg,ops,cb){$('ctrl').innerHTML=`<div style="width:100%"><b>${perg}</b><div style="display:grid;gap:6px;margin-top:8px">${ops.map((t,i)=>`<button class="tool" style="text-align:left" data-o="${i}">${t}</button>`).join('')}</div></div>`;
+ document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-o]').forEach(x=>x.classList.toggle('on',x===b));cb(+b.dataset.o,b);});}
+const f1x=v=>(Math.round(v*10)/10).toFixed(1).replace('.',',');
+const INK='#1f2421',MUT='#5f6b66',LINE='#dfe3e0',ACC='#4d7c0f',ACC2='#365314',BLUE='#2563a8';
+const ajuste=(xs,ys)=>{const n=xs.length,mx=xs.reduce((a,b)=>a+b)/n,my=ys.reduce((a,b)=>a+b)/n;let sxy=0,sxx=0;xs.forEach((x,i)=>{sxy+=(x-mx)*(ys[i]-my);sxx+=(x-mx)**2;});const b=sxy/sxx;return{b,a:my-b*mx};};
+function eixos(c,o){const{x0,y0,w,h,xmin,xmax,ymin,ymax,xt,yt,xf,yf,titulo}=o;const X=v=>x0+(v-xmin)/(xmax-xmin)*w,Y=v=>y0+h-(v-ymin)/(ymax-ymin)*h;
+ c.fillStyle='#fff';c.fillRect(x0,y0,w,h);c.strokeStyle='#eef0ee';c.lineWidth=1;c.font='500 10.5px system-ui';c.fillStyle=MUT;
+ yt.forEach(v=>{c.beginPath();c.moveTo(x0,Y(v)+.5);c.lineTo(x0+w,Y(v)+.5);c.stroke();c.textAlign='right';c.fillText(yf?yf(v):v,x0-6,Y(v)+3.5);});
+ xt.forEach(v=>{c.textAlign='center';c.fillText(xf?xf(v):v,X(v),y0+h+14);c.fillStyle=MUT;c.fillRect(X(v)-.5,y0+h,1,4);});
+ c.strokeStyle=INK;c.lineWidth=1;c.beginPath();c.moveTo(x0,y0);c.lineTo(x0,y0+h);c.lineTo(x0+w,y0+h);c.stroke();
+ if(titulo){c.fillStyle=INK;c.font='700 11px system-ui';c.textAlign='left';c.fillText(titulo.toUpperCase(),x0,y0-10);}return{X,Y};}
+function painelR(c,y,h){c.fillStyle='#fff';c.fillRect(478,y,268,h);c.strokeStyle=LINE;c.lineWidth=1;c.strokeRect(478.5,y+.5,267,h-1);}
+function rotulo(c,x,y,t,cor){c.fillStyle=cor||MUT;c.font='700 10px system-ui';c.textAlign='left';c.fillText(t.toUpperCase(),x,y);}
+function linhaM(c,x,y,lab,val,cor){c.font='500 12.5px system-ui';c.fillStyle=INK;c.textAlign='left';c.fillText(lab,x,y);c.font='700 12.5px system-ui';c.textAlign='right';c.fillStyle=cor||INK;c.fillText(val,x+240,y);c.strokeStyle='#f0f2f0';c.lineWidth=1;c.beginPath();c.moveTo(x,y+6);c.lineTo(x+240,y+6);c.stroke();}
+function fonte(c,t){c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';c.fillText(t,24,H-8);}
+
+(()=>{const d=Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype,'font');Object.defineProperty(CanvasRenderingContext2D.prototype,'font',{get(){return d.get.call(this);},set(v){d.set.call(this,String(v).replace(/(\d+(?:\.\d+)?)px/,(m,n)=>(+n*FSC).toFixed(1)+'px'));},configurable:true});})();
+let FSC=1.25;
+const ptrU=fn=>ptr(fn,'pointerup');
+const AZ='#0ea5e9',AZ2='#0369a1';
+const nf=v=>Math.round(v).toLocaleString('pt-BR');
+function quebra(c,t,x,y,w,lh){lh*=FSC;const ws=t.split(' ');let l='';for(const p of ws){if(c.measureText(l+p).width>w&&l){c.fillText(l,x,y);l='';y+=lh;}l+=p+' ';}c.fillText(l,x,y);return y;}
+function botao(txt,fn,extra){$('ctrl').innerHTML=(extra||'')+`<span class="small" style="color:var(--mut)">Analise o resultado com calma.</span><button class="btn" id="bCont">${txt}</button>`;$('bCont').onclick=()=>{$('ctrl').innerHTML='';fn();};}
+const RNG=s=>()=>(s=(s*16807)%2147483647)/2147483647;
+const MOB=()=>window.innerWidth<600;
+const TE='#92400e',TE2='#b45309',VM='#dc2626',OK='#15803d',AGUA='#bae6fd';
+function selo(c,x,y,ok,t){c.fillStyle=ok?'#dcfce7':'#fee2e2';c.beginPath();c.roundRect(x,y,240,30,6);c.fill();c.fillStyle=ok?OK:'#b91c1c';c.font='800 13px system-ui';c.textAlign='center';c.fillText(t,x+120,y+20);}
+/* ---------- professora e hipótese ---------- */
+function prof(c){const x=704,y=262;c.fillStyle='#78350f';c.beginPath();c.arc(x,y-56,17,Math.PI,0);c.fill();c.fillRect(x-17,y-56,6,16);c.fillRect(x+11,y-56,6,16);
+ c.fillStyle='#e0ac69';c.beginPath();c.arc(x,y-52,14,0,7);c.fill();c.fillStyle='#1f2937';c.beginPath();c.arc(x-5,y-54,1.8,0,7);c.arc(x+5,y-54,1.8,0,7);c.fill();
+ c.strokeStyle='#1f2937';c.lineWidth=1.5;c.beginPath();c.arc(x,y-49,5,.3,Math.PI-.3);c.stroke();c.fillStyle=ACC;c.beginPath();c.roundRect(x-20,y-36,40,62,10);c.fill();
+ c.strokeStyle='#78350f';c.lineWidth=3;c.beginPath();c.moveTo(x-18,y-18);c.lineTo(x-58,y-52);c.stroke();c.fillStyle='#e0ac69';c.beginPath();c.arc(x-18,y-18,5,0,7);c.fill();
+ c.fillStyle=INK;c.font='800 11px system-ui';c.textAlign='center';c.fillText('Professora',x,y+44);}
+function quadro(c){c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);c.strokeStyle='#e7e5e4';c.lineWidth=2;c.strokeRect(8,8,640,H-16);}
+function aula(P,depois){let i=0;const vai=()=>{G.aD=P[i].d;acao(`<b style="color:var(--main)">Professora:</b> ${P[i].t}`);
+  $('ctrl').innerHTML=(i?'<button class="btn ghost" id="bAv">Voltar</button>':'')+`<button class="btn" id="bAp">${i<P.length-1?'Continuar':'Começar'}</button><span class="small" style="color:var(--mut);margin-left:6px">explicação ${i+1} de ${P.length}</span>`;
+  if(i)$('bAv').onclick=()=>{i--;vai();};$('bAp').onclick=()=>{if(i<P.length-1){i++;vai();}else{G.aD=null;$('ctrl').innerHTML='';depois();}};};vai();}
+function hipotese(perg,ops,depois){acao(`<b style="color:var(--main)">Sua hipótese:</b> ${perg} Escolha antes de fazer o experimento.`);$('ctrl').innerHTML=ops.map((o,k)=>`<button class="tool" data-h="${k}">${o}</button>`).join('');
+ document.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{G.hip=+b.dataset.h;G.hipT=ops[G.hip];$('ctrl').innerHTML='';depois();});}
+const AU=c=>{if(!G.aD)return false;quadro(c);G.aD(c);prof(c);return true;};
+function txtQ(c,lin,x,y,tam){c.textAlign='left';lin.forEach((l,i)=>{c.fillStyle=l[0]==='*'?ACC2:INK;c.font=`${l[0]==='*'?800:500} ${tam||13}px system-ui`;c.fillText(l.replace(/^\*/,''),x,y+i*(tam||13)*1.9);});}
+function seta(c,x1,y1,x2,y2,cor){c.strokeStyle=cor||ACC2;c.fillStyle=cor||ACC2;c.lineWidth=2;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();const a=Math.atan2(y2-y1,x2-x1);c.beginPath();c.moveTo(x2,y2);c.lineTo(x2-9*Math.cos(a-.4),y2-9*Math.sin(a-.4));c.lineTo(x2-9*Math.cos(a+.4),y2-9*Math.sin(a+.4));c.fill();}
+/* ---------- desenhos ---------- */
+function cobertura(c,tipo,x0,x1,y,ys){const r=RNG(Math.round(x0*7+y));for(let x=x0+4;x<x1-2;x+=tipo==='grama'?5:9){const yy=ys?ys(x):y;
+ if(tipo==='grama'){c.strokeStyle=r()<.5?'#16a34a':'#22c55e';c.lineWidth=1.6;c.beginPath();c.moveTo(x,yy);c.lineTo(x+(r()-.5)*4,yy-8-r()*6);c.stroke();}
+ else if(tipo==='palhada'){c.strokeStyle=r()<.5?'#ca8a04':'#a16207';c.lineWidth=2;c.beginPath();const a=(r()-.5)*.6;c.moveTo(x-5,yy-1-r()*2);c.lineTo(x+5*Math.cos(a)+3,yy-1-r()*3+5*Math.sin(a));c.stroke();}}}
+function garrafa(c,x,y,w,h,tipo){c.fillStyle='rgba(224,242,254,.5)';c.strokeStyle='#94a3b8';c.lineWidth=1.5;c.beginPath();c.roundRect(x,y,w,h,8);c.fill();c.stroke();
+ c.beginPath();c.moveTo(x+w,y+6);c.lineTo(x+w+22,y+h*.45);c.lineTo(x+w+22,y+h*.75);c.lineTo(x+w,y+h-4);c.stroke();
+ c.fillStyle='#a16207';c.fillRect(x+2,y+h*.38,w-4,h*.6);c.fillStyle='#854d0e';for(let k=0;k<12;k++)c.fillRect(x+8+k*(w-16)/12,y+h*.6+(k%3)*4,3,3);
+ if(tipo!=='nu')cobertura(c,tipo,x+2,x+w-2,y+h*.38);}
+function copo(c,x,y,vol,tur){c.fillStyle=mix('#bae6fd','#92400e',tur/5);const hh=56*Math.min(1,vol/400);c.fillRect(x+3,y+59-hh,38,hh);c.strokeStyle='#64748b';c.lineWidth=1.5;c.beginPath();c.moveTo(x,y);c.lineTo(x+3,y+60);c.lineTo(x+41,y+60);c.lineTo(x+44,y);c.stroke();
+ c.fillStyle=MUT;c.font='600 8px system-ui';c.textAlign='left';[100,200,300,400].forEach(v=>{c.fillRect(x+40,y+59-56*v/400,4,1);});}
+function gotas(c,x0,x1,y0,y1,t){c.fillStyle='#38bdf8';for(let k=0;k<14;k++){const x=x0+((k*37)%(x1-x0)),yy=y0+((t*160+k*23)%(y1-y0));c.beginPath();c.ellipse(x,yy,1.6,4,0,0,7);c.fill();}}
+
+const VD='#4d7c0f',MR='#92400e';
+/* ---------- desenhos ---------- */
+function pote(c,x,y,ab){c.fillStyle='#e7e5e4';c.beginPath();c.moveTo(x-34,y);c.lineTo(x+34,y);c.lineTo(x+28,y+130);c.lineTo(x-28,y+130);c.closePath();c.fill();
+ c.fillStyle='#78350f';c.beginPath();c.moveTo(x-32,y+18);c.lineTo(x+32,y+18);c.lineTo(x+28,y+126);c.lineTo(x-28,y+126);c.closePath();c.fill();
+ const r=RNG(Math.round(x));for(let i=0;i<14;i++){c.fillStyle='rgba(254,243,199,.35)';c.beginPath();c.arc(x-24+r()*48,y+26+r()*96,1.5,0,7);c.fill();}
+ if(ab){c.fillStyle='#57270b';c.beginPath();c.ellipse(x,y+70,24,30,0,0,7);c.fill();}
+ c.strokeStyle='#a8a29e';c.lineWidth=2;c.beginPath();c.moveTo(x-34,y);c.lineTo(x-28,y+130);c.lineTo(x+28,y+130);c.lineTo(x+34,y);c.stroke();}
+function item(c,k,x,y,p){if(p<=0.02)return;const s=.35+.65*p,esc=1-p;c.save();c.translate(x,y);c.scale(s,s);
+ if(k==='banana'){c.strokeStyle=mix('#eab308','#3f2a14',Math.min(1,esc*1.4));c.lineWidth=9;c.lineCap='round';c.beginPath();c.arc(0,-14,22,.4,2.7);c.stroke();c.lineCap='butt';}
+ else if(k==='pao'){c.fillStyle=mix('#d6a35c','#a3a3a3',esc*.6);c.beginPath();c.roundRect(-18,-16,36,30,8);c.fill();const r=RNG(9);for(let i=0;i<Math.round(esc*24);i++){c.fillStyle=i%3?'#4ade80':'#f8fafc';c.beginPath();c.arc(-15+r()*30,-13+r()*24,2+r()*2,0,7);c.fill();}}
+ else if(k==='folha'){c.fillStyle=mix('#a16207','#57270b',esc);c.beginPath();c.ellipse(0,0,22,11,-.3,0,7);c.fill();c.strokeStyle='rgba(255,255,255,.4)';c.lineWidth=1;c.beginPath();c.moveTo(-20,6);c.lineTo(20,-6);c.stroke();}
+ else if(k==='papel'){c.fillStyle=mix('#f8fafc','#a8a29e',esc);c.fillRect(-18,-14,36,28);c.strokeStyle='#94a3b8';c.lineWidth=1;for(let i=0;i<4;i++){c.beginPath();c.moveTo(-14,-8+i*6);c.lineTo(14,-8+i*6);c.stroke();}}
+ else if(k==='sacola'){c.fillStyle='rgba(255,255,255,.85)';c.strokeStyle='#64748b';c.lineWidth=1.5;c.beginPath();c.moveTo(-16,-8);c.lineTo(16,-8);c.lineTo(13,18);c.lineTo(-13,18);c.closePath();c.fill();c.stroke();c.beginPath();c.arc(-8,-8,5,Math.PI,0);c.arc(8,-8,5,Math.PI,0);c.stroke();}
+ c.restore();}
+
+/* ---------- FASE 1 ---------- */
+const M1=[{n:'Casca de banana',k:'banana',p:[100,75,45,20,6,0,0],cor:'#ca8a04'},{n:'Pão',k:'pao',p:[100,85,62,40,22,10,4],cor:'#16a34a'},{n:'Folha seca',k:'folha',p:[100,96,90,83,75,67,59],cor:'#92400e'},{n:'Papel',k:'papel',p:[100,94,85,73,61,50,40],cor:'#64748b'},{n:'Sacola plástica',k:'sacola',p:[100,100,100,100,100,100,100],cor:'#0ea5e9'}];
+function f1(){FSC=1.25;G={t:0,w:0,obs:new Set(),D:M1.map(()=>[]),dig:-1,dt:0,fim:0,aD:null,fase:'aula'};telaJogo('O que apodrece?','semana 0');
+ const X=i=>66+i*88,Y0=96;
+ const cena=(c,mostra,w)=>{M1.forEach((m,i)=>{const x=X(i);const ab=mostra&&G.obs.has(i);pote(c,x,Y0,ab);if(!mostra||ab)item(c,m.k,x,Y0+70,m.p[w]/100);
+   c.fillStyle=INK;c.font='700 10px system-ui';c.textAlign='center';c.fillText(m.n,x,Y0+150);if(mostra&&!ab&&G.fase==='jogo'&&!G.fim){c.fillStyle=VD;c.font='700 9px system-ui';c.fillText('toque para cavar',x,Y0-8);}});};
+ const P=[{t:'Vamos montar um experimento que dura 6 semanas. Em cada pote colocamos terra do jardim, um pouco úmida, e enterramos um material diferente: casca de banana, pão, folha seca, papel e uma sacola plástica.',d:c=>cena(c,false,0)},
+  {t:'Os potes ficam lado a lado, na mesma sala, com a mesma terra e a mesma água. Assim, a única diferença entre eles é o material enterrado. Toda semana desenterramos com cuidado, olhamos quanto sobrou e enterramos de novo.',d:c=>{cena(c,false,0);c.fillStyle='#fff';c.strokeStyle='#e7e5e4';c.beginPath();c.roundRect(40,272,420,70,10);c.fill();c.stroke();txtQ(c,['*igual em todos: terra, água, lugar e tempo','*diferente: o material enterrado'],56,300,12);}},
+  {t:'No caderno de campo vamos anotar quanto sobrou de cada material, em porcentagem: 100% é inteiro, 0% é quando sumiu. Com as anotações vamos montar um gráfico de linhas, uma linha para cada material.',d:c=>{const O={x0:60,y0:60,w:380,h:220,xmin:0,xmax:6,ymin:0,ymax:100,xt:[0,1,2,3,4,5,6],yt:[0,50,100],yf:v=>v+'%',titulo:'quanto sobrou × semanas'};eixos(c,O);c.fillStyle=MUT;c.font='600 12px system-ui';c.textAlign='center';c.fillText('aqui aparecerão as suas anotações',250,180);}}];
+ const ctrl=()=>{const n=G.obs.size;$('ctrl').innerHTML=n===5&&G.w<6?'<button class="btn" id="bSm">Passar 1 semana</button>':'';if($('bSm'))$('bSm').onclick=()=>{G.w++;G.obs=new Set();$('info').textContent=`semana ${G.w}`;acao(`Semana ${G.w}. Desenterre os 5 potes e anote.`);ctrl();};};
+ G.tap=(x,y)=>{if(G.fase!=='jogo'||G.fim)return;const i=M1.findIndex((_,k)=>Math.abs(x-X(k))<38&&y>Y0-14&&y<Y0+140);if(i<0||G.obs.has(i))return;G.obs.add(i);G.D[i][G.w]=M1[i].p[G.w];
+  acao(`${M1[i].n}, semana ${G.w}: sobrou ${M1[i].p[G.w]}%.${G.obs.size<5?' Cave os outros potes.':''}`);
+  if(G.obs.size===5&&G.w===6){G.fim=1;const certo=G.hip===0;acao(`Fim das 6 semanas. A casca de banana sumiu primeiro e a sacola ficou inteira. Sua hipótese foi: ${G.hipT}. ${certo?'Você acertou.':'O resultado foi outro, e tudo bem: é assim que se aprende.'}`);
+   botao('Ver a explicação',()=>fimFase(200,true,'Quem faz o material sumir são os decompositores: fungos e bactérias que vivem na terra e se alimentam de restos de seres vivos. A casca de banana e o pão são macios e cheios de água e açúcar, por isso foram comidos primeiro. No pão dava para ver o bolor, que é um fungo. A folha seca e o papel são feitos de fibras duras, e demoram mais. A sacola plástica não serve de alimento para esses decompositores e continuou inteira. Quando os decompositores comem os restos, devolvem ao solo os nutrientes que as plantas vão usar de novo.','Se a sacola plástica não apodrece, para onde vão as sacolas que jogamos fora?'));}
+  if(!G.fim)ctrl();};
+ G.upd=()=>{};
+ G.desenha=c=>{if(AU(c))return;c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);c.fillStyle=INK;c.font='800 14px system-ui';c.textAlign='left';c.fillText(`Semana ${G.w} de 6`,30,40);cena(c,true,G.w);
+  painelR(c,20,320);rotulo(c,492,40,'Caderno de campo');const O={x0:520,y0:84,w:204,h:136,xmin:0,xmax:6,ymin:0,ymax:100,xt:[0,2,4,6],yt:[0,50,100],yf:v=>v+'%',titulo:'% que sobrou'};const{X:XX,Y:YY}=eixos(c,O);
+  M1.forEach((m,i)=>{const pts=G.D[i].map((v,w)=>[w,v]).filter(p=>p[1]!=null);c.strokeStyle=m.cor;c.lineWidth=2;c.beginPath();pts.forEach(([w,v],j)=>j?c.lineTo(XX(w),YY(v)):c.moveTo(XX(w),YY(v)));c.stroke();pts.forEach(([w,v])=>{c.fillStyle=m.cor;c.beginPath();c.arc(XX(w),YY(v),2.5,0,7);c.fill();});});
+  M1.forEach((m,i)=>{c.fillStyle=m.cor;c.fillRect(494+(i%2)*120,246+Math.floor(i/2)*16,10,10);c.fillStyle=INK;c.font='500 10px system-ui';c.textAlign='left';c.fillText(m.n,508+(i%2)*120,255+Math.floor(i/2)*16);});
+  if(G.hipT){c.fillStyle=MUT;c.font='600 10px system-ui';c.fillText(`Hipótese: ${G.hipT}`,494,306);}};
+ rodar();aula(P,()=>hipotese('Qual material vai sumir primeiro?',M1.map(m=>m.n),()=>{G.fase='jogo';G.obs=new Set(M1.map((_,i)=>i));M1.forEach((m,i)=>G.D[i][0]=100);acao('Semana 0: os 5 materiais foram enterrados inteiros. Toque em Passar 1 semana.');ctrl();}));}
+
+/* ---------- FASE 2 ---------- */
+const P2=[{n:'Seco',a:0,b:.1,fim:85},{n:'Úmido',a:.4,b:.6,fim:12},{n:'Encharcado',a:.9,b:1,fim:55}];
+function f2(){FSC=1.25;G={t:0,m:[0,0,0],sem:-1,fim:0,aD:null,fase:'aula'};telaJogo('Seco, úmido ou encharcado?','preparando');
+ const X=i=>90+i*150,Y0=110;
+ const potes=(c,ms,s)=>{P2.forEach((p,i)=>{const x=X(i);pote(c,x,Y0,false);const m=ms[i];
+   if(m>0){c.fillStyle=`rgba(14,165,233,${.15+.45*m})`;const top=Y0+126-108*Math.min(1,m*1.05);c.fillRect(x-30,top,60,Y0+126-top);if(m>=.9){c.fillStyle='rgba(56,189,248,.8)';c.fillRect(x-31,Y0+12,62,8);}}
+   const pr=s<0?1:1-(1-p.fim/100)*Math.min(1,s/4);item(c,'banana',x,Y0+60,pr);
+   if(s>=2&&i===2){for(let k=0;k<3;k++){c.strokeStyle='rgba(120,113,108,.6)';c.lineWidth=1.5;c.beginPath();const yy=Y0-10-k*12-(G.t*20%12);c.moveTo(x-10+k*10,yy);c.quadraticCurveTo(x-4+k*10,yy-6,x-10+k*10,yy-12);c.stroke();}c.fillStyle=VM;c.font='700 9px system-ui';c.textAlign='center';c.fillText('cheiro ruim',x,Y0-48);}
+   c.fillStyle=INK;c.font='800 12px system-ui';c.textAlign='center';c.fillText(`Pote ${'ABC'[i]}: ${p.n}`,x,Y0+150);
+   c.fillStyle='#e5e7eb';c.fillRect(x-40,Y0+160,80,8);c.fillStyle='#0ea5e9';c.fillRect(x-40,Y0+160,80*m,8);c.fillStyle='rgba(21,128,61,.35)';c.fillRect(x-40+80*p.a,Y0+157,80*(p.b-p.a)+1,14);
+   c.fillStyle=MUT;c.font='600 9px system-ui';c.fillText(`água: ${Math.round(m*100)}%`,x,Y0+182);});};
+ const P=[{t:'Os decompositores são seres vivos. Será que eles precisam de água? E de ar? Vamos preparar três potes iguais, cada um com uma casca de banana, mas com quantidades diferentes de água.',d:c=>potes(c,[0,.5,1],-1)},
+  {t:'Para saber se a terra está no ponto, fazemos o teste da esponja: apertamos um punhado na mão. Se não sai nenhuma gota, mas a terra fica grudada como uma esponja torcida, está úmida. Se escorre água entre os dedos, está encharcada.',d:c=>{c.fillStyle='#fff';c.strokeStyle='#e7e5e4';c.beginPath();c.roundRect(40,40,560,250,10);c.fill();c.stroke();
+   [['Seca','esfarela na mão','#d6a574'],['Úmida','gruda, sem pingar','#78350f'],['Encharcada','escorre água','#57270b']].forEach(([a,b,cor],i)=>{const x=130+i*180;c.fillStyle=cor;c.beginPath();c.arc(x,140,40,0,7);c.fill();if(i===2){c.fillStyle='#38bdf8';[0,1,2].forEach(k=>{c.beginPath();c.ellipse(x-14+k*14,196+k*6,3,6,0,0,7);c.fill();});}
+    c.fillStyle=INK;c.font='800 14px system-ui';c.textAlign='center';c.fillText(a,x,228);c.font='500 12px system-ui';c.fillText(b,x,248);});}},
+  {t:'Sua tarefa: deixar o pote A seco, o pote B úmido e o pote C encharcado, regando até a barra de água entrar na faixa verde. Depois passamos 4 semanas e comparamos.',d:c=>potes(c,[0,.5,.95],-1)}];
+ const ok=()=>P2.every((p,i)=>G.m[i]>=p.a-1e-9&&G.m[i]<=p.b+1e-9);
+ const ctrl=()=>{$('ctrl').innerHTML=P2.map((p,i)=>`<button class="tool" data-r="${i}">Regar pote ${'ABC'[i]}</button>`).join('')+'<button class="btn ghost" id="bEs">Esvaziar</button>'+(ok()?'<button class="btn" id="bSm">Passar 4 semanas</button>':'');
+  document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{const i=+b.dataset.r;G.m[i]=Math.min(1,Math.round((G.m[i]+.1)*10)/10);G.erro=G.m[i]>P2[i].b;acao(G.erro?`O pote ${'ABC'[i]} passou do ponto. Toque em Esvaziar e comece de novo.`:ok()?'Os três potes estão no ponto. Toque em Passar 4 semanas.':'Continue regando até cada barra entrar na faixa verde.');ctrl();});
+  $('bEs').onclick=()=>{G.m=[0,0,0];ctrl();};if($('bSm'))$('bSm').onclick=()=>{G.sem=0;$('ctrl').innerHTML='';};};
+ G.upd=dt=>{if(G.sem<0||G.fim)return;G.sem=Math.min(4,G.sem+dt*.8);$('info').textContent=`semana ${Math.floor(G.sem)}`;if(G.sem>=4){G.fim=1;const certo=G.hip===1;
+   acao(`Depois de 4 semanas sobrou ${P2[0].fim}% da banana no pote seco, ${P2[1].fim}% no úmido e ${P2[2].fim}% no encharcado, que ficou com cheiro ruim. Sua hipótese foi: ${G.hipT}. ${certo?'Você acertou.':'O resultado foi outro.'}`);
+   botao('Ver a explicação',()=>fimFase(200,true,'Os decompositores precisam de água e de ar ao mesmo tempo. Na terra seca falta água, e eles quase param de trabalhar. Na terra úmida há água e também espaços com ar entre os grãos, e a decomposição é rápida. Na terra encharcada a água ocupa todos os espaços e o ar acaba. Outros micro-organismos, que vivem sem oxigênio, assumem o trabalho, mais devagar e soltando gases de cheiro ruim. Por isso uma composteira bem cuidada fica úmida como esponja torcida e nunca encharcada.','O que acontece com as folhas que caem num lago, onde o fundo tem pouco oxigênio?'));}};
+ G.desenha=c=>{if(AU(c))return;c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);potes(c,G.m,G.sem);
+  painelR(c,20,320);rotulo(c,492,40,'Caderno de campo');c.font='700 11px system-ui';c.fillStyle=MUT;c.textAlign='left';c.fillText('Pote',492,62);c.textAlign='right';c.fillText('Banana que sobrou',732,62);
+  P2.forEach((p,i)=>linhaM(c,492,84+i*24,`${'ABC'[i]}: ${p.n}`,G.fim?`${p.fim}%`:'...',G.fim?MR:MUT));if(G.hipT)linhaM(c,492,170,'Hipótese',G.hipT,ACC2);
+  c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';quebra(c,'Faixa verde embaixo de cada pote: a quantidade de água pedida. Valores do modelo do jogo.',492,196,236,13);};
+ rodar();aula(P,()=>hipotese('Em qual pote a casca de banana vai sumir mais rápido?',['Seco','Úmido','Encharcado'],()=>{G.fase='jogo';acao('Regue os potes B e C até a faixa verde. O pote A fica seco.');ctrl();}));}
+
+/* ---------- FASE 3 ---------- */
+function f3(){FSC=1.25;const DES=[{v:6,m:4,txt:'Esta composteira está com cheiro de amônia e cheia de mosquinhas.',tot:0},{v:1,m:9,txt:'Esta composteira está fria há semanas e nada apodrece.',tot:0},{v:0,m:0,txt:'Agora monte do zero uma composteira com exatamente 12 baldes.',tot:12}];
+ G={t:0,k:0,v:0,m:0,ok:false,fim:0,aD:null,fase:'aula',erro:0};telaJogo('Verdes e marrons','composteira 1 de 3');
+ const r=()=>G.v?G.m/G.v:G.m?99:0;
+ const est=()=>{const x=r();if(!G.v&&!G.m)return{t:'vazia',c:MUT};if(x<1.5)return{t:'molhada, cheiro de amônia, moscas',c:VM};if(x>4)return{t:'seca e fria, nada acontece',c:'#0369a1'};if(x>=2&&x<=3)return{t:'equilibrada, esquenta e cheira a terra',c:OK};return{t:'quase lá',c:'#ca8a04'};};
+ const bin=(c,v,m,x0,y0)=>{c.fillStyle='#e7e5e4';c.fillRect(x0,y0,200,240);c.strokeStyle='#57534e';c.lineWidth=3;c.strokeRect(x0,y0,200,240);
+  const tot=v+m,seq=[];for(let i=0;i<tot;i++)seq.push(i*v/Math.max(1,tot)%1<v/Math.max(1,tot)?'v':'m');let vv=0,mm=0;const lay=[];for(let i=0;i<tot;i++){if(vv/Math.max(1,v)<=mm/Math.max(1,m)&&vv<v){lay.push('v');vv++;}else{lay.push('m');mm++;}}
+  const h=Math.min(12,230/Math.max(1,tot));lay.forEach((t,i)=>{const y=y0+236-(i+1)*h;c.fillStyle=t==='v'?'#65a30d':'#a16207';c.fillRect(x0+3,y,194,h-1);const rr=RNG(i*7+3);for(let k=0;k<6;k++){c.fillStyle=t==='v'?'#bef264':'#fcd34d';c.fillRect(x0+10+rr()*176,y+rr()*(h-3),5,2);}});
+  const e=est();if(r()<1.5&&tot){for(let k=0;k<4;k++){const fx=x0+40+k*40+Math.sin(G.t*6+k)*8,fy=y0-14+Math.cos(G.t*5+k)*6;c.fillStyle='#1f2937';c.beginPath();c.arc(fx,fy,2.5,0,7);c.fill();c.strokeStyle='rgba(31,41,55,.5)';c.lineWidth=1;c.beginPath();c.ellipse(fx-3,fy-3,3,1.5,-.5,0,7);c.ellipse(fx+3,fy-3,3,1.5,.5,0,7);c.stroke();}}
+  if(r()>=2&&r()<=3){for(let k=0;k<3;k++){c.strokeStyle='rgba(148,163,184,.6)';c.lineWidth=2;c.beginPath();const yy=y0-6-k*10-(G.t*18%10);c.moveTo(x0+60+k*40,yy);c.quadraticCurveTo(x0+66+k*40,yy-6,x0+60+k*40,yy-12);c.stroke();}}};
+ const P=[{t:'Uma composteira é uma caixa onde ajudamos os decompositores a transformar restos em adubo. Eles precisam de dois tipos de comida: os verdes, restos úmidos como cascas de frutas e grama cortada, e os marrons, restos secos como folhas secas, serragem e papelão.',d:c=>{bin(c,4,8,60,70);c.fillStyle='#65a30d';c.fillRect(320,110,26,18);c.fillStyle='#a16207';c.fillRect(320,170,26,18);txtQ(c,['*verdes','úmidos, cheios de nitrogênio'],356,124,12.5);txtQ(c,['*marrons','secos, cheios de carbono'],356,184,12.5);}},
+  {t:'Se colocamos verdes demais, a composteira fica molhada, cheira a amônia e atrai moscas. Se colocamos marrons demais, ela fica seca e fria e nada acontece. No meio do caminho ela esquenta e cheira a terra de mata.',d:c=>{bin(c,6,3,30,70);bin(c,4,9,250,70);c.fillStyle=VM;c.font='800 12px system-ui';c.textAlign='center';c.fillText('verdes demais',130,330);c.fillStyle=OK;c.fillText('equilibrada',350,330);}},
+  {t:'No jogo usamos uma regra prática simplificada: para cada balde de verdes, entre 2 e 3 baldes de marrons. Você vai consertar duas composteiras com problema e depois montar uma do zero.',d:c=>{c.fillStyle='#fff';c.strokeStyle='#e7e5e4';c.beginPath();c.roundRect(60,90,520,150,10);c.fill();c.stroke();txtQ(c,['*Regra do jogo','1 balde de verdes para 2 a 3 baldes de marrons','*Exemplo','4 verdes e 10 marrons: 10 ÷ 4 = 2,5 (equilibrada)'],84,124,13);}}];
+ const ini=()=>{const D=DES[G.k];G.v=D.v;G.m=D.m;G.ok=false;$('info').textContent=`composteira ${G.k+1} de 3`;acao(`${D.txt} Use os botões para corrigir.`);ctrl();};
+ const ctrl=()=>{$('ctrl').innerHTML='<button class="tool" id="bV">+ 1 balde verde</button><button class="tool" id="bM">+ 1 balde marrom</button><button class="btn ghost" id="bR">Recomeçar</button>';
+  $('bV').onclick=()=>add('v');$('bM').onclick=()=>add('m');$('bR').onclick=()=>{G.erro++;ini();};};
+ const add=t=>{if(G.ok)return;if(G.v+G.m>=20){acao('A composteira está cheia. Toque em Recomeçar.');return;}G[t]++;const D=DES[G.k],x=r(),bom=x>=2&&x<=3&&(!D.tot||G.v+G.m===D.tot);
+  if(D.tot&&G.v+G.m>D.tot){acao(`Passou de ${D.tot} baldes. Toque em Recomeçar.`);return;}
+  if(bom){G.ok=true;acao(`Correto! ${G.v} verdes e ${G.m} marrons: ${G.m} ÷ ${G.v} = ${f1x(x)}. A composteira está equilibrada.`);$('ctrl').innerHTML=`<button class="btn" id="bNx3">${G.k<2?'Próxima composteira':'Concluir'}</button>`;$('bNx3').onclick=()=>{G.k++;if(G.k<3)ini();else fecha();};}
+  else acao(`${G.v} verdes e ${G.m} marrons. Situação: ${est().t}.${D.tot?` Total: ${G.v+G.m} de ${D.tot} baldes.`:''}`);};
+ const fecha=()=>{G.fim=1;$('ctrl').innerHTML='';acao('As três composteiras estão equilibradas.');botao('Ver a explicação',()=>fimFase(Math.max(80,200-10*G.erro),true,'Os decompositores usam o carbono como fonte de energia e o nitrogênio para construir o próprio corpo. Os restos marrons trazem muito carbono e os verdes trazem mais nitrogênio. Com nitrogênio sobrando, ele escapa como amônia, o gás de cheiro forte. Com carbono sobrando, os micro-organismos não crescem e a composteira esfria. Os técnicos medem essa mistura pela relação entre carbono e nitrogênio, e uma revisão científica indica que a mistura inicial funciona bem com cerca de 25 a 30 partes de carbono para 1 de nitrogênio (Bernal e colegas, 2009). A regra de 2 a 3 baldes de marrons do jogo é uma simplificação para a escola.','Que restos da cozinha e do pátio da sua escola seriam verdes, e quais seriam marrons?'));};
+ G.upd=()=>{};
+ G.desenha=c=>{if(AU(c))return;c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);bin(c,G.v,G.m,120,90);
+  const O={x0:40,y0:30,w:400};c.fillStyle='#e5e7eb';c.fillRect(40,346,400,12);const lx=v=>40+400*clamp(Math.log(v/.25)/Math.log(48),0,1);c.fillStyle='rgba(21,128,61,.5)';c.fillRect(lx(2),346,lx(3)-lx(2),12);
+  if(G.v||G.m){c.fillStyle=INK;c.beginPath();const px=lx(Math.max(.25,Math.min(12,r())));c.moveTo(px,342);c.lineTo(px-6,334);c.lineTo(px+6,334);c.fill();}
+  c.fillStyle=MUT;c.font='600 9px system-ui';c.textAlign='left';c.fillText('verdes demais',40,340);c.textAlign='right';c.fillText('marrons demais',440,340);
+  painelR(c,20,320);rotulo(c,492,40,`Composteira ${Math.min(3,G.k+1)} de 3`);linhaM(c,492,64,'Baldes verdes',`${G.v}`,'#4d7c0f');linhaM(c,492,88,'Baldes marrons',`${G.m}`,MR);linhaM(c,492,112,'Marrons ÷ verdes',G.v?f1x(r()):'...');
+  const e=est();c.fillStyle=e.c;c.font='700 11px system-ui';c.textAlign='left';quebra(c,`Situação: ${e.t}`,492,140,236,15);
+  if(DES[Math.min(2,G.k)].tot)linhaM(c,492,186,'Total de baldes',`${G.v+G.m} de 12`);if(G.ok)selo(c,492,300,true,'CORRETO');};
+ rodar();aula(P,()=>{G.fase='jogo';ini();});}
+
+/* ---------- FASE 4 ---------- */
+const ORG=[{n:'Minhoca',x:90,y:270,f:'Engole terra e restos e solta o húmus, um adubo fino e escuro. Seus túneis deixam o ar entrar.'},{n:'Tatuzinho',x:330,y:110,f:'É um crustáceo, parente dos camarões, que vive na terra. Tritura folhas em pedaços menores.'},{n:'Colêmbolo',x:200,y:190,f:'Bichinho de 1 a 2 milímetros que pula. Come fungos e ajuda a espalhá-los.'},{n:'Ácaro',x:400,y:250,f:'Aracnídeo minúsculo, parente das aranhas. Muitos comem fungos e restos em decomposição.'},{n:'Larva de mosca-soldado',x:150,y:80,f:'A larva da Hermetia illucens come restos de comida muito depressa. Não é a mosca doméstica.'},{n:'Fungo',x:270,y:300,f:'Os fios brancos são hifas. Os fungos soltam substâncias que digerem papel, folhas e madeira.'},{n:'Lacraia',x:60,y:150,f:'É predadora: caça outros bichinhos da composteira. Toda comunidade tem quem come e quem é comido.'}];
+function f4(){FSC=1.25;G={t:0,lx:240,ly:180,ach:new Set(),bac:false,micro:false,fim:0,aD:null,fase:'aula'};telaJogo('Lupa na composteira','0 de 8');
+ const R=()=>MOB()?74:54;
+ const fundo=c=>{c.fillStyle='#57270b';c.fillRect(20,20,440,330);const r=RNG(3);for(let i=0;i<220;i++){c.fillStyle=['#78350f','#a16207','#3f2a14','#854d0e'][i%4];c.beginPath();c.ellipse(20+r()*440,20+r()*330,2+r()*6,1+r()*3,r()*3,0,7);c.fill();}
+  for(let i=0;i<10;i++){c.fillStyle='rgba(250,250,249,.85)';const x=40+r()*400,y=40+r()*290;c.beginPath();c.moveTo(x,y);c.lineTo(x+8,y+3);c.lineTo(x+3,y+9);c.fill();}};
+ const bicho=(c,o)=>{const{x,y}=o;c.save();c.translate(x,y);
+  if(o.n==='Minhoca'){c.strokeStyle='#e879a0';c.lineWidth=7;c.lineCap='round';c.beginPath();c.moveTo(-28,0);c.bezierCurveTo(-10,-14,10,14,28,0);c.stroke();c.lineCap='butt';}
+  else if(o.n==='Tatuzinho'){c.fillStyle='#64748b';c.beginPath();c.ellipse(0,0,14,9,0,0,7);c.fill();c.strokeStyle='#334155';c.lineWidth=1;for(let i=-2;i<=2;i++){c.beginPath();c.moveTo(i*5,-8);c.lineTo(i*5,8);c.stroke();}}
+  else if(o.n==='Colêmbolo'){c.fillStyle='#e2e8f0';c.beginPath();c.ellipse(0,0,7,3.5,0,0,7);c.fill();c.strokeStyle='#e2e8f0';c.lineWidth=1;c.beginPath();c.moveTo(-6,0);c.lineTo(-11,-4);c.moveTo(6,0);c.lineTo(10,3);c.stroke();}
+  else if(o.n==='Ácaro'){c.fillStyle='#dc2626';c.beginPath();c.arc(0,0,5,0,7);c.fill();c.strokeStyle='#dc2626';c.lineWidth=1;for(let i=0;i<4;i++){c.beginPath();c.moveTo(-4,-3+i*2);c.lineTo(-9,-5+i*3);c.moveTo(4,-3+i*2);c.lineTo(9,-5+i*3);c.stroke();}}
+  else if(o.n==='Larva de mosca-soldado'){c.fillStyle='#d6d3d1';c.beginPath();c.ellipse(0,0,14,5,.2,0,7);c.fill();c.strokeStyle='#78716c';c.lineWidth=1;for(let i=-2;i<=2;i++){c.beginPath();c.moveTo(i*5,-5);c.lineTo(i*5,5);c.stroke();}}
+  else if(o.n==='Fungo'){c.strokeStyle='rgba(255,255,255,.9)';c.lineWidth=1.2;const r=RNG(77);for(let i=0;i<14;i++){c.beginPath();c.moveTo(0,0);c.quadraticCurveTo((r()-.5)*30,(r()-.5)*30,(r()-.5)*44,(r()-.5)*44);c.stroke();}}
+  else if(o.n==='Lacraia'){c.strokeStyle='#b45309';c.lineWidth=5;c.lineCap='round';c.beginPath();c.moveTo(-24,4);c.quadraticCurveTo(0,-10,24,2);c.stroke();c.lineWidth=1;for(let i=-4;i<=4;i++){c.beginPath();c.moveTo(i*5,-2);c.lineTo(i*5-2,-9);c.moveTo(i*5,2);c.lineTo(i*5-2,8);c.stroke();}c.lineCap='butt';}
+  c.restore();};
+ const micro=c=>{c.fillStyle='#1f2937';c.fillRect(20,20,440,330);c.save();c.beginPath();c.arc(240,185,150,0,7);c.clip();c.fillStyle='#f0f9ff';c.fillRect(90,35,300,300);const r=RNG(5);
+  for(let i=0;i<40;i++){const x=110+r()*260+Math.sin(G.t*2+i)*4,y=55+r()*260+Math.cos(G.t*2+i)*4;c.fillStyle=i%3?'#7c3aed':'#db2777';c.beginPath();if(i%2)c.ellipse(x,y,7,2.5,r()*3,0,7);else c.arc(x,y,3,0,7);c.fill();}c.restore();
+  c.strokeStyle='#94a3b8';c.lineWidth=6;c.beginPath();c.arc(240,185,150,0,7);c.stroke();c.fillStyle='#fff';c.font='700 11px system-ui';c.textAlign='center';c.fillText('gota da composteira no microscópio',240,344);};
+ const P=[{t:'Quem trabalha dentro da composteira? Muitos seres vivos, quase todos pequenos demais para ver de longe. Vamos usar uma lupa, como os cientistas fazem no campo.',d:c=>{fundo(c);c.save();c.beginPath();c.arc(250,180,60,0,7);c.clip();bicho(c,ORG[2]);bicho(c,{n:'Ácaro',x:270,y:200});c.restore();c.strokeStyle='#334155';c.lineWidth=5;c.beginPath();c.arc(250,180,60,0,7);c.stroke();c.lineWidth=10;c.beginPath();c.moveTo(292,222);c.lineTo(340,270);c.stroke();}},
+  {t:'Alguns seres são tão pequenos que nem a lupa mostra. As bactérias só aparecem no microscópio, que aumenta centenas de vezes. Elas são as mais numerosas da composteira e são elas que a deixam quente.',d:c=>micro(c)},
+  {t:'Sua missão: arraste a lupa pela composteira e toque em cada bichinho quando ele aparecer. São 7 na lupa e mais um tipo de ser vivo no microscópio. Cada descoberta vai para o caderno de campo.',d:c=>{fundo(c);c.fillStyle='rgba(255,255,255,.9)';c.beginPath();c.roundRect(60,130,360,90,10);c.fill();txtQ(c,['*8 descobertas','7 com a lupa e 1 com o microscópio'],80,164,13);}}];
+ const ctrl=()=>{$('ctrl').innerHTML=`<button class="btn ghost" id="bMi">${G.micro?'Voltar para a lupa':'Usar o microscópio'}</button>`;$('bMi').onclick=()=>{G.micro=!G.micro;ctrl();acao(G.micro?'Toque na gota para registrar o que você vê.':'Arraste a lupa pela composteira.');};};
+ const achou=(n,f)=>{if(G.ach.has(n))return;G.ach.add(n);$('info').textContent=`${G.ach.size} de 8`;acao(`<b>${n}.</b> ${f}`);
+  if(G.ach.size===8){G.fim=1;botao('Ver a explicação',()=>fimFase(200,true,'A composteira é uma comunidade inteira. Fungos e bactérias digerem os restos por fora do corpo e transformam folhas e cascas em substâncias simples. Minhocas, tatuzinhos e larvas trituram os pedaços e aumentam a superfície para os micro-organismos agirem. Colêmbolos e ácaros comem fungos, e a lacraia caça os outros bichinhos. Há produtores de adubo, consumidores e predadores, como numa floresta. Sem os decompositores, os restos de folhas e animais se acumulariam e os nutrientes não voltariam ao solo para as plantas.','Por que não devemos jogar inseticida numa composteira, mesmo que ela tenha muitos bichinhos?'));}};
+ ptr((x,y)=>{if(!G.micro){G.lx=x;G.ly=y;}});ptr((x,y)=>{if(!G.micro){G.lx=x;G.ly=y;}},'pointerdown');
+ G.tap=(x,y)=>{if(G.fase!=='jogo'||G.fim)return;if(G.micro){if(Math.hypot(x-240,y-185)<150)achou('Bactérias','As mais numerosas da composteira. Ao comer os restos, liberam calor: por isso o meio da composteira fica quente.');return;}
+  G.lx=x;G.ly=y;const o=ORG.find(o=>Math.hypot(o.x-x,o.y-y)<30&&Math.hypot(o.x-G.lx,o.y-G.ly)<R());if(o)achou(o.n,o.f);};
+ G.upd=()=>{};
+ G.desenha=c=>{if(AU(c))return;c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);
+  if(G.micro)micro(c);else{fundo(c);c.save();c.beginPath();c.arc(G.lx,G.ly,R(),0,7);c.clip();c.fillStyle='rgba(255,255,255,.12)';c.fillRect(0,0,W,H);ORG.forEach(o=>bicho(c,o));c.restore();
+   ORG.forEach(o=>{if(G.ach.has(o.n)){c.strokeStyle='#bef264';c.lineWidth=2;c.beginPath();c.arc(o.x,o.y,20,0,7);c.stroke();}});
+   c.strokeStyle='#334155';c.lineWidth=5;c.beginPath();c.arc(G.lx,G.ly,R(),0,7);c.stroke();c.lineWidth=10;c.beginPath();c.moveTo(G.lx+R()*.7,G.ly+R()*.7);c.lineTo(G.lx+R()*.7+40,G.ly+R()*.7+40);c.stroke();}
+  painelR(c,20,320);rotulo(c,492,40,'Descobertas');[...ORG.map(o=>o.n),'Bactérias'].forEach((n,i)=>linhaM(c,492,64+i*22,n,G.ach.has(n)?'sim':'...',G.ach.has(n)?OK:MUT));};
+ rodar();aula(P,()=>{G.fase='jogo';ctrl();acao('Arraste a lupa pela composteira e toque nos bichinhos que aparecerem.');});}
+
+/* ---------- FASE 5 ---------- */
+const RES=[['Casca de banana','C','Resto de fruta: alimento para os decompositores.'],['Garrafa PET limpa','R','Plástico limpo vai para a reciclagem.'],['Borra de café','C','Resto orgânico que a composteira aceita bem.'],['Embalagem metalizada de salgadinho','A','Camadas de plástico e alumínio grudadas: na maioria das cidades não é reciclada e vira rejeito.'],['Folhas varridas do pátio','C','Material marrom, ótimo para equilibrar a composteira.'],['Lata de alumínio','R','O alumínio pode ser reciclado muitas vezes.'],['Casca de ovo','C','Se decompõe devagar e devolve cálcio ao solo.'],['Esponja de cozinha usada','A','Mistura de materiais suja: rejeito.'],['Caixa de papelão','R','Papelão limpo e seco vai para a reciclagem. Picado, também pode entrar como marrom na composteira.'],['Resto de carne com osso','A','Na composteira da escola atrai ratos e moscas; por isso vai para o descarte comum.'],['Casca de laranja','C','Resto de fruta para a composteira.'],['Pote de vidro','R','O vidro pode ser reciclado.'],['Resto de salada','C','Resto vegetal para a composteira.'],['Fralda descartável','A','Material sujo e misturado: rejeito.'],['Jornal velho','R','Papel limpo vai para a reciclagem.']];
+function f5(){FSC=1.25;G={t:0,i:0,cont:{C:0,R:0,A:0},err:0,fim:0,aD:null,fase:'aula',fb:null};telaJogo('O lixo da escola',`0 de ${RES.length}`);
+ const NOM={C:'Composteira',R:'Reciclagem',A:'Rejeito (aterro)'},COR={C:'#4d7c0f',R:'#0369a1',A:'#57534e'};
+ const lixeiras=(c,dest)=>{['C','R','A'].forEach((k,i)=>{const x=40+i*145;c.fillStyle=COR[k];c.beginPath();c.roundRect(x,240,120,90,8);c.fill();c.fillStyle='rgba(255,255,255,.25)';c.fillRect(x-4,232,128,12);
+   c.fillStyle='#fff';c.font='800 12px system-ui';c.textAlign='center';c.fillText(NOM[k],x+60,276);c.font='800 20px system-ui';c.fillText(dest?dest[k]:'',x+60,306);});};
+ const P=[{t:'Depois do lanche, a escola enche sacos de lixo. Mas será que tudo aquilo é lixo mesmo? Vamos separar cada resíduo em três destinos.',d:c=>lixeiras(c,null)},
+  {t:'Composteira: restos de comida vegetal, cascas e folhas. Reciclagem: plástico, metal, vidro e papel limpos. Rejeito: o que não dá para compostar nem reciclar, e só esse deveria ir para o aterro sanitário.',d:c=>{lixeiras(c,null);txtQ(c,['*Composteira: restos vegetais','*Reciclagem: plástico, metal, vidro, papel','*Rejeito: o que sobra de verdade'],60,80,13);}},
+  {t:'A Política Nacional de Resíduos Sólidos, a Lei 12.305 de 2010, diz a ordem: primeiro não gerar, depois reduzir, reutilizar, reciclar, tratar, e só no fim mandar o rejeito para o aterro. A compostagem é uma forma de tratar os restos orgânicos.',d:c=>{['não gerar','reduzir','reutilizar','reciclar','tratar','rejeito ao aterro'].forEach((t,i)=>{const w=440-i*56;c.fillStyle=mix('#4d7c0f','#57534e',i/5);c.fillRect(320-w/2,40+i*48,w,40);c.fillStyle='#fff';c.font='800 13px system-ui';c.textAlign='center';c.fillText(t,320,65+i*48);});}}];
+ const ctrl=()=>{$('ctrl').innerHTML=['C','R','A'].map(k=>`<button class="tool" data-d="${k}">${NOM[k]}</button>`).join('');document.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>esc(b.dataset.d));};
+ const esc=d=>{if(G.fim||G.i>=RES.length)return;const[n,cer,why]=RES[G.i];if(d!==cer){G.err++;G.fb={ok:false,n};acao(`Não é bem assim: <b>${n}</b> vai para ${NOM[cer]}. ${why}`);}else{G.fb={ok:true,n};acao(`Isso! <b>${n}</b>: ${why}`);}
+  G.cont[cer]++;G.i++;$('info').textContent=`${G.i} de ${RES.length}`;if(G.i>=RES.length){G.fim=1;$('ctrl').innerHTML='';const a=G.cont.A;
+   acao(`Separação concluída. Antes, os ${RES.length} resíduos iam para o aterro. Agora só ${a} vão. ${G.err?`Você teve ${G.err} ${G.err>1?'enganos':'engano'}, e cada um veio com a explicação.`:'Nenhum engano!'}`);
+   botao('Ver a explicação',()=>fimFase(Math.max(80,200-5*G.err),true,`Dos ${RES.length} resíduos do lanche, ${G.cont.C} podiam ir para a composteira e ${G.cont.R} para a reciclagem. Só ${a} eram rejeitos de verdade. Quando tudo vai junto para o aterro, os restos de comida apodrecem sem ar e soltam gases e um líquido escuro, o chorume. Separando, a escola transforma resto em adubo para a horta e devolve materiais para a indústria. A Lei 12.305, de 2010, a Política Nacional de Resíduos Sólidos, coloca o aterro como último destino, só para os rejeitos.`,'Que proposta a sua turma pode levar à direção para diminuir o lixo do lanche?'));}};
+ G.upd=()=>{};
+ G.desenha=c=>{if(AU(c))return;c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);
+  if(!G.fim&&G.fase==='jogo'){const n=RES[G.i][0];c.fillStyle='#fff';c.strokeStyle='#d6d3d1';c.lineWidth=2;c.beginPath();c.roundRect(80,50,340,110,14);c.fill();c.stroke();c.fillStyle=MUT;c.font='700 10px system-ui';c.textAlign='center';c.fillText(`resíduo ${G.i+1} de ${RES.length}`,250,74);c.fillStyle=INK;c.font='800 18px system-ui';quebraC(c,n,250,112,300,24);}
+  if(G.fim){const O={x0:80,y0:50,w:320,h:150,xmin:-.5,xmax:1.5,ymin:0,ymax:RES.length+3,xt:[0,1],yt:[0,5,10,15],xf:v=>v?'depois':'antes',titulo:'resíduos que vão para o aterro'};const{X,Y}=eixos(c,O);
+   [[0,RES.length],[1,G.cont.A]].forEach(([x,v])=>{c.fillStyle=x?'#4d7c0f':'#57534e';c.fillRect(X(x)-36,Y(v),72,Y(0)-Y(v));c.fillStyle=INK;c.font='800 13px system-ui';c.textAlign='center';c.fillText(v,X(x),Y(v)-6);});}
+  if(G.fb&&!G.fim){c.fillStyle=G.fb.ok?OK:VM;c.font='800 12px system-ui';c.textAlign='center';c.fillText(G.fb.ok?'certo':'veja a explicação acima',250,186);}
+  lixeiras(c,G.fase==='jogo'?G.cont:null);
+  painelR(c,20,320);rotulo(c,492,40,'Balanço da separação');['C','R','A'].forEach((k,i)=>linhaM(c,492,64+i*24,NOM[k],`${G.cont[k]}`,COR[k]));linhaM(c,492,140,'Enganos',`${G.err}`,G.err?VM:OK);
+  c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';quebra(c,'Toque no destino nos botões abaixo do quadro. Cada engano mostra a explicação.',492,166,236,13);};
+ rodar();aula(P,()=>{G.fase='jogo';ctrl();acao('Para onde vai este resíduo? Toque no destino.');});}
+
+function quebraC(c,t,x,y,w,lh){const p=t.split(' ');let l='',ls=[];p.forEach(s=>{const tt=l?l+' '+s:s;if(c.measureText(tt).width>w&&l){ls.push(l);l=s;}else l=tt;});ls.push(l);ls.forEach((s,i)=>c.fillText(s,x,y+(i-(ls.length-1)/2)*lh));}
+const _fimFase=fimFase;
+fimFase=function(pts,ok,oque,perg,extra){let img='';try{const cv=$('cv');if(cv)img=`<img alt="Resultado da fase" src="${cv.toDataURL('image/png')}" style="display:block;width:100%;max-width:640px;margin:12px auto;border:1px solid var(--line);border-radius:10px">`;}catch(e){}
+ _fimFase(pts,ok,oque,perg,(extra||'')+img);const el=document.querySelector('.card.res');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});};
+
+/* ================= INICIO / AVATAR ================= */
+function inicio(){parar();G=null;cx=null;$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><div class="capa"><canvas id="cA" width="560" height="560"></canvas>
+ <div><h2>Seu perfil de pesquisador</h2><div class="opts">
+ <div class="l">Pele</div><div class="sw" id="sP">${PELES.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.pele===i?'on':''}" aria-label="pele ${i+1}"></button>`).join('')}</div>
+ <div class="l">Cabelo</div><div class="sw" id="sE">${ESTILOS.map(([k,t])=>`<button class="tx ${A.estilo===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <div class="sw" id="sC">${CABS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.cab===i?'on':''}" aria-label="cor ${i+1}"></button>`).join('')}</div>
+ <div class="l">Camiseta</div><div class="sw" id="sT">${CAMISAS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.camisa===i?'on':''}" aria-label="camiseta ${i+1}"></button>`).join('')}</div>
+ <div class="l">Chapéu</div><div class="sw" id="sH">${CHAPEUS.map(([k,t])=>`<button class="tx ${A.chapeu===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <input class="nome" id="iN" maxlength="20" placeholder="Seu nome" value="${esc(A.nome)}">
+ </div></div></div>
+ <div class="row" style="margin-top:14px"><button class="btn" id="bJ">Iniciar as 5 fases</button><button class="btn ghost" id="bG">Guia do professor</button></div>
+ <p class="small" style="margin-top:10px">Ciências e Matemática · 4º e 5º anos · BNCC EF04CI06, EF05CI05, EF05MA24</p></div>`;
+ const pinta=()=>{const c=$('cA').getContext('2d');c.clearRect(0,0,560,560);c.fillStyle='#f7fee7';c.fillRect(0,0,560,560);c.fillStyle='#d9f99d';c.beginPath();c.arc(280,600,260,0,7);c.fill();avatar(c,280,560,6.4,A,true);};
+ pinta();
+ const liga=(id,f)=>document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{f(b);salvaA();document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b));pinta();});
+ liga('sP',b=>A.pele=+b.dataset.i);liga('sC',b=>A.cab=+b.dataset.i);liga('sT',b=>A.camisa=+b.dataset.i);liga('sE',b=>A.estilo=b.dataset.k);liga('sH',b=>A.chapeu=b.dataset.k);
+ $('iN').oninput=e=>{A.nome=e.target.value;salvaA();};
+ $('bJ').onclick=novo;$('bG').onclick=guia;
+}
+function novo(){S={f:0,tot:0,fp:0,res:[],fichas:0};salvo=false;intro();}
+function relatorio(){parar();G=null;cx=null;$('rankBox').style.display='block';const nome=A.nome.trim()||'Pesquisador';
+ $('tela').innerHTML=`<div class="card"><div class="rel"><canvas id="cR" width="240" height="240"></canvas><div><div class="small">Relatório de campo</div><h2>${esc(nome)}</h2><div class="big" style="font-size:2rem;font-weight:800;color:var(--deep)">${S.tot} pts</div></div></div>
+ <table class="tab" style="margin-top:12px"><tr><th>Fase</th><th>Pontos</th><th>Meta</th></tr>${FASES.map((F,i)=>{const r=S.res[i]||{pts:0,ok:false};return`<tr><td>${F.ic} ${F.nome}</td><td>${r.pts}</td><td>${r.ok?'✓':'✗'}</td></tr>`;}).join('')}</table>
+ <div class="pensa"><b>Para escrever no caderno:</b> explique, usando um número do jogo, quem transforma os restos em adubo e o que eles precisam para trabalhar.</div>
+ <div class="savebox noprint"><input id="pName" maxlength="20" value="${esc(nome)}"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row noprint" style="margin-top:12px"><button class="btn ghost" id="bI">Imprimir relatório</button><button class="btn ghost" id="bN">Jogar de novo</button><button class="btn ghost" id="bV">Início</button></div></div>`;
+ const c=$('cR').getContext('2d');c.fillStyle='#f7fee7';c.fillRect(0,0,240,240);avatar(c,120,240,3.2,A,true);
+ $('bS').onclick=()=>salvar('5 fases');$('bI').onclick=()=>window.print();$('bN').onclick=novo;$('bV').onclick=inicio;
+}
+
+/* ================= GUIA DO PROFESSOR ================= */
+function guia(){parar();$('hud').style.display='none';$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card guia">
+ <div class="row top noprint"><button class="btn ghost sm" id="bVt">← Voltar</button><button class="btn sm" id="bPr">Imprimir guia</button></div>
+ <h2 style="margin-top:10px">Guia do professor · Composteira da Escola</h2>
+ <p class="small">4º e 5º anos do Ensino Fundamental · Ciências e Matemática</p>
+ <h3>Como o jogo conduz a aula</h3>
+ <p>Cada fase segue a sequência de uma aula prática. Uma professora na tela apresenta o experimento em 3 passos, com desenhos. O aluno registra uma hipótese, sem nota, faz o experimento, anota no caderno de campo e compara o resultado com a própria hipótese antes de ler a explicação.</p>
+ <h3>Habilidades da BNCC</h3>
+ <div class="hab"><b>EF04CI06 (Ciências).</b> Relacionar a participação de fungos e bactérias no processo de decomposição, reconhecendo a importância ambiental desse processo.</div>
+ <div class="hab"><b>EF05CI05 (Ciências).</b> Construir propostas coletivas para um consumo mais consciente e criar soluções tecnológicas para o descarte adequado e a reutilização ou reciclagem de materiais consumidos na escola e/ou na vida cotidiana.</div>
+ <div class="hab"><b>EF05MA24 (Matemática).</b> Interpretar dados estatísticos apresentados em textos, tabelas e gráficos (colunas ou linhas), referentes a outras áreas do conhecimento ou a outros contextos, como saúde e trânsito, e produzir textos com o objetivo de sintetizar conclusões.</div>
+ <h3>Competências gerais da BNCC mobilizadas</h3>
+ <ul><li><b>2. Pensamento científico, crítico e criativo:</b> hipótese, variável controlada e registro semanal.</li><li><b>7. Argumentação:</b> explicar por que a composteira cheira mal ou fica fria.</li><li><b>10. Responsabilidade e cidadania:</b> propor à escola um plano de separação de resíduos.</li></ul>
+ <h3>Temas contemporâneos transversais</h3>
+ <p>Educação Ambiental e Educação para o Consumo (macroárea Meio Ambiente).</p>
+ <h3>Como as áreas se encontram</h3>
+ <table class="tab"><tr><th>Área</th><th>Onde aparece</th></tr>
+ <tr><td>Ciências</td><td>Decompositores, condições para a decomposição, comunidade do solo (fases 1 a 4).</td></tr>
+ <tr><td>Matemática</td><td>Gráfico de linhas semanal, divisão para a receita da composteira, gráfico de colunas antes e depois (fases 1, 3 e 5).</td></tr>
+ <tr><td>Geografia</td><td>Destino do lixo na cidade, aterro sanitário (fase 5).</td></tr>
+ <tr><td>Língua Portuguesa</td><td>Registro de hipóteses e escrita de uma proposta para a direção da escola.</td></tr></table>
+ <h3>Eixo transdisciplinar</h3>
+ <p>A casca de banana do lanche percorre todo o jogo: apodrece no pote, precisa de água e ar, entra na receita da composteira, é comida por fungos e bactérias e, no fim, vira decisão da escola inteira. Pergunta para a turma: o que é lixo e o que é recurso fora do lugar?</p>
+ <h3>Faça de verdade: material</h3>
+ <ul><li><b>Fases 1 e 2:</b> 5 potes ou garrafas PET cortadas, terra de jardim, casca de banana, pão, folha seca, papel, um pedaço de sacola plástica, etiquetas e uma régua.</li>
+ <li><b>Fase 3:</b> um balde com tampa e furos, restos de frutas e folhas secas. Mantenha a tampa fechada e evite restos de carne.</li>
+ <li><b>Fase 4:</b> lupas de mão, um prato branco e uma colher de composto. Devolva os bichinhos à composteira depois.</li></ul>
+ <h3>Roteiro de 50 minutos</h3>
+ <table class="tab"><tr><th>Tempo</th><th>O que fazer</th></tr>
+ <tr><td>5 min</td><td>Mostre um saco de lixo do lanche e pergunte o que dali ainda serve.</td></tr>
+ <tr><td>30 min</td><td>Duplas jogam; um lê a professora da tela, o outro anota as hipóteses.</td></tr>
+ <tr><td>10 min</td><td>Discussão: quais hipóteses a turma acertou e o que surpreendeu.</td></tr>
+ <tr><td>5 min</td><td>Cada dupla escreve a frase do relatório de campo.</td></tr></table>
+ <h3>Fase por fase</h3>
+ <table class="tab"><tr><th>Fase</th><th>O aluno faz</th><th>Para discutir</th><th>Conceitos</th></tr>
+ <tr><td>1. O que apodrece?</td><td>Desenterra 5 potes por 6 semanas e monta o gráfico</td><td>Para onde vão as sacolas?</td><td>Decompositores, gráfico de linhas.</td></tr>
+ <tr><td>2. Seco, úmido ou encharcado?</td><td>Prepara 3 potes com o teste da esponja</td><td>E as folhas no fundo de um lago?</td><td>Água e ar para os decompositores.</td></tr>
+ <tr><td>3. Verdes e marrons</td><td>Conserta 2 composteiras e monta 1</td><td>Que restos da escola são verdes ou marrons?</td><td>Carbono, nitrogênio, divisão.</td></tr>
+ <tr><td>4. Lupa na composteira</td><td>Encontra 8 seres vivos</td><td>Por que não usar inseticida?</td><td>Comunidade do solo, fungos, bactérias.</td></tr>
+ <tr><td>5. O lixo da escola</td><td>Separa 15 resíduos e compara antes e depois</td><td>Que proposta levar à direção?</td><td>Compostagem, reciclagem, rejeito.</td></tr></table>
+ <h3>Avaliação</h3>
+ <p>Use o relatório de campo impresso, o registro de hipóteses e a proposta escrita da turma. Todos os instrumentos têm o mesmo peso. Errar a hipótese não tira ponto.</p>
+ <h3>Sequência de 3 aulas</h3>
+ <ol><li><b>Aula 1.</b> Jogo completo e montagem dos potes reais da fase 1.</li><li><b>Aula 2.</b> Observação semanal dos potes durante 6 semanas, com gráfico no caderno.</li><li><b>Aula 3.</b> Separação real dos resíduos de um lanche e carta à direção.</li></ol>
+ <h3>Cuidados na mediação</h3>
+ <p>As porcentagens semanais, as umidades e a regra de 2 a 3 baldes de marrons para 1 de verdes são do modelo do jogo, para comparar situações; não são medidas. No experimento real os números mudam com o clima e a terra. Use luvas ao manusear restos e lave as mãos. A embalagem metalizada é reciclada em poucos lugares; confira o que a coleta da sua cidade aceita.</p>
+ <h3>De onde vêm os números</h3>
+ <p><b>Fase 3.</b> Relação de carbono para nitrogênio de cerca de 25 a 30 para 1 na mistura inicial, citada por Bernal e colegas (2009). <b>Fase 5.</b> Ordem de prioridade da Lei 12.305/2010, artigo 9º.</p>
+ <h3>Referências</h3>
+ <ul class="ref">
+ <li>Bernal MP, Alburquerque JA, Moral R. Composting of animal manures and chemical criteria for compost maturity assessment. A review. Bioresource Technology, 100(22):5444-5453, 2009.</li>
+ <li>Brasil. Lei nº 12.305, de 2 de agosto de 2010. Institui a Política Nacional de Resíduos Sólidos.</li></ul>
+ </div>`;
+ $('bVt').onclick=inicio;$('bPr').onclick=()=>window.print();
+}
+
+/* ================= RANKING ================= */
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="composteira-da-escola";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__a={get S(){return S},get G(){return G},FASES,inicio,novo,intro,guia};
+inicio();
+</script>
+</body>
+</html>
