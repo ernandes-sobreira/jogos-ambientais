@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chuva no Morro</title>
+<style>
+:root{--main:#b45309;--deep:#78350f;--soft:#fffbeb;--line:#fde68a;--ink:#10212b;--mut:#4d6370;--co2:#e53935;--ch4:#ef6c00;--ok:#2e7d32;--bad:#c62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff;color:var(--ink);line-height:1.45}
+.wrap{max-width:820px;margin:0 auto;padding:12px 14px 40px}
+a.hub{color:var(--deep);font-weight:700;text-decoration:none;font-size:.9rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+h1{font-size:1.4rem;color:var(--deep);letter-spacing:-.01em}
+h2{font-size:1.2rem;color:var(--deep);margin-bottom:6px;letter-spacing:-.01em}
+h3{font-size:1rem;color:var(--deep);margin:14px 0 6px}
+.hud{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--soft);color:var(--deep);border-radius:99px;padding:5px 12px;font-weight:700;font-size:.86rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.card{border:2px solid var(--line);border-radius:20px;padding:18px;margin-bottom:12px;background:#fff}
+.btn{background:var(--main);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.btn:hover{background:var(--deep)}.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:#fff;color:var(--deep);border:2px solid var(--main)}
+.btn.sm{padding:9px 14px;font-size:.92rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{font-size:.86rem;color:var(--mut)}
+canvas.cena{width:100%;height:auto;display:block;border:2px solid var(--line);border-radius:16px;touch-action:none;background:#fff;margin-top:10px}
+.top{justify-content:space-between}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--main);color:#fff;border-radius:14px;padding:8px 14px;font-weight:800;font-size:1.05rem}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.tool{border:2px solid var(--line);background:#fff;color:var(--deep);border-radius:12px;padding:9px 12px;font-weight:700;font-family:inherit;font-size:.92rem;cursor:pointer;touch-action:manipulation}
+.tool.on{border-color:var(--main);background:var(--soft)}
+.tool:disabled{opacity:.4}
+.mets{display:grid;gap:8px;margin-top:10px}
+.met{display:grid;grid-template-columns:92px 1fr 52px;gap:8px;align-items:center;font-weight:700;font-size:.9rem}
+.met .bar{position:relative;height:18px;background:#f1f4f5;border-radius:99px;overflow:hidden}
+.met .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;transition:width .15s}
+.met .alvo{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--ink);border-radius:2px}
+.met .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--mut)}
+.met.co2 .fill{background:var(--co2)}.met.ch4 .fill{background:var(--ch4)}
+.saldo .bar{background:linear-gradient(90deg,#e8f5e9 50%,#ffebee 50%)}
+.saldo .zero{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:var(--ink)}
+.saldo .fill{border-radius:0}
+.obj{display:flex;gap:10px;align-items:flex-start;background:#fff8e1;border:2px solid #ffe082;border-radius:14px;padding:10px 12px;margin-top:10px;font-size:.95rem}
+.obj b{color:#8d6e00;white-space:nowrap}
+.acao{display:flex;gap:10px;align-items:center;background:var(--soft);border-left:5px solid var(--main);border-radius:0 12px 12px 0;padding:9px 12px;margin-top:8px;font-weight:600;font-size:.95rem;min-height:64px}@media(max-width:640px){.acao{min-height:5.4em}}
+.acao .dedo{font-size:1.25rem;animation:pulo 1s ease-in-out infinite}
+@keyframes pulo{50%{transform:translateX(4px)}}
+.help{width:34px;height:34px;border-radius:50%;border:2px solid var(--main);background:#fff;color:var(--deep);font-weight:800;font-size:1rem;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(16,33,43,.35);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal .card{max-width:460px;width:100%}
+.intro{text-align:center;padding:26px 18px}
+.intro .ic{font-size:3rem;line-height:1}
+.intro .n{color:var(--mut);font-weight:700;font-size:.85rem;margin-top:8px}
+.passos{display:grid;gap:8px;margin:16px auto;max-width:420px;text-align:left}
+.passos div{display:flex;gap:12px;align-items:center;background:var(--soft);border-radius:12px;padding:10px 14px;font-weight:600}
+.passos b{font-size:1.3rem;min-width:1.6em;text-align:center}
+.res{text-align:center}
+.res .big{font-size:2.6rem;font-weight:800;color:var(--deep);line-height:1.1}
+.res .ok{color:var(--ok);font-weight:800}.res .no{color:var(--bad);font-weight:800}
+.pensa{background:var(--soft);border-radius:14px;padding:12px 14px;margin:14px auto;max-width:520px;text-align:left}
+.pensa b{color:var(--deep)}
+.boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.box{border:2px dashed var(--line);border-radius:14px;padding:10px;min-height:110px;cursor:pointer}
+.box h4{font-size:.92rem;color:var(--deep);margin-bottom:6px}
+.box.alvo{border-color:var(--main);background:var(--soft)}
+.cards{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;min-height:48px}
+.ct{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 11px;font-weight:700;font-size:.9rem;cursor:pointer;box-shadow:0 2px 0 var(--line);font-family:inherit;color:var(--ink);transition:transform .5s}
+.ct.sel{border-color:var(--main);background:var(--soft);transform:translateY(-2px)}
+.ct.certo{border-color:var(--ok);background:#e8f5e9}.ct.errado{border-color:var(--bad);background:#ffebee}
+.ct.movido{animation:voa .8s ease}
+@keyframes voa{0%{transform:translateY(-30px) scale(1.1);opacity:.3}100%{transform:none;opacity:1}}
+.capa{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+.capa canvas{width:100%;height:auto;display:block;border-radius:16px;background:var(--soft)}
+.opts{display:grid;gap:8px;margin-top:6px}
+.opts .l{font-size:.8rem;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.sw{display:flex;gap:6px;flex-wrap:wrap}
+.sw button{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--line);cursor:pointer}
+.sw button.on{box-shadow:0 0 0 3px var(--deep)}
+.sw .tx{width:auto;height:auto;border-radius:10px;padding:6px 10px;font-weight:700;font-size:.85rem;background:#fff;color:var(--deep);font-family:inherit;border:0}
+input.nome{border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit;width:100%}
+input[type=range]{width:100%;accent-color:var(--main)}
+.tab{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:6px}
+.tab th{text-align:left;background:var(--soft);color:var(--deep);padding:7px 6px}
+.tab td{border-bottom:1px solid var(--line);padding:7px 6px;vertical-align:top}
+.guia p,.guia li{font-size:.95rem;margin-bottom:6px}
+.guia ul,.guia ol{padding-left:20px}
+.hab{border-left:5px solid var(--main);background:var(--soft);padding:10px 14px;border-radius:0 12px 12px 0;font-size:.95rem}
+.ref li{font-size:.86rem;color:var(--mut)}
+.ranking{border:3px solid var(--main);border-radius:18px;padding:0 16px 12px;overflow:hidden;margin-top:12px}
+.ranking h3{font-size:1rem;margin:0 -16px 8px;padding:10px 16px;background:var(--main);color:#fff}
+.ranking ol{list-style:none}.ranking li{display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.ranking li:last-child{border-bottom:0}.rp{display:inline-block;min-width:2.1em;font-weight:800;color:var(--deep)}
+.savebox{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebox input{flex:1;min-width:160px;border:2px solid var(--line);border-radius:12px;padding:11px;font-size:1rem;font-family:inherit}
+.rel{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center}
+.rel canvas{width:120px;height:120px;border-radius:50%;background:var(--soft)}
+.mini{width:100%;max-width:420px;height:auto;display:block;margin:10px auto 0}
+@media (max-width:620px){.wrap{padding:10px 8px 30px}.card{padding:12px;border-radius:16px}.capa{grid-template-columns:1fr}.met{grid-template-columns:70px 1fr 44px;font-size:.82rem}.chip{font-size:.95rem}.rel{grid-template-columns:80px 1fr}.rel canvas{width:80px;height:80px}}
+@media print{a.hub,header .hud,.ranking,.noprint{display:none!important}.card{border:1px solid #ccc;break-inside:avoid}body{font-size:12px}}
+
+/* ===== pele profissional ===== */
+:root{--main:#b45309;--deep:#78350f;--soft:#fffbeb;--line:#fde68a;--ink:#1f2421;--mut:#5f6b66;--ok:#15803d;--bad:#b3261e}
+body{background:#f6f7f5;color:var(--ink);-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px}
+h1{font-size:1.35rem;font-weight:750;letter-spacing:-.015em;color:var(--ink)}
+h2{color:var(--ink);font-weight:750}
+h3{color:var(--deep);font-size:.95rem;text-transform:uppercase;letter-spacing:.04em}
+a.hub{color:var(--mut);font-weight:600}
+.card{border:1px solid var(--line);border-radius:10px;box-shadow:0 1px 2px rgba(16,24,20,.05)}
+.pill{border-radius:4px;background:#fff;border:1px solid var(--line);color:var(--ink);font-weight:600}
+.btn{border-radius:6px;font-weight:650;padding:11px 20px;letter-spacing:.01em}
+.btn.ghost{border:1px solid var(--line);color:var(--ink)}
+.btn.ghost:hover{background:var(--soft)}
+.tool{border:1px solid var(--line);border-radius:6px;font-weight:600;color:var(--ink)}
+.tool.on{border-color:var(--main);background:var(--soft);box-shadow:inset 0 0 0 1px var(--main)}
+.eyebrow{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.titulo{font-size:1.15rem;font-weight:750;color:var(--ink);letter-spacing:-.01em}
+.obj{background:#fafbfa;border:1px solid var(--line);border-left:3px solid var(--main);border-radius:6px;font-size:.92rem}
+.obj b{color:var(--deep);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding-top:2px}
+.acao{background:#fff;border:1px solid var(--line);border-left:3px solid var(--ink);border-radius:6px;font-weight:500;font-size:.93rem}
+canvas.cena{border:1px solid var(--line);border-radius:8px;background:#fbfcfb}
+.help{border:1px solid var(--line);color:var(--ink);font-weight:700}
+.intro .ic{font-size:2.6rem;font-weight:800;color:var(--main);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.passos div{background:#fafbfa;border:1px solid var(--line);border-radius:6px;font-weight:500}
+.passos b{font-size:.85rem;color:#fff;background:var(--main);border-radius:4px;min-width:1.7em;padding:2px 0}
+.res .big{color:var(--ink)}
+.pensa{background:#fafbfa;border:1px solid var(--line);border-radius:6px}
+.pensa b{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}
+.hab{border-left:3px solid var(--main);border-radius:0 6px 6px 0}
+.tab th{background:#f2f5f3;color:var(--ink);font-size:.82rem}
+.ranking{border:1px solid var(--line);border-radius:10px}
+.ranking h3{background:var(--ink);text-transform:none;letter-spacing:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="hub" href="https://ernandes-sobreira.github.io/jogos-ambientais/">← Todos os jogos</a>
+<header>
+  <h1>Chuva no Morro</h1>
+  <div class="hud" id="hud" style="display:none"><span class="pill" id="hF"></span><span class="pill" id="hP"></span></div>
+</header>
+<main id="tela"></main>
+<div class="ranking" id="rankBox"><h3>Ranking Global</h3><ol id="rankList"><li><span>Carregando o ranking...</span></li></ol><p class="small" id="rankNote"></p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const W=760,H=372;
+function hex(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mix(a,b,t){const A=hex(a),B=hex(b);return`rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`;}
+
+/* ================= AVATAR ================= */
+const PELES=['#f6d3b8','#e3b18b','#c68a5e','#94603e','#5d3b26'];
+const CABS=['#1b1b1b','#4e342e','#8d6e63','#d4a85a','#b5532f'];
+const CAMISAS=['#00838f','#2e7d32','#f9a825','#c62828','#6a1b9a','#37474f'];
+const ESTILOS=[['curto','Curto'],['cacheado','Cacheado'],['longo','Longo'],['coque','Coque'],['raspado','Raspado']];
+const CHAPEUS=[['nenhum','Sem'],['bone','Boné'],['campo','Chapéu']];
+let A={pele:2,cab:0,estilo:'cacheado',camisa:0,chapeu:'campo',nome:''};
+try{const s=JSON.parse(localStorage.getItem('bc_avatar')||'null');if(s)A=Object.assign(A,s);}catch(e){}
+function salvaA(){try{localStorage.setItem('bc_avatar',JSON.stringify(A));}catch(e){}}
+function avatar(c,x,y,s,a,prancheta){
+ c.save();c.translate(x,y);c.scale(s,s);
+ const pele=PELES[a.pele],cab=CABS[a.cab],cam=CAMISAS[a.camisa];
+ if(a.estilo==='longo'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-39,12.5,15,0,0,7);c.fill();c.fillRect(-12.5,-40,25,22);}
+ if(a.estilo==='cacheado'){c.fillStyle=cab;c.beginPath();c.ellipse(0,-40,15,14.5,0,0,7);c.fill();}
+ c.fillStyle=cam;c.beginPath();c.moveTo(-16,0);c.quadraticCurveTo(-17,-21,-6,-25);c.lineTo(6,-25);c.quadraticCurveTo(17,-21,16,0);c.closePath();c.fill();
+ c.fillStyle='rgba(0,0,0,.12)';c.fillRect(-1,-24,2,24);
+ c.fillStyle=pele;c.fillRect(-3.5,-29,7,6);
+ if(prancheta){c.fillStyle='#8d6e63';c.fillRect(4,-19,13,16);c.fillStyle='#fff';c.fillRect(5.5,-17,10,12);c.strokeStyle='#90a4ae';c.lineWidth=.8;for(let i=0;i<4;i++){c.beginPath();c.moveTo(7,-14+i*2.6);c.lineTo(14,-14+i*2.6);c.stroke();}}
+ c.strokeStyle=cam;c.lineWidth=6;c.lineCap='round';c.beginPath();c.moveTo(-11,-20);c.lineTo(-4,-9);c.stroke();
+ c.fillStyle=pele;c.beginPath();c.arc(-3,-8,3,0,7);c.fill();
+ c.fillStyle=pele;c.beginPath();c.ellipse(0,-39,9.5,11,0,0,7);c.fill();
+ c.beginPath();c.arc(-9.4,-38,2.3,0,7);c.arc(9.4,-38,2.3,0,7);c.fill();
+ c.fillStyle=cab;
+ if(a.estilo==='curto'){c.beginPath();c.ellipse(0,-44.5,10,6.8,0,Math.PI,0);c.fill();c.fillRect(-10,-46,2.8,7);c.fillRect(7.2,-46,2.8,7);}
+ if(a.estilo==='cacheado'){for(let i=0;i<13;i++){const an=Math.PI*(.8+i*1.4/12);c.beginPath();c.arc(Math.cos(an)*12,-41+Math.sin(an)*11.5,4.2,0,7);c.fill();}}
+ if(a.estilo==='longo'){c.beginPath();c.ellipse(0,-44.5,10.6,7.2,0,Math.PI,0);c.fill();}
+ if(a.estilo==='coque'){c.beginPath();c.ellipse(0,-44.5,10,6.4,0,Math.PI,0);c.fill();c.beginPath();c.arc(0,-53,5.2,0,7);c.fill();}
+ if(a.estilo==='raspado'){c.globalAlpha=.5;c.beginPath();c.ellipse(0,-44,9.8,6.2,0,Math.PI,0);c.fill();c.globalAlpha=1;}
+ c.fillStyle='#2b2a26';c.beginPath();c.arc(-3.4,-39,1.25,0,7);c.arc(3.4,-39,1.25,0,7);c.fill();
+ c.strokeStyle='#2b2a26';c.lineWidth=1;c.beginPath();c.arc(0,-35.6,2.6,.25,Math.PI-.25);c.stroke();
+ if(a.chapeu==='bone'){c.fillStyle=cam;c.beginPath();c.ellipse(0,-46,10.6,5.8,0,Math.PI,0);c.fill();c.fillRect(-10.6,-47,21.2,2.6);c.beginPath();c.ellipse(8.5,-46.2,8,2.2,0,0,7);c.fill();}
+ if(a.chapeu==='campo'){c.fillStyle='#d7c49e';c.beginPath();c.ellipse(0,-46,16.5,3.6,0,0,7);c.fill();c.beginPath();c.ellipse(0,-48,9.2,6.4,0,Math.PI,0);c.fill();c.fillStyle='#8d6e63';c.fillRect(-9.2,-49,18.4,1.9);}
+ c.restore();
+}
+function pernas(c,x,y,s,a){c.save();c.translate(x,y);c.scale(s,s);c.fillStyle='#455a64';c.fillRect(-11,0,9,20);c.fillRect(2,0,9,20);c.fillStyle='#3e2723';c.fillRect(-12,18,11,4);c.fillRect(1,18,11,4);c.restore();}
+
+/* ================= CENA ================= */
+const CORES={main:'#b45309',deep:'#78350f'};
+function sr(n){const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+function syncMol(){}function partic(){}
+function drawCena(c,G){if(G.desenha)G.desenha(c);}
+/* ================= TELA / LOOP ================= */
+let G=null,S=null,raf=0,ultimo=0,cx=null;
+function laco(ts){const dt=Math.min(.05,(ts-ultimo)/1000||0);ultimo=ts;if(G){G.t+=dt;if(G.upd)G.upd(dt);syncMol(G,dt);partic(G,dt);if(cx)drawCena(cx,G);if(G.extra)G.extra(cx);}raf=requestAnimationFrame(laco);}
+function parar(){cancelAnimationFrame(raf);raf=0;}
+function rodar(){parar();ultimo=performance.now();raf=requestAnimationFrame(laco);}
+function hud(){$('hud').style.display='flex';$('hF').textContent=`Fase ${S.f+1} de ${FASES.length}`;$('hP').textContent=`${Math.max(0,S.tot+S.fp)} pts`;}
+function telaJogo(chip,info){
+ const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><span class="chip" id="chip">${chip}</span><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="acao"><span class="dedo">👉</span><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});
+}
+function acao(t){const e=$('acao');if(e&&e.innerHTML!==t)e.innerHTML=t;}
+function ajuda(){const F=FASES[S.f],d=document.createElement('div');d.className='modal';
+ d.innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left"><b>🎯 Objetivo</b><span>${F.obj}</span></div><div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn">Entendi</button></div>`;
+ d.onclick=e=>{if(e.target===d||e.target.tagName==='BUTTON')d.remove();};document.body.appendChild(d);}
+function medidor(id,rot,cls,max,alvo){const a=alvo!=null?`<span class="alvo" style="left:${alvo/max*100}%"></span>`:'';return`<div class="met ${cls}" id="${id}" data-max="${max}"><span>${rot}</span><div class="bar"><span class="fill"></span>${a}</div><span class="v"></span></div>`;}
+function poeMed(id,v){const e=$(id);if(!e)return;const m=+e.dataset.max;e.querySelector('.fill').style.width=clamp(v/m*100,0,100)+'%';e.querySelector('.v').textContent=Math.round(v);}
+function poeSaldo(v,max){const e=$('mSaldo');if(!e)return;const f=e.querySelector('.fill'),p=clamp(Math.abs(v)/max*50,0,50);if(v<0){f.style.left=(50-p)+'%';f.style.width=p+'%';f.style.background='#43a047';}else{f.style.left='50%';f.style.width=p+'%';f.style.background='#e53935';}e.querySelector('.v').textContent=(v>0?'+':'')+Math.round(v);}
+
+/* ================= FASES ================= */
+const FASES=[
+ {nome:'Garrafas na janela',ic:'01',obj:'Repetir o experimento das três garrafas PET (solo nu, palhada e grama) e medir quanta água escorre e quão barrenta ela sai.',passos:[['1','Assista à explicação da professora.'],['2','Registre sua hipótese antes de molhar.'],['3','Toque em cada garrafa para regar e compare os copos.']],ini:()=>f1()},
+ {nome:'Morro mais inclinado',ic:'02',obj:'Calcular a declividade da garrafa em porcentagem e medir quanta terra a chuva leva em três inclinações diferentes.',passos:[['1','Empilhe livros para inclinar a garrafa.'],['2','Leia a declividade: altura ÷ comprimento × 100.'],['3','Meça 3 inclinações e veja o gráfico.']],ini:()=>f2()},
+ {nome:'O teste do cano',ic:'03',obj:'Medir o tempo que a água leva para entrar no solo em três lugares da escola e calcular a velocidade de infiltração.',passos:[['1','A água é despejada no cano enterrado.'],['2','Toque em Parar quando a água sumir.'],['3','Compare mata, gramado pisoteado e trilha de terra batida.']],ini:()=>f3()},
+ {nome:'Plantio em nível',ic:'04',obj:'Desenhar fileiras de plantas no morro para segurar a enxurrada antes que ela chegue ao córrego.',passos:[['1','Arraste o dedo no morro para plantar uma fileira.'],['2','Siga as curvas de nível, as linhas de mesma altura.'],['3','Toque em Chover: no máximo 8 de 40 gotas podem chegar ao córrego.']],ini:()=>f4()},
+ {nome:'Do morro ao rio',ic:'05',obj:'Planejar o uso de uma pequena bacia para produzir alimento sem encher o rio de terra, respeitando a mata ciliar.',passos:[['1','Toque em cada área para trocar o uso.'],['2','Produção mínima: 14. Terra no rio: no máximo 20.'],['3','As faixas na beira do rio são Área de Preservação Permanente.']],ini:()=>f5()}
+];
+function telaJogo(chip,info){const F=FASES[S.f];
+ $('tela').innerHTML=`<div class="card"><div class="row top"><div><div class="eyebrow">Fase ${S.f+1} de ${FASES.length}</div><div class="titulo" id="chip">${chip}</div></div><div class="row"><span class="pill" id="info">${info||''}</span><button class="help" id="bAj" aria-label="Como jogar">?</button></div></div>
+ <div class="obj"><b>Objetivo</b><span>${F.obj}</span></div><div class="acao"><span id="acao"></span></div>
+ <canvas class="cena" id="cv"></canvas><div class="ctrl" id="ctrl"></div><div class="mets" id="mets"></div></div>`;
+ $('bAj').onclick=ajuda;
+ const cv=$('cv'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);
+ cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;if(G&&G.tap)G.tap(x,y);});}
+function intro(){parar();G=null;cx=null;hud();const F=FASES[S.f];$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card intro"><div class="ic">${F.ic}</div><div class="n">FASE ${S.f+1} DE ${FASES.length}</div><h2>${F.nome}</h2><div class="obj" style="text-align:left;max-width:460px;margin:12px auto 0"><b>Objetivo</b><span>${F.obj}</span></div>
+ <div class="passos">${F.passos.map(p=>`<div><b>${p[0]}</b><span>${p[1]}</span></div>`).join('')}</div><button class="btn" id="bGo">Começar</button></div>`;
+ $('bGo').onclick=()=>{S.fp=0;F.ini();};}
+function fimFase(pts,ok,oque,pergunta,extraHtml){
+ parar();pts=Math.max(0,Math.round(pts));S.fp=0;S.tot+=pts;S.res[S.f]={pts,ok,oque};hud();
+ $('tela').innerHTML=`<div class="card res"><div class="eyebrow">Fase ${S.f+1} · ${FASES[S.f].nome}</div><div class="big">+${pts}</div>
+ <p class="${ok?'ok':'no'}">${ok?'Meta cumprida':'Meta não cumprida'}</p>${extraHtml||''}
+ <div class="pensa"><b>Síntese</b><br>${oque}</div><div class="pensa"><b>Para discutir</b><br>${pergunta}</div>
+ <div class="row" style="justify-content:center"><button class="btn" id="bNx">${S.f<FASES.length-1?'Próxima fase':'Ver relatório'}</button></div></div>`;
+ $('bNx').onclick=()=>{S.f++;if(S.f<FASES.length)intro();else relatorio();};}
+function ptr(fn,ev){const cv=$('cv');cv.style.touchAction='none';cv.addEventListener(ev||'pointermove',e=>{const r=cv.getBoundingClientRect();fn((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height,e);});}
+function opcoes(perg,ops,cb){$('ctrl').innerHTML=`<div style="width:100%"><b>${perg}</b><div style="display:grid;gap:6px;margin-top:8px">${ops.map((t,i)=>`<button class="tool" style="text-align:left" data-o="${i}">${t}</button>`).join('')}</div></div>`;
+ document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-o]').forEach(x=>x.classList.toggle('on',x===b));cb(+b.dataset.o,b);});}
+const f1x=v=>(Math.round(v*10)/10).toFixed(1).replace('.',',');
+const INK='#1f2421',MUT='#5f6b66',LINE='#dfe3e0',ACC='#b45309',ACC2='#78350f',BLUE='#2563a8';
+const ajuste=(xs,ys)=>{const n=xs.length,mx=xs.reduce((a,b)=>a+b)/n,my=ys.reduce((a,b)=>a+b)/n;let sxy=0,sxx=0;xs.forEach((x,i)=>{sxy+=(x-mx)*(ys[i]-my);sxx+=(x-mx)**2;});const b=sxy/sxx;return{b,a:my-b*mx};};
+function eixos(c,o){const{x0,y0,w,h,xmin,xmax,ymin,ymax,xt,yt,xf,yf,titulo}=o;const X=v=>x0+(v-xmin)/(xmax-xmin)*w,Y=v=>y0+h-(v-ymin)/(ymax-ymin)*h;
+ c.fillStyle='#fff';c.fillRect(x0,y0,w,h);c.strokeStyle='#eef0ee';c.lineWidth=1;c.font='500 10.5px system-ui';c.fillStyle=MUT;
+ yt.forEach(v=>{c.beginPath();c.moveTo(x0,Y(v)+.5);c.lineTo(x0+w,Y(v)+.5);c.stroke();c.textAlign='right';c.fillText(yf?yf(v):v,x0-6,Y(v)+3.5);});
+ xt.forEach(v=>{c.textAlign='center';c.fillText(xf?xf(v):v,X(v),y0+h+14);c.fillStyle=MUT;c.fillRect(X(v)-.5,y0+h,1,4);});
+ c.strokeStyle=INK;c.lineWidth=1;c.beginPath();c.moveTo(x0,y0);c.lineTo(x0,y0+h);c.lineTo(x0+w,y0+h);c.stroke();
+ if(titulo){c.fillStyle=INK;c.font='700 11px system-ui';c.textAlign='left';c.fillText(titulo.toUpperCase(),x0,y0-10);}return{X,Y};}
+function painelR(c,y,h){c.fillStyle='#fff';c.fillRect(478,y,268,h);c.strokeStyle=LINE;c.lineWidth=1;c.strokeRect(478.5,y+.5,267,h-1);}
+function rotulo(c,x,y,t,cor){c.fillStyle=cor||MUT;c.font='700 10px system-ui';c.textAlign='left';c.fillText(t.toUpperCase(),x,y);}
+function linhaM(c,x,y,lab,val,cor){c.font='500 12.5px system-ui';c.fillStyle=INK;c.textAlign='left';c.fillText(lab,x,y);c.font='700 12.5px system-ui';c.textAlign='right';c.fillStyle=cor||INK;c.fillText(val,x+240,y);c.strokeStyle='#f0f2f0';c.lineWidth=1;c.beginPath();c.moveTo(x,y+6);c.lineTo(x+240,y+6);c.stroke();}
+function fonte(c,t){c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';c.fillText(t,24,H-8);}
+
+(()=>{const d=Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype,'font');Object.defineProperty(CanvasRenderingContext2D.prototype,'font',{get(){return d.get.call(this);},set(v){d.set.call(this,String(v).replace(/(\d+(?:\.\d+)?)px/,(m,n)=>(+n*FSC).toFixed(1)+'px'));},configurable:true});})();
+let FSC=1.25;
+const ptrU=fn=>ptr(fn,'pointerup');
+const AZ='#0ea5e9',AZ2='#0369a1';
+const nf=v=>Math.round(v).toLocaleString('pt-BR');
+function quebra(c,t,x,y,w,lh){lh*=FSC;const ws=t.split(' ');let l='';for(const p of ws){if(c.measureText(l+p).width>w&&l){c.fillText(l,x,y);l='';y+=lh;}l+=p+' ';}c.fillText(l,x,y);return y;}
+function botao(txt,fn,extra){$('ctrl').innerHTML=(extra||'')+`<span class="small" style="color:var(--mut)">Analise o resultado com calma.</span><button class="btn" id="bCont">${txt}</button>`;$('bCont').onclick=()=>{$('ctrl').innerHTML='';fn();};}
+const RNG=s=>()=>(s=(s*16807)%2147483647)/2147483647;
+const MOB=()=>window.innerWidth<600;
+const TE='#92400e',TE2='#b45309',VM='#dc2626',OK='#15803d',AGUA='#bae6fd';
+function selo(c,x,y,ok,t){c.fillStyle=ok?'#dcfce7':'#fee2e2';c.beginPath();c.roundRect(x,y,240,30,6);c.fill();c.fillStyle=ok?OK:'#b91c1c';c.font='800 13px system-ui';c.textAlign='center';c.fillText(t,x+120,y+20);}
+/* ---------- professora e hipótese ---------- */
+function prof(c){const x=704,y=262;c.fillStyle='#78350f';c.beginPath();c.arc(x,y-56,17,Math.PI,0);c.fill();c.fillRect(x-17,y-56,6,16);c.fillRect(x+11,y-56,6,16);
+ c.fillStyle='#e0ac69';c.beginPath();c.arc(x,y-52,14,0,7);c.fill();c.fillStyle='#1f2937';c.beginPath();c.arc(x-5,y-54,1.8,0,7);c.arc(x+5,y-54,1.8,0,7);c.fill();
+ c.strokeStyle='#1f2937';c.lineWidth=1.5;c.beginPath();c.arc(x,y-49,5,.3,Math.PI-.3);c.stroke();c.fillStyle=ACC;c.beginPath();c.roundRect(x-20,y-36,40,62,10);c.fill();
+ c.strokeStyle='#78350f';c.lineWidth=3;c.beginPath();c.moveTo(x-18,y-18);c.lineTo(x-58,y-52);c.stroke();c.fillStyle='#e0ac69';c.beginPath();c.arc(x-18,y-18,5,0,7);c.fill();
+ c.fillStyle=INK;c.font='800 11px system-ui';c.textAlign='center';c.fillText('Professora',x,y+44);}
+function quadro(c){c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);c.strokeStyle='#e7e5e4';c.lineWidth=2;c.strokeRect(8,8,640,H-16);}
+function aula(P,depois){let i=0;const vai=()=>{G.aD=P[i].d;acao(`<b style="color:var(--main)">Professora:</b> ${P[i].t}`);
+  $('ctrl').innerHTML=(i?'<button class="btn ghost" id="bAv">Voltar</button>':'')+`<button class="btn" id="bAp">${i<P.length-1?'Continuar':'Começar'}</button><span class="small" style="color:var(--mut);margin-left:6px">explicação ${i+1} de ${P.length}</span>`;
+  if(i)$('bAv').onclick=()=>{i--;vai();};$('bAp').onclick=()=>{if(i<P.length-1){i++;vai();}else{G.aD=null;$('ctrl').innerHTML='';depois();}};};vai();}
+function hipotese(perg,ops,depois){acao(`<b style="color:var(--main)">Sua hipótese:</b> ${perg} Escolha antes de fazer o experimento.`);$('ctrl').innerHTML=ops.map((o,k)=>`<button class="tool" data-h="${k}">${o}</button>`).join('');
+ document.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{G.hip=+b.dataset.h;G.hipT=ops[G.hip];$('ctrl').innerHTML='';depois();});}
+const AU=c=>{if(!G.aD)return false;quadro(c);G.aD(c);prof(c);return true;};
+function txtQ(c,lin,x,y,tam){c.textAlign='left';lin.forEach((l,i)=>{c.fillStyle=l[0]==='*'?ACC2:INK;c.font=`${l[0]==='*'?800:500} ${tam||13}px system-ui`;c.fillText(l.replace(/^\*/,''),x,y+i*(tam||13)*1.9);});}
+function seta(c,x1,y1,x2,y2,cor){c.strokeStyle=cor||ACC2;c.fillStyle=cor||ACC2;c.lineWidth=2;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();const a=Math.atan2(y2-y1,x2-x1);c.beginPath();c.moveTo(x2,y2);c.lineTo(x2-9*Math.cos(a-.4),y2-9*Math.sin(a-.4));c.lineTo(x2-9*Math.cos(a+.4),y2-9*Math.sin(a+.4));c.fill();}
+/* ---------- desenhos ---------- */
+function cobertura(c,tipo,x0,x1,y,ys){const r=RNG(Math.round(x0*7+y));for(let x=x0+4;x<x1-2;x+=tipo==='grama'?5:9){const yy=ys?ys(x):y;
+ if(tipo==='grama'){c.strokeStyle=r()<.5?'#16a34a':'#22c55e';c.lineWidth=1.6;c.beginPath();c.moveTo(x,yy);c.lineTo(x+(r()-.5)*4,yy-8-r()*6);c.stroke();}
+ else if(tipo==='palhada'){c.strokeStyle=r()<.5?'#ca8a04':'#a16207';c.lineWidth=2;c.beginPath();const a=(r()-.5)*.6;c.moveTo(x-5,yy-1-r()*2);c.lineTo(x+5*Math.cos(a)+3,yy-1-r()*3+5*Math.sin(a));c.stroke();}}}
+function garrafa(c,x,y,w,h,tipo){c.fillStyle='rgba(224,242,254,.5)';c.strokeStyle='#94a3b8';c.lineWidth=1.5;c.beginPath();c.roundRect(x,y,w,h,8);c.fill();c.stroke();
+ c.beginPath();c.moveTo(x+w,y+6);c.lineTo(x+w+22,y+h*.45);c.lineTo(x+w+22,y+h*.75);c.lineTo(x+w,y+h-4);c.stroke();
+ c.fillStyle='#a16207';c.fillRect(x+2,y+h*.38,w-4,h*.6);c.fillStyle='#854d0e';for(let k=0;k<12;k++)c.fillRect(x+8+k*(w-16)/12,y+h*.6+(k%3)*4,3,3);
+ if(tipo!=='nu')cobertura(c,tipo,x+2,x+w-2,y+h*.38);}
+function copo(c,x,y,vol,tur){c.fillStyle=mix('#bae6fd','#92400e',tur/5);const hh=56*Math.min(1,vol/400);c.fillRect(x+3,y+59-hh,38,hh);c.strokeStyle='#64748b';c.lineWidth=1.5;c.beginPath();c.moveTo(x,y);c.lineTo(x+3,y+60);c.lineTo(x+41,y+60);c.lineTo(x+44,y);c.stroke();
+ c.fillStyle=MUT;c.font='600 8px system-ui';c.textAlign='left';[100,200,300,400].forEach(v=>{c.fillRect(x+40,y+59-56*v/400,4,1);});}
+function gotas(c,x0,x1,y0,y1,t){c.fillStyle='#38bdf8';for(let k=0;k<14;k++){const x=x0+((k*37)%(x1-x0)),yy=y0+((t*160+k*23)%(y1-y0));c.beginPath();c.ellipse(x,yy,1.6,4,0,0,7);c.fill();}}
+
+/* ---------- FASE 1 ---------- */
+const R1=[{n:'Solo nu',k:'nu',esc:320,tur:5},{n:'Palhada',k:'palhada',esc:170,tur:2},{n:'Grama',k:'grama',esc:110,tur:1}];
+function f1(){FSC=1.25;G={t:0,res:[null,null,null],reg:-1,rt:0,fim:0,aD:null,fase:'aula'};telaJogo('Garrafas na janela','0 de 3 garrafas');
+ const Y=k=>26+k*112;
+ const cena=(c,mostra)=>{R1.forEach((g,k)=>{const y=Y(k);c.fillStyle=INK;c.font='800 12px system-ui';c.textAlign='left';c.fillText(g.n,40,y+10);
+  garrafa(c,40,y+20,210,44,g.k);const r=mostra?G.res[k]:null,f=G.reg===k?Math.min(1,G.rt/2.4):r?1:0;copo(c,282,y+40,(r||R1[k]).esc*f*(r||G.reg===k?1:0),R1[k].tur);
+  if(G.reg===k){gotas(c,50,240,y-8,y+40,G.t);c.strokeStyle='#38bdf8';c.lineWidth=2;c.beginPath();c.moveTo(272,y+40);c.lineTo(290,y+48+40*f);c.stroke();}});};
+ const P=[{t:'Este é um experimento clássico de sala. Cortamos três garrafas PET de lado e enchemos com a mesma terra. Na primeira a terra fica nua. Na segunda cobrimos com palhada, folhas secas. Na terceira plantamos grama. Um copo embaixo da boca recolhe a água que escorre.',d:c=>cena(c,false)},
+  {t:'Num bom experimento só uma coisa muda de propósito. Aqui muda a cobertura do solo. O resto fica igual: a mesma terra, a mesma inclinação e a mesma quantidade de água, 500 mL em cada garrafa.',d:c=>{cena(c,false);c.fillStyle='#fff';c.strokeStyle='#e7e5e4';c.beginPath();c.roundRect(360,40,280,190,10);c.fill();c.stroke();
+   txtQ(c,['*Muda (variável testada)','cobertura do solo','*Fica igual (controle)','tipo de terra','inclinação das garrafas','500 mL de água em cada uma'],378,70,12.5);}},
+  {t:'Vamos medir duas coisas em cada copo: quantos mililitros de água escorreram pela superfície e a cor da água, numa escala de 0 (limpa) a 5 (barro puro). Água barrenta quer dizer terra indo embora.',d:c=>{garrafa(c,60,120,260,54,'nu');copo(c,352,150,300,5);seta(c,470,120,400,175);seta(c,470,250,400,200);
+   txtQ(c,['*volume que escorreu (mL)'],420,110,12.5);txtQ(c,['*cor da água (0 a 5)'],420,270,12.5);}}];
+ const joga=()=>{G.fase='jogo';acao('Toque em uma garrafa para regar com 500 mL. Observe o copo enchendo.');};
+ G.tap=(x,y)=>{if(G.fase!=='jogo'||G.reg>=0)return;const k=Math.floor((y-20)/112);if(k<0||k>2||G.res[k])return;G.reg=k;G.rt=0;};
+ G.upd=dt=>{if(G.reg<0)return;G.rt+=dt;if(G.rt>=2.6){const k=G.reg;G.res[k]=R1[k];G.reg=-1;const n=G.res.filter(Boolean).length;$('info').textContent=`${n} de 3 garrafas`;
+  acao(`${R1[k].n}: escorreram ${R1[k].esc} mL e a água saiu com cor ${R1[k].tur} de 5.${n<3?' Regue outra garrafa.':''}`);
+  if(n===3){G.fim=1;const certo=G.hip===0;acao(`Sua hipótese foi: ${G.hipT}. ${certo?'O resultado confirmou: o solo nu perdeu mais água e mais terra.':'O resultado foi outro: o solo nu perdeu mais água e mais terra. Errar uma hipótese faz parte da ciência.'}`);
+   botao('Ver a explicação',()=>fimFase(200,true,'Quando a gota de chuva bate no solo nu, ela solta grãos de terra, e a água que escorre leva esses grãos embora. A palhada e a grama recebem o impacto da gota, seguram a água por mais tempo e deixam mais água entrar no solo. Por isso escorreu menos água e mais limpa. Revisões de pesquisas de campo mostram que cobrir o solo com palhada reduz muito a perda de terra por erosão (Prosdocimi e colegas, 2016). Os números deste jogo são de um modelo, mas o padrão é o mesmo que você verá ao fazer o experimento de verdade.','Na sua escola ou no seu bairro, onde você vê solo descoberto? O que poderia cobri-lo?'));}}};
+ G.desenha=c=>{if(AU(c))return;c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);cena(c,true);if(G.fase==='jogo'&&G.reg<0&&!G.fim){c.fillStyle=MUT;c.font='600 10px system-ui';c.textAlign='left';c.fillText('toque numa garrafa para regar',40,H-8);}
+  painelR(c,20,320);rotulo(c,492,40,'Caderno de campo');c.font='700 11px system-ui';c.fillStyle=MUT;c.textAlign='left';c.fillText('Garrafa',492,62);c.textAlign='right';c.fillText('Escorreu · cor',732,62);
+  R1.forEach((g,k)=>linhaM(c,492,84+k*24,g.n,G.res[k]?`${g.esc} mL · ${g.tur}/5`:'...',G.res[k]?TE:MUT));
+  if(G.hipT){linhaM(c,492,170,'Hipótese',G.hipT,ACC2);}
+  c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';quebra(c,'Cada garrafa recebe 500 mL. O que não escorre entrou no solo.',492,196,236,13);
+  if(G.fim)selo(c,492,300,true,'EXPERIMENTO CONCLUÍDO');};
+ rodar();aula(P,()=>hipotese('Em qual garrafa a água vai sair mais barrenta?',['Solo nu','Palhada','Grama','Todas iguais'],joga));}
+
+/* ---------- FASE 2 ---------- */
+const Sf=p=>{const t=Math.atan(p/100),s=Math.sin(t);return 65.41*s*s+4.56*s+.065;};
+function f2(){FSC=1.25;const MIS=[10,20,40];G={t:0,nb:0,res:{},reg:0,fim:0,aD:null,fase:'aula'};telaJogo('Morro mais inclinado','0 de 3 medidas');
+ const X0=70,XB=370,YB=300,PX=6;const dec=()=>G.nb*2.5/50*100;
+ const rampa=(c,nb,chuva)=>{c.fillStyle='#e7e5e4';c.fillRect(20,YB,440,8);const hpx=nb*2.5*PX;const cores=['#1d4ed8','#b91c1c','#15803d','#7c3aed','#ca8a04','#0f766e','#be185d','#334155'];
+  for(let i=0;i<nb;i++){c.fillStyle=cores[i%8];c.fillRect(X0-34,YB-15*(i+1),52,14);c.fillStyle='rgba(255,255,255,.5)';c.fillRect(X0-30,YB-15*(i+1)+6,44,2);}
+  c.save();c.translate(X0,YB-hpx);c.rotate(Math.atan2(hpx,XB-X0));const L=Math.hypot(XB-X0,hpx);garrafa(c,0,-44,L-24,40,'nu');c.restore();
+  copo(c,XB+6,YB-62,G.reg>0?300*Math.min(1,G.reg/2.4):0,5);
+  c.strokeStyle=INK;c.lineWidth=1;c.beginPath();c.moveTo(X0,YB+22);c.lineTo(XB,YB+22);c.stroke();c.fillStyle=INK;c.font='700 10px system-ui';c.textAlign='center';c.fillText('comprimento: 50 cm',(X0+XB)/2,YB+36);
+  if(nb){c.beginPath();c.moveTo(X0-44,YB);c.lineTo(X0-44,YB-hpx);c.stroke();c.save();c.translate(X0-50,YB-hpx/2);c.rotate(-Math.PI/2);c.fillText(`altura: ${f1x(nb*2.5)} cm`,0,0);c.restore();}
+  if(chuva)gotas(c,X0,XB,20,YB-hpx-10,G.t);};
+ const P=[{t:'Agora usamos só a garrafa de solo nu. Vamos inclinar a garrafa colocando livros embaixo de uma ponta. Cada livro tem 2,5 cm de altura.',d:c=>rampa(c,3,false)},
+  {t:'Declividade é quanto o terreno sobe para cada pedaço que anda. Calculamos assim: altura dividida pelo comprimento, vezes 100. Com 5 cm de altura em 50 cm de comprimento: 5 ÷ 50 = 0,1, e 0,1 × 100 = 10%. Agricultores e engenheiros usam essa mesma conta.',d:c=>{rampa(c,2,false);c.fillStyle='#fff';c.strokeStyle='#e7e5e4';c.beginPath();c.roundRect(420,40,220,130,10);c.fill();c.stroke();txtQ(c,['*declividade =','altura ÷ comprimento × 100','*exemplo','5 ÷ 50 × 100 = 10%'],436,66,12.5);}},
+  {t:'Sua missão: montar três morros, com 10%, 20% e 40% de declividade, chover a mesma quantidade em cada um e medir quantos gramas de terra caíram no copo. Descubra quantos livros cada morro precisa.',d:c=>{rampa(c,4,true);txtQ(c,['*Missões','10% de declividade','20% de declividade','40% de declividade'],440,60,12.5);}}];
+ const ctrl=()=>{$('ctrl').innerHTML='<button class="btn ghost" id="bMn">- livro</button><button class="btn ghost" id="bMa">+ livro</button><button class="btn" id="bCh">Chover</button>';
+  $('bMn').onclick=()=>{G.nb=Math.max(0,G.nb-1);};$('bMa').onclick=()=>{G.nb=Math.min(8,G.nb+1);};$('bCh').onclick=()=>{if(!G.nb){acao('A garrafa está plana. Coloque pelo menos um livro.');return;}G.reg=.01;$('ctrl').innerHTML='';};};
+ const joga=()=>{G.fase='jogo';ctrl();acao('Use + livro e - livro para montar a primeira missão. Depois toque em Chover.');};
+ G.upd=dt=>{if(!G.reg)return;G.reg+=dt;if(G.reg<2.6)return;G.reg=0;const d=dec(),g=Math.round(20*Sf(d));G.res[d]=g;const feitas=MIS.filter(m=>G.res[m]!=null).length;$('info').textContent=`${feitas} de 3 medidas`;
+  if(!MIS.includes(d))acao(`${f1x(d)}% de declividade: ${g} g de terra. Essa não é uma das missões, mas a medida entrou no gráfico. Missões: 10%, 20% e 40%.`);else acao(`${f1x(d)}% de declividade: ${g} g de terra no copo.${feitas<3?' Monte a próxima missão.':''}`);
+  if(feitas<3){ctrl();return;}G.fim=1;const r=G.res[20]/G.res[10];const certo=G.hip===1;
+  acao(`De 10% para 20% a terra perdida foi de ${G.res[10]} g para ${G.res[20]} g, ${f1x(r)} vezes mais. Sua hipótese foi: ${G.hipT}. ${certo?'Você acertou.':'O resultado mostrou outra coisa.'}`);
+  botao('Ver a explicação',()=>fimFase(200,true,`Dobrar a declividade não dobra a erosão: neste experimento a terra perdida ficou ${f1x(r)} vezes maior. Num morro mais inclinado, a água escorre mais rápido e com mais força para arrancar e carregar a terra. O jogo usa o fator de declividade da Equação Universal de Perda de Solo, de Wischmeier e Smith (1978), usada até hoje para planejar a conservação do solo. Por isso as áreas muito inclinadas são as primeiras que precisam de proteção, e a lei brasileira protege topos de morro e encostas muito íngremes.`,'Um terreno sobe 12 metros a cada 60 metros de comprimento. Qual é a declividade dele em porcentagem?'));};
+ G.desenha=c=>{if(AU(c))return;c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);rampa(c,G.nb,G.reg>0);
+  painelR(c,20,320);rotulo(c,492,40,'Calculando a declividade');linhaM(c,492,64,'Livros',`${G.nb} × 2,5 cm = ${f1x(G.nb*2.5)} cm`);linhaM(c,492,88,'Conta',`${f1x(G.nb*2.5)} ÷ 50 × 100`);linhaM(c,492,110,'Declividade',`${f1x(dec())}%`,ACC2);
+  MIS.forEach((m,i)=>linhaM(c,492,136+i*22,`Missão ${m}%`,G.res[m]!=null?`${G.res[m]} g de terra`:'...',G.res[m]!=null?OK:MUT));
+  const pts=Object.entries(G.res).map(([d,g])=>[+d,g]).sort((a,b)=>a[0]-b[0]);if(pts.length){const O={x0:520,y0:216,w:200,h:80,xmin:0,xmax:42,ymin:0,ymax:Math.max(60,...pts.map(p=>p[1]))*1.1,xt:[0,10,20,30,40],yt:[0],xf:v=>v+'%',titulo:'terra perdida (g)'};const{X,Y}=eixos(c,O);
+   c.strokeStyle=TE2;c.lineWidth=1.5;c.beginPath();pts.forEach(([x,y],i)=>i?c.lineTo(X(x),Y(y)):c.moveTo(X(x),Y(y)));c.stroke();pts.forEach(([x,y])=>{c.fillStyle=TE;c.beginPath();c.arc(X(x),Y(y),3.5,0,7);c.fill();});}};
+ rodar();aula(P,()=>hipotese('Se a declividade dobrar, de 10% para 20%, a terra perdida vai:',['Dobrar','Mais que dobrar','Ficar igual'],joga));}
+
+/* ---------- FASE 3 ---------- */
+const LOC=[{n:'Mata da escola',c:'Mata',k:'mata',T:1,dur:3.5},{n:'Gramado pisoteado',c:'Gramado',k:'grama',T:6,dur:5.5},{n:'Trilha de terra batida',c:'Trilha',k:'trilha',T:20,dur:8}];
+function f3(){FSC=1.25;G={t:0,sel:-1,run:null,res:[null,null,null],fim:0,aD:null,fase:'aula',err:0};telaJogo('O teste do cano','0 de 3 lugares');
+ const perfil=(c,k,nivel,clock)=>{const cx=200;c.fillStyle='#e0f2fe';c.fillRect(20,20,430,130);
+  const cor={mata:'#14532d',grama:'#65a30d',trilha:'#a8a29e'}[k];c.fillStyle=k==='trilha'?'#a16207':'#854d0e';c.fillRect(20,150,430,190);
+  const r=RNG(5);const por=k==='mata'?60:k==='grama'?26:8;for(let i=0;i<por;i++){c.fillStyle='rgba(255,247,237,.65)';c.beginPath();c.arc(30+r()*410,170+r()*160,1.5+r()*(k==='mata'?3:1.5),0,7);c.fill();}
+  if(k==='mata'){c.strokeStyle='#78350f';c.lineWidth=1.5;for(let i=0;i<8;i++){c.beginPath();const x=40+i*52;c.moveTo(x,150);c.quadraticCurveTo(x+12,210,x-6,280);c.stroke();}cobertura(c,'palhada',20,450,150);for(let i=0;i<4;i++){c.fillStyle='#166534';c.beginPath();c.arc(60+i*110,70,30,0,7);c.fill();c.fillStyle='#78350f';c.fillRect(56+i*110,95,8,55);}}
+  if(k==='grama')cobertura(c,'grama',20,450,150);
+  if(k==='trilha'){c.fillStyle='#78716c';c.fillRect(20,150,430,10);}
+  c.fillStyle='rgba(148,163,184,.35)';c.fillRect(cx-30,90,60,110);c.strokeStyle='#475569';c.lineWidth=3;c.beginPath();c.moveTo(cx-30,90);c.lineTo(cx-30,200);c.moveTo(cx+30,90);c.lineTo(cx+30,200);c.stroke();
+  const topo=150-60*nivel;if(nivel>0){c.fillStyle='rgba(56,189,248,.75)';c.fillRect(cx-28,topo,56,150-topo);}
+  c.fillStyle=INK;c.font='700 10px system-ui';c.textAlign='left';for(let v=0;v<=10;v+=5){c.fillRect(cx+31,150-6*v,6,1.5);c.fillText(`${v} cm`,cx+40,154-6*v);}
+  if(clock!=null){c.fillStyle='#fff';c.strokeStyle='#d6d3d1';c.beginPath();c.roundRect(300,34,140,52,8);c.fill();c.stroke();c.fillStyle=INK;c.font='800 22px system-ui';c.textAlign='center';const m=Math.floor(clock),s=Math.floor((clock-m)*60);c.fillText(`${m}:${String(s).padStart(2,'0')}`,370,66);c.font='600 9px system-ui';c.fillStyle=MUT;c.fillText('minutos no cronômetro',370,80);}};
+ const P=[{t:'Para saber se a chuva consegue entrar no solo, usamos um cano de PVC enterrado alguns centímetros. Enchemos o cano com água até a marca de 10 cm e cronometramos quanto tempo a água leva para sumir.',d:c=>perfil(c,'grama',1,0)},
+  {t:'Vamos testar três lugares da escola: a mata, o gramado onde todo mundo pisa e a trilha de terra batida. Repare nos espaços entre os grãos de terra, os poros. É por eles que a água entra.',d:c=>{perfil(c,'mata',0,null);c.fillStyle='#fff';c.fillRect(470,40,160,90);txtQ(c,['*poros','espaços vazios','entre os grãos'],482,66,12.5);seta(c,470,100,330,230,'#fff7ed');}},
+  {t:'Você é o cronometrista. A água vai baixando. Quando ela sumir do cano, toque em Parar. Depois calculamos a velocidade: 10 cm divididos pelo tempo em minutos.',d:c=>perfil(c,'trilha',.6,2.5)}];
+ const ctrl=()=>{$('ctrl').innerHTML=LOC.map((l,i)=>`<button class="tool${G.sel===i?' on':''}" data-l="${i}">${l.n}${G.res[i]?' (feito)':''}</button>`).join('')+'<button class="btn" id="bEn">Encher o cano</button>';
+  document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{G.sel=+b.dataset.l;ctrl();});$('bEn').onclick=()=>{if(G.sel<0){acao('Escolha um lugar primeiro.');return;}G.run={t:0};$('ctrl').innerHTML='<button class="btn" id="bPa">Parar o cronômetro</button>';$('bPa').onclick=para;acao('Observe a água baixando. Toque em Parar quando ela sumir do cano.');};};
+ const para=()=>{const L=LOC[G.sel],fr=G.run.t/L.dur;if(fr<.95){G.err++;acao('Ainda tem água no cano. Espere mais um pouco e toque de novo.');return;}
+  const tm=fr*L.T;G.res[G.sel]=tm;G.run=null;const n=G.res.filter(Boolean).length;$('info').textContent=`${n} de 3 lugares`;
+  acao(`${L.n}: ${f1x(tm)} min. Velocidade: 10 ÷ ${f1x(tm)} = ${f1x(10/tm)} cm por minuto.${fr>1.15?' Você parou um pouco tarde, mas a medida vale.':''}`);
+  if(n<3){G.sel=-1;ctrl();return;}G.fim=1;const certo=G.hip===0;
+  acao(`Na mata a água entrou ${f1x(G.res[2]/G.res[0])} vezes mais rápido do que na trilha. Sua hipótese foi: ${G.hipT}. ${certo?'Você acertou.':'O resultado mostrou outra coisa.'}`);
+  botao('Ver a explicação',()=>fimFase(Math.max(80,200-10*G.err),true,'O solo da mata tem muitos poros grandes, abertos por raízes, minhocas e formigas, e a folhagem no chão protege esses poros. Quando pisamos muito ou passamos máquinas pesadas, os grãos se apertam e os poros grandes somem. É a compactação do solo, que reduz a entrada de água e aumenta a enxurrada (Hamza e Anderson, 2005). Água que não entra no solo não abastece as nascentes e o lençol freático. Ela escorre pela superfície, leva terra e pode causar alagamentos.','Que lugares da sua cidade são como a trilha de terra batida? Para onde vai a água da chuva que cai neles?'));};
+ const joga=()=>{G.fase='jogo';ctrl();acao('Escolha um lugar, encha o cano e seja o cronometrista.');};
+ G.upd=dt=>{if(G.run){G.run.t+=dt;if(G.run.t>LOC[G.sel].dur*1.5)para();}};
+ G.desenha=c=>{if(AU(c))return;c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);const k=G.sel>=0?LOC[G.sel].k:'grama';const L=G.sel>=0?LOC[G.sel]:null;
+  const fr=G.run?G.run.t/L.dur:0;perfil(c,k,G.run?Math.max(0,1-fr):0,G.run?fr*L.T:null);
+  painelR(c,20,320);rotulo(c,492,40,'Velocidade de infiltração');c.font='700 11px system-ui';c.fillStyle=MUT;c.textAlign='left';c.fillText('Lugar',492,62);c.textAlign='right';c.fillText('Tempo · cm por min',732,62);
+  LOC.forEach((l,i)=>linhaM(c,492,84+i*24,l.c,G.res[i]?`${f1x(G.res[i])} min · ${f1x(10/G.res[i])}`:'...',G.res[i]?OK:MUT));if(G.hipT)linhaM(c,492,170,'Hipótese',G.hipT,ACC2);
+  c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';quebra(c,'Velocidade = 10 cm ÷ tempo em minutos. O tempo de cada lugar vem do modelo do jogo.',492,196,236,13);};
+ rodar();aula(P,()=>hipotese('Onde a água vai entrar mais rápido no solo?',['Mata','Gramado pisoteado','Trilha de terra batida'],joga));}
+
+/* ---------- FASE 4 ---------- */
+const NIV=(k,x)=>60+k*48+16*Math.sin((x-20)/60);
+function f4(){FSC=1.25;G={t:0,F:[],dr:null,gotas:null,res:null,demo:true,fim:0,aD:null,fase:'aula',tent:0};telaJogo('Plantio em nível','fileiras: 0 de 5');
+ const XA=20,XB=460,RIO=330;
+ const efic=([x1,y1,x2,y2])=>{const xm=(x1+x2)/2,a=Math.atan2(y2-y1,x2-x1),t=Math.atan(16/60*Math.cos((xm-20)/60));const d=a-t;return Math.pow(Math.cos(d),2);};
+ const morro=(c)=>{c.fillStyle='#fef3c7';c.fillRect(XA,20,XB-XA,RIO-20);for(let k=0;k<6;k++){c.strokeStyle='rgba(146,64,14,.35)';c.lineWidth=1;c.setLineDash([4,4]);c.beginPath();for(let x=XA;x<=XB;x+=6){const y=NIV(k,x);x===XA?c.moveTo(x,y):c.lineTo(x,y);}c.stroke();c.setLineDash([]);
+   c.fillStyle='rgba(146,64,14,.6)';c.font='600 8px system-ui';c.textAlign='left';c.fillText(`${(6-k)*10} m`,XA+3,NIV(k,XA)-3);}
+  const turv=G.res?Math.min(1,G.res.rio/20):0;c.fillStyle=mix('#7dd3fc','#92400e',turv*.9);c.fillRect(XA,RIO,XB-XA,26);c.fillStyle='#0c4a6e';c.font='700 10px system-ui';c.fillText('córrego',XA+6,RIO+17);
+  c.fillStyle=MUT;c.font='600 9px system-ui';c.textAlign='right';c.fillText('topo do morro',XB-4,32);};
+ const fileira=(c,f,cor)=>{const[x1,y1,x2,y2]=f,n=Math.max(2,Math.floor(Math.hypot(x2-x1,y2-y1)/10));for(let i=0;i<=n;i++){const x=x1+(x2-x1)*i/n,y=y1+(y2-y1)*i/n;c.fillStyle=cor||'#15803d';c.beginPath();c.arc(x,y,4.5,0,7);c.fill();}};
+ const P=[{t:'Este é um morro visto de cima. As linhas tracejadas são curvas de nível: cada uma liga pontos que estão na mesma altura. A água da chuva sempre desce cortando essas linhas, do topo até o córrego.',d:c=>{morro(c);seta(c,240,40,240,320,'#0284c7');txtQ(c,['*a água desce','cortando as curvas'],480,80,12.5);}},
+  {t:'Um agricultor plantou as fileiras morro abaixo, no sentido da água. Vamos ver o que acontece quando chove. Depois será a sua vez de plantar.',d:c=>{morro(c);[100,200,300,400].forEach(x=>fileira(c,[x,50,x,310]));}},
+  {t:'Plantar em nível é plantar seguindo as curvas de nível, atravessando o caminho da água. Cada fileira vira uma pequena barreira. É a mesma ideia dos terraços que os incas construíam nas montanhas.',d:c=>{morro(c);[0,2,4].forEach(k=>{const f=[];for(let x=40;x<=440;x+=10)f.push([x,NIV(k,x)+20]);f.forEach(([x,y])=>{c.fillStyle='#15803d';c.beginPath();c.arc(x,y,4.5,0,7);c.fill();});});}}];
+ const chove=()=>{const r=RNG(41+G.tent*13);G.gotas=Array.from({length:40},(_,i)=>({x:XA+8+i*(XB-XA-16)/39,y:22-(i%5)*12,v:70+r()*20,on:1,pass:r}));G.res=null;$('ctrl').innerHTML='';};
+ const ctrl=()=>{$('ctrl').innerHTML='<button class="btn ghost" id="bDf">Desfazer fileira</button><button class="btn" id="bCh">Chover</button>';$('bDf').onclick=()=>{G.F.pop();G.res=null;att();};$('bCh').onclick=()=>{if(!G.F.length){acao('Plante pelo menos uma fileira.');return;}G.tent++;chove();};};
+ const att=()=>$('info').textContent=`fileiras: ${G.F.length} de 5`;
+ const fim=()=>{const n=G.gotas.filter(g=>g.on===2).length;G.res={rio:n};
+  if(G.demo){G.demo=false;G.F=[];att();acao(`Com as fileiras morro abaixo, ${n} de 40 gotas chegaram ao córrego levando terra. Agora é com você: arraste o dedo no morro para plantar até 5 fileiras.`);ctrl();return;}
+  if(n<=8){G.fim=1;acao(`Correto! ${n?`Só ${n} de 40 gotas chegaram`:"Nenhuma das 40 gotas chegou"} ao córrego. Sua hipótese foi: ${G.hipT}.`);
+   botao('Ver a explicação',()=>fimFase(Math.max(80,200-20*(G.tent-1)),true,'Fileiras plantadas morro abaixo viram canais: a água corre entre elas, ganha velocidade e leva a terra para o córrego. Fileiras em nível atravessam o caminho da água. Cada uma segura um pouco, a água perde força e tem mais tempo para entrar no solo. O terraceamento leva essa ideia mais longe, com degraus ou pequenos camalhões de terra. Em lavouras sem nenhuma proteção, o solo pode ser perdido muito mais rápido do que se forma, o que ameaça a agricultura a longo prazo (Montgomery, 2007).','Se você olhar uma plantação num morro, como sabe se as fileiras foram feitas em nível?'));}
+  else{acao(`${n} de 40 gotas chegaram ao córrego. Meta: no máximo 8. Plante fileiras mais compridas e acompanhando as linhas tracejadas.`);ctrl();}};
+ ptr((x,y)=>{if(G.fase!=='jogo'||G.gotas||G.fim||G.demo)return;if(x<XA||x>XB||y>RIO)return;G.dr=[x,y,x,y];},'pointerdown');
+ ptr((x,y)=>{if(G.dr){G.dr[2]=clamp(x,XA,XB);G.dr[3]=clamp(y,22,RIO-4);}});
+ ptr(()=>{if(!G.dr)return;const f=G.dr;G.dr=null;if(Math.hypot(f[2]-f[0],f[3]-f[1])<40){acao('Fileira muito curta. Arraste mais longe.');return;}if(G.F.length>=5){acao('Já são 5 fileiras. Desfaça uma para plantar outra.');return;}
+  G.F.push(f);G.res=null;att();acao(`Fileira plantada. Alinhamento com a curva de nível: ${Math.round(efic(f)*100)}%.`);},'pointerup');
+ G.upd=dt=>{if(!G.gotas)return;let vivas=0;G.gotas.forEach(g=>{if(g.on!==1)return;vivas++;const y0=g.y;g.y+=g.v*dt;
+   for(const f of G.F){const[x1,y1,x2,y2]=f;if(g.x<Math.min(x1,x2)-3||g.x>Math.max(x1,x2)+3)continue;const t=x2===x1?0:(g.x-x1)/(x2-x1);const yf=x2===x1?null:y1+t*(y2-y1);
+    if(yf!=null&&y0<yf&&g.y>=yf){if(g.pass()<efic(f)*.92){g.on=0;g.y=yf;break;}}}
+   if(g.on===1&&g.y>=RIO){g.on=2;}});if(!vivas){fim();G.gotas=G.gotas.map(g=>({...g}));G.gotasF=G.gotas;G.gotas=null;}};
+ G.desenha=c=>{if(AU(c))return;c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);morro(c);
+  G.F.forEach(f=>fileira(c,f));if(G.dr)fileira(c,G.dr,'#86efac');
+  const gs=G.gotas||G.gotasF;if(gs)gs.forEach(g=>{c.fillStyle=g.on===0?'#16a34a':g.on===2?TE:'#0284c7';c.beginPath();c.ellipse(g.x,Math.min(g.y,RIO+10),2.6,5,0,0,7);c.fill();});
+  painelR(c,20,320);rotulo(c,492,40,'Planejando o plantio');linhaM(c,492,64,'Fileiras',`${G.F.length} de 5`);
+  if(!G.demo)G.F.forEach((f,i)=>linhaM(c,492,88+i*20,`Fileira ${i+1}: alinhamento`,`${Math.round(efic(f)*100)}%`,efic(f)>.8?OK:VM));
+  if(G.res)linhaM(c,492,196,'Gotas no córrego',`${G.res.rio} de 40`,G.res.rio<=8?OK:VM);
+  c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';quebra(c,'Gota verde: segura por uma fileira. Gota marrom: chegou ao córrego levando terra.',492,244,236,13);if(G.fim)selo(c,492,300,true,'CORRETO');};
+ rodar();aula(P,()=>{G.fase='jogo';hipotese('Qual jeito de plantar segura mais a enxurrada?',['Fileiras morro abaixo','Fileiras atravessando o morro'],()=>{acao('Primeiro veja a chuva na plantação morro abaixo.');G.tent=0;G.F=[100,200,300,400].map(x=>[x,50,x,310]);chove();});});}
+
+/* ---------- FASE 5 ---------- */
+const USO={mata:{n:'Mata',p:0,s:1},pasto:{n:'Pasto bem manejado',p:2,s:3},pd:{n:'Plantio direto',p:4,s:4},conv:{n:'Lavoura com solo exposto',p:5,s:12}};
+function f5(){FSC=1.25;const AR=[{x:30,y:30,w:205,h:95,ap:0},{x:245,y:30,w:205,h:95,ap:0},{x:30,y:133,w:205,h:95,ap:0},{x:245,y:133,w:205,h:95,ap:0},{x:30,y:236,w:205,h:34,ap:1},{x:245,y:236,w:205,h:34,ap:1}];
+ const OPT=[['mata','pasto','pd','conv'],['mata','pasto','conv']];G={t:0,u:['conv','conv','pasto','pasto','conv','pasto'],ok:false,fim:0,aD:null,fase:'aula',mud:0};telaJogo('Do morro ao rio','planejando');
+ const calc=()=>{const up=[0,1,2,3].reduce((s,i)=>s+USO[G.u[i]].s,0),apm=[4,5].filter(i=>G.u[i]==='mata').length,fil=[1,.85,.7][apm],rio=up*fil+[4,5].reduce((s,i)=>s+USO[G.u[i]].s,0),pr=G.u.reduce((s,u)=>s+USO[u].p,0);return{rio:Math.round(rio*10)/10,pr,apm};};
+ const area=(c,a,u)=>{const r=RNG(a.x*3+a.y);c.save();c.beginPath();c.rect(a.x,a.y,a.w,a.h);c.clip();
+  if(u==='mata'){c.fillStyle='#bbf7d0';c.fillRect(a.x,a.y,a.w,a.h);for(let i=0;i<a.w*a.h/260;i++){c.fillStyle=r()<.5?'#15803d':'#166534';c.beginPath();c.arc(a.x+r()*a.w,a.y+r()*a.h,6+r()*5,0,7);c.fill();}}
+  else if(u==='pasto'){c.fillStyle='#d9f99d';c.fillRect(a.x,a.y,a.w,a.h);cobertura(c,'grama',a.x,a.x+a.w,0,x=>a.y+a.h*.5+Math.sin(x)*a.h*.3);for(let i=0;i<3;i++){const x=a.x+30+i*60,y=a.y+a.h*.45;c.fillStyle='#fff';c.beginPath();c.ellipse(x,y,9,5,0,0,7);c.fill();c.fillStyle='#1f2937';c.beginPath();c.arc(x+3,y-1,2,0,7);c.fill();}}
+  else if(u==='pd'){c.fillStyle='#fde68a';c.fillRect(a.x,a.y,a.w,a.h);for(let y=a.y+8;y<a.y+a.h;y+=12){cobertura(c,'palhada',a.x,a.x+a.w,y);for(let x=a.x+6;x<a.x+a.w;x+=10){c.fillStyle='#22c55e';c.beginPath();c.arc(x,y-4,2.5,0,7);c.fill();}}}
+  else{c.fillStyle='#d6a574';c.fillRect(a.x,a.y,a.w,a.h);c.strokeStyle='#92400e';c.lineWidth=2;for(let y=a.y+6;y<a.y+a.h;y+=9){c.beginPath();c.moveTo(a.x,y);c.lineTo(a.x+a.w,y);c.stroke();}}
+  c.restore();c.strokeStyle=a.ap?'#0f766e':'#fff';c.lineWidth=a.ap?2.5:2;c.strokeRect(a.x,a.y,a.w,a.h);
+  c.fillStyle='rgba(255,255,255,.85)';const t=a.ap?`APP: ${USO[u].n}`:USO[u].n;c.font='700 10px system-ui';const tw=c.measureText(t).width;c.fillRect(a.x+4,a.y+4,tw+10,16);c.fillStyle=INK;c.textAlign='left';c.fillText(t,a.x+9,a.y+16);};
+ const mapa=(c,us,rio)=>{c.fillStyle='#f5f5f4';c.fillRect(20,20,440,330);AR.forEach((a,i)=>area(c,a,us[i]));c.fillStyle=mix('#38bdf8','#92400e',Math.min(1,rio/40));c.beginPath();c.moveTo(20,278);for(let x=20;x<=460;x+=10)c.lineTo(x,282+Math.sin(x/30)*4);c.lineTo(460,330);c.lineTo(20,330);c.fill();
+  c.fillStyle='#fff';c.font='700 10px system-ui';c.textAlign='left';c.fillText('rio que desce para o Pantanal',30,316);c.fillStyle=MUT;c.font='600 9px system-ui';c.fillText('topo do morro',380,16);};
+ const P=[{t:'Agora pensamos em escala de paisagem. Esta é uma pequena bacia: o morro, as faixas na beira do rio e o rio que segue para o Pantanal. Toda a terra que a chuva arranca do morro desce para esse rio.',d:c=>mapa(c,['conv','conv','conv','conv','conv','conv'],48)},
+  {t:'As faixas na beira do rio são Áreas de Preservação Permanente, as APPs. O Código Florestal, a Lei 12.651 de 2012, manda manter vegetação nativa nessas faixas. Para rios com menos de 10 metros de largura, a faixa mínima é de 30 metros de cada lado. A mata ciliar filtra a enxurrada antes dela chegar à água.',d:c=>{mapa(c,['pasto','pasto','pasto','pasto','mata','mata'],10);seta(c,520,200,440,252,'#0f766e');txtQ(c,['*APP','mata ciliar'],480,190,12.5);}},
+  {t:'Sua missão é ser o técnico da bacia. A família precisa produzir pelo menos 14 unidades de alimento, e o rio pode receber no máximo 20 unidades de terra. Compare os usos: lavoura com solo exposto produz um pouco mais, mas solta muita terra. O plantio direto mantém palha sobre o solo.',d:c=>{c.fillStyle='#fff';c.strokeStyle='#e7e5e4';c.beginPath();c.roundRect(40,40,560,250,10);c.fill();c.stroke();c.font='800 12px system-ui';c.fillStyle=MUT;c.textAlign='left';c.fillText('USO',60,70);c.textAlign='right';c.fillText('PRODUÇÃO',440,70);c.fillText('TERRA SOLTA',580,70);
+   Object.values(USO).forEach((u,i)=>{c.font='600 13px system-ui';c.fillStyle=INK;c.textAlign='left';c.fillText(u.n,60,104+i*42);c.textAlign='right';c.fillText(u.p,440,104+i*42);c.fillStyle=u.s>5?VM:INK;c.fillText(u.s,580,104+i*42);});
+   c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';c.fillText('Unidades relativas do modelo do jogo, para comparação.',60,276);}}];
+ G.tap=(x,y)=>{if(G.fase!=='jogo'||G.fim)return;const i=AR.findIndex(a=>x>=a.x&&x<=a.x+a.w&&y>=a.y&&y<=a.y+a.h);if(i<0)return;const op=OPT[AR[i].ap];G.u[i]=op[(op.indexOf(G.u[i])+1)%op.length];G.mud++;confere();};
+ const confere=()=>{const r=calc();const app=r.apm===2;G.ok=r.pr>=14&&r.rio<=20&&app;
+  if(G.ok){acao(`Plano aprovado! Produção ${r.pr}, terra no rio ${f1x(r.rio)} e as duas APPs com mata.`);$('ctrl').innerHTML='<button class="btn" id="bOk">Concluir o plano</button>';$('bOk').onclick=fecha;}
+  else{$('ctrl').innerHTML='';acao(!app?'As faixas na beira do rio são APP e precisam ter mata.':r.pr<14?`Produção ${r.pr}: faltam ${14-r.pr} unidades de alimento.`:`Terra no rio: ${f1x(r.rio)}. O limite é 20. Troque algum uso que solta muita terra.`);}};
+ const fecha=()=>{G.fim=1;acao('Plano concluído.');botao('Ver a explicação',()=>fimFase(200,true,'O plano que funciona mistura produção e proteção. O plantio direto planta sem revolver a terra e mantém a palha da colheita anterior sobre o solo, por isso produz quase o mesmo e solta muito menos terra. É hoje um dos sistemas mais usados no Brasil (Derpsch e colegas, 2010). A mata ciliar na APP filtra a enxurrada e segura as margens. Quando muita terra chega aos rios, eles ficam rasos, um processo chamado assoreamento. No Pantanal, o rio Taquari recebe muita areia do planalto e rompe as margens em arrombados que mudam o curso da água, como estudou Assine (2005).','Quem paga o prejuízo quando a terra de uma fazenda no planalto vai parar no rio de quem vive no Pantanal?'));};
+ G.upd=()=>{};
+ G.desenha=c=>{if(AU(c))return;c.fillStyle='#fafaf9';c.fillRect(0,0,W,H);const r=calc();mapa(c,G.u,r.rio);
+  painelR(c,20,320);rotulo(c,492,40,'Técnico da bacia');linhaM(c,492,64,'Produção (mín. 14)',`${r.pr}`,r.pr>=14?OK:VM);linhaM(c,492,88,'Terra no rio (máx. 20)',`${f1x(r.rio)}`,r.rio<=20?OK:VM);linhaM(c,492,112,'APPs com mata',`${r.apm} de 2`,r.apm===2?OK:VM);
+  c.fillStyle='#e5e7eb';c.fillRect(492,126,240,10);c.fillStyle=r.rio<=20?'#0284c7':TE;c.fillRect(492,126,240*Math.min(1,r.rio/50),10);c.fillStyle=INK;c.fillRect(492+240*20/50,122,2,18);
+  c.fillStyle=MUT;c.font='500 10px system-ui';c.textAlign='left';quebra(c,'Toque numa área para trocar o uso. A mata ciliar nas duas APPs filtra parte da terra que desce do morro.',492,156,236,13);if(G.ok)selo(c,492,300,true,'CORRETO');};
+ rodar();aula(P,()=>{G.fase='jogo';acao('Toque nas áreas para trocar o uso até cumprir as três metas.');confere();});}
+
+const _fimFase=fimFase;
+fimFase=function(pts,ok,oque,perg,extra){let img='';try{const cv=$('cv');if(cv)img=`<img alt="Resultado da fase" src="${cv.toDataURL('image/png')}" style="display:block;width:100%;max-width:640px;margin:12px auto;border:1px solid var(--line);border-radius:10px">`;}catch(e){}
+ _fimFase(pts,ok,oque,perg,(extra||'')+img);const el=document.querySelector('.card.res');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});};
+
+/* ================= INICIO / AVATAR ================= */
+function inicio(){parar();G=null;cx=null;$('hud').style.display='none';$('rankBox').style.display='block';
+ $('tela').innerHTML=`<div class="card"><div class="capa"><canvas id="cA" width="560" height="560"></canvas>
+ <div><h2>Seu perfil de pesquisador</h2><div class="opts">
+ <div class="l">Pele</div><div class="sw" id="sP">${PELES.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.pele===i?'on':''}" aria-label="pele ${i+1}"></button>`).join('')}</div>
+ <div class="l">Cabelo</div><div class="sw" id="sE">${ESTILOS.map(([k,t])=>`<button class="tx ${A.estilo===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <div class="sw" id="sC">${CABS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.cab===i?'on':''}" aria-label="cor ${i+1}"></button>`).join('')}</div>
+ <div class="l">Camiseta</div><div class="sw" id="sT">${CAMISAS.map((c,i)=>`<button style="background:${c}" data-i="${i}" class="${A.camisa===i?'on':''}" aria-label="camiseta ${i+1}"></button>`).join('')}</div>
+ <div class="l">Chapéu</div><div class="sw" id="sH">${CHAPEUS.map(([k,t])=>`<button class="tx ${A.chapeu===k?'on':''}" data-k="${k}">${t}</button>`).join('')}</div>
+ <input class="nome" id="iN" maxlength="20" placeholder="Seu nome" value="${esc(A.nome)}">
+ </div></div></div>
+ <div class="row" style="margin-top:14px"><button class="btn" id="bJ">Iniciar as 5 fases</button><button class="btn ghost" id="bG">Guia do professor</button></div>
+ <p class="small" style="margin-top:10px">Geografia, Ciências e Matemática · 6º ano · BNCC EF06GE10, EF06MA13, EF05CI03</p></div>`;
+ const pinta=()=>{const c=$('cA').getContext('2d');c.clearRect(0,0,560,560);c.fillStyle='#fffbeb';c.fillRect(0,0,560,560);c.fillStyle='#fde68a';c.beginPath();c.arc(280,600,260,0,7);c.fill();avatar(c,280,560,6.4,A,true);};
+ pinta();
+ const liga=(id,f)=>document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{f(b);salvaA();document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b));pinta();});
+ liga('sP',b=>A.pele=+b.dataset.i);liga('sC',b=>A.cab=+b.dataset.i);liga('sT',b=>A.camisa=+b.dataset.i);liga('sE',b=>A.estilo=b.dataset.k);liga('sH',b=>A.chapeu=b.dataset.k);
+ $('iN').oninput=e=>{A.nome=e.target.value;salvaA();};
+ $('bJ').onclick=novo;$('bG').onclick=guia;
+}
+function novo(){S={f:0,tot:0,fp:0,res:[],fichas:0};salvo=false;intro();}
+function relatorio(){parar();G=null;cx=null;$('rankBox').style.display='block';const nome=A.nome.trim()||'Pesquisador';
+ $('tela').innerHTML=`<div class="card"><div class="rel"><canvas id="cR" width="240" height="240"></canvas><div><div class="small">Relatório de campo</div><h2>${esc(nome)}</h2><div class="big" style="font-size:2rem;font-weight:800;color:var(--deep)">${S.tot} pts</div></div></div>
+ <table class="tab" style="margin-top:12px"><tr><th>Fase</th><th>Pontos</th><th>Meta</th></tr>${FASES.map((F,i)=>{const r=S.res[i]||{pts:0,ok:false};return`<tr><td>${F.ic} ${F.nome}</td><td>${r.pts}</td><td>${r.ok?'✓':'✗'}</td></tr>`;}).join('')}</table>
+ <div class="pensa"><b>Para escrever no caderno:</b> explique, usando um número do jogo, por que solo coberto e plantio em nível seguram a terra no morro e protegem o rio.</div>
+ <div class="savebox noprint"><input id="pName" maxlength="20" value="${esc(nome)}"><button class="btn" id="bS">Salvar no ranking</button></div><p class="small" id="sSt"></p>
+ <div class="row noprint" style="margin-top:12px"><button class="btn ghost" id="bI">Imprimir relatório</button><button class="btn ghost" id="bN">Jogar de novo</button><button class="btn ghost" id="bV">Início</button></div></div>`;
+ const c=$('cR').getContext('2d');c.fillStyle='#fffbeb';c.fillRect(0,0,240,240);avatar(c,120,240,3.2,A,true);
+ $('bS').onclick=()=>salvar('5 fases');$('bI').onclick=()=>window.print();$('bN').onclick=novo;$('bV').onclick=inicio;
+}
+
+/* ================= GUIA DO PROFESSOR ================= */
+function guia(){parar();$('hud').style.display='none';$('rankBox').style.display='none';
+ $('tela').innerHTML=`<div class="card guia">
+ <div class="row top noprint"><button class="btn ghost sm" id="bVt">← Voltar</button><button class="btn sm" id="bPr">Imprimir guia</button></div>
+ <h2 style="margin-top:10px">Guia do professor · Chuva no Morro</h2>
+ <p class="small">6º ano do Ensino Fundamental · Geografia, Ciências e Matemática</p>
+ <h3>Como o jogo conduz a aula</h3>
+ <p>Cada fase segue a sequência que o professor faria em sala. Primeiro uma professora na tela apresenta o experimento em 3 passos, com desenhos. Depois o aluno registra uma hipótese, sem nota. Em seguida faz o experimento, anota os resultados num caderno de campo e, no fim, compara o resultado com a própria hipótese antes de ler a explicação. É a estratégia prever, observar e explicar.</p>
+ <h3>Habilidades da BNCC</h3>
+ <div class="hab"><b>EF06GE10 (Geografia).</b> Explicar as diferentes formas de uso do solo (rotação de terras, terraceamento, aterros etc.) e de apropriação dos recursos hídricos (sistema de irrigação, tratamento e redes de distribuição), bem como suas vantagens e desvantagens em diferentes épocas e lugares.</div>
+ <div class="hab"><b>EF06MA13 (Matemática).</b> Resolver e elaborar problemas que envolvam porcentagens, com base na ideia de proporcionalidade, sem fazer uso da "regra de três", utilizando estratégias pessoais, cálculo mental e calculadora, em contextos de educação financeira, entre outros.</div>
+ <div class="hab"><b>EF05CI03 (Ciências, retomada do 5º ano).</b> Selecionar argumentos que justifiquem a importância da cobertura vegetal para a manutenção do ciclo da água, a conservação dos solos, dos cursos de água e da qualidade do ar atmosférico.</div>
+ <h3>Competências gerais da BNCC mobilizadas</h3>
+ <ul><li><b>2. Pensamento científico, crítico e criativo:</b> formular hipóteses, controlar variáveis e comparar resultados.</li><li><b>7. Argumentação:</b> defender um plano de uso da terra com dados de produção e de erosão.</li><li><b>10. Responsabilidade e cidadania:</b> discutir quem paga o custo da terra que vai para o rio.</li></ul>
+ <h3>Temas contemporâneos transversais</h3>
+ <p>Educação Ambiental (macroárea Meio Ambiente) e Ciência e Tecnologia. A fase 5 traz o Código Florestal e o rio Taquari, no Pantanal.</p>
+ <h3>Como as áreas se encontram</h3>
+ <table class="tab"><tr><th>Área</th><th>Onde aparece</th></tr>
+ <tr><td>Geografia</td><td>Uso do solo, curvas de nível, terraceamento, bacia hidrográfica e APP (fases 4 e 5).</td></tr>
+ <tr><td>Ciências</td><td>Cobertura vegetal, poros do solo, compactação e infiltração (fases 1 e 3).</td></tr>
+ <tr><td>Matemática</td><td>Declividade em porcentagem, velocidade como razão, leitura de gráfico (fases 2 e 3).</td></tr>
+ <tr><td>Língua Portuguesa</td><td>Registro de hipótese e escrita da conclusão no caderno de campo.</td></tr></table>
+ <h3>Eixo transdisciplinar</h3>
+ <p>A mesma gota de chuva atravessa as cinco fases: bate na garrafa, desce a encosta, entra ou não entra no solo, é segurada pela fileira e chega ao rio do Pantanal. Proponha à turma a pergunta: de quem é a terra que o rio leva embora? A resposta junta ciência, matemática, lei e vida de quem mora rio abaixo.</p>
+ <h3>Faça de verdade: material</h3>
+ <ul><li><b>Fase 1:</b> 3 garrafas PET de 2 L cortadas de lado, terra, folhas secas, uma muda de grama com raiz, 3 copos transparentes, barbante, regador ou garrafa com furos e copo medidor.</li>
+ <li><b>Fase 2:</b> a garrafa de solo nu, livros e uma régua. Pese a terra seca do copo em balança de cozinha, se houver.</li>
+ <li><b>Fase 3:</b> um pedaço de cano de PVC de cerca de 10 cm de diâmetro, marcado a 10 cm, martelo de borracha, água e cronômetro do celular.</li></ul>
+ <h3>Roteiro de 50 minutos</h3>
+ <table class="tab"><tr><th>Tempo</th><th>O que fazer</th></tr>
+ <tr><td>5 min</td><td>Mostre uma foto de rio barrento depois da chuva e pergunte de onde veio a cor.</td></tr>
+ <tr><td>30 min</td><td>Duplas jogam; um lê a professora da tela em voz alta, o outro anota as hipóteses.</td></tr>
+ <tr><td>10 min</td><td>Discussão: quantas hipóteses a turma acertou e o que surpreendeu.</td></tr>
+ <tr><td>5 min</td><td>Cada dupla escreve a frase do relatório de campo.</td></tr></table>
+ <h3>Fase por fase</h3>
+ <table class="tab"><tr><th>Fase</th><th>O aluno faz</th><th>Para discutir</th><th>Conceitos</th></tr>
+ <tr><td>1. Garrafas na janela</td><td>Rega 3 garrafas e compara os copos</td><td>Onde há solo descoberto perto de você?</td><td>Cobertura do solo, variável controlada.</td></tr>
+ <tr><td>2. Morro mais inclinado</td><td>Calcula a declividade com livros e mede a terra perdida</td><td>Declividade de 12 m em 60 m?</td><td>Porcentagem, relação não proporcional.</td></tr>
+ <tr><td>3. O teste do cano</td><td>Cronometra a infiltração em 3 lugares</td><td>Para onde vai a água da rua asfaltada?</td><td>Poros, compactação, velocidade.</td></tr>
+ <tr><td>4. Plantio em nível</td><td>Vê a plantação morro abaixo e desenha fileiras em nível</td><td>Como reconhecer fileiras em nível?</td><td>Curvas de nível, terraceamento.</td></tr>
+ <tr><td>5. Do morro ao rio</td><td>Planeja o uso de uma bacia com metas</td><td>Quem paga a terra que vai ao rio?</td><td>Plantio direto, APP, assoreamento.</td></tr></table>
+ <h3>Avaliação</h3>
+ <p>Use o relatório de campo impresso, o registro de hipóteses e a frase de cada dupla. Todos os instrumentos têm o mesmo peso. Valorize o aluno que explica por que a hipótese dele não se confirmou: errar a hipótese não tira ponto.</p>
+ <h3>Sequência de 3 aulas</h3>
+ <ol><li><b>Aula 1.</b> Jogo completo e discussão.</li><li><b>Aula 2.</b> Montagem real das garrafas e do teste do cano no pátio.</li><li><b>Aula 3.</b> Leitura de uma imagem de satélite da região: a turma localiza rios, matas ciliares e áreas de solo exposto.</li></ol>
+ <h3>Cuidados na mediação</h3>
+ <p>Os volumes, cores, tempos, produções e quantidades de terra do jogo vêm de um modelo e servem para comparar situações; não são medidas de um lugar real. O experimento de verdade vai dar outros números, mas o mesmo padrão. A fase 2 usa a fórmula real do fator de declividade da Equação Universal de Perda de Solo. A faixa de 30 metros vale para rios com menos de 10 metros de largura; rios mais largos têm faixas maiores.</p>
+ <h3>De onde vêm os números</h3>
+ <p><b>Fase 2.</b> Fator de declividade de Wischmeier e Smith (1978). <b>Fase 5.</b> Faixa mínima de APP da Lei 12.651/2012, artigo 4º. As demais quantidades são do modelo do jogo.</p>
+ <h3>Referências</h3>
+ <ul class="ref">
+ <li>Assine ML. River avulsions on the Taquari megafan, Pantanal wetland, Brazil. Geomorphology, 70(3-4):357-371, 2005.</li>
+ <li>Brasil. Lei nº 12.651, de 25 de maio de 2012. Dispõe sobre a proteção da vegetação nativa.</li>
+ <li>Derpsch R, Friedrich T, Kassam A, Li H. Current status of adoption of no-till farming in the world and some of its main benefits. International Journal of Agricultural and Biological Engineering, 3(1):1-25, 2010.</li>
+ <li>Hamza MA, Anderson WK. Soil compaction in cropping systems: a review of the nature, causes and possible solutions. Soil and Tillage Research, 82(2):121-145, 2005.</li>
+ <li>Montgomery DR. Soil erosion and agricultural sustainability. Proceedings of the National Academy of Sciences, 104(33):13268-13272, 2007.</li>
+ <li>Prosdocimi M, Tarolli P, Cerdà A. Mulching practices for reducing soil water erosion: a review. Earth-Science Reviews, 161:191-203, 2016.</li>
+ <li>Wischmeier WH, Smith DD. Predicting rainfall erosion losses: a guide to conservation planning. Agriculture Handbook 537. Washington: USDA, 1978.</li></ul>
+ </div>`;
+ $('bVt').onclick=inicio;$('bPr').onclick=()=>window.print();
+}
+
+/* ================= RANKING ================= */
+const firebaseConfig={apiKey:"AIzaSyCbXi3UCVl8oLleBzGb6DqWSxbZmZU2yDQ",authDomain:"jogos-ranking.firebaseapp.com",projectId:"jogos-ranking",storageBucket:"jogos-ranking.firebasestorage.app",messagingSenderId:"958784915420",appId:"1:958784915420:web:4212d3ad278f02d600f119"};
+const GAME_ID="chuva-no-morro";let db=null,fs=null,salvo=false;
+(async()=>{try{const a=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");const f=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");db=f.getFirestore(a.initializeApp(firebaseConfig));fs=f;carregar();}catch(e){$('rankList').innerHTML='<li><span>Ranking indisponível sem internet.</span></li>';$('rankNote').textContent='O jogo funciona normalmente. O ranking volta quando houver conexão.';}})();
+async function carregar(){if(!db)return;try{const q=fs.query(fs.collection(db,'games',GAME_ID,'scores'),fs.orderBy('score','desc'),fs.limit(10));const sn=await fs.getDocs(q);const r=[];sn.forEach(d=>r.push(d.data()));$('rankNote').textContent='Maior pontuação primeiro.';$('rankList').innerHTML=r.length?r.map((x,i)=>`<li><span><span class="rp">${i+1}º</span>${esc(x.name||'?')}</span><span>${(Number(x.score)||0).toLocaleString('pt-BR')} pts · ${esc(x.level||'')}</span></li>`).join(''):'<li><span>Seja o primeiro do ranking!</span></li>';}catch(e){$('rankList').innerHTML='<li><span>Não foi possível carregar o ranking.</span></li>';}}
+async function salvar(nivel){if(salvo)return;const nome=$('pName').value.trim(),st=$('sSt');if(!nome){st.textContent='Digite seu nome primeiro.';return;}if(!db){st.textContent='Sem conexão com o ranking. O resultado não foi enviado.';return;}
+ $('bS').disabled=true;try{await fs.addDoc(fs.collection(db,'games',GAME_ID,'scores'),{name:nome.slice(0,20),score:Math.max(0,S.tot),level:nivel,ts:fs.serverTimestamp()});salvo=true;st.textContent='Salvo no Ranking Global!';carregar();}catch(e){$('bS').disabled=false;st.textContent='Erro ao salvar. Tente de novo.';}}
+window.__a={get S(){return S},get G(){return G},FASES,inicio,novo,intro,guia};
+inicio();
+</script>
+</body>
+</html>
